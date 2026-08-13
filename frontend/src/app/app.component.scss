@@ -1,0 +1,212 @@
+// ──────────────────────────────────────────────────────
+//  FordaGO — Global Design System
+// ──────────────────────────────────────────────────────
+
+// ── Color Palette ───────────────────────────────────────
+$bg:             #06080F;
+$bg2:            #0B0E1A;
+$surface:        rgba(255,255,255,0.04);
+$surface2:       rgba(255,255,255,0.07);
+$surface-solid:  #0F1220;
+$border:         rgba(255,255,255,0.08);
+$border-bright:  rgba(255,255,255,0.14);
+$accent:         #FFD600;
+$accent-dim:     rgba(255,214,0,0.12);
+$accent-border:  rgba(255,214,0,0.3);
+$accent-glow:    rgba(255,214,0,0.18);
+$text:           #FFFFFF;
+$text-secondary: rgba(255,255,255,0.7);
+$muted:          rgba(255,255,255,0.35);
+$muted2:         rgba(255,255,255,0.2);
+$amber:          #FF9500;
+$blue:           #4A9EFF;
+$green:          #00D68F;
+$red:            #FF4461;
+$purple:         #A78BFA;
+
+// ── Design Tokens ──────────────────────────────────────
+$radius-sm:  10px;
+$radius-md:  16px;
+$radius-lg:  22px;
+$radius-xl:  28px;
+$shadow-card: 0 4px 24px rgba(0,0,0,0.3);
+$shadow-glow: 0 0 20px rgba(255,214,0,0.15);
+$glass-bg:    rgba(255,255,255,0.03);
+$glass-border: rgba(255,255,255,0.06);
+$glass-blur:  blur(20px);
+$transition-fast: 0.15s ease;
+$transition-smooth: 0.3s cubic-bezier(0.4,0,0.2,1);
+:root {
+  --ion-background-color:       #{$bg};
+  --ion-text-color:             #{$text};
+  --ion-toolbar-background:     #{$bg};
+  --ion-toolbar-color:          #{$text};
+  --ion-toolbar-border-color:   transparent;
+  --ion-tab-bar-background:     rgba(6,8,15,0.92);
+  --ion-tab-bar-border-color:   rgba(255,255,255,0.07);
+  --ion-tab-bar-color:          rgba(255,255,255,0.35);
+  --ion-tab-bar-color-selected: #{$accent};
+  --ion-color-primary:          #{$accent};
+  --ion-color-primary-rgb:      255,214,0;
+  --ion-color-primary-contrast: #000000;
+  --ion-item-background:        #{$surface-solid};
+  --ion-item-color:             #{$text};
+  --ion-border-color:           #{$border};
+  --ion-card-background:        #{$surface-solid};
+  --ion-card-color:             #{$text};
+  --ion-input-background:       #{$surface};
+  --ion-font-family:            'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+// ── Tab Bar ───────────────────────────────────────────────
+ion-tab-bar.custom-tab-bar {
+  --background:    rgba(6,8,15,0.92);
+  --border:        1px solid rgba(255,255,255,0.07);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius:   24px 24px 0 0;
+  padding-bottom:  env(safe-area-inset-bottom);
+
+  ion-tab-button {
+    --color:          rgba(255,255,255,0.35);
+    --color-selected: #{$accent};
+    --padding-top:    10px;
+    font-size:        10px;
+    font-weight:      600;
+    letter-spacing:   0.3px;
+    transition:       color 0.2s;
+
+    &.tab-selected .tab-label { color: #{$accent}; }
+  }
+}
+
+// ── Shared Section Label ──────────────────────────────
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: $muted;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin: 16px 0 8px;
+}
+
+// Rounded surface card
+.surface-card {
+  background: $surface;
+  border-radius: 18px;
+  padding: 16px;
+  border: 0.5px solid $surface2;
+}
+
+// Accent badge
+%badge-base {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.badge-accent  { @extend %badge-base; background: $accent-dim;  color: $accent; border: 0.5px solid $accent-border; }
+.badge-green   { @extend %badge-base; background: rgba(74,222,128,0.1); color: $green; border: 1px solid rgba(74,222,128,0.2); }
+.badge-amber   { @extend %badge-base; background: rgba(245,158,11,0.1); color: $amber; border: 1px solid rgba(245,158,11,0.2); }
+.badge-red     { @extend %badge-base; background: rgba(248,113,113,0.1); color: $red; border: 1px solid rgba(248,113,113,0.2); }
+.badge-neutral { @extend %badge-base; background: $surface2; color: $muted; border: 1px solid $surface2; }
+
+// Progress bar
+.progress-track {
+  background: $surface3;
+  border-radius: 4px;
+  height: 5px;
+  margin-bottom: 5px;
+
+  .progress-fill {
+    background: $accent;
+    border-radius: 4px;
+    height: 5px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+// Form fields (shared modal styles)
+.field-group { margin-bottom: 14px; }
+
+.field-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: $muted2;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.field-wrap {
+  position: relative;
+
+  .field-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  ion-input,
+  ion-select,
+  input,
+  select {
+    background: $surface3 !important;
+    border: 1px solid $surface2;
+    border-radius: 11px;
+    color: $text !important;
+    --padding-start: 38px;
+    padding-left: 38px;
+    font-size: 13px;
+    transition: border-color 0.2s;
+
+    &:focus,
+    &.has-focus { border-color: $accent-border; }
+  }
+}
+
+// Row of 2 equal columns
+.row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+// Dismiss handle for bottom sheet modals
+.modal-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: $surface3;
+  margin: 0 auto 18px;
+}
+
+// Shared modal bottom buttons
+.modal-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+// ── Animations ───────────────────────────────────────────
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+.fade-up { animation: fadeUp 0.4s ease both; }

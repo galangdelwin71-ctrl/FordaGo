@@ -1,0 +1,893 @@
+// profile.page.scss – FordaGO Modern Redesign
+
+// ── Toolbar ────────────────────────────────────────────
+// Header markup moved to shared app-header component.
+
+// ── Content ────────────────────────────────────────────
+ion-content {
+  --background: #06080F;
+}
+
+.content-inner {
+  padding: 16px 16px 100px;
+}
+
+// ── Profile Hero ───────────────────────────────────────
+.profile-hero {
+  background: linear-gradient(135deg, #1A1200 0%, #0F0A00 60%, #0B0E1A 100%);
+  border: 1px solid rgba(255,214,0,0.15);
+  border-radius: 24px;
+  padding: 28px 20px;
+  margin-bottom: 16px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -80px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 220px;
+    height: 220px;
+    background: radial-gradient(circle, rgba(255,214,0,0.1) 0%, transparent 65%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #FFD600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    font-weight: 800;
+    color: #000;
+    margin: 0 auto 16px;
+    box-shadow: 0 0 24px rgba(255,214,0,0.35);
+  }
+
+  .profile-avatar-img {
+    object-fit: cover;
+    border: 1px solid rgba(255,214,0,0.4);
+  }
+
+  .profile-name {
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 4px;
+    letter-spacing: -0.3px;
+  }
+
+  .profile-email {
+    font-size: 12px;
+    color: rgba(255,255,255,0.45);
+    margin-bottom: 14px;
+  }
+
+  .badges-row {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+}
+
+// ── Badges ─────────────────────────────────────────────
+.badge {
+  font-size: 10px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  letter-spacing: 0.2px;
+
+  &.premium {
+    background: rgba(255,214,0,0.12);
+    color: #FFD600;
+    border: 1px solid rgba(255,214,0,0.25);
+
+    .badge-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #FFD600;
+      animation: pulse 2s infinite;
+    }
+  }
+
+  &.active {
+    background: rgba(0,214,143,0.1);
+    color: #00D68F;
+    border: 1px solid rgba(0,214,143,0.2);
+  }
+}
+
+// ── Stats Grid ─────────────────────────────────────────
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+
+  .stat-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 13px 10px;
+    text-align: center;
+
+    .stat-emoji,
+    .stat-icon {
+      font-size: 20px;
+      display: block;
+      margin-bottom: 8px;
+
+      &.gold { color: #FFD600; }
+      &.amber { color: #FF9500; }
+      &.lime { color: #FFD600; }
+      &.blue { color: #4A9EFF; }
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 4px;
+      color: #fff;
+
+      &.amber { color: #FF9500; }
+      &.lime  { color: #FFD600; }
+      &.blue  { color: #4A9EFF; }
+    }
+
+    .stat-label {
+      font-size: 9px;
+      color: rgba(255,255,255,0.35);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      font-weight: 600;
+    }
+  }
+}
+
+// ── Section Label ──────────────────────────────────────
+.section-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin: 20px 0 10px;
+}
+
+// ── Information Card ───────────────────────────────────
+.info-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 18px;
+  padding: 4px 16px;
+  margin-bottom: 10px;
+
+  .info-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .info-icon {
+      font-size: 16px;
+      width: 28px;
+      text-align: center;
+      flex-shrink: 0;
+
+      ion-icon {
+        font-size: 18px;
+        color: rgba(255,255,255,0.55);
+      }
+    }
+
+    .info-content {
+      flex: 1;
+
+      .info-label {
+        font-size: 10px;
+        color: rgba(255,255,255,0.3);
+        margin-bottom: 3px;
+        font-weight: 500;
+      }
+
+      .info-value {
+        font-size: 13px;
+        font-weight: 700;
+        color: #fff;
+      }
+    }
+
+    .info-action {
+      color: #FFD600;
+      font-size: 11px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: opacity 0.15s;
+      padding: 0 4px;
+
+      &:active {
+        opacity: 0.7;
+      }
+    }
+  }
+}
+
+// ── Menu Items ─────────────────────────────────────────
+.menu-item {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.1s;
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  &:hover {
+    border-color: rgba(255,214,0,0.2);
+    background: rgba(255,255,255,0.06);
+  }
+
+  &.danger {
+    border-color: rgba(255,68,97,0.12);
+
+    &:hover {
+      border-color: rgba(255,68,97,0.3);
+    }
+
+    .menu-label {
+      color: #FF4461;
+    }
+
+    .menu-arrow {
+      color: #FF4461;
+    }
+  }
+
+  .menu-icon {
+    font-size: 18px;
+    width: 28px;
+    text-align: center;
+    flex-shrink: 0;
+
+    ion-icon {
+      font-size: 20px;
+      color: rgba(255,255,255,0.72);
+    }
+  }
+
+  .menu-content {
+    flex: 1;
+
+    .menu-label {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 2px;
+    }
+
+    .menu-sub {
+      font-size: 11px;
+      color: rgba(255,255,255,0.35);
+    }
+  }
+
+  .menu-arrow {
+    font-size: 20px;
+    color: rgba(255,255,255,0.25);
+  }
+
+  .theme-toggle {
+    --handle-background: #fff;
+    --track-background: rgba(148, 163, 184, 0.35);
+    --track-background-checked: #22c55e;
+    --handle-background-checked: #ffffff;
+  }
+}
+
+// ── Light Theme Overrides (host-context for Angular encapsulation) ─────────────
+:host-context(body.light-theme) {
+  ion-content {
+    --background: #f4f5f8 !important;
+  }
+
+  .section-label {
+    color: rgba(15, 23, 42, 0.5);
+  }
+
+  .profile-hero {
+    // Was #fffbeb/#fef3c7/#f0f4ff -- a near-white pale gradient that read as
+    // "washed out" on real screens (see screenshot). Richer amber tones so
+    // the card still reads as "gold membership" in light mode instead of
+    // fading into the page background.
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 60%, #e0e7ff 100%);
+    border-color: rgba(217, 119, 6, 0.35);
+
+    .profile-name { color: #0f172a; }
+    // Was rgba(15,23,42,0.5) -- too light against the now-warmer card
+    // background per the "email napakalight ng gray" report.
+    .profile-email { color: rgba(15, 23, 42, 0.68); }
+  }
+
+  // "Daily Pass Member" pill -- previously had NO light-mode override at
+  // all, so it kept its dark-mode style (bright yellow text on a bright
+  // yellow-tinted background), which is nearly unreadable once the hero
+  // card itself is light/yellow-toned. Darkened text + tightened
+  // background/border so it reads as a clear badge against the card.
+  .badge.premium {
+    background: rgba(180, 83, 9, 0.14);
+    color: #b45309;
+    border-color: rgba(180, 83, 9, 0.32);
+
+    .badge-dot { background: #b45309; }
+  }
+
+  .badge.active {
+    background: rgba(5, 150, 105, 0.12);
+    color: #047857;
+    border-color: rgba(5, 150, 105, 0.28);
+  }
+
+  .stats-grid .stat-card {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.09);
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+
+    .stat-value { color: #0f172a; }
+    .stat-label { color: rgba(15, 23, 42, 0.45); }
+  }
+
+  .info-card {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.09);
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+
+    .info-row {
+      border-bottom-color: rgba(15, 23, 42, 0.07);
+
+      .info-icon ion-icon { color: rgba(15, 23, 42, 0.45); }
+      .info-label { color: rgba(15, 23, 42, 0.45); }
+      .info-value { color: #0f172a; }
+    }
+  }
+
+  .menu-item {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.09);
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+
+    &:hover {
+      border-color: rgba(245, 158, 11, 0.35);
+      background: #fffdf0;
+    }
+
+    .menu-icon ion-icon { color: rgba(15, 23, 42, 0.6); }
+    .menu-label { color: #0f172a; }
+    .menu-sub { color: rgba(15, 23, 42, 0.45); }
+    .menu-arrow { color: rgba(15, 23, 42, 0.25); }
+
+    &.danger {
+      .menu-label { color: #e11d48; }
+      .menu-arrow { color: #e11d48; }
+    }
+  }
+
+  .custom-tab-bar {
+    --background: rgba(255, 255, 255, 0.97) !important;
+    border-top: 1px solid rgba(15, 23, 42, 0.09);
+
+    .tab-label { color: rgba(15, 23, 42, 0.45); }
+    &.active .tab-label { color: #f59e0b; }
+
+    ion-tab-button {
+      --color: rgba(15, 23, 42, 0.45);
+      --color-selected: #f59e0b;
+    }
+  }
+
+}
+
+// ── Bottom Tab Bar ─────────────────────────────────────
+.custom-tab-bar {
+  --background: rgba(6,8,15,0.94);
+  --border: 1px solid rgba(255,255,255,0.07);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 6px 0 env(safe-area-inset-bottom, 10px);
+  height: 64px;
+
+  .tab-btn {
+    --color: rgba(255,255,255,0.3);
+    --color-selected: #FFD600;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    flex: 1;
+    padding: 4px 0;
+
+    &.active .tab-label { color: #FFD600; }
+    &.active .tab-icon, &.active ion-icon  { filter: drop-shadow(0 0 6px rgba(255,214,0,0.5)); }
+
+    .tab-icon, ion-icon { font-size: 22px; transition: filter 0.2s; }
+
+    .tab-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.3);
+      letter-spacing: 0.2px;
+    }
+  }
+}
+
+// ── Modals ─────────────────────────────────────────────
+ion-modal {
+  --background: #0B0E1A;
+  --border-radius: 26px;
+}
+
+.modal-content { --background: #0B0E1A; }
+
+.modal-handle {
+  width: 36px; height: 4px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.1);
+  margin: 0 auto 20px;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 20px;
+  letter-spacing: -0.3px;
+}
+
+// ── Forms ───────────────────────────────────────────────
+.form-group { margin-bottom: 14px; }
+
+.profile-photo-editor {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+}
+
+.photo-preview {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #FFD600;
+  color: #000;
+  font-weight: 800;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.photo-preview-img {
+  object-fit: cover;
+  border: 1px solid rgba(255,214,0,0.45);
+}
+
+.photo-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.photo-btn,
+.photo-remove-btn {
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+  cursor: pointer;
+}
+
+.photo-remove-btn {
+  color: #FF9AA9;
+  border-color: rgba(255,154,169,0.35);
+  background: rgba(255,68,97,0.08);
+}
+
+.photo-file-input {
+  display: none;
+}
+
+.form-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  display: block;
+  margin-bottom: 7px;
+}
+
+.form-input {
+  --background: rgba(255,255,255,0.05);
+  --color: #fff;
+  --placeholder-color: rgba(255,255,255,0.2);
+  --border-radius: 12px;
+  --padding-start: 14px;
+  --padding-end: 14px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  font-size: 14px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  width: 100%;
+}
+
+.modal-save-btn {
+  width: 100%;
+  padding: 15px;
+  background: #FFD600;
+  color: #000;
+  font-size: 15px;
+  font-weight: 800;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(255,214,0,0.3);
+  transition: transform 0.15s, box-shadow 0.15s;
+  &:active { transform: scale(0.97); box-shadow: none; }
+}
+
+.modal-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.modal-cancel-btn,
+.modal-danger-btn {
+  width: 100%;
+  padding: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
+
+  &:active {
+    opacity: 0.85;
+    transform: scale(0.98);
+  }
+}
+
+.modal-cancel-btn {
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.72);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.modal-danger-btn {
+  background: rgba(255,68,97,0.14);
+  color: #FF4461;
+  border: 1px solid rgba(255,68,97,0.22);
+}
+
+.notif-setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+
+  &:last-of-type {
+    border-bottom: none;
+  }
+}
+
+.notif-setting-content {
+  flex: 1;
+}
+
+.notif-setting-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.notif-setting-desc {
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(255,255,255,0.42);
+}
+
+.notif-toggle {
+  --track-background: rgba(255,255,255,0.14);
+  --track-background-checked: rgba(255,214,0,0.35);
+  --handle-background: #fff;
+  --handle-background-checked: #FFD600;
+}
+
+.progress-history-list {
+  display: grid;
+  gap: 10px;
+}
+
+.history-item {
+  display: grid;
+  grid-template-columns: 68px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.history-date {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.38);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.history-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 3px;
+}
+
+.history-detail {
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+}
+
+.history-value {
+  font-size: 13px;
+  font-weight: 800;
+  color: #FFD600;
+}
+
+.renewal-info {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 18px;
+  padding: 6px 16px;
+}
+
+.renewal-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.renewal-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.renewal-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+
+  &.price {
+    color: #FFD600;
+  }
+}
+
+.logout-center {
+  text-align: center;
+  padding: 12px 0 4px;
+}
+
+.logout-icon {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,68,97,0.12);
+
+  ion-icon {
+    font-size: 28px;
+    color: #FF4461;
+  }
+}
+
+.logout-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.logout-sub {
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(255,255,255,0.45);
+}
+
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(6px);
+}
+
+.confirm-box {
+  width: 100%;
+  max-width: 340px;
+  border-radius: 16px;
+  background: linear-gradient(170deg, #101010 0%, #161616 100%);
+  border: 1px solid rgba(250, 204, 21, 0.38);
+  padding: 24px 20px;
+  text-align: center;
+}
+
+.confirm-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(250, 204, 21, 0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+
+  ion-icon {
+    color: #fcd34d;
+    font-size: 28px;
+  }
+}
+
+.confirm-title {
+  color: #fef2f2;
+  font-size: 17px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.confirm-msg {
+  color: #d4d4d8;
+  font-size: 12px;
+  margin-bottom: 14px;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.confirm-cancel,
+.confirm-logout {
+  flex: 1;
+  border-radius: 10px;
+  padding: 11px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  border: 0;
+  cursor: pointer;
+}
+
+.confirm-cancel {
+  background: #232323;
+  color: #f4f4f5;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.confirm-logout {
+  color: #141414;
+  background: #FFD600;
+}
+
+// ── Animations ─────────────────────────────────────────
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fade-up {
+  animation: fadeUp 0.4s ease both;
+}
+
+
+/* V3 native-footer integration */
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: #06080f;
+}
+
+ion-content.fordago-page-content {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.content-inner {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding-bottom: 28px !important;
+}
+
+
+/* V4 final: Ionic owns the page height; ion-content owns vertical scrolling. */
+:host {
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+
+:host > ion-content {
+  min-height: 0 !important;
+  --overflow: auto !important;
+}
+
+:host > ion-content::part(scroll) {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y !important;
+}

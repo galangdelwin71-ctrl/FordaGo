@@ -1,0 +1,866 @@
+<ion-content class="login-bg" [fullscreen]="true" [scrollY]="true">
+  <main class="login-wrap">
+
+    <section class="brand-section" aria-label="FordaGO">
+      <div class="logo-frame">
+        <img
+          src="assets/icon/logo.png"
+          class="gym-logo-img"
+          alt="AFFORDA Gym logo"
+          (error)="$any($event.target).src='assets/icon/fordago-logo.svg'"
+        />
+      </div>
+
+      <h1 class="brand-name">FORDAGO</h1>
+      <p class="brand-tagline">
+        Stronger Today, <span>Better Tomorrow.</span>
+      </p>
+    </section>
+
+    <section class="auth-shell" [class.compact-shell]="segment === 'login'">
+
+      <div
+        class="tab-row"
+        *ngIf="segment !== 'forgot' && (segment === 'login' || regStep === 1)"
+        [class.register-active]="segment === 'register'"
+      >
+        <span class="tab-indicator" aria-hidden="true"></span>
+
+        <button
+          type="button"
+          class="tab-btn"
+          [class.active]="segment === 'login'"
+          (click)="goToLogin()"
+        >
+          Sign In
+        </button>
+
+        <button
+          type="button"
+          class="tab-btn"
+          [class.active]="segment === 'register'"
+          (click)="goToRegister()"
+        >
+          Register
+        </button>
+      </div>
+
+      <!-- LOGIN -->
+      <form
+        *ngIf="segment === 'login'"
+        class="view-panel login-panel"
+        (submit)="submitLogin($event)"
+        autocomplete="off"
+        novalidate
+      >
+        <header class="panel-heading">
+          <h2>Sign in</h2>
+          <p>Access your FordaGO account.</p>
+        </header>
+
+        <div class="field">
+          <label class="field-lbl" for="login-email">Email</label>
+          <div class="input-shell">
+            <ion-icon name="mail-outline" aria-hidden="true"></ion-icon>
+            <input
+              id="login-email"
+              class="field-input"
+              type="email"
+              [(ngModel)]="email"
+              name="email"
+              placeholder="Enter your email"
+              autocomplete="email"
+              inputmode="email"
+            />
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-lbl" for="login-password">Password</label>
+          <div class="input-shell password-shell">
+            <ion-icon name="lock-closed-outline" aria-hidden="true"></ion-icon>
+            <input
+              id="login-password"
+              class="field-input"
+              [type]="showLoginPassword ? 'text' : 'password'"
+              [(ngModel)]="password"
+              name="password"
+              placeholder="Enter your password"
+              autocomplete="current-password"
+              autocapitalize="off"
+              spellcheck="false"
+            />
+
+            <button
+              type="button"
+              class="icon-btn password-toggle"
+              (click)="toggleLoginPassword()"
+              [attr.aria-label]="showLoginPassword ? 'Hide password' : 'Show password'"
+            >
+              <ion-icon
+                [name]="showLoginPassword ? 'eye-off-outline' : 'eye-outline'"
+                aria-hidden="true"
+              ></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-actions end-action">
+          <button type="button" class="text-link" (click)="goToForgotPassword()">
+            Forgot password?
+          </button>
+        </div>
+
+        <div class="err-msg" *ngIf="error" role="alert">
+          <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
+          <span>{{ error }}</span>
+        </div>
+
+        <button
+          class="submit-btn"
+          type="submit"
+          [disabled]="loading"
+          [class.is-loading]="loading"
+        >
+          <ion-spinner *ngIf="loading" name="crescent"></ion-spinner>
+          <span>{{ loading ? 'Signing In' : 'Login' }}</span>
+        
+        </button>
+
+        <div class="divider" aria-hidden="true">
+          <span></span>
+          <small>OR</small>
+          <span></span>
+        </div>
+
+        <button type="button" class="signup-card" (click)="goToRegister()">
+          <span class="signup-icon">
+            <ion-icon name="person-add-outline" aria-hidden="true"></ion-icon>
+          </span>
+          <span class="signup-copy">
+            <small>Don’t have an account?</small>
+            <strong>Sign Up</strong>
+          </span>
+          <ion-icon class="signup-arrow" name="chevron-forward-outline" aria-hidden="true"></ion-icon>
+        </button>
+      </form>
+
+      <!-- REGISTER STEP 1 -->
+      <section *ngIf="segment === 'register' && regStep === 1 && !regSuccess" class="view-panel">
+        <div class="progress-dots" aria-label="Registration progress: account details">
+          <span class="progress-dot active"></span>
+          <span class="progress-dot"></span>
+          <span class="progress-dot"></span>
+        </div>
+
+        <header class="panel-heading centered-heading">
+          <h2>Account Details</h2>
+          <p>Tell us a little about yourself.</p>
+        </header>
+
+        <div class="two-col responsive-columns">
+          <div class="field">
+            <label class="field-lbl" for="reg-first-name">First Name</label>
+            <div class="input-shell">
+              <ion-icon name="person-outline" aria-hidden="true"></ion-icon>
+              <input
+                id="reg-first-name"
+                class="field-input"
+                type="text"
+                [(ngModel)]="reg.firstName"
+                placeholder="Enter first name"
+                autocomplete="given-name"
+              />
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-lbl" for="reg-last-name">Last Name</label>
+            <div class="input-shell">
+              <ion-icon name="person-outline" aria-hidden="true"></ion-icon>
+              <input
+                id="reg-last-name"
+                class="field-input"
+                type="text"
+                [(ngModel)]="reg.lastName"
+                placeholder="Enter last name"
+                autocomplete="family-name"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-lbl" for="reg-email">Email</label>
+          <div class="input-shell">
+            <ion-icon name="mail-outline" aria-hidden="true"></ion-icon>
+            <input
+              id="reg-email"
+              class="field-input"
+              type="email"
+              [(ngModel)]="reg.email"
+              placeholder="Enter email address"
+              autocomplete="email"
+              inputmode="email"
+            />
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-lbl" for="reg-phone">Phone Number</label>
+          <div class="input-shell">
+            <ion-icon name="call-outline" aria-hidden="true"></ion-icon>
+            <input
+              id="reg-phone"
+              class="field-input"
+              type="tel"
+              [(ngModel)]="reg.phone"
+              placeholder="09171234567"
+              autocomplete="tel"
+              appNoNegative
+              pattern="[0-9]*"
+              inputmode="numeric"
+              maxlength="11"
+            />
+          </div>
+        </div>
+
+        <div class="field gender-field">
+          <label class="field-lbl" id="reg-gender-label">Gender</label>
+
+          <div
+            class="gender-picker"
+            [class.open]="genderOpen"
+            (click)="$event.stopPropagation()"
+          >
+            <button
+              type="button"
+              class="gender-trigger"
+              (click)="toggleGenderDropdown($event)"
+              [attr.aria-expanded]="genderOpen"
+              aria-haspopup="listbox"
+              aria-labelledby="reg-gender-label"
+            >
+              <span class="gender-trigger-left">
+                <ion-icon name="people-outline" aria-hidden="true"></ion-icon>
+                <span class="gender-value" [class.placeholder]="!reg.gender">
+                  {{ genderLabel }}
+                </span>
+              </span>
+
+              <ion-icon
+                class="gender-chevron"
+                name="chevron-down-outline"
+                aria-hidden="true"
+              ></ion-icon>
+            </button>
+
+            <div
+              class="gender-menu"
+              *ngIf="genderOpen"
+              role="listbox"
+              aria-labelledby="reg-gender-label"
+            >
+              <button
+                type="button"
+                class="gender-option"
+                *ngFor="let option of genderOptions"
+                [class.selected]="reg.gender === option.value"
+                [attr.aria-selected]="reg.gender === option.value"
+                (click)="selectGender(option.value)"
+                role="option"
+              >
+                <span>{{ option.label }}</span>
+                <ion-icon
+                  *ngIf="reg.gender === option.value"
+                  name="checkmark-outline"
+                  aria-hidden="true"
+                ></ion-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="two-col responsive-columns">
+          <div class="field">
+            <label class="field-lbl" for="reg-password">Password</label>
+            <div class="input-shell password-shell">
+              <ion-icon name="lock-closed-outline" aria-hidden="true"></ion-icon>
+              <input
+                id="reg-password"
+                class="field-input"
+                [type]="showRegisterPassword ? 'text' : 'password'"
+                [(ngModel)]="reg.password"
+                placeholder="Create password"
+                autocomplete="new-password"
+                autocapitalize="off"
+                spellcheck="false"
+              />
+              <button
+                type="button"
+                class="icon-btn password-toggle"
+                (click)="toggleRegisterPassword()"
+                [attr.aria-label]="showRegisterPassword ? 'Hide password' : 'Show password'"
+              >
+                <ion-icon
+                  [name]="showRegisterPassword ? 'eye-off-outline' : 'eye-outline'"
+                  aria-hidden="true"
+                ></ion-icon>
+              </button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-lbl" for="reg-confirm">Confirm Password</label>
+            <div class="input-shell password-shell">
+              <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
+              <input
+                id="reg-confirm"
+                class="field-input"
+                [type]="showRegisterConfirm ? 'text' : 'password'"
+                [(ngModel)]="reg.confirm"
+                placeholder="Repeat password"
+                autocomplete="new-password"
+                autocapitalize="off"
+                spellcheck="false"
+              />
+              <button
+                type="button"
+                class="icon-btn password-toggle"
+                (click)="toggleRegisterConfirm()"
+                [attr.aria-label]="showRegisterConfirm ? 'Hide password confirmation' : 'Show password confirmation'"
+              >
+                <ion-icon
+                  [name]="showRegisterConfirm ? 'eye-off-outline' : 'eye-outline'"
+                  aria-hidden="true"
+                ></ion-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="hint-msg">
+          <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+          <span>Use at least 8 characters with uppercase, lowercase, number, and special character.</span>
+        </div>
+
+        <div class="err-msg" *ngIf="regError" role="alert">
+          <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
+          <span>{{ regError }}</span>
+        </div>
+
+        <button class="submit-btn" type="button" (click)="nextStep()">
+          <span>Continue</span>
+          
+        </button>
+
+        <button type="button" class="bottom-text-link" (click)="goToLogin()">
+          Already have an account? <strong>Sign In</strong>
+        </button>
+      </section>
+
+      <!-- REGISTER STEP 2 -->
+      <section *ngIf="segment === 'register' && regStep === 2 && !regSuccess" class="view-panel">
+        <div class="progress-dots" aria-label="Registration progress: membership">
+          <span class="progress-dot done"></span>
+          <span class="progress-dot active"></span>
+          <span class="progress-dot"></span>
+        </div>
+
+        <header class="panel-heading centered-heading">
+          <h2>Choose Membership</h2>
+          <p>Select the plan that fits your routine.</p>
+        </header>
+
+        <div class="plan-cards">
+          <button
+            type="button"
+            class="plan-card"
+            [class.selected]="reg.membership_type === 'daily'"
+            (click)="reg.membership_type = 'daily'; reg.payment_method = ''"
+          >
+            <span class="plan-icon">
+              <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+            </span>
+
+            <span class="plan-info">
+              <strong class="plan-name">Daily Pass</strong>
+              <span class="plan-desc">Pay per visit after your account is approved.</span>
+              <span class="plan-price">₱40 per day</span>
+            </span>
+
+            <span class="plan-check">
+              <ion-icon name="checkmark-outline" aria-hidden="true"></ion-icon>
+            </span>
+          </button>
+
+          <button
+            type="button"
+            class="plan-card"
+            [class.selected]="reg.membership_type === 'premium'"
+            (click)="reg.membership_type = 'premium'; reg.payment_method = 'cash'"
+          >
+            <span class="plan-icon">
+              <ion-icon name="diamond-outline" aria-hidden="true"></ion-icon>
+            </span>
+
+            <span class="plan-info">
+              <strong class="plan-name">Premium</strong>
+              <span class="plan-desc">Unlimited gym access for one month.</span>
+              <span class="plan-price">₱500 per month</span>
+            </span>
+
+            <span class="plan-check">
+              <ion-icon name="checkmark-outline" aria-hidden="true"></ion-icon>
+            </span>
+          </button>
+        </div>
+
+        <div *ngIf="reg.membership_type === 'premium'" class="payment-section">
+          <span class="section-lbl">Payment Method</span>
+
+          <div class="payment-options">
+            <button
+              type="button"
+              class="pay-opt"
+              [class.active]="reg.payment_method === 'cash'"
+              (click)="reg.payment_method = 'cash'"
+            >
+              <ion-icon name="cash-outline" aria-hidden="true"></ion-icon>
+              <span>Cash</span>
+            </button>
+
+            <button
+              type="button"
+              class="pay-opt"
+              [class.active]="reg.payment_method === 'gcash'"
+              (click)="reg.payment_method = 'gcash'"
+            >
+              <ion-icon name="phone-portrait-outline" aria-hidden="true"></ion-icon>
+              <span>GCash</span>
+            </button>
+          </div>
+
+          <div class="info-box">
+            <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+            <p>
+              <strong>Premium membership requires payment before activation.</strong>
+              <span *ngIf="reg.payment_method === 'cash'">
+                Pay ₱500 at the gym counter. The admin will confirm the payment and activate your account.
+              </span>
+              <span *ngIf="reg.payment_method === 'gcash'">
+                Send ₱500 through GCash and present your receipt to the admin for verification.
+              </span>
+            </p>
+          </div>
+        </div>
+
+        <div class="err-msg" *ngIf="regError" role="alert">
+          <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
+          <span>{{ regError }}</span>
+        </div>
+
+        <div class="step-btns">
+          <button type="button" class="back-btn" (click)="regStep = 1">
+            <ion-icon name="arrow-back-outline" aria-hidden="true"></ion-icon>
+            <span>Back</span>
+          </button>
+
+          <button type="button" class="submit-btn flex-1" (click)="nextStep()">
+            <span>Continue</span>
+            
+          </button>
+        </div>
+      </section>
+
+      <!-- REGISTER STEP 3 -->
+      <section *ngIf="segment === 'register' && regStep === 3 && !regSuccess" class="view-panel">
+        <div class="progress-dots" aria-label="Registration progress: review">
+          <span class="progress-dot done"></span>
+          <span class="progress-dot done"></span>
+          <span class="progress-dot active"></span>
+        </div>
+
+        <header class="panel-heading centered-heading">
+          <h2>Review & Confirm</h2>
+          <p>Check your information before creating your account.</p>
+        </header>
+
+        <div class="summary-card">
+          <div class="summary-row">
+            <span class="summary-icon"><ion-icon name="person-outline"></ion-icon></span>
+            <span class="summary-copy">
+              <small>Name</small>
+              <strong>{{ (reg.firstName + ' ' + reg.lastName).trim() }}</strong>
+            </span>
+          </div>
+
+          <div class="summary-row">
+            <span class="summary-icon"><ion-icon name="mail-outline"></ion-icon></span>
+            <span class="summary-copy">
+              <small>Email</small>
+              <strong>{{ reg.email }}</strong>
+            </span>
+          </div>
+
+          <div class="summary-row" *ngIf="reg.phone">
+            <span class="summary-icon"><ion-icon name="call-outline"></ion-icon></span>
+            <span class="summary-copy">
+              <small>Phone</small>
+              <strong>{{ reg.phone }}</strong>
+            </span>
+          </div>
+
+          <div class="summary-row" *ngIf="reg.gender">
+            <span class="summary-icon"><ion-icon name="people-outline"></ion-icon></span>
+            <span class="summary-copy">
+              <small>Gender</small>
+              <strong>{{ genderLabel }}</strong>
+            </span>
+          </div>
+
+          <div class="summary-row">
+            <span class="summary-icon"><ion-icon name="barbell-outline"></ion-icon></span>
+            <span class="summary-copy">
+              <small>Membership</small>
+              <strong>
+                {{ reg.membership_type === 'daily' ? 'Daily Pass, ₱40 per day' : 'Premium, ₱500 per month' }}
+              </strong>
+            </span>
+          </div>
+
+          <div class="summary-row" *ngIf="reg.membership_type === 'premium'">
+            <span class="summary-icon"><ion-icon name="card-outline"></ion-icon></span>
+            <span class="summary-copy">
+              <small>Payment</small>
+              <strong>{{ reg.payment_method === 'gcash' ? 'GCash' : 'Cash' }}</strong>
+            </span>
+          </div>
+        </div>
+
+        <div class="info-box" *ngIf="reg.membership_type === 'daily'">
+          <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+          <p>
+            After registration, wait for admin verification before signing in. Each visit requires a QR attendance scan and ₱40 payment confirmation.
+          </p>
+        </div>
+
+        <div class="info-box" *ngIf="reg.membership_type === 'premium'">
+          <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+          <p>
+            After registration, pay ₱500 {{ reg.payment_method === 'gcash' ? 'through GCash' : 'at the gym counter' }}. Your account becomes available after admin approval.
+          </p>
+        </div>
+
+        <div class="err-msg" *ngIf="regError" role="alert">
+          <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
+          <span>{{ regError }}</span>
+        </div>
+
+        <div class="step-btns">
+          <button type="button" class="back-btn" (click)="regStep = 2">
+            <ion-icon name="arrow-back-outline" aria-hidden="true"></ion-icon>
+            <span>Back</span>
+          </button>
+
+          <button
+            type="button"
+            class="submit-btn flex-1"
+            [disabled]="regLoading"
+            [class.is-loading]="regLoading"
+            (click)="register()"
+          >
+            <ion-spinner *ngIf="regLoading" name="crescent"></ion-spinner>
+            <span>{{ regLoading ? 'Creating Account' : 'Create Account' }}</span>
+            <ion-icon *ngIf="!regLoading" name="checkmark-outline" aria-hidden="true"></ion-icon>
+          </button>
+        </div>
+      </section>
+
+      <!-- REGISTRATION SUCCESS -->
+      <section *ngIf="regSuccess" class="view-panel success-box">
+        <span class="success-icon pending-icon">
+          <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+        </span>
+
+        <h2>Registration Submitted</h2>
+
+        <p *ngIf="regSuccessMembershipType === 'daily'">
+          Your Daily Pass account is waiting for admin verification. After approval, you can sign in and pay ₱40 for each verified visit.
+        </p>
+
+        <p *ngIf="regSuccessMembershipType === 'premium'">
+          Your Premium registration is waiting for admin verification. Please pay ₱500
+          {{ regSuccessPaymentMethod === 'gcash' ? 'through GCash' : 'at the gym counter' }} before activation.
+        </p>
+
+        <div class="status-note" *ngIf="regSuccessPhone && regSuccessSmsSent">
+          <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
+          <span>Confirmation sent to {{ regSuccessPhone }}.</span>
+        </div>
+
+        <div class="status-note" *ngIf="regSuccessPhone && !regSuccessSmsSent">
+          <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+          <span>
+            Account created for {{ regSuccessPhone }}. SMS alert is not available yet{{ regSuccessSmsReason ? ' (' + regSuccessSmsReason + ')' : '' }}.
+          </span>
+        </div>
+
+        <button class="submit-btn" type="button" (click)="goToLogin()">
+          <span>Go to Sign In</span>
+          <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
+        </button>
+      </section>
+
+      <!-- FORGOT PASSWORD -->
+      <section *ngIf="segment === 'forgot'" class="view-panel forgot-panel">
+        <button
+          type="button"
+          class="auth-back-btn"
+          (click)="goToLogin()"
+          aria-label="Back to sign in"
+        >
+          <ion-icon name="chevron-back-outline" aria-hidden="true"></ion-icon>
+        </button>
+
+        <!-- Forgot step 1 -->
+        <div *ngIf="fpStep === 1" class="subview-panel">
+          <span class="feature-icon">
+            <ion-icon name="key-outline" aria-hidden="true"></ion-icon>
+          </span>
+
+          <header class="panel-heading centered-heading">
+            <h2>Reset Password</h2>
+            <p>Enter the email or phone number linked to your account.</p>
+          </header>
+
+          <div class="field">
+            <label class="field-lbl" for="fp-identifier">Email or Phone Number</label>
+            <div class="input-shell">
+              <ion-icon name="search-outline" aria-hidden="true"></ion-icon>
+              <input
+                id="fp-identifier"
+                class="field-input"
+                type="text"
+                [(ngModel)]="fpIdentifier"
+                placeholder="Email or 11-digit phone number"
+                (keydown.enter)="fpLookupEmail()"
+              />
+            </div>
+          </div>
+
+          <div class="err-msg" *ngIf="fpError" role="alert">
+            <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
+            <span>{{ fpError }}</span>
+          </div>
+
+          <button
+            class="submit-btn"
+            type="button"
+            [disabled]="fpLoading"
+            [class.is-loading]="fpLoading"
+            (click)="fpLookupEmail()"
+          >
+            <ion-spinner *ngIf="fpLoading" name="crescent"></ion-spinner>
+            <span>{{ fpLoading ? 'Searching' : 'Continue' }}</span>
+            <ion-icon *ngIf="!fpLoading" name="arrow-forward-outline" aria-hidden="true"></ion-icon>
+          </button>
+        </div>
+
+        <!-- Forgot step 2 -->
+        <div *ngIf="fpStep === 2" class="subview-panel">
+          <header class="panel-heading centered-heading">
+            <h2>Choose Delivery</h2>
+            <p>Select where you want to receive your verification code.</p>
+          </header>
+
+          <div class="payment-options channel-options">
+            <button
+              type="button"
+              class="pay-opt"
+              [class.active]="fpChannel === 'email'"
+              (click)="fpChooseChannel('email')"
+            >
+              <ion-icon name="mail-outline" aria-hidden="true"></ion-icon>
+              <span>{{ fpEmailMasked }}</span>
+            </button>
+
+            <button
+              type="button"
+              class="pay-opt"
+              *ngIf="fpHasPhone"
+              [class.active]="fpChannel === 'sms'"
+              (click)="fpChooseChannel('sms')"
+            >
+              <ion-icon name="chatbubble-ellipses-outline" aria-hidden="true"></ion-icon>
+              <span>{{ fpPhoneMasked }}</span>
+            </button>
+          </div>
+
+          <div class="hint-msg" *ngIf="!fpHasPhone">
+            <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+            <span>No phone number is saved. The verification code will be sent by email.</span>
+          </div>
+
+          <div class="err-msg" *ngIf="fpError" role="alert">
+            <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
+            <span>{{ fpError }}</span>
+          </div>
+
+          <div class="step-btns">
+            <button type="button" class="back-btn" (click)="fpStep = 1">
+              <ion-icon name="arrow-back-outline" aria-hidden="true"></ion-icon>
+              <span>Back</span>
+            </button>
+
+            <button
+              type="button"
+              class="submit-btn flex-1"
+              [disabled]="fpLoading"
+              [class.is-loading]="fpLoading"
+              (click)="fpSendCode()"
+            >
+              <ion-spinner *ngIf="fpLoading" name="crescent"></ion-spinner>
+              <span>{{ fpLoading ? 'Sending' : 'Send Code' }}</span>
+              <ion-icon *ngIf="!fpLoading" name="send-outline" aria-hidden="true"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- Forgot step 3 -->
+        <div *ngIf="fpStep === 3" class="subview-panel">
+          <header class="panel-heading centered-heading">
+            <h2>Enter Verification Code</h2>
+            <p>Use the 6-digit code sent to your selected contact method.</p>
+          </header>
+
+          <div class="status-note" *ngIf="fpSentMessage">
+            <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+            <span>{{ fpSentMessage }}</span>
+          </div>
+
+          <div class="field">
+            <label class="field-lbl" for="fp-code">Verification Code</label>
+            <div class="input-shell code-shell">
+              <ion-icon name="keypad-outline" aria-hidden="true"></ion-icon>
+              <input
+                id="fp-code"
+                class="field-input code-input"
+                type="text"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                maxlength="6"
+                [(ngModel)]="fpCode"
+                placeholder="000000"
+                (keydown.enter)="fpVerifyCode()"
+              />
+            </div>
+          </div>
+
+          <div class="err-msg" *ngIf="fpError" role="alert">
+            <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
+            <span>{{ fpError }}</span>
+          </div>
+
+          <button
+            class="submit-btn"
+            type="button"
+            [disabled]="fpLoading"
+            [class.is-loading]="fpLoading"
+            (click)="fpVerifyCode()"
+          >
+            <ion-spinner *ngIf="fpLoading" name="crescent"></ion-spinner>
+            <span>{{ fpLoading ? 'Verifying' : 'Verify Code' }}</span>
+            <ion-icon *ngIf="!fpLoading" name="checkmark-outline" aria-hidden="true"></ion-icon>
+          </button>
+
+          <button type="button" class="bottom-text-link" (click)="fpStep = 2">
+            Didn’t receive a code? <strong>Send Again</strong>
+          </button>
+        </div>
+
+        <!-- Forgot step 4 -->
+        <div *ngIf="fpStep === 4" class="subview-panel">
+          <header class="panel-heading centered-heading">
+            <h2>Create New Password</h2>
+            <p>Choose a secure password for your FordaGO account.</p>
+          </header>
+
+          <div class="field">
+            <label class="field-lbl" for="fp-new-password">New Password</label>
+            <div class="input-shell password-shell">
+              <ion-icon name="lock-closed-outline" aria-hidden="true"></ion-icon>
+              <input
+                id="fp-new-password"
+                class="field-input"
+                [type]="fpShowPassword ? 'text' : 'password'"
+                [(ngModel)]="fpNewPassword"
+                placeholder="Enter new password"
+                autocomplete="new-password"
+              />
+              <button type="button" class="icon-btn password-toggle" (click)="fpToggleNewPassword()">
+                <ion-icon [name]="fpShowPassword ? 'eye-off-outline' : 'eye-outline'" aria-hidden="true"></ion-icon>
+              </button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-lbl" for="fp-confirm-password">Confirm Password</label>
+            <div class="input-shell password-shell">
+              <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
+              <input
+                id="fp-confirm-password"
+                class="field-input"
+                [type]="fpShowConfirm ? 'text' : 'password'"
+                [(ngModel)]="fpConfirmPassword"
+                placeholder="Repeat new password"
+                autocomplete="new-password"
+              />
+              <button type="button" class="icon-btn password-toggle" (click)="fpToggleConfirmPassword()">
+                <ion-icon [name]="fpShowConfirm ? 'eye-off-outline' : 'eye-outline'" aria-hidden="true"></ion-icon>
+              </button>
+            </div>
+          </div>
+
+          <div class="hint-msg">
+            <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+            <span>Use at least 8 characters with uppercase, lowercase, number, and special character.</span>
+          </div>
+
+          <div class="err-msg" *ngIf="fpError" role="alert">
+            <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
+            <span>{{ fpError }}</span>
+          </div>
+
+          <button
+            class="submit-btn"
+            type="button"
+            [disabled]="fpLoading"
+            [class.is-loading]="fpLoading"
+            (click)="fpSubmitNewPassword()"
+          >
+            <ion-spinner *ngIf="fpLoading" name="crescent"></ion-spinner>
+            <span>{{ fpLoading ? 'Saving Password' : 'Save New Password' }}</span>
+            <ion-icon *ngIf="!fpLoading" name="checkmark-outline" aria-hidden="true"></ion-icon>
+          </button>
+        </div>
+
+        <!-- Forgot step 5 -->
+        <div *ngIf="fpStep === 5" class="subview-panel success-box">
+          <span class="success-icon">
+            <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
+          </span>
+
+          <h2>Password Updated</h2>
+          <p>Your password has been changed successfully. You can now sign in using your new password.</p>
+
+          <button class="submit-btn" type="button" (click)="goToLogin()">
+            <span>Go to Sign In</span>
+            <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
+          </button>
+        </div>
+      </section>
+
+    </section>
+  </main>
+</ion-content>

@@ -1,0 +1,1000 @@
+// schedule.page.ts
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import {
+  IonContent,
+  IonFooter,
+  IonFab,
+  IonFabButton,
+  IonIcon,
+  IonModal,
+} from '@ionic/angular/standalone';
+import { HttpClient } from '@angular/common/http';
+import { AuthService } from '../services/auth.service';
+import { NotificationCenterService } from '../services/notification-center.service';
+import { WorkoutTrackerService } from '../services/workout-tracker.service';
+import { NoNegativeDirective } from '../directives/no-negative.directive';
+import { HeaderComponent } from '../shared/header/header.component';
+import { NotificationPanelComponent } from '../shared/notification-panel/notification-panel.component';
+import { API_BASE_URL } from '../config/api.config';
+import { buildExercisesFromTemplate } from '../data/workout-templates';
+import type { WeekPlanTemplateDay, StoredWorkoutSession } from '../services/workout-tracker.service';
+
+// ── Interfaces ────────────────────────────────────────────
+
+export interface DayItem {
+  name: string;
+  num: number;
+  date: Date;
+  hasSession: boolean;
+  active: boolean;
+}
+
+export type SessionStatus = 'upcoming' | 'optional' | 'missed' | 'done';
+
+export interface Exercise {
+  name: string;
+  sets: number;
+  reps: string; // e.g. "12", "12-15", "failure", "30s"
+  done?: boolean;
+}
+
+export interface WorkoutSession {
+  id?: string;
+  timeVal: string;
+  timeAmpm: string;
+  title: string;
+  duration: string;
+  location: string;
+  coach: string;
+  membersCount: number;
+  status: SessionStatus;
+  customTarget?: string;  // e.g. "Back & Bicep", "Chest & Tricep"
+  isCustom?: boolean;
+  exercises?: Exercise[];
+  /** Explicit "no workout needed today" flag — see WorkoutTrackerService.StoredWorkoutSession (Stage 3). */
+  isRestDay?: boolean;
+}
+
+export interface HomeWorkout {
+  visible: boolean;
+  exercises: string[];
+  sessionTitle?: string;
+}
+
+export interface EditBuffer {
+  timeRaw: string;
+  duration: string;
+  coach: string;
+  location: string;
+  customTarget: string;
+  exercises: Exercise[];
+}
+
+export interface WeekPlanDay {
+  title: string;
+  customTarget: string;
+  duration: string;
+  coach: string;
+  location: string;
+  time: string;
+  isRest: boolean;
+  exercises: Exercise[];
+}
+
+export interface WorkoutHistoryItem {
+  displayDate: string;
+  dateKey: string;
+  sessions: WorkoutSession[];
+}
+
+// ── Component ─────────────────────────────────────────────
+
+@Component({
+  selector: 'app-schedule',
+  templateUrl: './schedule.page.html',
+  styleUrls: ['./schedule.page.scss'],
+  standalone: true,
+  host: { class: 'ion-page fordago-page' },
+  imports: [
+    CommonModule,
+    FormsModule,
+    IonContent,
+    IonFooter,
+    IonFab,
+    IonFabButton,
+    IonIcon,
+    IonModal,
+    NoNegativeDirective,
+    HeaderComponent,
+    NotificationPanelComponent,
+  ],
+})
+export class SchedulePage implements OnInit {
+
+  private readonly api = API_BASE_URL;
+  profileImage = '';
+  initials = 'U';
+
+  // ── Constants ────────────────────────────────────────────
+  private readonly DAY_NAMES   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  private readonly DAY_SHORT   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  private readonly MONTH_NAMES = [
+    'January','February','March','April','May','June',
+    'July','August','September','October','November','December',
+  ];
+
+  readonly workoutTypes = [
+    'Upper Body',
+    'Lower Body / Leg Day',
+    'Cardio & Core',
+    'Full Body',
+    'Mobility & Stretch',
+    'Rest Day',
+  ];
+
+  readonly coaches   = ['Coach Ethan', 'Coach Ryza', 'Coach Marco'];
+  readonly locations = ['Gym Floor B','Cardio Area','Weights Area','Functional Zone','Home'];
+  readonly durationOptions = ['30 min','45 min','60 min','75 min','90 min'];
+
+  // ── Suggested targets per workout type ───────────────────
+  private readonly suggestedTargetsMap: Record<string, string[]> = {
+    'Upper Body': [
+      'Back & Bicep',
+      'Chest & Tricep',
+      'Shoulders',
+      'Back & Rear Delt',
+      'Chest & Shoulder',
+      'Arms (Bi & Tri)',
+    ],
+    'Lower Body / Leg Day': [
+      'Quads & Glutes',
+      'Hamstrings & Glutes',
+      'Calves & Quads',
+      'Glutes Focus',
+      'Full Legs',
+    ],
+    'Cardio & Core': [
+      'HIIT',
+      'Steady State',
+      'Core & Abs',
+      'Jump Rope HIIT',
+      'Treadmill + Core',
+    ],
+    'Full Body': [
+      'Push / Pull / Legs',
+      'Compound Lifts',
+      'Circuit Training',
+      'Functional Strength',
+    ],
+    'Mobility & Stretch': [
+      'Hip Flexors',
+      'Upper Back',
+      'Full Body Stretch',
+      'Shoulder Mobility',
+      'Spine & Core',
+    ],
+    'Rest Day': [
+      'Light Walk',
+      'Foam Rolling',
+      'Active Recovery',
+    ],
+  };
+
+  // Home workout alternatives per workout type (string format for hw-card)
+  private readonly homeWorkoutMap: Record<string, string[]> = {
+    'Upper Body':           ['3 × 15 Push-ups','3 × 12 Tricep Dips','3 × 10 Pike Push-ups','2 × 15 Diamond Push-ups'],
+    'Lower Body / Leg Day': ['3 × 15 Squats','3 × 12 Lunges each leg','3 × 20 Calf Raises','2 × 30s Wall Sit'],
+    'Cardio & Core':        ['3 × 20 Mountain Climbers','3 × 15 Burpees','3 × 30 Bicycle Crunches','2 min Jump Rope'],
+    'Full Body':            ['3 × 10 Burpees','3 × 12 Push-ups','3 × 15 Squats','3 × 20 Jumping Jacks'],
+    'Mobility & Stretch':   ['2 min Hip Flexor Stretch','2 min Hamstring Stretch','90s Shoulder Mobility','2 min Cat-Cow Flow'],
+    'Rest Day':             ['10 min Light Walk','5 min Deep Breathing','Foam Roll 15 min','Hydrate & Rest'],
+  };
+
+  // ── State ────────────────────────────────────────────────
+
+  private baseDate: Date = (() => {
+    const today = new Date();
+    const day = today.getDay(); // 0=Sun, 1=Mon ... 6=Sat
+    const diff = day === 0 ? -6 : 1 - day; // offset to Monday
+    const mon = new Date(today);
+    mon.setDate(today.getDate() + diff);
+    mon.setHours(0, 0, 0, 0);
+    return mon;
+  })();
+
+  private selectedDayIndex: number = (() => {
+    const day = new Date().getDay(); // 0=Sun
+    return day === 0 ? 6 : day - 1; // Mon=0 ... Sun=6
+  })();
+
+  weekDays: DayItem[] = [];
+  sessions: WorkoutSession[] = [];
+
+  monthLabel        = '';
+  selectedDayLabel  = '';
+
+  // ── Card expand/edit ──────────────────────────────────────
+  expandedCard: number | null = null;
+  editBuffer: EditBuffer = { timeRaw: '', duration: '', coach: '', location: '', customTarget: '', exercises: [] };
+
+  // ── Add modal ─────────────────────────────────────────────
+  addModalOpen             = false;
+  newWorkoutType           = 'Upper Body';
+  newWorkoutCustomTarget   = '';
+  newWorkoutDate           = '';
+  newWorkoutTime           = '';
+  newWorkoutDuration       = '60 min';
+  newWorkoutCoach          = '';
+  newWorkoutLocation       = 'Gym Floor B';
+  newWorkoutExercises: Exercise[] = [];
+  newWorkoutTimeWarning    = ''; // Time validation warning
+
+  // ── Home workout card ─────────────────────────────────────
+  homeWorkout: HomeWorkout = { visible: false, exercises: [], sessionTitle: '' };
+  homeWorkoutModalOpen = false;
+
+  // ── History modal ─────────────────────────────────────────
+  historyModalOpen = false;
+  historyItems: WorkoutHistoryItem[] = [];
+
+  // ── Week Plan modal ───────────────────────────────────────
+  private readonly WEEK_PLAN_KEY = 'fordago_week_plan_v1';
+  weekPlanModalOpen = false;
+  weekPlanDays: WeekPlanDay[] = this.buildDefaultWeekPlanDays();
+  weekPlanActiveDay = 0;
+  weekPlanSaved = false;
+
+  // ── Lifecycle ────────────────────────────────────────────
+
+  constructor(
+    private router: Router,
+    private http: HttpClient,
+    private auth: AuthService,
+    private notificationCenter: NotificationCenterService,
+    private workoutTracker: WorkoutTrackerService
+  ) {}
+
+  ngOnInit(): void {
+    this.applyUserContext();
+    this.workoutTracker.startAutoSync();
+    this.seedWeekSessions();
+    this.seedMonthSessions();
+    this.buildWeekStrip();
+    this.renderSessions();
+  }
+
+  ionViewWillEnter(): void {
+    this.applyUserContext();
+    this.workoutTracker.syncStoreStatuses();
+    this.seedMonthSessions();
+    this.buildWeekStrip();
+    this.renderSessions();
+  }
+
+  private applyUserContext(): void {
+    const user = this.auth.user;
+    const username = String(user?.username || '').trim();
+    this.initials = username
+      ? username.split(' ').map((part) => part[0]).join('').toUpperCase().slice(0, 2)
+      : 'U';
+    this.profileImage = String(user?.profile_image || '').trim();
+  }
+
+  // ── Auto status calculation ────────────────────────────
+  /**
+   * Returns the effective display status for a session, auto-detecting
+   * missed workouts based on current date/time.
+   */
+  private autoComputeStatus(session: WorkoutSession, dayDate: Date): SessionStatus {
+    return this.workoutTracker.autoComputeStatus(session, dayDate);
+  }
+
+  private sendMissedNotification(sessionTitle: string, dayDate: Date, homeExercises: string[]): void {
+    void this.notificationCenter.notifyMissedWorkout(
+      sessionTitle,
+      dayDate,
+      `${this.dateKey(dayDate)}-${sessionTitle}`,
+      homeExercises
+    );
+  }
+
+  private getHomeWorkoutListForTitle(sessionTitle: string): string[] {
+    return this.homeWorkoutMap[sessionTitle] ?? this.homeWorkoutMap['Full Body'];
+  }
+
+  // ── Helpers ──────────────────────────────────────────────
+
+  private dateKey(d: Date): string {
+    return this.workoutTracker.getDateKey(d);
+  }
+
+  private to24(time: string, ampm: string): string {
+    let [h, m] = time.split(':').map(Number);
+    if (ampm === 'PM' && h !== 12) h += 12;
+    if (ampm === 'AM' && h === 12) h = 0;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  }
+
+  private to12(time24: string): { time: string; ampm: 'AM' | 'PM' } {
+    if (!time24) return { time: '12:00', ampm: 'AM' };
+    let [h, m] = time24.split(':').map(Number);
+    const ampm: 'AM' | 'PM' = h >= 12 ? 'PM' : 'AM';
+    h = h > 12 ? h - 12 : h === 0 ? 12 : h;
+    return { time: `${h}:${String(m).padStart(2,'0')}`, ampm };
+  }
+
+  private readStoredSessions(): Record<string, WorkoutSession[]> {
+    return this.workoutTracker.readStore() as Record<string, WorkoutSession[]>;
+  }
+
+  private writeStoredSessions(store: Record<string, WorkoutSession[]>): void {
+    this.workoutTracker.writeStore(store);
+  }
+
+  /** Delegates to the shared workout-templates data source (see ../data/workout-templates.ts) so this stays in sync with WorkoutTrackerService's own month-seeding. */
+  private buildExercises(title: string, customTarget?: string): Exercise[] {
+    return buildExercisesFromTemplate(title, customTarget);
+  }
+
+  /**
+   * Delegates day-seeding to WorkoutTrackerService.buildDaySessions() — the
+   * single shared implementation of rest-day/template logic — instead of
+   * re-deriving it locally. Casts across the two pages' near-identical
+   * WorkoutSession/StoredWorkoutSession shapes (runtime-compatible; the
+   * only static difference is `reps: string` vs `string | number`), then
+   * runs the result through this page's own normalizeSession() so ids and
+   * exercise arrays stay in the shape the rest of this page expects.
+   * (Stage 3 follow-up: previously seedWeekSessions/seedMonthSessions/
+   * applyWeekPlanToCurrentWeek each had their own copy of this logic that
+   * still wrote `[]` for rest days, so which page seeded a day first could
+   * silently determine whether the dashboard's streak logic saw a proper
+   * rest-day flag or a blank record.)
+   */
+  private buildDaySessionsFromTracker(dayIdx: number, template: WeekPlanDay[] | null): WorkoutSession[] {
+    const built = this.workoutTracker.buildDaySessions(dayIdx, template as unknown as WeekPlanTemplateDay[] | null);
+    return (built as unknown as WorkoutSession[]).map(session => this.normalizeSession(session));
+  }
+
+  private normalizeSession(session: WorkoutSession): WorkoutSession {
+    return {
+      ...session,
+      id: session.id ?? `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      customTarget: session.customTarget?.trim() || undefined,
+      exercises: session.exercises?.length
+        ? session.exercises.map(ex => ({ ...ex }))
+        : this.buildExercises(session.title, session.customTarget),
+    };
+  }
+
+  private getStoredSessionsForDate(dayDate: Date, fallbackIndex?: number): WorkoutSession[] {
+    const store = this.readStoredSessions();
+    const key = this.dateKey(dayDate);
+    const saved = store[key];
+    if (saved?.length) {
+      return saved.map(session => this.normalizeSession(session));
+    }
+
+    if (fallbackIndex === undefined) return [];
+    return this.buildDaySessionsFromTracker(fallbackIndex, this.loadWeekPlanTemplate());
+  }
+
+  private saveSessionsForDate(dayDate: Date, sessions: WorkoutSession[]): void {
+    const store = this.readStoredSessions();
+    const key = this.dateKey(dayDate);
+    store[key] = sessions.map(session => this.normalizeSession(session));
+    this.writeStoredSessions(store);
+  }
+
+  private seedWeekSessions(): void {
+    const store = this.readStoredSessions();
+    const template = this.loadWeekPlanTemplate();
+    let changed = false;
+
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(this.baseDate);
+      d.setDate(this.baseDate.getDate() + i);
+      const key = this.dateKey(d);
+      if (store[key]) continue; // already seeded
+
+      store[key] = this.buildDaySessionsFromTracker(i, template);
+      changed = true;
+    }
+
+    if (changed) {
+      this.writeStoredSessions(store);
+    }
+  }
+
+  /**
+   * Pre-seeds the ENTIRE current calendar month (not just the currently
+   * viewed 7-day week) so anything relying on the stored schedule — most
+   * importantly the dashboard's "Upcoming Schedules" (This Month) stat —
+   * reflects the true number of sessions for the month, even for days the
+   * member hasn't scrolled to yet on this page. Idempotent: only writes
+   * days that aren't already in the store, so it never clobbers existing
+   * progress (done/missed/edited sessions are left untouched).
+   */
+  private seedMonthSessions(): void {
+    const store = this.readStoredSessions();
+    const template = this.loadWeekPlanTemplate();
+    let changed = false;
+
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth(); // 0-indexed
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const d = new Date(year, month, day);
+      const key = this.dateKey(d);
+      if (store[key]) continue; // already seeded (e.g. by seedWeekSessions or a prior visit)
+
+      // Convert JS's Sunday-first getDay() (0=Sun..6=Sat) into the
+      // Monday-first index (0=Mon..6=Sun) that defaultSessionsByDayIdx /
+      // the saved week-plan template both use.
+      const jsDay = d.getDay();
+      const idx = jsDay === 0 ? 6 : jsDay - 1;
+
+      store[key] = this.buildDaySessionsFromTracker(idx, template);
+      changed = true;
+    }
+
+    if (changed) {
+      this.writeStoredSessions(store);
+    }
+  }
+
+  // ── Exercise lookup ───────────────────────────────────────
+
+  /**
+   * Returns exercises for a session.
+   * Priority: "WorkoutType|CustomTarget" → "WorkoutType" → []
+   */
+  getExercises(session: WorkoutSession): Exercise[] {
+    if (session.exercises?.length) {
+      return session.exercises;
+    }
+    return this.buildExercises(session.title, session.customTarget);
+  }
+
+  /** Exercises shown in the modal preview */
+  getModalExercises(): Exercise[] {
+    return this.buildExercises(this.newWorkoutType, this.newWorkoutCustomTarget);
+  }
+
+  // ── Suggested targets & target placeholder ────────────────
+
+  getSuggestedTargets(workoutType: string): string[] {
+    return this.suggestedTargetsMap[workoutType] ?? [];
+  }
+
+  getTargetPlaceholder(workoutType: string): string {
+    const suggestions = this.suggestedTargetsMap[workoutType];
+    if (suggestions?.length) {
+      return `e.g. ${suggestions[0]}, ${suggestions[1] ?? ''}`.replace(/, $/, '');
+    }
+    return 'Enter your focus area...';
+  }
+
+  selectTarget(target: string): void {
+    this.newWorkoutCustomTarget = this.newWorkoutCustomTarget === target ? '' : target;
+  }
+
+  onWorkoutTypeChange(type: string): void {
+    this.newWorkoutCustomTarget = ''; // reset when workout type changes
+    this.newWorkoutExercises = [];
+  }
+
+  // ── Week Strip ───────────────────────────────────────────
+
+  buildWeekStrip(): void {
+    this.seedWeekSessions();
+    const days: DayItem[] = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(this.baseDate);
+      d.setDate(this.baseDate.getDate() + i);
+
+      const storedSessions = this.getStoredSessionsForDate(d, i);
+      const hasSession = storedSessions.length > 0;
+
+      days.push({
+        name:      this.DAY_SHORT[d.getDay()],
+        num:       d.getDate(),
+        date:      d,
+        hasSession,
+        active:    i === this.selectedDayIndex,
+      });
+    }
+    this.weekDays = days;
+    this.updateMonthLabel();
+  }
+
+  private updateMonthLabel(): void {
+    const first = this.weekDays[0].date;
+    const last  = this.weekDays[6].date;
+    this.monthLabel = first.getMonth() === last.getMonth()
+      ? `${this.MONTH_NAMES[first.getMonth()]} ${first.getFullYear()}`
+      : `${this.MONTH_NAMES[first.getMonth()]} – ${this.MONTH_NAMES[last.getMonth()]} ${first.getFullYear()}`;
+  }
+
+  selectDay(day: DayItem, index: number): void {
+    this.weekDays.forEach(d => (d.active = false));
+    day.active            = true;
+    this.selectedDayIndex = index;
+    this.expandedCard     = null;
+    this.renderSessions();
+  }
+
+  prevWeek(): void {
+    this.baseDate = new Date(this.baseDate);
+    this.baseDate.setDate(this.baseDate.getDate() - 7);
+    this.selectedDayIndex = 0;
+    this.buildWeekStrip();
+    this.renderSessions();
+  }
+
+  nextWeek(): void {
+    this.baseDate = new Date(this.baseDate);
+    this.baseDate.setDate(this.baseDate.getDate() + 7);
+    this.selectedDayIndex = 0;
+    this.buildWeekStrip();
+    this.renderSessions();
+  }
+
+  // ── Sessions ─────────────────────────────────────────────
+
+  renderSessions(): void {
+    this.workoutTracker.syncStoreStatuses();
+    const selected = this.weekDays[this.selectedDayIndex];
+    const dayDate  = selected?.date ?? this.baseDate;
+    const all = this.getStoredSessionsForDate(dayDate, this.selectedDayIndex);
+
+    // Auto-compute status for each session (detect missed workouts)
+    all.forEach(s => {
+      const computed = this.autoComputeStatus(s, dayDate);
+      if (computed === 'missed' && s.status !== 'done') {
+        if (s.status !== 'missed') {
+          s.status = 'missed';
+          this.sendMissedNotification(s.title, dayDate, this.getHomeWorkoutListForTitle(s.title));
+        }
+      } else if (s.status !== 'done') {
+        s.status = computed;
+      }
+    });
+
+    this.sessions = all.map(session => this.normalizeSession(session));
+    this.saveSessionsForDate(dayDate, this.sessions);
+    this.selectedDayLabel = `${this.DAY_NAMES[dayDate.getDay()]}, ${this.MONTH_NAMES[dayDate.getMonth()]} ${dayDate.getDate()}`;
+
+    const missed = this.sessions.find(s => s.status === 'missed');
+    this.homeWorkout = missed
+      ? { visible: true, exercises: this.getHomeWorkoutListForTitle(missed.title), sessionTitle: missed.title }
+      : { visible: false, exercises: [], sessionTitle: '' };
+  }
+
+  openHomeWorkoutModal(): void {
+    this.homeWorkoutModalOpen = true;
+  }
+
+  closeHomeWorkoutModal(): void {
+    this.homeWorkoutModalOpen = false;
+  }
+
+  // ── Card Actions ─────────────────────────────────────────
+
+  toggleEditPanel(index: number, event: Event): void {
+    event.stopPropagation();
+    if (this.expandedCard === index) { this.expandedCard = null; return; }
+
+    const s = this.sessions[index];
+    const exercises = this.getExercises(s).map(ex => ({ ...ex }));
+    this.editBuffer = {
+      timeRaw:      this.to24(s.timeVal, s.timeAmpm),
+      duration:     s.duration,
+      coach:        s.coach,
+      location:     s.location,
+      customTarget: s.customTarget ?? '',
+      exercises,
+    };
+    this.expandedCard = index;
+  }
+
+  saveEdit(index: number): void {
+    const s = this.sessions[index];
+    if (!s) return;
+
+    const { time, ampm } = this.to12(this.editBuffer.timeRaw);
+    s.timeVal     = time;
+    s.timeAmpm    = ampm;
+    s.duration    = this.editBuffer.duration;
+    s.coach       = this.editBuffer.coach;
+    s.location    = this.editBuffer.location;
+    s.customTarget = this.editBuffer.customTarget.trim() || undefined;
+
+    // Use exercises from buffer (custom edits) if any are non-empty, else rebuild from type/target
+    const validExercises = this.editBuffer.exercises.filter(ex => ex.name.trim() !== '');
+    s.exercises = validExercises.length > 0
+      ? validExercises.map(ex => ({ ...ex }))
+      : this.buildExercises(s.title, s.customTarget);
+
+    this.expandedCard = null;
+    const editedDayDate = this.weekDays[this.selectedDayIndex].date;
+    this.saveSessionsForDate(editedDayDate, this.sessions);
+    // Push this edit to the backend immediately — without this the edit
+    // stays local-only and gets silently reverted the next time
+    // WorkoutTrackerService.pullFromServer() merges the (stale) server copy
+    // back into the local store (e.g. on the next Dashboard visit).
+    this.workoutTracker.pushSession(editedDayDate, s as unknown as StoredWorkoutSession);
+    this.renderSessions();
+  }
+
+  deleteSession(index: number, event?: Event): void {
+    if (event) event.stopPropagation();
+    const session = this.sessions[index];
+    if (!session) return;
+
+    const dayDate = this.weekDays[this.selectedDayIndex].date;
+    this.sessions.splice(index, 1);
+    this.saveSessionsForDate(dayDate, this.sessions);
+    // Delete on the backend too — otherwise the deleted session still
+    // exists server-side and pullFromServer() re-adds it as a "new"
+    // session the next time the local store no longer has a matching id.
+    this.workoutTracker.deleteSessionFromServer(dayDate, session.id);
+
+    this.expandedCard = null;
+    this.buildWeekStrip();
+    this.renderSessions();
+  }
+
+  cycleStatus(index: number, event: Event): void {
+    event.stopPropagation();
+    const s = this.sessions[index];
+    if (!s) return;
+
+    const cycle: Record<SessionStatus, SessionStatus> = {
+      upcoming: 'done',
+      optional: 'done',
+      done:     'upcoming',
+      missed:   'upcoming',
+    };
+    s.status = cycle[s.status];
+    if (s.exercises?.length) {
+      const markDone = s.status === 'done';
+      s.exercises = s.exercises.map((exercise) => ({
+        ...exercise,
+        done: markDone,
+      }));
+    }
+    const dayDate = this.weekDays[this.selectedDayIndex].date;
+    this.saveSessionsForDate(dayDate, this.sessions);
+    this.workoutTracker.pushSession(dayDate, s as unknown as StoredWorkoutSession);
+    this.renderSessions();
+  }
+
+  // ── Add Modal ─────────────────────────────────────────────
+
+  openAddModal(): void {
+    const d  = this.weekDays[this.selectedDayIndex]?.date ?? new Date();
+    const mm = String(d.getMonth() + 1).padStart(2,'0');
+    const dd = String(d.getDate()).padStart(2,'0');
+    this.newWorkoutDate          = `${d.getFullYear()}-${mm}-${dd}`;
+    this.newWorkoutTime          = '07:00';
+    this.newWorkoutDuration      = '60 min';
+    this.newWorkoutCoach         = '';
+    this.newWorkoutLocation      = 'Gym Floor B';
+    this.newWorkoutCustomTarget  = '';
+    this.newWorkoutType          = 'Upper Body';
+    this.newWorkoutExercises     = [];
+    this.addModalOpen            = true;
+  }
+
+  closeAddModal(): void {
+    this.addModalOpen = false;
+  }
+
+  saveWorkout(): void {
+    if (!this.newWorkoutDate) return;
+
+    const [y, mo, day] = this.newWorkoutDate.split('-').map(Number);
+    const targetDate   = new Date(y, mo - 1, day);
+    const key          = this.dateKey(targetDate);
+
+    // Check if time is in the past for today
+    const now = new Date();
+    const todayKey = this.dateKey(now);
+    if (key === todayKey) {
+      const [inputHour, inputMin] = (this.newWorkoutTime || '07:00').split(':').map(Number);
+      const currentHour = now.getHours();
+      const currentMin = now.getMinutes();
+      
+      if (inputHour < currentHour || (inputHour === currentHour && inputMin <= currentMin)) {
+        this.newWorkoutTimeWarning = `⚠ Cannot add workout — ${this.to12String(inputHour, inputMin)} has already passed today`;
+        return;
+      }
+    }
+
+    this.newWorkoutTimeWarning = ''; // Clear warning on success
+
+    const { time, ampm } = this.to12(this.newWorkoutTime || '07:00');
+
+    const validCustomExercises = this.newWorkoutExercises.filter(ex => ex.name.trim() !== '');
+
+    const session: WorkoutSession = this.normalizeSession({
+      timeVal:      time,
+      timeAmpm:     ampm,
+      title:        this.newWorkoutType,
+      duration:     this.newWorkoutDuration,
+      location:     this.newWorkoutLocation,
+      coach:        this.newWorkoutCoach,
+      membersCount: 0,
+      status:       'upcoming',
+      customTarget: this.newWorkoutCustomTarget.trim() || undefined,
+      isCustom:     true,
+      exercises:    validCustomExercises.length > 0 ? validCustomExercises : undefined,
+    });
+
+    const store = this.readStoredSessions();
+    const sessionsForDate = (store[key] ?? []).map(item => this.normalizeSession(item));
+    sessionsForDate.push(session);
+    store[key] = sessionsForDate;
+    this.writeStoredSessions(store);
+    this.workoutTracker.pushSession(targetDate, session as unknown as StoredWorkoutSession);
+
+    const selKey = this.dateKey(this.weekDays[this.selectedDayIndex]?.date ?? new Date());
+    if (key === selKey) this.renderSessions();
+
+    this.buildWeekStrip();
+    this.closeAddModal();
+  }
+
+  private to12String(hour: number, min: number): string {
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const h12 = hour % 12 || 12;
+    const minStr = min.toString().padStart(2, '0');
+    return `${h12}:${minStr} ${ampm}`;
+  }
+
+  // ── Template helpers ──────────────────────────────────────
+
+  get missedSessions(): boolean {
+    return this.sessions.some(s => s.status === 'missed');
+  }
+
+  get missedSessionTitle(): string {
+    return this.sessions.find(s => s.status === 'missed')?.title ?? 'Workout';
+  }
+
+  getDotColor(status: SessionStatus): string {
+    const map: Record<SessionStatus, string> = {
+      upcoming: '#e8ff47',
+      optional: '#60a5fa',
+      missed:   '#555555',
+      done:     '#22c55e',
+    };
+    return map[status] ?? '#e8ff47';
+  }
+
+  getBadgeClass(status: SessionStatus): string {
+    const map: Record<SessionStatus, string> = {
+      upcoming: 'badge-green',
+      optional: 'badge-amber',
+      missed:   'badge-muted',
+      done:     'badge-done',
+    };
+    return map[status] ?? 'badge-green';
+  }
+
+  getBadgeText(status: SessionStatus): string {
+    const map: Record<SessionStatus, string> = {
+      upcoming: 'Upcoming',
+      optional: 'Optional',
+      missed:   'Missed',
+      done:     'Done',
+    };
+    return map[status] ?? 'Upcoming';
+  }
+
+  // ── Notifications panel ───────────────────────────────────
+  // Display/state now lives entirely in the shared NotificationPanelComponent
+  // (see shared/notification-panel/); this page just toggles [isOpen] from
+  // the header bell and mirrors (unreadCountChange) into its own header badge.
+  notifPanelOpen = false;
+  unreadCount = 0;
+
+  openNotifPanel(): void {
+    this.notifPanelOpen = true;
+  }
+
+  closeNotifPanel(): void { this.notifPanelOpen = false; }
+
+  onUnreadCountChange(count: number): void {
+    this.unreadCount = count;
+  }
+
+  private closeOverlaysForNavigation(): void {
+    this.notifPanelOpen = false;
+    this.homeWorkoutModalOpen = false;
+    this.historyModalOpen = false;
+    this.weekPlanModalOpen = false;
+    this.addModalOpen = false;
+  }
+
+  // ── Navigation ───────────────────────────────────────────
+  goToDashboard(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/dashboard']);  }
+  goToSchedule():  void { this.closeOverlaysForNavigation(); this.router.navigate(['/schedule']);   }
+  goToQr():        void { this.closeOverlaysForNavigation(); this.router.navigate(['/qr-scanner']); }
+  goToInventory(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/inventory']);  }
+  goToEquipment(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/equipment']); }
+  goToProfile():   void { this.closeOverlaysForNavigation(); this.router.navigate(['/profile']);    }
+
+  // ── History ───────────────────────────────────────────────
+  openHistoryModal(): void {
+    this.historyItems = this.buildHistory();
+    this.historyModalOpen = true;
+  }
+
+  closeHistoryModal(): void {
+    this.historyModalOpen = false;
+  }
+
+  private buildHistory(): WorkoutHistoryItem[] {
+    const store = this.readStoredSessions() as Record<string, WorkoutSession[]>;
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    const items: WorkoutHistoryItem[] = [];
+
+    for (const key of Object.keys(store)) {
+      const [y, m, d] = key.split('-').map(Number);
+      const date = new Date(y, m - 1, d);
+      if (date > today) continue;
+      const doneSessions = (store[key] ?? []).filter(s => s.status === 'done');
+      if (doneSessions.length === 0) continue;
+      const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      items.push({
+        displayDate: `${dayNames[date.getDay()]}, ${monthNames[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`,
+        dateKey: key,
+        sessions: doneSessions.map(s => this.normalizeSession(s)),
+      });
+    }
+
+    return items.sort((a, b) => b.dateKey.localeCompare(a.dateKey));
+  }
+
+  // ── Exercise editing in edit panel ────────────────────────
+  addExerciseToBuffer(): void {
+    this.editBuffer.exercises = [
+      ...this.editBuffer.exercises,
+      { name: '', sets: 3, reps: '10-12' },
+    ];
+  }
+
+  removeExerciseFromBuffer(index: number): void {
+    this.editBuffer.exercises = this.editBuffer.exercises.filter((_, i) => i !== index);
+  }
+
+  // ── Week Plan ─────────────────────────────────────────────
+  private buildDefaultWeekPlanDays(): WeekPlanDay[] {
+    const defaults = ['Upper Body','Cardio & Core','Rest Day','Upper Body','Full Body','Lower Body / Leg Day','Rest Day'];
+    const targets  = ['Back & Bicep','Core & Abs','','Chest & Tricep','Compound Lifts','Quads & Glutes',''];
+    return defaults.map((title, i) => ({
+      title,
+      customTarget: targets[i],
+      duration: '60 min',
+      coach: '',
+      location: 'Gym Floor B',
+      time: '07:00',
+      isRest: title === 'Rest Day',
+      exercises: [],
+    }));
+  }
+
+  openWeekPlanModal(): void {
+    const saved = this.loadWeekPlanTemplate();
+    this.weekPlanDays = saved ?? this.buildDefaultWeekPlanDays();
+    this.weekPlanActiveDay = 0;
+    this.weekPlanSaved = false;
+    this.weekPlanModalOpen = true;
+  }
+
+  closeWeekPlanModal(): void {
+    this.weekPlanModalOpen = false;
+  }
+
+  onWeekPlanTypeChange(dayIndex: number): void {
+    const day = this.weekPlanDays[dayIndex];
+    day.isRest = day.title === 'Rest Day';
+    if (day.isRest) { day.customTarget = ''; }
+    day.exercises = [];
+  }
+
+  addWeekPlanExercise(dayIndex: number): void {
+    this.weekPlanDays[dayIndex].exercises = [
+      ...(this.weekPlanDays[dayIndex].exercises ?? []),
+      { name: '', sets: 3, reps: '10-12' },
+    ];
+  }
+
+  removeWeekPlanExercise(dayIndex: number, exIndex: number): void {
+    this.weekPlanDays[dayIndex].exercises = this.weekPlanDays[dayIndex].exercises.filter((_, i) => i !== exIndex);
+  }
+
+  addNewWorkoutExercise(): void {
+    this.newWorkoutExercises = [...this.newWorkoutExercises, { name: '', sets: 3, reps: '10-12' }];
+  }
+
+  removeNewWorkoutExercise(index: number): void {
+    this.newWorkoutExercises = this.newWorkoutExercises.filter((_, i) => i !== index);
+  }
+
+  saveWeekPlan(): void {
+    localStorage.setItem(this.WEEK_PLAN_KEY, JSON.stringify(this.weekPlanDays));
+    this.weekPlanSaved = true;
+    // Apply template to the current week (unseeded days)
+    this.applyWeekPlanToCurrentWeek();
+    setTimeout(() => {
+      this.closeWeekPlanModal();
+      this.buildWeekStrip();
+      this.renderSessions();
+    }, 900);
+  }
+
+  clearWeekPlan(): void {
+    localStorage.removeItem(this.WEEK_PLAN_KEY);
+    this.weekPlanDays = this.buildDefaultWeekPlanDays();
+    this.weekPlanSaved = false;
+  }
+
+  private loadWeekPlanTemplate(): WeekPlanDay[] | null {
+    try {
+      const raw = localStorage.getItem(this.WEEK_PLAN_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw) as WeekPlanDay[];
+    } catch {
+      return null;
+    }
+  }
+
+  private applyWeekPlanToCurrentWeek(): void {
+    const template = this.loadWeekPlanTemplate();
+    if (!template) return;
+    const store = this.readStoredSessions();
+
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(this.baseDate);
+      d.setDate(this.baseDate.getDate() + i);
+      const key = this.dateKey(d);
+
+      const existingSessions = store[key] ?? [];
+      const builtSessions = this.buildDaySessionsFromTracker(i, template);
+
+      // Reuse the existing session id(s) for this date (matched by position)
+      // instead of the fresh random id buildDaySessionsFromTracker just
+      // generated. Without this, every Week Plan save orphans the old
+      // backend row (the new id never matches it) — that old row then comes
+      // back as a DUPLICATE the next time pullFromServer() merges server
+      // data into the local store.
+      const sessions = builtSessions.map((session, idx) => ({
+        ...session,
+        id: existingSessions[idx]?.id ?? session.id,
+      }));
+
+      store[key] = sessions;
+
+      sessions.forEach((session) => this.workoutTracker.pushSession(d, session as unknown as StoredWorkoutSession));
+
+      // If this day used to have MORE sessions than the new template
+      // produces, the leftover old ones are gone locally — delete them
+      // server-side too so they don't come back as orphaned duplicates later.
+      existingSessions.slice(sessions.length).forEach((oldSession) => {
+        if (oldSession.id) this.workoutTracker.deleteSessionFromServer(d, oldSession.id);
+      });
+    }
+    this.writeStoredSessions(store);
+  }
+
+  readonly weekDayLabels = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+}

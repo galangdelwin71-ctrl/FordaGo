@@ -1,0 +1,442 @@
+<!-- profile.page.html -->
+<app-header
+  subtitle="PROFILE"
+  [unreadCount]="unreadCount"
+  [profileImage]="profile.profileImage"
+  [initials]="profile.initials"
+  (equipmentClick)="goToEquipment()"
+  (notifClick)="openNotifPanel()"
+  (profileClick)="goToProfile()">
+</app-header>
+
+<ion-content [fullscreen]="false" class="fordago-page-content" [scrollY]="true">
+  <div class="content-inner">
+
+    <!-- Profile Hero Section -->
+    <div class="profile-hero fade-up">
+      <div class="profile-avatar" *ngIf="!profile.profileImage">{{ profile.initials }}</div>
+      <img *ngIf="profile.profileImage" [src]="profile.profileImage" alt="Profile" class="profile-avatar profile-avatar-img" />
+      <div class="profile-name">{{ fullName }}</div>
+      <div class="profile-email">{{ profile.email }}</div>
+      <div class="badges-row">
+        <div class="badge premium">
+          <span class="badge-dot"></span> {{ profile.membershipPlan }} Member
+        </div>
+        <div class="badge active">Active</div>
+      </div>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="stats-grid fade-up">
+      <div class="stat-card">
+        <ion-icon name="barbell-outline" class="stat-icon gold"></ion-icon>
+        <div class="stat-value">{{ sessionsThisMonth }}</div>
+        <div class="stat-label">Sessions</div>
+      </div>
+      <div class="stat-card">
+        <ion-icon name="flame-outline" class="stat-icon amber"></ion-icon>
+        <div class="stat-value amber">{{ dayStreak }}</div>
+        <div class="stat-label">Day Streak</div>
+      </div>
+      <div class="stat-card">
+        <ion-icon name="calendar-outline" class="stat-icon lime"></ion-icon>
+        <div class="stat-value lime">{{ daysLeft }}</div>
+        <div class="stat-label">Days Left</div>
+      </div>
+      <div class="stat-card">
+        <ion-icon name="time-outline" class="stat-icon blue"></ion-icon>
+        <div class="stat-value blue">{{ avgMinutes }}</div>
+        <div class="stat-label">Avg Min</div>
+      </div>
+    </div>
+
+    <!-- Personal Information -->
+    <div class="section-label">Personal Information</div>
+    <div class="info-card fade-up">
+      <div class="info-row">
+        <span class="info-icon"><ion-icon name="call-outline"></ion-icon></span>
+        <div class="info-content">
+          <div class="info-label">Phone</div>
+          <div class="info-value">{{ profile.phone }}</div>
+        </div>
+      </div>
+      <div class="info-row">
+        <span class="info-icon"><ion-icon name="gift-outline"></ion-icon></span>
+        <div class="info-content">
+          <div class="info-label">Date of Birth</div>
+          <div class="info-value">{{ profile.dateOfBirth }}</div>
+        </div>
+      </div>
+      <div class="info-row">
+        <span class="info-icon"><ion-icon name="person-outline"></ion-icon></span>
+        <div class="info-content">
+          <div class="info-label">Gender</div>
+          <div class="info-value">{{ profile.gender }}</div>
+        </div>
+      </div>
+      <div class="info-row">
+        <span class="info-icon"><ion-icon name="card-outline"></ion-icon></span>
+        <div class="info-content">
+          <div class="info-label">Membership Plan</div>
+          <div class="info-value">{{ profile.membershipPlan }} · Expires {{ profile.expiryDate }}</div>
+        </div>
+        <span class="info-action" (click)="openRenewal()">Renew</span>
+      </div>
+    </div>
+
+    <!-- Account Settings Menu -->
+    <div class="section-label">Account</div>
+
+    <div class="menu-item fade-up" (click)="router.navigate(['/transactions'])">
+      <span class="menu-icon"><ion-icon name="receipt-outline"></ion-icon></span>
+      <div class="menu-content">
+        <div class="menu-label">Transaction History</div>
+        <div class="menu-sub">Gym visits &amp; shop purchases</div>
+      </div>
+      <span class="menu-arrow">›</span>
+    </div>
+
+    <div class="menu-item fade-up" (click)="openEdit()">
+      <span class="menu-icon"><ion-icon name="create-outline"></ion-icon></span>
+      <div class="menu-content">
+        <div class="menu-label">Edit Profile</div>
+        <div class="menu-sub">Update your personal info</div>
+      </div>
+      <span class="menu-arrow">›</span>
+    </div>
+
+    <div class="menu-item fade-up" (click)="openChangePassword()">
+      <span class="menu-icon"><ion-icon name="lock-closed-outline"></ion-icon></span>
+      <div class="menu-content">
+        <div class="menu-label">Change Password</div>
+        <div class="menu-sub">Security settings</div>
+      </div>
+      <span class="menu-arrow">›</span>
+    </div>
+
+    <div class="menu-item fade-up" (click)="openNotifications()">
+      <span class="menu-icon"><ion-icon name="notifications-outline"></ion-icon></span>
+      <div class="menu-content">
+        <div class="menu-label">Notifications</div>
+        <div class="menu-sub">Manage alerts & reminders</div>
+      </div>
+      <span class="menu-arrow">›</span>
+    </div>
+
+    <div class="menu-item fade-up">
+      <span class="menu-icon"><ion-icon name="moon-outline"></ion-icon></span>
+      <div class="menu-content">
+        <div class="menu-label">Dark Mode</div>
+        <div class="menu-sub">Switch between light and dark theme</div>
+      </div>
+      <ion-toggle [checked]="isDarkMode" (ionChange)="onThemeToggle($event)" class="theme-toggle"></ion-toggle>
+    </div>
+
+    <div class="menu-item fade-up" (click)="openProgressHistory()">
+      <span class="menu-icon"><ion-icon name="stats-chart-outline"></ion-icon></span>
+      <div class="menu-content">
+        <div class="menu-label">Progress History</div>
+        <div class="menu-sub">View past sessions & records</div>
+      </div>
+      <span class="menu-arrow">›</span>
+    </div>
+
+    <div class="menu-item danger fade-up" (click)="confirmLogout()">
+      <span class="menu-icon"><ion-icon name="log-out-outline"></ion-icon></span>
+      <div class="menu-content">
+        <div class="menu-label">Log Out</div>
+        <div class="menu-sub">Sign out of FordaGO</div>
+      </div>
+      <span class="menu-arrow">›</span>
+    </div>
+
+    <div style="height: 24px;"></div>
+
+  </div>
+</ion-content>
+
+<ion-footer class="fordago-app-footer ion-no-border">
+  <nav class="fordago-bottom-nav" aria-label="Main navigation">
+    <button type="button" class="fordago-nav-item" (click)="goToDashboard()" aria-label="Home">
+      <span class="fordago-nav-icon"><ion-icon name="home-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Home</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item" (click)="goToSchedule()" aria-label="Schedule">
+      <span class="fordago-nav-icon"><ion-icon name="calendar-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Schedule</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item fordago-scan-item" (click)="goToQr()" aria-label="Scan QR">
+      <span class="fordago-scan-button"><ion-icon name="scan-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Scan</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item" (click)="goToInventory()" aria-label="Shop">
+      <span class="fordago-nav-icon"><ion-icon name="bag-handle-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Shop</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item is-active" (click)="goToProfile()" aria-label="Profile">
+      <span class="fordago-nav-icon"><ion-icon name="person-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Profile</span>
+    </button>
+  </nav>
+</ion-footer>
+
+
+<!-- Edit Profile Modal -->
+<ion-modal
+  [isOpen]="editModalOpen"
+  (didDismiss)="closeEdit()"
+  [breakpoints]="[0, 0.55, 0.85]"
+  [initialBreakpoint]="0.55">
+  <ng-template>
+    <ion-content class="ion-padding modal-content">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Edit Profile</div>
+
+      <div class="profile-photo-editor">
+        <div class="photo-preview" *ngIf="!editForm.profileImage">{{ profile.initials }}</div>
+        <img *ngIf="editForm.profileImage" [src]="editForm.profileImage" alt="Profile preview" class="photo-preview photo-preview-img" />
+        <div class="photo-actions">
+          <label class="photo-btn" for="profileImageInput">Upload Photo</label>
+          <button type="button" class="photo-remove-btn" *ngIf="editForm.profileImage" (click)="removeProfileImage()">Remove</button>
+        </div>
+        <input
+          id="profileImageInput"
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          class="photo-file-input"
+          (change)="onProfileImageSelected($event)"
+        />
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="form-group">
+          <label class="form-label">First Name</label>
+          <ion-input
+            type="text"
+            [(ngModel)]="editForm.firstName"
+            placeholder="First name"
+            class="form-input">
+          </ion-input>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Last Name</label>
+          <ion-input
+            type="text"
+            [(ngModel)]="editForm.lastName"
+            placeholder="Last name"
+            class="form-input">
+          </ion-input>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <ion-input
+          type="email"
+          [(ngModel)]="editForm.email"
+          placeholder="Email address"
+          class="form-input">
+        </ion-input>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Phone</label>
+        <ion-input
+          type="tel"
+          appNoNegative
+          pattern="[0-9]*"
+          inputmode="numeric"
+          maxlength="11"
+          [(ngModel)]="editForm.phone"
+          (ionInput)="onPhoneIonInput($event)"
+          placeholder="09171234567"
+          class="form-input">
+        </ion-input>
+        <div *ngIf="phoneInvalid" style="margin-top:6px;color:#ff6b6b;font-size:12px;">
+          Invalid input: numbers only, exactly 11 digits (e.g. 09171234567).
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="modal-save-btn" [disabled]="phoneInvalid || savingProfile" (click)="saveProfile()">
+          {{ savingProfile ? 'Saving…' : 'Save Changes' }}
+        </button>
+        <button class="modal-cancel-btn" [disabled]="savingProfile" (click)="closeEdit()">
+          Cancel
+        </button>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<!-- Change Password Modal -->
+<ion-modal
+  [isOpen]="changePasswordModalOpen"
+  (didDismiss)="closeChangePassword()"
+  [breakpoints]="[0, 0.55, 0.75]"
+  [initialBreakpoint]="0.55">
+  <ng-template>
+    <ion-content class="ion-padding modal-content">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Change Password</div>
+
+      <div class="form-group">
+        <label class="form-label">Current Password</label>
+        <ion-input
+          type="password"
+          [(ngModel)]="passwordForm.current"
+          placeholder="Enter current password"
+          class="form-input">
+        </ion-input>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">New Password</label>
+        <ion-input
+          type="password"
+          [(ngModel)]="passwordForm.new"
+          placeholder="Enter new password"
+          class="form-input">
+        </ion-input>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Confirm Password</label>
+        <ion-input
+          type="password"
+          [(ngModel)]="passwordForm.confirm"
+          placeholder="Confirm new password"
+          class="form-input">
+        </ion-input>
+      </div>
+
+      <div class="modal-actions">
+        <button class="modal-save-btn" (click)="savePassword()">
+          Update Password
+        </button>
+        <button class="modal-cancel-btn" (click)="closeChangePassword()">
+          Cancel
+        </button>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<!-- Notifications Modal -->
+<ion-modal
+  [isOpen]="notificationsModalOpen"
+  (didDismiss)="closeNotifications()"
+  [breakpoints]="[0, 0.55, 0.85]"
+  [initialBreakpoint]="0.55">
+  <ng-template>
+    <ion-content class="ion-padding modal-content">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Notification Settings</div>
+
+      <div class="notif-setting" *ngFor="let setting of notificationSettings">
+        <div class="notif-setting-content">
+          <div class="notif-setting-title">{{ setting.label }}</div>
+          <div class="notif-setting-desc">{{ setting.description }}</div>
+        </div>
+        <ion-toggle
+          [(ngModel)]="setting.enabled"
+          class="notif-toggle">
+        </ion-toggle>
+      </div>
+
+      <div class="modal-actions">
+        <button class="modal-save-btn" (click)="saveNotificationSettings()">
+          Save Settings
+        </button>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<!-- Progress History Modal -->
+<ion-modal
+  [isOpen]="progressHistoryModalOpen"
+  (didDismiss)="closeProgressHistory()"
+  [breakpoints]="[0, 0.55, 0.95]"
+  [initialBreakpoint]="0.75">
+  <ng-template>
+    <ion-content class="ion-padding modal-content">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Progress History</div>
+
+      <div class="progress-history-list">
+        <div class="history-item" *ngFor="let item of progressHistory">
+          <div class="history-date">{{ item.date }}</div>
+          <div class="history-content">
+            <div class="history-title">{{ item.title }}</div>
+            <div class="history-detail">{{ item.detail }}</div>
+          </div>
+          <div class="history-value">{{ item.value }}</div>
+        </div>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<!-- Renewal Modal -->
+<ion-modal
+  [isOpen]="renewalModalOpen"
+  (didDismiss)="closeRenewal()"
+  [breakpoints]="[0, 0.55, 0.75]"
+  [initialBreakpoint]="0.55">
+  <ng-template>
+    <ion-content class="ion-padding modal-content">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Renew Membership</div>
+
+      <div class="renewal-info">
+        <div class="renewal-item">
+          <span class="renewal-label">Current Plan</span>
+          <span class="renewal-value">{{ profile.membershipPlan }}</span>
+        </div>
+        <div class="renewal-item">
+          <span class="renewal-label">Current Expiry</span>
+          <span class="renewal-value">{{ profile.expiryDate }}</span>
+        </div>
+        <div class="renewal-item">
+          <span class="renewal-label">Renewal Price</span>
+          <span class="renewal-value price">₱2,999</span>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="modal-save-btn" (click)="processRenewal()">
+          Proceed to Payment
+        </button>
+        <button class="modal-cancel-btn" (click)="closeRenewal()">
+          Cancel
+        </button>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<!-- Logout Confirmation Dialog -->
+<div class="confirm-overlay" *ngIf="logoutModalOpen">
+  <div class="confirm-box logout-box">
+    <div class="confirm-icon logout-icon">
+      <ion-icon name="log-out-outline"></ion-icon>
+    </div>
+    <div class="confirm-title">Logout Account?</div>
+    <div class="confirm-msg">Are you sure you want to logout?</div>
+    <div class="confirm-actions">
+      <button class="confirm-cancel" (click)="cancelLogout()">Cancel</button>
+      <button class="confirm-logout" (click)="logout()">Logout</button>
+    </div>
+  </div>
+</div>
+
+<app-notification-panel
+  [isOpen]="notifPanelOpen"
+  (closed)="closeNotifPanel()"
+  (unreadCountChange)="onUnreadCountChange($event)">
+</app-notification-panel>

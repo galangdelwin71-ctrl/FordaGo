@@ -1,0 +1,7 @@
+{
+  "name": "fordaGo",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}

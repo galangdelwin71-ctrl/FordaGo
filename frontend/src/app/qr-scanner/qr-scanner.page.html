@@ -1,0 +1,357 @@
+<!-- qr-scanner.page.html -->
+<app-header
+  subtitle="QR SCANNER"
+  [unreadCount]="unreadCount"
+  [profileImage]="profileImage"
+  [initials]="initials"
+  (equipmentClick)="goToEquipment()"
+  (notifClick)="openNotifPanel()"
+  (profileClick)="goToProfile()">
+</app-header>
+
+<ion-content [fullscreen]="false" class="fordago-page-content" [scrollY]="true">
+  <div class="scroll-wrap">
+
+    <!-- Scan Mode -->
+    <div class="section-label">Scan Mode</div>
+    <div class="mode-row">
+      <div
+        class="mode-card"
+        [class.active]="scanMode === 'attendance'"
+        (click)="setMode('attendance')"
+      >
+        <div class="mode-icon-wrap">
+          <ion-icon class="mode-emoji" name="person-outline"></ion-icon>
+        </div>
+        <div class="mode-name">Attendance</div>
+      </div>
+      <div
+        class="mode-card"
+        [class.active]="scanMode === 'equipment'"
+        (click)="setMode('equipment')"
+      >
+        <div class="mode-icon-wrap">
+          <ion-icon class="mode-emoji" name="barbell-outline"></ion-icon>
+        </div>
+        <div class="mode-name">Equipment</div>
+      </div>
+    </div>
+
+    <!-- Scanner Frame -->
+    <div class="scanner-wrap">
+      <div class="qr-frame">
+        <div class="qr-corner tl"></div>
+        <div class="qr-corner tr"></div>
+        <div class="qr-corner bl"></div>
+        <div class="qr-corner br"></div>
+        <div class="camera-center" *ngIf="!isScanning">
+          <ion-icon class="camera-emoji" name="camera-outline"></ion-icon>
+        </div>
+        <div [id]="'fordago-qr-reader'" class="camera-reader" [class.live]="isScanning"></div>
+      </div>
+      <div class="scan-label">{{ isScanning ? 'Scanning…' : 'Point camera at QR code' }}</div>
+      <div class="scan-sub">{{ scanStatusMessage }}</div>
+    </div>
+
+    <!-- Camera permission notice -->
+    <div class="permission-notice" *ngIf="cameraPermissionState === 'denied'">
+      <ion-icon name="camera-outline"></ion-icon>
+      <div class="permission-notice-text">
+        <span class="permission-notice-title">Camera access is blocked</span>
+        Open Settings → Apps → FordaGO → Permissions and enable Camera. Android won't show the permission popup again once it's been denied — it has to be turned on manually.
+      </div>
+    </div>
+    <div class="permission-notice" *ngIf="cameraPermissionState === 'unsupported'">
+      <ion-icon name="alert-circle-outline"></ion-icon>
+      <div class="permission-notice-text">
+        <span class="permission-notice-title">Camera not available</span>
+        This device or browser doesn't support camera scanning. Use Run Demo Scan instead.
+      </div>
+    </div>
+
+    <div class="scan-actions">
+      <button
+        class="scan-btn"
+        [class.scanning]="isScanning"
+        [disabled]="isProcessingScan"
+        (click)="isScanning ? stopScan() : startScan()"
+      >
+        <ion-icon class="scan-btn-icon" [name]="isScanning ? 'stop-circle-outline' : 'camera-outline'"></ion-icon>
+        {{ isScanning ? 'Stop Scanning' : 'Start Camera Scan' }}
+      </button>
+    </div>
+
+    <!-- My Scan Log -->
+    <div class="log-header">
+      <div class="log-title-wrap">
+        <span class="section-label" style="margin-bottom: 0;">My Scan Log</span>
+        <span class="my-badge">You only</span>
+      </div>
+      <button class="clear-btn" (click)="clearLog()">Clear</button>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="filter-row">
+      <button
+        class="filter-tab"
+        [class.active]="currentFilter === 'all'"
+        (click)="setFilter('all')"
+      >All</button>
+      <button
+        class="filter-tab"
+        [class.active]="currentFilter === 'attendance'"
+        (click)="setFilter('attendance')"
+      >Attendance</button>
+      <button
+        class="filter-tab"
+        [class.active]="currentFilter === 'equipment'"
+        (click)="setFilter('equipment')"
+      >Equipment</button>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-log" *ngIf="filteredLogs.length === 0">
+      No logs yet. Scan a QR code to start.
+    </div>
+
+    <!-- Log Items -->
+    <div
+      *ngFor="let log of filteredLogs; let i = index"
+      class="log-item"
+      [style.animation-delay]="(i * 0.04) + 's'"
+    >
+      <div class="log-icon-wrap" [ngClass]="log.type === 'attendance' ? 'att' : 'equip'">
+        <ion-icon class="log-emoji" [name]="log.type === 'attendance' ? 'person-outline' : 'barbell-outline'"></ion-icon>
+      </div>
+      <div class="log-info">
+        <div class="log-name">{{ log.label }}</div>
+        <div class="log-time">{{ log.date }}, {{ log.time }}</div>
+      </div>
+      <span class="log-badge" [ngClass]="log.type === 'attendance' ? 'att' : 'equip'">
+        {{ log.type === 'attendance' ? 'Check-in' : 'Equipment' }}
+      </span>
+    </div>
+
+  </div>
+</ion-content>
+
+<ion-footer class="fordago-app-footer ion-no-border">
+  <nav class="fordago-bottom-nav" aria-label="Main navigation">
+    <button type="button" class="fordago-nav-item" (click)="goToDashboard()" aria-label="Home">
+      <span class="fordago-nav-icon"><ion-icon name="home-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Home</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item" (click)="goToSchedule()" aria-label="Schedule">
+      <span class="fordago-nav-icon"><ion-icon name="calendar-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Schedule</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item fordago-scan-item is-active" (click)="goToQr()" aria-label="Scan QR">
+      <span class="fordago-scan-button"><ion-icon name="scan-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Scan</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item" (click)="goToInventory()" aria-label="Shop">
+      <span class="fordago-nav-icon"><ion-icon name="bag-handle-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Shop</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item" (click)="goToProfile()" aria-label="Profile">
+      <span class="fordago-nav-icon"><ion-icon name="person-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Profile</span>
+    </button>
+  </nav>
+</ion-footer>
+
+
+<!-- Notifications Overlay -->
+<div class="notif-overlay" *ngIf="notifPanelOpen" (click)="closeNotifPanel()">
+  <div class="notif-overlay-card" (click)="$event.stopPropagation()">
+    <div class="notif-panel-header">
+      <div class="notif-header-left">
+        <div class="notif-header-icon-wrap">
+          <ion-icon name="notifications" class="notif-header-icon"></ion-icon>
+        </div>
+        <div>
+          <div class="notif-header-title">Notifications</div>
+          <div class="notif-header-sub">{{ unreadCount > 0 ? unreadCount + ' unread' : 'All caught up' }}</div>
+        </div>
+      </div>
+      <div class="notif-header-actions">
+        <button class="notif-icon-btn notif-markread-btn" *ngIf="unreadCount > 0" (click)="markAllRead()" title="Mark all read">
+          <ion-icon name="checkmark-done-outline"></ion-icon>
+        </button>
+        <button class="notif-icon-btn notif-dismiss-btn" (click)="closeNotifPanel()" title="Close">
+          <ion-icon name="close-outline"></ion-icon>
+        </button>
+      </div>
+    </div>
+    <div class="notif-divider"></div>
+    <div class="notif-scroll-wrap">
+      <div class="notif-empty-state" *ngIf="notifications.length === 0">
+        <div class="notif-empty-glow"></div>
+        <ion-icon name="notifications-off-outline" class="notif-empty-icon"></ion-icon>
+        <div class="notif-empty-title">You're all caught up!</div>
+        <div class="notif-empty-sub">No new notifications right now.</div>
+      </div>
+      <button type="button" class="notif-item" *ngFor="let n of notifications" (click)="openNotification(n)" [class.is-unread]="n.unread">
+        <div class="notif-item-left">
+          <div class="notif-item-avatar" [class.is-unread]="n.unread">
+            <ion-icon name="megaphone-outline"></ion-icon>
+          </div>
+        </div>
+        <div class="notif-item-body">
+          <div class="notif-item-top">
+            <span class="notif-item-title">{{ n.title }}</span>
+            <span class="notif-new-badge" *ngIf="n.unread">New</span>
+          </div>
+          <div class="notif-item-msg">{{ n.message }}</div>
+          <div class="notif-item-meta" *ngIf="n.createdAt">
+            <ion-icon name="time-outline"></ion-icon>
+            {{ n.createdAt | date:'MMM d · h:mm a' }}
+          </div>
+        </div>
+        <div class="notif-item-chevron"><ion-icon name="chevron-forward-outline"></ion-icon></div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Notification Detail Overlay -->
+<div class="notif-overlay" *ngIf="notifDetailOpen" (click)="closeNotificationDetail()">
+  <div class="notif-overlay-card" (click)="$event.stopPropagation()">
+    <div class="notif-panel-header notif-detail-header">
+      <button class="notif-back-btn" (click)="backToNotifList()">
+        <ion-icon name="chevron-back-outline"></ion-icon>
+        All Notifications
+      </button>
+      <button class="notif-icon-btn notif-dismiss-btn" (click)="closeAllNotifications()" title="Close">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+    <div class="notif-scroll-wrap">
+      <div class="notif-detail-hero">
+        <div class="notif-detail-hero-glow"></div>
+        <div class="notif-detail-hero-icon-wrap">
+          <ion-icon name="megaphone-outline"></ion-icon>
+        </div>
+        <div class="notif-detail-hero-title">{{ selectedNotification?.title }}</div>
+        <div class="notif-detail-hero-date" *ngIf="selectedNotification?.createdAt">
+          <ion-icon name="time-outline"></ion-icon>
+          {{ selectedNotification?.createdAt | date:'MMMM d, y \u00b7 h:mm a' }}
+        </div>
+      </div>
+      <div class="notif-detail-body-wrap">
+        <div class="notif-detail-body">{{ selectedNotification?.message }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ─── Attendance Success Modal ──────────────────────────── -->
+<ion-modal
+  [isOpen]="attendanceModalOpen"
+  (didDismiss)="closeAttendanceModal()"
+  [breakpoints]="[0, 1]"
+  [initialBreakpoint]="1"
+  class="bottom-sheet-modal"
+>
+  <ng-template>
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="success-wrap">
+        <div class="success-icon-ring">
+          <ion-icon class="success-emoji" name="checkmark-circle-outline"></ion-icon>
+        </div>
+        <div class="modal-title">Attendance Recorded!</div>
+        <div class="modal-sub">Today, {{ scannedTime }}</div>
+        <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+          <span class="confirmed-badge">
+            <ion-icon name="checkmark-done-outline"></ion-icon>
+            Check-in Confirmed
+          </span>
+        </div>
+        <button class="done-btn" (click)="closeAttendanceModal()">Done</button>
+      </div>
+    </div>
+  </ng-template>
+</ion-modal>
+
+<!-- ─── Pending Payment Modal (Daily Pass) ────────────────── -->
+<ion-modal
+  [isOpen]="pendingModalOpen"
+  (didDismiss)="closePendingModal()"
+  [breakpoints]="[0, 1]"
+  [initialBreakpoint]="1"
+  class="bottom-sheet-modal"
+>
+  <ng-template>
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="success-wrap">
+        <div class="success-icon-ring" style="background: rgba(255,180,0,0.1); border-color: rgba(255,180,0,0.3);">
+          <ion-icon class="success-emoji" name="hourglass-outline"></ion-icon>
+        </div>
+        <div class="modal-title">Payment Pending</div>
+        <div class="modal-sub">Today, {{ scannedTime }}</div>
+        <p style="text-align:center; color:#aaa; font-size:13px; line-height:1.6; margin-bottom:20px;">
+          {{ checkInMessage }}
+        </p>
+        <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+          <span class="confirmed-badge" style="background: rgba(255,180,0,0.1); border-color: rgba(255,180,0,0.3); color: #ffb400;">
+            <ion-icon name="hourglass-outline"></ion-icon>
+            Awaiting Admin Confirmation
+          </span>
+        </div>
+        <button class="done-btn" (click)="closePendingModal()">OK, Got it</button>
+      </div>
+    </div>
+  </ng-template>
+</ion-modal>
+
+<!-- ─── Equipment Tutorial Modal ─────────────────────────── -->
+<ion-modal
+  [isOpen]="tutorialModalOpen"
+  (didDismiss)="closeTutorialModal()"
+  [breakpoints]="[0, 1]"
+  [initialBreakpoint]="1"
+  class="bottom-sheet-modal tutorial-modal"
+>
+  <ng-template>
+    <div class="modal-sheet tutorial-sheet">
+      <div class="modal-handle"></div>
+
+      <div class="equip-header" *ngIf="activeEquipment">
+        <div class="equip-icon-big">
+          <ion-icon class="equip-emoji" name="barbell-outline"></ion-icon>
+        </div>
+        <div>
+          <div class="equip-name">{{ activeEquipment.name }}</div>
+          <div class="equip-cat">{{ activeEquipment.category }}</div>
+        </div>
+      </div>
+
+      <div class="warning-box" *ngIf="activeEquipment">
+        <ion-icon class="warning-emoji" name="warning-outline"></ion-icon>
+        <div class="warning-text">{{ activeEquipment.warning }}</div>
+      </div>
+
+      <div class="tut-section" *ngIf="activeEquipment">
+        <div class="tut-section-title">Muscles Worked</div>
+        <div class="muscle-tags">
+          <span class="muscle-tag" *ngFor="let m of activeEquipment.muscles">{{ m }}</span>
+        </div>
+      </div>
+
+      <div class="tut-section" *ngIf="activeEquipment">
+        <div class="tut-section-title">How to Use</div>
+        <div class="tut-step" *ngFor="let step of activeEquipment.steps; let j = index">
+          <span class="step-num">{{ j + 1 }}</span>
+          <span class="step-text">{{ step }}</span>
+        </div>
+      </div>
+
+      <button class="tut-done-btn" (click)="closeTutorialModal()">Got it</button>
+    </div>
+  </ng-template>
+</ion-modal>

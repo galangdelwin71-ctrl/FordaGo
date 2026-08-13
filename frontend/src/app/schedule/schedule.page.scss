@@ -1,0 +1,2460 @@
+// schedule.page.scss - FordaGO Modern Redesign - Theme Aware
+
+// ── CSS Custom Properties ──────────────────────────
+:root {
+  --text-primary: #FFFFFF;
+  --text-secondary: rgba(255,255,255,0.75);
+  --text-muted: rgba(255,255,255,0.5);
+  --text-tertiary: rgba(255,255,255,0.35);
+  --accent-lime: #FFD600;
+  --accent-amber: #FF9500;
+  --accent-red: #FF4461;
+  --accent-blue: #4A9EFF;
+  --accent-green: #00D68F;
+  --accent-shadow: rgba(255,214,0,0.3);
+  --accent-border: rgba(255,214,0,0.25);
+  --accent-dim: rgba(255,214,0,0.1);
+  --bg-primary: #06080F;
+  --bg-secondary: #0B0E1A;
+  --bg-tertiary: #111428;
+  --overlay-light: rgba(255,255,255,0.04);
+  --overlay-medium: rgba(255,255,255,0.07);
+  --overlay-heavy: rgba(255,255,255,0.1);
+  --border-primary: rgba(255,255,255,0.1);
+  --border-secondary: rgba(255,255,255,0.08);
+  --glass-bg: rgba(255,255,255,0.03);
+  --glass-border: rgba(255,255,255,0.06);
+  --glass-blur: blur(20px);
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
+  --shadow-glow: 0 0 20px rgba(255,214,0,0.15);
+  --shadow-card: 0 4px 24px rgba(0,0,0,0.3);
+  --transition-fast: 0.15s ease;
+  --transition-smooth: 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+ion-content {
+  --background: var(--bg-primary);
+}
+
+// ── Scroll Wrapper ───────────────────────────────────────
+.scroll-wrap {
+  padding: 16px 16px 90px;
+}
+
+// ── Month Row ────────────────────────────────────────────
+.month-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.month-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.month-nav {
+  display: flex;
+  gap: 6px;
+}
+
+.nav-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid var(--border-primary);
+  background: var(--overlay-light);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  line-height: 1;
+  transition: all 0.15s;
+
+  &:hover  { background: var(--overlay-medium); color: var(--text-primary); }
+  &:active { opacity: 0.7; }
+}
+
+// ── Week Strip ───────────────────────────────────────────
+.week-strip {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  margin-bottom: 20px;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar { display: none; }
+}
+
+.day-pill {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 14px 8px;
+  border-radius: 14px;
+  background: var(--overlay-light);
+  border: 1px solid var(--border-secondary);
+  cursor: pointer;
+  transition: all 0.18s;
+  min-width: 50px;
+
+  &:hover { border-color: var(--border-primary); background: var(--overlay-medium); }
+
+  &.active {
+    background: var(--accent-lime);
+    border-color: transparent;
+    box-shadow: 0 4px 16px var(--accent-shadow);
+
+    .day-name, .day-num { color: #000; }
+    .dot-indicator { background: rgba(0,0,0,0.5); }
+  }
+
+  .day-name {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  .day-num {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .dot-indicator {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--accent-lime);
+  }
+}
+
+// ── Section Header ───────────────────────────────────────
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.session-count {
+  font-size: 10px;
+  color: var(--text-muted);
+  background: var(--overlay-light);
+  border: 0.5px solid var(--border-secondary);
+  padding: 2px 9px;
+  border-radius: 20px;
+}
+
+// ── Empty State ──────────────────────────────────────────
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  animation: fadeUp 0.25s ease both;
+
+  .empty-icon {
+    font-size: 38px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .empty-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  .empty-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+}
+
+// ── Sessions List ────────────────────────────────────────
+.sessions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+// ── Session Card ─────────────────────────────────────────
+.session-card {
+  background: var(--overlay-light);
+  border: 1px solid var(--border-secondary);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  transition: border-color 0.18s, background 0.18s;
+  animation: fadeUp 0.25s ease both;
+
+  &:hover { border-color: var(--accent-border); background: var(--overlay-medium); }
+
+  &.missed { opacity: 0.55; }
+
+  &.done {
+    .session-title { text-decoration: line-through; color: var(--text-muted); }
+  }
+}
+
+// ── Time Column ───────────────────────────────────────────
+.time-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 38px;
+
+  .time-val {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent-lime);
+    line-height: 1;
+  }
+
+  .time-ampm {
+    font-size: 9px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .time-line {
+    width: 1px;
+    flex: 1;
+    min-height: 28px;
+    background: var(--border-secondary);
+    margin: 3px 0;
+  }
+
+  .time-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    border: 2px solid var(--accent-lime);
+    flex-shrink: 0;
+  }
+}
+
+// ── Session Info ─────────────────────────────────────────
+.session-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.session-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.session-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.session-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+// ── Custom Target Tag ────────────────────────────────────
+.session-target {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  .target-icon { font-size: 10px; }
+  .target-icon ion-icon { font-size: 11px; color: var(--accent-lime); }
+
+  .target-text {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--accent-lime);
+    background: var(--accent-dim);
+    border: 0.5px solid var(--accent-border);
+    padding: 1px 7px;
+    border-radius: 20px;
+  }
+}
+
+.session-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 5px;
+}
+
+.session-coach {
+  font-size: 10px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  .coach-icon { display: inline-flex; align-items: center; }
+  .coach-icon ion-icon { font-size: 12px; color: var(--text-muted); }
+
+  .coach-dot {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--border-secondary);
+    flex-shrink: 0;
+  }
+}
+
+// ── Exercise List (on card) ───────────────────────────────
+.exercise-list {
+  margin-top: 10px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-secondary);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.exercise-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 0.5px solid var(--border-secondary);
+
+  .ex-list-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+
+  .ex-list-count {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+}
+
+.exercise-items {
+  padding: 4px 0;
+}
+
+// Column labels above the exercise rows ("Exercise" / "Sets × Reps").
+// Padding matches .exercise-item's own left/right padding exactly (12px)
+// so "Exercise" and "Sets × Reps" sit flush at the same inset from their
+// respective edges as the row content below — no spacer column, since a
+// spacer pushed "Exercise" inward on the left while "Sets × Reps" stayed
+// flush on the right, making the two sides look uneven.
+.ex-columns-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px 8px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border-secondary);
+}
+
+.ex-columns-name,
+.ex-columns-detail {
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+
+.ex-columns-name { flex: 1; }
+
+.exercise-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid var(--border-tertiary);
+  }
+
+  .ex-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 7px;
+    background: var(--accent-dim);
+    border: 0.5px solid var(--accent-border);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--accent-lime);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .ex-name {
+    font-size: 15px;
+    font-weight: 450;
+    color: var(--text-secondary);
+    flex: 1;
+  }
+
+  .ex-detail {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    background: var(--overlay-medium);
+    padding: 4px 10px;
+    border-radius: 7px;
+    border: 0.5px solid var(--border-secondary);
+    flex-shrink: 0;
+  }
+}
+
+// ── Badges ───────────────────────────────────────────────
+.badge {
+  flex-shrink: 0;
+  font-size: 9px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+
+  &.badge-green {
+    background: var(--accent-dim);
+    color: var(--accent-lime);
+    border: 1px solid var(--accent-border);
+  }
+
+  &.badge-amber {
+    background: rgba(255,149,0,0.1);
+    color: var(--accent-amber);
+    border: 1px solid rgba(255,149,0,0.2);
+  }
+
+  &.badge-muted {
+    background: var(--overlay-light);
+    color: var(--text-muted);
+    border: 1px solid var(--border-primary);
+  }
+
+  &.badge-done {
+    background: rgba(0,214,143,0.1);
+    color: var(--accent-green);
+    border: 1px solid rgba(0,214,143,0.2);
+  }
+}
+
+// ── Card Action Buttons ──────────────────────────────────
+.card-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.action-btn {
+  flex: 1;
+  height: 30px;
+  border-radius: 8px;
+  border: 0.5px solid var(--border-secondary);
+  background: var(--overlay-medium);
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.15s;
+
+  ion-icon { font-size: 12px; }
+
+  &:hover  { background: var(--overlay-heavy); color: var(--text-primary); border-color: var(--border-primary); }
+  &:active { opacity: 0.7; }
+
+  &.primary {
+    background: var(--accent-dim);
+    color: var(--accent-lime);
+    border-color: var(--accent-border);
+    &:hover { background: rgba(255,214,0,0.2); }
+  }
+
+  &.danger {
+    background: rgba(239,68,68,0.08);
+    color: #ef4444;
+    border-color: rgba(239,68,68,0.18);
+    &:hover { background: rgba(239,68,68,0.15); }
+  }
+}
+
+// ── Inline Edit Panel ────────────────────────────────────
+.edit-panel {
+  display: none;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 0.5px solid var(--border-secondary);
+
+  &.open { display: block; }
+
+  .edit-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 8px;
+
+    &.single {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .edit-input,
+  .edit-select {
+    height: 36px;
+    background: var(--overlay-light);
+    border: 1px solid var(--border-primary);
+    border-radius: 10px;
+    padding: 0 10px;
+    color: var(--text-primary);
+    font-size: 12px;
+    outline: none;
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    transition: border-color 0.15s;
+
+    &:focus { border-color: var(--accent-border); }
+    option  { background: var(--bg-surface); }
+  }
+
+  .target-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+
+    .target-input-icon {
+      position: absolute;
+      left: 10px;
+      font-size: 13px;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .target-input {
+      padding-left: 32px;
+    }
+  }
+
+  .edit-actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  .edit-save {
+    flex: 1;
+    height: 32px;
+    border-radius: 8px;
+    background: #FFD600;
+    color: #111317;
+    border: none;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background 0.15s;
+    &:hover { background: #ffe033; }
+  }
+
+  .edit-delete {
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 8px;
+    background: rgba(239,68,68,0.08);
+    color: #ef4444;
+    border: 0.5px solid rgba(239,68,68,0.18);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+    &:hover { background: rgba(239,68,68,0.15); }
+  }
+}
+
+// ── Home Workout Suggestion ───────────────────────────────
+.hw-card {
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-top: 16px;
+  animation: fadeUp 0.3s 0.2s ease both;
+
+  .hw-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .hw-icon-wrap {
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    background: var(--accent-dim);
+    border: 0.5px solid var(--accent-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .hw-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent-lime);
+  }
+
+  .hw-sub {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 1px;
+  }
+
+  .hw-exercises {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .hw-ex {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: var(--overlay-light);
+    border-radius: 8px;
+    border: 0.5px solid var(--border-secondary);
+  }
+
+  .ex-num {
+    width: 20px; height: 20px;
+    border-radius: 6px;
+    background: var(--accent-dim);
+    border: 0.5px solid var(--accent-border);
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--accent-lime);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .ex-text {
+    font-size: 11px;
+    color: var(--text-secondary);
+    flex: 1;
+  }
+
+  .hw-view-btn {
+    margin-top: 10px;
+    width: 100%;
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid var(--accent-border);
+    background: var(--accent-dim);
+    color: var(--accent-lime);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+
+    &:hover {
+      background: rgba(255,214,0,0.18);
+    }
+  }
+}
+
+// ── FAB ──────────────────────────────────────────────────
+.fab-btn {
+  --background: var(--accent-lime);
+  --background-hover: var(--accent-lime);
+  --background-activated: var(--accent-lime);
+  --border-radius: 50%;
+  --color: #000000;
+  width: 56px;
+  height: 56px;
+  box-shadow: 0 4px 24px var(--accent-shadow);
+
+  .fab-plus {
+    font-size: 30px;
+    font-weight: 400;
+    color: #000;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+// ── Bottom Tab Bar ────────────────────────────────────────
+.custom-tab-bar {
+  --background: var(--bg-surface-elevated);
+  --border: 1px solid var(--border-secondary);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 6px 0 env(safe-area-inset-bottom, 10px);
+  height: 64px;
+
+  .tab-btn {
+    --color: var(--text-muted);
+    --color-selected: var(--accent-lime);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    flex: 1;
+    padding: 4px 0;
+    transition: opacity 0.15s;
+
+    &:active { opacity: 0.7; }
+
+    &.active .tab-label { color: var(--accent-lime); }
+    &.active .tab-icon, &.active ion-icon  { filter: drop-shadow(0 0 6px var(--accent-shadow)); }
+
+    .tab-icon, ion-icon { font-size: 22px; transition: filter 0.2s; }
+
+    .tab-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.2px;
+    }
+  }
+}
+
+// ── Add Workout Modal ─────────────────────────────────────
+.modal-content {
+  --background: #0B0E1A;
+}
+
+.field-icon ion-icon,
+.target-input-icon ion-icon,
+.hw-icon-wrap ion-icon {
+  font-size: 16px;
+}
+
+.modal-sheet {
+  padding: 0 16px calc(96px + env(safe-area-inset-bottom));
+
+  .modal-handle {
+    width: 36px; height: 3px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.1);
+    margin: 14px auto 18px;
+  }
+
+  .modal-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #FFFFFF;
+    margin-bottom: 20px;
+    letter-spacing: -0.3px;
+  }
+}
+
+// ── Form Fields ──────────────────────────────────────────
+.field-group { margin-bottom: 14px; }
+
+.field-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+
+  .label-optional {
+    font-weight: 400;
+    color: rgba(255,255,255,0.35);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+}
+
+.field-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  .field-icon {
+    position: absolute;
+    left: 12px;
+    font-size: 14px;
+    color: rgba(255,255,255,0.5);
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  input,
+  select {
+    width: 100%;
+    height: 44px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding-left: 38px;
+    padding-right: 12px;
+    color: #FFFFFF;
+    font-size: 13px;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    transition: border-color 0.15s;
+
+    &:focus { border-color: rgba(255,214,0,0.25); }
+    option  { background: #0B0E1A; }
+  }
+}
+
+.field-warning {
+  display: block;
+  font-size: 11px;
+  color: #FF6B6B;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+// ── Target Suggestions (chips) ────────────────────────────
+.target-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.target-chip {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    border-color: rgba(255,214,0,0.25);
+    color: #FFD600;
+    background: rgba(255,214,0,0.1);
+  }
+
+  &.selected {
+    border-color: rgba(255,214,0,0.25);
+    color: #FFD600;
+    background: rgba(255,214,0,0.1);
+  }
+}
+
+// ── Modal Exercise Preview ────────────────────────────────
+.modal-exercise-preview {
+  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 14px;
+  animation: fadeUp 0.2s ease both;
+
+  .preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    background: rgba(0,0,0,0.2);
+
+    .preview-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .preview-sub {
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+    }
+  }
+
+  .preview-list {
+    padding: 4px 0;
+  }
+
+  .preview-ex {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+
+    &:not(:last-child) {
+      border-bottom: 0.5px solid #1e1e1e;
+    }
+
+    .ex-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: rgba(255,214,0,0.1);
+      border: 1px solid rgba(255,214,0,0.25);
+      font-size: 9px;
+      font-weight: 700;
+      color: #FFD600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .ex-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.9);
+      flex: 1;
+    }
+
+    .ex-detail {
+      font-size: 12px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.45);
+      background: rgba(255,255,255,0.05);
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+  }
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.modal-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  background: linear-gradient(180deg, rgba(11,14,26,0) 0%, rgba(11,14,26,0.92) 26%, rgba(11,14,26,1) 100%);
+  padding-top: 12px;
+  padding-bottom: calc(4px + env(safe-area-inset-bottom));
+}
+
+.btn {
+  height: 44px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: none;
+
+  &:active { opacity: 0.8; }
+
+  &.btn-secondary {
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.5);
+    border: 0.5px solid rgba(255,255,255,0.08);
+    &:hover { background: #262626; }
+  }
+
+  &.btn-primary {
+    background: #FFD600;
+    color: #0d0d0d;
+    font-weight: 700;
+    &:hover { background: #d4f03e; }
+    &:disabled {
+      background: rgba(255,214,0,0.4);
+      color: rgba(13,13,13,0.5);
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+  }
+}
+
+// ── Animations ───────────────────────────────────────────
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+// ── Dark Mode (explicit defaults to ensure reversion from light mode) ────
+.history-session-title { color: #FFFFFF; }
+.history-session-meta  { color: rgba(255,255,255,0.5); ion-icon { color: rgba(255,255,255,0.35); } }
+.history-ex-name   { color: rgba(255,255,255,0.5); }
+.history-ex-detail { color: rgba(255,255,255,0.35); }
+.history-ex-check  { &.checked { color: #00D68F; } &:not(.checked) { color: rgba(255,255,255,0.4); } }
+.history-date-label { color: rgba(255,255,255,0.5); }
+
+.wplan-day-name    { color: #FFFFFF; }
+.wplan-rest-label  { color: rgba(255,255,255,0.5); }
+.wplan-day-tab {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.5);
+  &.rest { color: rgba(255,255,255,0.35); }
+}
+
+.field-label { color: rgba(255,255,255,0.5); }
+.field-wrap {
+  input, select { color: #FFFFFF; border-color: rgba(255,255,255,0.08); }
+}
+
+.notif-modal-item {
+  .notif-title { color: #FFFFFF; }
+  .notif-msg   { color: rgba(255,255,255,0.5); }
+  .notif-dot   { &.unread { background: #FF4461; } &.read { background: rgba(255,255,255,0.35); } }
+}
+
+.modal-title { color: #FFFFFF; }
+.modal-sub   { color: rgba(255,255,255,0.5); }
+
+// ── Light Mode ──────────────────────────────────────────
+:host-context(body.light-theme) {
+  // ── CSS Variable overrides ──────────────────────────
+  --surface:      #ffffff;
+  --surface2:     rgba(15,23,42,0.05);
+  --border:       rgba(15,23,42,0.09);
+  --text:         #0f172a;
+  --muted:        rgba(15,23,42,0.5);
+  --muted2:       rgba(15,23,42,0.4);
+  --lime:         #d97706;
+  --lime-dim:     rgba(245,158,11,0.1);
+  --lime-border:  rgba(245,158,11,0.25);
+
+  // ── Page background ─────────────────────────────────
+  ion-content { --background: #f4f5f8 !important; }
+  .scroll-wrap { background: transparent; }
+
+  // ── Month / Navigation ───────────────────────────────
+  .month-label { color: rgba(15,23,42,0.5); }
+  .nav-btn {
+    background: rgba(15,23,42,0.05);
+    border-color: rgba(15,23,42,0.1);
+    color: rgba(15,23,42,0.6);
+  }
+
+  // ── Day Strip ────────────────────────────────────────
+  .day-pill {
+    background: rgba(15,23,42,0.04);
+    border-color: rgba(15,23,42,0.09);
+    &:hover { background: rgba(15,23,42,0.07); border-color: rgba(15,23,42,0.14); }
+    .day-name { color: rgba(15,23,42,0.4); }
+    .day-num  { color: #0f172a; }
+    .dot-indicator { background: #d97706; }
+  }
+
+  // ── Section header ───────────────────────────────────
+  .section-title { color: rgba(15,23,42,0.45); }
+  .session-count {
+    color: rgba(15,23,42,0.45);
+    background: rgba(15,23,42,0.04);
+    border-color: rgba(15,23,42,0.09);
+  }
+  .icon-action-btn {
+    background: rgba(15,23,42,0.05);
+    border-color: rgba(15,23,42,0.1);
+    color: rgba(15,23,42,0.5);
+    &:hover { background: rgba(15,23,42,0.09); color: #d97706; border-color: rgba(245,158,11,0.3); }
+  }
+
+  // ── Session Card ─────────────────────────────────────
+  .session-card {
+    background: #ffffff;
+    border-color: rgba(15,23,42,0.09);
+    box-shadow: 0 2px 8px rgba(15,23,42,0.06);
+    &:hover { border-color: rgba(245,158,11,0.25); background: #ffffff; }
+  }
+  .session-title { color: #0f172a; }
+  .session-meta  { color: rgba(15,23,42,0.5); }
+  .session-coach { color: rgba(15,23,42,0.45); }
+  .session-coach .coach-icon ion-icon { color: rgba(15,23,42,0.4); }
+  .session-coach .coach-dot { background: rgba(15,23,42,0.15); }
+  .session-target .target-text {
+    color: #d97706;
+    background: rgba(245,158,11,0.1);
+    border-color: rgba(245,158,11,0.25);
+  }
+  .session-target .target-icon ion-icon { color: #d97706; }
+
+  // Time column
+  .time-col {
+    .time-val  { color: #d97706; }
+    .time-ampm { color: rgba(15,23,42,0.4); }
+    .time-line { background: rgba(15,23,42,0.1); }
+    .time-dot  { border-color: #d97706; }
+  }
+
+  // Badges
+  .badge.badge-green  { background: rgba(245,158,11,0.1); color: #d97706; border-color: rgba(245,158,11,0.25); }
+  .badge.badge-amber  { background: rgba(249,115,22,0.1); color: #ea580c; border-color: rgba(249,115,22,0.2); }
+  .badge.badge-muted  { background: rgba(15,23,42,0.05); color: rgba(15,23,42,0.45); border-color: rgba(15,23,42,0.1); }
+  .badge.badge-done   { background: rgba(16,185,129,0.1); color: #059669; border-color: rgba(16,185,129,0.2); }
+
+  // Exercise list on session card
+  .exercise-list {
+    background: rgba(15,23,42,0.03);
+    border-color: rgba(15,23,42,0.08);
+  }
+  .exercise-list-header {
+    border-bottom-color: rgba(15,23,42,0.08);
+    .ex-list-title { color: rgba(15,23,42,0.45); }
+    .ex-list-count { color: rgba(15,23,42,0.35); }
+  }
+  .ex-columns-header { border-bottom-color: rgba(15,23,42,0.08); }
+  .ex-columns-name,
+  .ex-columns-detail { color: rgba(15,23,42,0.45); }
+  .exercise-item {
+    &:not(:last-child) { border-bottom-color: rgba(15,23,42,0.06); }
+    .ex-num    { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.22); color: #d97706; }
+    .ex-name   { color: #0f172a; }
+    .ex-detail { color: rgba(15,23,42,0.5); background: rgba(15,23,42,0.05); border-color: rgba(15,23,42,0.09); }
+  }
+
+  // Card action buttons
+  .card-actions .action-btn {
+    background: rgba(15,23,42,0.05);
+    border-color: rgba(15,23,42,0.1);
+    color: rgba(15,23,42,0.6);
+    &:hover { background: rgba(15,23,42,0.09); color: #0f172a; border-color: rgba(15,23,42,0.15); }
+    &.primary { background: rgba(245,158,11,0.1); color: #d97706; border-color: rgba(245,158,11,0.25); &:hover { background: rgba(245,158,11,0.18); } }
+    &.danger  { background: rgba(239,68,68,0.07); color: #dc2626; border-color: rgba(239,68,68,0.18); }
+  }
+
+  // Inline edit panel
+  .edit-panel {
+    border-top-color: rgba(15,23,42,0.09);
+    .edit-input, .edit-select {
+      background: rgba(15,23,42,0.05);
+      border-color: rgba(15,23,42,0.12);
+      color: #0f172a;
+      option { background: #ffffff; color: #0f172a; }
+      &:focus { border-color: rgba(245,158,11,0.4); }
+    }
+    .edit-save { background: rgba(245,158,11,0.1); color: #d97706; border-color: rgba(245,158,11,0.25); }
+  }
+
+  // Edit exercise rows (inside edit panel and modals)
+  .edit-exercises-title { color: rgba(15,23,42,0.5); }
+  .add-ex-btn { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.25); color: #d97706; }
+  .ex-edit-name, .ex-edit-sets, .ex-edit-reps {
+    background: rgba(15,23,42,0.05);
+    border-color: rgba(15,23,42,0.12);
+    color: #0f172a;
+    &:focus { border-color: rgba(245,158,11,0.4); }
+  }
+
+  // Home workout card
+  .hw-card {
+    background: rgba(245,158,11,0.05);
+    border-color: rgba(245,158,11,0.2);
+    .hw-title { color: #d97706; }
+    .hw-sub   { color: rgba(15,23,42,0.5); }
+    .hw-ex { background: rgba(15,23,42,0.04); border-color: rgba(15,23,42,0.08); }
+    .ex-text { color: #0f172a; }
+    .ex-num  { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.22); color: #d97706; }
+    .hw-view-btn { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.25); color: #d97706; }
+  }
+
+  // Empty state
+  .empty-state {
+    .empty-icon  { color: rgba(15,23,42,0.2); }
+    .empty-title { color: #0f172a; }
+    .empty-sub   { color: rgba(15,23,42,0.45); }
+  }
+
+  // ── All Modals (shared) ──────────────────────────────
+  ion-content.modal-content { --background: #ffffff !important; }
+  .modal-sheet {
+    background: #ffffff;
+    border-top-color: rgba(15,23,42,0.09);
+  }
+  .modal-handle { background: rgba(15,23,42,0.12); }
+  .modal-sheet .modal-title { color: #0f172a; }
+  .modal-title { color: #0f172a; }
+  .modal-sub   { color: rgba(15,23,42,0.5); }
+
+  // Modal gradient footer
+  .modal-actions {
+    background: linear-gradient(180deg, rgba(244,245,248,0) 0%, rgba(244,245,248,0.95) 26%, #f4f5f8 100%);
+  }
+  .btn.btn-secondary {
+    background: rgba(15,23,42,0.06);
+    color: rgba(15,23,42,0.6);
+    border-color: rgba(15,23,42,0.1);
+  }
+
+  // Form fields (shared across Add Workout & Week Plan modals)
+  .field-label { color: rgba(15,23,42,0.5); }
+  .field-wrap {
+    input, select {
+      background: rgba(15,23,42,0.05);
+      border-color: rgba(15,23,42,0.09);
+      color: #0f172a;
+      option { background: #ffffff; color: #0f172a; }
+      &:focus { border-color: #d97706; }
+    }
+    .field-icon { color: rgba(15,23,42,0.4); }
+  }
+  .target-chip {
+    background: rgba(15,23,42,0.05);
+    border-color: rgba(15,23,42,0.22);
+    color: rgba(15,23,42,0.65);
+    &:hover, &.selected { background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.45); color: #b45309; font-weight: 700; }
+  }
+  .wplan-exercises-empty { color: rgba(15,23,42,0.4); }
+
+  // Exercise preview list (inside Add Workout modal)
+  .modal-exercise-preview {
+    background: rgba(15,23,42,0.03);
+    border-color: rgba(15,23,42,0.08);
+    .preview-header {
+      background: rgba(15,23,42,0.04);
+      border-bottom-color: rgba(15,23,42,0.08);
+      .preview-title { color: rgba(15,23,42,0.45); }
+      .preview-sub   { color: rgba(15,23,42,0.35); }
+    }
+    .preview-ex {
+      &:not(:last-child) { border-bottom-color: rgba(15,23,42,0.06); }
+      .ex-num    { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.22); color: #d97706; }
+      .ex-name   { color: #0f172a; }
+      .ex-detail { color: rgba(15,23,42,0.5); background: rgba(15,23,42,0.05); border-color: rgba(15,23,42,0.09); }
+    }
+  }
+
+  // ── History Modal ─────────────────────────────────────
+  .history-empty {
+    .empty-icon  { color: rgba(15,23,42,0.2); }
+    .empty-title { color: #0f172a; }
+    .empty-sub   { color: rgba(15,23,42,0.45); }
+  }
+  .history-date-label { color: rgba(15,23,42,0.45); }
+  .history-session-card {
+    background: #ffffff;
+    border-color: rgba(15,23,42,0.09);
+    box-shadow: 0 2px 8px rgba(15,23,42,0.05);
+  }
+  .history-session-title { color: #0f172a; }
+  .history-session-meta  { color: rgba(15,23,42,0.5); ion-icon { color: rgba(15,23,42,0.4); } }
+  .history-ex-name   { color: rgba(15,23,42,0.5); }
+  .history-ex-detail { color: rgba(15,23,42,0.4); }
+  .history-ex-check {
+    &.checked     { color: #059669; }
+    &:not(.checked) { color: rgba(15,23,42,0.4); }
+  }
+
+  // ── Week Plan Modal ───────────────────────────────────
+  .wplan-day-tab {
+    background: rgba(15,23,42,0.05);
+    border-color: rgba(15,23,42,0.09);
+    color: rgba(15,23,42,0.5);
+    &.active { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.25); color: #d97706; }
+    &.rest   { color: rgba(15,23,42,0.4); }
+  }
+  .week-plan-day-editor {
+    background: rgba(15,23,42,0.03);
+    border-color: rgba(15,23,42,0.08);
+  }
+  .wplan-day-name    { color: #0f172a; }
+  .wplan-rest-label  { color: rgba(15,23,42,0.5); }
+  .toggle-slider {
+    background: rgba(15,23,42,0.1);
+    border-color: rgba(15,23,42,0.15);
+    &::before { background: rgba(15,23,42,0.35); }
+  }
+  .toggle-switch input:checked + .toggle-slider {
+    background: rgba(245,158,11,0.15);
+    border-color: rgba(245,158,11,0.35);
+    &::before { background: #d97706; }
+  }
+  .wplan-summary-chip {
+    background: rgba(15,23,42,0.04);
+    border-color: rgba(15,23,42,0.09);
+    &:hover { border-color: rgba(245,158,11,0.3); }
+  }
+  .wplan-chip-day   { color: rgba(15,23,42,0.4); }
+  .wplan-chip-title { color: #d97706; &.rest-chip { color: rgba(15,23,42,0.35); } }
+
+  // ── Notification modals ───────────────────────────────
+  .notif-modal-item {
+    background: rgba(15,23,42,0.05);
+    border-color: rgba(15,23,42,0.09);
+    &.unread-item { border-color: #d97706; }
+    .notif-dot {
+      &.unread { background: #d97706; }
+      &.read   { background: rgba(15,23,42,0.4); }
+    }
+    .notif-title { color: #0f172a; }
+    .notif-msg   { color: rgba(15,23,42,0.5); }
+  }
+  .mark-read-btn { color: #d97706; }
+  .notif-detail-date { color: rgba(15,23,42,0.45); }
+  .info-box {
+    background: rgba(245,158,11,0.07);
+    border: 1px solid rgba(245,158,11,0.2);
+    color: rgba(15,23,42,0.6);
+  }
+  .home-guide-item .home-guide-num { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.2); color: #d97706; }
+  .home-guide-text { color: #0f172a; }
+  .home-guide-tip  { color: rgba(15,23,42,0.45); }
+
+  // ── Tab bar ───────────────────────────────────────────
+  .custom-tab-bar {
+    --background: rgba(255,255,255,0.97) !important;
+    border-top: 1px solid rgba(15,23,42,0.09);
+    .tab-label { color: rgba(15,23,42,0.45); }
+    ion-tab-button {
+      --color: rgba(15,23,42,0.45);
+      --color-selected: #f59e0b;
+    }
+  }
+}
+
+.home-guide-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.home-guide-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.home-guide-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  background: rgba(255,214,0,0.1);
+  border: 1px solid rgba(255,214,0,0.25);
+  color: #FFD600;
+  font-size: 10px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.home-guide-text {
+  font-size: 13px;
+  color: #eef2f8;
+  font-weight: 600;
+}
+
+.home-guide-tip {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  margin-top: 3px;
+}
+
+// ── Section Header Actions ────────────────────────────────
+.section-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.icon-action-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.09);
+  color: rgba(255,255,255,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  ion-icon { font-size: 14px; }
+  &:hover { background: rgba(255,255,255,0.1); color: #FFD600; border-color: rgba(255,214,0,0.25); }
+  &:active { opacity: 0.7; }
+}
+
+// ── Exercise Edit Rows in Edit Panel ──────────────────────
+.edit-exercises-section {
+  margin-bottom: 10px;
+}
+
+.edit-exercises-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.edit-exercises-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.add-ex-btn {
+  height: 28px;
+  padding: 0 16px;
+  border-radius: 8px;
+  background: #FFD600;
+  border: none;
+  color: #222;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  box-shadow: 0 2px 10px rgba(255,214,0,0.13);
+  transition: filter 0.15s, box-shadow 0.15s;
+  ion-icon { font-size: 15px; color: #222; }
+  &:active { filter: brightness(0.95); box-shadow: none; }
+}
+
+.edit-exercise-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.edit-exercise-row {
+  display: grid;
+  grid-template-columns: 1fr 44px 60px 26px;
+  gap: 5px;
+  align-items: center;
+}
+
+.ex-edit-name,
+.ex-edit-sets,
+.ex-edit-reps {
+  height: 30px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 8px;
+  padding: 0 8px;
+  color: #FFFFFF;
+  font-size: 11px;
+  outline: none;
+  width: 100%;
+  &:focus { border-color: rgba(255,214,0,0.25); }
+}
+
+.ex-del-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: rgba(239,68,68,0.08);
+  border: 0.5px solid rgba(239,68,68,0.18);
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  ion-icon { font-size: 13px; }
+  &:active { opacity: 0.7; }
+}
+
+// ── Workout History Modal ─────────────────────────────────
+.history-empty {
+  text-align: center;
+  padding: 48px 20px;
+  .empty-icon { font-size: 36px; color: rgba(255,255,255,0.2); display: block; margin-bottom: 10px; }
+  .empty-title { font-size: 14px; font-weight: 700; color: #FFFFFF; margin-bottom: 4px; }
+  .empty-sub   { font-size: 12px; color: rgba(255,255,255,0.5); }
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 20px;
+}
+
+.history-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-date-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: rgba(255,255,255,0.5);
+  padding-left: 2px;
+}
+
+.history-session-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.history-session-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.history-session-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.history-done-badge {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: rgba(0,214,143,0.1);
+  color: #00D68F;
+  border: 1px solid rgba(0,214,143,0.2);
+}
+
+.history-session-meta {
+  font-size: 10px;
+  color: rgba(255,255,255,0.5);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 2px;
+  ion-icon { font-size: 11px; }
+}
+
+.history-exercise-list {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.history-ex-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+}
+
+.history-ex-check {
+  font-size: 14px;
+  &.checked { color: #00D68F; }
+  &:not(.checked) { color: rgba(255,255,255,0.4); }
+}
+
+.history-ex-name { flex: 1; color: rgba(255,255,255,0.5); }
+.history-ex-detail { font-size: 10px; color: rgba(255,255,255,0.35); }
+
+// ── Week Plan Modal ───────────────────────────────────────
+.modal-sub {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  margin-top: -8px;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+
+.week-plan-day-tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 14px;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+.wplan-day-tab {
+  flex-shrink: 0;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 9px;
+  border: 1px solid rgba(255,255,255,0.09);
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.5);
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  &.active {
+    background: rgba(255,214,0,0.1);
+    border-color: rgba(255,214,0,0.25);
+    color: #FFD600;
+  }
+  &.rest {
+    color: rgba(255,255,255,0.35);
+    text-decoration: line-through;
+    opacity: 0.6;
+  }
+}
+
+.week-plan-day-editor {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.wplan-day-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin-bottom: 10px;
+}
+
+.wplan-rest-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.wplan-rest-label {
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+  font-weight: 600;
+}
+
+// Toggle switch
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+  input { opacity: 0; width: 0; height: 0; }
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  border-radius: 22px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.12);
+  transition: 0.2s;
+  &::before {
+    content: '';
+    position: absolute;
+    width: 16px; height: 16px;
+    left: 2px; bottom: 2px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.4);
+    transition: 0.2s;
+  }
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background: rgba(255,214,0,0.15);
+  border-color: rgba(255,214,0,0.35);
+  &::before { transform: translateX(18px); background: #FFD600; }
+}
+
+.week-plan-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.wplan-summary-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 5px 8px;
+  border-radius: 9px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  cursor: pointer;
+  transition: all 0.15s;
+  min-width: 44px;
+  &:hover { border-color: rgba(255,214,0,0.25); }
+}
+
+.wplan-chip-day {
+  font-size: 8px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.wplan-chip-title {
+  font-size: 9px;
+  color: #FFD600;
+  font-weight: 600;
+  text-align: center;
+  margin-top: 2px;
+  &.rest-chip { color: rgba(255,255,255,0.35); }
+}
+
+.saved-btn {
+  background: rgba(0,214,143,0.12) !important;
+  color: #00D68F !important;
+  border-color: rgba(0,214,143,0.25) !important;
+}
+
+.clear-plan-btn {
+  background: none;
+  border: none;
+  color: rgba(239,68,68,0.6);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  &:hover { color: #ef4444; background: rgba(239,68,68,0.08); }
+}
+
+// ── Yellow primary button ─────────────────────────────────
+.btn-yellow {
+  flex: 1;
+  height: 44px;
+  border-radius: 12px;
+  background: #FFD600;
+  color: #000;
+  border: none;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  box-shadow: 0 4px 18px rgba(255,214,0,0.35);
+  transition: all 0.18s;
+  &:hover  { background: #ffe033; box-shadow: 0 6px 22px rgba(255,214,0,0.5); }
+  &:active { opacity: 0.85; }
+}
+
+.btn-primary.btn-yellow {
+  background: #FFD600;
+  color: #000;
+  border: none;
+  box-shadow: 0 4px 18px rgba(255,214,0,0.35);
+  &:hover { background: #ffe033; }
+}
+
+// ── Week plan exercises empty hint ────────────────────────
+.wplan-exercises-empty {
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+  padding: 8px 4px;
+  font-style: italic;
+}
+
+
+/* =========================================================
+   V3 SCHEDULE — PROFILE-MATCHED MOBILE REDESIGN
+   ========================================================= */
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  --schedule-bg: #06080f;
+  --schedule-panel: rgba(255, 255, 255, 0.04);
+  --schedule-panel-2: rgba(255, 255, 255, 0.06);
+  --schedule-border: rgba(255, 255, 255, 0.08);
+  --schedule-yellow: #ffd600;
+  --schedule-orange: #ff9500;
+  --schedule-red: #ff4461;
+  --schedule-green: #00d68f;
+  --schedule-blue: #4a9eff;
+  --schedule-text: #ffffff;
+  --schedule-muted: rgba(255, 255, 255, 0.48);
+  background: var(--schedule-bg);
+}
+
+ion-content.fordago-page-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  --background: var(--schedule-bg) !important;
+}
+
+.scroll-wrap {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 18px 8px 28px !important;
+  box-sizing: border-box;
+}
+
+/* Month selector becomes a profile-style compact card header. */
+.month-row {
+  margin: 0 0 12px !important;
+  padding: 14px 15px !important;
+  border: 1px solid var(--schedule-border) !important;
+  border-radius: 18px !important;
+  background: var(--schedule-panel) !important;
+}
+
+.month-label {
+  color: var(--schedule-text) !important;
+  font-size: 14px !important;
+  font-weight: 850 !important;
+  letter-spacing: 0.2px !important;
+}
+
+.month-nav {
+  gap: 7px !important;
+}
+
+.nav-btn {
+  width: 34px !important;
+  height: 34px !important;
+  border: 1px solid rgba(255, 214, 0, 0.15) !important;
+  border-radius: 11px !important;
+  background: rgba(255, 214, 0, 0.055) !important;
+  color: var(--schedule-yellow) !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+}
+
+/* Seven days fit the phone width; no broken horizontal strip. */
+.week-strip {
+  width: 100% !important;
+  display: grid !important;
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  gap: 5px !important;
+  overflow: visible !important;
+  margin: 0 0 18px !important;
+  padding: 0 !important;
+}
+
+.day-pill {
+  min-width: 0 !important;
+  width: 100% !important;
+  min-height: 66px !important;
+  padding: 9px 2px 8px !important;
+  gap: 3px !important;
+  border: 1px solid var(--schedule-border) !important;
+  border-radius: 13px !important;
+  background: var(--schedule-panel) !important;
+  box-sizing: border-box !important;
+}
+
+.day-pill .day-name {
+  color: var(--schedule-muted) !important;
+  font-size: clamp(6.7px, 1.9vw, 8px) !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.3px !important;
+}
+
+.day-pill .day-num {
+  color: var(--schedule-text) !important;
+  font-size: clamp(13px, 4vw, 16px) !important;
+  font-weight: 850 !important;
+}
+
+.day-pill .dot-indicator {
+  width: 4px !important;
+  height: 4px !important;
+  background: var(--schedule-yellow) !important;
+}
+
+.day-pill.active {
+  border-color: rgba(255, 214, 0, 0.55) !important;
+  background: #ffd600 !important;
+  box-shadow: 0 7px 18px rgba(255, 214, 0, 0.18) !important;
+}
+
+.day-pill.active .day-name,
+.day-pill.active .day-num {
+  color: #111317 !important;
+}
+
+/* Selected day / actions */
+.section-header {
+  width: 100% !important;
+  margin: 0 0 10px !important;
+  padding: 0 2px !important;
+  gap: 10px !important;
+}
+
+/* "THURSDAY, AUGUST 13" label above the session list. Enlarged from 10px
+   per request — was too small to read comfortably. */
+.section-title {
+  min-width: 0 !important;
+  color: rgba(255, 255, 255, 0.62) !important;
+  font-size: 15px !important;
+  font-weight: 850 !important;
+  letter-spacing: 0.3px !important;
+}
+
+.section-header-actions {
+  min-width: 0 !important;
+  gap: 6px !important;
+}
+
+/* History / Week-Plan icon buttons next to the date label. Enlarged from
+   32px — too small to tap reliably per request. */
+.icon-action-btn {
+  width: 40px !important;
+  height: 40px !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 0 !important;
+  border: 1px solid var(--schedule-border) !important;
+  border-radius: 12px !important;
+  background: var(--schedule-panel) !important;
+  color: var(--schedule-yellow) !important;
+}
+
+.icon-action-btn ion-icon {
+  display: block !important;
+  color: currentColor !important;
+  font-size: 20px !important;
+  opacity: 1 !important;
+}
+
+.session-count {
+  color: var(--schedule-muted) !important;
+  font-size: 9px !important;
+  white-space: nowrap !important;
+}
+
+/* Empty state looks like Profile cards. */
+.empty-state {
+  margin-top: 10px !important;
+  padding: 34px 18px !important;
+  border: 1px solid var(--schedule-border) !important;
+  border-radius: 20px !important;
+  background: var(--schedule-panel) !important;
+}
+
+.empty-state .empty-icon {
+  color: rgba(255, 214, 0, 0.45) !important;
+}
+
+.empty-state .empty-title {
+  color: var(--schedule-text) !important;
+}
+
+.empty-state .empty-sub {
+  color: var(--schedule-muted) !important;
+}
+
+/* Session card */
+.sessions-list {
+  gap: 12px !important;
+}
+
+.session-card {
+  width: 100% !important;
+  padding: 15px !important;
+  gap: 12px !important;
+  overflow: hidden !important;
+  border: 1px solid var(--schedule-border) !important;
+  border-radius: 20px !important;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.025)) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.14) !important;
+  opacity: 1 !important;
+}
+
+.session-card.missed {
+  border-color: rgba(255, 68, 97, 0.14) !important;
+  background: linear-gradient(145deg, rgba(255, 68, 97, 0.04), rgba(255, 255, 255, 0.025)) !important;
+}
+
+.session-card.done {
+  border-color: rgba(0, 214, 143, 0.15) !important;
+}
+
+.time-col {
+  min-width: 48px !important;
+  padding-top: 2px !important;
+}
+
+.time-col .time-val {
+  color: var(--schedule-yellow) !important;
+  font-size: 14px !important;
+  font-weight: 900 !important;
+}
+
+.time-col .time-ampm {
+  color: var(--schedule-muted) !important;
+  font-size: 8px !important;
+  font-weight: 750 !important;
+}
+
+.time-col .time-line {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.session-info {
+  min-width: 0 !important;
+}
+
+.session-title {
+  color: var(--schedule-text) !important;
+  font-size: 14px !important;
+  font-weight: 850 !important;
+  line-height: 1.25 !important;
+}
+
+.session-card.done .session-title {
+  color: rgba(255, 255, 255, 0.55) !important;
+}
+
+.session-meta,
+.session-coach {
+  color: var(--schedule-muted) !important;
+  line-height: 1.45 !important;
+}
+
+.session-target .target-text {
+  border-color: rgba(255, 214, 0, 0.18) !important;
+  background: rgba(255, 214, 0, 0.07) !important;
+  color: var(--schedule-yellow) !important;
+}
+
+.badge {
+  border: 1px solid transparent !important;
+  font-weight: 800 !important;
+}
+
+.exercise-list {
+  margin-top: 12px !important;
+  border: 1px solid var(--schedule-border) !important;
+  border-radius: 14px !important;
+  background: rgba(255, 255, 255, 0.025) !important;
+}
+
+.exercise-list-header {
+  padding: 12px 14px !important;
+  border-bottom-color: rgba(255, 255, 255, 0.07) !important;
+}
+
+.exercise-list-header .ex-list-title {
+  color: rgba(255, 255, 255, 0.58) !important;
+}
+
+.exercise-list-header .ex-list-count {
+  color: rgba(255, 255, 255, 0.36) !important;
+}
+
+.exercise-item {
+  min-width: 0 !important;
+  padding: 12px 14px !important;
+  gap: 10px !important;
+}
+
+.exercise-item .ex-name {
+  min-width: 0 !important;
+  color: rgba(255, 255, 255, 0.94) !important;
+  font-weight: 450 !important;
+  overflow-wrap: anywhere !important;
+}
+
+.exercise-item .ex-detail {
+  color: rgba(255, 255, 255, 0.75) !important;
+  font-weight: 700 !important;
+}
+
+.card-actions {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 7px !important;
+  margin-top: 12px !important;
+}
+
+.action-btn {
+  min-width: 0 !important;
+  min-height: 38px !important;
+  padding: 7px 5px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  border: 1px solid var(--schedule-border) !important;
+  border-radius: 11px !important;
+  background: rgba(255, 255, 255, 0.035) !important;
+  color: rgba(255, 255, 255, 0.68) !important;
+  font-size: 9px !important;
+  font-weight: 750 !important;
+  white-space: nowrap !important;
+}
+
+.action-btn ion-icon {
+  display: block !important;
+  font-size: 14px !important;
+  color: currentColor !important;
+}
+
+.action-btn.primary {
+  color: var(--schedule-yellow) !important;
+  border-color: rgba(255, 214, 0, 0.15) !important;
+  background: rgba(255, 214, 0, 0.055) !important;
+}
+
+.action-btn.danger {
+  color: #ff667d !important;
+  border-color: rgba(255, 68, 97, 0.13) !important;
+  background: rgba(255, 68, 97, 0.055) !important;
+}
+
+.hw-card {
+  margin-top: 14px !important;
+  border: 1px solid var(--schedule-border) !important;
+  border-radius: 20px !important;
+  background: var(--schedule-panel) !important;
+}
+
+.fordago-schedule-fab {
+  --background: #ffd600 !important;
+  --color: #111317 !important;
+  --box-shadow: 0 8px 24px rgba(255, 214, 0, 0.28) !important;
+}
+
+@media (max-width: 370px) {
+  .scroll-wrap {
+    padding-left: 5px !important;
+    padding-right: 5px !important;
+  }
+
+  .week-strip {
+    gap: 3px !important;
+  }
+
+  .day-pill {
+    min-height: 60px !important;
+    border-radius: 11px !important;
+  }
+
+  .session-card {
+    padding: 12px !important;
+    gap: 9px !important;
+  }
+
+  .time-col {
+    min-width: 40px !important;
+  }
+
+  .card-actions {
+    gap: 5px !important;
+  }
+
+  .action-btn {
+    font-size: 8px !important;
+  }
+}
+
+
+/* V4 final: Ionic owns the page height; ion-content owns vertical scrolling. */
+:host {
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+
+:host > ion-content {
+  min-height: 0 !important;
+  --overflow: auto !important;
+}
+
+:host > ion-content::part(scroll) {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   V3 SCHEDULE — LIGHT MODE OVERRIDE
+   The "V3 mobile redesign" block above hardcodes dark-mode colors
+   with !important and never got a light-mode counterpart. A plain
+   `!important` declaration always wins over a non-!important one
+   regardless of specificity or source order, so every
+   :host-context(body.light-theme) rule earlier in this file was
+   silently losing to these for the elements listed below. This
+   block re-asserts the same rules at the same !important weight,
+   scoped to light mode, so it can actually win the cascade.
+   ───────────────────────────────────────────────────────────── */
+:host-context(body.light-theme) {
+  --schedule-bg: #f4f5f8;
+  --schedule-panel: rgba(15, 23, 42, 0.04);
+  --schedule-panel-2: rgba(15, 23, 42, 0.06);
+  --schedule-border: rgba(15, 23, 42, 0.09);
+  --schedule-yellow: #d97706;
+  --schedule-orange: #ea580c;
+  --schedule-red: #dc2626;
+  --schedule-green: #059669;
+  --schedule-blue: #2563eb;
+  --schedule-text: #0f172a;
+  --schedule-muted: rgba(15, 23, 42, 0.5);
+
+  .month-row {
+    background: var(--schedule-panel) !important;
+    border-color: var(--schedule-border) !important;
+  }
+
+  .nav-btn {
+    background: rgba(217, 119, 6, 0.07) !important;
+    border-color: rgba(217, 119, 6, 0.18) !important;
+  }
+
+  .day-pill {
+    background: var(--schedule-panel) !important;
+    border-color: var(--schedule-border) !important;
+  }
+
+  .day-pill.active {
+    background: #ffd600 !important;
+    box-shadow: 0 7px 18px rgba(217, 119, 6, 0.18) !important;
+  }
+
+  .day-pill.active .day-name,
+  .day-pill.active .day-num {
+    color: #111317 !important;
+  }
+
+  .section-title {
+    color: #000000 !important;
+  }
+
+  .empty-state {
+    background: var(--schedule-panel) !important;
+    border-color: var(--schedule-border) !important;
+  }
+
+  .empty-state .empty-icon {
+    color: rgba(217, 119, 6, 0.5) !important;
+  }
+
+  .session-card {
+    background: linear-gradient(145deg, #ffffff, #f9fafb) !important;
+    border-color: var(--schedule-border) !important;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06) !important;
+  }
+
+  .session-card.missed {
+    border-color: rgba(220, 38, 38, 0.16) !important;
+    background: linear-gradient(145deg, rgba(220, 38, 38, 0.04), #f9fafb) !important;
+  }
+
+  .session-card.done {
+    border-color: rgba(5, 150, 105, 0.18) !important;
+  }
+
+  .session-card.done .session-title {
+    color: rgba(15, 23, 42, 0.4) !important;
+  }
+
+  .time-col .time-line {
+    background: rgba(15, 23, 42, 0.1) !important;
+  }
+
+  .session-target .target-text {
+    border-color: rgba(217, 119, 6, 0.22) !important;
+    background: rgba(217, 119, 6, 0.08) !important;
+    color: #d97706 !important;
+  }
+
+  .exercise-list {
+    background: rgba(15, 23, 42, 0.03) !important;
+    border-color: var(--schedule-border) !important;
+  }
+
+  .exercise-list-header {
+    border-bottom-color: rgba(15, 23, 42, 0.08) !important;
+  }
+
+  .exercise-list-header .ex-list-title {
+    color: rgba(15, 23, 42, 0.5) !important;
+  }
+
+  .exercise-list-header .ex-list-count {
+    color: rgba(15, 23, 42, 0.35) !important;
+  }
+
+  .exercise-item .ex-name {
+    color: #000000 !important;
+    font-weight: 450 !important;
+  }
+
+  .exercise-item .ex-detail {
+    color: rgba(15, 23, 42, 0.7) !important;
+    font-weight: 700 !important;
+  }
+
+  .action-btn {
+    background: rgba(15, 23, 42, 0.035) !important;
+    color: rgba(15, 23, 42, 0.62) !important;
+  }
+
+  .action-btn.primary {
+    color: #d97706 !important;
+    border-color: rgba(217, 119, 6, 0.2) !important;
+    background: rgba(217, 119, 6, 0.08) !important;
+  }
+
+  .action-btn.danger {
+    color: #dc2626 !important;
+    border-color: rgba(220, 38, 38, 0.18) !important;
+    background: rgba(220, 38, 38, 0.06) !important;
+  }
+
+  .hw-card {
+    background: rgba(217, 119, 6, 0.05) !important;
+    border-color: rgba(217, 119, 6, 0.2) !important;
+  }
+
+  /* "RECOMMENDED EXERCISES" preview inside the Add Workout modal was still
+     showing its dark-mode colors (pale gray-on-white, unreadable) because
+     it never got a matching entry in this !important block — same root
+     cause documented in the block comment above for every other element
+     here. Re-asserted at the same !important weight so it actually wins. */
+  .modal-exercise-preview {
+    background: rgba(15, 23, 42, 0.035) !important;
+    border-color: rgba(15, 23, 42, 0.09) !important;
+  }
+
+  .modal-exercise-preview .preview-header {
+    background: rgba(15, 23, 42, 0.05) !important;
+    border-bottom-color: rgba(15, 23, 42, 0.08) !important;
+  }
+
+  .modal-exercise-preview .preview-title {
+    color: rgba(15, 23, 42, 0.65) !important;
+  }
+
+  .modal-exercise-preview .preview-sub {
+    color: rgba(15, 23, 42, 0.45) !important;
+  }
+
+  .preview-ex {
+    border-bottom-color: rgba(15, 23, 42, 0.07) !important;
+  }
+
+  .preview-ex .ex-num {
+    background: rgba(217, 119, 6, 0.16) !important;
+    border-color: rgba(217, 119, 6, 0.45) !important;
+    color: #b45309 !important;
+    font-weight: 800 !important;
+  }
+
+  .preview-ex .ex-name {
+    color: #000000 !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+  }
+
+  .preview-ex .ex-detail {
+    color: rgba(15, 23, 42, 0.75) !important;
+    background: rgba(15, 23, 42, 0.07) !important;
+    border-color: rgba(15, 23, 42, 0.22) !important;
+    font-size: 12px !important;
+  }
+
+  /* Larger, solid-black labels + visible icons across the Add Workout /
+     Week Plan form fields, per request — the shared (non-scoped) light-
+     theme rules earlier in this file, and the !important rules in
+     global.scss's body.light-theme ion-modal block, were both keeping
+     these at small pale-gray text, which read as "faded"/low-contrast
+     even though nothing was technically broken. Same !important weight as
+     the rest of this block so it actually wins here too. */
+  .modal-title {
+    color: #000000 !important;
+    font-size: 22px !important;
+  }
+
+  .field-label {
+    color: #000000 !important;
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.4px !important;
+  }
+
+  .field-label .label-optional {
+    color: rgba(15, 23, 42, 0.5) !important;
+    font-weight: 500 !important;
+  }
+
+  .field-wrap .field-icon,
+  .field-wrap .field-icon ion-icon {
+    color: #d97706 !important;
+    font-size: 19px !important;
+    opacity: 1 !important;
+  }
+
+  .field-wrap input,
+  .field-wrap select {
+    color: #000000 !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+  }
+
+  .modal-exercise-preview .preview-title {
+    color: #000000 !important;
+    font-size: 13px !important;
+    font-weight: 800 !important;
+  }
+
+  .modal-exercise-preview .preview-sub {
+    color: rgba(15, 23, 42, 0.7) !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+  }
+
+  .target-chip {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+  }
+
+  .edit-exercises-title {
+    color: #000000 !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+  }
+}
+

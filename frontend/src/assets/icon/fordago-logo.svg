@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFD600"/>
+      <stop offset="100%" stop-color="#FF9500"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Hexagon base -->
+  <polygon points="40,4 74,22 74,58 40,76 6,58 6,22"
+    fill="url(#bgGrad)" filter="url(#glow)"/>
+
+  <!-- Inner dark overlay for depth -->
+  <polygon points="40,10 68,25 68,55 40,70 12,55 12,25"
+    fill="rgba(0,0,0,0.15)"/>
+
+  <!-- Barbell -->
+  <!-- Left weight plate outer -->
+  <rect x="7"  y="33" width="9" height="14" rx="3" fill="#06080F"/>
+  <!-- Left collar -->
+  <rect x="16" y="36" width="5" height="8" rx="1.5" fill="#1a1200"/>
+  <!-- Bar -->
+  <rect x="21" y="38" width="38" height="4" rx="2" fill="#06080F"/>
+  <!-- Right collar -->
+  <rect x="59" y="36" width="5" height="8" rx="1.5" fill="#1a1200"/>
+  <!-- Right weight plate outer -->
+  <rect x="64" y="33" width="9" height="14" rx="3" fill="#06080F"/>
+
+  <!-- Shine highlight on left plate -->
+  <rect x="7"  y="33" width="3" height="14" rx="1.5" fill="rgba(255,255,255,0.15)"/>
+  <!-- Shine on right plate -->
+  <rect x="77" y="33" width="3" height="14" rx="1.5" fill="rgba(255,255,255,0.15)" transform="translate(-3,0)"/>
+</svg>

@@ -1,0 +1,2117 @@
+// dashboard.page.scss – FordaGO Modern Redesign - Theme Aware
+
+// ── CSS Custom Properties ──────────────────────────
+:host {
+  --text-primary: #FFFFFF;
+  --text-secondary: rgba(255,255,255,0.75);
+  --text-muted: rgba(255,255,255,0.5);
+  --text-tertiary: rgba(255,255,255,0.35);
+  --accent-lime: #FFD600;
+  --accent-amber: #FF9500;
+  --accent-red: #FF4461;
+  --accent-blue: #4A9EFF;
+  --accent-green: #00D68F;
+  --accent-shadow: rgba(255,214,0,0.3);
+  --accent-border: rgba(255,214,0,0.25);
+  --accent-dim: rgba(255,214,0,0.1);
+  --bg-primary: #06080F;
+  --bg-secondary: #0B0E1A;
+  --bg-tertiary: #111428;
+  --overlay-light: rgba(255,255,255,0.04);
+  --overlay-medium: rgba(255,255,255,0.07);
+  --overlay-heavy: rgba(255,255,255,0.1);
+  --border-primary: rgba(255,255,255,0.1);
+  --border-secondary: rgba(255,255,255,0.08);
+  --glass-bg: rgba(255,255,255,0.03);
+  --glass-border: rgba(255,255,255,0.06);
+  --glass-blur: blur(20px);
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
+  --shadow-glow: 0 0 20px rgba(255,214,0,0.15);
+  --shadow-card: 0 4px 24px rgba(0,0,0,0.3);
+  --transition-fast: 0.15s ease;
+  --transition-smooth: 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+
+ion-content {
+  --background: var(--bg-primary);
+}
+
+// ── Content ───────────────────────────────────────────
+.content-inner {
+  padding: 16px 16px 100px;
+}
+
+// ── Greeting ──────────────────────────────────────────
+.greeting-wrap { margin-bottom: 20px; }
+
+.greeting-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.4px;
+  margin-bottom: 4px;
+}
+
+.greeting-name {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.4px;
+}
+
+// ── Membership Card ───────────────────────────────────
+.membership-card {
+  background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 60%, var(--bg-primary) 100%);
+  border-radius: 22px;
+  padding: 20px;
+  margin-bottom: 16px;
+  border: 1px solid var(--accent-border);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(255,214,0,0.12) 0%, transparent 65%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: -20px;
+    width: 150px; height: 150px;
+    background: radial-gradient(circle, rgba(255,149,0,0.07) 0%, transparent 65%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .badge-active {
+    background: var(--accent-dim);
+    color: var(--accent-lime);
+    font-size: 10px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--accent-border);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 12px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+
+    .badge-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--accent-lime);
+      animation: pulse 2s infinite;
+    }
+  }
+
+  .plan-name {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    letter-spacing: -0.3px;
+  }
+
+  .plan-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+
+  .progress-track {
+    background: var(--overlay-medium);
+    border-radius: 6px;
+    height: 6px;
+    margin-bottom: 6px;
+
+    .progress-fill {
+      background: var(--accent-lime);
+      border-radius: 6px;
+      height: 6px;
+      transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+      box-shadow: 0 0 8px var(--accent-shadow);
+    }
+  }
+
+  .progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+}
+
+// ── Section Label ─────────────────────────────────────
+.section-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin: 20px 0 10px;
+}
+
+// ── Stats Grid ────────────────────────────────────────
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+
+  .stat-card {
+    background: var(--overlay-light);
+    border-radius: 16px;
+    padding: 14px;
+    border: 1px solid var(--border-secondary);
+    position: relative;
+    overflow: hidden;
+
+    &:nth-child(1) {
+      border-color: var(--accent-border);
+      &::before { background: radial-gradient(circle at top right, var(--accent-dim) 0%, transparent 60%); }
+    }
+    &:nth-child(2) {
+      border-color: rgba(255,149,0,0.15);
+      &::before { background: radial-gradient(circle at top right, rgba(255,149,0,0.1) 0%, transparent 60%); }
+    }
+    &:nth-child(3) {
+      border-color: rgba(74,158,255,0.15);
+      &::before { background: radial-gradient(circle at top right, rgba(74,158,255,0.1) 0%, transparent 60%); }
+    }
+    &:nth-child(4) {
+      border-color: rgba(0,214,143,0.15);
+      &::before { background: radial-gradient(circle at top right, rgba(0,214,143,0.1) 0%, transparent 60%); }
+    }
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .stat-emoji, .stat-icon {
+      font-size: 24px;
+      margin-bottom: 8px;
+      display: block;
+      &.accent-icon { color: var(--accent-lime); }
+      &.amber-icon  { color: var(--accent-amber); }
+      &.blue-icon   { color: var(--accent-blue); }
+      &.green-icon  { color: var(--accent-green); }
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 4px;
+      color: var(--text-primary);
+      letter-spacing: -0.5px;
+
+      &.amber { color: var(--accent-amber); }
+      &.blue  { color: var(--accent-blue); }
+      &.lime  { color: var(--accent-lime); }
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+  }
+}
+
+// ── Scan Button ───────────────────────────────────────
+.scan-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--accent-lime);
+  color: #000;
+  font-size: 15px;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 4px 24px var(--accent-shadow);
+  letter-spacing: 0.2px;
+
+  &:active { transform: scale(0.97); box-shadow: 0 2px 12px var(--accent-shadow); }
+
+  .action-icon, ion-icon { font-size: 20px; }
+}
+
+// ── Generic Card ──────────────────────────────────────
+.card {
+  background: var(--overlay-light);
+  border-radius: 20px;
+  padding: 16px;
+  border: 1px solid var(--border-secondary);
+  margin-bottom: 10px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 28px;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+// ── Today's Workout ───────────────────────────────────
+.workout-count {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: -2px 0 10px;
+}
+
+.workout-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 10px;
+}
+
+.workout-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.workout-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  min-width: 0;
+}
+
+.workout-focus {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 214, 0, 0.82);
+  margin-top: 2px;
+}
+
+.workout-status {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.5);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 4px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+
+  &.done {
+    color: #00D68F;
+    border-color: rgba(0,214,143,0.22);
+    background: rgba(0,214,143,0.08);
+  }
+
+  &.missed {
+    color: #FF4461;
+    border-color: rgba(255,68,97,0.22);
+    background: rgba(255,68,97,0.08);
+  }
+}
+
+.workout-badge {
+  font-size: 10px;
+  background: rgba(74,158,255,0.12);
+  color: #4A9EFF;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(74,158,255,0.2);
+  font-weight: 600;
+}
+
+.exercise-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  cursor: pointer;
+  transition: opacity 0.15s;
+
+  &:last-of-type { border-bottom: none; }
+
+  &.completed {
+    opacity: 0.4;
+    .ex-name { text-decoration: line-through; }
+  }
+
+  &.disabled {
+    opacity: 0.45;
+    pointer-events: none;
+    cursor: not-allowed;
+  }
+
+  .ex-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .ex-name {
+    font-size: 13px;
+    color: rgba(255,255,255,0.85);
+    flex: 1;
+  }
+
+  .ex-detail {
+    font-size: 11px;
+    color: rgba(255,255,255,0.35);
+  }
+
+  .ex-check {
+    font-size: 13px;
+    color: #00D68F;
+    font-weight: 700;
+  }
+}
+
+.workout-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.workout-progress-track {
+  flex: 1;
+  height: 5px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 4px;
+
+  .workout-progress-fill {
+    height: 5px;
+    background: linear-gradient(90deg, #FFD600, #00D68F);
+    border-radius: 4px;
+    transition: width 0.4s ease;
+  }
+}
+
+.workout-progress-label {
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+  flex-shrink: 0;
+  font-weight: 600;
+}
+
+// ── Activity Heatmap ──────────────────────────────────
+.heat-day-labels {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.heat-lbl {
+  font-size: 9px;
+  color: #555;
+  text-align: center;
+}
+
+.heat-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.heat-cell {
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 0.1s;
+
+  // Without these, a press-and-hold on mobile gets intercepted by the
+  // browser's own gestures (page scroll, text selection, the native
+  // long-press context/callout menu) before our pointerdown timer ever
+  // fires — which is why long-press previously showed nothing on touch
+  // devices. touch-action: none stops the browser from treating this
+  // press as a scroll/zoom gesture; the user-select / touch-callout rules
+  // stop the OS-level "copy/select" popup from stealing the press instead.
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+
+  &:active { transform: scale(0.9); }
+}
+
+// Stage 4: leading blank cells inserted so the first real day lines up
+// under its correct weekday column (see generateHeatmap() in dashboard.page.ts).
+// Rendered fully transparent and inert — not a real day, so no hover/tap
+// feedback and no tooltip.
+.heat-pad {
+  height: 28px;
+  border-radius: 6px;
+  background: transparent;
+  pointer-events: none;
+}
+
+// Intensities
+.heat-0 { background: rgba(255,255,255,0.05); }
+.heat-1 { background: rgba(255,214,0,0.2); }
+.heat-2 { background: rgba(255,214,0,0.5); }
+.heat-3 { background: #FFD600; }
+
+// Long-press popup shown while holding a single heat-cell (see
+// onHeatCellPressStart/onHeatCellPressEnd in dashboard.page.ts). Fixed
+// positioning + pointer-events: none so it never blocks the pointerup that
+// has to land back on the cell to dismiss it.
+.heat-popup {
+  position: fixed;
+  z-index: 1200;
+  transform: translate(-50%, -100%) translateY(-12px);
+  min-width: 148px;
+  max-width: 210px;
+  padding: 10px 14px 11px;
+  border-radius: 12px;
+  background: #14172a;
+  border: 1px solid rgba(255, 214, 0, 0.28);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.42);
+  pointer-events: none;
+  animation: heatPopupIn 120ms ease both;
+}
+
+.heat-popup-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 3px;
+}
+
+.heat-popup-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px rgba(255, 214, 0, 0.35);
+}
+
+.heat-popup-date {
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1px;
+}
+
+.heat-popup-label {
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+// Small downward-pointing triangle anchoring the popup visually to the cell
+// it's describing, since the popup itself renders above the cell.
+.heat-popup-arrow {
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 12px;
+  height: 12px;
+  transform: translateX(-50%) rotate(45deg);
+  background: #14172a;
+  border-right: 1px solid rgba(255, 214, 0, 0.28);
+  border-bottom: 1px solid rgba(255, 214, 0, 0.28);
+  border-radius: 0 0 3px 0;
+}
+
+@keyframes heatPopupIn {
+  from { opacity: 0; transform: translate(-50%, -100%) translateY(-6px); }
+  to   { opacity: 1; transform: translate(-50%, -100%) translateY(-12px); }
+}
+
+.heat-legend {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.heat-legend-label {
+  font-size: 10px;
+  color: rgba(255,255,255,0.3);
+}
+
+.heat-legend-cell {
+  width: 14px; height: 14px;
+  border-radius: 3px;
+}
+
+// ── Personal Records ──────────────────────────────────
+.pr-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 16px 0 8px;
+}
+
+.add-pr-btn {
+  font-size: 11px;
+  font-weight: 700;
+  color: #FFD600;
+  background: rgba(255,214,0,0.1);
+  border: 1px solid rgba(255,214,0,0.25);
+  border-radius: 20px;
+  padding: 5px 14px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+
+  &:active { opacity: 0.7; }
+}
+
+.pr-list { padding: 8px 16px; }
+
+.pr-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 0.5px solid #222;
+  cursor: pointer;
+  transition: opacity 0.15s;
+
+  &:last-child { border-bottom: none; }
+  &:active { opacity: 0.7; }
+}
+ 
+.pr-icon {
+  width: 36px; height: 36px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  ion-icon {
+    font-size: 18px;
+    color: #FFD600;
+  }
+}
+
+.pr-info { flex: 1; }
+
+.pr-name {
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 2px;
+}
+
+.pr-value {
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pr-new-badge {
+  font-size: 9px;
+  background: rgba(255,214,0,0.12);
+  color: #FFD600;
+  padding: 2px 7px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,214,0,0.2);
+  font-weight: 700;
+}
+
+.pr-date {
+  font-size: 10px;
+  color: rgba(255,255,255,0.3);
+}
+
+.pr-edit-hint {
+  font-size: 12px;
+  opacity: 0.35;
+  margin-left: 4px;
+}
+
+// ── Notification Overlay ─────────────────────────────
+.notif-overlay {
+  position: fixed;
+  inset-inline: 0;
+  top: 56px;
+  bottom: 64px;
+  background: rgba(0, 0, 0, 0.52);
+  z-index: 999;
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  animation: notifFadeIn 0.18s ease both;
+}
+
+@keyframes notifFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.notif-overlay-card {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  background: #0B0E1A;
+  border-top: 2px solid transparent;
+  border-image: linear-gradient(90deg, #FFD600, transparent) 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: notifSlideUp 0.22s cubic-bezier(0.22,1,0.36,1) both;
+}
+
+// ── Panel header ──────────────────────────────────────
+.notif-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  flex-shrink: 0;
+}
+
+.notif-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.notif-header-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.2px;
+}
+
+.notif-header-sub {
+  font-size: 11px;
+  color: rgba(255,255,255,0.42);
+  font-weight: 500;
+  margin-top: 1px;
+}
+
+.notif-icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.75);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-size: 18px;
+  transition: background 0.15s;
+  flex-shrink: 0;
+
+  &:active { opacity: 0.7; }
+}
+
+.notif-dismiss-btn {
+  font-size: 20px;
+}
+
+.notif-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1) 20%, rgba(255,255,255,0.1) 80%, transparent);
+  flex-shrink: 0;
+  margin: 0 16px;
+}
+
+// ── Scroll wrap ───────────────────────────────────────
+.notif-scroll-wrap {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 10px 12px 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.12) transparent;
+
+  &::-webkit-scrollbar       { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 999px; }
+}
+
+// ── Modal (PR) ────────────────────────────────────────
+ion-modal {
+  --background: #0B0E1A;
+  --border-radius: 26px;
+}
+
+.modal-content { --background: #0B0E1A; }
+
+.modal-handle {
+  width: 36px; height: 4px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.12);
+  margin: 0 auto 20px;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 20px;
+  letter-spacing: -0.3px;
+}
+
+.form-group {
+  margin-bottom: 14px;
+}
+
+.form-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  display: block;
+  margin-bottom: 7px;
+}
+
+.form-select, .form-input {
+  --background: rgba(255,255,255,0.05);
+  --color: #fff;
+  --placeholder-color: rgba(255,255,255,0.25);
+  --border-radius: 12px;
+  --padding-start: 14px;
+  --padding-end: 14px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  font-size: 14px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  width: 100%;
+}
+
+.form-row {
+  display: flex;
+  gap: 10px;
+
+  .flex-1 { flex: 1; }
+}
+
+.modal-actions {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modal-save-btn {
+  width: 100%;
+  padding: 15px;
+  background: #FFD600;
+  color: #000;
+  font-size: 15px;
+  font-weight: 800;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(255,214,0,0.3);
+  transition: transform 0.15s, box-shadow 0.15s;
+  &:active { transform: scale(0.97); box-shadow: none; }
+}
+
+.modal-delete-btn {
+  width: 100%;
+  padding: 13px;
+  background: rgba(255,68,97,0.07);
+  color: #FF4461;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid rgba(255,68,97,0.25);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  &:active { opacity: 0.7; }
+}
+
+// ── Animations ────────────────────────────────────────
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fade-up {
+  // NOTE: intentionally no 'both'/'forwards' fill-mode. Those retain the
+  // keyframe's final `transform: translateY(0)` on the element forever
+  // after the entrance animation ends. Any lingering (non-"none") transform
+  // on an ancestor creates a NEW CSS containing block for `position: fixed`
+  // descendants -- which silently broke the heatmap long-press popup
+  // (.heat-popup, position: fixed, nested inside a .card.fade-up ancestor):
+  // its viewport-relative coordinates (from getBoundingClientRect) were
+  // being reinterpreted relative to the .card box instead, so it rendered
+  // off-screen/hidden. Dropping the fill-mode lets the element revert to
+  // its default (transform: none) the instant the 0.4s animation finishes,
+  // with no visible difference to the fade-up effect itself.
+  animation: fadeUp 0.4s ease;
+}
+
+// ── Light Mode ──────────────────────────────────────────
+:host-context(body.light-theme) {
+  --card:        #ffffff;
+  --card-border: rgba(15,23,42,0.09);
+  --accent-dim:  rgba(245,158,11,0.1);
+
+  ion-content { --background: #f4f5f8 !important; }
+
+  .greeting-sub  { color: rgba(15,23,42,0.45); }
+  .greeting-name { color: #0f172a; }
+
+  .section-label { color: rgba(15,23,42,0.45); }
+
+  // Generic card container (heatmap, PR list, etc.)
+  .card {
+    background: #ffffff;
+    border-color: rgba(15,23,42,0.09);
+    box-shadow: 0 2px 10px rgba(15,23,42,0.05);
+  }
+
+  // Today's Workout section
+  .workout-count { color: rgba(15,23,42,0.5); }
+  .workout-title { color: #000000; }
+  .workout-focus { color: #b45309; }
+  .workout-status {
+    background: rgba(15,23,42,0.05);
+    border-color: rgba(15,23,42,0.1);
+    color: rgba(0, 0, 0, 0.45);
+    &.done {
+      color: #00D68F;
+      border-color: rgba(0,214,143,0.22);
+      background: rgba(0, 159, 106, 0.08);
+    }
+    &.missed {
+      color: #FF4461;
+      border-color: rgba(255,68,97,0.22);
+      background: rgba(255,68,97,0.08);
+    }
+  }
+  .exercise-item {
+    border-bottom-color: rgba(15,23,42,0.06);
+    .ex-name { color: #0f172a; }
+    .ex-detail { color: rgba(15,23,42,0.5); }
+  }
+  .workout-progress-track { background: rgba(15,23,42,0.07); }
+  .workout-progress-label { color: rgba(15,23,42,0.5); }
+  .empty-state {
+    color: rgba(15,23,42,0.45);
+    ion-icon { color: rgba(15,23,42,0.2) !important; }
+  }
+
+  // Activity heatmap
+  .heat-lbl        { color: rgba(15,23,42,0.45); }
+  .heat-legend-label { color: rgba(15,23,42,0.4); }
+  .heat-0 { background: rgba(15,23,42,0.06); }
+  .heat-1 { background: rgba(245,158,11,0.2); }
+  .heat-2 { background: rgba(245,158,11,0.5); }
+  .heat-3 { background: #d97706; }
+  .heat-legend-cell.heat-0 { background: rgba(15,23,42,0.06); }
+  .heat-legend-cell.heat-1 { background: rgba(245,158,11,0.2); }
+  .heat-legend-cell.heat-2 { background: rgba(245,158,11,0.5); }
+  .heat-legend-cell.heat-3 { background: #d97706; }
+
+  .heat-popup {
+    background: #ffffff;
+    border-color: rgba(217, 119, 6, 0.3);
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.18);
+  }
+  .heat-popup-date  { color: #0f172a; }
+  .heat-popup-label { color: rgba(15, 23, 42, 0.55); }
+  .heat-popup-arrow {
+    background: #ffffff;
+    border-color: rgba(217, 119, 6, 0.3);
+  }
+
+  // Personal Records
+  .add-pr-btn {
+    color: #d97706;
+    background: rgba(245,158,11,0.1);
+    border-color: rgba(245,158,11,0.25);
+  }
+  .pr-item { border-bottom-color: rgba(15,23,42,0.08); }
+  .pr-icon {
+    background: rgba(15,23,42,0.05);
+    border-color: rgba(15,23,42,0.1);
+    ion-icon { color: #d97706; }
+  }
+  .pr-name  { color: rgba(15,23,42,0.5); }
+  .pr-value { color: #0f172a; }
+  .pr-new-badge {
+    background: rgba(245,158,11,0.12);
+    color: #d97706;
+    border-color: rgba(245,158,11,0.25);
+  }
+  .pr-date      { color: rgba(15,23,42,0.4); }
+  .pr-edit-hint { color: rgba(15,23,42,0.35); }
+
+  .membership-card {
+    background:( #fffbeb 0%);
+    border-color: rgba(245,158,11,0.3);
+    .plan-name   { color: #0f172a; }
+    .plan-meta   { color: rgba(15,23,42,0.5); }
+    .progress-track { background: rgba(15,23,42,0.1); }
+    .progress-labels { color: rgba(15,23,42,0.45); }
+  }
+
+  .stats-grid .stat-card {
+    background: #ffffff;
+    border-color: rgba(131, 135, 143, 0.09);
+    box-shadow: 0 2px 10px rgba(15,23,42,0.06);
+    .stat-value { color: #0f172a; }
+    .stat-label { color: rgba(15,23,42,0.45); }
+  }
+
+  .modal-title { color: #0f172a !important; }
+  .section-label { color: rgba(15,23,42,0.45); }
+
+  .modal-content, ion-modal { --background: #ffffff; }
+  .modal-handle  { background: rgba(15,23,42,0.12); }
+  .modal-title   { color: #0f172a; }
+  .form-label    { color: rgba(15,23,42,0.5); }
+  .form-select, .form-input {
+    --background: rgba(15,23,42,0.04);
+    --color: #0f172a;
+    --placeholder-color: rgba(15,23,42,0.3);
+    border-color: rgba(15,23,42,0.1);
+  }
+}
+
+// ── Final profile-matched dashboard polish ─────────────────────────────
+// These overrides intentionally keep the existing dashboard logic intact.
+:host {
+  --dash-bg: #06080f;
+  --dash-panel: rgba(255, 255, 255, 0.04);
+  --dash-panel-strong: rgba(255, 255, 255, 0.065);
+  --dash-border: rgba(255, 255, 255, 0.08);
+  --dash-text: #ffffff;
+  --dash-muted: rgba(255, 255, 255, 0.48);
+  --dash-faint: rgba(255, 255, 255, 0.30);
+  --dash-yellow: #ffd600;
+  --dash-orange: #ff9500;
+  --dash-red: #ff4461;
+  --dash-blue: #4a9eff;
+  --dash-green: #00d68f;
+  display: block;
+}
+
+ion-content {
+  --background: var(--dash-bg);
+}
+
+.content-inner {
+  padding: 18px 16px 104px;
+}
+
+.greeting-wrap {
+  margin-bottom: 18px;
+}
+
+.greeting-sub {
+  margin-bottom: 5px;
+  color: var(--dash-muted);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.35px;
+}
+
+.greeting-name {
+  color: var(--dash-text);
+  font-size: clamp(25px, 7vw, 30px);
+  font-weight: 900;
+  letter-spacing: -0.65px;
+  line-height: 1.08;
+}
+
+.membership-card {
+  padding: 20px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 214, 0, 0.16);
+  background: linear-gradient(135deg, #1a1200 0%, #0f0a00 56%, #0b0e1a 100%);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.20);
+
+  &::before {
+    top: -100px;
+    right: -72px;
+    width: 220px;
+    height: 220px;
+    background: radial-gradient(circle, rgba(255, 214, 0, 0.11) 0%, transparent 66%);
+  }
+
+  &::after {
+    opacity: 0.45;
+  }
+}
+
+.membership-card-top {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 17px;
+}
+
+.membership-card .badge-active {
+  margin-bottom: 0;
+}
+
+.membership-card-icon {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 214, 0, 0.18);
+  background: rgba(255, 214, 0, 0.075);
+  color: var(--dash-yellow);
+
+  ion-icon {
+    font-size: 19px;
+  }
+}
+
+.plan-kicker {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 4px;
+  color: rgba(255, 255, 255, 0.38);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.membership-card .plan-name,
+.membership-card .plan-meta,
+.membership-card .progress-track,
+.membership-card .progress-labels {
+  position: relative;
+  z-index: 1;
+}
+
+.membership-card .plan-name {
+  font-size: 21px;
+  font-weight: 900;
+  letter-spacing: -0.45px;
+}
+
+.section-label {
+  margin: 22px 0 10px;
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.9px;
+}
+
+.stats-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+
+  .stat-card {
+    min-width: 0;
+    padding: 13px 7px 12px;
+    border-radius: 15px;
+    background: var(--dash-panel);
+    border: 1px solid var(--dash-border);
+    text-align: center;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.10);
+
+    .stat-icon {
+      margin: 0 auto 8px;
+      font-size: 20px;
+    }
+
+    .stat-value {
+      margin-bottom: 5px;
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: -0.3px;
+    }
+
+    .stat-label {
+      min-height: 20px;
+      color: rgba(255, 255, 255, 0.34);
+      font-size: 8px;
+      font-weight: 750;
+      line-height: 1.25;
+      letter-spacing: 0.2px;
+      text-transform: uppercase;
+    }
+  }
+
+  .sessions-card {
+    border-color: rgba(255, 214, 0, 0.14);
+  }
+
+  .streak-card {
+    border-color: rgba(255, 149, 0, 0.16);
+  }
+
+  .average-card {
+    border-color: rgba(74, 158, 255, 0.16);
+  }
+
+  .upcoming-card {
+    border-color: rgba(0, 214, 143, 0.16);
+  }
+}
+
+.scan-btn {
+  min-height: 54px;
+  padding: 0 18px;
+  border-radius: 16px;
+  background: #FFD600;
+  box-shadow: 0 11px 28px rgba(255, 214, 0, 0.18);
+}
+
+.card {
+  border-radius: 18px;
+  border-color: var(--dash-border);
+  background: var(--dash-panel);
+  box-shadow: 0 9px 24px rgba(0, 0, 0, 0.10);
+}
+
+.empty-state-icon {
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 32px;
+}
+
+.notif-overlay {
+  background: rgba(2, 3, 8, 0.72);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.notif-overlay-card {
+  background: #0b0e1a;
+  border-top: 1px solid rgba(255, 214, 0, 0.24);
+  border-image: none;
+  box-shadow: 0 -18px 44px rgba(0, 0, 0, 0.30);
+}
+
+@media (max-width: 350px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+:host-context(body.light-theme),
+:host-context(html.light-theme) {
+  --dash-bg: #f4f5f8;
+  --dash-panel: #ffffff;
+  --dash-panel-strong: #f7f8fa;
+  --dash-border: rgba(15, 23, 42, 0.09);
+  --dash-text: #0f172a;
+  --dash-muted: rgba(15, 23, 42, 0.50);
+  --dash-faint: rgba(15, 23, 42, 0.34);
+
+  // These previously had NO light-mode override, only the dark-mode
+  // defaults from the :host block above -- so every icon/value/badge/
+  // border that referenced var(--dash-yellow) etc. (several with
+  // !important) stayed bright yellow-on-white in light mode, which is
+  // exactly the low-contrast "hindi masyadong kita" issue reported.
+  // Redefining the variables here fixes every usage in one place instead
+  // of chasing each selector individually.
+  --dash-yellow: #d97706;
+  --dash-orange: #c2410c;
+  --dash-red: #dc2626;
+  --dash-blue: #2563eb;
+  --dash-green: #16a34a;
+
+  .greeting-sub,
+  .section-label {
+    color: rgba(15, 23, 42, 0.45);
+  }
+
+  .greeting-name {
+    color: #0f172a;
+  }
+
+  .membership-card {
+    // Was #fff9df/#fff4bf/#f5f7ff -- same washed-out pale gradient reported
+    // on the profile page's matching card. Matched to the same richer
+    // amber tones used there for consistency across the app.
+    background: #fff6d1;
+    border-color: rgba(158, 87, 5, 0.35);
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+
+    &::before {
+      background: radial-gradient(circle, rgba(217, 119, 6, 0.12) 0%, transparent 66%);
+    }
+  }
+
+  .plan-kicker {
+    color: rgba(15, 23, 42, 0.40);
+  }
+
+  .stats-grid .stat-card,
+  .card {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.09);
+    box-shadow: 0 5px 18px rgba(15, 23, 42, 0.055);
+  }
+
+  .stats-grid .stat-card .stat-label {
+    color: rgba(15, 23, 42, 0.43);
+  }
+
+  .empty-state-icon {
+    color: rgba(15, 23, 42, 0.22);
+  }
+
+  .notif-overlay {
+    background: rgba(15, 23, 42, 0.28);
+  }
+
+  .notif-overlay-card {
+    background: #f8f9fb;
+    border-top-color: rgba(245, 158, 11, 0.28);
+  }
+
+  .notif-header-title {
+    color: #0f172a;
+  }
+
+  .notif-header-sub {
+    color: rgba(15, 23, 42, 0.46);
+  }
+
+}
+
+// ─────────────────────────────────────────────────────
+// FINAL VISIBILITY + PROFILE THEME FIX
+// Keeps all dashboard logic unchanged.
+// ─────────────────────────────────────────────────────
+
+ion-content {
+  color: var(--dash-text);
+}
+
+.page-bottom-space {
+  height: 24px;
+}
+
+.membership-card .badge-active {
+  color: var(--dash-yellow) !important;
+  background: rgba(255, 214, 0, 0.10);
+  border-color: rgba(255, 214, 0, 0.24);
+}
+
+.membership-card .badge-dot {
+  background: var(--dash-yellow) !important;
+  box-shadow: 0 0 8px rgba(255, 214, 0, 0.48);
+}
+
+.plan-kicker {
+  color: var(--dash-muted) !important;
+}
+
+.membership-card .plan-name {
+  color: var(--dash-text) !important;
+}
+
+.membership-card .plan-meta,
+.membership-card .progress-labels {
+  color: var(--dash-muted) !important;
+}
+
+.membership-card .progress-track {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.membership-card .progress-fill {
+  background: #FFD600;
+}
+
+.stats-grid .stat-card .stat-label {
+  color: rgba(255, 255, 255, 0.50);
+  font-size: 8.4px;
+  font-weight: 800;
+}
+
+.stats-grid .sessions-card .stat-icon,
+.stats-grid .sessions-card .stat-value {
+  color: var(--dash-yellow) !important;
+}
+
+.stats-grid .streak-card .stat-icon,
+.stats-grid .streak-card .stat-value {
+  color: var(--dash-orange) !important;
+}
+
+.stats-grid .average-card .stat-icon,
+.stats-grid .average-card .stat-value {
+  color: var(--dash-blue) !important;
+}
+
+.stats-grid .upcoming-card .stat-icon,
+.stats-grid .upcoming-card .stat-value {
+  color: var(--dash-green) !important;
+}
+
+.workout-count {
+  color: var(--dash-muted);
+}
+
+.workout-title,
+.ex-name,
+.pr-value {
+  color: var(--dash-text);
+}
+
+.ex-detail,
+.workout-progress-label,
+.pr-name,
+.pr-date {
+  color: var(--dash-muted);
+}
+
+:host-context(body.light-theme),
+:host-context(html.light-theme) {
+  .membership-card .badge-active {
+    color: #7a4200 !important;
+    background: rgba(245, 158, 11, 0.16);
+    border-color: rgba(245, 158, 11, 0.34);
+  }
+
+  // .membership-card-icon (the small card-outline icon, top-right of the
+  // membership card) has an unscoped !important color rule further down
+  // this file (V3 DASHBOARD — MOBILE CONTENT OVERRIDES section) that isn't
+  // theme-aware, so it stayed bright dark-mode yellow on the light card
+  // background — same root cause as the earlier header icon issue. This
+  // selector's extra class (via :host-context) out-specifies that plain
+  // rule even though both carry !important.
+  .membership-card-icon {
+    border-color: rgba(122, 66, 0, 0.28) !important;
+    background: rgba(122, 66, 0, 0.10) !important;
+    color: #7a4200 !important;
+
+    ion-icon {
+      color: #7a4200 !important;
+    }
+  }
+
+  .plan-kicker,
+  .membership-card .plan-meta,
+  .membership-card .progress-labels {
+    color: rgba(15, 23, 42, 0.50) !important;
+  }
+
+  .membership-card .plan-name {
+    color: #0f172a !important;
+  }
+
+  .membership-card .progress-track {
+    background: rgba(15, 23, 42, 0.10);
+  }
+
+  .stats-grid .stat-card .stat-label {
+    color: rgba(15, 23, 42, 0.50);
+  }
+
+  .workout-title,
+  .ex-name,
+  .pr-value {
+    color: #0f172a;
+  }
+
+  .workout-count,
+  .ex-detail,
+  .workout-progress-label,
+  .pr-name,
+  .pr-date {
+    color: rgba(15, 23, 42, 0.50);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-button,
+  .fade-up {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+// "Today's Workout" section heading only — deliberately its own class
+// instead of editing .section-label directly, since .section-label is
+// shared with "This Month", "Activity — Last 4 Weeks", and "Personal
+// Records" and changing it there would resize/recolor all four headings.
+.today-workout-label {
+  font-size: 13px;
+}
+
+:host-context(body.light-theme),
+:host-context(html.light-theme) {
+  .today-workout-label,
+  .this-month-label {
+    color: #000000;
+  }
+}
+
+// "This Month" section heading only — same reasoning as .today-workout-label
+// above: .section-label is shared with 3 other headings, so this stays a
+// dedicated class rather than resizing every section heading in the app.
+// NOTE: color is intentionally NOT set here. The base .section-label rule
+// already gives it the correct light-gray tone for dark mode (readable on
+// the dark background). It was previously hardcoded to rgb(8, 7, 0) — near
+// black — in this unscoped block, which applied in BOTH themes and made the
+// label nearly invisible in dark mode. Black is now applied only inside the
+// light-theme block below, matching how .today-workout-label handles it.
+.this-month-label {
+  font-size: 13px;
+}
+
+// "Today's Workout" card + its 4 stat cards under "This Month" — light-mode
+// only black border per request. .stats-grid .stat-card covers all four
+// variants (sessions/streak/average/upcoming) since they all carry the
+// shared .stat-card class; .workout-card is the new class added above so
+// this doesn't also darken the Activity/Personal Records cards, which
+// still use the plain, unscoped .card class.
+:host-context(body.light-theme),
+:host-context(html.light-theme) {
+  .stats-grid .stat-card {
+    border-color: #d4d4d4 !important;
+  }
+
+  .workout-card {
+    border-color: #d4d4d4 !important;
+  }
+}
+
+// Today's Workout exercise rows ("Barbell Back Squat", etc.) — .ex-name is
+// only ever used inside this exercise list, so no separate class needed
+// here; safe to size/color it directly without affecting anything else.
+.ex-name {
+  font-size: 14px;
+}
+
+:host-context(body.light-theme),
+:host-context(html.light-theme) {
+  .ex-name {
+    color: #000000;
+  }
+}
+
+// Column header row above the exercise list ("Exercise" / "Sets × Reps"),
+// laid out with the same spacer + flex(1) + fixed-end structure as
+// .exercise-item so its two labels land directly above the name and
+// sets×reps columns they describe.
+.exercise-list-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 0 6px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.exercise-list-header-spacer {
+  width: 8px;
+  flex-shrink: 0;
+}
+
+.exercise-list-header-name,
+.exercise-list-header-detail {
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.exercise-list-header-name {
+  flex: 1;
+}
+
+:host-context(body.light-theme),
+:host-context(html.light-theme) {
+  .exercise-list-header {
+    border-bottom-color: rgba(15, 23, 42, 0.08);
+  }
+
+  .exercise-list-header-name,
+  .exercise-list-header-detail {
+    color: rgba(15, 23, 42, 0.45);
+  }
+}
+
+
+
+// ─────────────────────────────────────────────────────
+// CLEAN FINAL FIXES
+// ─────────────────────────────────────────────────────
+
+ion-content {
+  --padding-bottom: 92px;
+}
+
+.content-inner {
+  padding-bottom: 118px !important;
+}
+
+.page-bottom-space {
+  height: 18px;
+}
+
+.pr-list {
+  overflow: hidden;
+}
+
+.pr-item {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+}
+
+.pr-value {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.pr-unit {
+  color: var(--dash-yellow);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.pr-empty-state {
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 22px 14px;
+  text-align: center;
+  color: var(--dash-muted);
+
+  strong {
+    color: var(--dash-text);
+    font-size: 13px;
+  }
+
+  > span:last-child {
+    max-width: 230px;
+    font-size: 11px;
+    line-height: 1.5;
+  }
+}
+
+.pr-empty-icon {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 3px;
+  border: 1px solid rgba(255, 214, 0, 0.20);
+  border-radius: 14px;
+  background: rgba(255, 214, 0, 0.08);
+  color: var(--dash-yellow);
+
+  ion-icon {
+    font-size: 22px;
+  }
+}
+
+:host-context(body.light-theme),
+:host-context(html.light-theme) {
+  .pr-unit {
+    color: #b77900;
+  }
+}
+
+
+/* =========================================================
+   V3 DASHBOARD — MOBILE CONTENT OVERRIDES
+   ========================================================= */
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: #06080f;
+}
+
+ion-content.fordago-page-content {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.content-inner {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 18px 16px 26px !important;
+  box-sizing: border-box;
+}
+
+.membership-card-icon {
+  width: 40px !important;
+  height: 40px !important;
+  display: grid !important;
+  place-items: center !important;
+  border: 1px solid rgba(255, 214, 0, 0.20) !important;
+  border-radius: 13px !important;
+  background: rgba(255, 214, 0, 0.07) !important;
+  color: #ffd600 !important;
+}
+
+.membership-card-icon ion-icon {
+  display: block !important;
+  color: #ffd600 !important;
+  font-size: 20px !important;
+  opacity: 1 !important;
+}
+
+.stats-grid {
+  width: 100%;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+
+.stat-card {
+  min-width: 0 !important;
+  padding: 13px 5px !important;
+}
+
+.stat-icon {
+  display: block !important;
+  opacity: 1 !important;
+}
+
+.heat-grid {
+  width: 100%;
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+}
+
+.page-bottom-space {
+  height: 8px !important;
+}
+
+@media (max-width: 360px) {
+  .content-inner {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 9px !important;
+  }
+
+  .stat-card {
+    min-height: 94px !important;
+    padding: 14px 10px !important;
+  }
+}
+
+
+/* V4 final: Ionic owns the page height; ion-content owns vertical scrolling. */
+:host {
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+
+:host > ion-content {
+  min-height: 0 !important;
+  --overflow: auto !important;
+}
+
+:host > ion-content::part(scroll) {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y !important;
+}
+
+
+/* =========================================================
+   STAT CARD DETAIL POPUP
+   NOTE: the Notifications panel no longer lives in this file —
+   it was extracted into shared/notification-panel/ (its own
+   scoped .notif-overlay/.notif-overlay-card rules there don't
+   leak here, and vice versa, thanks to Angular's per-component
+   style encapsulation). The .notif-overlay/.notif-overlay-card
+   classes below now style ONLY the stat-card detail popup that
+   still lives in this template.
+
+   Tapping a "This Month" stat card opens a click-to-expand
+   popup, centered on screen and sized to fit its content (short
+   panels stay compact, longer lists grow up to a max-height and
+   then scroll) instead of taking over the full screen. A close
+   button always sits in the top-right of its header (see
+   .notif-dismiss-btn further up this file).
+   ========================================================= */
+.notif-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  padding: 24px !important;
+  overflow: hidden !important;
+}
+
+.notif-overlay-card {
+  width: 100% !important;
+  max-width: 420px !important;
+  height: auto !important;
+  max-height: 80vh !important;
+  margin: 0 auto;
+  border-radius: 24px !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-top: 2px solid transparent !important;
+  border-image: linear-gradient(90deg, var(--dash-yellow), transparent) 1 !important;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5) !important;
+  transform-origin: center center;
+  animation: statPopupIn 0.2s cubic-bezier(0.22, 1, 0.36, 1) both !important;
+}
+
+@keyframes statPopupIn {
+  from { transform: scale(0.92); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+:host-context(body.light-theme),
+:host-context(html.light-theme) {
+  .notif-overlay-card {
+    border-color: rgba(245, 158, 11, 0.22) !important;
+    box-shadow: 0 30px 70px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(15, 23, 42, 0.03) !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .notif-overlay {
+    padding: 16px !important;
+  }
+}
+
+/* =========================================================
+   STAT CARD DETAIL PANEL
+   Tapping a "This Month" stat card opens a themed panel that
+   reuses the notif-overlay shell. Colors below reference the
+   same --dash-* variables as the stat cards themselves so each
+   panel matches its card's accent (yellow/orange/blue/green),
+   and automatically follows light/dark theme since --dash-text
+   and --dash-muted are already redefined per-theme above.
+   ========================================================= */
+
+.stats-grid .stat-card {
+  cursor: pointer;
+  transition: transform 150ms ease, border-color 180ms ease;
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--dash-yellow);
+    outline-offset: 2px;
+  }
+}
+
+.stat-detail-icon-wrap {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--dash-text);
+  font-size: 18px;
+}
+
+.stat-detail-card.theme-sessions {
+  border-image: linear-gradient(90deg, var(--dash-yellow), transparent) 1 !important;
+  .stat-detail-icon-wrap { background: rgba(255, 214, 0, 0.14); border-color: rgba(255, 214, 0, 0.28); color: var(--dash-yellow); }
+  .stat-detail-hero-icon, .stat-detail-badge, .stat-detail-hero-value { color: var(--dash-yellow); }
+}
+
+.stat-detail-card.theme-streak {
+  border-image: linear-gradient(90deg, var(--dash-orange), transparent) 1 !important;
+  .stat-detail-icon-wrap { background: rgba(255, 149, 0, 0.14); border-color: rgba(255, 149, 0, 0.28); color: var(--dash-orange); }
+  .stat-detail-hero-icon, .stat-detail-badge, .stat-detail-hero-value { color: var(--dash-orange); }
+}
+
+.stat-detail-card.theme-avg {
+  border-image: linear-gradient(90deg, var(--dash-blue), transparent) 1 !important;
+  .stat-detail-icon-wrap { background: rgba(74, 158, 255, 0.14); border-color: rgba(74, 158, 255, 0.28); color: var(--dash-blue); }
+  .stat-detail-hero-icon, .stat-detail-badge, .stat-detail-hero-value { color: var(--dash-blue); }
+}
+
+.stat-detail-card.theme-upcoming {
+  border-image: linear-gradient(90deg, var(--dash-green), transparent) 1 !important;
+  .stat-detail-icon-wrap { background: rgba(0, 214, 143, 0.14); border-color: rgba(0, 214, 143, 0.28); color: var(--dash-green); }
+  .stat-detail-hero-icon, .stat-detail-badge, .stat-detail-hero-value { color: var(--dash-green); }
+}
+
+.stat-detail-list-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 10px;
+  margin-bottom: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.stat-detail-dot {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.6;
+}
+
+.stat-detail-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.stat-detail-name {
+  margin-bottom: 2px;
+  color: var(--dash-text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.stat-detail-meta {
+  color: var(--dash-muted);
+  font-size: 11px;
+}
+
+.stat-detail-badge {
+  flex-shrink: 0;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.stat-detail-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--dash-muted);
+
+  ion-icon { font-size: 36px; opacity: 0.3; }
+  strong { color: var(--dash-text); font-size: 14px; }
+  span { font-size: 12px; }
+}
+
+.stat-detail-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px 16px 16px;
+}
+
+.stat-detail-hero-icon {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 14px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 30px;
+
+  &.is-lit {
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+}
+
+.stat-detail-hero-value {
+  margin-bottom: 6px;
+  color: var(--dash-text);
+  font-size: 26px;
+  font-weight: 900;
+}
+
+.stat-detail-hero-caption {
+  max-width: 280px;
+  color: var(--dash-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.stat-detail-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 4px 4px 8px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  color: var(--dash-muted);
+  font-size: 12px;
+  line-height: 1.55;
+
+  ion-icon {
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: var(--dash-muted);
+    font-size: 16px;
+  }
+}
+
+/* =========================================================
+   LIVE SESSION TIMER (Start/Stop on the Today's Workout card)
+   ========================================================= */
+
+.session-timer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 2px 0 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.session-timer-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  border: none;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 150ms ease, opacity 150ms ease;
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  &.start {
+    margin-left: auto;
+    background: #FFD600;
+    color: #111317;
+  }
+
+  &.stop {
+    background: rgba(255, 68, 97, 0.12);
+    border: 1px solid rgba(255, 68, 97, 0.3);
+    color: var(--dash-red);
+  }
+
+  ion-icon {
+    font-size: 15px;
+  }
+}
+
+.session-timer-live {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-variant-numeric: tabular-nums;
+
+  .session-timer-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--dash-red);
+    box-shadow: 0 0 8px rgba(255, 68, 97, 0.55);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+
+  .session-timer-value {
+    color: var(--dash-text);
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+  }
+}
+
+.session-timer-done {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0 12px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(0, 214, 143, 0.08);
+  border: 1px solid rgba(0, 214, 143, 0.2);
+  color: var(--dash-green);
+  font-size: 11px;
+  font-weight: 700;
+
+  ion-icon {
+    font-size: 14px;
+  }
+}
+
+:host-context(body.light-theme),
+:host-context(html.light-theme) {
+  .session-timer-row {
+    background: rgba(15, 23, 42, 0.04);
+    border-color: rgba(15, 23, 42, 0.09);
+  }
+
+  .session-timer-btn.stop {
+    background: rgba(220, 38, 38, 0.08);
+    border-color: rgba(220, 38, 38, 0.25);
+  }
+
+  .session-timer-done {
+    background: rgba(5, 150, 105, 0.08);
+    border-color: rgba(5, 150, 105, 0.2);
+  }
+}
+

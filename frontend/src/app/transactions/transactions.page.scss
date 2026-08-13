@@ -1,0 +1,443 @@
+// transactions.page.scss - FordaGO Modern Redesign - Theme Aware
+
+// ── CSS Custom Properties ──────────────────────────
+:root {
+  --text-primary: #FFFFFF;
+  --text-secondary: rgba(255,255,255,0.75);
+  --text-muted: rgba(255,255,255,0.5);
+  --text-tertiary: rgba(255,255,255,0.35);
+  --accent-lime: #FFD600;
+  --accent-amber: #FF9500;
+  --accent-red: #FF4461;
+  --accent-blue: #4A9EFF;
+  --accent-green: #00D68F;
+  --accent-shadow: rgba(255,214,0,0.3);
+  --accent-border: rgba(255,214,0,0.25);
+  --accent-dim: rgba(255,214,0,0.1);
+  --bg-primary: #06080F;
+  --bg-secondary: #0B0E1A;
+  --bg-tertiary: #111428;
+  --overlay-light: rgba(255,255,255,0.04);
+  --overlay-medium: rgba(255,255,255,0.07);
+  --overlay-heavy: rgba(255,255,255,0.1);
+  --border-primary: rgba(255,255,255,0.1);
+  --border-secondary: rgba(255,255,255,0.08);
+  --glass-bg: rgba(255,255,255,0.03);
+  --glass-border: rgba(255,255,255,0.06);
+  --glass-blur: blur(20px);
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
+  --shadow-glow: 0 0 20px rgba(255,214,0,0.15);
+  --shadow-card: 0 4px 24px rgba(0,0,0,0.3);
+  --transition-fast: 0.15s ease;
+  --transition-smooth: 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+
+// ── Ionic Overrides ──────────────────────────────
+ion-toolbar {
+  --background: transparent;
+  --border-width: 0;
+  --padding-start: 4px;
+  --padding-end: 16px;
+}
+
+ion-content {
+  --background: var(--bg-primary);
+}
+
+.toolbar-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+  text-align: center;
+}
+
+.back-btn {
+  --color: var(--text-secondary);
+}
+
+.dl-btn {
+  width: 44px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,214,0,0.1);
+  border: 1px solid rgba(255,214,0,0.45);
+  border-radius: 10px;
+  color: #FFD600;
+  padding: 0;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+
+  .dl-fallback {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    color: #FFD600;
+  }
+
+  &:active { background: rgba(255,214,0,0.22); }
+}
+
+.content-inner {
+  padding: 14px 16px 100px;
+}
+
+// -- Period Filter Pills --
+.pill-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+.pill {
+  flex-shrink: 0;
+  padding: 7px 16px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.45);
+  cursor: pointer;
+  transition: all 0.18s;
+
+  &.active {
+    background: rgba(255,214,0,0.12);
+    border-color: rgba(255,214,0,0.35);
+    color: #FFD600;
+  }
+}
+
+// -- Summary Card --
+.summary-card {
+  background: linear-gradient(135deg, #1A1200 0%, #0F0A00 60%, #0B0E1A 100%);
+  border: 1px solid rgba(255,214,0,0.15);
+  border-radius: 20px;
+  padding: 18px 16px;
+  margin-bottom: 20px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    pointer-events: none;
+  }
+}
+
+.summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.summary-item {
+  text-align: center;
+  flex: 1;
+}
+
+.summary-val {
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+  margin-bottom: 4px;
+
+  &.gold { color: #FFD600; }
+}
+
+.summary-lbl {
+  font-size: 10px;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.summary-divider {
+  width: 1px;
+  height: 36px;
+  background: rgba(255,255,255,0.08);
+}
+
+// -- Empty / Loading --
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 20px;
+  gap: 14px;
+
+  ion-icon {
+    font-size: 48px;
+    color: rgba(255,255,255,0.12);
+  }
+
+  ion-spinner { --color: #FFD600; }
+}
+
+.empty-lbl {
+  font-size: 13px;
+  color: rgba(255,255,255,0.3);
+}
+
+// -- Transaction Cards --
+.tx-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tx-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 16px;
+  padding: 14px;
+  transition: border-color 0.15s;
+
+  &:active { border-color: rgba(255,214,0,0.25); }
+}
+
+// -- Left icon --
+.tx-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  ion-icon { font-size: 20px; }
+
+  &.icon-daily {
+    background: rgba(255,214,0,0.1);
+    border: 1px solid rgba(255,214,0,0.2);
+    ion-icon { color: #FFD600; }
+  }
+
+  &.icon-premium {
+    background: rgba(74,158,255,0.1);
+    border: 1px solid rgba(74,158,255,0.2);
+    ion-icon { color: #4A9EFF; }
+  }
+
+  &.icon-shop {
+    background: rgba(0,214,143,0.1);
+    border: 1px solid rgba(0,214,143,0.2);
+    ion-icon { color: #00D68F; }
+  }
+}
+
+// -- Middle info --
+.tx-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.tx-type {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tx-sub {
+  font-size: 11px;
+  color: rgba(255,255,255,0.45);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tx-date {
+  font-size: 10px;
+  color: rgba(255,255,255,0.3);
+  margin-bottom: 4px;
+}
+
+.tx-status {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: 10px;
+
+  &.st-paid     { background: rgba(0,214,143,0.12);  color: #00D68F; }
+  &.st-pending  { background: rgba(255,214,0,0.12);  color: #FFD600; }
+  &.st-rejected { background: rgba(255,68,97,0.12);  color: #FF4461; }
+  &.st-neutral  { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.3); }
+}
+
+// -- Right amount --
+.tx-amount-wrap {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.tx-amount {
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 4px;
+
+  &.free {
+    font-size: 12px;
+    color: rgba(255,255,255,0.35);
+    font-weight: 600;
+  }
+}
+
+.tx-source-badge {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.06);
+  border-radius: 6px;
+  padding: 2px 6px;
+  display: inline-block;
+}
+
+// -- Animations --
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fade-up { animation: fadeUp 0.3s ease both; }
+
+// ── Light Mode ──────────────────────────────────────────
+// Same gap as the Equipment page had -- this file had NO light-theme
+// block at all, so light mode left Transaction History fully dark
+// (dark cards, white text) while the rest of the app switched over.
+:host-context(body.light-theme) {
+  ion-content { --background: #f4f5f8 !important; }
+
+  .toolbar-title { color: #0f172a; }
+
+  .dl-btn {
+    background: rgba(217, 119, 6, 0.1);
+    border-color: rgba(217, 119, 6, 0.4);
+    color: #d97706;
+    .dl-fallback { color: #d97706; }
+    &:active { background: rgba(217, 119, 6, 0.2); }
+  }
+
+  .pill {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.1);
+    color: rgba(15, 23, 42, 0.5);
+    &.active {
+      background: rgba(217, 119, 6, 0.12);
+      border-color: rgba(217, 119, 6, 0.35);
+      color: #d97706;
+    }
+  }
+
+  // Summary card: was a near-black gold-tinted gradient -- switched to a
+  // light warm-cream gradient so it still reads as "gold summary" without
+  // looking like a leftover dark panel on an otherwise white page.
+  .summary-card {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 55%, #eef2ff 100%);
+    border-color: rgba(217, 119, 6, 0.28);
+  }
+  .summary-val {
+    color: #0f172a;
+    &.gold { color: #b45309; }
+  }
+  .summary-lbl { color: rgba(15, 23, 42, 0.45); }
+  .summary-divider { background: rgba(15, 23, 42, 0.12); }
+
+  .empty-state {
+    ion-icon { color: rgba(15, 23, 42, 0.18); }
+    ion-spinner { --color: #d97706; }
+  }
+  .empty-lbl { color: rgba(15, 23, 42, 0.4); }
+
+  .tx-card {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.08);
+    &:active { border-color: rgba(217, 119, 6, 0.3); }
+  }
+
+  .tx-icon {
+    &.icon-daily {
+      background: rgba(217, 119, 6, 0.1);
+      border-color: rgba(217, 119, 6, 0.25);
+      ion-icon { color: #d97706; }
+    }
+    &.icon-premium {
+      background: rgba(37, 99, 235, 0.1);
+      border-color: rgba(37, 99, 235, 0.22);
+      ion-icon { color: #2563eb; }
+    }
+    &.icon-shop {
+      background: rgba(5, 150, 105, 0.1);
+      border-color: rgba(5, 150, 105, 0.22);
+      ion-icon { color: #059669; }
+    }
+  }
+
+  .tx-type { color: #0f172a; }
+  .tx-sub  { color: rgba(15, 23, 42, 0.5); }
+  .tx-date { color: rgba(15, 23, 42, 0.35); }
+
+  .tx-status {
+    &.st-paid     { background: rgba(5,150,105,0.12);  color: #059669; }
+    &.st-pending  { background: rgba(217,119,6,0.14);  color: #b45309; }
+    &.st-rejected { background: rgba(220,38,38,0.12);  color: #dc2626; }
+    &.st-neutral  { background: rgba(15,23,42,0.06);   color: rgba(15,23,42,0.4); }
+  }
+
+  .tx-amount {
+    color: #0f172a;
+    &.free { color: rgba(15, 23, 42, 0.4); }
+  }
+
+  .tx-source-badge {
+    color: rgba(15, 23, 42, 0.4);
+    background: rgba(15, 23, 42, 0.06);
+  }
+}
+
+
+/* V4 final: Ionic owns the page height; ion-content owns vertical scrolling. */
+:host {
+  display: block;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  height: 100%;
+}
+
+:host > ion-content {
+  min-height: 0 !important;
+  --overflow: auto !important;
+}
+
+:host > ion-content::part(scroll) {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y !important;
+}

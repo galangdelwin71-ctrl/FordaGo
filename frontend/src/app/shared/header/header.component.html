@@ -1,0 +1,40 @@
+<!-- header.component.html -->
+<ion-header [translucent]="false" class="fordago-app-header ion-no-border">
+  <ion-toolbar class="fordago-toolbar">
+    <div slot="start" class="toolbar-brand">
+      <span class="brand-mark" aria-hidden="true">
+        <img src="/assets/icon/logo.png" class="brand-logo" alt="" />
+      </span>
+      <span class="toolbar-brand-copy">
+        <span class="toolbar-logo">FordaGO</span>
+        <span class="toolbar-subtitle" *ngIf="subtitle">{{ subtitle }}</span>
+      </span>
+    </div>
+
+    <div slot="end" class="header-end">
+      <!-- Page-specific extra actions (e.g. inventory's cart/orders button)
+           are projected here, before the shared equipment/notif/profile
+           buttons, so every page keeps the same right-to-left order. -->
+      <ng-content select="[header-extra]"></ng-content>
+
+      <button type="button" class="equip-header-btn" (click)="equipmentClick.emit()" aria-label="Open equipment">
+        <ion-icon name="barbell-outline" aria-hidden="true"></ion-icon>
+      </button>
+
+      <button
+        type="button"
+        class="notif-bell-btn"
+        [class.has-unread]="unreadCount > 0"
+        (click)="notifClick.emit()"
+        aria-label="Open notifications">
+        <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
+        <span class="notif-bell-badge" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
+      </button>
+
+      <button type="button" class="profile-button" (click)="profileClick.emit()" aria-label="Open profile">
+        <span class="avatar" *ngIf="!profileImage">{{ initials || 'U' }}</span>
+        <img *ngIf="profileImage" [src]="profileImage" alt="Profile" class="avatar avatar-img" />
+      </button>
+    </div>
+  </ion-toolbar>
+</ion-header>

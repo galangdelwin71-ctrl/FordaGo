@@ -1,0 +1,191 @@
+<!-- equipment.page.html -->
+<ion-header [translucent]="false" class="fordago-app-header ion-no-border">
+  <ion-toolbar class="fordago-toolbar">
+    <div slot="start" class="toolbar-brand">
+      <span class="brand-mark" aria-hidden="true">
+        <img src="/assets/icon/logo.png" class="brand-logo" alt="" />
+      </span>
+      <span class="toolbar-brand-copy">
+        <span class="toolbar-logo">FordaGO</span>
+        <span class="toolbar-subtitle">EQUIPMENT</span>
+      </span>
+    </div>
+
+    <div slot="end" class="header-end">
+      <button type="button" class="equip-header-btn" (click)="goToEquipment()" aria-label="Open equipment">
+        <ion-icon name="barbell-outline" aria-hidden="true"></ion-icon>
+      </button>
+
+      <button
+        type="button"
+        class="notif-bell-btn"
+        [class.has-unread]="unreadCount > 0"
+        (click)="openNotifPanel()"
+        aria-label="Open notifications">
+        <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
+        <span class="notif-bell-badge" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
+      </button>
+
+      <button type="button" class="profile-button" (click)="goToProfile()" aria-label="Open profile">
+        <span class="avatar" *ngIf="!profileImage">{{ initials || 'U' }}</span>
+        <img *ngIf="profileImage" [src]="profileImage" alt="Profile" class="avatar avatar-img" />
+      </button>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="false" class="fordago-page-content" [scrollY]="true">
+  <div class="scroll-wrap">
+
+    <!-- Page Title -->
+    <div class="page-title-wrap">
+      <div class="page-title">Equipment</div>
+      <div class="page-sub">Gym machines &amp; tools</div>
+    </div>
+
+    <!-- Search -->
+    <div class="search-wrap">
+      <ion-icon name="search-outline" class="search-icon-ion"></ion-icon>
+      <input
+        class="search-input"
+        type="text"
+        placeholder="Search equipment..."
+        [(ngModel)]="searchQuery"
+      />
+    </div>
+
+    <!-- Category Filter Pills -->
+    <div class="cat-row">
+      <div
+        *ngFor="let cat of categories"
+        class="cat-pill"
+        [class.active]="activeCategory === cat"
+        (click)="setCategory(cat)"
+      >{{ cat }}</div>
+    </div>
+
+    <!-- Loading -->
+    <div class="empty-state" *ngIf="isLoading">
+      <ion-spinner name="crescent" class="empty-spinner"></ion-spinner>
+      <div class="empty-state-text" style="margin-top:10px;">Loading...</div>
+    </div>
+
+    <!-- Error -->
+    <div class="empty-state" *ngIf="errorMsg && !isLoading">
+      <ion-icon name="alert-circle-outline" class="empty-state-icon"></ion-icon>
+      <div class="empty-state-text">{{ errorMsg }}</div>
+    </div>
+
+    <!-- Empty -->
+    <div class="empty-state" *ngIf="!isLoading && !errorMsg && filteredEquipment.length === 0">
+      <ion-icon name="barbell-outline" class="empty-state-icon empty-state-icon-faint"></ion-icon>
+      <div class="empty-state-text">No equipment found</div>
+    </div>
+
+    <!-- Equipment Grid -->
+    <div class="equip-grid" *ngIf="!isLoading && !errorMsg && filteredEquipment.length > 0">
+      <div
+        *ngFor="let item of filteredEquipment; let i = index"
+        class="equip-card fade-up"
+        [style.animation-delay]="(i * 0.05) + 's'"
+        (click)="openModal(item)"
+      >
+        <!-- Photo -->
+        <div class="equip-photo-wrap">
+          <img *ngIf="item.image_url" [src]="item.image_url" alt="{{ item.name }}" class="equip-photo" />
+          <div *ngIf="!item.image_url" class="equip-photo-placeholder">
+            <ion-icon name="barbell-outline"></ion-icon>
+          </div>
+          <!-- Status badge on photo -->
+          <span class="equip-status-badge"
+                [class.available]="item.status === 'available'"
+                [class.unavailable]="item.status !== 'available'">
+            {{ item.status === 'available' ? 'Available' : 'Unavailable' }}
+          </span>
+        </div>
+        <!-- Info -->
+        <div class="equip-card-info">
+          <div class="equip-name">{{ item.name }}</div>
+          <div class="equip-cat" *ngIf="item.category">{{ item.category }}</div>
+          <div class="equip-weight" *ngIf="item.weight_scale">Available weights: {{ item.weight_scale }}</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</ion-content>
+
+<ion-footer class="fordago-app-footer ion-no-border">
+  <nav class="fordago-bottom-nav" aria-label="Main navigation">
+    <button type="button" class="fordago-nav-item" (click)="goToDashboard()" aria-label="Home">
+      <span class="fordago-nav-icon"><ion-icon name="home-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Home</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item" (click)="goToSchedule()" aria-label="Schedule">
+      <span class="fordago-nav-icon"><ion-icon name="calendar-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Schedule</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item fordago-scan-item" (click)="goToQr()" aria-label="Scan QR">
+      <span class="fordago-scan-button"><ion-icon name="scan-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Scan</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item" (click)="goToInventory()" aria-label="Shop">
+      <span class="fordago-nav-icon"><ion-icon name="bag-handle-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Shop</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item" (click)="goToProfile()" aria-label="Profile">
+      <span class="fordago-nav-icon"><ion-icon name="person-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Profile</span>
+    </button>
+  </nav>
+</ion-footer>
+
+
+<app-notification-panel
+  [isOpen]="notifPanelOpen"
+  (closed)="closeNotifPanel()"
+  (unreadCountChange)="onUnreadCountChange($event)">
+</app-notification-panel>
+
+<!-- Equipment Detail Overlay -->
+<div class="equipment-modal-backdrop" *ngIf="modalOpen" (click)="closeModal()">
+  <div class="equipment-modal-card" *ngIf="selectedItem" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Equipment Details</div>
+    </div>
+
+    <div class="modal-photo-wrap">
+      <img *ngIf="selectedItem.image_url" [src]="selectedItem.image_url" alt="{{ selectedItem.name }}" class="modal-photo" />
+      <div *ngIf="!selectedItem.image_url" class="modal-photo-placeholder">
+        <ion-icon name="barbell-outline"></ion-icon>
+      </div>
+    </div>
+
+    <div class="modal-name">{{ selectedItem.name }}</div>
+
+    <div class="modal-row">
+      <span class="modal-cat" *ngIf="selectedItem.category">{{ selectedItem.category }}</span>
+      <span class="modal-status"
+            [class.available]="selectedItem.status === 'available'"
+            [class.unavailable]="selectedItem.status !== 'available'">
+        {{ selectedItem.status === 'available' ? 'Available' : 'Unavailable' }}
+      </span>
+    </div>
+
+    <div class="info-card" *ngIf="selectedItem.weight_scale">
+      <div class="info-label">Available weights</div>
+      <div class="info-value">{{ selectedItem.weight_scale }}</div>
+    </div>
+
+    <div class="info-card" *ngIf="selectedItem.description">
+      <div class="info-label">Description</div>
+      <div class="info-value">{{ selectedItem.description }}</div>
+    </div>
+
+    <button class="close-modal-btn" (click)="closeModal()" type="button">Close</button>
+  </div>
+</div>

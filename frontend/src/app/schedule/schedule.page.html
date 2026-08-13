@@ -1,0 +1,626 @@
+<!-- schedule.page.html -->
+<app-header
+  subtitle="SCHEDULE"
+  [unreadCount]="unreadCount"
+  [profileImage]="profileImage"
+  [initials]="initials"
+  (equipmentClick)="goToEquipment()"
+  (notifClick)="openNotifPanel()"
+  (profileClick)="goToProfile()">
+</app-header>
+
+<ion-content [fullscreen]="false" class="fordago-page-content" [scrollY]="true">
+  <div class="scroll-wrap">
+
+    <!-- Month row -->
+    <div class="month-row">
+      <span class="month-label">{{ monthLabel }}</span>
+      <div class="month-nav">
+        <button class="nav-btn" (click)="prevWeek()">&#8249;</button>
+        <button class="nav-btn" (click)="nextWeek()">&#8250;</button>
+      </div>
+    </div>
+
+    <!-- Week Strip -->
+    <div class="week-strip">
+      <div
+        *ngFor="let day of weekDays; let i = index"
+        class="day-pill"
+        [class.active]="day.active"
+        [class.has-session]="day.hasSession"
+        (click)="selectDay(day, i)">
+        <span class="day-name">{{ day.name }}</span>
+        <span class="day-num">{{ day.num }}</span>
+        <span class="dot-indicator" *ngIf="day.hasSession"></span>
+      </div>
+    </div>
+
+    <!-- Section Header -->
+    <div class="section-header">
+      <span class="section-title">{{ selectedDayLabel }}</span>
+      <div class="section-header-actions">
+        <button class="icon-action-btn" (click)="openHistoryModal()" title="Workout History">
+          <ion-icon name="time-outline"></ion-icon>
+        </button>
+        <button class="icon-action-btn" (click)="openWeekPlanModal()" title="Create Week Plan">
+          <ion-icon name="calendar-number-outline"></ion-icon>
+        </button>
+        <span class="session-count">
+          {{ sessions.length === 0 ? 'No sessions' : sessions.length + (sessions.length === 1 ? ' session' : ' sessions') }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="sessions.length === 0">
+      <ion-icon name="calendar-outline" class="empty-icon"></ion-icon>
+      <div class="empty-title">Rest day or no sessions</div>
+      <div class="empty-sub">Tap + to schedule a workout</div>
+    </div>
+
+    <!-- Session Cards -->
+    <div class="sessions-list">
+      <div
+        *ngFor="let s of sessions; let i = index"
+        class="session-card"
+        [class.missed]="s.status === 'missed'"
+        [class.done]="s.status === 'done'"
+        [style.animation-delay]="(i * 0.07) + 's'">
+
+        <!-- Time Column -->
+        <div class="time-col">
+          <span class="time-val">{{ s.timeVal }}</span>
+          <span class="time-ampm">{{ s.timeAmpm }}</span>
+          <div class="time-line"></div>
+          <div class="time-dot" [style.border-color]="getDotColor(s.status)"></div>
+        </div>
+
+        <!-- Session Info -->
+        <div class="session-info">
+          <div class="session-header">
+            <div class="session-title-wrap">
+              <div class="session-title">{{ s.title }}</div>
+              <!-- Custom target tag if user set a specific target -->
+              <div class="session-target" *ngIf="s.customTarget">
+                <span class="target-icon"><ion-icon name="locate-outline"></ion-icon></span>
+                <span class="target-text">{{ s.customTarget }}</span>
+              </div>
+            </div>
+            <span class="badge" [ngClass]="getBadgeClass(s.status)">
+              {{ getBadgeText(s.status) }}
+            </span>
+          </div>
+          <div class="session-meta">{{ s.duration }} · {{ s.location }}</div>
+          <div class="session-coach">
+            <span class="coach-icon"><ion-icon name="person-outline"></ion-icon></span>
+            <span *ngIf="s.coach">{{ s.coach }}</span>
+            <span *ngIf="!s.coach">Home workout</span>
+            <span class="coach-dot" *ngIf="s.coach && s.membersCount > 0"></span>
+            <span *ngIf="s.coach && s.membersCount > 0">{{ s.membersCount }} joining</span>
+          </div>
+
+          <!-- Exercise List (shown when customTarget or default exercises exist) -->
+          <div class="exercise-list" *ngIf="getExercises(s).length > 0">
+            <div class="exercise-list-header">
+              <span class="ex-list-title">Exercises</span>
+              <span class="ex-list-count">{{ getExercises(s).length }} exercises</span>
+            </div>
+            <div class="exercise-items">
+              <!-- Column labels for the sets×reps value shown per row, so the
+                   number isn't unlabeled (e.g. "4×8-10" now sits under
+                   "Sets × Reps"). -->
+              <div class="ex-columns-header">
+                <span class="ex-columns-name">Exercise</span>
+                <span class="ex-columns-detail">Sets × Reps</span>
+              </div>
+              <div class="exercise-item" *ngFor="let ex of getExercises(s); let j = index">
+                <span class="ex-num">{{ j + 1 }}</span>
+                <span class="ex-name">{{ ex.name }}</span>
+                <span class="ex-detail">{{ ex.sets }}×{{ ex.reps }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card Action Buttons -->
+          <div class="card-actions">
+            <button class="action-btn primary" (click)="toggleEditPanel(i, $event)">
+              <ion-icon name="create-outline"></ion-icon>
+              {{ expandedCard === i ? 'Close' : 'Edit' }}
+            </button>
+            <button class="action-btn" (click)="cycleStatus(i, $event)">
+              <ion-icon name="checkmark-outline"></ion-icon>
+              {{ s.status === 'done' ? 'Undo' : 'Mark Done' }}
+            </button>
+            <button class="action-btn danger" (click)="deleteSession(i, $event)">
+              <ion-icon name="trash-outline"></ion-icon>
+              Delete
+            </button>
+          </div>
+
+          <!-- Inline Edit Panel -->
+          <div class="edit-panel" [class.open]="expandedCard === i">
+            <div class="edit-row">
+              <input
+                class="edit-input"
+                type="time"
+                [(ngModel)]="editBuffer.timeRaw" />
+              <select class="edit-select" [(ngModel)]="editBuffer.duration">
+                <option *ngFor="let d of durationOptions" [value]="d">{{ d }}</option>
+              </select>
+            </div>
+            <div class="edit-row">
+              <select class="edit-select" [(ngModel)]="editBuffer.coach">
+                <option value="">No coach</option>
+                <option *ngFor="let c of coaches" [value]="c">{{ c }}</option>
+              </select>
+              <select class="edit-select" [(ngModel)]="editBuffer.location">
+                <option *ngFor="let l of locations" [value]="l">{{ l }}</option>
+              </select>
+            </div>
+            <!-- Custom Target Input -->
+            <div class="edit-row single">
+              <div class="target-input-wrap">
+                <span class="target-input-icon"><ion-icon name="locate-outline"></ion-icon></span>
+                <input
+                  class="edit-input target-input"
+                  type="text"
+                  placeholder="Custom target (e.g. Back & Bicep)"
+                  [(ngModel)]="editBuffer.customTarget" />
+              </div>
+            </div>
+
+            <!-- Exercise Editor -->
+            <div class="edit-exercises-section">
+              <div class="edit-exercises-header">
+                <span class="edit-exercises-title">Exercises</span>
+                <button class="add-ex-btn" (click)="addExerciseToBuffer()">
+                  <ion-icon name="add-outline"></ion-icon> Add
+                </button>
+              </div>
+              <div class="edit-exercise-rows">
+                <div class="edit-exercise-row" *ngFor="let ex of editBuffer.exercises; let j = index">
+                  <input class="ex-edit-name" type="text" placeholder="Exercise name" [(ngModel)]="editBuffer.exercises[j].name" />
+                  <input class="ex-edit-sets" type="number" [min]="1" appNoNegative placeholder="Sets" pattern="[0-9]*" [(ngModel)]="editBuffer.exercises[j].sets" />
+                  <input class="ex-edit-reps" type="text" placeholder="Reps" [(ngModel)]="editBuffer.exercises[j].reps" />
+                  <button class="ex-del-btn" (click)="removeExerciseFromBuffer(j)">
+                    <ion-icon name="close-outline"></ion-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="edit-actions">
+              <button class="edit-save" (click)="saveEdit(i)">Save changes</button>
+              <button class="edit-delete" (click)="deleteSession(i, $event)">Remove</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Home Workout Suggestion (shown when a session is missed) -->
+    <div class="hw-card" *ngIf="homeWorkout.visible && missedSessions">
+      <div class="hw-header">
+        <div class="hw-icon-wrap"><ion-icon name="home-outline"></ion-icon></div>
+        <div>
+          <div class="hw-title">Missed {{ missedSessionTitle }}?</div>
+          <div class="hw-sub">Try this home alternative</div>
+        </div>
+      </div>
+      <div class="hw-exercises">
+        <div class="hw-ex" *ngFor="let ex of homeWorkout.exercises; let j = index">
+          <span class="ex-num">{{ j + 1 }}</span>
+          <span class="ex-text">{{ ex }}</span>
+        </div>
+      </div>
+      <button class="hw-view-btn" (click)="openHomeWorkoutModal()">View Full Home Workout Plan</button>
+    </div>
+
+    <div style="height: 24px;"></div>
+  </div>
+
+<!-- FAB Add Button -->
+<ion-fab vertical="bottom" horizontal="end" slot="fixed" >
+  <ion-fab-button class="fab-btn fordago-schedule-fab" (click)="openAddModal()">
+    <span class="fab-plus">+</span>
+  </ion-fab-button>
+</ion-fab>
+
+
+</ion-content>
+
+<ion-footer class="fordago-app-footer ion-no-border">
+  <nav class="fordago-bottom-nav" aria-label="Main navigation">
+    <button type="button" class="fordago-nav-item" (click)="goToDashboard()" aria-label="Home">
+      <span class="fordago-nav-icon"><ion-icon name="home-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Home</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item is-active" (click)="goToSchedule()" aria-label="Schedule">
+      <span class="fordago-nav-icon"><ion-icon name="calendar-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Schedule</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item fordago-scan-item" (click)="goToQr()" aria-label="Scan QR">
+      <span class="fordago-scan-button"><ion-icon name="scan-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Scan</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item" (click)="goToInventory()" aria-label="Shop">
+      <span class="fordago-nav-icon"><ion-icon name="bag-handle-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Shop</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item" (click)="goToProfile()" aria-label="Profile">
+      <span class="fordago-nav-icon"><ion-icon name="person-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Profile</span>
+    </button>
+  </nav>
+</ion-footer>
+
+
+<!-- Add Workout Modal -->
+<ion-modal
+  [isOpen]="addModalOpen"
+  (didDismiss)="closeAddModal()"
+  [breakpoints]="[0, 0.92, 1]"
+  [initialBreakpoint]="0.92">
+  <ng-template>
+    <ion-content class="modal-content">
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-title">Add Workout</div>
+
+        <div class="field-group">
+          <label class="field-label">Workout Type</label>
+          <div class="field-wrap">
+            <span class="field-icon"><ion-icon name="barbell-outline"></ion-icon></span>
+            <select [(ngModel)]="newWorkoutType" (ngModelChange)="onWorkoutTypeChange($event)">
+              <option *ngFor="let wt of workoutTypes" [value]="wt">{{ wt }}</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Custom Target Input (shown for all types except Rest Day) -->
+        <div class="field-group" *ngIf="newWorkoutType !== 'Rest Day'">
+          <label class="field-label">Specific Target <span class="label-optional">(Optional)</span></label>
+          <div class="field-wrap">
+            <span class="field-icon"><ion-icon name="locate-outline"></ion-icon></span>
+            <input
+              type="text"
+              [(ngModel)]="newWorkoutCustomTarget"
+              [placeholder]="getTargetPlaceholder(newWorkoutType)" />
+          </div>
+          <!-- Suggested targets as chips -->
+          <div class="target-suggestions">
+            <span
+              *ngFor="let t of getSuggestedTargets(newWorkoutType)"
+              class="target-chip"
+              [class.selected]="newWorkoutCustomTarget === t"
+              (click)="selectTarget(t)">
+              {{ t }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Exercise Preview (shown when target is selected) -->
+        <div class="modal-exercise-preview" *ngIf="newWorkoutCustomTarget || newWorkoutType">
+          <div class="preview-header">
+            <span class="preview-title">Recommended Exercises</span>
+            <span class="preview-sub">{{ getModalExercises().length }} exercises</span>
+          </div>
+          <div class="preview-list">
+            <div class="preview-ex" *ngFor="let ex of getModalExercises(); let j = index">
+              <span class="ex-num">{{ j + 1 }}</span>
+              <span class="ex-name">{{ ex.name }}</span>
+              <span class="ex-detail">{{ ex.sets }}×{{ ex.reps }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="field-group">
+            <label class="field-label">Date</label>
+            <div class="field-wrap">
+              <span class="field-icon"><ion-icon name="calendar-outline"></ion-icon></span>
+              <input type="date" [(ngModel)]="newWorkoutDate" />
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Time</label>
+            <div class="field-wrap">
+              <span class="field-icon">⏰</span>
+              <input type="time" [(ngModel)]="newWorkoutTime" (ngModelChange)="newWorkoutTimeWarning = ''" />
+            </div>
+            <div class="field-warning" *ngIf="newWorkoutTimeWarning">{{ newWorkoutTimeWarning }}</div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Coach (Optional)</label>
+          <div class="field-wrap">
+            <span class="field-icon">👤</span>
+            <select [(ngModel)]="newWorkoutCoach">
+              <option value="">No coach</option>
+              <option *ngFor="let c of coaches" [value]="c">{{ c }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Location</label>
+          <div class="field-wrap">
+            <span class="field-icon">📍</span>
+            <select [(ngModel)]="newWorkoutLocation">
+              <option *ngFor="let l of locations" [value]="l">{{ l }}</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Exercise Editor -->
+        <div class="edit-exercises-section">
+          <div class="edit-exercises-header">
+            <span class="edit-exercises-title">My Exercises <span class="label-optional">(Optional)</span></span>
+            <button class="add-ex-btn" (click)="addNewWorkoutExercise()">
+              <ion-icon name="add-outline"></ion-icon> Add
+            </button>
+          </div>
+          <div class="wplan-exercises-empty" *ngIf="newWorkoutExercises.length === 0">
+            Leave empty to use recommended exercises, or add your own below
+          </div>
+          <div class="edit-exercise-rows">
+            <div class="edit-exercise-row" *ngFor="let ex of newWorkoutExercises; let j = index">
+              <input class="ex-edit-name" type="text" placeholder="e.g. Bench Press" [(ngModel)]="newWorkoutExercises[j].name" />
+              <input class="ex-edit-sets" type="number" [min]="1" appNoNegative placeholder="Sets" pattern="[0-9]*" [(ngModel)]="newWorkoutExercises[j].sets" />
+              <input class="ex-edit-reps" type="text" placeholder="Reps" [(ngModel)]="newWorkoutExercises[j].reps" />
+              <button class="ex-del-btn" (click)="removeNewWorkoutExercise(j)">
+                <ion-icon name="close-outline"></ion-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn btn-secondary" (click)="closeAddModal()">Cancel</button>
+          <button 
+            class="btn btn-primary btn-yellow" 
+            (click)="saveWorkout()"
+            [disabled]="!!newWorkoutTimeWarning">
+            Save Workout
+          </button>
+        </div>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<app-notification-panel
+  [isOpen]="notifPanelOpen"
+  (closed)="closeNotifPanel()"
+  (unreadCountChange)="onUnreadCountChange($event)">
+</app-notification-panel>
+
+<!-- Home Workout Guide Modal -->
+<ion-modal [isOpen]="homeWorkoutModalOpen" (didDismiss)="closeHomeWorkoutModal()" [breakpoints]="[0,0.65,0.95]" [initialBreakpoint]="0.65">
+  <ng-template>
+    <ion-content class="modal-content">
+      <!-- Wrapped in .modal-sheet -- same structure as Add Workout / History /
+           Week Plan below. Without this wrapper the sheet had no bottom
+           safe-area padding and didn't fill its allotted breakpoint height,
+           which is what showed up as a black gap under the content. -->
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-title">Home Workout Guide</div>
+        <div class="modal-sub" *ngIf="homeWorkout.sessionTitle">For missed {{ homeWorkout.sessionTitle }} session</div>
+        <div class="home-guide-list">
+          <div class="home-guide-item" *ngFor="let ex of homeWorkout.exercises; let i = index">
+            <span class="home-guide-num">{{ i + 1 }}</span>
+            <div>
+              <div class="home-guide-text">{{ ex }}</div>
+              <div class="home-guide-tip">Keep rests at 30-60 seconds per set.</div>
+            </div>
+          </div>
+        </div>
+        <div class="info-box" style="margin-top:14px;">
+          Complete this routine at home, then mark your next session as done to stay on track.
+        </div>
+        <div class="modal-actions" style="margin-top: 12px;">
+          <button class="btn btn-primary btn-yellow" style="grid-column: 1 / -1;" (click)="closeHomeWorkoutModal()">Got it</button>
+        </div>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<!-- Workout History Modal -->
+<ion-modal [isOpen]="historyModalOpen" (didDismiss)="closeHistoryModal()" [breakpoints]="[0,0.75,1]" [initialBreakpoint]="0.75">
+  <ng-template>
+    <ion-content class="modal-content">
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-title">Workout History</div>
+        <div class="history-empty" *ngIf="historyItems.length === 0">
+          <ion-icon name="barbell-outline" class="empty-icon"></ion-icon>
+          <div class="empty-title">No completed workouts yet</div>
+          <div class="empty-sub">Mark a session as Done to see it here</div>
+        </div>
+        <div class="history-list" *ngIf="historyItems.length > 0">
+          <div class="history-group" *ngFor="let item of historyItems">
+            <div class="history-date-label">{{ item.displayDate }}</div>
+            <div class="history-session-card" *ngFor="let s of item.sessions">
+              <div class="history-session-top">
+                <span class="history-session-title">{{ s.title }}</span>
+                <span class="history-done-badge">Done</span>
+              </div>
+              <div class="history-session-meta" *ngIf="s.customTarget">
+                <ion-icon name="locate-outline"></ion-icon> {{ s.customTarget }}
+              </div>
+              <div class="history-session-meta">
+                <ion-icon name="time-outline"></ion-icon> {{ s.timeVal }} {{ s.timeAmpm }} · {{ s.duration }}
+                <span *ngIf="s.coach"> · {{ s.coach }}</span>
+              </div>
+              <div class="history-exercise-list" *ngIf="getExercises(s).length > 0">
+                <div class="history-ex-item" *ngFor="let ex of getExercises(s)">
+                  <span class="history-ex-check" [class.checked]="ex.done">
+                    <ion-icon [name]="ex.done ? 'checkmark-circle' : 'ellipse-outline'"></ion-icon>
+                  </span>
+                  <span class="history-ex-name">{{ ex.name }}</span>
+                  <span class="history-ex-detail">{{ ex.sets }}×{{ ex.reps }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<!-- Week Plan Modal -->
+<ion-modal [isOpen]="weekPlanModalOpen" (didDismiss)="closeWeekPlanModal()" [breakpoints]="[0,0.92,1]" [initialBreakpoint]="0.92">
+  <ng-template>
+    <ion-content class="modal-content">
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-title">My Week Plan</div>
+        <div class="modal-sub">Set your workout for each day. This will auto-fill your schedule every week.</div>
+
+        <!-- Day Tab Selector -->
+        <div class="week-plan-day-tabs">
+          <button
+            *ngFor="let label of weekDayLabels; let di = index"
+            class="wplan-day-tab"
+            [class.active]="weekPlanActiveDay === di"
+            [class.rest]="weekPlanDays[di]?.isRest"
+            (click)="weekPlanActiveDay = di">
+            {{ label.slice(0,3) }}
+          </button>
+        </div>
+
+        <!-- Day Editor -->
+        <div class="week-plan-day-editor" *ngIf="weekPlanDays[weekPlanActiveDay] as day">
+          <div class="wplan-day-name">{{ weekDayLabels[weekPlanActiveDay] }}</div>
+
+          <!-- Rest Day toggle -->
+          <div class="wplan-rest-row">
+            <span class="wplan-rest-label">Rest Day</span>
+            <label class="toggle-switch">
+              <input type="checkbox" [(ngModel)]="day.isRest" (ngModelChange)="day.title = day.isRest ? 'Rest Day' : 'Upper Body'" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <ng-container *ngIf="!day.isRest">
+            <div class="field-group">
+              <label class="field-label">Workout Type</label>
+              <div class="field-wrap">
+                <span class="field-icon"><ion-icon name="barbell-outline"></ion-icon></span>
+                <select [(ngModel)]="day.title" (ngModelChange)="onWeekPlanTypeChange(weekPlanActiveDay)">
+                  <option *ngFor="let wt of workoutTypes" [value]="wt">{{ wt }}</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Focus Target <span class="label-optional">(Optional)</span></label>
+              <div class="field-wrap">
+                <span class="field-icon"><ion-icon name="locate-outline"></ion-icon></span>
+                <input type="text" [(ngModel)]="day.customTarget" [placeholder]="getTargetPlaceholder(day.title)" />
+              </div>
+              <div class="target-suggestions">
+                <span
+                  *ngFor="let t of getSuggestedTargets(day.title)"
+                  class="target-chip"
+                  [class.selected]="day.customTarget === t"
+                  (click)="day.customTarget = day.customTarget === t ? '' : t">
+                  {{ t }}
+                </span>
+              </div>
+            </div>
+
+            <div class="two-col">
+              <div class="field-group">
+                <label class="field-label">Time</label>
+                <div class="field-wrap">
+                  <span class="field-icon">⏰</span>
+                  <input type="time" [(ngModel)]="day.time" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label class="field-label">Duration</label>
+                <div class="field-wrap">
+                  <span class="field-icon">⏱</span>
+                  <select [(ngModel)]="day.duration">
+                    <option *ngFor="let d of durationOptions" [value]="d">{{ d }}</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Coach (Optional)</label>
+              <div class="field-wrap">
+                <span class="field-icon">👤</span>
+                <select [(ngModel)]="day.coach">
+                  <option value="">No coach</option>
+                  <option *ngFor="let c of coaches" [value]="c">{{ c }}</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Location</label>
+              <div class="field-wrap">
+                <span class="field-icon">📍</span>
+                <select [(ngModel)]="day.location">
+                  <option *ngFor="let l of locations" [value]="l">{{ l }}</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Exercise Editor -->
+            <div class="edit-exercises-section">
+              <div class="edit-exercises-header">
+                <span class="edit-exercises-title">My Exercises</span>
+                <button class="add-ex-btn" (click)="addWeekPlanExercise(weekPlanActiveDay)">
+                  <ion-icon name="add-outline"></ion-icon> Add Exercise
+                </button>
+              </div>
+              <div class="wplan-exercises-empty" *ngIf="(day.exercises?.length ?? 0) === 0">
+                Tap "Add Exercise" to list your own exercises for this day
+              </div>
+              <div class="edit-exercise-rows">
+                <div class="edit-exercise-row" *ngFor="let ex of day.exercises; let j = index">
+                  <input class="ex-edit-name" type="text" placeholder="e.g. Bench Press" [(ngModel)]="weekPlanDays[weekPlanActiveDay].exercises[j].name" />
+                  <input class="ex-edit-sets" type="number" [min]="1" appNoNegative placeholder="Sets" pattern="[0-9]*" [(ngModel)]="weekPlanDays[weekPlanActiveDay].exercises[j].sets" />
+                  <input class="ex-edit-reps" type="text" placeholder="Reps" [(ngModel)]="weekPlanDays[weekPlanActiveDay].exercises[j].reps" />
+                  <button class="ex-del-btn" (click)="removeWeekPlanExercise(weekPlanActiveDay, j)">
+                    <ion-icon name="close-outline"></ion-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+
+        <!-- Week summary chips -->
+        <div class="week-plan-summary">
+          <div class="wplan-summary-chip" *ngFor="let day of weekPlanDays; let di = index" (click)="weekPlanActiveDay = di">
+            <span class="wplan-chip-day">{{ weekDayLabels[di].slice(0,3) }}</span>
+            <span class="wplan-chip-title" [class.rest-chip]="day.isRest">{{ day.isRest ? 'Rest' : day.title }}</span>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn btn-secondary" (click)="closeWeekPlanModal()">Cancel</button>
+          <button class="btn btn-yellow" [class.saved-btn]="weekPlanSaved" (click)="saveWeekPlan()">
+            {{ weekPlanSaved ? '✓ Applied!' : 'Apply This Week Plan' }}
+          </button>
+        </div>
+        <div style="text-align:center; margin-top:8px;">
+          <button class="clear-plan-btn" (click)="clearWeekPlan()">Reset to default</button>
+        </div>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>

@@ -1,0 +1,262 @@
+<!-- admin-reports.page.html -->
+<ion-header [translucent]="false">
+  <ion-toolbar>
+    <div slot="start" class="toolbar-brand">
+      <ion-back-button defaultHref="/admin" class="back-btn"></ion-back-button>
+    </div>
+    <div class="toolbar-title">Reports &amp; Analytics</div>
+    <div slot="end" class="header-end">
+      <button class="print-btn" (click)="printCurrent()" title="Print">
+        <span class="btn-label">PRN</span>
+      </button>
+      <button class="dl-btn" (click)="downloadPDF()" title="Download PDF">
+        <span class="btn-label">PDF</span>
+      </button>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="false">
+  <div class="content-inner">
+
+    <!-- Tab Switcher -->
+    <div class="tab-row">
+      <div class="tab-pill" [class.active]="activeTab === 'transactions'" (click)="setTab('transactions')">Transactions</div>
+      <div class="tab-pill" [class.active]="activeTab === 'attendance'"   (click)="setTab('attendance')">Attendance</div>
+      <div class="tab-pill" [class.active]="activeTab === 'sales'"        (click)="setTab('sales')">Sales</div>
+      <div class="tab-pill" [class.active]="activeTab === 'inventory'"    (click)="setTab('inventory')">Inventory</div>
+    </div>
+
+    <!-- Period Filter (hidden for inventory) -->
+    <div class="pill-row" *ngIf="activeTab !== 'inventory'">
+      <div class="pill" [class.active]="period === 'daily'"   (click)="setPeriod('daily')">Daily</div>
+      <div class="pill" [class.active]="period === 'weekly'"  (click)="setPeriod('weekly')">Weekly</div>
+      <div class="pill" [class.active]="period === 'monthly'" (click)="setPeriod('monthly')">Monthly</div>
+      <div class="pill" [class.active]="period === 'yearly'"  (click)="setPeriod('yearly')" *ngIf="activeTab === 'sales'">Yearly</div>
+      <div class="pill" [class.active]="period === 'all'"     (click)="setPeriod('all')"   *ngIf="activeTab === 'transactions'">All Time</div>
+    </div>
+
+    <!-- Loading -->
+    <div class="empty-state" *ngIf="isLoading">
+      <ion-spinner name="crescent"></ion-spinner>
+      <div class="empty-lbl">Loading…</div>
+    </div>
+
+    <!-- ════════════ TRANSACTIONS TAB ════════════ -->
+    <ng-container *ngIf="!isLoading && activeTab === 'transactions'">
+      <!-- Summary -->
+      <div class="summary-grid fade-up">
+        <div class="sum-card">
+          <div class="sum-val">{{ txRows.length }}</div>
+          <div class="sum-lbl">Records</div>
+        </div>
+        <div class="sum-card gold">
+          <div class="sum-val">₱{{ txTotal | number:'1.2-2' }}</div>
+          <div class="sum-lbl">Revenue</div>
+        </div>
+        <div class="sum-card">
+          <div class="sum-val">{{ txGymCount }}</div>
+          <div class="sum-lbl">Gym</div>
+        </div>
+        <div class="sum-card">
+          <div class="sum-val">{{ txShopCount }}</div>
+          <div class="sum-lbl">Shop</div>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="txRows.length === 0">
+        <ion-icon name="receipt-outline"></ion-icon>
+        <div class="empty-lbl">No transactions found</div>
+      </div>
+
+      <div class="tx-list">
+        <div
+          *ngFor="let tx of txRows; let i = index"
+          class="tx-card fade-up"
+          [style.animation-delay]="(i * 0.03) + 's'"
+        >
+          <div class="tx-icon" [class]="getTxIconClass(tx)">
+            <ion-icon [name]="getTxIcon(tx)"></ion-icon>
+          </div>
+          <div class="tx-info">
+            <div class="tx-name">{{ tx.username }}</div>
+            <div class="tx-sub">{{ tx.type_label }}<span *ngIf="tx.product_name"> · {{ tx.product_name }}</span></div>
+            <div class="tx-date">{{ tx.transaction_date | date:'MMM d, yyyy · h:mm a' }}</div>
+          </div>
+          <div class="tx-right">
+            <div class="tx-amount" [class.free]="tx.amount == 0">
+              {{ tx.amount > 0 ? ('₱' + (tx.amount | number:'1.2-2')) : 'Premium' }}
+            </div>
+            <div class="tx-status" [class]="'st-' + getStatusKey(tx)">{{ getStatusLabel(tx) }}</div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ════════════ ATTENDANCE TAB ════════════ -->
+    <ng-container *ngIf="!isLoading && activeTab === 'attendance'">
+      <!-- Summary -->
+      <div class="summary-grid fade-up" *ngIf="attSummary">
+        <div class="sum-card">
+          <div class="sum-val">{{ attSummary.total }}</div>
+          <div class="sum-lbl">Total</div>
+        </div>
+        <div class="sum-card amber">
+          <div class="sum-val">{{ attSummary.daily }}</div>
+          <div class="sum-lbl">Daily</div>
+        </div>
+        <div class="sum-card blue">
+          <div class="sum-val">{{ attSummary.premium }}</div>
+          <div class="sum-lbl">Premium</div>
+        </div>
+        <div class="sum-card gold">
+          <div class="sum-val">₱{{ attSummary.totalRevenue | number:'1.0-0' }}</div>
+          <div class="sum-lbl">Revenue</div>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="attRows.length === 0">
+        <ion-icon name="people-outline"></ion-icon>
+        <div class="empty-lbl">No attendance records found</div>
+      </div>
+
+      <div class="att-list">
+        <div
+          *ngFor="let att of attRows; let i = index"
+          class="att-card fade-up"
+          [style.animation-delay]="(i * 0.03) + 's'"
+        >
+          <div class="att-left">
+            <div class="att-avatar">{{ getInitials(att.username) }}</div>
+          </div>
+          <div class="att-info">
+            <div class="att-name">{{ att.username }}</div>
+            <div class="att-email">{{ att.email }}</div>
+            <div class="att-date">{{ att.check_in_time | date:'MMM d, yyyy · h:mm a' }}</div>
+          </div>
+          <div class="att-right">
+            <div class="att-type-badge" [class]="att.membership_type">
+              {{ att.membership_type === 'daily' ? 'Daily ₱40' : 'Premium' }}
+            </div>
+            <div class="tx-status" [class]="'st-' + att.payment_status">{{ att.payment_status }}</div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ════════════ SALES TAB ════════════ -->
+    <ng-container *ngIf="!isLoading && activeTab === 'sales'">
+      <!-- Grand summary cards -->
+      <div class="summary-grid fade-up" *ngIf="salesSummary">
+        <div class="sum-card gold">
+          <div class="sum-val">₱{{ salesSummary.totalRevenue | number:'1.0-0' }}</div>
+          <div class="sum-lbl">Total Revenue</div>
+        </div>
+        <div class="sum-card">
+          <div class="sum-val">₱{{ salesSummary.gymRevenue | number:'1.0-0' }}</div>
+          <div class="sum-lbl">Gym Revenue</div>
+        </div>
+        <div class="sum-card green">
+          <div class="sum-val">₱{{ salesSummary.shopRevenue | number:'1.0-0' }}</div>
+          <div class="sum-lbl">Shop Revenue</div>
+        </div>
+        <div class="sum-card">
+          <div class="sum-val">{{ salesSummary.totalCheckins }}</div>
+          <div class="sum-lbl">Check-ins</div>
+        </div>
+      </div>
+
+      <!-- Gym Sales breakdown -->
+      <div class="section-label">Gym Attendance Revenue</div>
+      <div class="empty-state mini" *ngIf="attSalesRows.length === 0">
+        <div class="empty-lbl">No gym revenue data</div>
+      </div>
+      <div class="sales-table" *ngIf="attSalesRows.length > 0">
+        <div class="sales-row header-row">
+          <div class="col-date">Date</div>
+          <div class="col-num">Check-ins</div>
+          <div class="col-rev">Revenue</div>
+        </div>
+        <div *ngFor="let row of attSalesRows; let i = index" class="sales-row fade-up" [style.animation-delay]="(i * 0.03) + 's'">
+          <div class="col-date">{{ row.sale_date | date:'MMM d, yyyy' }}</div>
+          <div class="col-num">{{ row.count }}</div>
+          <div class="col-rev gold">₱{{ row.revenue | number:'1.2-2' }}</div>
+        </div>
+      </div>
+
+      <!-- Shop Sales breakdown -->
+      <div class="section-label">Shop / Inventory Sales</div>
+      <div class="empty-state mini" *ngIf="shopSalesRows.length === 0">
+        <div class="empty-lbl">No shop sales data</div>
+      </div>
+      <div class="sales-table" *ngIf="shopSalesRows.length > 0">
+        <div class="sales-row header-row">
+          <div class="col-date">Date</div>
+          <div class="col-num">Orders</div>
+          <div class="col-rev">Revenue</div>
+        </div>
+        <div *ngFor="let row of shopSalesRows; let i = index" class="sales-row fade-up" [style.animation-delay]="(i * 0.03) + 's'">
+          <div class="col-date">{{ row.sale_date | date:'MMM d, yyyy' }}</div>
+          <div class="col-num">{{ row.count }}</div>
+          <div class="col-rev green">₱{{ row.revenue | number:'1.2-2' }}</div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ════════════ INVENTORY TAB ════════════ -->
+    <ng-container *ngIf="!isLoading && activeTab === 'inventory'">
+      <div class="summary-grid fade-up" *ngIf="invSummary">
+        <div class="sum-card">
+          <div class="sum-val">{{ invSummary.totalStock }}</div>
+          <div class="sum-lbl">Total Stock</div>
+        </div>
+        <div class="sum-card amber">
+          <div class="sum-val">{{ invSummary.totalSold }}</div>
+          <div class="sum-lbl">Total Sold</div>
+        </div>
+        <div class="sum-card gold">
+          <div class="sum-val">₱{{ invSummary.totalRevenue | number:'1.0-0' }}</div>
+          <div class="sum-lbl">Revenue</div>
+        </div>
+        <div class="sum-card">
+          <div class="sum-val">{{ invRows.length }}</div>
+          <div class="sum-lbl">Products</div>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="invRows.length === 0">
+        <ion-icon name="cube-outline"></ion-icon>
+        <div class="empty-lbl">No inventory data</div>
+      </div>
+
+      <div class="inv-list">
+        <div
+          *ngFor="let item of invRows; let i = index"
+          class="inv-card fade-up"
+          [style.animation-delay]="(i * 0.03) + 's'"
+        >
+          <div class="inv-info">
+            <div class="inv-name">{{ item.name }}</div>
+            <div class="inv-brand" *ngIf="item.brand">{{ item.brand }}</div>
+            <div class="inv-price">₱{{ item.price | number:'1.2-2' }} / unit</div>
+          </div>
+          <div class="inv-stats">
+            <div class="inv-stat">
+              <div class="inv-stat-val green">{{ item.total_sold }}</div>
+              <div class="inv-stat-lbl">Sold</div>
+            </div>
+            <div class="inv-stat">
+              <div class="inv-stat-val" [class.warn]="item.current_stock <= 5">{{ item.current_stock }}</div>
+              <div class="inv-stat-lbl">Stock</div>
+            </div>
+            <div class="inv-stat">
+              <div class="inv-stat-val gold">₱{{ item.total_revenue | number:'1.0-0' }}</div>
+              <div class="inv-stat-lbl">Revenue</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+  </div>
+</ion-content>

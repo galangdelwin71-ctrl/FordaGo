@@ -1,0 +1,37 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        // NOTE: Laravel's default `users`, `password_reset_tokens`, and
+        // `sessions` tables are intentionally NOT created here.
+        //
+        // This app reuses the existing production `fordago` database:
+        //   - `users`           already exists (username/role/membership schema)
+        //   - `sessions`        already exists, but it's gym CLASS SCHEDULES,
+        //                       not Laravel session storage
+        //   - `password_resets` already exists (custom OTP-based reset flow),
+        //                       so Laravel's token-based `password_reset_tokens`
+        //                       is not used
+        //
+        // See app/Models/User.php for the User model mapped to the real
+        // `users` columns, and .env SESSION_DRIVER=file so Laravel never
+        // needs its own sessions table.
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        // Intentionally empty — see up(). Nothing was created here to drop.
+    }
+};

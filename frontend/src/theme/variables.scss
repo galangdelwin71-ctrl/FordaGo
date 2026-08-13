@@ -1,0 +1,82 @@
+// For information on how to create your own theme, please refer to:
+// https://ionicframework.com/docs/theming/
+
+// ═══════════════════════════════════════════════════════════
+// FORDAGO THEME SYSTEM
+// ═══════════════════════════════════════════════════════════
+
+:root {
+  // ── Brand Colors (constant) ──────────────────────────────
+  --accent-lime: #FFD600;
+  --accent-amber: #FF9500;
+  --accent-blue: #4A9EFF;
+  --accent-green: #00D68F;
+  --accent-red: #FF4461;
+
+  // ── Dark Mode (Default) ──────────────────────────────────
+  --bg-primary: #06080F;
+  --bg-secondary: #0D0D0D;
+  --bg-tertiary: #141414;
+  --bg-surface: #101010;
+  --bg-surface-elevated: #1A1A1A;
+  
+  --text-primary: #FFFFFF;
+  --text-secondary: #E5E5EA;
+  --text-tertiary: #AEAEB2;
+  --text-muted: rgba(255, 255, 255, 0.45);
+  
+  --border-primary: rgba(255, 255, 255, 0.12);
+  --border-secondary: rgba(255, 255, 255, 0.08);
+  --border-tertiary: rgba(255, 255, 255, 0.04);
+  
+  --overlay-light: rgba(255, 255, 255, 0.04);
+  --overlay-medium: rgba(255, 255, 255, 0.08);
+  --overlay-heavy: rgba(255, 255, 255, 0.12);
+  
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.7);
+  
+  // ── Accent with transparency ─────────────────────────────
+  --accent-dim: rgba(255, 214, 0, 0.1);
+  --accent-border: rgba(255, 214, 0, 0.25);
+  --accent-shadow: rgba(255, 214, 0, 0.35);
+  
+  --ion-background-color: var(--bg-primary);
+  --ion-text-color: var(--text-primary);
+}
+
+// ═══════════════════════════════════════════════════════════
+// LIGHT MODE OVERRIDE
+// ═══════════════════════════════════════════════════════════
+
+// Force light mode
+body.light-theme,
+body.light {
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F5F5F7;
+  --bg-tertiary: #EAEAEC;
+  --bg-surface: #FFFFFF;
+  --bg-surface-elevated: #FAFAFA;
+  
+  --text-primary: #1C1C1E;
+  --text-secondary: #3A3A3C;
+  --text-tertiary: #8E8E93;
+  --text-muted: #AEAEB2;
+  
+  --border-primary: rgba(0, 0, 0, 0.1);
+  --border-secondary: rgba(0, 0, 0, 0.06);
+  --border-tertiary: rgba(0, 0, 0, 0.04);
+  
+  --overlay-light: rgba(0, 0, 0, 0.04);
+  --overlay-medium: rgba(0, 0, 0, 0.08);
+  --overlay-heavy: rgba(0, 0, 0, 0.12);
+  
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  
+  --accent-dim: rgba(255, 214, 0, 0.15);
+  --accent-border: rgba(255, 214, 0, 0.3);
+  --accent-shadow: rgba(255, 214, 0, 0.25);
+}

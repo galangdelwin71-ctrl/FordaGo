@@ -1,0 +1,828 @@
+// qr-scanner.page.scss — FordaGO Modern Redesign v2 (theme-consistent)
+//
+// NOTE (fix, Aug 2026): previous version defined a component-local `:root {}`
+// block (which leaks globally in Angular — :root is never style-scoped) AND
+// invented shorthand variable names (--lime, --surface, --border, --muted,
+// --text, --blue, --radius) that were only ever defined inside the
+// `:host-context(body.light-theme)` block below. In dark mode (the app's
+// default theme) those variables were undefined, so several buttons/cards
+// silently lost their intended colors. This version scopes tokens to
+// `:host` (matches dashboard.page.scss / schedule.page.ts convention) and
+// uses the SAME canonical token names used across the rest of the app, with
+// values defined for both dark (default) and light mode.
+
+:host {
+  --text-primary: #FFFFFF;
+  --text-secondary: rgba(255,255,255,0.75);
+  --text-muted: rgba(255,255,255,0.5);
+  --text-tertiary: rgba(255,255,255,0.35);
+  --accent-lime: #FFD600;
+  --accent-amber: #FF9500;
+  --accent-red: #FF4461;
+  --accent-blue: #4A9EFF;
+  --accent-green: #00D68F;
+  --accent-shadow: rgba(255,214,0,0.3);
+  --accent-border: rgba(255,214,0,0.25);
+  --accent-dim: rgba(255,214,0,0.1);
+  --bg-primary: #06080F;
+  --bg-secondary: #0B0E1A;
+  --bg-tertiary: #111428;
+  --overlay-light: rgba(255,255,255,0.04);
+  --overlay-medium: rgba(255,255,255,0.07);
+  --overlay-heavy: rgba(255,255,255,0.1);
+  --border-primary: rgba(255,255,255,0.1);
+  --border-secondary: rgba(255,255,255,0.08);
+  --glass-bg: rgba(255,255,255,0.03);
+  --glass-border: rgba(255,255,255,0.06);
+  --glass-blur: blur(20px);
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
+  --shadow-glow: 0 0 20px rgba(255,214,0,0.15);
+  --shadow-card: 0 4px 24px rgba(0,0,0,0.3);
+  --transition-fast: 0.15s ease;
+  --transition-smooth: 0.3s cubic-bezier(0.4,0,0.2,1);
+
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+// ── Ionic Overrides ──────────────────────────────────────
+ion-content {
+  --background: var(--bg-primary);
+  flex: 1 1 auto;
+  min-height: 0;
+  --overflow: auto !important;
+}
+
+ion-content::part(scroll) {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y !important;
+}
+
+// ── Scroll Wrapper ───────────────────────────────────────
+.scroll-wrap {
+  padding: 16px 16px 100px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+// ── Section Label ─────────────────────────────────────────
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  margin-bottom: 10px;
+  display: block;
+}
+
+// ── Mode Row ─────────────────────────────────────────────
+.mode-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.mode-card {
+  background: var(--overlay-light);
+  border: 1px solid var(--border-secondary);
+  border-radius: var(--radius-md);
+  padding: 14px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+
+  &:active { background: var(--overlay-medium); }
+
+  &.active {
+    border-color: var(--accent-border);
+    background: var(--accent-dim);
+    box-shadow: 0 0 0 1px var(--accent-border) inset;
+
+    .mode-icon-wrap {
+      background: var(--accent-dim);
+      border-color: var(--accent-border);
+      color: var(--accent-lime);
+    }
+
+    .mode-name { color: var(--accent-lime); }
+  }
+
+  .mode-icon-wrap {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    background: var(--overlay-medium);
+    border: 1px solid var(--border-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 8px;
+    color: var(--text-secondary);
+    transition: all var(--transition-fast);
+  }
+
+  .mode-emoji { font-size: 18px; line-height: 1; }
+
+  .mode-name {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: color var(--transition-fast);
+  }
+}
+
+// ── Scanner Card ───────────────────────────────────────────
+.scanner-wrap {
+  background: linear-gradient(160deg, var(--bg-tertiary) 0%, var(--bg-secondary) 70%);
+  border: 1px solid var(--border-secondary);
+  border-radius: var(--radius-xl);
+  padding: 22px 20px 24px;
+  text-align: center;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-card);
+}
+
+.qr-frame {
+  width: min(72vw, 260px);
+  height: min(72vw, 260px);
+  margin: 0 auto 18px;
+  border-radius: var(--radius-lg);
+  background: #000;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid var(--accent-lime);
+  box-shadow: var(--shadow-glow), inset 0 0 30px rgba(0,0,0,0.5);
+
+  .qr-corner {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-color: var(--accent-lime);
+    border-style: solid;
+    z-index: 2;
+
+    &.tl { top: 12px; left: 12px; border-width: 3px 0 0 3px; border-radius: 6px 0 0 0; }
+    &.tr { top: 12px; right: 12px; border-width: 3px 3px 0 0; border-radius: 0 6px 0 0; }
+    &.bl { bottom: 12px; left: 12px; border-width: 0 0 3px 3px; border-radius: 0 0 0 6px; }
+    &.br { bottom: 12px; right: 12px; border-width: 0 3px 3px 0; border-radius: 0 0 6px 0; }
+  }
+
+  .camera-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    opacity: 0.25;
+    color: var(--accent-lime);
+
+    .camera-emoji { font-size: 54px; }
+  }
+}
+
+.camera-reader {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  overflow: hidden;
+  border-radius: calc(var(--radius-lg) - 2px);
+
+  &.live { opacity: 1; }
+}
+
+// html5-qrcode injects <video>/<canvas> elements directly into the DOM,
+// outside Angular's template — emulated view encapsulation cannot scope to
+// them, so this must use ::ng-deep (not the invalid `:global()` syntax used
+// previously) to make the camera feed actually fill and fit the frame.
+::ng-deep .camera-reader video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+::ng-deep .camera-reader img {
+  display: none !important; // hides html5-qrcode's default torch/camera-switch icons; we provide our own UI
+}
+
+.scan-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.scan-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  padding: 0 8px;
+}
+
+// ── Permission notice ─────────────────────────────────────
+.permission-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+  background: rgba(255,68,97,0.08);
+  border: 1px solid rgba(255,68,97,0.25);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  margin: 14px 0 4px;
+
+  ion-icon { font-size: 18px; color: var(--accent-red); flex-shrink: 0; margin-top: 1px; }
+
+  .permission-notice-text {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+
+  .permission-notice-title {
+    font-weight: 700;
+    color: var(--text-primary);
+    display: block;
+    margin-bottom: 2px;
+  }
+}
+
+// ── Scan Buttons ───────────────────────────────────────────
+.scan-actions {
+  display: flex;
+  gap: 10px;
+  margin: 18px 0 20px;
+}
+
+.scan-btn {
+  flex: 1;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--accent-lime);
+  border: none;
+  color: #000;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  box-shadow: 0 6px 22px var(--accent-shadow);
+
+  &:active { transform: scale(0.97); box-shadow: 0 2px 10px var(--accent-shadow); }
+
+  .scan-btn-icon { font-size: 18px; line-height: 1; }
+
+  // "Scanning" is now an active, clickable Stop state (not a disabled
+  // loading state) — the button toggles startScan()/stopScan() based on
+  // isScanning, so it must stay clickable and must not carry a spinner.
+  &.scanning {
+    background: var(--accent-dim);
+    color: var(--accent-lime);
+    border: 1px solid var(--accent-border);
+    box-shadow: none;
+  }
+
+  &:disabled:not(.scanning) {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+}
+
+// ── Log Section Header ────────────────────────────────────
+.log-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.log-title-wrap { display: flex; align-items: center; gap: 8px; }
+
+.my-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: var(--accent-dim);
+  color: var(--accent-lime);
+  border: 1px solid var(--accent-border);
+  letter-spacing: 0.3px;
+}
+
+.clear-btn {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+
+  &:active { color: var(--text-secondary); }
+}
+
+// ── Filter Tabs ───────────────────────────────────────────
+.filter-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.filter-tab {
+  padding: 6px 13px;
+  border-radius: 20px;
+  border: 1px solid var(--border-secondary);
+  background: var(--overlay-light);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+
+  &:active { background: var(--overlay-medium); }
+
+  &.active {
+    background: var(--accent-dim);
+    color: var(--accent-lime);
+    border-color: var(--accent-border);
+  }
+}
+
+// ── Empty State ───────────────────────────────────────────
+.empty-log {
+  text-align: center;
+  padding: 32px 20px;
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--overlay-light);
+  border: 1px dashed var(--border-secondary);
+  border-radius: var(--radius-md);
+}
+
+// ── Log Items ─────────────────────────────────────────────
+.log-item {
+  background: var(--overlay-light);
+  border: 1px solid var(--border-secondary);
+  border-radius: var(--radius-md);
+  padding: 13px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  animation: fadeUp 0.2s ease both;
+  transition: border-color var(--transition-fast);
+}
+
+.log-icon-wrap {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  .log-emoji { font-size: 17px; line-height: 1; }
+
+  &.att {
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    color: var(--accent-lime);
+  }
+
+  &.equip {
+    background: rgba(74,158,255,0.1);
+    border: 1px solid rgba(74,158,255,0.2);
+    color: var(--accent-blue);
+  }
+}
+
+.log-info { flex: 1; min-width: 0; }
+.log-name { font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
+.log-time { font-size: 11px; color: var(--text-muted); }
+
+.log-badge {
+  flex-shrink: 0;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 4px 9px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+
+  &.att { background: var(--accent-dim); color: var(--accent-lime); border: 1px solid var(--accent-border); }
+  &.equip { background: rgba(74,158,255,0.1); color: var(--accent-blue); border: 1px solid rgba(74,158,255,0.2); }
+}
+
+// ── Notification Overlay ─────────────────────────────────
+.notif-overlay {
+  position: fixed; inset-inline: 0; top: 56px; bottom: 64px;
+  background: rgba(2,3,8,0.72);
+  z-index: 999;
+  display: flex; align-items: stretch; justify-content: center;
+  overflow: hidden;
+  animation: notifFadeIn 0.18s ease both;
+}
+@keyframes notifFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.notif-overlay-card {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-secondary);
+  border-top: 2px solid transparent;
+  border-image: linear-gradient(90deg, var(--accent-lime), transparent) 1;
+  display: flex; flex-direction: column; overflow: hidden;
+  animation: notifSlideUp 0.22s cubic-bezier(0.22,1,0.36,1) both;
+}
+@keyframes notifSlideUp { from { transform: translateY(24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.notif-panel-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 10px; flex-shrink: 0; }
+.notif-header-left  { display: flex; align-items: center; gap: 12px; }
+.notif-header-icon-wrap {
+  width: 38px; height: 38px; border-radius: 12px;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-border); display: grid; place-items: center; flex-shrink: 0;
+}
+.notif-header-icon  { font-size: 18px; color: var(--accent-lime); }
+.notif-header-title { font-size: 15px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.2px; }
+.notif-header-sub   { font-size: 11px; color: var(--text-muted); font-weight: 500; margin-top: 1px; }
+.notif-header-actions { display: flex; align-items: center; gap: 8px; }
+.notif-icon-btn {
+  width: 34px; height: 34px; border-radius: 10px;
+  border: 1px solid var(--border-secondary);
+  background: var(--overlay-light); color: var(--text-secondary);
+  display: grid; place-items: center; cursor: pointer; font-size: 18px;
+  &:active { opacity: 0.7; }
+}
+.notif-markread-btn { color: var(--accent-lime); background: var(--accent-dim); border-color: var(--accent-border); }
+.notif-dismiss-btn  { font-size: 20px; }
+.notif-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-secondary) 20%, var(--border-secondary) 80%, transparent);
+  flex-shrink: 0; margin: 0 16px;
+}
+.notif-scroll-wrap {
+  flex: 1; overflow-y: auto; overflow-x: hidden; padding: 10px 12px 8px;
+  scrollbar-width: thin; scrollbar-color: var(--overlay-heavy) transparent;
+  &::-webkit-scrollbar       { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: var(--overlay-heavy); border-radius: 999px; }
+}
+.notif-empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 52px 24px; position: relative; }
+.notif-empty-glow  { position: absolute; width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle, var(--accent-dim), transparent 70%); top: 30px; }
+.notif-empty-icon  { font-size: 46px; color: var(--overlay-heavy); margin-bottom: 14px; position: relative; }
+.notif-empty-title { font-size: 15px; font-weight: 700; color: var(--text-secondary); margin-bottom: 5px; }
+.notif-empty-sub   { font-size: 12px; color: var(--text-muted); text-align: center; }
+.notif-item {
+  display: flex; align-items: flex-start; gap: 12px; padding: 12px 10px;
+  border-radius: 14px; border: 1px solid var(--border-secondary);
+  background: var(--overlay-light); margin-bottom: 8px; position: relative;
+  width: 100%; text-align: left; cursor: pointer; appearance: none; -webkit-appearance: none;
+  &.is-unread { border-color: var(--accent-border); background: var(--accent-dim); }
+  &.is-unread::before { content:''; position:absolute; left:0; top:10%; bottom:10%; width:3px; border-radius:0 3px 3px 0; background: var(--accent-lime); }
+  &:active { opacity: 0.82; }
+}
+.notif-item-left  { flex-shrink: 0; }
+.notif-item-avatar {
+  width: 44px; height: 44px; border-radius: 13px;
+  background: var(--overlay-medium); border: 1px solid var(--border-secondary);
+  display: grid; place-items: center; font-size: 19px; color: var(--text-muted);
+  &.is-unread { background: var(--accent-dim); border-color: var(--accent-border); color: var(--accent-lime); }
+  ion-icon { font-size: 19px; display: block; }
+}
+.notif-item-body   { flex: 1; min-width: 0; }
+.notif-item-top    { display: flex; align-items: center; gap: 7px; margin-bottom: 3px; flex-wrap: wrap; }
+.notif-item-title  { font-size: 14px; font-weight: 700; color: var(--text-primary); flex: 1; }
+.notif-new-badge   { font-size: 9px; font-weight: 800; color: var(--bg-secondary); background: var(--accent-lime); border-radius: 20px; padding: 2px 7px; letter-spacing: 0.3px; flex-shrink: 0; }
+.notif-item-msg    { font-size: 12px; color: var(--text-muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.notif-item-meta    { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-tertiary); margin-top: 4px; ion-icon { font-size: 12px; } }
+.notif-item-chevron { margin-left: auto; flex-shrink: 0; color: var(--text-tertiary); ion-icon { font-size: 16px; } }
+
+// ── Notification Detail View ────────────────────────────
+.notif-detail-header { padding: 12px 16px 8px; }
+.notif-back-btn {
+  display: flex; align-items: center; gap: 4px; background: none; border: none;
+  color: var(--accent-lime); font-size: 13px; font-weight: 700; cursor: pointer; padding: 4px 0;
+  ion-icon { font-size: 18px; }
+}
+.notif-detail-hero {
+  position: relative; display: flex; flex-direction: column;
+  align-items: center; text-align: center; padding: 30px 20px 22px; overflow: hidden;
+}
+.notif-detail-hero-glow {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, var(--accent-dim) 0%, transparent 65%);
+  pointer-events: none;
+}
+.notif-detail-hero-icon-wrap {
+  width: 64px; height: 64px; border-radius: 20px;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-border); display: grid; place-items: center;
+  font-size: 28px; color: var(--accent-lime); margin-bottom: 16px;
+  box-shadow: var(--shadow-glow);
+  ion-icon { font-size: 28px; display: block; }
+}
+.notif-detail-hero-title { font-size: 17px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.3px; margin-bottom: 10px; }
+.notif-detail-hero-date {
+  display: inline-flex; align-items: center; gap: 5px; font-size: 11px;
+  color: var(--text-muted); background: var(--overlay-light);
+  border: 1px solid var(--border-secondary); border-radius: 20px; padding: 4px 12px;
+  ion-icon { font-size: 12px; }
+}
+.notif-detail-body-wrap {
+  background: var(--overlay-light); border: 1px solid var(--border-secondary);
+  border-radius: 16px; padding: 16px; margin: 0 0 10px;
+}
+.notif-detail-body { font-size: 14px; color: var(--text-secondary); line-height: 1.75; white-space: pre-wrap; }
+
+// ── Bottom Tab Bar ────────────────────────────────────────
+.fordago-app-footer { flex-shrink: 0; }
+.fordago-bottom-nav {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: center;
+  padding: 8px 6px calc(6px + env(safe-area-inset-bottom, 0px));
+  background: rgba(6,8,15,0.96);
+  border-top: 1px solid var(--border-secondary);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.fordago-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: transparent;
+  border: none;
+  padding: 4px 0;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+
+  &:active { opacity: 0.7; }
+  &.is-active { color: var(--accent-lime); }
+}
+.fordago-nav-icon { font-size: 21px; display: block; }
+.fordago-nav-label { font-size: 9px; font-weight: 700; letter-spacing: 0.2px; }
+.fordago-scan-item .fordago-scan-button {
+  width: 40px; height: 36px;
+  display: grid; place-items: center;
+  margin-top: -8px;
+  border-radius: 13px;
+  background: var(--accent-lime);
+  color: #111;
+  box-shadow: 0 7px 18px var(--accent-shadow);
+  ion-icon { font-size: 21px; }
+}
+.fordago-scan-item.is-active { color: var(--accent-lime); }
+
+// ── Light Mode ───────────────────────────────────────────
+:host-context(body.light-theme) {
+  --text-primary: #0f172a;
+  --text-secondary: rgba(15,23,42,0.7);
+  --text-muted: rgba(15,23,42,0.5);
+  --text-tertiary: rgba(15,23,42,0.35);
+  --bg-primary: #f4f5f8;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #eef0f4;
+  --overlay-light: rgba(15,23,42,0.04);
+  --overlay-medium: rgba(15,23,42,0.07);
+  --overlay-heavy: rgba(15,23,42,0.12);
+  --border-primary: rgba(15,23,42,0.1);
+  --border-secondary: rgba(15,23,42,0.09);
+  --accent-lime: #d97706;
+  --accent-amber: #f59e0b;
+  --accent-dim: rgba(217,119,6,0.1);
+  --accent-border: rgba(217,119,6,0.25);
+  --accent-shadow: rgba(217,119,6,0.25);
+
+  ion-content { --background: var(--bg-primary) !important; }
+
+  .scanner-wrap { background: linear-gradient(160deg, #ffffff 0%, #fbfbfc 100%); box-shadow: 0 2px 10px rgba(15,23,42,0.06); }
+  .qr-frame { border-color: var(--accent-lime); }
+
+  .scan-btn { color: #1c1200; }
+
+  .fordago-bottom-nav { background: rgba(255,255,255,0.97); }
+  .fordago-scan-item .fordago-scan-button { color: #1c1200; }
+
+  .permission-notice { background: rgba(217,119,6,0.08); border-color: rgba(217,119,6,0.25); }
+}
+
+// ── Animations ────────────────────────────────────────────
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+// ── Shared Modal Sheet ────────────────────────────────────
+.bottom-sheet-modal {
+  --background: transparent;
+  align-items: flex-end;
+
+  &::part(content) {
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+  }
+}
+
+.modal-sheet {
+  background: var(--bg-secondary);
+  border-radius: 24px 24px 0 0;
+  padding: 0 24px 36px;
+  border-top: 1px solid var(--border-secondary);
+  animation: slideUp 0.25s ease;
+
+  .modal-handle {
+    width: 36px;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--overlay-heavy);
+    margin: 14px auto 20px;
+  }
+}
+
+// ── Attendance Success ────────────────────────────────────
+.success-wrap {
+  text-align: center;
+
+  .success-icon-ring {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: rgba(0,214,143,0.1);
+    border: 1px solid rgba(0,214,143,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 14px;
+    box-shadow: 0 0 20px rgba(0,214,143,0.15);
+
+    .success-emoji { font-size: 28px; line-height: 1; color: var(--accent-green); }
+  }
+
+  .modal-title { font-size: 18px; font-weight: 800; color: var(--text-primary); margin-bottom: 4px; }
+  .modal-sub   { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+
+  .confirmed-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0,214,143,0.1);
+    color: var(--accent-green);
+    border: 1px solid rgba(0,214,143,0.2);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 5px 14px;
+    border-radius: 20px;
+  }
+
+  .done-btn {
+    width: 100%;
+    height: 50px;
+    border-radius: 14px;
+    background: var(--accent-lime);
+    border: none;
+    color: #000;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    margin-top: 20px;
+    box-shadow: 0 4px 16px var(--accent-shadow);
+    transition: opacity var(--transition-fast);
+
+    &:active { opacity: 0.9; }
+  }
+}
+
+// ── Equipment Tutorial Sheet ──────────────────────────────
+.tutorial-modal { &::part(content) { max-height: 90vh; } }
+
+.tutorial-sheet {
+  overflow-y: auto;
+  max-height: 88vh;
+  padding: 0 20px 36px;
+}
+
+.equip-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  .equip-icon-big {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: rgba(96, 165, 250, 0.1);
+    border: 1px solid rgba(96, 165, 250, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--accent-blue);
+
+    .equip-emoji { font-size: 22px; line-height: 1; }
+  }
+
+  .equip-name { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+  .equip-cat  { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+}
+
+.warning-box {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.22);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+
+  .warning-emoji { font-size: 15px; flex-shrink: 0; margin-top: 1px; line-height: 1; color: var(--accent-amber); }
+  .warning-text { font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
+}
+
+.tut-section { margin-bottom: 14px; }
+.tut-section-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 8px;
+}
+
+.muscle-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.muscle-tag {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: rgba(96, 165, 250, 0.08);
+  color: var(--accent-blue);
+  border: 1px solid rgba(96, 165, 250, 0.18);
+}
+
+.tut-step {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 8px;
+
+  .step-num {
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--accent-lime);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .step-text { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+}
+
+.tut-done-btn {
+  width: 100%;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--overlay-light);
+  border: 1px solid var(--border-secondary);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  margin-top: 4px;
+
+  &:active { background: var(--overlay-medium); }
+}

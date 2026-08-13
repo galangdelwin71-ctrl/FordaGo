@@ -1,0 +1,255 @@
+// header.component.scss
+//
+// Canonical FordaGO app header styling. This is the ONLY place header CSS
+// should live — do not redefine .brand-mark / .toolbar-logo / .avatar /
+// .notif-bell-btn / .equip-header-btn / .profile-button in a page-level
+// .scss file again. Each selector below is declared exactly once per theme
+// (no cascading V2/V3/"final fix" overrides), so there is one unambiguous
+// source of truth for how big/what shape the header renders.
+
+:host {
+  display: block;
+  --header-yellow: #FFD600;
+  --header-orange: #FF9500;
+  --header-red: #FF4461;
+  --header-bg: #06080f;
+  --header-panel: rgba(255, 255, 255, 0.04);
+  --header-panel-strong: rgba(255, 255, 255, 0.065);
+  --header-border: rgba(255, 255, 255, 0.08);
+}
+
+ion-header {
+  background: transparent;
+}
+
+ion-toolbar {
+  --background: rgba(6, 8, 15, 0.94);
+  --border-width: 0;
+  --min-height: 58px;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(18px) saturate(135%);
+  -webkit-backdrop-filter: blur(18px) saturate(135%);
+}
+
+// ── Brand (logo + name) ──────────────────────────────────
+.toolbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.brand-mark {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 214, 0, 0.24);
+  background: rgba(255, 214, 0, 0.06);
+  box-shadow: 0 0 0 3px rgba(255, 214, 0, 0.025), 0 8px 22px rgba(0, 0, 0, 0.24);
+}
+
+.brand-logo {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 7px rgba(255, 214, 0, 0.34));
+}
+
+.toolbar-brand-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  line-height: 1;
+}
+
+.toolbar-logo {
+  display: inline-block;
+  font-size: 21px;
+  font-weight: 900;
+  letter-spacing: -0.65px;
+  line-height: 1.05;
+  background: linear-gradient(110deg, #fff06a 0%, var(--header-yellow) 38%, var(--header-orange) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 4px 10px rgba(255, 149, 0, 0.12));
+}
+
+.toolbar-subtitle {
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.38);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 1.7px;
+  white-space: nowrap;
+}
+
+// ── Right-side action group ──────────────────────────────
+.header-end {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+// Notification bell and equipment shortcut must look identical apart from
+// the bell's unread state, so they share one rule instead of duplicating
+// it under two class names (which is exactly how the sizes drifted apart
+// across pages before).
+.notif-bell-btn,
+.equip-header-btn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  overflow: visible;
+  border-radius: 13px;
+  border: 1px solid var(--header-border);
+  background: var(--header-panel);
+  color: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 7px 20px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  transition: transform 150ms ease, border-color 180ms ease, background 180ms ease, color 180ms ease;
+
+  ion-icon {
+    font-size: 20px;
+    display: block;
+  }
+
+  &:active {
+    transform: scale(0.94);
+    background: var(--header-panel-strong);
+  }
+}
+
+.notif-bell-btn.has-unread {
+  color: var(--header-yellow);
+  border-color: rgba(255, 214, 0, 0.24);
+  background: rgba(255, 214, 0, 0.07);
+}
+
+.notif-bell-badge {
+  position: absolute;
+  z-index: 5;
+  top: -6px;
+  right: -6px;
+  min-width: 19px;
+  height: 19px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  border: 2px solid var(--header-bg);
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff6b7d 0%, var(--header-red) 55%, #e92045 100%);
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 5px 14px rgba(255, 68, 97, 0.38);
+  pointer-events: none;
+}
+
+// ── Profile avatar button ────────────────────────────────
+.profile-button {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 150ms ease, filter 180ms ease;
+
+  &:active {
+    transform: scale(0.93);
+  }
+
+  &:focus-visible {
+    outline: 3px solid rgba(255, 214, 0, 0.22);
+    outline-offset: 3px;
+  }
+}
+
+.profile-button .avatar {
+  width: 40px;
+  height: 40px;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(255, 214, 0, 0.55);
+  border-radius: 50%;
+  background: var(--header-yellow);
+  color: #111317;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+  box-shadow: 0 0 0 3px rgba(255, 214, 0, 0.055), 0 8px 20px rgba(0, 0, 0, 0.24);
+}
+
+.profile-button .avatar-img {
+  object-fit: cover;
+  background: #11151f;
+  color: transparent;
+}
+
+@media (max-width: 350px) {
+  .toolbar-subtitle {
+    display: none;
+  }
+}
+
+// ── Light Mode ────────────────────────────────────────────
+:host-context(body.light-theme),
+:host-context(html.light-theme) {
+  ion-toolbar {
+    --background: rgba(255, 255, 255, 0.96);
+    border-bottom-color: rgba(15, 23, 42, 0.08);
+  }
+
+  .brand-mark {
+    border-color: rgba(245, 158, 11, 0.20);
+    background: rgba(245, 158, 11, 0.06);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.025), 0 6px 18px rgba(15, 23, 42, 0.08);
+  }
+
+  .toolbar-subtitle {
+    color: rgba(15, 23, 42, 0.38);
+  }
+
+  .notif-bell-btn,
+  .equip-header-btn {
+    color: rgba(15, 23, 42, 0.62);
+    background: rgba(15, 23, 42, 0.045);
+    border-color: rgba(15, 23, 42, 0.09);
+    box-shadow: 0 5px 16px rgba(15, 23, 42, 0.07);
+  }
+
+  // Reference design keeps the bell icon neutral (matching the equipment
+  // button) even when unread > 0 — the red count badge alone is the
+  // indicator in light mode, so no separate amber icon state here.
+
+  .notif-bell-badge {
+    border-color: #ffffff;
+  }
+
+  .profile-button .avatar {
+    color: #111317;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.06), 0 7px 18px rgba(15, 23, 42, 0.10);
+  }
+}

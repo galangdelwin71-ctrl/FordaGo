@@ -1,0 +1,638 @@
+<!-- ── Confirm Delete Dialog ────────────────────────── -->
+<div class="confirm-overlay" *ngIf="confirmDialog.show">
+  <div class="confirm-box">
+    <div class="confirm-icon">
+      <ion-icon name="trash-outline"></ion-icon>
+    </div>
+    <div class="confirm-title">Delete {{ confirmDialog.label }}?</div>
+    <div class="confirm-msg">This action cannot be undone.</div>
+    <div class="confirm-name">{{ confirmDialog.name }}</div>
+    <div class="confirm-actions">
+      <button class="confirm-cancel" (click)="confirmDialog.show = false">Cancel</button>
+      <button class="confirm-delete" (click)="confirmDialog.onConfirm(); confirmDialog.show = false">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Confirm Logout Dialog ────────────────────────── -->
+<div class="confirm-overlay" *ngIf="showLogoutDialog">
+  <div class="confirm-box logout-box">
+    <div class="confirm-icon logout-icon">
+      <ion-icon name="log-out-outline"></ion-icon>
+    </div>
+    <div class="confirm-title">Logout Account?</div>
+    <div class="confirm-msg">Are you sure you want to logout?</div>
+    <div class="confirm-actions">
+      <button class="confirm-cancel" (click)="cancelLogout()">Cancel</button>
+      <button class="confirm-logout" (click)="confirmLogout()">Logout</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Admin Dashboard ───────────────────────────────── -->
+<ion-header [translucent]="false">
+  <ion-toolbar class="admin-toolbar">
+    <div class="toolbar-left" slot="start">
+      <img src="/assets/icon/logo.png" class="admin-brand-logo" alt="FordaGO" (error)="$event.target.src='/assets/icon/fordago-logo.svg'" />
+      <div class="toolbar-text">
+        <span class="toolbar-logo">FordaGO</span>
+        <span class="toolbar-role">{{ panelLabel }}</span>
+      </div>
+    </div>
+    <ion-buttons slot="end">
+      <button class="logout-btn" (click)="logout()">
+        <ion-icon name="log-out-outline"></ion-icon> Logout
+      </button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="admin-content">
+  <div class="admin-wrap">
+
+    <!-- ── Tab Nav ───────────────────────────────────── -->
+    <div class="admin-hero">
+      <div class="admin-hero-copy">
+        <div class="admin-kicker">Control Center</div>
+        <div class="admin-heading">Manage members, schedules, orders, and attendance in one place.</div>
+      </div>
+      <div class="admin-hero-glow"></div>
+    </div>
+
+    <div class="tab-row">
+      <button class="tab-btn" [class.active]="activeTab==='overview'"    (click)="activeTab='overview'">
+        <ion-icon name="stats-chart-outline"></ion-icon> Overview
+      </button>
+      <button class="tab-btn" [class.active]="activeTab==='members'"     (click)="activeTab='members'">
+        <ion-icon name="people-outline"></ion-icon> Members
+      </button>
+      <button class="tab-btn" [class.active]="activeTab==='schedule'"    (click)="activeTab='schedule'">
+        <ion-icon name="calendar-outline"></ion-icon> Schedule
+      </button>
+      <button class="tab-btn" [class.active]="activeTab==='inventory'"   (click)="activeTab='inventory'">
+        <ion-icon name="cart-outline"></ion-icon> Shop
+      </button>
+      <button class="tab-btn" [class.active]="activeTab==='equipment'"   (click)="activeTab='equipment'">
+        <ion-icon name="barbell-outline"></ion-icon> Equipment
+      </button>
+      <button class="tab-btn" [class.active]="activeTab==='notifs'"      (click)="activeTab='notifs'">
+        <ion-icon name="notifications-outline"></ion-icon> Notifs
+      </button>
+      <button class="tab-btn" [class.active]="activeTab==='attendance'" (click)="activeTab='attendance'">
+        <ion-icon name="clipboard-outline"></ion-icon> Attendance
+      </button>
+      <button class="tab-btn reports-btn" (click)="router.navigate(['/admin-reports'])">
+        <ion-icon name="bar-chart-outline"></ion-icon> Reports
+      </button>
+    </div>
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- TAB: OVERVIEW                                  -->
+    <!-- ══════════════════════════════════════════════ -->
+    <div *ngIf="activeTab==='overview'">
+
+      <div class="stats-grid">
+        <div class="stat-card accent">
+          <ion-icon name="people-outline" class="stat-icon gold"></ion-icon>
+          <div class="stat-value">{{ totalMembers }}</div>
+          <div class="stat-label">Total Members</div>
+        </div>
+        <div class="stat-card">
+          <ion-icon name="checkmark-circle-outline" class="stat-icon green"></ion-icon>
+          <div class="stat-value green">{{ activeToday }}</div>
+          <div class="stat-label">Check-ins Today</div>
+        </div>
+        <div class="stat-card">
+          <ion-icon name="cube-outline" class="stat-icon amber"></ion-icon>
+          <div class="stat-value amber">{{ lowStockCount }}</div>
+          <div class="stat-label">Low Stock Items</div>
+        </div>
+        <div class="stat-card">
+          <ion-icon name="receipt-outline" class="stat-icon blue"></ion-icon>
+          <div class="stat-value blue">{{ pendingOrders }}</div>
+          <div class="stat-label">Pending Orders</div>
+        </div>
+      </div>
+
+      <!-- Expiring memberships -->
+      <div class="section-label"><ion-icon name="warning-outline"></ion-icon> Expiring Soon (within 7 days)</div>
+      <div class="empty-state" *ngIf="expiringMembers.length === 0">No memberships expiring soon.</div>
+      <div *ngFor="let m of expiringMembers" class="member-row warn">
+        <div class="member-info">
+          <div class="member-avatar">{{ m.initials }}</div>
+          <div>
+            <div class="member-name">{{ m.username }}</div>
+            <div class="member-meta">Expires {{ m.expiryDate }} · {{ m.daysLeft }} days left</div>
+          </div>
+        </div>
+        <span class="badge warn">Expiring</span>
+      </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- TAB: MEMBERS                                   -->
+    <!-- ══════════════════════════════════════════════ -->
+    <div *ngIf="activeTab==='members'">
+
+      <div class="section-header-row">
+        <span class="section-label" style="margin:0">All Members</span>
+        <div class="header-actions">
+          <button class="refresh-btn" (click)="loadAll()" title="Refresh list">
+            <ion-icon name="refresh-outline"></ion-icon>
+            Refresh
+          </button>
+          <button class="add-btn" (click)="toggleAddMember()">{{ showAddMember ? '✕ Cancel' : '+ Add Member' }}</button>
+        </div>
+      </div>
+
+      <!-- ── Pending Accounts Alert ──────────────────── -->
+      <div class="pending-alert-section" *ngIf="pendingMembers.length > 0">
+        <div class="pending-alert-header">
+          <ion-icon name="time-outline"></ion-icon>
+          <span>Pending Verification ({{ pendingMembers.length }})</span>
+        </div>
+        <div class="pending-card" *ngFor="let m of pendingMembers">
+          <div class="pending-card-info">
+            <div class="member-avatar pending-avatar">{{ m.initials }}</div>
+            <div>
+              <div class="pending-name">{{ m.username }}</div>
+              <div class="pending-meta">{{ m.email }}</div>
+              <div class="pending-type-row">
+                <span class="type-chip" [class.daily]="m.membership_type === 'daily'" [class.premium]="m.membership_type !== 'daily'">
+                  <ion-icon [name]="m.membership_type === 'daily' ? 'today-outline' : 'star-outline'"></ion-icon>
+                  {{ m.membership_type === 'daily' ? 'Daily Pass' : 'Premium' }}
+                </span>
+                <span class="status-pill pending">Awaiting Verification</span>
+              </div>
+            </div>
+          </div>
+          <div class="pending-card-actions">
+            <button class="approve-btn" (click)="quickApprove(m)">
+              <ion-icon name="checkmark-circle-outline"></ion-icon> Approve
+            </button>
+            <button class="act-btn plan-btn" (click)="openMembershipEdit(m)">
+              <ion-icon name="star-outline"></ion-icon> Plan
+            </button>
+            <button class="act-btn del" (click)="declineMember(m)">
+              <ion-icon name="close-circle-outline"></ion-icon> Decline
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Filter Chips ───────────────────────────── -->
+      <div class="filter-row">
+        <div class="filter-group">
+          <span class="filter-label">Status:</span>
+          <button class="filter-chip" [class.active]="memberStatusFilter==='all'"     (click)="memberStatusFilter='all'">All</button>
+          <button class="filter-chip pending" [class.active]="memberStatusFilter==='pending'"  (click)="memberStatusFilter='pending'">Pending</button>
+          <button class="filter-chip active"  [class.active]="memberStatusFilter==='active'"   (click)="memberStatusFilter='active'">Verified</button>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Type:</span>
+          <button class="filter-chip" [class.active]="memberTypeFilter==='all'"     (click)="memberTypeFilter='all'">All</button>
+          <button class="filter-chip premium" [class.active]="memberTypeFilter==='premium'" (click)="memberTypeFilter='premium'">Premium</button>
+          <button class="filter-chip daily"   [class.active]="memberTypeFilter==='daily'"   (click)="memberTypeFilter='daily'">Daily Pass</button>
+        </div>
+      </div>
+
+      <!-- Add Member Form -->
+      <div class="inline-form" *ngIf="showAddMember">
+        <div class="form-title">New Account</div>
+        <input class="field-input" type="text"     placeholder="Full name / Username *"  [(ngModel)]="newMember.username" />
+        <input class="field-input" type="email"    placeholder="Email *"                 [(ngModel)]="newMember.email" />
+        <input class="field-input" type="password" placeholder="Password *"              [(ngModel)]="newMember.password" />
+        <input class="field-input" type="tel"      placeholder="Phone number (optional)" [(ngModel)]="newMember.phone" />
+        <select class="field-input" [(ngModel)]="newMember.gender">
+          <option value="">Gender (optional)</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="other">Other</option>
+        </select>
+        <select class="field-input" [(ngModel)]="newMember.role">
+          <option *ngFor="let r of assignableRoles" [value]="r.value">{{ r.label }}</option>
+        </select>
+        <ng-container *ngIf="newMember.role === 'user'">
+          <select class="field-input" [(ngModel)]="newMember.membership_type">
+            <option value="premium">Premium (Monthly)</option>
+            <option value="daily">Daily Pass</option>
+          </select>
+          <select class="field-input" *ngIf="newMember.membership_type === 'premium'" [(ngModel)]="newMember.payment_method">
+            <option value="cash">Cash</option>
+            <option value="gcash">GCash</option>
+          </select>
+        </ng-container>
+        <button class="submit-btn" (click)="saveMember()">Save Account</button>
+      </div>
+
+      <!-- Edit Member Form -->
+      <div class="inline-form" *ngIf="editingMember">
+        <div class="form-title">Edit Member</div>
+        <input class="field-input" type="text"  placeholder="Username" [(ngModel)]="editingMember.username" />
+        <input class="field-input" type="email" placeholder="Email"    [(ngModel)]="editingMember.email" />
+        <input class="field-input" type="tel"   placeholder="Phone"    [(ngModel)]="editingMember.phone" />
+        <select class="field-input" [(ngModel)]="editingMember.gender">
+          <option value="">Gender</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="other">Other</option>
+        </select>
+        <select class="field-input" *ngIf="!isEmployee" [(ngModel)]="editingMember.role">
+          <option *ngFor="let r of assignableRoles" [value]="r.value">{{ r.label }}</option>
+        </select>
+        <div class="form-actions">
+          <button class="submit-btn" (click)="updateMember()">Update</button>
+          <button class="cancel-btn" (click)="editingMember=null">Cancel</button>
+        </div>
+      </div>
+
+      <input class="search-input" type="text" placeholder="Search by name or email…"
+        [(ngModel)]="memberSearch" />
+
+      <div class="empty-state" *ngIf="membersLoading">
+        <ion-spinner name="crescent"></ion-spinner> Loading members...
+      </div>
+      <div class="empty-state" *ngIf="!membersLoading && membersError">
+        <ion-icon name="cloud-offline-outline" style="font-size:2rem;margin-bottom:8px;"></ion-icon><br/>
+        Could not load members. Check the server connection.
+        <br/><button class="submit-btn" style="margin-top:12px" (click)="loadAll()">Retry</button>
+      </div>
+      <div class="empty-state" *ngIf="!membersLoading && !membersError && filteredMembers.length === 0">No members found.</div>
+
+      <div *ngFor="let m of filteredMembers" class="member-row" [class.pending-row]="m.membership_status !== 'active'">
+        <div class="member-info">
+          <div class="member-avatar">{{ m.initials }}</div>
+          <div style="min-width:0;flex:1">
+            <div class="member-name">{{ m.username }}</div>
+            <div class="member-meta">{{ m.email }} · <span [class]="'role-'+m.role">{{ m.role }}</span></div>
+            <div class="member-plan">
+              {{ m.membership_type === 'daily' ? 'Daily Pass' : 'Premium' }}
+              <span class="plan-type-badge" [class.daily]="m.membership_type === 'daily'" [class.premium]="m.membership_type !== 'daily'">
+                <ion-icon [name]="m.membership_type === 'daily' ? 'today-outline' : 'star-outline'"></ion-icon>
+              </span>
+              <span class="membership-status-badge" [class.pending]="m.membership_status !== 'active'" [class.active]="m.membership_status === 'active'">
+                {{ m.membership_status === 'active' ? 'Verified' : 'Pending Verification' }}
+              </span>
+              <span *ngIf="m.membership_expiry"> · Exp: {{ m.membership_expiry | date:'MMM d, yyyy' }}</span>
+            </div>
+          </div>
+        </div>
+        <!-- Approve / Decline row shown only for pending members -->
+        <div class="member-pending-actions" *ngIf="m.membership_status !== 'active'">
+          <button class="act-btn approve-btn" (click)="quickApprove(m)">
+            <ion-icon name="checkmark-circle-outline"></ion-icon> Approve
+          </button>
+          <button class="act-btn del" (click)="declineMember(m)">
+            <ion-icon name="close-circle-outline"></ion-icon> Decline
+          </button>
+        </div>
+        <div class="row-actions">
+          <button class="act-btn plan-btn" (click)="openMembershipEdit(m)">
+            <ion-icon name="star-outline"></ion-icon> Plan
+          </button>
+          <button class="act-btn edit" (click)="editMember(m)"><ion-icon name="create-outline"></ion-icon> Edit</button>
+          <button class="act-btn del"  (click)="deleteMember(m)"><ion-icon name="trash-outline"></ion-icon> Delete</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- TAB: SCHEDULE                                  -->
+    <!-- ══════════════════════════════════════════════ -->
+    <div *ngIf="activeTab==='schedule'">
+
+      <div class="section-header-row">
+        <span class="section-label" style="margin:0">Sessions</span>
+        <button class="add-btn" (click)="toggleAddSession()">{{ showAddSession ? '✕ Cancel' : '+ Add Session' }}</button>
+      </div>
+
+      <!-- Add Session Form -->
+      <div class="inline-form" *ngIf="showAddSession">
+        <div class="form-title">New Session</div>
+        <input class="field-input" type="text"   placeholder="Title"    [(ngModel)]="newSession.title" />
+        <input class="field-input" type="date"                          [(ngModel)]="newSession.date" />
+        <input class="field-input" type="time"                          [(ngModel)]="newSession.time" />
+        <input class="field-input" type="text"   placeholder="Location" [(ngModel)]="newSession.location" />
+        <input class="field-input" type="text"   placeholder="Coach"    [(ngModel)]="newSession.coach" />
+        <button class="submit-btn" (click)="saveSession()">Save Session</button>
+      </div>
+
+      <!-- Edit Session Form -->
+      <div class="inline-form" *ngIf="editingSession">
+        <div class="form-title">Edit Session</div>
+        <input class="field-input" type="text" placeholder="Title"    [(ngModel)]="editingSession.title" />
+        <input class="field-input" type="date"                        [(ngModel)]="editingSession.date" />
+        <input class="field-input" type="time"                        [(ngModel)]="editingSession.time" />
+        <input class="field-input" type="text" placeholder="Location" [(ngModel)]="editingSession.location" />
+        <input class="field-input" type="text" placeholder="Coach"    [(ngModel)]="editingSession.coach" />
+        <div class="form-actions">
+          <button class="submit-btn" (click)="updateSession()">Update</button>
+          <button class="cancel-btn" (click)="editingSession=null">Cancel</button>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="sessions.length === 0">No sessions scheduled.</div>
+
+      <div *ngFor="let s of sessions" class="session-row">
+        <div class="session-info">
+          <div class="session-title">{{ s.title }}</div>
+          <div class="session-meta">{{ s.date }} · {{ s.time }} · {{ s.location }}</div>
+          <div class="session-meta"><ion-icon name="person-outline"></ion-icon> {{ s.coach || 'No coach' }} · {{ s.membersCount || 0 }} members</div>
+        </div>
+        <div class="row-actions">
+          <span class="badge" [ngClass]="s.status">{{ s.status }}</span>
+          <button class="act-btn edit" (click)="editSession(s)"><ion-icon name="create-outline"></ion-icon> Edit</button>
+          <button class="act-btn del"  (click)="deleteSession(s)"><ion-icon name="trash-outline"></ion-icon> Delete</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- TAB: INVENTORY / SHOP                          -->
+    <!-- ══════════════════════════════════════════════ -->
+    <div *ngIf="activeTab==='inventory'">
+
+      <div class="section-header-row">
+        <span class="section-label" style="margin:0">Supplements Shop</span>
+        <button class="add-btn" (click)="toggleAddProduct()">{{ showAddProduct ? '✕ Cancel' : '+ Add Product' }}</button>
+      </div>
+
+      <!-- Add Product Form -->
+      <div class="inline-form" *ngIf="showAddProduct">
+        <div class="form-title">New Product</div>
+        <input class="field-input" type="text"   placeholder="Name"   [(ngModel)]="newProduct.name" />
+        <input class="field-input" type="text"   placeholder="Brand"  [(ngModel)]="newProduct.brand" />
+        <input class="field-input" type="number" placeholder="Price"  [(ngModel)]="newProduct.price" appNoNegative pattern="[0-9]*(\.[0-9]{1,2})?" />
+        <input class="field-input" type="number" placeholder="Stock"  [(ngModel)]="newProduct.stock" appNoNegative pattern="[0-9]*" />
+        <div class="image-upload-wrap">
+          <label class="image-upload-label">Product Photo</label>
+          <label class="image-upload-btn">
+            <ion-icon name="camera-outline"></ion-icon>
+            <span>{{ newProduct.image_url ? 'Change Photo' : 'Upload Photo' }}</span>
+            <input type="file" accept="image/*" style="display:none" (change)="onProductImageChange($event, 'new')" />
+          </label>
+          <img *ngIf="newProduct.image_url" [src]="newProduct.image_url" class="image-preview" />
+        </div>
+        <button class="submit-btn" (click)="saveProduct()">Save Product</button>
+      </div>
+
+      <!-- Edit Product Form -->
+      <div class="inline-form" *ngIf="editingProduct">
+        <div class="form-title">Edit Product</div>
+        <input class="field-input" type="text"   placeholder="Name"  [(ngModel)]="editingProduct.name" />
+        <input class="field-input" type="text"   placeholder="Brand" [(ngModel)]="editingProduct.brand" />
+        <input class="field-input" type="number" placeholder="Price" [(ngModel)]="editingProduct.price" appNoNegative pattern="[0-9]*(\.[0-9]{1,2})?" />
+        <input class="field-input" type="number" placeholder="Stock" [(ngModel)]="editingProduct.stock" appNoNegative pattern="[0-9]*" />
+        <div class="image-upload-wrap">
+          <label class="image-upload-label">Product Photo</label>
+          <label class="image-upload-btn">
+            <ion-icon name="camera-outline"></ion-icon>
+            <span>{{ editingProduct.image_url ? 'Change Photo' : 'Upload Photo' }}</span>
+            <input type="file" accept="image/*" style="display:none" (change)="onProductImageChange($event, 'edit')" />
+          </label>
+          <img *ngIf="editingProduct.image_url" [src]="editingProduct.image_url" class="image-preview" />
+        </div>
+        <div class="form-actions">
+          <button class="submit-btn" (click)="updateProduct()">Update</button>
+          <button class="cancel-btn" (click)="editingProduct=null">Cancel</button>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="products.length === 0">No products.</div>
+
+      <div *ngFor="let p of products" class="product-row">
+        <div class="product-icon-box">{{ p.icon }}</div>
+        <div class="product-info">
+          <div class="product-name">{{ p.name }}</div>
+          <div class="product-meta">{{ p.brand }} · ₱{{ p.price }}</div>
+          <div class="product-meta">Stock: <span [class]="p.stock < 3 ? 'low-stock' : 'ok-stock'">{{ p.stock }} units</span></div>
+        </div>
+        <div class="row-actions">
+          <button class="act-btn edit" (click)="editProduct(p)">Edit</button>
+          <button class="act-btn del"  (click)="deleteProduct(p)">Delete</button>
+        </div>
+      </div>
+
+      <!-- Pending Orders — packed one card per checkout (order_group_id), not
+           one per product line, so a member's multi-item cart shows as a
+           single order the admin approves/rejects as a unit. -->
+      <div class="section-label"><ion-icon name="receipt-outline"></ion-icon> Pending Orders</div>
+      <div class="empty-state" *ngIf="pendingOrderGroups.length === 0">No pending orders.</div>
+      <div *ngFor="let g of pendingOrderGroups" class="order-row">
+        <div>
+          <div class="order-title">{{ g.username }}</div>
+          <div class="order-meta">{{ g.email }} · {{ g.paymentMethod === 'cash' ? 'Cash' : 'GCash' }} · ₱{{ g.total }}</div>
+          <ul class="order-group-items">
+            <li *ngFor="let item of g.items">{{ item.name }} × {{ item.quantity }} — ₱{{ item.total }}</li>
+          </ul>
+        </div>
+        <div class="row-actions">
+          <button class="act-btn edit" [disabled]="g.cancelling" (click)="approveOrderGroup(g)">Approve</button>
+          <button class="act-btn del"  [disabled]="g.cancelling" (click)="rejectOrderGroup(g)">Reject</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- TAB: EQUIPMENT                                 -->
+    <!-- ══════════════════════════════════════════════ -->
+    <div *ngIf="activeTab==='equipment'">
+
+      <div class="section-header-row">
+        <span class="section-label" style="margin:0">Equipment</span>
+        <button class="add-btn" (click)="toggleAddEquipment()">{{ showAddEquipment ? '✕ Cancel' : '+ Add Equipment' }}</button>
+      </div>
+
+      <!-- Add Equipment Form -->
+      <div class="inline-form" *ngIf="showAddEquipment">
+        <div class="form-title">New Equipment</div>
+        <input class="field-input" type="text" placeholder="Equipment name (e.g. Treadmill)" [(ngModel)]="newEquipment.name" />
+        <input class="field-input" type="text" placeholder="Category (e.g. Cardio, Strength)" [(ngModel)]="newEquipment.category" />
+        <input class="field-input" type="text" placeholder="Optional weight scale (leave blank if not applicable, e.g. Treadmill)" [(ngModel)]="newEquipment.weight_scale" />
+        <textarea class="field-input" placeholder="Description (optional)" [(ngModel)]="newEquipment.description" rows="2" style="resize:vertical;"></textarea>
+        <select class="field-input" [(ngModel)]="newEquipment.status">
+          <option value="available">Available</option>
+          <option value="unavailable">Not Available</option>
+          <option value="maintenance">Under Maintenance</option>
+        </select>
+        <!-- Image Upload -->
+        <label class="field-lbl">Equipment Photo</label>
+        <div class="img-upload-wrap">
+          <img *ngIf="newEquipment.image_url" [src]="newEquipment.image_url" class="img-preview" alt="Preview" />
+          <div *ngIf="!newEquipment.image_url" class="img-placeholder">No photo selected</div>
+          <label class="img-upload-btn">
+            📷 Choose Photo
+            <input type="file" accept="image/*" style="display:none" (change)="onEquipmentImageChange($event, 'new')" />
+          </label>
+          <button *ngIf="newEquipment.image_url" class="cancel-btn" style="margin-top:6px" (click)="newEquipment.image_url=''">Remove Photo</button>
+        </div>
+        <button class="submit-btn" (click)="saveEquipment()">Save Equipment</button>
+      </div>
+
+      <!-- Edit Equipment Form -->
+      <div class="inline-form" *ngIf="editingEquipment">
+        <div class="form-title">Edit Equipment</div>
+        <input class="field-input" type="text" placeholder="Equipment name" [(ngModel)]="editingEquipment.name" />
+        <input class="field-input" type="text" placeholder="Category" [(ngModel)]="editingEquipment.category" />
+        <input class="field-input" type="text" placeholder="Optional weight scale (leave blank if not applicable)" [(ngModel)]="editingEquipment.weight_scale" />
+        <textarea class="field-input" placeholder="Description (optional)" [(ngModel)]="editingEquipment.description" rows="2" style="resize:vertical;"></textarea>
+        <select class="field-input" [(ngModel)]="editingEquipment.status">
+          <option value="available">Available</option>
+          <option value="unavailable">Not Available</option>
+          <option value="maintenance">Under Maintenance</option>
+        </select>
+        <!-- Image Upload -->
+        <label class="field-lbl">Equipment Photo</label>
+        <div class="img-upload-wrap">
+          <img *ngIf="editingEquipment.image_url" [src]="editingEquipment.image_url" class="img-preview" alt="Preview" />
+          <div *ngIf="!editingEquipment.image_url" class="img-placeholder">No photo selected</div>
+          <label class="img-upload-btn">
+            📷 Choose Photo
+            <input type="file" accept="image/*" style="display:none" (change)="onEquipmentImageChange($event, 'edit')" />
+          </label>
+          <button *ngIf="editingEquipment.image_url" class="cancel-btn" style="margin-top:6px" (click)="editingEquipment.image_url=''">Remove Photo</button>
+        </div>
+        <div class="form-actions">
+          <button class="submit-btn" (click)="updateEquipment()">Update</button>
+          <button class="cancel-btn" (click)="editingEquipment=null">Cancel</button>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="equipment.length === 0">No equipment listed.</div>
+
+      <div *ngFor="let e of equipment" class="equip-row">
+        <div class="equip-icon-box">
+          <img *ngIf="e.image_url" [src]="e.image_url" style="width:36px;height:36px;object-fit:cover;border-radius:8px;" alt="{{ e.name }}" />
+          <span *ngIf="!e.image_url">🏋️</span>
+        </div>
+        <div class="equip-info">
+          <div class="equip-name">{{ e.name }}</div>
+          <div class="equip-meta">{{ e.category }} · {{ e.status }}</div>
+          <div class="equip-meta" *ngIf="e.weight_scale">Weights: {{ e.weight_scale }}</div>
+        </div>
+        <div class="row-actions">
+          <button class="act-btn edit" (click)="editEquipment(e)">Edit</button>
+          <button class="act-btn del"  (click)="deleteEquipment(e)">Delete</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- TAB: NOTIFICATIONS                             -->
+    <!-- ══════════════════════════════════════════════ -->
+    <div *ngIf="activeTab==='notifs'">
+
+      <div class="section-label">Send Notification</div>
+      <textarea class="notif-input" [(ngModel)]="notifMessage" placeholder="Type announcement or alert…" rows="3"></textarea>
+      <button class="submit-btn" (click)="sendNotification()">Send to All Members</button>
+
+      <div class="section-label" style="margin-top:24px">Recent Notifications</div>
+      <div class="empty-state" *ngIf="notifications.length === 0">No notifications sent yet.</div>
+      <div *ngFor="let n of notifications" class="notif-row">
+        <div class="notif-msg">{{ n.message }}</div>
+        <div class="notif-meta">{{ n.created_at }} · <span [class]="n.is_read ? 'read' : 'unread'">{{ n.is_read ? 'Read' : 'New' }}</span></div>
+      </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- TAB: ATTENDANCE                                -->
+    <!-- ══════════════════════════════════════════════ -->
+    <div *ngIf="activeTab==='attendance'">
+
+      <!-- QR Code Display -->
+      <div class="section-label">Gym Check-in QR Code</div>
+      <div class="qr-card">
+        <div class="qr-desc">Show this QR code to members so they can scan it to check in. Daily Pass members must pay first before their attendance is confirmed.</div>
+        <button class="submit-btn" style="margin-bottom:12px" (click)="toggleGymQrCode()">
+          <ion-icon [name]="showQrCode ? 'eye-off-outline' : 'qr-code-outline'"></ion-icon>
+          {{ showQrCode ? 'Hide QR Code' : 'Show QR Code' }}
+        </button>
+        <div class="qr-display" *ngIf="showQrCode">
+          <div class="qr-placeholder">
+            <div class="qr-label">FORDAGO GYM</div>
+            <div class="qr-loading" *ngIf="isLoadingQrCode">Generating attendance QR...</div>
+            <div class="qr-error" *ngIf="!isLoadingQrCode && qrCodeError">{{ qrCodeError }}</div>
+            <img *ngIf="!isLoadingQrCode && gymQrImageUrl" [src]="gymQrImageUrl" alt="FordaGO attendance QR code" class="qr-image" />
+            <div class="qr-code-val">{{ gymQrCode }}</div>
+            <div class="qr-actions" *ngIf="!isLoadingQrCode && gymQrImageUrl">
+              <button class="act-btn edit" (click)="regenerateGymQrCode()">Regenerate</button>
+              <button class="act-btn" (click)="downloadGymQrCode()">Download</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pending Payment Requests -->
+      <div class="section-label" style="margin-top:24px">
+        Pending Daily Payments
+        <span class="badge-count" *ngIf="attendancePending.length">{{ attendancePending.length }}</span>
+      </div>
+      <div class="empty-state" *ngIf="attendancePending.length === 0">No pending payments.</div>
+      <div *ngFor="let a of attendancePending" class="attend-row pending-row">
+        <div class="attend-info">
+          <div class="attend-name">{{ a.username }}</div>
+          <div class="attend-meta">{{ a.check_in_time | date:'h:mm a, MMM d' }} · Daily Pass · ₱100</div>
+          <div class="attend-pay">Payment: <strong>{{ a.payment_method || 'cash' | titlecase }}</strong></div>
+        </div>
+        <div class="attend-actions">
+          <button class="act-btn edit" (click)="confirmCheckin(a)">
+            <ion-icon name="checkmark-outline"></ion-icon> Confirm
+          </button>
+          <button class="act-btn del"  (click)="rejectCheckin(a)">
+            <ion-icon name="close-outline"></ion-icon> Reject
+          </button>
+        </div>
+      </div>
+
+      <!-- Daily Check-ins -->
+      <div class="section-label" style="margin-top:24px">Attendance Records ({{ selectedReportDate }})</div>
+      <div class="empty-state" *ngIf="attendanceToday.length === 0">No attendance records for this date.</div>
+      <div *ngFor="let a of attendanceToday" class="attend-row">
+        <div class="attend-info">
+          <div class="attend-name">{{ a.username }}</div>
+          <div class="attend-meta">{{ a.check_in_time | date:'h:mm a' }} · {{ a.membership_type | titlecase }}</div>
+        </div>
+        <span class="status-badge" [class.paid]="a.payment_status==='paid'" [class.pending]="a.payment_status==='pending'">
+          <ion-icon [name]="a.payment_status === 'paid' ? 'checkmark-circle-outline' : 'time-outline'"></ion-icon>
+          {{ a.payment_status === 'paid' ? 'Confirmed' : 'Pending' }}
+        </span>
+      </div>
+
+      <!-- Equipment Scan Records -->
+      <div class="section-label" style="margin-top:24px">Equipment QR Scan Records ({{ selectedReportDate }})</div>
+      <div class="empty-state" *ngIf="equipmentScanLogs.length === 0">No equipment scans for this date.</div>
+      <div *ngFor="let log of equipmentScanLogs" class="attend-row">
+        <div class="attend-info">
+          <div class="attend-name">{{ log.username }}</div>
+          <div class="attend-meta">{{ log.equipment_name }} · Code: {{ log.equipment_code || '-' }}</div>
+          <div class="attend-pay">Scanned at: {{ log.scanned_at | date:'h:mm a' }}</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Membership edit modal -->
+    <div class="overlay" *ngIf="editingMembershipFor" (click)="editingMembershipFor=null"></div>
+    <div class="edit-membership-modal" *ngIf="editingMembershipFor">
+      <div class="modal-title-sm">Edit Membership — {{ editingMembershipFor.username }}</div>
+      <label class="field-lbl">Membership Type</label>
+      <select class="field-input" [(ngModel)]="membershipForm.membership_type">
+        <option value="premium">Premium</option>
+        <option value="daily">Daily Pass</option>
+      </select>
+      <label class="field-lbl" style="margin-top:10px">Expiry Date (Leave blank for Daily)</label>
+      <input type="date" class="field-input" [(ngModel)]="membershipForm.membership_expiry">
+      <div class="form-actions">
+        <button class="act-btn" (click)="editingMembershipFor=null">Cancel</button>
+        <button class="act-btn edit" (click)="saveMembership()">Save</button>
+      </div>
+    </div>
+
+  </div>
+</ion-content>

@@ -1,0 +1,456 @@
+<!-- dashboard.page.html -->
+<app-header
+  subtitle="AFFORDA GYM"
+  [unreadCount]="unreadCount"
+  [profileImage]="profileImage"
+  [initials]="initials"
+  (equipmentClick)="goToEquipment()"
+  (notifClick)="openNotifPanel()"
+  (profileClick)="goToProfile()">
+</app-header>
+
+<ion-content [fullscreen]="false" class="fordago-page-content" [scrollY]="true">
+  <div class="content-inner">
+
+    <!-- Greeting -->
+    <div class="fade-up greeting-wrap">
+      <div class="greeting-sub">{{ timeGreeting }}</div>
+      <div class="greeting-name">{{ memberName }}</div>
+    </div>
+
+    <!-- Membership Card -->
+    <div class="membership-card fade-up">
+      <div class="membership-card-top">
+        <div class="badge-active">
+          <span class="badge-dot"></span> Active Member
+        </div>
+        <span class="membership-card-icon" aria-hidden="true">
+          <ion-icon name="card-outline"></ion-icon>
+        </span>
+      </div>
+      <div class="plan-kicker">Membership plan</div>
+      <div class="plan-name">{{ planName }}</div>
+      <div class="plan-meta">Expires {{ expiryDate }} &nbsp;·&nbsp; {{ daysLeft }} days left</div>
+      <div class="progress-track">
+        <div class="progress-fill" [style.width.%]="progressPercent"></div>
+      </div>
+      <div class="progress-labels">
+        <span>Start</span>
+        <span>{{ daysLeft }} days left</span>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="section-label this-month-label">This Month</div>
+    <div class="stats-grid">
+      <div class="stat-card sessions-card fade-up" role="button" tabindex="0"
+           (click)="openStatDetail('sessions')" (keyup.enter)="openStatDetail('sessions')">
+        <ion-icon name="barbell-outline" class="stat-icon accent-icon"></ion-icon>
+        <div class="stat-value">{{ sessionsThisMonth }}</div>
+        <div class="stat-label">Sessions this month</div>
+      </div>
+      <div class="stat-card streak-card fade-up" role="button" tabindex="0"
+           (click)="openStatDetail('streak')" (keyup.enter)="openStatDetail('streak')">
+        <ion-icon name="flame-outline" class="stat-icon amber-icon"></ion-icon>
+        <div class="stat-value amber">{{ dayStreak }}</div>
+        <div class="stat-label">Day streak</div>
+      </div>
+      <div class="stat-card average-card fade-up" role="button" tabindex="0"
+           (click)="openStatDetail('avg')" (keyup.enter)="openStatDetail('avg')">
+        <ion-icon name="time-outline" class="stat-icon blue-icon"></ion-icon>
+        <div class="stat-value blue">{{ avgMinutes }}</div>
+        <div class="stat-label">Avg min / session</div>
+      </div>
+      <div class="stat-card upcoming-card fade-up" role="button" tabindex="0"
+           (click)="openStatDetail('upcoming')" (keyup.enter)="openStatDetail('upcoming')">
+        <ion-icon name="calendar-outline" class="stat-icon green-icon"></ion-icon>
+        <div class="stat-value lime">{{ upcomingCount }}</div>
+        <div class="stat-label">Upcoming schedules</div>
+      </div>
+    </div>
+
+    <!-- Scan QR only -->
+    <button class="scan-btn fade-up" (click)="goToQr()">
+      <ion-icon name="scan-outline" class="action-icon"></ion-icon>
+      <span>Scan QR to Check In</span>
+    </button>
+
+    <!-- Today's Workout -->
+    <div class="section-label today-workout-label">Today's Workout</div>
+    <div class="workout-count" *ngIf="todayWorkouts.length > 0">
+      {{ todayWorkouts.length }} workout{{ todayWorkouts.length === 1 ? '' : 's' }} scheduled today
+    </div>
+    <div class="card fade-up workout-card" *ngFor="let workout of todayWorkouts; let workoutIndex = index">
+      <div class="workout-header">
+        <div class="workout-title-wrap">
+          <div>
+            <div class="workout-title">{{ workout.name }}</div>
+            <div class="workout-focus" *ngIf="workout.focus">Focus: {{ workout.focus }}</div>
+          </div>
+          <div class="workout-status" [class.done]="workout.status === 'done'" [class.missed]="workout.status === 'missed'">
+            {{ workout.status === 'done' ? 'Done' : workout.status === 'missed' ? 'Missed' : 'Scheduled' }}
+          </div>
+        </div>
+        <div class="workout-badge">{{ workout.time }}</div>
+      </div>
+
+      <!-- Live Session Timer: start when the workout actually begins, stop
+           when finished. Stopping records the real elapsed minutes, which is
+           what powers the "Avg Min / Session" stat instead of a guess. -->
+      <div class="session-timer-row" *ngIf="workout.status !== 'missed' && workout.status !== 'done'">
+        <ng-container *ngIf="!isSessionTimerActive(workout)">
+          <button type="button" class="session-timer-btn start" (click)="startWorkoutSession(workout)">
+            <ion-icon name="play-outline"></ion-icon>
+            <span>Start Session</span>
+          </button>
+        </ng-container>
+        <ng-container *ngIf="isSessionTimerActive(workout)">
+          <div class="session-timer-live">
+            <span class="session-timer-dot"></span>
+            <span class="session-timer-value">{{ getElapsedLabel(workout) }}</span>
+          </div>
+          <button type="button" class="session-timer-btn stop" (click)="stopWorkoutSession(workout)">
+            <ion-icon name="stop-outline"></ion-icon>
+            <span>Stop</span>
+          </button>
+        </ng-container>
+      </div>
+      <div class="session-timer-done" *ngIf="workout.status === 'done' && workout.actualMinutes">
+        <ion-icon name="checkmark-circle-outline"></ion-icon>
+        <span>Tracked {{ workout.actualMinutes }} min</span>
+      </div>
+      <div class="exercise-list-header" *ngIf="workout.exercises.length > 0">
+        <span class="exercise-list-header-spacer" aria-hidden="true"></span>
+        <span class="exercise-list-header-name">Exercise</span>
+        <span class="exercise-list-header-detail">Sets × Reps</span>
+      </div>
+      <div
+        class="exercise-item"
+        *ngFor="let ex of workout.exercises; let i = index"
+        [class.completed]="ex.done"
+        [class.disabled]="workout.status === 'missed' || !isWorkoutStillActive(workout.time)"
+        (click)="toggleExercise(workoutIndex, i)">
+        <div class="ex-dot" [style.background]="ex.color"></div>
+        <div class="ex-name">{{ ex.name }}</div>
+        <div class="ex-detail">{{ ex.sets }} × {{ ex.reps }}</div>
+        <div class="ex-check" *ngIf="ex.done">✓</div>
+      </div>
+      <div class="workout-progress-row">
+        <div class="workout-progress-track">
+          <div class="workout-progress-fill" [style.width.%]="getWorkoutCompletionPercent(workout)"></div>
+        </div>
+        <span class="workout-progress-label">{{ getCompletedExercises(workout) }}/{{ workout.exercises.length }} done</span>
+      </div>
+    </div>
+    <ng-template [ngIf]="todayWorkouts.length === 0" #noWorkout>
+      <div class="card fade-up empty-state">
+        <ion-icon name="moon-outline" class="empty-state-icon"></ion-icon>
+        <div>No workout scheduled today. Rest day!</div>
+      </div>
+    </ng-template>
+
+    <!-- Activity Heatmap -->
+    <!-- HOW IT WORKS:
+         Each cell = 1 day. Value 0 = no session, 1 = light, 2 = moderate, 3 = intense.
+         This data comes from completedSessions — when a member checks in via QR scan,
+         that session is marked as completed and the heatmap automatically updates.
+         If a scheduled workout is marked done, intensity = 1. If check-in + workout done = 3. -->
+    <div class="section-label">Activity — Last 4 Weeks</div>
+    <div class="card fade-up">
+      <div class="heat-day-labels">
+        <div class="heat-lbl" *ngFor="let d of dayLabels">{{ d }}</div>
+      </div>
+      <div class="heat-grid">
+        <div
+          class="heat-cell"
+          *ngFor="let cell of heatmapData; let i = index"
+          [class]="cell.isPadding ? 'heat-pad' : ('heat-' + cell.intensity)"
+          [attr.title]="cell.isPadding ? null : (cell.date + ': ' + cell.label)"
+          [attr.aria-hidden]="cell.isPadding ? 'true' : null"
+          (pointerdown)="onHeatCellPressStart(cell, $event)"
+          (pointerup)="onHeatCellPressEnd($event)"
+          (pointerleave)="onHeatCellPressEnd($event)"
+          (pointercancel)="onHeatCellPressEnd($event)">
+        </div>
+      </div>
+      <!-- Long-press popup: shows the pressed day's date + status while held, disappears on release -->
+      <div
+        class="heat-popup"
+        *ngIf="activeHeatmapPopup as popup"
+        [style.left.px]="popup.x"
+        [style.top.px]="popup.y">
+        <div class="heat-popup-header">
+          <span class="heat-popup-dot" [class]="'heat-' + popup.cell.intensity"></span>
+          <span class="heat-popup-date">{{ popup.cell.date }}</span>
+        </div>
+        <div class="heat-popup-label">{{ popup.cell.label }}</div>
+        <div class="heat-popup-arrow"></div>
+      </div>
+      <div class="heat-legend">
+        <span class="heat-legend-label">Less</span>
+        <div class="heat-legend-cell heat-0"></div>
+        <div class="heat-legend-cell heat-1"></div>
+        <div class="heat-legend-cell heat-2"></div>
+        <div class="heat-legend-cell heat-3"></div>
+        <span class="heat-legend-label">More</span>
+      </div>
+    </div>
+
+    <!-- Personal Records -->
+    <!-- HOW IT WORKS:
+         Manual entry lang ito. Pindutin mo yung + button or yung luma mong record
+         para ma-edit/update. Di ito auto-detect kasi walang sensor — ikaw mismo
+         mag-iinput after mo ma-achieve yung PR. -->
+    <div class="pr-header">
+      <div class="section-label" style="margin: 0;">Personal Records</div>
+      <button class="add-pr-btn" (click)="openPrModal()">+ Add PR</button>
+    </div>
+    <div class="card fade-up pr-list">
+      <div class="pr-empty-state" *ngIf="personalRecords.length === 0">
+        <span class="pr-empty-icon">
+          <ion-icon name="trophy-outline"></ion-icon>
+        </span>
+        <strong>No personal records yet</strong>
+        <span>Add your first record using the Add PR button.</span>
+      </div>
+
+      <button
+        type="button"
+        class="pr-item"
+        *ngFor="let pr of personalRecords"
+        (click)="editPr(pr)">
+        <div class="pr-icon"><ion-icon [name]="pr.icon"></ion-icon></div>
+        <div class="pr-info">
+          <div class="pr-name">{{ pr.exercise }}</div>
+          <div class="pr-value">
+            <span>{{ pr.value }}</span>
+            <span class="pr-unit" *ngIf="pr.unit">{{ pr.unit }}</span>
+            <span class="pr-new-badge" *ngIf="pr.isNew">New PR</span>
+          </div>
+        </div>
+        <div class="pr-date">{{ pr.date }}</div>
+        <ion-icon name="create-outline" class="pr-edit-hint"></ion-icon>
+      </button>
+    </div>
+
+    <!-- Notifications are available from the bell button in the header. -->
+
+    <div class="page-bottom-space" aria-hidden="true"></div>
+
+  </div>
+</ion-content>
+
+<ion-footer class="fordago-app-footer ion-no-border">
+  <nav class="fordago-bottom-nav" aria-label="Main navigation">
+    <button type="button" class="fordago-nav-item is-active" (click)="goToDashboard()" aria-label="Home">
+      <span class="fordago-nav-icon"><ion-icon name="home-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Home</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item" (click)="goToSchedule()" aria-label="Schedule">
+      <span class="fordago-nav-icon"><ion-icon name="calendar-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Schedule</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item fordago-scan-item" (click)="goToQr()" aria-label="Scan QR">
+      <span class="fordago-scan-button"><ion-icon name="scan-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Scan</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item" (click)="goToInventory()" aria-label="Shop">
+      <span class="fordago-nav-icon"><ion-icon name="bag-handle-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Shop</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item" (click)="goToProfile()" aria-label="Profile">
+      <span class="fordago-nav-icon"><ion-icon name="person-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Profile</span>
+    </button>
+  </nav>
+</ion-footer>
+
+
+<!-- Shared notifications dropdown: list + detail views, all state owned by
+     NotificationPanelComponent. See shared/notification-panel/. -->
+<app-notification-panel
+  [isOpen]="notifPanelOpen"
+  (closed)="closeNotifPanel()"
+  (unreadCountChange)="onUnreadCountChange($event)">
+</app-notification-panel>
+
+<!-- Stat Card Detail Overlay -->
+<!-- Tapping any "This Month" stat card opens this panel, themed to match that
+     card's accent color, with content specific to the stat that was tapped. -->
+<div class="notif-overlay" *ngIf="statDetailOpen" (click)="closeStatDetail()">
+  <div
+    class="notif-overlay-card stat-detail-card"
+    [class.theme-sessions]="statDetailOpen === 'sessions'"
+    [class.theme-streak]="statDetailOpen === 'streak'"
+    [class.theme-avg]="statDetailOpen === 'avg'"
+    [class.theme-upcoming]="statDetailOpen === 'upcoming'"
+    (click)="$event.stopPropagation()">
+
+    <div class="notif-panel-header">
+      <div class="notif-header-left">
+        <div class="stat-detail-icon-wrap">
+          <ion-icon
+            [name]="statDetailOpen === 'sessions' ? 'barbell-outline'
+                   : statDetailOpen === 'streak'   ? (dayStreak > 0 ? 'flame' : 'flame-outline')
+                   : statDetailOpen === 'avg'      ? 'time-outline'
+                   : 'calendar-outline'">
+          </ion-icon>
+        </div>
+        <div>
+          <div class="notif-header-title">
+            {{ statDetailOpen === 'sessions' ? 'Sessions This Month'
+             : statDetailOpen === 'streak'   ? 'Day Streak'
+             : statDetailOpen === 'avg'      ? 'Avg Min / Session'
+             : 'Upcoming Schedules' }}
+          </div>
+          <div class="notif-header-sub">
+            {{ statDetailOpen === 'sessions' ? (sessionsThisMonth + ' completed this month')
+             : statDetailOpen === 'streak'   ? (dayStreak + (dayStreak === 1 ? ' day' : ' days') + ' in a row')
+             : statDetailOpen === 'avg'      ? (avgMinutes + ' min average')
+             : (upcomingCount + ' scheduled this month') }}
+          </div>
+        </div>
+      </div>
+      <button class="notif-icon-btn notif-dismiss-btn" (click)="closeStatDetail()" title="Close">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+
+    <div class="notif-divider"></div>
+
+    <div class="notif-scroll-wrap">
+
+      <!-- Sessions this month: full list of completed sessions -->
+      <ng-container *ngIf="statDetailOpen === 'sessions'">
+        <div class="stat-detail-empty" *ngIf="completedSessionsList.length === 0">
+          <ion-icon name="barbell-outline"></ion-icon>
+          <strong>No completed sessions yet</strong>
+          <span>Finish a scheduled workout and mark it done to see it here.</span>
+        </div>
+        <div class="stat-detail-list-item" *ngFor="let s of completedSessionsList">
+          <div class="stat-detail-dot"></div>
+          <div class="stat-detail-info">
+            <div class="stat-detail-name">{{ s.title }}</div>
+            <div class="stat-detail-meta">{{ s.date }} · {{ s.time }}</div>
+          </div>
+          <div class="stat-detail-badge">{{ s.duration }}</div>
+        </div>
+      </ng-container>
+
+      <!-- Day streak: motivation + how it works -->
+      <ng-container *ngIf="statDetailOpen === 'streak'">
+        <div class="stat-detail-hero">
+          <div class="stat-detail-hero-icon" [class.is-lit]="dayStreak > 0">
+            <ion-icon [name]="dayStreak > 0 ? 'flame' : 'flame-outline'"></ion-icon>
+          </div>
+          <div class="stat-detail-hero-value">{{ dayStreak }} {{ dayStreak === 1 ? 'day' : 'days' }}</div>
+          <div class="stat-detail-hero-caption">{{ streakMotivation }}</div>
+        </div>
+        <div class="stat-detail-note">
+          <ion-icon name="information-circle-outline"></ion-icon>
+          <span>Complete at least one workout every day to keep your streak alive. Missing a full day resets it back to 0 — so don't break the chain!</span>
+        </div>
+      </ng-container>
+
+      <!-- Avg minutes per session: explanation of how it's calculated -->
+      <ng-container *ngIf="statDetailOpen === 'avg'">
+        <div class="stat-detail-hero">
+          <div class="stat-detail-hero-icon">
+            <ion-icon name="time"></ion-icon>
+          </div>
+          <div class="stat-detail-hero-value">{{ avgMinutes }} min</div>
+          <div class="stat-detail-hero-caption">Average duration per completed session this month</div>
+        </div>
+        <div class="stat-detail-note">
+          <ion-icon name="information-circle-outline"></ion-icon>
+          <span>
+            Calculated from workouts you've completed and marked done this month:
+            {{ totalMinutesThisMonth }} total minutes across {{ sessionsThisMonth }}
+            session{{ sessionsThisMonth === 1 ? '' : 's' }}, divided by the number of completed sessions.
+            Minutes come from your Start/Stop session timer when available, or the scheduled
+            duration otherwise.
+          </span>
+        </div>
+      </ng-container>
+
+      <!-- Upcoming schedules: full list for this month -->
+      <ng-container *ngIf="statDetailOpen === 'upcoming'">
+        <div class="stat-detail-empty" *ngIf="upcomingSessionsList.length === 0">
+          <ion-icon name="calendar-outline"></ion-icon>
+          <strong>No upcoming schedules</strong>
+          <span>Book a session to see it listed here.</span>
+        </div>
+        <div class="stat-detail-list-item" *ngFor="let u of upcomingSessionsList">
+          <div class="stat-detail-dot"></div>
+          <div class="stat-detail-info">
+            <div class="stat-detail-name">{{ u.title }}</div>
+            <div class="stat-detail-meta">{{ u.date }} · {{ u.time }}</div>
+          </div>
+          <div class="stat-detail-badge" *ngIf="u.type">{{ u.type }}</div>
+        </div>
+      </ng-container>
+
+    </div>
+  </div>
+</div>
+
+<!-- PR Add/Edit Modal -->
+<ion-modal
+  [isOpen]="prModalOpen"
+  (didDismiss)="closePrModal()"
+  [breakpoints]="[0, 0.55, 0.85]"
+  [initialBreakpoint]="0.55">
+  <ng-template>
+    <ion-content class="ion-padding modal-content">
+      <div class="modal-handle"></div>
+      <div class="modal-title">{{ editingPr ? 'Edit PR' : 'Add New PR' }}</div>
+
+      <div class="form-group">
+        <label class="form-label">Exercise</label>
+        <ion-input
+          type="text"
+          [(ngModel)]="prForm.exercise"
+          autocomplete="off"
+          placeholder="Type your workout (e.g. Incline Dumbbell Press)"
+          class="form-select">
+        </ion-input>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label class="form-label">Value</label>
+          <ion-input
+            type="number"
+            appNoNegative
+            pattern="[0-9]*(\.[0-9]{1,2})?"
+            [(ngModel)]="prForm.value"
+            placeholder="0"
+            class="form-input">
+          </ion-input>
+        </div>
+        <div class="form-group flex-1">
+          <label class="form-label">Unit</label>
+          <ion-input
+            type="text"
+            [(ngModel)]="prForm.unit"
+            placeholder="Optional (kg, lbs, reps, min)"
+            class="form-input">
+          </ion-input>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="modal-save-btn" (click)="savePr()">
+          {{ editingPr ? 'Update PR' : 'Save PR' }}
+        </button>
+        <button class="modal-delete-btn" *ngIf="editingPr" (click)="deletePr()">
+          Delete
+        </button>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>

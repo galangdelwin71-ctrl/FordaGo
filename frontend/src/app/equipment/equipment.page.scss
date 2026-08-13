@@ -1,0 +1,656 @@
+// equipment.page.scss - FordaGO Modern Redesign - Theme Aware
+
+// ── CSS Custom Properties ──────────────────────────
+:root {
+  --text-primary: #FFFFFF;
+  --text-secondary: rgba(255,255,255,0.75);
+  --text-muted: rgba(255,255,255,0.5);
+  --text-tertiary: rgba(255,255,255,0.35);
+  --accent-lime: #FFD600;
+  --accent-amber: #FF9500;
+  --accent-red: #FF4461;
+  --accent-blue: #4A9EFF;
+  --accent-green: #00D68F;
+  --accent-shadow: rgba(255,214,0,0.3);
+  --accent-border: rgba(255,214,0,0.25);
+  --accent-dim: rgba(255,214,0,0.1);
+  --bg-primary: #06080F;
+  --bg-secondary: #0B0E1A;
+  --bg-tertiary: #111428;
+  --overlay-light: rgba(255,255,255,0.04);
+  --overlay-medium: rgba(255,255,255,0.07);
+  --overlay-heavy: rgba(255,255,255,0.1);
+  --border-primary: rgba(255,255,255,0.1);
+  --border-secondary: rgba(255,255,255,0.08);
+  --glass-bg: rgba(255,255,255,0.03);
+  --glass-border: rgba(255,255,255,0.06);
+  --glass-blur: blur(20px);
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
+  --shadow-glow: 0 0 20px rgba(255,214,0,0.15);
+  --shadow-card: 0 4px 24px rgba(0,0,0,0.3);
+  --transition-fast: 0.15s ease;
+  --transition-smooth: 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+
+// ── Toolbar -------------------------------------------
+ion-toolbar {
+  --background: transparent;
+  --border-width: 0;
+  --padding-start: 16px;
+  --padding-end: 16px;
+}
+
+ion-content {
+  --background: var(--bg-primary);
+}
+
+// -- Header Brand --------------------------------------
+.toolbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .brand-logo {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 8px rgba(255,214,0,0.4));
+  }
+
+.toolbar-logo {
+  font-size: 20px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--accent-lime) 0%, var(--accent-amber) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.5px;
+}
+}
+
+.header-end {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-right: 4px;
+}
+
+// -- Scroll Wrap ---------------------------------------
+.scroll-wrap {
+  padding: 16px 16px 110px;
+}
+
+// -- Page Title ----------------------------------------
+.page-title-wrap {
+  margin-bottom: 18px;
+}
+
+.page-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.5px;
+}
+
+.page-sub {
+  font-size: 12px;
+  color: #555;
+  margin-top: 2px;
+}
+
+// -- Search --------------------------------------------
+.search-wrap {
+  position: relative;
+  margin-bottom: 16px;
+
+  .search-icon-ion {
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #555;
+    font-size: 15px;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .search-input {
+    width: 100%;
+    background: #1a1a1a;
+    border: 1px solid #252525;
+    border-radius: 12px;
+    padding: 11px 14px 11px 38px;
+    color: #f0f0f0;
+    font-size: 13px;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s;
+
+    &::placeholder { color: #444; }
+    &:focus { border-color: rgba(232, 255, 71, 0.3); }
+  }
+}
+
+// -- Category Pills ------------------------------------
+.cat-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 18px;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+
+  .cat-pill {
+    flex-shrink: 0;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: #1a1a1a;
+    border: 1px solid #252525;
+    font-size: 10px;
+    font-weight: 700;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+
+    &.active {
+      background: #e8ff47;
+      color: #0d0d0d;
+      border-color: transparent;
+    }
+  }
+}
+
+// -- Empty / Loading -----------------------------------
+.empty-state {
+  text-align: center;
+  padding: 60px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.empty-spinner {
+  color: #e8ff47;
+}
+
+.empty-state-icon {
+  font-size: 36px;
+  color: #555;
+  margin-bottom: 8px;
+
+  &.empty-state-icon-faint {
+    color: #333;
+  }
+}
+
+.empty-state-text {
+  color: #555;
+  font-size: 13px;
+}
+
+// -- Equipment Grid ------------------------------------
+.equip-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.equip-card {
+  background: #161616;
+  border: 0.5px solid #252525;
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.18s;
+
+  &:active { border-color: rgba(232, 255, 71, 0.3); }
+}
+
+// -- Photo Section -------------------------------------
+.equip-photo-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #1a1a1a;
+}
+
+.equip-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.equip-photo-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1a1a1a;
+
+  ion-icon {
+    font-size: 36px;
+    color: #2a2a2a;
+  }
+}
+
+// -- Status Badge (over photo) -------------------------
+.equip-status-badge {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  &.available {
+    background: rgba(0, 214, 143, 0.85);
+    color: #000;
+  }
+
+  &.unavailable {
+    background: rgba(255, 68, 97, 0.85);
+    color: #fff;
+  }
+}
+
+// -- Card Info (below photo) ---------------------------
+.equip-card-info {
+  padding: 10px 12px 12px;
+
+  .equip-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 3px;
+  }
+
+  .equip-cat {
+    font-size: 10px;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+
+  .equip-weight {
+    margin-top: 6px;
+    font-size: 10px;
+    line-height: 1.4;
+    font-weight: 700;
+    color: #e8ff47;
+    letter-spacing: 0.3px;
+  }
+}
+
+// -- Header Notification Bell ---------------------------
+.notif-bell-btn {
+  position: relative;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.72);
+  cursor: pointer;
+  padding: 7px 8px;
+  line-height: 0;
+  border-radius: 12px;
+  transition: background 0.15s;
+  ion-icon { font-size: 20px; display: block; }
+  &:active { background: rgba(255,255,255,0.12); }
+}
+
+.notif-bell-badge {
+  position: absolute;
+  top: 0; right: 0;
+  background: #FF4461;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 1px 4px;
+  min-width: 14px;
+  text-align: center;
+  line-height: 12px;
+}
+
+.avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: linear-gradient(145deg,#FFD600,#F5C400);
+  color: #111; font-weight: 900; font-size: 0.82rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.24); overflow: hidden; flex-shrink: 0;
+}
+.avatar-img    { object-fit: cover; border: 1px solid rgba(255,214,0,0.45); }
+
+// -- Modal ---------------------------------------------
+.equipment-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.82);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.equipment-modal-card {
+  width: 100%;
+  max-width: 520px;
+  min-height: 100%;
+  background:
+    radial-gradient(circle at top left, rgba(232, 255, 71, 0.08), transparent 30%),
+    #101010;
+  color: #ffffff;
+  padding: 18px 18px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+}
+
+.modal-sheet {
+  min-height: 100%;
+  background:
+    radial-gradient(circle at top left, rgba(232, 255, 71, 0.08), transparent 30%),
+    #101010;
+  color: #ffffff;
+  padding: 18px 18px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modal-title {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  color: #f2f2f2;
+  text-transform: uppercase;
+}
+
+.modal-photo-wrap {
+  width: 100%;
+  height: 240px;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #1a1a1a;
+  border: 1px solid #262626;
+
+  .modal-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .modal-photo-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    ion-icon {
+      font-size: 54px;
+      color: #2a2a2a;
+    }
+  }
+}
+
+.modal-name {
+  font-size: 24px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.3px;
+}
+
+.modal-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  .modal-cat {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #f0f0f0;
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    padding: 5px 10px;
+    border-radius: 999px;
+  }
+
+  .modal-status {
+    font-size: 11px;
+    font-weight: 800;
+    padding: 5px 10px;
+    border-radius: 999px;
+
+    &.available {
+      background: rgba(0, 214, 143, 0.14);
+      color: #00d68f;
+    }
+    &.unavailable {
+      background: rgba(255, 68, 97, 0.14);
+      color: #ff4461;
+    }
+  }
+}
+
+.info-card {
+  background: #141414;
+  border: 1px solid #262626;
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.info-label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #8f8f8f;
+  margin-bottom: 8px;
+}
+
+.info-value {
+  font-size: 14px;
+  color: #ffffff;
+  font-weight: 700;
+  line-height: 1.6;
+
+  &.muted {
+    color: #8f8f8f;
+  }
+}
+
+.close-modal-btn {
+  width: 100%;
+  margin-top: auto;
+  padding: 14px;
+  background: linear-gradient(135deg, #e8ff47, #ffd600);
+  border: none;
+  border-radius: 14px;
+  color: #0d0d0d;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+// -- Animations ----------------------------------------
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fade-up {
+  animation: fadeUp 0.3s ease both;
+}
+
+// ── Light Mode ──────────────────────────────────────────
+// This page previously had NO light-theme block at all, so switching to
+// light mode left the entire Equipment page (title, search, category
+// pills, cards, notif panel, detail modal) rendered exactly as dark mode --
+// dark backgrounds, white text -- while every other page correctly
+// adapted. This block brings it in line with the rest of the app using
+// the same amber/white/navy palette established elsewhere.
+:host-context(body.light-theme) {
+  ion-content { --background: #f4f5f8 !important; }
+
+  .page-title { color: #0f172a; }
+  .page-sub   { color: rgba(15, 23, 42, 0.45); }
+
+  // Search
+  .search-wrap {
+    .search-icon-ion { color: rgba(15, 23, 42, 0.35); }
+    .search-input {
+      background: #ffffff;
+      border-color: rgba(15, 23, 42, 0.1);
+      color: #0f172a;
+      &::placeholder { color: rgba(15, 23, 42, 0.35); }
+      &:focus { border-color: rgba(217, 119, 6, 0.35); }
+    }
+  }
+
+  // Category pills
+  .cat-row .cat-pill {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.1);
+    color: rgba(15, 23, 42, 0.5);
+    &.active {
+      background: #d97706;
+      color: #ffffff;
+    }
+  }
+
+  // Loading / error / empty states
+  .empty-spinner { color: #d97706; }
+  .empty-state-icon {
+    color: rgba(15, 23, 42, 0.35);
+    &.empty-state-icon-faint { color: rgba(15, 23, 42, 0.22); }
+  }
+  .empty-state-text { color: rgba(15, 23, 42, 0.5); }
+
+  // Equipment grid cards
+  .equip-card {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.09);
+    &:active { border-color: rgba(217, 119, 6, 0.3); }
+  }
+  .equip-photo-wrap,
+  .equip-photo-placeholder {
+    background: rgba(15, 23, 42, 0.04);
+  }
+  .equip-photo-placeholder ion-icon { color: rgba(15, 23, 42, 0.2); }
+  .equip-card-info {
+    .equip-name { color: #0f172a; }
+    .equip-cat  { color: rgba(15, 23, 42, 0.45); }
+    .equip-weight { color: #d97706; }
+  }
+
+  // Header (this page renders its own header markup rather than
+  // app-header, so it needs its own overrides for the icon buttons)
+  .toolbar-logo {
+    background: linear-gradient(135deg, #d97706 0%, #ea580c 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+  .equip-header-btn,
+  .notif-bell-btn {
+    background: rgba(15, 23, 42, 0.05);
+    border-color: rgba(15, 23, 42, 0.1);
+    color: rgba(15, 23, 42, 0.6);
+  }
+
+  // Equipment detail modal
+  .equipment-modal-backdrop { background: rgba(15, 23, 42, 0.45); }
+  .equipment-modal-card,
+  .modal-sheet {
+    background:
+      radial-gradient(circle at top left, rgba(217, 119, 6, 0.07), transparent 30%),
+      #ffffff;
+    color: #0f172a;
+  }
+  .modal-title { color: rgba(15, 23, 42, 0.5); }
+  .modal-photo-wrap {
+    background: rgba(15, 23, 42, 0.04);
+    border-color: rgba(15, 23, 42, 0.08);
+    .modal-photo-placeholder ion-icon { color: rgba(15, 23, 42, 0.2); }
+  }
+  .modal-name { color: #0f172a; }
+  .modal-row {
+    .modal-cat {
+      color: #0f172a;
+      background: rgba(15, 23, 42, 0.05);
+      border-color: rgba(15, 23, 42, 0.1);
+    }
+    .modal-status {
+      &.available   { background: rgba(5,150,105,0.12); color: #059669; }
+      &.unavailable { background: rgba(220,38,38,0.12); color: #dc2626; }
+    }
+  }
+  .info-card { background: #ffffff; border-color: rgba(15, 23, 42, 0.09); }
+  .info-label { color: rgba(15, 23, 42, 0.45); }
+  .info-value {
+    color: #0f172a;
+    &.muted { color: rgba(15, 23, 42, 0.4); }
+  }
+}
+
+
+/* V3 native footer / scroll integration */
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+ion-content.fordago-page-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  --overflow: auto !important;
+}
+
+
+/* V4 final: Ionic owns the page height; ion-content owns vertical scrolling. */
+:host {
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+
+:host > ion-content {
+  min-height: 0 !important;
+  --overflow: auto !important;
+}
+
+:host > ion-content::part(scroll) {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y !important;
+}
+

@@ -1,0 +1,569 @@
+// profile.page.ts
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import {
+  IonContent,
+  IonFooter,
+  IonIcon,
+  IonModal,
+  IonInput,
+  IonToggle,
+} from '@ionic/angular/standalone';
+import { HttpClient } from '@angular/common/http';
+import { AuthService } from '../services/auth.service';
+import { ProfileService, UserProfile } from '../services/profile.service';
+import { WorkoutTrackerService } from '../services/workout-tracker.service';
+import { ThemeService } from '../services/theme.service';
+import { NoNegativeDirective } from '../directives/no-negative.directive';
+import { HeaderComponent } from '../shared/header/header.component';
+import { NotificationPanelComponent } from '../shared/notification-panel/notification-panel.component';
+import { Subscription } from 'rxjs';
+import { API_BASE_URL } from '../config/api.config';
+
+// ── Interfaces ────────────────────────────────────────
+export interface MemberProfile {
+  firstName:      string;
+  lastName:       string;
+  email:          string;
+  phone:          string;
+  dateOfBirth:    string;
+  gender:         string;
+  profileImage:   string;
+  membershipPlan: string;
+  expiryDate:     string;
+  initials:       string;
+}
+
+export interface NotificationSetting {
+  id:          string;
+  label:       string;
+  description: string;
+  enabled:     boolean;
+}
+
+export interface ProgressHistoryItem {
+  date:   string;
+  title:  string;
+  detail: string;
+  value:  string;
+}
+
+// ── Component ─────────────────────────────────────────
+@Component({
+  selector: 'app-profile',
+  templateUrl: './profile.page.html',
+  styleUrls: ['./profile.page.scss'],
+  standalone: true,
+  host: { class: 'ion-page fordago-page' },
+  imports: [
+    CommonModule,
+    FormsModule,
+    IonContent,
+    IonFooter,
+    IonIcon,
+    IonModal,
+    IonInput,
+    IonToggle,
+    NoNegativeDirective,
+    HeaderComponent,
+    NotificationPanelComponent,
+  ],
+})
+export class ProfilePage implements OnInit, OnDestroy {
+
+  // ── Member Profile ────────────────────────────────────
+  profile: MemberProfile = {
+    firstName:      'Carl Andrew',
+    lastName:       'Bernaldo',
+    email:          'carl.bernaldo@email.com',
+    phone:          '0912 345 6789',
+    dateOfBirth:    'March 12, 2000',
+    gender:         'Male',
+    profileImage:   '',
+    membershipPlan: 'Premium',
+    expiryDate:     'July 14, 2025',
+    initials:       'CB',
+  };
+
+  // Edit form (bound to form inputs)
+  editForm: Partial<MemberProfile> = {};
+  phoneInvalid = false;
+  savingProfile = false;
+  private profileStatsSubscription?: Subscription;
+
+  // ── Password Form ─────────────────────────────────────
+  passwordForm = {
+    current:  '',
+    new:      '',
+    confirm:  '',
+  };
+
+  // ── Stats ─────────────────────────────────────────────
+  sessionsThisMonth = 0;
+  dayStreak         = 0;
+  daysLeft          = 0;
+  avgMinutes        = 0;
+
+  // ── Notification Settings ─────────────────────────────
+  notificationSettings: NotificationSetting[] = [
+    {
+      id:          'workout-reminder',
+      label:       'Workout Reminders',
+      description: 'Remind me before scheduled workouts',
+      enabled:     true,
+    },
+    {
+      id:          'achievement',
+      label:       'Achievements',
+      description: 'Notify me when I unlock new achievements',
+      enabled:     true,
+    },
+    {
+      id:          'membership',
+      label:       'Membership Updates',
+      description: 'Updates about my membership and plans',
+      enabled:     false,
+    },
+    {
+      id:          'marketing',
+      label:       'Marketing Emails',
+      description: 'Special offers and promotions',
+      enabled:     false,
+    },
+  ];
+
+  // ── Progress History ──────────────────────────────────
+  progressHistory: ProgressHistoryItem[] = [];
+
+  // ── Modal States ──────────────────────────────────────
+  editModalOpen              = false;
+  changePasswordModalOpen    = false;
+  notificationsModalOpen     = false;
+  progressHistoryModalOpen   = false;
+  renewalModalOpen           = false;
+  logoutModalOpen            = false;
+  isDarkMode                 = true;
+
+  private api = API_BASE_URL;
+
+  constructor(
+    public router: Router,
+    private auth: AuthService,
+    private http: HttpClient,
+    private workoutTracker: WorkoutTrackerService,
+    private themeService: ThemeService
+  ) {}
+
+  ngOnInit(): void {
+    if (!this.auth.user) {
+      this.router.navigate(['/login']);
+      return;
+    }
+    this.loadProfile();
+    this.refreshProgressStats();
+    this.isDarkMode = this.themeService.isDarkMode();
+    this.profileStatsSubscription = this.workoutTracker.updates$.subscribe(() => {
+      this.refreshProgressStats();
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.profileStatsSubscription?.unsubscribe();
+  }
+
+  ionViewWillEnter(): void {
+    if (!this.auth.user) return;
+    this.loadProfile();
+    this.refreshProgressStats();
+  }
+
+  // ── Profile Management ────────────────────────────────
+  private loadProfile(): void {
+    const user = this.auth.user;
+    const parts = (user.username || '').split(' ');
+    const first = String((user as any).first_name || '').trim() || parts[0] || '';
+    const last  = String((user as any).last_name || '').trim() || parts.slice(1).join(' ') || '';
+
+    const membershipType = (user as any).membership_type || 'premium';
+    const expiryRaw      = (user as any).membership_expiry || null;
+
+    let expiryDate = membershipType === 'daily' ? 'Pay per visit' : 'N/A';
+    let daysLeft   = 0;
+    if (expiryRaw) {
+      const exp = new Date(expiryRaw);
+      const now = new Date();
+      const diff = Math.ceil((exp.getTime() - now.getTime()) / 86400000);
+      daysLeft   = Math.max(diff, 0);
+      expiryDate = exp.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    }
+
+    this.daysLeft = daysLeft;
+    const safePhone = this.normalizePhone((user as any).phone || '');
+    this.profile = {
+      ...this.profile,
+      firstName:      first,
+      lastName:       last,
+      email:          user.email || '',
+      phone:          safePhone,
+      gender:         (user as any).gender || '',
+      profileImage:   (user as any).profile_image || '',
+      membershipPlan: membershipType === 'premium' ? 'Premium' : 'Daily Pass',
+      expiryDate,
+      initials:       this.buildInitials(first, last || first),
+    };
+  }
+
+  openEdit(): void {
+    this.editForm = {
+      firstName: this.profile.firstName,
+      lastName:  this.profile.lastName,
+      email:     this.profile.email,
+      phone:     this.normalizePhone(this.profile.phone),
+      profileImage: this.profile.profileImage,
+    };
+    this.phoneInvalid = false;
+    this.editModalOpen = true;
+  }
+
+  closeEdit(): void {
+    this.editModalOpen = false;
+    this.editForm = {};
+    this.phoneInvalid = false;
+  }
+
+  saveProfile(): void {
+    const safePhone = this.normalizePhone(this.editForm.phone || '');
+    if (!this.editForm.firstName || !this.editForm.lastName ||
+        !this.editForm.email || !safePhone) {
+      alert('Please fill in all fields');
+      return;
+    }
+
+    if (this.phoneInvalid || !this.isValidPhone(safePhone)) {
+      alert('Invalid input: Phone number must contain digits only and be exactly 11 digits long.');
+      return;
+    }
+
+    const userId = this.auth.user?.id;
+    if (!userId) {
+      alert('Your session has expired. Please log in again.');
+      return;
+    }
+
+    const nextFirstName = this.editForm.firstName ?? this.profile.firstName;
+    const nextLastName  = this.editForm.lastName  ?? this.profile.lastName;
+    const nextEmail     = this.editForm.email     ?? this.profile.email;
+    const nextImage     = this.editForm.profileImage ?? this.profile.profileImage;
+
+    const payload = {
+      username:      `${nextFirstName} ${nextLastName}`.trim(),
+      first_name:    nextFirstName,
+      last_name:     nextLastName,
+      email:         nextEmail,
+      phone:         safePhone,
+      gender:        this.profile.gender,
+      profile_image: nextImage || null,
+    };
+
+    const headers = { Authorization: `Bearer ${this.auth.token}` };
+    this.savingProfile = true;
+
+    // IMPORTANT: local/cached state (this.profile, auth localStorage) is only
+    // updated AFTER the server confirms the save. Updating it optimistically
+    // (old behavior) masked failed saves -- e.g. DB unreachable -- until the
+    // next login silently reverted the change with no explanation.
+    this.http.put(`${this.api}/users/${userId}`, payload, { headers }).subscribe({
+      next: () => {
+        this.savingProfile = false;
+        this.profile = {
+          ...this.profile,
+          firstName:    nextFirstName,
+          lastName:     nextLastName,
+          email:        nextEmail,
+          phone:        safePhone,
+          profileImage: nextImage,
+          initials:     this.buildInitials(nextFirstName, nextLastName),
+        };
+        this.auth.updateCurrentUser(payload);
+        this.closeEdit();
+      },
+      error: (err: any) => {
+        this.savingProfile = false;
+        const message = err?.error?.message
+          || (err?.status === 0
+            ? 'Cannot reach the server. Please check your connection and try again.'
+            : 'Failed to save profile. Please try again.');
+        alert(message);
+        // Modal stays open on failure so the user keeps their edits and can
+        // retry once the connection/server issue is resolved.
+      },
+    });
+  }
+
+  private normalizePhone(value: string): string {
+    return String(value || '').replace(/\D/g, '').slice(0, 11);
+  }
+
+  private isValidPhone(value: string): boolean {
+    return /^\d{11}$/.test(String(value || ''));
+  }
+
+  onPhoneIonInput(event: any): void {
+    const raw = String(event?.detail?.value || '');
+    const normalized = this.normalizePhone(raw);
+    this.phoneInvalid = raw !== normalized;
+    this.editForm.phone = normalized;
+  }
+
+  onProfileImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input?.files?.[0];
+    if (!file) return;
+
+    const isAllowedType = ['image/png', 'image/jpeg', 'image/webp'].includes(file.type);
+    if (!isAllowedType) {
+      alert('Please select a PNG, JPG, or WEBP image.');
+      input.value = '';
+      return;
+    }
+
+    const maxBytes = 2 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      alert('Image must be 2MB or smaller.');
+      input.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result || '');
+      if (!result.startsWith('data:image/')) {
+        alert('Invalid image file.');
+        return;
+      }
+      this.editForm.profileImage = result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  removeProfileImage(): void {
+    this.editForm.profileImage = '';
+  }
+
+  private buildInitials(first: string, last: string): string {
+    return (first.charAt(0) + last.charAt(0)).toUpperCase();
+  }
+
+  // ── Password Management ───────────────────────────────
+  openChangePassword(): void {
+    this.passwordForm = { current: '', new: '', confirm: '' };
+    this.changePasswordModalOpen = true;
+  }
+
+  closeChangePassword(): void {
+    this.changePasswordModalOpen = false;
+    this.passwordForm = { current: '', new: '', confirm: '' };
+  }
+
+  savePassword(): void {
+    if (!this.passwordForm.current || !this.passwordForm.new || !this.passwordForm.confirm) {
+      alert('Please fill in all password fields');
+      return;
+    }
+    if (this.passwordForm.new !== this.passwordForm.confirm) {
+      alert('New passwords do not match');
+      return;
+    }
+    if (this.passwordForm.new.length < 8) {
+      alert('Password must be at least 8 characters long');
+      return;
+    }
+    const headers = { Authorization: `Bearer ${this.auth.token}` };
+    this.http.post(`${this.api}/auth/change-password`, {
+      currentPassword: this.passwordForm.current,
+      newPassword:     this.passwordForm.new,
+    }, { headers }).subscribe({
+      next: () => { alert('Password updated successfully!'); this.closeChangePassword(); },
+      error: (e: any) => alert(e.error?.message || 'Failed to update password'),
+    });
+  }
+
+  // ── Notification Settings ─────────────────────────────
+  openNotifications(): void {
+    this.notificationsModalOpen = true;
+  }
+
+  closeNotifications(): void {
+    this.notificationsModalOpen = false;
+  }
+
+  saveNotificationSettings(): void {
+    // In a real app, send to API
+    console.log('Notification settings saved:', this.notificationSettings);
+    alert('Notification settings saved!');
+    this.closeNotifications();
+  }
+
+  onThemeToggle(event: CustomEvent): void {
+    this.isDarkMode = !!event.detail?.checked;
+    this.themeService.setTheme(this.isDarkMode ? 'dark' : 'light');
+  }
+
+  // ── Progress History ──────────────────────────────────
+  openProgressHistory(): void {
+    this.progressHistoryModalOpen = true;
+  }
+
+  closeProgressHistory(): void {
+    this.progressHistoryModalOpen = false;
+  }
+
+  // ── Membership Renewal ────────────────────────────────
+  openRenewal(): void {
+    this.renewalModalOpen = true;
+  }
+
+  closeRenewal(): void {
+    this.renewalModalOpen = false;
+  }
+
+  processRenewal(): void {
+    // In a real app, redirect to payment gateway
+    console.log('Renewal process initiated');
+    alert('Redirecting to payment gateway...');
+    // this.router.navigate(['/payment']);
+    this.closeRenewal();
+  }
+
+  // ── Logout Management ─────────────────────────────────
+  confirmLogout(): void {
+    this.logoutModalOpen = true;
+  }
+
+  cancelLogout(): void {
+    this.logoutModalOpen = false;
+  }
+
+  logout(): void {
+    this.logoutModalOpen = false;
+    this.auth.logout();
+    this.router.navigate(['/login']);
+  }
+
+  // ── Notifications panel ────────────────────────────────
+  // Display/state now lives entirely in the shared NotificationPanelComponent
+  // (see shared/notification-panel/); this page just toggles [isOpen] from
+  // the header bell and mirrors (unreadCountChange) into its own header badge.
+  notifPanelOpen = false;
+  unreadCount = 0;
+
+  openNotifPanel(): void {
+    this.notifPanelOpen = true;
+  }
+
+  closeNotifPanel(): void { this.notifPanelOpen = false; }
+
+  onUnreadCountChange(count: number): void {
+    this.unreadCount = count;
+  }
+
+  private closeOverlaysForNavigation(): void {
+    this.notifPanelOpen = false;
+    this.logoutModalOpen = false;
+  }
+
+  // ── Navigation ────────────────────────────────────────
+  goToDashboard(): void {
+    this.closeOverlaysForNavigation();
+    this.router.navigate(['/dashboard']);
+  }
+
+  goToSchedule(): void {
+    this.closeOverlaysForNavigation();
+    this.router.navigate(['/schedule']);
+  }
+
+  goToQr(): void {
+    this.closeOverlaysForNavigation();
+    this.router.navigate(['/qr-scanner']);
+  }
+
+  goToInventory(): void {
+    this.closeOverlaysForNavigation();
+    this.router.navigate(['/inventory']);
+  }
+
+  goToEquipment(): void {
+    this.closeOverlaysForNavigation();
+    this.router.navigate(['/equipment']);
+  }
+
+  goToProfile(): void {
+    this.closeOverlaysForNavigation();
+    // Already on profile, no navigation needed
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── Getters ───────────────────────────────────────────
+  get fullName(): string {
+    return `${this.profile.firstName} ${this.profile.lastName}`;
+  }
+
+  get daysUntilExpiry(): number {
+    // In a real app, calculate from expiryDate
+    return this.daysLeft;
+  }
+
+  private getDateKey(date: Date): string {
+    return this.workoutTracker.getDateKey(date);
+  }
+
+  private durationToMinutes(duration: string): number {
+    const match = duration.match(/(\d+)/);
+    return match ? Number(match[1]) : 0;
+  }
+
+  private refreshProgressStats(): void {
+    const store = this.workoutTracker.syncStoreStatuses();
+    const allEntries: Array<{ sessionDate: Date; session: any }> = [];
+
+    Object.keys(store).forEach((key) => {
+      const sessions = store[key] ?? [];
+      const [year, month, day] = key.split('-').map(Number);
+      const sessionDate = new Date(year, month, day);
+      sessions.forEach((session) => {
+        allEntries.push({ sessionDate, session });
+      });
+    });
+
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    const completedThisMonth = allEntries.filter((item) =>
+      item.session.status === 'done' &&
+      item.sessionDate.getMonth() === currentMonth &&
+      item.sessionDate.getFullYear() === currentYear
+    );
+
+    this.sessionsThisMonth = completedThisMonth.length;
+    const completedMinutes = completedThisMonth.reduce((total, item) => {
+      return total + this.durationToMinutes(item.session.duration || '0');
+    }, 0);
+    this.avgMinutes = completedThisMonth.length ? Math.round(completedMinutes / completedThisMonth.length) : 0;
+
+    let streak = 0;
+    const cursor = new Date(now);
+    cursor.setHours(0, 0, 0, 0);
+    while (true) {
+      const cursorKey = this.getDateKey(cursor);
+      const daySessions = store[cursorKey] ?? [];
+      if (!daySessions.some((session: any) => session.status === 'done')) break;
+      streak += 1;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+    this.dayStreak = streak;
+  }
+}

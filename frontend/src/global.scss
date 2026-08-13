@@ -1,0 +1,1112 @@
+/* Modal theming with CSS variables */
+ion-modal .notif-setting-title,
+ion-modal .notif-setting-desc,
+ion-modal .logout-title,
+ion-modal .logout-sub,
+ion-modal .modal-save-btn,
+ion-modal .modal-cancel-btn,
+ion-modal .modal-danger-btn {
+  /* Was var(--text-primary) -- same issue as the .modal-save-btn background
+     fix below: that custom property only exists inside per-page
+     component-scoped SCSS, never on the real document root, so it silently
+     invalidated this whole declaration for every element listed here. Any
+     element without its own later, more specific color rule (Cancel /
+     Danger buttons on some pages) was one undefined var() away from
+     unreadable text. #FFFFFF is the literal value every page already gives
+     --text-primary, so this keeps the same intended look everywhere. */
+  color: #FFFFFF !important;
+}
+
+ion-modal .modal-save-btn {
+  /* Was var(--accent-lime)/var(--accent-amber) -- those custom properties
+     are only ever declared inside individual pages' component-scoped SCSS
+     (e.g. inventory.page.scss' :root block), which Angular's view
+     encapsulation prevents from ever reaching the real document root. An
+     undefined var() inside a shorthand invalidates the WHOLE property, so
+     this rule's `background` silently fell back to transparent on every
+     page (Profile's "Save Changes", Dashboard's "Save PR", etc.), leaving
+     the `color: #000 !important` below with nothing to contrast against --
+     black text on a dark modal panel. Literal hex values match what the
+     component-level .modal-save-btn rules already use correctly. */
+  background: #FFD600 !important;
+  color: #000 !important;
+}
+
+ion-modal .modal-sheet,
+ion-modal .modal-content,
+ion-modal .modal-inner {
+  background: var(--bg-surface) !important;
+}
+
+ion-modal .modal-title,
+ion-modal .info-label,
+ion-modal .info-value,
+ion-modal .modal-name,
+ion-modal .modal-cat,
+ion-modal .modal-status,
+ion-modal .close-modal-btn {
+  // Same undefined-var(--text-primary) issue as above -- literal value.
+  color: #FFFFFF !important;
+}
+
+ion-modal .info-card {
+  // Was var(--bg-tertiary) / var(--border-secondary) -- same undefined-var
+  // issue; literal values match what every page's own scoped block gives
+  // these two custom properties.
+  background: #111428 !important;
+  border-color: rgba(255,255,255,0.08) !important;
+}
+
+ion-modal .info-value.muted {
+  color: rgba(255,255,255,0.5) !important;
+}
+
+ion-modal .modal-danger-btn {
+  background: rgba(255,68,97,0.14) !important;
+  color: #FF4461 !important;
+  border: 1px solid rgba(255,68,97,0.22) !important;
+}
+
+ion-modal .logout-icon {
+  background: rgba(255,68,97,0.12) !important;
+}
+
+body.light-theme ion-modal .notif-setting-title,
+body.light-theme ion-modal .notif-setting-desc,
+body.light-theme ion-modal .logout-title,
+body.light-theme ion-modal .logout-sub,
+body.light-theme ion-modal .modal-save-btn,
+body.light-theme ion-modal .modal-cancel-btn,
+body.light-theme ion-modal .modal-danger-btn {
+  color: #0f172a !important;
+}
+
+body.light-theme ion-modal .modal-save-btn {
+  color: #0f172a !important;
+}
+ion-popover.gender-popover {
+  --background: #15181d;
+  --color: #ffffff;
+  --offset-y: 4px;
+  --backdrop-opacity: 0;
+  --box-shadow: 0 16px 38px rgba(0, 0, 0, 0.38);
+  --max-width: calc(100vw - 28px);
+}
+
+ion-popover.gender-popover::part(content) {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: #15181d;
+}
+
+ion-popover.gender-popover ion-content {
+  --background: #15181d;
+}
+
+ion-popover.gender-popover ion-list {
+  padding: 4px 0;
+  background: #15181d;
+}
+
+ion-popover.gender-popover ion-item {
+  --min-height: 50px;
+  --background: #15181d;
+  --background-hover: rgba(255, 255, 255, 0.05);
+  --background-activated: rgba(255, 214, 0, 0.1);
+  --color: rgba(255, 255, 255, 0.82);
+  --border-color: rgba(255, 255, 255, 0.07);
+  --padding-start: 16px;
+  --inner-padding-end: 14px;
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+ion-popover.gender-popover ion-item.item-radio-checked {
+  --background: rgba(255, 214, 0, 0.12);
+  --color: #ffd600;
+}
+
+ion-popover.gender-popover ion-radio {
+  --color: rgba(255, 255, 255, 0.35);
+  --color-checked: #ffd600;
+}
+
+/* Gender dropdown: light mode */
+body.light-theme ion-popover.gender-popover,
+html.light-theme ion-popover.gender-popover {
+  --background: #ffffff;
+  --color: #0f172a;
+  --box-shadow: 0 14px 34px rgba(15, 23, 42, 0.16);
+}
+
+body.light-theme ion-popover.gender-popover::part(content),
+html.light-theme ion-popover.gender-popover::part(content) {
+  border-color: rgba(15, 23, 42, 0.12);
+  background: #ffffff;
+}
+
+body.light-theme ion-popover.gender-popover ion-content,
+html.light-theme ion-popover.gender-popover ion-content {
+  --background: #ffffff;
+}
+
+body.light-theme ion-popover.gender-popover ion-list,
+html.light-theme ion-popover.gender-popover ion-list {
+  background: #ffffff;
+}
+
+body.light-theme ion-popover.gender-popover ion-item,
+html.light-theme ion-popover.gender-popover ion-item {
+  --background: #ffffff;
+  --background-hover: #f6f7f9;
+  --background-activated: rgba(255, 214, 0, 0.14);
+  --color: #1f2937;
+  --border-color: rgba(15, 23, 42, 0.08);
+}
+
+body.light-theme ion-popover.gender-popover ion-item.item-radio-checked,
+html.light-theme ion-popover.gender-popover ion-item.item-radio-checked {
+  --background: rgba(255, 214, 0, 0.16);
+  --color: #8f6c00;
+}
+
+body.light-theme ion-popover.gender-popover ion-radio,
+html.light-theme ion-popover.gender-popover ion-radio {
+  --color: rgba(15, 23, 42, 0.35);
+  --color-checked: #d6a900;
+}
+/*
+ * App Global CSS
+ * ----------------------------------------------------------------------------
+ * Put style rules here that you want to apply globally. These styles are for
+ * the entire app and not just one component. Additionally, this file can be
+ * used as an entry point to import other CSS/Sass files to be included in the
+ * output CSS.
+ * For more information on global stylesheets, visit the documentation:
+ * https://ionicframework.com/docs/layout/global-stylesheets
+ */
+
+/* Core CSS required for Ionic components to work properly */
+@import "@ionic/angular/css/core.css";
+
+:root {
+  --app-font-stack: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+}
+
+body,
+ion-content,
+ion-toolbar,
+button,
+input,
+select,
+textarea {
+  font-family: var(--app-font-stack);
+}
+
+/* Basic CSS for apps built with Ionic */
+@import "@ionic/angular/css/normalize.css";
+@import "@ionic/angular/css/structure.css";
+@import "@ionic/angular/css/typography.css";
+@import "@ionic/angular/css/display.css";
+
+/* Optional CSS utils that can be commented out */
+@import "@ionic/angular/css/padding.css";
+@import "@ionic/angular/css/float-elements.css";
+@import "@ionic/angular/css/text-alignment.css";
+@import "@ionic/angular/css/text-transformation.css";
+@import "@ionic/angular/css/flex-utils.css";
+
+/**
+ * Ionic Dark Mode
+ * -----------------------------------------------------
+ * For more info, please see:
+ * https://ionicframework.com/docs/theming/dark-mode
+ */
+
+/* @import "@ionic/angular/css/palettes/dark.always.css"; */
+@import "@ionic/angular/css/palettes/dark.class.css";
+
+/* ─────────────────────────────────────────────────────────────────
+   DARK MODE  — body.ion-palette-dark is set by ThemeService
+   ────────────────────────────────────────────────────────────────── */
+body.ion-palette-dark ion-modal {
+  /* modal backgrounds */
+  --background: #101010 !important;
+  ion-content { --background: #101010 !important; }
+  .modal-sheet { background: #101010 !important; border-top-color: rgba(255,255,255,0.08) !important; }
+  .modal-handle { background: rgba(255,255,255,0.12) !important; }
+
+  /* text */
+  .modal-title        { color: #FFFFFF !important; }
+  .modal-sub          { color: rgba(255,255,255,0.5) !important; }
+  .field-label, .field-lbl { color: rgba(255,255,255,0.5) !important; }
+  .section-label      { color: rgba(255,255,255,0.5) !important; }
+
+  /* inputs */
+  .field-wrap input, .field-wrap select,
+  .edit-input, .edit-select,
+  .ex-edit-name, .ex-edit-sets, .ex-edit-reps {
+    background: rgba(255,255,255,0.06) !important;
+    border-color: rgba(255,255,255,0.1) !important;
+    color: #FFFFFF !important;
+  }
+  .field-wrap select option, .edit-select option {
+    background: #0B0E1A !important;
+    color: #FFFFFF !important;
+  }
+  .field-icon { color: rgba(255,255,255,0.3) !important; }
+
+  /* chips & tags */
+  .target-chip {
+    background: rgba(255,255,255,0.06) !important;
+    border-color: rgba(255,255,255,0.1) !important;
+    color: rgba(255,255,255,0.5) !important;
+    &.selected {
+      background: rgba(255,214,0,0.1) !important;
+      border-color: rgba(255,214,0,0.25) !important;
+      color: #FFD600 !important;
+    }
+  }
+
+  /* history */
+  .history-date-label    { color: rgba(255,255,255,0.45) !important; }
+  .history-session-card  { background: rgba(255,255,255,0.04) !important; border-color: rgba(255,255,255,0.08) !important; }
+  .history-session-title { color: #FFFFFF !important; }
+  .history-session-meta  { color: rgba(255,255,255,0.5) !important; }
+  .history-ex-name       { color: rgba(255,255,255,0.5) !important; }
+  .history-ex-detail     { color: rgba(255,255,255,0.3) !important; }
+  .history-ex-check:not(.checked) { color: rgba(255,255,255,0.3) !important; }
+
+  /* week plan */
+  .wplan-day-name     { color: #FFFFFF !important; }
+  .wplan-rest-label   { color: rgba(255,255,255,0.6) !important; }
+  .wplan-day-tab      { background: rgba(255,255,255,0.06) !important; border-color: rgba(255,255,255,0.1) !important; color: rgba(255,255,255,0.45) !important; }
+  .wplan-day-tab.active { background: rgba(255,214,0,0.1) !important; border-color: rgba(255,214,0,0.25) !important; color: #FFD600 !important; }
+  .week-plan-day-editor { background: rgba(255,255,255,0.03) !important; border-color: rgba(255,255,255,0.07) !important; }
+  .wplan-chip-day     { color: rgba(255,255,255,0.3) !important; }
+  .wplan-chip-title   { color: #FFD600 !important; }
+  .wplan-chip-title.rest-chip { color: rgba(255,255,255,0.3) !important; }
+  .wplan-exercises-empty { color: rgba(255,255,255,0.3) !important; }
+  .edit-exercises-title  { color: rgba(255,255,255,0.5) !important; }
+
+  /* notifications */
+  .notif-modal-item   { background: rgba(255,255,255,0.04) !important; border-color: rgba(255,255,255,0.08) !important; }
+  .notif-modal-item .notif-title { color: #FFFFFF !important; }
+  .notif-modal-item .notif-msg   { color: rgba(255,255,255,0.5) !important; }
+  .mark-read-btn      { color: #FFD600 !important; }
+
+  /* exercise preview */
+  .modal-exercise-preview { background: rgba(255,255,255,0.03) !important; border-color: rgba(255,255,255,0.07) !important; }
+  .preview-title  { color: rgba(255,255,255,0.45) !important; }
+  .ex-name        { color: #FFFFFF !important; }
+  .ex-detail      { color: rgba(255,255,255,0.5) !important; background: rgba(255,255,255,0.06) !important; border-color: rgba(255,255,255,0.1) !important; }
+
+  /* buttons */
+  .btn.btn-secondary { background: rgba(255,255,255,0.06) !important; color: rgba(255,255,255,0.6) !important; border-color: rgba(255,255,255,0.1) !important; }
+  .modal-actions { background: linear-gradient(180deg, rgba(11,14,26,0) 0%, rgba(11,14,26,0.95) 26%, #0B0E1A 100%) !important; }
+}
+
+/* Full-screen modal override */
+/* Native select option — light styling everywhere in light mode */
+body.light-theme select option {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Light theme — sets Ionic CSS variables globally */
+body.light-theme {
+  --ion-background-color:     #f4f5f8;
+  --ion-background-color-rgb: 244, 245, 248;
+  --ion-text-color:           #0f172a;
+  --ion-text-color-rgb:       15, 23, 42;
+  --ion-card-background:      #ffffff;
+  --ion-item-background:      #ffffff;
+  --ion-toolbar-background:   #ffffff;
+  --ion-tab-bar-background:   #ffffff;
+
+  /* Force all ion-content backgrounds to light */
+  ion-content {
+    --background: #f4f5f8;
+  }
+
+  ion-toolbar {
+    --background: #ffffff;
+  }
+
+  ion-tab-bar {
+    --background: #ffffff;
+    border-top: 1px solid rgba(15, 23, 42, 0.09);
+  }
+
+  /* ── Modal overlay (ion-modal is appended to <body>, outside component
+     shadow DOM, so :host-context can't reach it — override globally) ── */
+  ion-modal {
+    --background: #ffffff;
+    --backdrop-opacity: 0.3;
+
+    /* The inner ion-content inside every modal */
+    ion-content {
+      --background: #ffffff !important;
+    }
+
+    /* The rendered modal sheet div */
+    .modal-sheet {
+      background: #ffffff !important;
+      border-top-color: rgba(15,23,42,0.09) !important;
+    }
+
+    .modal-handle { background: rgba(15,23,42,0.12) !important; }
+    .modal-title  { color: #0f172a !important; }
+    .modal-sub    { color: rgba(15,23,42,0.5) !important; }
+
+    /* Form inputs/selects inside modals */
+    .field-wrap input,
+    .field-wrap select,
+    .edit-input,
+    .edit-select,
+    .ex-edit-name,
+    .ex-edit-sets,
+    .ex-edit-reps {
+      background: rgba(15,23,42,0.05) !important;
+      border-color: rgba(15,23,42,0.12) !important;
+      color: #0f172a !important;
+    }
+
+    /* Native <option> elements in the dropdown */
+    .field-wrap select option,
+    .edit-select option {
+      background: #ffffff !important;
+      color: #0f172a !important;
+    }
+
+    /* Personal Record modal fields (Dashboard → "Add New PR"): this modal
+       uses its own .form-select/.form-input/.form-label classes, distinct
+       from .field-wrap/.edit-input above, and was missing from this global
+       override. Same root cause as everything else in this block — ion-modal
+       content is portaled to <body>, so dashboard.page.scss's component-
+       scoped :host-context(body.light-theme) rule for these classes never
+       matches, leaving the dark-mode default (--color: #fff) active: white
+       text/placeholder on a near-white modal, i.e. invisible in light mode. */
+    .form-select,
+    .form-input {
+      --background: rgba(15,23,42,0.05) !important;
+      --color: #0f172a !important;
+      --placeholder-color: rgba(15,23,42,0.35) !important;
+      border-color: rgba(15,23,42,0.12) !important;
+    }
+
+    .form-label { color: rgba(15,23,42,0.5) !important; }
+
+    /* Labels */
+    .field-label {
+      color: #000000 !important;
+      font-size: 14px !important;
+      font-weight: 450 !important;
+    }
+    .field-lbl, .edit-exercises-title { color: rgba(15,23,42,0.5) !important; }
+
+    /* Target chips */
+    .target-chip {
+      background: rgba(15,23,42,0.04) !important;
+      border-color: rgba(15,23,42,0.1) !important;
+      color: rgba(15,23,42,0.55) !important;
+      &.selected { background: rgba(245,158,11,0.1) !important; border-color: rgba(245,158,11,0.25) !important; color: #d97706 !important; }
+    }
+
+    /* Exercise preview in Add Workout modal — same portal/specificity issue
+       as every other rule in this ion-modal block (see comment above on
+       .detail-name etc.): these were the only declarations here missing
+       !important, so the dark-mode base (#fff text) kept winning and the
+       "Recommended Exercises" preview stayed unreadable in light mode. */
+    .modal-exercise-preview {
+      background: rgba(15,23,42,0.03) !important;
+      border-color: rgba(15,23,42,0.08) !important;
+      .preview-header { background: rgba(15,23,42,0.04) !important; border-bottom-color: rgba(15,23,42,0.08) !important; }
+      .preview-title  { color: #0f172a !important; }
+      .preview-sub    { color: rgba(15,23,42,0.65) !important; }
+      .ex-num    { background: rgba(245,158,11,0.1) !important; border-color: rgba(245,158,11,0.22) !important; color: #d97706 !important; }
+      .ex-name   { color: #0f172a !important; }
+      .ex-detail { color: rgba(15,23,42,0.5) !important; background: rgba(15,23,42,0.05) !important; border-color: rgba(15,23,42,0.09) !important; }
+    }
+
+    /* Cancel/Save buttons */
+    .btn.btn-secondary {
+      background: rgba(15,23,42,0.06) !important;
+      color: rgba(15,23,42,0.6) !important;
+      border-color: rgba(15,23,42,0.1) !important;
+    }
+    .modal-actions {
+      background: linear-gradient(180deg, rgba(244,245,248,0) 0%, rgba(244,245,248,0.95) 26%, #f4f5f8 100%) !important;
+    }
+
+    /* Week plan day tabs */
+    .wplan-day-tab {
+      background: rgba(15,23,42,0.04) !important;
+      border-color: rgba(15,23,42,0.1) !important;
+      color: rgba(15,23,42,0.5) !important;
+      &.active { background: rgba(245,158,11,0.1) !important; border-color: rgba(245,158,11,0.25) !important; color: #d97706 !important; }
+    }
+    .week-plan-day-editor { background: rgba(15,23,42,0.03) !important; border-color: rgba(15,23,42,0.08) !important; }
+    .wplan-day-name   { color: #0f172a !important; }
+    .wplan-rest-label { color: rgba(15,23,42,0.6) !important; }
+
+    /* History session cards */
+    .history-date-label { color: rgba(15,23,42,0.45) !important; }
+    .history-session-card { background: #ffffff !important; border-color: rgba(15,23,42,0.09) !important; }
+    .history-session-title { color: #0f172a !important; }
+    .history-session-meta  { color: rgba(15,23,42,0.5) !important; }
+    .history-ex-name   { color: rgba(15,23,42,0.6) !important; }
+    .history-ex-detail { color: rgba(15,23,42,0.4) !important; }
+
+    /* Notification modal items */
+    .notif-modal-item {
+      background: #f8f9fa !important;
+      border-color: rgba(15,23,42,0.08) !important;
+      .notif-title { color: #0f172a !important; }
+      .notif-msg   { color: rgba(15,23,42,0.5) !important; }
+      .notif-dot.read { background: rgba(15,23,42,0.2) !important; }
+    }
+    .notif-title { color: #0f172a !important; }
+    .notif-msg   { color: rgba(15,23,42,0.5) !important; }
+    .notif-detail-date { color: rgba(15,23,42,0.45) !important; }
+    .notif-detail-body { color: #0f172a !important; }
+    .mark-read-btn { color: #d97706 !important; }
+    .modal-title { color: #0f172a !important; }
+    .notif-panel-title { color: #0f172a !important; }
+
+    /* Product detail / order modals (inventory) — !important on every
+       declaration in this whole ion-modal block is intentional and load-
+       bearing, not decoration: ion-modal content is portaled by Ionic to
+       document.body, outside this component's DOM subtree, so the
+       component's own :host-context(body.light-theme) rules can never
+       match it. Its plain (non-host-context) dark-mode base rules DO
+       match, and because of Angular's view-encapsulation attributes they
+       end up with *higher* specificity than a normal-weight override
+       here. !important is the only way this global stylesheet can
+       reliably win against that. */
+    .detail-name   { color: #0f172a !important; }
+    .detail-brand  { color: #d97706 !important; }
+    .box-label     { color: rgba(15,23,42,0.45) !important; }
+    .box-value     { color: #d97706 !important; }
+    .section-text  { color: rgba(15,23,42,0.6) !important; }
+    .spec-label    { color: rgba(15,23,42,0.45) !important; }
+    .spec-value    { color: #0f172a !important; }
+    .feature-item  { color: rgba(15,23,42,0.6) !important; }
+    .total-label   { color: rgba(15,23,42,0.5) !important; }
+    .total-price   { color: #d97706 !important; }
+    .qty-display   { color: #d97706 !important; }
+    .qty-dec-btn, .qty-inc-btn {
+      background: rgba(15,23,42,0.07) !important;
+      border-color: rgba(15,23,42,0.12) !important;
+      color: #0f172a !important;
+    }
+    .order-name    { color: #0f172a !important; }
+    .order-date    { color: rgba(15,23,42,0.4) !important; }
+    .detail-value  { color: #0f172a !important; }
+    .detail-label  { color: rgba(15,23,42,0.4) !important; }
+    .summary-label { color: rgba(15,23,42,0.5) !important; }
+    .summary-value { color: #0f172a !important; }
+    .section-title { color: #0f172a !important; }
+    .empty-text    { color: rgba(15,23,42,0.45) !important; }
+
+    /* Payment method cards (product detail + cart modals) */
+    .payment-option {
+      background: rgba(15,23,42,0.04) !important;
+      border-color: rgba(15,23,42,0.1) !important;
+      &.selected { background: rgba(245,158,11,0.1) !important; border-color: rgba(245,158,11,0.25) !important; }
+    }
+    .payment-label { color: #0f172a !important; }
+    .payment-option.selected .payment-label { color: #d97706 !important; }
+    .payment-desc  { color: rgba(15,23,42,0.45) !important; }
+    .payment-icon  { color: #0f172a !important; }
+
+    /* Cart modal line items */
+    .cart-item { background: rgba(15,23,42,0.03) !important; border-color: rgba(15,23,42,0.09) !important; }
+    .cart-item-name  { color: #0f172a !important; }
+    .cart-item-price { color: #d97706 !important; }
+
+    /* My Orders modal per-item rows */
+    .item-name  { color: #0f172a !important; }
+    .item-total { color: #d97706 !important; }
+
+    /* Close / Add to Cart / Cancel action buttons */
+    .action-btn.cancel {
+      background: rgba(220,38,38,0.08) !important;
+      color: #dc2626 !important;
+      border-color: rgba(220,38,38,0.28) !important;
+    }
+    .action-btn.secondary {
+      background: rgba(245,158,11,0.1) !important;
+      color: #d97706 !important;
+      border-color: rgba(245,158,11,0.35) !important;
+    }
+    .cancel-order-btn {
+      background: rgba(220,38,38,0.08) !important;
+      color: #dc2626 !important;
+      border-color: rgba(220,38,38,0.28) !important;
+    }
+
+    /* Quick order confirm dialog */
+    .quick-confirm-title { color: #0f172a !important; }
+    .quick-confirm-sub   { color: rgba(15,23,42,0.5) !important; }
+
+    .info-box {
+      background: rgba(245,158,11,0.06) !important;
+      border-color: rgba(245,158,11,0.2) !important;
+      color: rgba(15,23,42,0.6) !important;
+    }
+    .order-item {
+      background: #f8f9fa !important;
+      border-color: rgba(15,23,42,0.08) !important;
+      .detail-item { background: rgba(15,23,42,0.05) !important; }
+    }
+    .orders-header .section-title { color: #0f172a !important; }
+    .empty-orders .empty-text { color: rgba(15,23,42,0.45) !important; }
+
+    /* Scan page success modal */
+    .modal-sub    { color: rgba(15,23,42,0.5) !important; }
+    .success-icon-ring { background: rgba(16,185,129,0.1) !important; border-color: rgba(16,185,129,0.2) !important; }
+  }
+
+  /* Full-screen notification modal toolbar — light mode: dark back button */
+  ion-modal .notif-modal-item {
+    background: #f8f9fa !important;
+    border-color: rgba(15,23,42,0.08) !important;
+    .notif-dot {
+      &.unread { background: #d97706 !important; }
+      &.read { background: rgba(15,23,42,0.2) !important; }
+    }
+    .notif-title { color: #0f172a !important; }
+    .notif-msg { color: rgba(15,23,42,0.5) !important; }
+  }
+  ion-modal .notif-detail-date { color: rgba(15,23,42,0.45) !important; }
+  ion-modal .notif-detail-body { color: #0f172a !important; }
+  ion-modal .modal-title { color: #0f172a !important; }
+
+  /* ion-page inside modal */
+  ion-modal .ion-page { background: #ffffff; }
+}
+
+
+/* ==================================================================
+   FORDAGO V4 — IONIC PAGE + NATIVE SAFE AREA + REAL SCROLL
+   ================================================================== */
+
+:root {
+  --fordago-bg: #06080f;
+  --fordago-yellow: #ffd600;
+  --fordago-orange: #ff9500;
+  --fordago-red: #ff4461;
+
+  /* Capacitor 8 SystemBars injects these on Android. */
+  --fordago-safe-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --fordago-safe-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+  --fordago-safe-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
+  --fordago-safe-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
+}
+
+html,
+body,
+ion-app,
+ion-router-outlet {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  background: var(--fordago-bg);
+}
+
+/* CRITICAL: every routed page gets a real Ionic page box. */
+.ion-page.fordago-page {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  contain: layout size style !important;
+  background: var(--fordago-bg) !important;
+}
+
+.ion-page.fordago-page > ion-header,
+.ion-page.fordago-page > ion-footer {
+  flex: 0 0 auto !important;
+}
+
+/* ion-content owns the remaining height and is the ONLY page scroller. */
+.ion-page.fordago-page > ion-content {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  height: 0 !important;
+  width: 100% !important;
+  --overflow: auto !important;
+}
+
+.ion-page.fordago-page > ion-content::part(scroll) {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y !important;
+  overscroll-behavior-y: contain;
+}
+
+.ion-page.fordago-page > ion-content .content-inner,
+.ion-page.fordago-page > ion-content .scroll-wrap,
+.ion-page.fordago-page > ion-content .login-wrap {
+  height: auto !important;
+  max-height: none !important;
+}
+
+/* ---------------- HEADER / NOTCH ---------------- */
+
+.fordago-app-header {
+  position: relative !important;
+  z-index: 50 !important;
+  padding-top: max(0px, calc(var(--fordago-safe-top) - 50px)) !important;
+  padding-left: var(--fordago-safe-left) !important;
+  padding-right: var(--fordago-safe-right) !important;
+  background: rgba(6, 8, 15, 0.99) !important;
+  box-shadow: none !important;
+}
+
+.fordago-app-header::after {
+  display: none !important;
+}
+
+.fordago-app-header ion-toolbar,
+ion-toolbar.fordago-toolbar {
+  --background: #06080f !important;
+  --color: #ffffff !important;
+  --border-width: 0 !important;
+  --min-height: 56px !important;
+  --padding-start: 12px !important;
+  --padding-end: 12px !important;
+  min-height: 56px !important;
+  border-bottom: 1px solid rgba(255,255,255,.07) !important;
+}
+
+.fordago-app-header .toolbar-brand {
+  display: flex !important;
+  align-items: center !important;
+  gap: 9px !important;
+  padding-left: 4px !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+.fordago-app-header .brand-mark {
+  width: 38px !important;
+  height: 38px !important;
+  flex: 0 0 38px !important;
+  display: grid !important;
+  place-items: center !important;
+  overflow: hidden !important;
+  border-radius: 50% !important;
+}
+
+.fordago-app-header .brand-logo {
+  display: block !important;
+  width: 36px !important;
+  height: 36px !important;
+  object-fit: contain !important;
+  margin: 0 !important;
+}
+
+.fordago-app-header .toolbar-brand-copy {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  min-width: 0 !important;
+}
+
+.fordago-app-header .toolbar-logo {
+  display: block !important;
+  max-width: 150px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  -webkit-text-fill-color: #ffd600 !important;
+  color: #ffd600 !important;
+  font-size: 19px !important;
+  font-weight: 900 !important;
+  line-height: 1.05 !important;
+  letter-spacing: -.4px !important;
+}
+
+.fordago-app-header .toolbar-subtitle {
+  display: block !important;
+  margin-top: 3px !important;
+  max-width: 145px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  color: rgba(255,255,255,.38) !important;
+  font-size: 7px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  letter-spacing: 1.15px !important;
+}
+
+.fordago-app-header .header-end {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 7px !important;
+  margin-left: 8px !important;
+  overflow: visible !important;
+}
+
+.fordago-app-header .notif-bell-btn,
+.fordago-app-header .equip-header-btn,
+.fordago-app-header .profile-button,
+.fordago-app-header .cart-btn,
+.fordago-app-header .cart-icon-btn {
+  position: relative !important;
+  width: 39px !important;
+  height: 39px !important;
+  min-width: 39px !important;
+  min-height: 39px !important;
+  flex: 0 0 39px !important;
+  display: grid !important;
+  place-items: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  border: 1px solid rgba(255,214,0,.18) !important;
+  border-radius: 13px !important;
+  background: rgba(255,255,255,.04) !important;
+  color: #ffd600 !important;
+}
+
+.fordago-app-header .notif-bell-btn ion-icon,
+.fordago-app-header .equip-header-btn ion-icon,
+.fordago-app-header .cart-btn ion-icon,
+.fordago-app-header .cart-icon-btn ion-icon {
+  display: block !important;
+  color: #ffd600 !important;
+  font-size: 19px !important;
+  opacity: 1 !important;
+}
+
+.fordago-app-header .avatar {
+  width: 39px !important;
+  height: 39px !important;
+  min-width: 39px !important;
+  min-height: 39px !important;
+  display: grid !important;
+  place-items: center !important;
+  margin: 0 !important;
+  border: 1px solid rgba(255,214,0,.52) !important;
+  border-radius: 50% !important;
+  background: #ffd600 !important;
+  color: #111317 !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  object-fit: cover !important;
+}
+
+.fordago-app-header .notif-bell-badge,
+.fordago-app-header .cart-badge {
+  position: absolute !important;
+  z-index: 5 !important;
+  top: -6px !important;
+  right: -6px !important;
+  min-width: 18px !important;
+  height: 18px !important;
+  padding: 0 5px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 2px solid #06080f !important;
+  border-radius: 999px !important;
+  background: #ff4461 !important;
+  color: #fff !important;
+  font-size: 8px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+}
+
+/* ---------------- SIX-ITEM FOOTER ---------------- */
+
+.fordago-app-footer {
+  position: relative !important;
+  inset: auto !important;
+  z-index: 60 !important;
+  flex: 0 0 auto !important;
+  padding-left: var(--fordago-safe-left) !important;
+  padding-right: var(--fordago-safe-right) !important;
+  overflow: visible !important;
+  background: rgba(6,8,15,.99) !important;
+  border-top: 1px solid rgba(255,255,255,.075) !important;
+  box-shadow: 0 -9px 26px rgba(0,0,0,.25) !important;
+}
+
+.fordago-app-footer::before {
+  display: none !important;
+}
+
+.fordago-bottom-nav {
+  position: relative !important;
+  inset: auto !important;
+  width: 100% !important;
+  max-width: 760px !important;
+  margin: 0 auto !important;
+  padding: 6px 4px calc(6px + var(--fordago-safe-bottom)) !important;
+  box-sizing: border-box !important;
+  display: grid !important;
+
+  /* 5 items (Equipment moved to the header) — Scan is the true, symmetric
+     center: 2 equal-width items on each side of the fixed-width scan slot. */
+  grid-template-columns: 1fr 1fr 68px 1fr 1fr !important;
+  align-items: end !important;
+  gap: 0 !important;
+
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.fordago-nav-item {
+  min-width: 0 !important;
+  min-height: 56px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  padding: 4px 1px !important;
+  border: 0 !important;
+  border-radius: 13px !important;
+  background: transparent !important;
+  color: rgba(255,255,255,.35) !important;
+  font: inherit !important;
+  cursor: pointer !important;
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+.fordago-nav-item:active {
+  transform: scale(.94);
+}
+
+.fordago-nav-icon {
+  width: 27px !important;
+  height: 27px !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+.fordago-nav-icon ion-icon {
+  display: block !important;
+  color: currentColor !important;
+  font-size: 19px !important;
+  opacity: 1 !important;
+}
+
+.fordago-nav-label {
+  max-width: 100% !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: nowrap !important;
+  color: currentColor !important;
+  font-size: clamp(6.2px, 1.8vw, 8.2px) !important;
+  font-weight: 750 !important;
+  line-height: 1 !important;
+  letter-spacing: -.1px !important;
+}
+
+.fordago-nav-item.is-active {
+  color: #ffd600 !important;
+  background: rgba(255,214,0,.065) !important;
+}
+
+.fordago-scan-item {
+  align-self: stretch !important;
+  justify-content: flex-start !important;
+  padding-top: 0 !important;
+  color: rgba(255,255,255,.52) !important;
+  background: transparent !important;
+}
+
+.fordago-scan-button {
+  width: 48px !important;
+  height: 48px !important;
+  margin-top: -16px !important;
+  margin-bottom: 1px !important;
+  display: grid !important;
+  place-items: center !important;
+  border: 2px solid #06080f !important;
+  border-radius: 16px !important;
+  background: #ffd600 !important;
+  color: #111317 !important;
+  box-shadow: 0 8px 24px rgba(255,214,0,.28) !important;
+}
+
+.fordago-scan-button ion-icon {
+  display: block !important;
+  color: #111317 !important;
+  font-size: 24px !important;
+  opacity: 1 !important;
+}
+
+.fordago-scan-item.is-active {
+  color: #ffd600 !important;
+  background: transparent !important;
+}
+
+.custom-tab-bar,
+.profile-bottom-nav {
+  display: none !important;
+}
+
+/* ---------------- LOGIN / SMALL SCREENS ---------------- */
+
+.ion-page.fordago-page > ion-content.login-bg {
+  --overflow: auto !important;
+}
+
+.ion-page.fordago-page .login-wrap {
+  min-height: 100% !important;
+  height: auto !important;
+  max-height: none !important;
+  padding-top: calc(22px + var(--fordago-safe-top)) !important;
+  padding-bottom: calc(36px + var(--fordago-safe-bottom)) !important;
+  overflow: visible !important;
+}
+
+@media (max-width: 360px) {
+  .fordago-app-header ion-toolbar {
+    --padding-start: 8px !important;
+    --padding-end: 8px !important;
+  }
+
+  .fordago-app-header .brand-mark {
+    width: 34px !important;
+    height: 34px !important;
+    flex-basis: 34px !important;
+  }
+
+  .fordago-app-header .brand-logo {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .fordago-app-header .toolbar-logo {
+    font-size: 17px !important;
+    max-width: 125px !important;
+  }
+
+  .fordago-app-header .toolbar-subtitle {
+    max-width: 125px !important;
+    font-size: 6.5px !important;
+  }
+
+  .fordago-app-header .notif-bell-btn,
+  .fordago-app-header .equip-header-btn,
+  .fordago-app-header .profile-button,
+  .fordago-app-header .cart-btn,
+  .fordago-app-header .cart-icon-btn,
+  .fordago-app-header .avatar {
+    width: 35px !important;
+    height: 35px !important;
+    min-width: 35px !important;
+    min-height: 35px !important;
+    flex-basis: 35px !important;
+  }
+
+  .fordago-bottom-nav {
+    grid-template-columns: 1fr 1fr 60px 1fr 1fr !important;
+    padding-left: 1px !important;
+    padding-right: 1px !important;
+  }
+
+  .fordago-nav-item {
+    min-height: 53px !important;
+  }
+
+  .fordago-nav-icon ion-icon {
+    font-size: 17px !important;
+  }
+
+  .fordago-scan-button {
+    width: 43px !important;
+    height: 43px !important;
+    margin-top: -14px !important;
+    border-radius: 14px !important;
+  }
+
+  .fordago-scan-button ion-icon {
+    font-size: 21px !important;
+  }
+
+  .fordago-nav-label {
+    font-size: 5.9px !important;
+    letter-spacing: -.18px !important;
+  }
+}
+
+/* App setting controls theme; the phone appearance does not. */
+body.light-theme .fordago-app-header,
+html.light-theme .fordago-app-header,
+body.light-theme .fordago-app-footer,
+html.light-theme .fordago-app-footer {
+  background: rgba(255,255,255,.99) !important;
+}
+
+body.light-theme .fordago-app-header ion-toolbar,
+html.light-theme .fordago-app-header ion-toolbar {
+  --background: #ffffff !important;
+  --color: #0f172a !important;
+  border-bottom-color: rgba(15,23,42,.08) !important;
+}
+
+/* V4 header block above hardcodes the logo text, subtitle, and
+   notif/equipment icon colors to the dark-mode gold (#ffd600) with
+   !important and no theme scoping, which beats the header component's
+   own (non-!important) light-mode rules. Same specificity mechanism as
+   every ion-modal fix above in this file — restated here for the app
+   header's icons/text so light mode actually renders dark text/icons
+   instead of gold-on-white. */
+body.light-theme .fordago-app-header .toolbar-logo,
+html.light-theme .fordago-app-header .toolbar-logo {
+  -webkit-text-fill-color: #0f172a !important;
+  color: #0f172a !important;
+}
+
+body.light-theme .fordago-app-header .toolbar-subtitle,
+html.light-theme .fordago-app-header .toolbar-subtitle {
+  color: rgba(15,23,42,.38) !important;
+}
+
+body.light-theme .fordago-app-header .notif-bell-btn,
+body.light-theme .fordago-app-header .equip-header-btn,
+html.light-theme .fordago-app-header .notif-bell-btn,
+html.light-theme .fordago-app-header .equip-header-btn {
+  border-color: rgba(15,23,42,.12) !important;
+  background: rgba(15,23,42,.045) !important;
+  color: #0f172a !important;
+}
+
+body.light-theme .fordago-app-header .notif-bell-btn ion-icon,
+body.light-theme .fordago-app-header .equip-header-btn ion-icon,
+html.light-theme .fordago-app-header .notif-bell-btn ion-icon,
+html.light-theme .fordago-app-header .equip-header-btn ion-icon {
+  color: #0f172a !important;
+}
+
+body.light-theme .fordago-nav-item,
+html.light-theme .fordago-nav-item {
+  color: rgba(15,23,42,.44) !important;
+}
+
+body.light-theme .fordago-nav-item.is-active,
+html.light-theme .fordago-nav-item.is-active {
+  color: #b77900 !important;
+  background: rgba(245,158,11,.08) !important;
+}
+

@@ -1,0 +1,531 @@
+<!-- inventory.page.html -->
+<app-header
+  subtitle="SUPPLEMENTS SHOP"
+  [unreadCount]="unreadCount"
+  [profileImage]="profileImage"
+  [initials]="initials"
+  (equipmentClick)="goToEquipment()"
+  (notifClick)="openNotifPanel()"
+  (profileClick)="goToProfile()">
+</app-header>
+
+<!-- Cart / Pending Orders shortcuts -- moved off the header per request.
+     Floating stack pinned to the bottom-right, sitting just above the
+     bottom nav bar so it never overlaps page content or the footer. -->
+<div class="shop-fab-stack" [class.fabs-hidden]="anyModalOpen">
+  <button type="button" class="shop-fab-btn" (click)="openCart()" aria-label="Open cart">
+    <ion-icon name="cart-outline" aria-hidden="true"></ion-icon>
+    <span class="shop-fab-badge" *ngIf="cartItemCount > 0">{{ cartItemCount }}</span>
+  </button>
+  <button type="button" class="shop-fab-btn" (click)="openOrders()" *ngIf="pendingOrderGroups.length > 0" aria-label="Open orders">
+    <ion-icon name="receipt-outline" aria-hidden="true"></ion-icon>
+    <span class="shop-fab-badge" *ngIf="awaitingPaymentCount > 0">{{ awaitingPaymentCount }}</span>
+  </button>
+</div>
+
+<ion-content [fullscreen]="false" class="shop-content fordago-page-content" [scrollY]="true">
+  <div class="scroll-wrap">
+
+    <!-- Section Label -->
+    <div class="section-label">Available Supplements</div>
+
+    <!-- Loading State -->
+    <div class="empty-shop" *ngIf="productsLoading">
+      <ion-icon name="hourglass-outline" class="empty-emoji"></ion-icon>
+      <div class="empty-text">Loading products…</div>
+    </div>
+
+    <!-- Error State -->
+    <div class="empty-shop" *ngIf="!productsLoading && productsLoadError">
+      <ion-icon name="cloud-offline-outline" class="empty-emoji"></ion-icon>
+      <div class="empty-text">Couldn't load products. Check your connection and try again.</div>
+      <button type="button" class="order-btn" style="margin-top:12px;" (click)="retryLoadProducts()">Retry</button>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-shop" *ngIf="!productsLoading && !productsLoadError && products.length === 0">
+      <ion-icon name="cube-outline" class="empty-emoji"></ion-icon>
+      <div class="empty-text">No products available</div>
+    </div>
+
+    <!-- Product Cards List -->
+    <div class="products-list">
+      <div
+        *ngFor="let product of products; let i = index"
+        class="product-card"
+        [style.animation-delay]="(i * 0.05) + 's'"
+        (click)="openOrderModal(product)"
+      >
+        <!-- Product Image / Icon Banner -->
+        <div class="product-banner">
+          <img *ngIf="product.image_url" [src]="product.image_url" class="product-img" [alt]="product.name" (error)="handleProductImageError(product)" />
+          <div *ngIf="!product.image_url" class="product-icon-fallback">{{ product.icon }}</div>
+          <div class="stock-chip" [class.low]="product.stock < 3" [class.out]="product.stock === 0">
+            <span *ngIf="product.stock > 0">{{ product.stock }} left</span>
+            <span *ngIf="product.stock === 0">Out of stock</span>
+          </div>
+        </div>
+
+        <!-- Product Info -->
+        <div class="product-body">
+          <div class="product-brand">{{ product.brand }}</div>
+          <div class="product-name">{{ product.name }}</div>
+
+        </div>
+
+        <!-- Price + Add to Cart + Place Order -->
+        <div class="product-footer">
+          <div class="product-price">₱{{ product.price }}</div>
+          <div class="product-actions">
+            <button
+              class="order-btn add-btn"
+              [class.in-cart]="cartQtyFor(product.id) > 0"
+              [disabled]="product.stock === 0 || cartQtyFor(product.id) >= product.stock"
+              (click)="addToCart(product); $event.stopPropagation()"
+            >
+              <ion-icon name="cart-outline" *ngIf="cartQtyFor(product.id) === 0"></ion-icon>
+              {{ cartQtyFor(product.id) > 0 ? cartQtyFor(product.id) + ' in cart' : 'Add' }}
+            </button>
+            <button
+              class="order-btn place-btn"
+              [disabled]="product.stock === 0 || quickOrderingId === product.id"
+              (click)="openQuickOrderConfirm(product, $event)"
+            >
+              <ion-icon name="flash-outline"></ion-icon>
+              Order
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</ion-content>
+
+<ion-footer class="fordago-app-footer ion-no-border" [class.nav-hidden]="anyModalOpen">
+  <nav class="fordago-bottom-nav" aria-label="Main navigation">
+    <button type="button" class="fordago-nav-item" (click)="goToDashboard()" aria-label="Home">
+      <span class="fordago-nav-icon"><ion-icon name="home-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Home</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item" (click)="goToSchedule()" aria-label="Schedule">
+      <span class="fordago-nav-icon"><ion-icon name="calendar-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Schedule</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item fordago-scan-item" (click)="goToQr()" aria-label="Scan QR">
+      <span class="fordago-scan-button"><ion-icon name="scan-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Scan</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item is-active" (click)="goToInventory()" aria-label="Shop">
+      <span class="fordago-nav-icon"><ion-icon name="bag-handle-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Shop</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item" (click)="goToProfile()" aria-label="Profile">
+      <span class="fordago-nav-icon"><ion-icon name="person-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Profile</span>
+    </button>
+  </nav>
+</ion-footer>
+
+
+<!-- Order Modal -->
+<ion-modal
+  [isOpen]="orderModalOpen"
+  (didDismiss)="closeOrderModal()"
+  [breakpoints]="[0, 1]"
+  [initialBreakpoint]="1"
+  class="bottom-sheet-modal"
+>
+  <ng-template>
+    <div class="modal-sheet" *ngIf="selectedProduct">
+      <div class="modal-handle"></div>
+
+      <!-- Scrollable content -->
+      <div class="modal-scroll-body">
+
+      <!-- Product Header -->
+      <div class="detail-header">
+        <div class="detail-img-wrap">
+          <img *ngIf="selectedProduct.image_url" [src]="selectedProduct.image_url" class="detail-img" [alt]="selectedProduct.name" (error)="handleSelectedProductImageError()" />
+          <div *ngIf="!selectedProduct.image_url" class="detail-emoji">{{ selectedProduct.icon }}</div>
+        </div>
+        <div class="header-info">
+          <div class="detail-name">{{ selectedProduct.name }}</div>
+          <div class="detail-brand">{{ selectedProduct.brand }}</div>
+        </div>
+      </div>
+
+      <!-- Price Box -->
+      <div class="info-box price-box">
+        <div class="box-label">Price per Unit</div>
+        <div class="box-value price">₱{{ selectedProduct.price }}</div>
+      </div>
+
+      <!-- Stock Box -->
+      <div class="info-box stock-box" [class.low-stock]="selectedProduct.stock < 3">
+        <div class="box-label">Stock Available</div>
+        <div class="box-value">
+          {{ selectedProduct.stock > 0 ? selectedProduct.stock + ' units' : 'Out of Stock' }}
+        </div>
+      </div>
+
+      <!-- Quantity Selector -->
+      <div class="qty-section">
+        <div class="section-title">How many units?</div>
+        <div class="qty-selector">
+          <button class="qty-dec-btn" (click)="decrementQty()" [disabled]="orderQty <= 1">−</button>
+          <span class="qty-display">{{ orderQty }}</span>
+          <button class="qty-inc-btn" (click)="incrementQty()" [disabled]="orderQty >= selectedProduct.stock">+</button>
+        </div>
+      </div>
+
+      <!-- Total Amount -->
+      <div class="total-box">
+        <span class="total-label">Order Total</span>
+        <span class="total-price">₱{{ selectedProduct.price * orderQty }}</span>
+      </div>
+
+      <!-- Payment Method (used for either Add to Cart's later checkout
+           default, or immediately by Place Order Now below) -->
+      <div class="payment-section">
+        <div class="section-title">Payment Method</div>
+        <div class="payment-options">
+          <button
+            class="payment-option"
+            [class.selected]="cartPaymentMethod === 'cash'"
+            (click)="selectCartPaymentMethod('cash')"
+          >
+            <span class="payment-icon"><ion-icon name="card-outline"></ion-icon></span>
+            <span class="payment-label">Cash</span>
+            <span class="payment-desc">Pay at counter</span>
+          </button>
+          <button
+            class="payment-option"
+            [class.selected]="cartPaymentMethod === 'gcash'"
+            (click)="selectCartPaymentMethod('gcash')"
+          >
+            <span class="payment-icon"><ion-icon name="scan-outline"></ion-icon></span>
+            <span class="payment-label">GCash</span>
+            <span class="payment-desc">QR code payment</span>
+          </button>
+        </div>
+      </div>
+
+      </div><!-- end modal-scroll-body -->
+
+      <!-- Order Error -->
+      <div class="order-error-box" *ngIf="orderError" role="alert">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        <span>{{ orderError }}</span>
+      </div>
+
+      <!-- Fixed Action Buttons — always visible at bottom.
+           Add to Cart stays available for members who want to batch
+           several products into one checkout; Place Order Now skips the
+           cart entirely for a single-item purchase. -->
+      <div class="modal-actions three-up">
+        <button class="action-btn cancel" [disabled]="placingOrder" (click)="closeOrderModal()">Close</button>
+        <button
+          class="action-btn secondary"
+          [disabled]="placingOrder || selectedProduct.stock === 0 || cartQtyFor(selectedProduct.id) >= selectedProduct.stock"
+          (click)="addSelectedToCart()"
+        >
+          <ion-icon name="cart-outline"></ion-icon>
+          Add to Cart
+        </button>
+        <button
+          class="action-btn confirm place-order-btn"
+          [disabled]="placingOrder || selectedProduct.stock === 0"
+          (click)="placeOrderNow()"
+        >
+          <ion-icon name="flash-outline"></ion-icon>
+          {{ placingOrder ? 'Placing Order…' : 'Place Order Now' }}
+        </button>
+      </div>
+    </div>
+  </ng-template>
+</ion-modal>
+
+<!-- Quick Order Confirm Modal -->
+<ion-modal
+  [isOpen]="quickOrderConfirmOpen"
+  (didDismiss)="closeQuickOrderConfirm()"
+  [breakpoints]="[0, 1]"
+  [initialBreakpoint]="1"
+  class="bottom-sheet-modal"
+>
+  <ng-template>
+    <div class="modal-sheet quick-confirm-sheet" *ngIf="quickOrderProduct as p">
+      <div class="modal-handle"></div>
+
+      <div class="quick-confirm-body">
+        <div class="quick-confirm-img-wrap">
+          <img *ngIf="p.image_url" [src]="p.image_url" [alt]="p.name" />
+          <span *ngIf="!p.image_url" class="quick-confirm-fallback">{{ p.icon }}</span>
+        </div>
+        <div class="quick-confirm-title">Order {{ p.name }}?</div>
+        <div class="quick-confirm-sub">1 unit &middot; ₱{{ p.price }}</div>
+      </div>
+
+      <div class="order-error-box" *ngIf="quickOrderConfirmError" role="alert">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        <span>{{ quickOrderConfirmError }}</span>
+      </div>
+
+      <div class="modal-actions">
+        <button class="action-btn cancel" [disabled]="quickOrderingId === p.id" (click)="closeQuickOrderConfirm()">Cancel</button>
+        <button class="action-btn confirm" [disabled]="quickOrderingId === p.id" (click)="confirmQuickOrder()">
+          {{ quickOrderingId === p.id ? 'Placing…' : 'Yes, Order' }}
+        </button>
+      </div>
+    </div>
+  </ng-template>
+</ion-modal>
+
+<!-- Cart Modal -->
+<ion-modal
+  [isOpen]="cartModalOpen"
+  (didDismiss)="closeCart()"
+  [breakpoints]="[0, 1]"
+  [initialBreakpoint]="1"
+  class="bottom-sheet-modal"
+>
+  <ng-template>
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+
+      <div class="modal-scroll-body">
+        <div class="orders-header">
+          <div class="section-title">Your Cart</div>
+        </div>
+
+        <div class="empty-orders" *ngIf="cart.length === 0">
+          <ion-icon name="cart-outline" class="empty-emoji"></ion-icon>
+          <div class="empty-text">Your cart is empty</div>
+        </div>
+
+        <div class="cart-list" *ngIf="cart.length > 0">
+          <div class="cart-item" *ngFor="let item of cart">
+            <div class="cart-item-icon">
+              <img *ngIf="item.product.image_url" [src]="item.product.image_url" [alt]="item.product.name" />
+              <span *ngIf="!item.product.image_url">{{ item.product.icon }}</span>
+            </div>
+            <div class="cart-item-body">
+              <div class="cart-item-name">{{ item.product.name }}</div>
+              <div class="cart-item-price">₱{{ item.product.price }} each</div>
+            </div>
+            <div class="cart-item-controls">
+              <button class="qty-dec-btn small" (click)="decrementCartItem(item)" aria-label="Decrease quantity">−</button>
+              <span class="qty-display small">{{ item.quantity }}</span>
+              <button class="qty-inc-btn small" (click)="incrementCartItem(item)" [disabled]="item.quantity >= item.product.stock" aria-label="Increase quantity">+</button>
+            </div>
+            <button class="cart-item-remove" (click)="removeCartItem(item)" aria-label="Remove item">
+              <ion-icon name="trash-outline"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="total-box cart-total-box" *ngIf="cart.length > 0">
+          <span class="total-label">Cart Total</span>
+          <span class="total-price">₱{{ cartTotal }}</span>
+        </div>
+
+        <div class="payment-section" *ngIf="cart.length > 0">
+          <div class="section-title">Payment Method</div>
+          <div class="payment-options">
+            <button
+              class="payment-option"
+              [class.selected]="cartPaymentMethod === 'cash'"
+              (click)="selectCartPaymentMethod('cash')"
+            >
+              <span class="payment-icon"><ion-icon name="card-outline"></ion-icon></span>
+              <span class="payment-label">Cash</span>
+              <span class="payment-desc">Pay at counter</span>
+            </button>
+            <button
+              class="payment-option"
+              [class.selected]="cartPaymentMethod === 'gcash'"
+              (click)="selectCartPaymentMethod('gcash')"
+            >
+              <span class="payment-icon"><ion-icon name="scan-outline"></ion-icon></span>
+              <span class="payment-label">GCash</span>
+              <span class="payment-desc">QR code payment</span>
+            </button>
+          </div>
+        </div>
+      </div><!-- end modal-scroll-body -->
+
+      <div class="order-error-box" *ngIf="checkoutError" role="alert">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        <span>{{ checkoutError }}</span>
+      </div>
+
+      <div class="modal-actions">
+        <button class="action-btn cancel" (click)="closeCart()" [disabled]="checkingOut">Close</button>
+        <button
+          class="action-btn confirm"
+          [disabled]="cart.length === 0 || checkingOut"
+          (click)="checkoutCart()"
+        >
+          {{ checkingOut ? 'Placing Order…' : 'Checkout (' + cartItemCount + ')' }}
+        </button>
+      </div>
+    </div>
+  </ng-template>
+</ion-modal>
+
+<!-- Order Success Modal -->
+<ion-modal
+  [isOpen]="orderSuccessOpen"
+  (didDismiss)="closeOrderSuccess()"
+  [breakpoints]="[0, 1]"
+  [initialBreakpoint]="1"
+  class="bottom-sheet-modal"
+>
+  <ng-template>
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      
+      <div class="modal-scroll-body">
+      <div class="success-wrap">
+        <div class="success-icon">✅</div>
+        <div class="success-title">Order Placed!</div>
+        <div class="success-message">Proceed to counter for payment & pickup</div>
+        
+        <div class="order-summary-box">
+          <div class="summary-item" *ngFor="let item of lastOrderItems">
+            <span class="summary-label">{{ item.product.name }} × {{ item.quantity }}</span>
+            <span class="summary-value">₱{{ item.product.price * item.quantity }}</span>
+          </div>
+          <div class="summary-divider"></div>
+          <div class="summary-item">
+            <span class="summary-label">Total Amount</span>
+            <span class="summary-value price">₱{{ lastOrderTotal }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Payment Method</span>
+            <span class="summary-value">{{ lastOrderPayment === 'cash' ? 'Cash at Counter' : 'GCash QR' }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-label">Status</span>
+            <span class="summary-value status-pending">⏳ Waiting Payment</span>
+          </div>
+        </div>
+
+        <div class="instruction-box">
+          <div class="instruction-title">What's Next?</div>
+          <div class="instruction-steps">
+            <div class="step">
+              <span class="step-num">1</span>
+              <span class="step-text">Go to counter with this order</span>
+            </div>
+            <div class="step">
+              <span class="step-num">2</span>
+              <span *ngIf="lastOrderPayment === 'cash'" class="step-text">Pay ₱{{ lastOrderTotal }} in cash to admin</span>
+              <span *ngIf="lastOrderPayment === 'gcash'" class="step-text">Scan QR code & transfer ₱{{ lastOrderTotal }} via GCash</span>
+            </div>
+            <div class="step">
+              <span class="step-num">3</span>
+              <span class="step-text">Admin confirms payment & gives your order</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div><!-- end modal-scroll-body -->
+
+      <div class="modal-actions">
+        <button class="action-btn confirm" style="grid-column: 1 / -1;" (click)="closeOrderSuccess()">Done</button>
+      </div>
+    </div>
+  </ng-template>
+</ion-modal>
+
+<!-- My Orders Modal -->
+<ion-modal
+  [isOpen]="ordersModalOpen"
+  (didDismiss)="closeOrders()"
+  [breakpoints]="[0, 1]"
+  [initialBreakpoint]="1"
+  class="bottom-sheet-modal"
+>
+  <ng-template>
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+
+      <div class="modal-scroll-body">
+        <div class="orders-header">
+          <div class="section-title">My Orders</div>
+        </div>
+
+        <div class="order-error-box" *ngIf="orderError" role="alert">
+          <ion-icon name="alert-circle-outline"></ion-icon>
+          <span>{{ orderError }}</span>
+        </div>
+
+        <div class="empty-orders" *ngIf="pendingOrderGroups.length === 0">
+          <span class="empty-emoji">📭</span>
+          <div class="empty-text">No pending orders</div>
+        </div>
+
+        <div class="orders-list" *ngIf="pendingOrderGroups.length > 0">
+          <div class="order-item" [ngClass]="'status-' + group.status" *ngFor="let group of pendingOrderGroups">
+            <div class="order-header-row">
+              <div class="order-product">
+                <ion-icon name="bag-handle-outline" class="order-icon"></ion-icon>
+                <div>
+                  <div class="order-name">{{ group.items.length }} item{{ group.items.length > 1 ? 's' : '' }}</div>
+                  <div class="order-date">{{ group.date | date:'short' }}</div>
+                </div>
+              </div>
+              <div class="order-status" [ngClass]="group.status">
+                <span *ngIf="group.status === 'pending'">⏳</span>
+                <span *ngIf="group.status === 'payment_verified'">✓</span>
+                <span *ngIf="group.status === 'completed'">✅</span>
+                <span *ngIf="group.status === 'rejected'">✖</span>
+                <span *ngIf="group.status === 'cancelled'">🚫</span>
+                {{ statusLabel(group.status) }}
+              </div>
+            </div>
+
+            <ul class="order-group-items-list">
+              <li *ngFor="let item of group.items">
+                <span class="item-name">{{ item.product.name }} × {{ item.quantity }}</span>
+                <span class="item-total">₱{{ item.total }}</span>
+              </li>
+            </ul>
+
+            <div class="order-details">
+              <div class="detail-item">
+                <span class="detail-label">Total</span>
+                <span class="detail-value">₱{{ group.total }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Payment</span>
+                <span class="detail-value">{{ group.paymentMethod === 'cash' ? 'Cash' : 'GCash' }}</span>
+              </div>
+            </div>
+
+            <button
+              class="cancel-order-btn"
+              *ngIf="group.status === 'pending'"
+              [disabled]="group.cancelling"
+              (click)="cancelOrder(group)"
+            >
+              {{ group.cancelling ? 'Cancelling…' : 'Cancel Order' }}
+            </button>
+          </div>
+        </div>
+      </div><!-- end modal-scroll-body -->
+    </div>
+  </ng-template>
+</ion-modal>
+
+<app-notification-panel
+  [isOpen]="notifPanelOpen"
+  (closed)="closeNotifPanel()"
+  (unreadCountChange)="onUnreadCountChange($event)">
+</app-notification-panel>

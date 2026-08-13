@@ -1,0 +1,90 @@
+<!-- transactions.page.html -->
+<ion-header [translucent]="false" class="fordago-app-header fordago-subpage-header">
+  <ion-toolbar class="fordago-toolbar">
+    <div slot="start" class="toolbar-brand">
+      <ion-back-button defaultHref="/profile" class="back-btn"></ion-back-button>
+    </div>
+    <div class="toolbar-title">Transaction History</div>
+    <div slot="end" class="header-end">
+      <button class="dl-btn" (click)="downloadPDF()" title="Download PDF">
+        <span class="dl-fallback">PDF</span>
+      </button>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="false" class="fordago-page-content">
+  <div class="content-inner">
+
+    <!-- Period Filter -->
+    <div class="pill-row">
+      <div class="pill" [class.active]="period === 'all'"     (click)="setPeriod('all')">All</div>
+      <div class="pill" [class.active]="period === 'daily'"   (click)="setPeriod('daily')">Today</div>
+      <div class="pill" [class.active]="period === 'weekly'"  (click)="setPeriod('weekly')">This Week</div>
+      <div class="pill" [class.active]="period === 'monthly'" (click)="setPeriod('monthly')">This Month</div>
+    </div>
+
+    <!-- Summary Card -->
+    <div class="summary-card fade-up" *ngIf="!isLoading">
+      <div class="summary-row">
+        <div class="summary-item">
+          <div class="summary-val">{{ transactions.length }}</div>
+          <div class="summary-lbl">Transactions</div>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="summary-item">
+          <div class="summary-val gold">₱{{ totalSpent | number:'1.2-2' }}</div>
+          <div class="summary-lbl">Total Spent</div>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="summary-item">
+          <div class="summary-val">{{ attendanceCount }}</div>
+          <div class="summary-lbl">Gym Visits</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="empty-state" *ngIf="isLoading">
+      <ion-spinner name="crescent"></ion-spinner>
+      <div class="empty-lbl">Loading transactions…</div>
+    </div>
+
+    <!-- Empty -->
+    <div class="empty-state" *ngIf="!isLoading && transactions.length === 0">
+      <ion-icon name="receipt-outline"></ion-icon>
+      <div class="empty-lbl">No transactions found</div>
+    </div>
+
+    <!-- Transaction List -->
+    <div class="tx-list" *ngIf="!isLoading && transactions.length > 0">
+      <div
+        *ngFor="let tx of transactions; let i = index"
+        class="tx-card fade-up"
+        [style.animation-delay]="(i * 0.04) + 's'"
+      >
+        <!-- Left icon -->
+        <div class="tx-icon" [class]="getIconClass(tx)">
+          <ion-icon [name]="getIcon(tx)"></ion-icon>
+        </div>
+
+        <!-- Middle info -->
+        <div class="tx-info">
+          <div class="tx-type">{{ tx.type_label }}</div>
+          <div class="tx-sub" *ngIf="tx.product_name">{{ tx.product_name }}</div>
+          <div class="tx-date">{{ tx.transaction_date | date:'MMM d, yyyy · h:mm a' }}</div>
+          <div class="tx-status" [class]="'st-' + getStatusKey(tx)">{{ getStatusLabel(tx) }}</div>
+        </div>
+
+        <!-- Right amount -->
+        <div class="tx-amount-wrap">
+          <div class="tx-amount" [class.free]="tx.amount == 0">
+            {{ tx.amount > 0 ? ('₱' + (tx.amount | number:'1.2-2')) : 'Included' }}
+          </div>
+          <div class="tx-source-badge">{{ tx.source === 'attendance' ? 'Gym' : 'Shop' }}</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</ion-content>
