@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\InventoryController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PersonalRecordController;
+use App\Http\Controllers\Api\ProposalController;
 use App\Http\Controllers\Api\ReportsController;
 use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\Api\UserController;
@@ -158,6 +159,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{conversationId}/messages',         [MessageController::class, 'index'])->whereNumber('conversationId');
         Route::post('/{conversationId}/messages',        [MessageController::class, 'store'])->whereNumber('conversationId');
         Route::patch('/{conversationId}/read',           [MessageController::class, 'markRead'])->whereNumber('conversationId');
+    });
+
+    Route::prefix('proposals')->group(function () {
+        Route::get('/',              [ProposalController::class, 'index']);
+        Route::post('/',             [ProposalController::class, 'store']);
+        Route::get('/{id}',          [ProposalController::class, 'show'])->whereNumber('id');
+        Route::post('/{id}/accept',  [ProposalController::class, 'accept'])->whereNumber('id');
+        Route::post('/{id}/cancel',  [ProposalController::class, 'cancel'])->whereNumber('id');
     });
 
 });
