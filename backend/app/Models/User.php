@@ -69,4 +69,32 @@ class User extends Authenticatable
     {
         return '';
     }
+
+    // ── Coaching relationships ────────────────────────
+
+    public function coachProfile()
+    {
+        return $this->hasOne(CoachProfile::class);
+    }
+
+    /**
+     * Conversations where this user is the coach.
+     */
+    public function coachConversations()
+    {
+        return $this->hasMany(Conversation::class, 'coach_id');
+    }
+
+    /**
+     * Conversations where this user is the client.
+     */
+    public function clientConversations()
+    {
+        return $this->hasMany(Conversation::class, 'client_id');
+    }
+
+    public function isCoach(): bool
+    {
+        return $this->coachProfile()->exists();
+    }
 }
