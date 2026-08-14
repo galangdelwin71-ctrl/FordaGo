@@ -8,6 +8,7 @@ import { IonContent, IonFooter, IonIcon, IonModal, IonInput } from '@ionic/angul
 import { HttpClient } from '@angular/common/http';
 import { Subscription } from 'rxjs';
 import { WorkoutTrackerService, StoredWorkoutSession } from '../services/workout-tracker.service';
+import { NotificationCenterService } from '../services/notification-center.service';
 import { NoNegativeDirective } from '../directives/no-negative.directive';
 import { HeaderComponent } from '../shared/header/header.component';
 import { NotificationPanelComponent } from '../shared/notification-panel/notification-panel.component';
@@ -32,6 +33,8 @@ export interface TodayWorkout {
   name: string;          // e.g. "Upper Body"
   focus?: string;        // e.g. "Back & Bicep"
   time: string;          // e.g. "6:00 AM Tomorrow"
+  duration: string;      // scheduled duration preset, e.g. "60 min" — used only to trigger the
+                          // duration-reached alert; actual tracked time still comes from actualMinutes.
   exercises: WorkoutExercise[];
   status: PersistedScheduleSession['status'];
   actualMinutes?: number;  // minutes captured by the Start/Stop session timer, once stopped
@@ -196,9 +199,49 @@ export class DashboardPage implements OnInit, OnDestroy {
   private trackerSubscription?: Subscription;
   private userSubscription?: Subscription;
 
-  // Tap an exercise item to mark it done/undone and persist immediately
-  toggleExercise(workoutIndex: number, exerciseIndex: number): void {
-    const workout = this.todayWorkouts[workoutIndex];
+  // Dashboard shows only ONE workout card at a time by default — tapping
+  // "View all" below it expands to show every session scheduled today.
+  // Plain boolean (not per-workout) since only one workout list is ever
+  // shown here.
+  showAllWorkouts = false;
+
+  toggleShowAllWorkouts(): void {
+    this.showAllWorkouts = !this.showAllWorkouts;
+  }
+
+  /**
+   * todayWorkouts sorted so not-yet-done sessions surface first (soonest
+   * scheduled time first among them), and completed ('done') sessions sink
+   * to the bottom — once a session is marked done it drops out of the way
+   * so the next thing to do is always what's on top / shown first. Missed
+   * sessions never reach todayWorkouts to begin with (already filtered out
+   * in refreshDashboardFromSchedule()), so this only ever separates
+   * "still to do" from "done".
+   */
+  get sortedTodayWorkouts(): TodayWorkout[] {
+    return [...this.todayWorkouts].sort((a, b) => {
+      const aDone = a.status === 'done' ? 1 : 0;
+      const bDone = b.status === 'done' ? 1 : 0;
+      if (aDone !== bDone) return aDone - bDone;
+
+      const aTime = this.parse12HourTimeToDate(a.time, new Date()).getTime();
+      const bTime = this.parse12HourTimeToDate(b.time, new Date()).getTime();
+      return aTime - bTime;
+    });
+  }
+
+  /** What the template actually renders: just the top card unless the member has tapped "View all". */
+  get displayedTodayWorkouts(): TodayWorkout[] {
+    const sorted = this.sortedTodayWorkouts;
+    return this.showAllWorkouts ? sorted : sorted.slice(0, 1);
+  }
+
+  // Tap an exercise item to mark it done/undone and persist immediately.
+  // Takes the workout object itself (not an index into todayWorkouts) —
+  // the template iterates displayedTodayWorkouts, a sorted/sliced VIEW of
+  // todayWorkouts, so an index from that view would no longer line up
+  // with the matching position in the underlying todayWorkouts array.
+  toggleExercise(workout: TodayWorkout, exerciseIndex: number): void {
     if (!workout) return;
     if (workout.status === 'missed' || !this.isWorkoutStillActive(workout.time)) return;
     workout.exercises[exerciseIndex].done = !workout.exercises[exerciseIndex].done;
@@ -565,6 +608,7 @@ export class DashboardPage implements OnInit, OnDestroy {
       name: session.title,
       focus: session.customTarget || '',
       time: `${session.timeVal} ${session.timeAmpm}`,
+      duration: session.duration || '',
       exercises,
       status: session.status,
       actualMinutes: session.actualMinutes,
@@ -600,6 +644,14 @@ export class DashboardPage implements OnInit, OnDestroy {
     });
 
     this.todayWorkouts = filteredSessions.map((session) => this.buildTodayWorkoutFromSession(session));
+
+    // Nothing left to expand into once there's 1 or 0 sessions remaining
+    // (e.g. the last other session for today just got marked done and
+    // filtered out above) — collapse back so "View all" doesn't stay stuck
+    // open with nothing extra to show.
+    if (this.todayWorkouts.length <= 1) {
+      this.showAllWorkouts = false;
+    }
 
     const allSessions: Array<{ sessionDate: Date; session: PersistedScheduleSession }> = [];
     Object.keys(store).forEach((key) => {
@@ -671,6 +723,27 @@ export class DashboardPage implements OnInit, OnDestroy {
     } else {
       this.stopTimerTickingIfIdle();
     }
+
+    // Reconcile the duration-reached prompt against the freshly-rebuilt
+    // todayWorkouts array: buildTodayWorkoutFromSession() above creates NEW
+    // object instances on every refresh, so the object durationPromptWorkout
+    // captured earlier would otherwise go stale (detached from the array) —
+    // re-point it at the live object by sessionId, or auto-dismiss the
+    // prompt if that session isn't running anymore (e.g. stopped via the
+    // card's own Stop button while the prompt was open elsewhere).
+    if (this.durationPromptWorkout) {
+      const stillRunning = this.todayWorkouts.find(
+        (workout) => workout.sessionId === this.durationPromptWorkout!.sessionId && !!workout.startedAt
+      );
+      // Session was stopped some other way (e.g. the card's own Stop button)
+      // while the alarm was still ringing for it — silence the alarm here
+      // too, since dismissDurationPrompt()/stopSessionFromPrompt() are the
+      // only other places that stop it and neither runs on this path.
+      if (!stillRunning) {
+        this.stopAlarmLoop();
+      }
+      this.durationPromptWorkout = stillRunning ?? null;
+    }
   }
 
   // ── Live Session Timer ───────────────────────────────
@@ -682,11 +755,207 @@ export class DashboardPage implements OnInit, OnDestroy {
   private timerInterval: ReturnType<typeof setInterval> | null = null;
   activeTimerNow = Date.now();
 
+  // Tracks which sessions have already fired their "duration reached" alert
+  // for the CURRENT run of their timer, so the ring/notification fires
+  // exactly once per Start→Stop cycle instead of every tick once exceeded.
+  // Keyed by sessionId; cleared on start/stop/destroy (see below) so it
+  // never grows unbounded across the page's lifetime.
+  private durationAlertedSessionIds = new Set<string>();
+
+  // The workout currently showing the "Duration reached — Stop or Keep
+  // Going?" confirmation prompt, or null when no prompt is open. Only one
+  // prompt shows at a time even if multiple sessions cross their duration
+  // in the same tick — see checkDurationAlerts(). Reconciled against the
+  // live todayWorkouts array on every refreshDashboardFromSchedule() call
+  // (see below) so it never displays a stale/stopped session.
+  durationPromptWorkout: TodayWorkout | null = null;
+
+  // Repeating alarm loop: interval handle for the "keep beeping until
+  // dismissed" duration-reached alarm (see startAlarmLoop()/stopAlarmLoop()
+  // below). Kept separate from timerInterval (which only drives the
+  // on-screen elapsed clock) so stopping one can never accidentally stop
+  // the other.
+  private alarmRepeatInterval: ReturnType<typeof setInterval> | null = null;
+  // Shortened from 1400ms: each ring itself now lasts ~540ms (3 tones), so
+  // 900ms still guarantees the previous ring has fully finished + its
+  // AudioContext closed before the next one starts, while leaving a much
+  // shorter silent gap in between — the alarm reads as closer to continuous.
+  private static readonly ALARM_REPEAT_MS = 900;
+
   private ensureTimerTicking(): void {
     if (this.timerInterval) return;
     this.timerInterval = setInterval(() => {
       this.activeTimerNow = Date.now();
+      this.checkDurationAlerts();
     }, 1000);
+  }
+
+  /** Minutes elapsed since the session's timer was started, using the live-ticking clock. Returns 0 if the timer isn't running or the stamp is malformed. */
+  private getElapsedMinutes(workout: TodayWorkout): number {
+    if (!workout.startedAt) return 0;
+    const startedMs = new Date(workout.startedAt).getTime();
+    if (Number.isNaN(startedMs)) return 0;
+    return Math.max(0, (this.activeTimerNow - startedMs) / 60000);
+  }
+
+  /**
+   * True once the live timer has run at least as long as the session's
+   * scheduled duration. Purely informational — does NOT stop the timer or
+   * change status; the member still taps Stop manually, and actualMinutes /
+   * history / averages keep reflecting real elapsed time regardless of
+   * this flag.
+   */
+  isDurationReached(workout: TodayWorkout): boolean {
+    if (!workout.startedAt) return false;
+    const durationMinutes = this.durationToMinutes(workout.duration);
+    if (durationMinutes <= 0) return false; // no duration set (e.g. legacy session) — nothing to compare against
+    return this.getElapsedMinutes(workout) >= durationMinutes;
+  }
+
+  /**
+   * Fires the one-time "duration reached" side-effects for any currently-
+   * running session that just crossed its scheduled duration. Called every
+   * timer tick (see ensureTimerTicking above); the durationAlertedSessionIds
+   * guard keeps the notification + prompt-open + alarm-start idempotent per
+   * run so none of them re-trigger every second once the threshold is
+   * crossed.
+   *
+   * Starts a REPEATING alarm (see startAlarmLoop()) and opens the
+   * Stop/Keep-Going confirmation prompt (durationPromptWorkout) so the
+   * member actually notices — previously this only pushed a silent
+   * notification-center entry plus a passive on-screen banner, easy to miss
+   * while mid-workout. The alarm keeps beeping on its own interval until
+   * the member responds via dismissDurationPrompt() or
+   * stopSessionFromPrompt() (or the session is stopped some other way —
+   * see the reconciliation block in refreshDashboardFromSchedule()).
+   */
+  private checkDurationAlerts(): void {
+    this.todayWorkouts.forEach((workout) => {
+      if (!this.isDurationReached(workout)) return;
+      if (this.durationAlertedSessionIds.has(workout.sessionId)) return;
+
+      this.durationAlertedSessionIds.add(workout.sessionId);
+      this.startAlarmLoop();
+      // Don't clobber an already-open prompt for a different session that
+      // crossed its duration first.
+      if (!this.durationPromptWorkout) {
+        this.durationPromptWorkout = workout;
+      }
+      // uniqueKey includes startedAt so a later Start→Stop→Start cycle for the
+      // same sessionId can alert again — the notification center's own dedupe
+      // list is keyed by this string, not just the sessionId.
+      void this.notificationCenter.notifyDurationReached(
+        workout.name,
+        `${workout.sessionId}-${workout.startedAt}`
+      );
+    });
+  }
+
+  /**
+   * Loud multi-tone buzzer — one "ring" of the alarm. Called repeatedly by
+   * startAlarmLoop() below to build the full repeating alarm; this method
+   * itself only ever plays a single ring per call. Built with the Web Audio
+   * API instead of an <audio> asset so there's no external file to ship,
+   * fetch, or ever fail to load. A fresh AudioContext is created per ring
+   * and explicitly closed once that ring finishes (well before the next
+   * ring starts, given the headroom built into ALARM_REPEAT_MS) so a
+   * long-running alarm never accumulates live audio contexts (a real
+   * memory/handle leak on some browsers if left open).
+   * Wrapped in try/catch and fails silently — audio is a nice-to-have here;
+   * it must never block the notification + confirmation prompt that fire
+   * alongside it if the Web Audio API is unavailable or blocked (e.g.
+   * autoplay policy before any user gesture).
+   */
+  private playDurationReachedSound(): void {
+    try {
+      const AudioContextClass = window.AudioContext ?? (window as any).webkitAudioContext;
+      if (!AudioContextClass) return;
+      const context = new AudioContextClass();
+
+      // 'square' instead of 'sine': richer harmonics read as a much louder,
+      // more piercing buzzer at the same gain — this is what actually makes
+      // the alarm sound "maingay" rather than a soft chime.
+      const playTone = (startTime: number, frequency: number, durationSec: number) => {
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        oscillator.type = 'square';
+        oscillator.frequency.value = frequency;
+        // Short envelope (ramp up, ramp down) instead of a hard on/off so
+        // the beep doesn't click/pop, even at the higher peak gain below.
+        gain.gain.setValueAtTime(0.0001, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.7, startTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, startTime + durationSec);
+        oscillator.connect(gain);
+        gain.connect(context.destination);
+        oscillator.start(startTime);
+        oscillator.stop(startTime + durationSec);
+      };
+
+      // Three-tone rising buzz per ring (was two) for a longer, more
+      // attention-grabbing alarm burst.
+      const now = context.currentTime;
+      const toneDuration = 0.16;
+      const toneGap = 0.14;
+      playTone(now, 784, toneDuration);
+      playTone(now + toneGap, 988, toneDuration);
+      playTone(now + toneGap * 2, 1318.5, toneDuration);
+
+      const totalDurationMs = (toneGap * 2 + toneDuration) * 1000 + 100;
+      setTimeout(() => {
+        void context.close().catch(() => {});
+      }, totalDurationMs);
+    } catch {
+      // Never let a playback failure break the duration-reached flow.
+    }
+  }
+
+  /**
+   * Starts the repeating "duration reached" alarm: plays one ring
+   * immediately via playDurationReachedSound(), then again every
+   * ALARM_REPEAT_MS until stopAlarmLoop() is called. Guarded against
+   * double-starting so calling it while already looping (e.g. a second
+   * session crossing its duration mid-alarm) never stacks a second
+   * interval for the same alarm.
+   */
+  private startAlarmLoop(): void {
+    if (this.alarmRepeatInterval) return;
+    this.playDurationReachedSound();
+    this.alarmRepeatInterval = setInterval(() => {
+      this.playDurationReachedSound();
+    }, DashboardPage.ALARM_REPEAT_MS);
+  }
+
+  /** Stops the repeating alarm started by startAlarmLoop(). Safe to call even when no alarm is currently looping. */
+  private stopAlarmLoop(): void {
+    if (!this.alarmRepeatInterval) return;
+    clearInterval(this.alarmRepeatInterval);
+    this.alarmRepeatInterval = null;
+  }
+
+  /** "Keep Going" in the duration-reached prompt — stops the repeating alarm and closes the prompt; the session timer itself keeps running untouched. */
+  dismissDurationPrompt(): void {
+    this.stopAlarmLoop();
+    this.durationPromptWorkout = null;
+  }
+
+  /**
+   * "Stop Session" in the duration-reached prompt. Looks up the CURRENT
+   * live workout object by sessionId (rather than trusting the possibly-
+   * stale object captured when the prompt opened, which refreshDashboard-
+   * FromSchedule() may have since replaced with a new instance) before
+   * delegating to the same stopWorkoutSession() the card's own Stop button
+   * uses, so behavior stays identical either way.
+   */
+  stopSessionFromPrompt(): void {
+    this.stopAlarmLoop();
+    const promptedSessionId = this.durationPromptWorkout?.sessionId;
+    this.durationPromptWorkout = null;
+    if (!promptedSessionId) return;
+
+    const currentWorkout = this.todayWorkouts.find((workout) => workout.sessionId === promptedSessionId);
+    if (currentWorkout) {
+      this.stopWorkoutSession(currentWorkout);
+    }
   }
 
   private stopTimerTickingIfIdle(): void {
@@ -712,6 +981,10 @@ export class DashboardPage implements OnInit, OnDestroy {
     if (workout.status === 'missed' || workout.status === 'done') return;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    // Defensive reset: guarantees a fresh Start always gets its own
+    // duration-reached alert, even if a stale entry somehow survived from a
+    // previous run of this same session.
+    this.durationAlertedSessionIds.delete(workout.sessionId);
     this.workoutTracker.startSession(today, workout.sessionId);
     this.ensureTimerTicking();
     this.refreshDashboardFromSchedule();
@@ -722,6 +995,7 @@ export class DashboardPage implements OnInit, OnDestroy {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     this.workoutTracker.stopSession(today, workout.sessionId);
+    this.durationAlertedSessionIds.delete(workout.sessionId);
     this.refreshDashboardFromSchedule();
   }
 
@@ -1027,7 +1301,8 @@ export class DashboardPage implements OnInit, OnDestroy {
     private router: Router,
     private auth: AuthService,
     private http: HttpClient,
-    private workoutTracker: WorkoutTrackerService
+    private workoutTracker: WorkoutTrackerService,
+    private notificationCenter: NotificationCenterService
   ) {}
 
   onLogoError(event: Event): void {
@@ -1099,7 +1374,10 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.trackerSubscription?.unsubscribe();
     this.userSubscription?.unsubscribe();
     this.stopTimerTickingIfIdle();
+    this.stopAlarmLoop();
     this.clearHeatmapLongPressTimer();
+    this.durationAlertedSessionIds.clear();
+    this.durationPromptWorkout = null;
   }
 
   private applyUserContext(user: any): void {

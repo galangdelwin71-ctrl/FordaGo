@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Capacitor } from '@capacitor/core';
-import { firstValueFrom } from 'rxjs';
+import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { AuthService } from './auth.service';
 import { API_BASE_URL } from '../config/api.config';
 
@@ -24,12 +24,56 @@ export class NotificationCenterService {
   private readonly api = this.resolveApiBase();
   private readonly localNotificationsKey = 'fordago_local_notifications_v1';
   private readonly notifiedMissedKey = 'fordago_notified_missed_v1';
+  private readonly notifiedDurationKey = 'fordago_notified_duration_v1';
   private readonly readServerNotificationsKey = 'fordago_read_server_notifications_v1';
+
+  // Shared poll state (providedIn: 'root' — one instance for the whole
+  // app). NotificationPanelComponent is embedded on nearly every page
+  // (dashboard, schedule, equipment, inventory, profile, qr-scanner) and
+  // used to run its OWN setInterval in ngOnInit(). Since Ionic doesn't
+  // always fully destroy a previous page's components when navigating,
+  // every page visited in a session could leave behind another live
+  // 15s polling loop — several of them firing independently is exactly
+  // what produced the burst of near-simultaneous GET /api/notifications
+  // calls. Owning the single timer here instead means it's started once
+  // (guarded by pollTimer below) no matter how many panel instances call
+  // startPolling().
+  private pollTimer: ReturnType<typeof setInterval> | null = null;
+  private notificationsSubject = new BehaviorSubject<AppNotificationItem[]>([]);
+  readonly notifications$ = this.notificationsSubject.asObservable();
 
   constructor(private http: HttpClient, private auth: AuthService) {}
 
   private resolveApiBase(): string {
     return API_BASE_URL;
+  }
+
+  /**
+   * Starts the ONE shared background poll. Safe to call from every page —
+   * only the first call actually does anything; subsequent calls
+   * (e.g. every time a page's NotificationPanelComponent mounts) are
+   * no-ops thanks to the pollTimer guard.
+   */
+  startPolling(): void {
+    if (this.pollTimer) {
+      return;
+    }
+
+    void this.refreshNotifications();
+    this.pollTimer = setInterval(() => {
+      void this.refreshNotifications();
+    }, 15000);
+  }
+
+  /** Fetches the latest notification list and publishes it to every subscriber (all open panel instances update together). */
+  async refreshNotifications(): Promise<void> {
+    const data = await this.loadNotifications();
+    this.notificationsSubject.next(data);
+  }
+
+  /** Publishes an already-computed list without re-fetching from the server — used after a local mark-as-read mutation so every panel instance reflects it immediately instead of waiting for the next poll. */
+  publishNotifications(data: AppNotificationItem[]): void {
+    this.notificationsSubject.next(data);
   }
 
   async notifyMissedWorkout(sessionTitle: string, dayDate: Date, uniqueKey: string, homeExercises: string[] = []): Promise<void> {
@@ -81,6 +125,13 @@ export class NotificationCenterService {
     this.writeLocalNotifications([localNotification, ...this.readLocalNotifications()]);
     await this.sendDeviceNotification(localNotification);
 
+    // Publish immediately so every open panel/badge reflects this the
+    // instant it happens instead of waiting for the next 15s poll tick —
+    // this is what makes "missed workout" notifications feel real-time.
+    this.publishNotifications(
+      this.sortNotifications([localNotification, ...this.notificationsSubject.value])
+    );
+
     const token = this.auth.token;
     if (!token) {
       return;
@@ -94,13 +145,77 @@ export class NotificationCenterService {
             sessionTitle,
             dayLabel,
             homeExercises: normalizedExercises,
+            // Lets the backend dedup on (user_id, session_key) — see
+            // NotificationController::missedWorkoutAlert() — so a cleared
+            // localStorage / reinstall / different device re-reporting this
+            // same missed session updates the existing notification instead
+            // of creating a duplicate row.
+            sessionKey: uniqueKey,
           },
           { headers: { Authorization: `Bearer ${token}` } }
         )
       );
+
+      // The backend now has its own canonical copy of this notification
+      // (with its own server-assigned id/timestamp). Drop the local stand-in
+      // so the next refresh shows ONE entry from the server instead of a
+      // local+server duplicate pair with two slightly different timestamps
+      // — that mismatch was what made the same missed-workout alert appear
+      // to "jump around" in the list (sometimes adjacent, sometimes split
+      // apart by whatever else sorted between their two createdAt values).
+      this.writeLocalNotifications(
+        this.readLocalNotifications().filter((item) => item.id !== localNotification.id)
+      );
+      void this.refreshNotifications();
     } catch {
       // Keep local and device alerts even if backend save/SMS fails.
     }
+  }
+
+  /**
+   * Fires the "session duration reached" ring/notification once a running
+   * Start/Stop session timer (see DashboardPage.checkDurationAlerts()) has
+   * run at least as long as the session's scheduled duration. This is
+   * purely informational — it never stops the timer or marks the session
+   * done; the member keeps going (or taps Stop) on their own, and actual
+   * tracked minutes / session history / averages are unaffected.
+   *
+   * `uniqueKey` should embed the session's startedAt timestamp (not just
+   * its id) so a later Start→Stop→Start cycle for the same session can
+   * alert again instead of being silently swallowed by the dedupe list
+   * below, which persists indefinitely like notifyMissedWorkout's does.
+   */
+  async notifyDurationReached(sessionTitle: string, uniqueKey: string): Promise<void> {
+    const notified = this.readNotifiedDuration();
+    if (notified.includes(uniqueKey)) {
+      return;
+    }
+
+    const createdAt = new Date().toISOString();
+    const title = `⏰ Duration Complete: ${sessionTitle}`;
+    const message = `Your set duration for ${sessionTitle} is up. Keep going if you're not done, or tap Stop to end the session.`;
+    const localNotification: StoredNotificationItem = {
+      id: `duration-${uniqueKey}`,
+      key: uniqueKey,
+      title,
+      message,
+      createdAt,
+      unread: true,
+      source: 'local',
+    };
+
+    notified.push(uniqueKey);
+    this.writeNotifiedDuration(notified);
+    this.writeLocalNotifications([localNotification, ...this.readLocalNotifications()]);
+    await this.sendDeviceNotification(localNotification);
+
+    // Duration-reached alerts are local-only (no backend call), so this is
+    // the only publish point for them — without it, the panel/badge would
+    // wait for the next 15s poll to show it, same real-time gap as the
+    // missed-workout alert had.
+    this.publishNotifications(
+      this.sortNotifications([localNotification, ...this.notificationsSubject.value])
+    );
   }
 
   async loadNotifications(): Promise<AppNotificationItem[]> {
@@ -161,6 +276,21 @@ export class NotificationCenterService {
     serverIds.forEach((id) => readServerIds.add(id));
     this.writeReadServerNotifications(Array.from(readServerIds));
 
+    // Publish the now-read state immediately so every open panel/badge
+    // (and the header's unread count) reflects it without waiting for the
+    // next poll — mirrors the same real-time fix applied to new
+    // notifications above.
+    this.publishNotifications(
+      this.sortNotifications(
+        this.notificationsSubject.value.map((item) => {
+          const isTargeted = notifications.some(
+            (target) => target.id === item.id && target.source === item.source
+          );
+          return isTargeted ? { ...item, unread: false } : item;
+        })
+      )
+    );
+
     const token = this.auth.token;
     if (!token || serverIds.length === 0) {
       return;
@@ -211,6 +341,19 @@ export class NotificationCenterService {
 
   private writeNotifiedMissed(keys: string[]): void {
     localStorage.setItem(this.getScopedStorageKey(this.notifiedMissedKey), JSON.stringify(Array.from(new Set(keys))));
+  }
+
+  private readNotifiedDuration(): string[] {
+    try {
+      const raw = localStorage.getItem(this.getScopedStorageKey(this.notifiedDurationKey));
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private writeNotifiedDuration(keys: string[]): void {
+    localStorage.setItem(this.getScopedStorageKey(this.notifiedDurationKey), JSON.stringify(Array.from(new Set(keys))));
   }
 
   private readReadServerNotifications(): number[] {

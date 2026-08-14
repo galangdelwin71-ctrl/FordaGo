@@ -256,7 +256,13 @@ body.ion-palette-dark ion-modal {
     background: #0B0E1A !important;
     color: #FFFFFF !important;
   }
-  .field-icon { color: rgba(255,255,255,0.3) !important; }
+  .field-icon {
+    // Was rgba(255,255,255,0.3) — too dim to read against the dark modal.
+    // Matches the app's accent yellow (see schedule.page.scss's own
+    // .field-icon base rule) so this !important layer doesn't silently
+    // override it back to gray, per request.
+    color: #FFD600 !important;
+  }
 
   /* chips & tags */
   .target-chip {
@@ -372,6 +378,7 @@ body.light-theme {
       background: rgba(15,23,42,0.05) !important;
       border-color: rgba(15,23,42,0.12) !important;
       color: #0f172a !important;
+      font-size: 13px !important;
     }
 
     /* Native <option> elements in the dropdown */
@@ -405,7 +412,28 @@ body.light-theme {
       font-size: 14px !important;
       font-weight: 450 !important;
     }
-    .field-lbl, .edit-exercises-title { color: rgba(15,23,42,0.5) !important; }
+    .field-lbl { color: rgba(15,23,42,0.5) !important; }
+    .edit-exercises-title {
+      color: #0f172a !important;
+      font-size: 12px !important;
+      font-weight: 800 !important;
+    }
+
+    /* "Leave empty to use recommended exercises..." hint (My Exercises
+       section, Add Workout modal). Same portal issue as everything else in
+       this ion-modal block: schedule.page.scss's own :host-context(body.
+       light-theme) rule for .wplan-exercises-empty never reaches this
+       element because ion-modal content isn't a DOM descendant of the
+       app-schedule component once rendered, so :host-context can't match
+       it — only this global, unscoped selector can. Solid black per
+       request; the base dark-mode rule (near-white, no !important) was
+       winning and rendering white-on-white — invisible, not just faint. */
+    .wplan-exercises-empty {
+      color: #000000 !important;
+      opacity: 0.75 !important;
+      font-size: 12px !important;
+      font-weight: 500 !important;
+    }
 
     /* Target chips */
     .target-chip {
@@ -415,6 +443,22 @@ body.light-theme {
       &.selected { background: rgba(245,158,11,0.1) !important; border-color: rgba(245,158,11,0.25) !important; color: #d97706 !important; }
     }
 
+    /* Duration unit toggle (Min/Hrs) inside the Add Workout modal — same
+       portal issue as every other rule in this ion-modal block: ion-modal
+       content is moved to document.body, so schedule.page.scss's own
+       :host-context(body.light-theme) rule for .duration-unit-toggle/
+       .duration-unit-btn never matches it. The base (dark-mode) rule keeps
+       winning instead, rendering the inactive "Hrs" label in white text on
+       the light modal background — invisible, not just faint. */
+    .duration-unit-toggle {
+      background: rgba(15,23,42,0.05) !important;
+      border-color: rgba(15,23,42,0.12) !important;
+    }
+    .duration-unit-btn {
+      color: rgba(15,23,42,0.55) !important;
+      &.active { background: #ffd600 !important; color: #111317 !important; }
+    }
+
     /* Exercise preview in Add Workout modal — same portal/specificity issue
        as every other rule in this ion-modal block (see comment above on
        .detail-name etc.): these were the only declarations here missing
@@ -422,7 +466,7 @@ body.light-theme {
        "Recommended Exercises" preview stayed unreadable in light mode. */
     .modal-exercise-preview {
       background: rgba(15,23,42,0.03) !important;
-      border-color: rgba(15,23,42,0.08) !important;
+      border: 1.5px solid rgba(15,23,42,0.35) !important;
       .preview-header { background: rgba(15,23,42,0.04) !important; border-bottom-color: rgba(15,23,42,0.08) !important; }
       .preview-title  { color: #0f172a !important; }
       .preview-sub    { color: rgba(15,23,42,0.65) !important; }
@@ -475,6 +519,159 @@ body.light-theme {
     .mark-read-btn { color: #d97706 !important; }
     .modal-title { color: #0f172a !important; }
     .notif-panel-title { color: #0f172a !important; }
+
+    /* Shared notifications bottom sheet (NotificationPanelComponent) — same
+       portal issue as everything else in this ion-modal block: this
+       component's own SCSS deliberately has no :host-context(body.
+       light-theme) block (see the comment at the bottom of
+       notification-panel.component.scss) because ion-modal content is
+       moved to document.body, outside the component's DOM subtree, so
+       :host-context() can never match it there. This is the only place
+       its light-theme colors can live. Mirrors the amber-accent mapping
+       dashboard.page.scss already uses for its own .notif-* classes. */
+    .notif-header-icon { color: #d97706 !important; }
+    .notif-header-icon-wrap {
+      background: rgba(245,158,11,0.16) !important;
+      border-color: rgba(245,158,11,0.25) !important;
+    }
+    .notif-header-title { color: #0f172a !important; }
+    .notif-header-sub { color: rgba(15,23,42,0.5) !important; }
+    .notif-icon-btn {
+      border-color: rgba(15,23,42,0.1) !important;
+      background: rgba(15,23,42,0.05) !important;
+      color: rgba(15,23,42,0.65) !important;
+    }
+    .notif-markread-btn {
+      color: #d97706 !important;
+      background: rgba(245,158,11,0.1) !important;
+      border-color: rgba(245,158,11,0.25) !important;
+    }
+    .notif-divider {
+      background: linear-gradient(90deg, transparent, rgba(15,23,42,0.1) 20%, rgba(15,23,42,0.1) 80%, transparent) !important;
+    }
+    .notif-empty-icon { color: rgba(15,23,42,0.2) !important; }
+    .notif-empty-title { color: rgba(15,23,42,0.75) !important; }
+    .notif-empty-sub { color: rgba(15,23,42,0.5) !important; }
+    .notif-panel-item {
+      border-color: rgba(15,23,42,0.08) !important;
+      background: #ffffff !important;
+      color: #0f172a !important;
+      &.is-unread {
+        background: #fffdf3 !important;
+        border-color: rgba(245,158,11,0.24) !important;
+        &::before { background: #d97706 !important; }
+      }
+    }
+    .notif-item-avatar {
+      background: rgba(15,23,42,0.045) !important;
+      border-color: rgba(15,23,42,0.08) !important;
+      color: rgba(15,23,42,0.5) !important;
+      &.is-unread {
+        background: rgba(245,158,11,0.16) !important;
+        border-color: rgba(245,158,11,0.25) !important;
+        color: #d97706 !important;
+      }
+    }
+    .notif-item-title { color: #0f172a !important; }
+    .notif-new-badge { color: #ffffff !important; background: #d97706 !important; }
+    .notif-item-msg { color: rgba(15,23,42,0.48) !important; }
+    .notif-item-meta { color: rgba(15,23,42,0.32) !important; }
+    .notif-item-chevron { color: rgba(15,23,42,0.24) !important; }
+    .notif-back-btn { color: #d97706 !important; }
+    .notif-detail-hero-glow {
+      background: radial-gradient(ellipse at 50% 0%, rgba(245,158,11,0.1) 0%, transparent 65%) !important;
+    }
+    .notif-detail-hero-icon-wrap {
+      background: rgba(245,158,11,0.2) !important;
+      border-color: rgba(245,158,11,0.28) !important;
+      box-shadow: 0 8px 32px rgba(245,158,11,0.14) !important;
+      color: #d97706 !important;
+    }
+    .notif-detail-hero-title { color: #0f172a !important; }
+    .notif-detail-hero-date {
+      color: rgba(15,23,42,0.46) !important;
+      background: rgba(15,23,42,0.05) !important;
+      border-color: rgba(15,23,42,0.08) !important;
+    }
+    .notif-detail-body-wrap {
+      background: rgba(15,23,42,0.03) !important;
+      border-color: rgba(15,23,42,0.07) !important;
+    }
+    .notif-detail-body { color: #0f172a !important; }
+    .notif-home-guide {
+      background: rgba(15,23,42,0.03) !important;
+      border-color: rgba(15,23,42,0.08) !important;
+    }
+    .notif-home-title { color: #d97706 !important; }
+    .notif-home-num {
+      background: rgba(245,158,11,0.1) !important;
+      border-color: rgba(245,158,11,0.25) !important;
+      color: #d97706 !important;
+    }
+    .notif-home-text { color: #0f172a !important; }
+
+    /* Stat Card Detail Dropdown (Dashboard → tapping a "This Month" stat
+       card). Same portal issue as everything else in this ion-modal block:
+       dashboard.page.scss's own .stat-detail-* rules are literal dark-mode
+       colors (see the comment above .stat-detail-sheet there) because
+       ion-modal content is portaled to document.body, outside this
+       component's DOM subtree — :host-scoped CSS variables and
+       :host-context(body.light-theme) can never reach it. This is the only
+       place its light-theme colors can live, mirroring the amber-accent
+       mapping used for the Notifications panel just above. */
+    .stat-detail-sheet {
+      &.theme-sessions { border-top-color: #d97706 !important; }
+      &.theme-streak   { border-top-color: #c2410c !important; }
+      &.theme-avg      { border-top-color: #2563eb !important; }
+      &.theme-upcoming { border-top-color: #16a34a !important; }
+    }
+    .stat-detail-icon-wrap {
+      background: rgba(15,23,42,0.06) !important;
+      border-color: rgba(15,23,42,0.12) !important;
+      color: #0f172a !important;
+    }
+    .stat-detail-sheet.theme-sessions {
+      .stat-detail-icon-wrap { background: rgba(217,119,6,0.12) !important; border-color: rgba(217,119,6,0.28) !important; color: #d97706 !important; }
+      .stat-detail-hero-icon, .stat-detail-badge, .stat-detail-hero-value { color: #d97706 !important; }
+    }
+    .stat-detail-sheet.theme-streak {
+      .stat-detail-icon-wrap { background: rgba(194,65,12,0.12) !important; border-color: rgba(194,65,12,0.28) !important; color: #c2410c !important; }
+      .stat-detail-hero-icon, .stat-detail-badge, .stat-detail-hero-value { color: #c2410c !important; }
+    }
+    .stat-detail-sheet.theme-avg {
+      .stat-detail-icon-wrap { background: rgba(37,99,235,0.12) !important; border-color: rgba(37,99,235,0.28) !important; color: #2563eb !important; }
+      .stat-detail-hero-icon, .stat-detail-badge, .stat-detail-hero-value { color: #2563eb !important; }
+    }
+    .stat-detail-sheet.theme-upcoming {
+      .stat-detail-icon-wrap { background: rgba(22,163,74,0.12) !important; border-color: rgba(22,163,74,0.28) !important; color: #16a34a !important; }
+      .stat-detail-hero-icon, .stat-detail-badge, .stat-detail-hero-value { color: #16a34a !important; }
+    }
+    .stat-detail-hero-icon {
+      background: rgba(15,23,42,0.05) !important;
+      border-color: rgba(15,23,42,0.1) !important;
+    }
+    .stat-detail-list-item {
+      background: rgba(15,23,42,0.03) !important;
+      border-color: rgba(15,23,42,0.07) !important;
+    }
+    .stat-detail-badge {
+      background: rgba(15,23,42,0.05) !important;
+      border-color: rgba(15,23,42,0.1) !important;
+    }
+    .stat-detail-name { color: #0f172a !important; }
+    .stat-detail-meta { color: rgba(15,23,42,0.5) !important; }
+    .stat-detail-empty {
+      color: rgba(15,23,42,0.5) !important;
+      strong { color: #0f172a !important; }
+    }
+    .stat-detail-hero-value { color: #0f172a !important; }
+    .stat-detail-hero-caption { color: rgba(15,23,42,0.5) !important; }
+    .stat-detail-note {
+      color: rgba(15,23,42,0.55) !important;
+      background: rgba(15,23,42,0.03) !important;
+      border-color: rgba(15,23,42,0.08) !important;
+      ion-icon { color: rgba(15,23,42,0.5) !important; }
+    }
 
     /* Product detail / order modals (inventory) — !important on every
        declaration in this whole ion-modal block is intentional and load-

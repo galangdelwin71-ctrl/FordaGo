@@ -1,77 +1,46 @@
 // notification-panel.component.scss
 //
-// Self-contained styling for the shared notification dropdown.
-// Unlike page-level styles (e.g. dashboard.page.scss), this component does
-// NOT rely on a parent page's --dash-* variables, because it is dropped
-// into 6 different pages that don't all define them. It defines its own
-// scoped --panel-* variables in :host instead.
+// Self-contained styling for the shared notifications bottom sheet.
+//
+// IMPORTANT — no CSS custom properties (--var) or :host-context() here:
+// this content renders inside an inline <ion-modal>, and Ionic physically
+// relocates a presented modal's DOM out of this component's own subtree
+// (into an app-level overlay container) so it can stack above everything
+// regardless of where <ion-modal> was declared in the template. Once
+// relocated, those elements no longer have this component's :host as an
+// ancestor, so :host-scoped custom properties stop inheriting and
+// :host-context() stops matching — the exact failure mode documented at
+// length in src/global.scss for every other ion-modal in this app (search
+// "appended to <body>" there). Colors below are therefore literal values
+// (baked in at build time, not looked up at runtime), and the light-theme
+// variant lives in global.scss as a plain `body.light-theme ion-modal
+// .notif-*` override instead of a :host-context() block here, for the
+// same reason — see global.scss for that block; there is intentionally no
+// light-theme block in this file.
 
 :host {
-  --panel-yellow: #FFD600;
-  --panel-orange: #FF9500;
-  --panel-red: #FF4461;
-  --panel-bg: #0B0E1A;
-  --panel-text: #FFFFFF;
-  --panel-text-muted: rgba(255, 255, 255, 0.48);
-  --panel-text-faint: rgba(255, 255, 255, 0.30);
-  --panel-border: rgba(255, 255, 255, 0.08);
-  --panel-item-bg: rgba(255, 255, 255, 0.03);
-  --panel-item-border: rgba(255, 255, 255, 0.065);
-
   display: block;
 }
 
-// ── Overlay shell ─────────────────────────────────────────────
-.notif-overlay {
-  position: fixed;
-  inset-inline: 0;
-  top: 56px;
-  bottom: 64px;
-  z-index: 999;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  box-sizing: border-box;
-  overflow: hidden;
-  padding: 12px;
-  background: rgba(2, 3, 8, 0.72);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
-  animation: notifPanelFadeIn 0.18s ease both;
+// ── Modal shell ───────────────────────────────────────────────
+// Same ion-modal + .modal-sheet + .modal-handle pattern used by every
+// other bottom sheet in the app (see schedule.page.scss's Add Workout /
+// History / Week Plan modals), so this panel opens the same way: slides
+// up from the bottom, drag the handle (or tap outside) to dismiss.
+.modal-content {
+  --background: #0B0E1A;
 }
 
-@keyframes notifPanelFadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+.modal-sheet {
+  padding: 0 0 calc(18px + env(safe-area-inset-bottom));
 }
 
-// Real floating dropdown card: content-sized, anchored just under the
-// header, capped so it never grows past a reasonable dropdown footprint
-// even on tall/desktop-width viewports. `.notif-scroll-wrap` (flex: 1,
-// overflow-y: auto below) handles internal scrolling once content exceeds
-// max-height, so nothing here needs to change for that to keep working.
-.notif-overlay-card {
-  box-sizing: border-box;
-  width: 100%;
-  max-width: 380px;
-  height: auto;
-  max-height: min(70vh, 560px);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background: var(--panel-bg);
-  border-radius: 20px;
-  border: 1px solid var(--panel-border);
-  border-top: 2px solid transparent;
-  border-image: linear-gradient(90deg, var(--panel-yellow), transparent) 1;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.03);
-  transform-origin: top center;
-  animation: notifPanelDropIn 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-@keyframes notifPanelDropIn {
-  from { transform: translateY(-14px) scale(0.97); opacity: 0; }
-  to   { transform: translateY(0) scale(1); opacity: 1; }
+.modal-handle {
+  width: 36px;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.14);
+  margin: 14px auto 4px;
 }
 
 // ── Panel header ──────────────────────────────────────────────
@@ -79,8 +48,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px 10px;
-  flex-shrink: 0;
+  padding: 10px 16px 10px;
 }
 
 .notif-header-left {
@@ -102,19 +70,19 @@
 
 .notif-header-icon {
   font-size: 18px;
-  color: var(--panel-yellow);
+  color: #FFD600;
 }
 
 .notif-header-title {
   font-size: 15px;
   font-weight: 800;
-  color: var(--panel-text);
+  color: #FFFFFF;
   letter-spacing: -0.2px;
 }
 
 .notif-header-sub {
   font-size: 11px;
-  color: var(--panel-text-muted);
+  color: rgba(255, 255, 255, 0.5);
   font-weight: 500;
   margin-top: 1px;
 }
@@ -145,7 +113,7 @@
 }
 
 .notif-markread-btn {
-  color: var(--panel-yellow);
+  color: #FFD600;
   background: rgba(255, 214, 0, 0.08);
   border-color: rgba(255, 214, 0, 0.2);
 }
@@ -210,7 +178,7 @@
 
 .notif-empty-sub {
   font-size: 12px;
-  color: var(--panel-text-muted);
+  color: rgba(255, 255, 255, 0.5);
   text-align: center;
 }
 
@@ -223,10 +191,10 @@
   gap: 12px;
   margin-bottom: 8px;
   padding: 12px 10px;
-  border: 1px solid var(--panel-item-border);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
-  background: var(--panel-item-bg);
-  color: var(--panel-text);
+  background: rgba(255, 255, 255, 0.04);
+  color: #FFFFFF;
   text-align: left;
   appearance: none;
   -webkit-appearance: none;
@@ -245,7 +213,7 @@
       bottom: 10%;
       width: 3px;
       border-radius: 0 3px 3px 0;
-      background: var(--panel-yellow);
+      background: #FFD600;
     }
   }
 
@@ -268,7 +236,7 @@
   &.is-unread {
     background: rgba(255, 214, 0, 0.16);
     border-color: rgba(255, 214, 0, 0.22);
-    color: var(--panel-yellow);
+    color: #FFD600;
   }
 }
 
@@ -285,15 +253,15 @@
 .notif-item-title {
   font-size: 14px;
   font-weight: 700;
-  color: var(--panel-text);
+  color: #FFFFFF;
   flex: 1;
 }
 
 .notif-new-badge {
   font-size: 9px;
   font-weight: 800;
-  color: var(--panel-bg);
-  background: var(--panel-yellow);
+  color: #0B0E1A;
+  background: #FFD600;
   border-radius: 20px;
   padding: 2px 7px;
   letter-spacing: 0.3px;
@@ -341,7 +309,7 @@
   gap: 4px;
   background: none;
   border: none;
-  color: var(--panel-yellow);
+  color: #FFD600;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -380,7 +348,7 @@
   display: grid;
   place-items: center;
   font-size: 28px;
-  color: var(--panel-yellow);
+  color: #FFD600;
   margin-bottom: 16px;
   box-shadow: 0 8px 32px rgba(255, 214, 0, 0.15);
   position: relative;
@@ -389,7 +357,7 @@
 .notif-detail-hero-title {
   font-size: 17px;
   font-weight: 800;
-  color: var(--panel-text);
+  color: #FFFFFF;
   letter-spacing: -0.3px;
   margin-bottom: 10px;
   position: relative;
@@ -440,7 +408,7 @@
   align-items: center;
   gap: 6px;
   font-size: 11px;
-  color: var(--panel-yellow);
+  color: #FFD600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 10px;
@@ -462,7 +430,7 @@
   border-radius: 5px;
   background: rgba(255, 214, 0, 0.1);
   border: 1px solid rgba(255, 214, 0, 0.25);
-  color: var(--panel-yellow);
+  color: #FFD600;
   font-size: 9px;
   font-weight: 700;
   display: inline-flex;
@@ -478,125 +446,11 @@
 }
 
 // ── Light mode ────────────────────────────────────────────────
-// This component is dropped into pages that toggle `body.light-theme` /
-// `html.light-theme`, so it mirrors the color mapping used in
-// dashboard.page.scss's own light-theme block for these same .notif-*
-// classes (amber accent instead of yellow, dark text on light surfaces).
-:host-context(body.light-theme),
-:host-context(html.light-theme) {
-  --panel-yellow: #D97706;
-  --panel-orange: #C2410C;
-  --panel-red: #DC2626;
-  --panel-bg: #F8F9FB;
-  --panel-text: #0F172A;
-  --panel-text-muted: rgba(15, 23, 42, 0.50);
-  --panel-text-faint: rgba(15, 23, 42, 0.34);
-  --panel-border: rgba(15, 23, 42, 0.09);
-  --panel-item-bg: #FFFFFF;
-  --panel-item-border: rgba(15, 23, 42, 0.08);
-
-  .notif-overlay {
-    background: rgba(15, 23, 42, 0.28);
-  }
-
-  .notif-overlay-card {
-    border-image: linear-gradient(90deg, var(--panel-yellow), transparent) 1;
-    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(15, 23, 42, 0.03);
-  }
-
-  .notif-header-icon-wrap {
-    background: rgba(245, 158, 11, 0.16);
-    border-color: rgba(245, 158, 11, 0.25);
-  }
-
-  .notif-icon-btn {
-    border-color: rgba(15, 23, 42, 0.1);
-    background: rgba(15, 23, 42, 0.05);
-    color: rgba(15, 23, 42, 0.65);
-  }
-
-  .notif-markread-btn {
-    background: rgba(245, 158, 11, 0.1);
-    border-color: rgba(245, 158, 11, 0.25);
-  }
-
-  .notif-divider {
-    background: linear-gradient(90deg, transparent, rgba(15, 23, 42, 0.1) 20%, rgba(15, 23, 42, 0.1) 80%, transparent);
-  }
-
-  .notif-empty-icon {
-    color: rgba(15, 23, 42, 0.2);
-  }
-
-  .notif-empty-title {
-    color: rgba(15, 23, 42, 0.75);
-  }
-
-  .notif-panel-item {
-    &.is-unread {
-      background: #FFFDF3;
-      border-color: rgba(245, 158, 11, 0.24);
-    }
-  }
-
-  .notif-item-avatar {
-    background: rgba(15, 23, 42, 0.045);
-    border-color: rgba(15, 23, 42, 0.08);
-    color: rgba(15, 23, 42, 0.50);
-
-    &.is-unread {
-      background: rgba(245, 158, 11, 0.16);
-      border-color: rgba(245, 158, 11, 0.25);
-    }
-  }
-
-  .notif-item-msg {
-    color: rgba(15, 23, 42, 0.48);
-  }
-
-  .notif-item-meta {
-    color: rgba(15, 23, 42, 0.32);
-  }
-
-  .notif-item-chevron {
-    color: rgba(15, 23, 42, 0.24);
-  }
-
-  .notif-detail-hero-glow {
-    background: radial-gradient(ellipse at 50% 0%, rgba(245, 158, 11, 0.1) 0%, transparent 65%);
-  }
-
-  .notif-detail-hero-icon-wrap {
-    background: rgba(245, 158, 11, 0.2);
-    border-color: rgba(245, 158, 11, 0.28);
-    box-shadow: 0 8px 32px rgba(245, 158, 11, 0.14);
-  }
-
-  .notif-detail-hero-date {
-    color: rgba(15, 23, 42, 0.46);
-    background: rgba(15, 23, 42, 0.05);
-    border-color: rgba(15, 23, 42, 0.08);
-  }
-
-  .notif-detail-body-wrap {
-    background: rgba(15, 23, 42, 0.03);
-    border-color: rgba(15, 23, 42, 0.07);
-  }
-
-  .notif-detail-body {
-    color: #0F172A;
-  }
-
-  .notif-home-guide {
-    background: rgba(15, 23, 42, 0.03);
-    border-color: rgba(15, 23, 42, 0.08);
-  }
-
-  .notif-home-item .notif-home-num {
-    color: var(--panel-yellow);
-  }
-
-  .notif-home-item .notif-home-text {
-    color: #0F172A;
-  }
-}
+// Deliberately NOT here. This content is portaled by Ionic out of this
+// component's DOM subtree when the modal presents (see header comment),
+// so a :host-context(body.light-theme) block here would never match —
+// it would be dead code. The light-theme override for every .notif-*
+// class below lives in global.scss instead, under a plain
+// `body.light-theme ion-modal { ... }` selector, matching how every
+// other bottom-sheet modal in this app (Add Workout, History, Week Plan,
+// etc.) handles the same portal issue.

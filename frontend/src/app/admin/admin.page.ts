@@ -4,7 +4,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { NoNegativeDirective } from '../directives/no-negative.directive';
 import QRCode from 'qrcode';
 import jsPDF from 'jspdf';
@@ -166,6 +167,19 @@ export class AdminPage implements OnInit {
   attendanceToday:   any[] = [];
   attendancePending: any[] = [];
   equipmentScanLogs: any[] = [];
+  // Loading/error flags -- kept separate from an empty array so the
+  // template (and whoever's debugging) can tell "genuinely no records for
+  // this date" apart from "the request failed" instead of both collapsing
+  // into the same empty-state message. Previously every one of these three
+  // lists' error handlers just silently reset to `[]`, which is exactly
+  // what made a dead API_BASE_URL / offline ngrok tunnel indistinguishable
+  // from an ordinary empty day.
+  attendancePendingLoading = false;
+  attendancePendingError   = false;
+  attendanceTodayLoading   = false;
+  attendanceTodayError     = false;
+  equipmentScanLogsLoading = false;
+  equipmentScanLogsError   = false;
   selectedReportDate = '';
   gymQrCode = 'FORDAGO_GYM_CHECKIN_V1';
   gymQrImageUrl = '';
@@ -258,9 +272,18 @@ export class AdminPage implements OnInit {
     });
 
     // Attendance — pending daily payments
+    this.attendancePendingLoading = true;
+    this.attendancePendingError   = false;
     this.http.get<any[]>(`${this.api}/attendance/pending`, { headers }).subscribe({
-      next: data => this.attendancePending = data,
-      error: () => this.attendancePending = []
+      next: data => {
+        this.attendancePendingLoading = false;
+        this.attendancePending = data;
+      },
+      error: () => {
+        this.attendancePendingLoading = false;
+        this.attendancePendingError   = true;
+        this.attendancePending = [];
+      }
     });
 
     this.loadDailyReports();
@@ -278,14 +301,32 @@ export class AdminPage implements OnInit {
     const headers = { Authorization: `Bearer ${this.auth.token}` };
     const date = this.selectedReportDate || this.toIsoDate(new Date());
 
+    this.attendanceTodayLoading = true;
+    this.attendanceTodayError   = false;
     this.http.get<any[]>(`${this.api}/attendance/by-date?date=${encodeURIComponent(date)}`, { headers }).subscribe({
-      next: data => this.attendanceToday = data,
-      error: () => this.attendanceToday = []
+      next: data => {
+        this.attendanceTodayLoading = false;
+        this.attendanceToday = data;
+      },
+      error: () => {
+        this.attendanceTodayLoading = false;
+        this.attendanceTodayError   = true;
+        this.attendanceToday = [];
+      }
     });
 
+    this.equipmentScanLogsLoading = true;
+    this.equipmentScanLogsError   = false;
     this.http.get<any[]>(`${this.api}/equipment/scan-logs?date=${encodeURIComponent(date)}`, { headers }).subscribe({
-      next: data => this.equipmentScanLogs = data,
-      error: () => this.equipmentScanLogs = []
+      next: data => {
+        this.equipmentScanLogsLoading = false;
+        this.equipmentScanLogs = data;
+      },
+      error: () => {
+        this.equipmentScanLogsLoading = false;
+        this.equipmentScanLogsError   = true;
+        this.equipmentScanLogs = [];
+      }
     });
   }
 
@@ -689,15 +730,9 @@ export class AdminPage implements OnInit {
 
     try {
       const headers = { Authorization: `Bearer ${this.auth.token}` };
-      const response = await fetch(`${this.api}/attendance/qr-code`, {
-        headers,
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to load attendance QR payload.');
-      }
-
-      const data = await response.json();
+      const data = await firstValueFrom(
+        this.http.get<{ qr_code?: string }>(`${this.api}/attendance/qr-code`, { headers })
+      );
       const qrValue = String(data?.qr_code || '').trim();
 
       if (!qrValue) {
@@ -715,7 +750,17 @@ export class AdminPage implements OnInit {
       });
     } catch (error) {
       this.gymQrImageUrl = '';
-      this.qrCodeError = error instanceof Error ? error.message : 'Failed to generate QR code.';
+      // HttpErrorResponse (network/CORS/4xx/5xx) vs a plain Error (empty
+      // payload above) need different messages -- a raw HttpErrorResponse's
+      // own .message is a generic "Http failure response for ..." string
+      // that isn't useful to a non-technical admin reading this on screen.
+      if (error instanceof HttpErrorResponse) {
+        this.qrCodeError = error.status === 0
+          ? 'Could not reach the server. Check that the backend/tunnel is running and API_BASE_URL is correct.'
+          : `Server error (${error.status}) while loading the QR code.`;
+      } else {
+        this.qrCodeError = error instanceof Error ? error.message : 'Failed to generate QR code.';
+      }
     } finally {
       this.isLoadingQrCode = false;
     }

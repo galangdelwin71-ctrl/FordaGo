@@ -1,5 +1,5 @@
 // profile.page.ts
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -14,12 +14,10 @@ import {
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
 import { ProfileService, UserProfile } from '../services/profile.service';
-import { WorkoutTrackerService } from '../services/workout-tracker.service';
 import { ThemeService } from '../services/theme.service';
 import { NoNegativeDirective } from '../directives/no-negative.directive';
 import { HeaderComponent } from '../shared/header/header.component';
 import { NotificationPanelComponent } from '../shared/notification-panel/notification-panel.component';
-import { Subscription } from 'rxjs';
 import { API_BASE_URL } from '../config/api.config';
 
 // ── Interfaces ────────────────────────────────────────
@@ -71,7 +69,7 @@ export interface ProgressHistoryItem {
     NotificationPanelComponent,
   ],
 })
-export class ProfilePage implements OnInit, OnDestroy {
+export class ProfilePage implements OnInit {
 
   // ── Member Profile ────────────────────────────────────
   profile: MemberProfile = {
@@ -91,7 +89,6 @@ export class ProfilePage implements OnInit, OnDestroy {
   editForm: Partial<MemberProfile> = {};
   phoneInvalid = false;
   savingProfile = false;
-  private profileStatsSubscription?: Subscription;
 
   // ── Password Form ─────────────────────────────────────
   passwordForm = {
@@ -99,12 +96,6 @@ export class ProfilePage implements OnInit, OnDestroy {
     new:      '',
     confirm:  '',
   };
-
-  // ── Stats ─────────────────────────────────────────────
-  sessionsThisMonth = 0;
-  dayStreak         = 0;
-  daysLeft          = 0;
-  avgMinutes        = 0;
 
   // ── Notification Settings ─────────────────────────────
   notificationSettings: NotificationSetting[] = [
@@ -152,7 +143,6 @@ export class ProfilePage implements OnInit, OnDestroy {
     public router: Router,
     private auth: AuthService,
     private http: HttpClient,
-    private workoutTracker: WorkoutTrackerService,
     private themeService: ThemeService
   ) {}
 
@@ -162,21 +152,12 @@ export class ProfilePage implements OnInit, OnDestroy {
       return;
     }
     this.loadProfile();
-    this.refreshProgressStats();
     this.isDarkMode = this.themeService.isDarkMode();
-    this.profileStatsSubscription = this.workoutTracker.updates$.subscribe(() => {
-      this.refreshProgressStats();
-    });
-  }
-
-  ngOnDestroy(): void {
-    this.profileStatsSubscription?.unsubscribe();
   }
 
   ionViewWillEnter(): void {
     if (!this.auth.user) return;
     this.loadProfile();
-    this.refreshProgressStats();
   }
 
   // ── Profile Management ────────────────────────────────
@@ -190,16 +171,11 @@ export class ProfilePage implements OnInit, OnDestroy {
     const expiryRaw      = (user as any).membership_expiry || null;
 
     let expiryDate = membershipType === 'daily' ? 'Pay per visit' : 'N/A';
-    let daysLeft   = 0;
     if (expiryRaw) {
       const exp = new Date(expiryRaw);
-      const now = new Date();
-      const diff = Math.ceil((exp.getTime() - now.getTime()) / 86400000);
-      daysLeft   = Math.max(diff, 0);
       expiryDate = exp.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     }
 
-    this.daysLeft = daysLeft;
     const safePhone = this.normalizePhone((user as any).phone || '');
     this.profile = {
       ...this.profile,
@@ -350,6 +326,11 @@ export class ProfilePage implements OnInit, OnDestroy {
 
   removeProfileImage(): void {
     this.editForm.profileImage = '';
+  }
+
+  // ── Getters ───────────────────────────────────────────
+  get fullName(): string {
+    return `${this.profile.firstName} ${this.profile.lastName}`;
   }
 
   private buildInitials(first: string, last: string): string {
@@ -505,65 +486,5 @@ export class ProfilePage implements OnInit, OnDestroy {
     // Already on profile, no navigation needed
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  // ── Getters ───────────────────────────────────────────
-  get fullName(): string {
-    return `${this.profile.firstName} ${this.profile.lastName}`;
-  }
-
-  get daysUntilExpiry(): number {
-    // In a real app, calculate from expiryDate
-    return this.daysLeft;
-  }
-
-  private getDateKey(date: Date): string {
-    return this.workoutTracker.getDateKey(date);
-  }
-
-  private durationToMinutes(duration: string): number {
-    const match = duration.match(/(\d+)/);
-    return match ? Number(match[1]) : 0;
-  }
-
-  private refreshProgressStats(): void {
-    const store = this.workoutTracker.syncStoreStatuses();
-    const allEntries: Array<{ sessionDate: Date; session: any }> = [];
-
-    Object.keys(store).forEach((key) => {
-      const sessions = store[key] ?? [];
-      const [year, month, day] = key.split('-').map(Number);
-      const sessionDate = new Date(year, month, day);
-      sessions.forEach((session) => {
-        allEntries.push({ sessionDate, session });
-      });
-    });
-
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-    const completedThisMonth = allEntries.filter((item) =>
-      item.session.status === 'done' &&
-      item.sessionDate.getMonth() === currentMonth &&
-      item.sessionDate.getFullYear() === currentYear
-    );
-
-    this.sessionsThisMonth = completedThisMonth.length;
-    const completedMinutes = completedThisMonth.reduce((total, item) => {
-      return total + this.durationToMinutes(item.session.duration || '0');
-    }, 0);
-    this.avgMinutes = completedThisMonth.length ? Math.round(completedMinutes / completedThisMonth.length) : 0;
-
-    let streak = 0;
-    const cursor = new Date(now);
-    cursor.setHours(0, 0, 0, 0);
-    while (true) {
-      const cursorKey = this.getDateKey(cursor);
-      const daySessions = store[cursorKey] ?? [];
-      if (!daySessions.some((session: any) => session.status === 'done')) break;
-      streak += 1;
-      cursor.setDate(cursor.getDate() - 1);
-    }
-    this.dayStreak = streak;
   }
 }

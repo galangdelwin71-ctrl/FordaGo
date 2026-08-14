@@ -63,7 +63,33 @@ export class WorkoutTrackerService {
     'Rest Day': ['10 min Light Walk', '5 min Deep Breathing', 'Foam Roll 15 min', 'Hydrate and rest'],
   };
   private syncTimer: ReturnType<typeof setInterval> | null = null;
+  // Precise per-session timers (see scheduleMissedChecks()) so a session
+  // flips to 'missed' and fires its notification the INSTANT its scheduled
+  // time passes, instead of waiting for the next periodic syncStoreStatuses()
+  // poll below.
+  private missedCheckTimers: ReturnType<typeof setTimeout>[] = [];
   private updatesSubject = new BehaviorSubject<number>(Date.now());
+
+  /**
+   * Day keys that seedCurrentMonthIfNeeded() just filled with a BLIND
+   * default placeholder because the local store had absolutely nothing
+   * for that day — the normal case being a fresh install/reinstall,
+   * since localStorage does not survive that on Android/iOS (Capacitor
+   * WebView storage lives inside the app's private data directory, which
+   * an uninstall wipes). Each placeholder gets a brand-new random id
+   * (see buildSeededSession()), so on its own, pullFromServer()'s normal
+   * id-matched merge can never find it and would just PUSH the member's
+   * real synced history in ALONGSIDE the placeholder instead of
+   * replacing it — leaving two sessions for that day and making the
+   * dashboard/schedule appear to have "reverted to default" even though
+   * the real data was safely on the server the whole time.
+   *
+   * The next pullFromServer() call checks this set and REPLACES (not
+   * appends) local sessions for these specific days before falling back
+   * to normal per-id merge behavior. Cleared once a pull has resolved
+   * (successfully) so it never affects unrelated future syncs.
+   */
+  private pendingServerReconcileKeys = new Set<string>();
 
   readonly updates$ = this.updatesSubject.asObservable();
 
@@ -80,13 +106,19 @@ export class WorkoutTrackerService {
     // the full month — not just whatever days happened to already exist.
     this.seedCurrentMonthIfNeeded();
     this.syncStoreStatuses();
+    // Explicit call (not just relying on writeStore()'s own call below):
+    // if every session was already correctly seeded/synced on this boot,
+    // syncStoreStatuses() never calls writeStore() at all (nothing
+    // `changed`), so nothing would otherwise schedule today's precise
+    // missed-check timers on a fresh app launch.
+    this.scheduleMissedChecks();
     if (this.syncTimer) {
       return;
     }
 
     this.syncTimer = setInterval(() => {
       this.syncStoreStatuses();
-    }, 60000);
+    }, 15000);
   }
 
   /**
@@ -128,6 +160,7 @@ export class WorkoutTrackerService {
 
       store[key] = this.buildDaySessions(dayIdx, template);
       changed = true;
+      this.pendingServerReconcileKeys.add(key);
     }
 
     if (changed) {
@@ -300,6 +333,11 @@ export class WorkoutTrackerService {
   writeStore(store: Record<string, StoredWorkoutSession[]>): void {
     localStorage.setItem(this.getScopedStorageKey(), JSON.stringify(this.normalizeStore(store)));
     this.updatesSubject.next(Date.now());
+    // Re-derive today's precise missed-check timers from whatever just
+    // changed (new session added, time edited, session started/stopped/
+    // marked done, a session just flipped to 'missed', etc.) so they never
+    // drift out of sync with the actual store contents.
+    this.scheduleMissedChecks();
   }
 
   // ── Backend sync (Stage 2) ───────────────────────────────────────────
@@ -327,9 +365,20 @@ export class WorkoutTrackerService {
         })
       );
 
-      if (!Array.isArray(rows) || rows.length === 0) return;
+      if (!Array.isArray(rows) || rows.length === 0) {
+        // Nothing on the server at all for this user. Any day still
+        // marked pending simply has no server history to reconcile
+        // against, so the local default placeholder stands as-is —
+        // settle those keys so future pulls treat them normally again.
+        this.pendingServerReconcileKeys.clear();
+        return;
+      }
 
       const store = this.readStore();
+      // Tracks which pending keys this pass has already replaced, so a day
+      // with MULTIPLE server rows gets them all appended onto the same
+      // fresh array instead of each row wiping out the previous one.
+      const replacedThisPass = new Set<string>();
 
       rows.forEach((row) => {
         const isoDate = String(row.session_date || '').slice(0, 10);
@@ -337,6 +386,17 @@ export class WorkoutTrackerService {
         if (!y || !m || !d) return;
         // Rebuild the internal 0-indexed-month key from the real date.
         const key = `${y}-${m - 1}-${d}`;
+
+        // A day that was just blind-seeded (see pendingServerReconcileKeys)
+        // gets its local placeholder session(s) discarded entirely on the
+        // FIRST server row that lands for it this pass — the member's real
+        // synced history replaces the guess instead of sitting duplicated
+        // next to it. Subsequent rows for the same day in this same pass
+        // then append normally onto that now-real array.
+        if (this.pendingServerReconcileKeys.has(key) && !replacedThisPass.has(key)) {
+          store[key] = [];
+          replacedThisPass.add(key);
+        }
 
         const daySessions = store[key] ?? [];
         const idx = daySessions.findIndex((s) => s.id === row.client_session_id);
@@ -374,9 +434,22 @@ export class WorkoutTrackerService {
         store[key] = daySessions;
       });
 
+      // Every key that was pending reconciliation is now settled for this
+      // successful pull: either a row replaced its blind placeholder above,
+      // or (if the server simply had nothing for that day) the placeholder
+      // is correct as-is. Either way, later pulls should go back to normal
+      // id-matched merge/append behavior for these days rather than
+      // treating them as pending again.
+      this.pendingServerReconcileKeys.clear();
+
       this.writeStore(store);
     } catch {
       // Offline or server unreachable — local cache is still usable.
+      // Deliberately NOT clearing pendingServerReconcileKeys here: a day
+      // that was blind-seeded but never got a chance to reconcile should
+      // still get replaced by the next successful pull (e.g. next page
+      // view, or once connectivity returns), not silently treated as
+      // final.
     }
   }
 
@@ -583,7 +656,10 @@ export class WorkoutTrackerService {
       const [hours, minutes] = this.to24(session.timeVal, session.timeAmpm).split(':').map(Number);
       const sessionMinutes = hours * 60 + minutes;
       const nowMinutes = now.getHours() * 60 + now.getMinutes();
-      if (nowMinutes > sessionMinutes + 30) {
+      // No grace period: a session becomes 'missed' the moment its
+      // scheduled time passes (member request — previously waited 30 min
+      // past the scheduled time before flagging it).
+      if (nowMinutes > sessionMinutes) {
         return 'missed';
       }
     }
@@ -634,6 +710,74 @@ export class WorkoutTrackerService {
     }
 
     return store;
+  }
+
+  /** Cancels every pending precise missed-check timer (see scheduleMissedChecks()) without scheduling new ones. */
+  private clearMissedCheckTimers(): void {
+    this.missedCheckTimers.forEach((timer) => clearTimeout(timer));
+    this.missedCheckTimers = [];
+  }
+
+  /**
+   * Schedules one precise setTimeout per still-upcoming session TODAY,
+   * firing exactly when that session's scheduled time arrives so it flips
+   * to 'missed' (and its notification sends) the instant the time passes
+   * — no waiting for the next periodic syncStoreStatuses() poll in
+   * startAutoSync(), which could otherwise add up to that poll interval's
+   * worth of visible delay between "time's up" and the notification.
+   *
+   * The periodic poll is kept running as a safety net on top of this —
+   * it still catches: a pending setTimeout getting delayed/dropped by the
+   * OS while the app is backgrounded, the day rolling over past midnight,
+   * and any session this method skipped for not yet being scheduled. This
+   * method is what makes the common case (member actively using / running
+   * in the foreground when the clock hits the scheduled time) fire
+   * immediately instead of up to ~15s late.
+   *
+   * Always re-derived from the CURRENT store rather than diffed against
+   * the previous schedule, so it's simplest and safest to just clear and
+   * rebuild every time it's called (see writeStore(), which calls this on
+   * every mutation) — the number of sessions in a single day is always
+   * small, so this is cheap.
+   */
+  private scheduleMissedChecks(): void {
+    this.clearMissedCheckTimers();
+
+    const store = this.readStore();
+    const now = new Date();
+    const todayKey = this.getDateKey(now);
+    const todaySessions = store[todayKey] ?? [];
+
+    todaySessions.forEach((session) => {
+      // Same exemptions as autoComputeStatus()/syncStoreStatuses(): a
+      // session that's already done/missed, a rest day, or currently being
+      // actively timed never needs a missed-check scheduled for it.
+      if (session.status === 'done' || session.status === 'missed' || session.isRestDay || session.startedAt) {
+        return;
+      }
+
+      const [hours, minutes] = this.to24(session.timeVal, session.timeAmpm).split(':').map(Number);
+      if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+        return; // malformed time on this session — nothing precise to schedule, periodic poll still covers it
+      }
+
+      const scheduledAt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0, 0);
+      const msUntilDue = scheduledAt.getTime() - now.getTime();
+
+      // Already due right now (e.g. this ran moments after the scheduled
+      // time, or a session was just edited into the past) — whatever wrote
+      // the store already has (or is about to have, via its own call chain)
+      // a syncStoreStatuses() pass covering this moment; scheduling a
+      // zero/negative-delay timer here would just race it redundantly.
+      if (msUntilDue <= 0) {
+        return;
+      }
+
+      const timer = setTimeout(() => {
+        this.syncStoreStatuses();
+      }, msUntilDue);
+      this.missedCheckTimers.push(timer);
+    });
   }
 
   private getScopedStorageKey(): string {

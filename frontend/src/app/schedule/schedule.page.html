@@ -58,10 +58,18 @@
       <div class="empty-sub">Tap + to schedule a workout</div>
     </div>
 
-    <!-- Session Cards -->
+    <!-- Session Cards: shows just the TOP session by default; tapping
+         "View all" below reveals every session for this day (mirrors the
+         same pattern on the Dashboard page). Not-yet-done sessions surface
+         first automatically -- see sortedSessions/displayedSessions in
+         schedule.page.ts. `i` here is just the display position (used for
+         the stagger animation); every action below resolves the REAL
+         index into this.sessions via sessionIndex(s), since displayedSessions
+         is a sorted/sliced VIEW whose positions don't line up with the
+         underlying array. -->
     <div class="sessions-list">
       <div
-        *ngFor="let s of sessions; let i = index"
+        *ngFor="let s of displayedSessions; let i = index"
         class="session-card"
         [class.missed]="s.status === 'missed'"
         [class.done]="s.status === 'done'"
@@ -123,22 +131,22 @@
 
           <!-- Card Action Buttons -->
           <div class="card-actions">
-            <button class="action-btn primary" (click)="toggleEditPanel(i, $event)">
+            <button class="action-btn primary" (click)="toggleEditPanel(sessionIndex(s), $event)">
               <ion-icon name="create-outline"></ion-icon>
-              {{ expandedCard === i ? 'Close' : 'Edit' }}
+              {{ expandedCard === sessionIndex(s) ? 'Close' : 'Edit' }}
             </button>
-            <button class="action-btn" (click)="cycleStatus(i, $event)">
+            <button class="action-btn" (click)="cycleStatus(sessionIndex(s), $event)">
               <ion-icon name="checkmark-outline"></ion-icon>
               {{ s.status === 'done' ? 'Undo' : 'Mark Done' }}
             </button>
-            <button class="action-btn danger" (click)="deleteSession(i, $event)">
+            <button class="action-btn danger" (click)="deleteSession(sessionIndex(s), $event)">
               <ion-icon name="trash-outline"></ion-icon>
               Delete
             </button>
           </div>
 
           <!-- Inline Edit Panel -->
-          <div class="edit-panel" [class.open]="expandedCard === i">
+          <div class="edit-panel" [class.open]="expandedCard === sessionIndex(s)">
             <div class="edit-row">
               <input
                 class="edit-input"
@@ -190,13 +198,25 @@
             </div>
 
             <div class="edit-actions">
-              <button class="edit-save" (click)="saveEdit(i)">Save changes</button>
-              <button class="edit-delete" (click)="deleteSession(i, $event)">Remove</button>
+              <button class="edit-save" (click)="saveEdit(sessionIndex(s))">Save changes</button>
+              <button class="edit-delete" (click)="deleteSession(sessionIndex(s), $event)">Remove</button>
             </div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- "View all" toggle: only shown once there's more than one session
+         for the selected day, since with just one there's nothing extra to
+         reveal. Mirrors the Dashboard page's workout-view-all-btn. -->
+    <button
+      type="button"
+      class="session-view-all-btn"
+      *ngIf="sessions.length > 1"
+      (click)="toggleShowAllSessions()">
+      <span>{{ showAllSessions ? 'Show less' : 'View all ' + sessions.length + ' sessions' }}</span>
+      <ion-icon [name]="showAllSessions ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+    </button>
 
     <!-- Home Workout Suggestion (shown when a session is missed) -->
     <div class="hw-card" *ngIf="homeWorkout.visible && missedSessions">
@@ -333,6 +353,52 @@
               <input type="time" [(ngModel)]="newWorkoutTime" (ngModelChange)="newWorkoutTimeWarning = ''" />
             </div>
             <div class="field-warning" *ngIf="newWorkoutTimeWarning">{{ newWorkoutTimeWarning }}</div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Duration</label>
+          <div class="duration-input-row">
+            <div class="field-wrap duration-field-wrap">
+              <span class="field-icon">⏱</span>
+              <input
+                type="number"
+                inputmode="decimal"
+                appNoNegative
+                [min]="newWorkoutDurationUnit === 'hrs' ? 0.25 : 1"
+                [max]="newWorkoutDurationUnit === 'hrs' ? 8 : 480"
+                [step]="newWorkoutDurationUnit === 'hrs' ? 0.25 : 1"
+                pattern="[0-9]*\.?[0-9]*"
+                [placeholder]="newWorkoutDurationUnit === 'hrs' ? 'e.g. 1.5' : 'e.g. 45'"
+                [ngModel]="newWorkoutDurationInputValue"
+                (ngModelChange)="onDurationInputChange($event)" />
+            </div>
+            <!-- Min / Hrs unit toggle — switches how the number above is
+                 interpreted; the underlying stored duration always stays in
+                 minutes so nothing elsewhere in the app needs to change. -->
+            <div class="duration-unit-toggle">
+              <button
+                type="button"
+                class="duration-unit-btn"
+                [class.active]="newWorkoutDurationUnit === 'min'"
+                (click)="onDurationUnitChange('min')">Min</button>
+              <button
+                type="button"
+                class="duration-unit-btn"
+                [class.active]="newWorkoutDurationUnit === 'hrs'"
+                (click)="onDurationUnitChange('hrs')">Hrs</button>
+            </div>
+          </div>
+          <!-- Quick presets — tap to fill the field above, or just type any
+               specific duration (in minutes or hours) instead. -->
+          <div class="target-suggestions">
+            <span
+              *ngFor="let d of durationOptions"
+              class="target-chip"
+              [class.selected]="newWorkoutDuration === d"
+              (click)="selectDurationPreset(d)">
+              {{ d }}
+            </span>
           </div>
         </div>
 

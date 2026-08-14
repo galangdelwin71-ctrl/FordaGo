@@ -200,6 +200,44 @@ ion-content {
   gap: 8px;
 }
 
+// "View all sessions" toggle -- shown below the single displayed session
+// card when more than one session is scheduled for the selected day.
+// Mirrors .workout-view-all-btn on the Dashboard page: a plain outlined
+// pill (not filled like .fab-btn/.btn-yellow) so it reads as a
+// secondary/expand action, not a primary CTA.
+.session-view-all-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 11px;
+  margin: 4px 0 4px;
+  border-radius: 14px;
+  background: var(--overlay-light);
+  border: 1px solid var(--border-secondary);
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  transition: opacity 150ms ease, transform 150ms ease;
+
+  &:hover {
+    color: var(--text-primary);
+    border-color: var(--border-primary);
+  }
+
+  &:active {
+    opacity: 0.7;
+    transform: scale(0.98);
+  }
+
+  ion-icon {
+    font-size: 16px;
+  }
+}
+
 // ── Session Card ─────────────────────────────────────────
 .session-card {
   background: var(--overlay-light);
@@ -795,7 +833,7 @@ ion-content {
 
 .field-label {
   display: block;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   color: rgba(255,255,255,0.5);
   text-transform: uppercase;
@@ -819,7 +857,11 @@ ion-content {
     position: absolute;
     left: 12px;
     font-size: 14px;
-    color: rgba(255,255,255,0.5);
+    // Was a dim rgba(255,255,255,0.5) — barely visible against the dark
+    // modal background. Switched to the app's accent yellow so the
+    // Workout Type / Target / Date / Time / Coach / Location icons in the
+    // Add Workout & Week Plan modals actually stand out, per request.
+    color: #FFD600;
     z-index: 1;
     pointer-events: none;
   }
@@ -834,7 +876,7 @@ ion-content {
     padding-left: 38px;
     padding-right: 12px;
     color: #FFFFFF;
-    font-size: 13px;
+    font-size: 14px;
     outline: none;
     -webkit-appearance: none;
     appearance: none;
@@ -851,6 +893,53 @@ ion-content {
   color: #FF6B6B;
   margin-top: 6px;
   font-weight: 500;
+}
+
+// ── Duration field (free-typing minutes/hours input + unit toggle) ───────
+// .duration-field-wrap reuses .field-wrap's existing input styling as-is.
+// .duration-input-row lays it out next to the Min/Hrs segmented toggle.
+.duration-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .duration-field-wrap {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.duration-unit-toggle {
+  flex-shrink: 0;
+  display: flex;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 3px;
+  height: 44px;
+  box-sizing: border-box;
+}
+
+.duration-unit-btn {
+  min-width: 44px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+
+  &.active {
+    background: #FFD600;
+    color: #111317;
+  }
+
+  &:not(.active):hover {
+    color: rgba(255, 255, 255, 0.8);
+  }
 }
 
 // ── Target Suggestions (chips) ────────────────────────────
@@ -1092,6 +1181,12 @@ ion-content {
     color: rgba(15,23,42,0.45);
     background: rgba(15,23,42,0.04);
     border-color: rgba(15,23,42,0.09);
+  }
+  .session-view-all-btn {
+    background: rgba(15,23,42,0.04);
+    border-color: rgba(15,23,42,0.1);
+    color: rgba(15,23,42,0.55);
+    &:hover { color: #0f172a; border-color: rgba(15,23,42,0.18); }
   }
   .icon-action-btn {
     background: rgba(15,23,42,0.05);
@@ -1433,7 +1528,7 @@ ion-content {
 }
 
 .edit-exercises-title {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   color: rgba(255,255,255,0.5);
   text-transform: uppercase;
@@ -1468,30 +1563,36 @@ ion-content {
 }
 
 .edit-exercise-row {
+  // Widened sets/reps columns so 2-digit + "10-12"-style ranges fit
+  // without clipping; delete button matched to the taller input height.
   display: grid;
-  grid-template-columns: 1fr 44px 60px 26px;
-  gap: 5px;
+  grid-template-columns: 1fr 58px 84px 30px;
+  gap: 6px;
   align-items: center;
 }
 
 .ex-edit-name,
 .ex-edit-sets,
 .ex-edit-reps {
-  height: 30px;
+  // Base style — no dark/light scoping here, so this benefits both themes.
+  // Enlarged from 32px/12.5px per request: rows were too small to read
+  // comfortably, especially the Sets/Reps fields.
+  height: 38px;
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.09);
   border-radius: 8px;
-  padding: 0 8px;
+  padding: 0 9px;
   color: #FFFFFF;
-  font-size: 11px;
+  font-size: 14px;
   outline: none;
   width: 100%;
   &:focus { border-color: rgba(255,214,0,0.25); }
 }
 
 .ex-del-btn {
-  width: 26px;
-  height: 26px;
+  // Matched to the new 38px row height so it stays vertically centered.
+  width: 30px;
+  height: 30px;
   border-radius: 7px;
   background: rgba(239,68,68,0.08);
   border: 0.5px solid rgba(239,68,68,0.18);
@@ -1500,7 +1601,7 @@ ion-content {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  ion-icon { font-size: 13px; }
+  ion-icon { font-size: 14px; }
   &:active { opacity: 0.7; }
 }
 
@@ -2455,6 +2556,20 @@ ion-content.fordago-page-content {
     color: #000000 !important;
     font-size: 12px !important;
     font-weight: 800 !important;
+  }
+
+  /* "Leave empty to use recommended exercises..." hint under My Exercises
+     (Optional). Same root cause as every other rule in this block: the
+     base (dark-mode) .wplan-exercises-empty rule near the top of this file
+     sets near-white text with no !important, and this class was missing
+     from this override block, so light mode showed white-on-white — i.e.
+     invisible, not just faint. Solid black per request so it's actually
+     readable. */
+  .wplan-exercises-empty {
+    color: #000000 !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    opacity: 0.75 !important;
   }
 }
 

@@ -1,5 +1,5 @@
 // schedule.page.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -12,6 +12,7 @@ import {
   IonModal,
 } from '@ionic/angular/standalone';
 import { HttpClient } from '@angular/common/http';
+import { Subscription } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { NotificationCenterService } from '../services/notification-center.service';
 import { WorkoutTrackerService } from '../services/workout-tracker.service';
@@ -112,7 +113,7 @@ export interface WorkoutHistoryItem {
     NotificationPanelComponent,
   ],
 })
-export class SchedulePage implements OnInit {
+export class SchedulePage implements OnInit, OnDestroy {
 
   private readonly api = API_BASE_URL;
   profileImage = '';
@@ -212,6 +213,7 @@ export class SchedulePage implements OnInit {
 
   weekDays: DayItem[] = [];
   sessions: WorkoutSession[] = [];
+  private trackerSubscription?: Subscription;
 
   monthLabel        = '';
   selectedDayLabel  = '';
@@ -220,6 +222,74 @@ export class SchedulePage implements OnInit {
   expandedCard: number | null = null;
   editBuffer: EditBuffer = { timeRaw: '', duration: '', coach: '', location: '', customTarget: '', exercises: [] };
 
+  // Sessions list for the selected day shows only ONE session card by
+  // default — tapping "View all" below it expands to show every session
+  // scheduled that day. Mirrors the same pattern on the Dashboard page.
+  showAllSessions = false;
+
+  toggleShowAllSessions(): void {
+    this.showAllSessions = !this.showAllSessions;
+    // Closing back to the single-card view can hide whichever session was
+    // mid-edit; close the edit panel too so it never stays open on a card
+    // the member can no longer see.
+    this.expandedCard = null;
+  }
+
+  /**
+   * Sort priority used by sortedSessions below: still-actionable sessions
+   * (upcoming/optional — the member can still do these) always rank above
+   * 'missed' (already past, can't be completed on time anymore), which in
+   * turn ranks above 'done' (already finished — nothing left to do here).
+   * Keeping missed sessions out of the same bucket as upcoming ones (the
+   * old behavior) let an old missed morning session sit above an
+   * actionable session later today just because it happened earlier in
+   * the day — confusing, since the actionable one is what the member
+   * actually needs to see first.
+   */
+  private statusSortRank(status: SessionStatus): number {
+    if (status === 'done') return 2;
+    if (status === 'missed') return 1;
+    return 0; // upcoming / optional — still actionable
+  }
+
+  /**
+   * this.sessions sorted by statusSortRank first (actionable → missed →
+   * done), then by scheduled time ascending within each group — so the
+   * next thing the member can actually still do is always what's on top /
+   * shown first, resolved sessions (missed or done) sink below it.
+   */
+  get sortedSessions(): WorkoutSession[] {
+    return [...this.sessions].sort((a, b) => {
+      const rankDiff = this.statusSortRank(a.status) - this.statusSortRank(b.status);
+      if (rankDiff !== 0) return rankDiff;
+
+      const aTime = this.to24(a.timeVal, a.timeAmpm);
+      const bTime = this.to24(b.timeVal, b.timeAmpm);
+      return aTime.localeCompare(bTime);
+    });
+  }
+
+  /** What the template actually renders: just the top card unless the member has tapped "View all". */
+  get displayedSessions(): WorkoutSession[] {
+    const sorted = this.sortedSessions;
+    return this.showAllSessions ? sorted : sorted.slice(0, 1);
+  }
+
+  /**
+   * Real index of a session within the unsorted this.sessions array. The
+   * template iterates displayedSessions — a sorted/sliced VIEW — but every
+   * existing action method (toggleEditPanel, cycleStatus, deleteSession,
+   * saveEdit, expandedCard tracking) is index-based against this.sessions,
+   * so the template resolves the real index through this helper rather than
+   * using the display loop's own index, which would no longer line up.
+   * Sorting is done via a shallow copy ([...this.sessions].sort(...)), so
+   * elements are the SAME object references — indexOf() reliably finds
+   * the matching entry.
+   */
+  sessionIndex(session: WorkoutSession): number {
+    return this.sessions.indexOf(session);
+  }
+
   // ── Add modal ─────────────────────────────────────────────
   addModalOpen             = false;
   newWorkoutType           = 'Upper Body';
@@ -227,6 +297,20 @@ export class SchedulePage implements OnInit {
   newWorkoutDate           = '';
   newWorkoutTime           = '';
   newWorkoutDuration       = '60 min';
+  // Backing numeric value for the free-typing duration input in the Add
+  // Workout modal (see onDurationInputChange/selectDurationPreset below).
+  // Kept in sync with newWorkoutDuration (the "NN min" string every other
+  // part of the app — saveWorkout(), session display, durationToMinutes()
+  // parsing — already expects) so nothing downstream needed to change.
+  newWorkoutDurationMinutes: number | null = 60;
+  // Unit currently shown in the Min/Hrs toggle. Purely a display concern —
+  // newWorkoutDurationMinutes (and therefore newWorkoutDuration) always
+  // stays in minutes no matter which unit is selected.
+  newWorkoutDurationUnit: 'min' | 'hrs' = 'min';
+  // Raw value bound to the duration <input>, interpreted according to
+  // newWorkoutDurationUnit. Kept separate from newWorkoutDurationMinutes so
+  // the field can hold a decimal (e.g. "1.5" hrs) without it being truncated.
+  newWorkoutDurationInputValue: number | null = 60;
   newWorkoutCoach          = '';
   newWorkoutLocation       = 'Gym Floor B';
   newWorkoutExercises: Exercise[] = [];
@@ -264,6 +348,21 @@ export class SchedulePage implements OnInit {
     this.seedMonthSessions();
     this.buildWeekStrip();
     this.renderSessions();
+    // Keep the displayed sessions in sync with the tracker's background
+    // store even while the member stays on this page without navigating
+    // away and back — e.g. the periodic 15s status poll in
+    // WorkoutTrackerService.startAutoSync() flipping a session to 'missed'
+    // the moment its scheduled time passes. Calls refreshSessionsView()
+    // (read-only) rather than renderSessions() on purpose: renderSessions()
+    // always re-saves via saveSessionsForDate() — which itself fires this
+    // same updates$ stream — so wiring it directly here would recurse.
+    this.trackerSubscription = this.workoutTracker.updates$.subscribe(() => {
+      this.refreshSessionsView();
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.trackerSubscription?.unsubscribe();
   }
 
   ionViewWillEnter(): void {
@@ -373,7 +472,12 @@ export class SchedulePage implements OnInit {
     const store = this.readStoredSessions();
     const key = this.dateKey(dayDate);
     const saved = store[key];
-    if (saved?.length) {
+    // Check key EXISTENCE, not array length — an empty array here means
+    // the member intentionally deleted every session for this day (now a
+    // rest day) and must stay empty. Checking `.length` treated that
+    // empty-but-present array the same as "never seeded" (0 is falsy),
+    // which silently re-seeded deleted sessions back on the next render.
+    if (saved) {
       return saved.map(session => this.normalizeSession(session));
     }
 
@@ -525,6 +629,7 @@ export class SchedulePage implements OnInit {
     day.active            = true;
     this.selectedDayIndex = index;
     this.expandedCard     = null;
+    this.showAllSessions  = false;
     this.renderSessions();
   }
 
@@ -532,6 +637,7 @@ export class SchedulePage implements OnInit {
     this.baseDate = new Date(this.baseDate);
     this.baseDate.setDate(this.baseDate.getDate() - 7);
     this.selectedDayIndex = 0;
+    this.showAllSessions  = false;
     this.buildWeekStrip();
     this.renderSessions();
   }
@@ -540,6 +646,7 @@ export class SchedulePage implements OnInit {
     this.baseDate = new Date(this.baseDate);
     this.baseDate.setDate(this.baseDate.getDate() + 7);
     this.selectedDayIndex = 0;
+    this.showAllSessions  = false;
     this.buildWeekStrip();
     this.renderSessions();
   }
@@ -568,6 +675,32 @@ export class SchedulePage implements OnInit {
     this.sessions = all.map(session => this.normalizeSession(session));
     this.saveSessionsForDate(dayDate, this.sessions);
     this.selectedDayLabel = `${this.DAY_NAMES[dayDate.getDay()]}, ${this.MONTH_NAMES[dayDate.getMonth()]} ${dayDate.getDate()}`;
+
+    const missed = this.sessions.find(s => s.status === 'missed');
+    this.homeWorkout = missed
+      ? { visible: true, exercises: this.getHomeWorkoutListForTitle(missed.title), sessionTitle: missed.title }
+      : { visible: false, exercises: [], sessionTitle: '' };
+  }
+
+  /**
+   * Read-only counterpart to renderSessions(): re-reads the SELECTED day's
+   * sessions straight from the tracker store and refreshes what's shown,
+   * without writing anything back. Used by the updates$ subscription in
+   * ngOnInit() so a background status change (missed-poll, server pull,
+   * another push) shows up immediately here even if the member never
+   * leaves/re-enters this page. Deliberately skipped if the selected day
+   * has no store entry yet — seeding/normal renderSessions() owns that
+   * path, this method only mirrors what's already there.
+   */
+  private refreshSessionsView(): void {
+    const selected = this.weekDays[this.selectedDayIndex];
+    const dayDate = selected?.date ?? this.baseDate;
+    const key = this.dateKey(dayDate);
+    const store = this.readStoredSessions();
+    const daySessions = store[key];
+    if (!daySessions) return;
+
+    this.sessions = daySessions.map(session => this.normalizeSession(session));
 
     const missed = this.sessions.find(s => s.status === 'missed');
     this.homeWorkout = missed
@@ -683,6 +816,9 @@ export class SchedulePage implements OnInit {
     this.newWorkoutDate          = `${d.getFullYear()}-${mm}-${dd}`;
     this.newWorkoutTime          = '07:00';
     this.newWorkoutDuration      = '60 min';
+    this.newWorkoutDurationMinutes = 60;
+    this.newWorkoutDurationUnit  = 'min';
+    this.newWorkoutDurationInputValue = 60;
     this.newWorkoutCoach         = '';
     this.newWorkoutLocation      = 'Gym Floor B';
     this.newWorkoutCustomTarget  = '';
@@ -755,6 +891,72 @@ export class SchedulePage implements OnInit {
     const h12 = hour % 12 || 12;
     const minStr = min.toString().padStart(2, '0');
     return `${h12}:${minStr} ${ampm}`;
+  }
+
+  private clampDurationMinutes(value: number): number {
+    if (!Number.isFinite(value)) return 1;
+    return Math.min(480, Math.max(1, Math.round(value)));
+  }
+
+  /**
+   * Fires on every keystroke in the free-typing Duration field. The typed
+   * value is interpreted according to newWorkoutDurationUnit (min or hrs)
+   * and converted to minutes for newWorkoutDurationMinutes/newWorkoutDuration
+   * (the "NN min" string saveWorkout() actually persists) — everything
+   * downstream of those two keeps working exactly as before, regardless of
+   * which unit the member is typing in.
+   *
+   * Allows a temporarily empty/invalid field while the member is still
+   * typing (e.g. clearing "60" to type "45", or "1" to type "1.5") without
+   * snapping back to a stale value mid-edit — newWorkoutDuration simply
+   * keeps its last valid value until a valid positive number is entered
+   * again. NaN is never assigned to newWorkoutDurationInputValue so the
+   * bound <input> can't be pushed into an invalid state.
+   */
+  onDurationInputChange(value: number | string | null): void {
+    if (value === null || value === '') {
+      this.newWorkoutDurationInputValue = null;
+      return;
+    }
+    const numeric = Number(value);
+    if (Number.isNaN(numeric)) {
+      return; // unparseable — ignore and keep the last valid state
+    }
+    this.newWorkoutDurationInputValue = numeric;
+    if (numeric <= 0) {
+      // Mid-typing a value like "0.5" passes through "0" first — let it
+      // through without touching the canonical minutes/duration yet.
+      return;
+    }
+    const minutesValue = this.newWorkoutDurationUnit === 'hrs' ? numeric * 60 : numeric;
+    const clamped = this.clampDurationMinutes(minutesValue);
+    this.newWorkoutDurationMinutes = clamped;
+    this.newWorkoutDuration = `${clamped} min`;
+  }
+
+  /**
+   * Handles the Min/Hrs toggle. Re-derives the displayed input value from
+   * the current canonical minutes so switching units never loses or
+   * corrupts the underlying duration — e.g. 90 min becomes "1.5" when
+   * switching to Hrs, and switching back shows "90" again.
+   */
+  onDurationUnitChange(unit: 'min' | 'hrs'): void {
+    if (this.newWorkoutDurationUnit === unit) return;
+    this.newWorkoutDurationUnit = unit;
+    const minutes = this.newWorkoutDurationMinutes ?? this.clampDurationMinutes(60);
+    this.newWorkoutDurationInputValue = unit === 'hrs'
+      ? Math.round((minutes / 60) * 100) / 100 // e.g. 90 min -> 1.5
+      : minutes;
+  }
+
+  /** Tapping a quick-preset chip fills the display string and numeric input (always in minutes) in one step. */
+  selectDurationPreset(preset: string): void {
+    const match = preset.match(/(\d+)/);
+    const minutes = match ? this.clampDurationMinutes(Number(match[1])) : this.newWorkoutDurationMinutes;
+    this.newWorkoutDurationMinutes = minutes;
+    this.newWorkoutDuration = preset;
+    this.newWorkoutDurationUnit = 'min';
+    this.newWorkoutDurationInputValue = minutes;
   }
 
   // ── Template helpers ──────────────────────────────────────
@@ -868,7 +1070,7 @@ export class SchedulePage implements OnInit {
   addExerciseToBuffer(): void {
     this.editBuffer.exercises = [
       ...this.editBuffer.exercises,
-      { name: '', sets: 3, reps: '10-12' },
+      { name: '', sets: null as unknown as number, reps: '' },
     ];
   }
 
@@ -914,7 +1116,7 @@ export class SchedulePage implements OnInit {
   addWeekPlanExercise(dayIndex: number): void {
     this.weekPlanDays[dayIndex].exercises = [
       ...(this.weekPlanDays[dayIndex].exercises ?? []),
-      { name: '', sets: 3, reps: '10-12' },
+      { name: '', sets: null as unknown as number, reps: '' },
     ];
   }
 
@@ -923,7 +1125,7 @@ export class SchedulePage implements OnInit {
   }
 
   addNewWorkoutExercise(): void {
-    this.newWorkoutExercises = [...this.newWorkoutExercises, { name: '', sets: 3, reps: '10-12' }];
+    this.newWorkoutExercises = [...this.newWorkoutExercises, { name: '', sets: null as unknown as number, reps: '' }];
   }
 
   removeNewWorkoutExercise(index: number): void {

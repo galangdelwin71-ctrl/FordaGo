@@ -573,7 +573,15 @@
         Pending Daily Payments
         <span class="badge-count" *ngIf="attendancePending.length">{{ attendancePending.length }}</span>
       </div>
-      <div class="empty-state" *ngIf="attendancePending.length === 0">No pending payments.</div>
+      <div class="empty-state" *ngIf="attendancePendingLoading">
+        <ion-spinner name="crescent"></ion-spinner> Loading pending payments...
+      </div>
+      <div class="empty-state" *ngIf="!attendancePendingLoading && attendancePendingError">
+        <ion-icon name="cloud-offline-outline" style="font-size:2rem;margin-bottom:8px;"></ion-icon><br/>
+        Could not load pending payments. Check the server connection.
+        <br/><button class="submit-btn" style="margin-top:12px" (click)="loadAll()">Retry</button>
+      </div>
+      <div class="empty-state" *ngIf="!attendancePendingLoading && !attendancePendingError && attendancePending.length === 0">No pending payments.</div>
       <div *ngFor="let a of attendancePending" class="attend-row pending-row">
         <div class="attend-info">
           <div class="attend-name">{{ a.username }}</div>
@@ -592,7 +600,15 @@
 
       <!-- Daily Check-ins -->
       <div class="section-label" style="margin-top:24px">Attendance Records ({{ selectedReportDate }})</div>
-      <div class="empty-state" *ngIf="attendanceToday.length === 0">No attendance records for this date.</div>
+      <div class="empty-state" *ngIf="attendanceTodayLoading">
+        <ion-spinner name="crescent"></ion-spinner> Loading attendance records...
+      </div>
+      <div class="empty-state" *ngIf="!attendanceTodayLoading && attendanceTodayError">
+        <ion-icon name="cloud-offline-outline" style="font-size:2rem;margin-bottom:8px;"></ion-icon><br/>
+        Could not load attendance records. Check the server connection.
+        <br/><button class="submit-btn" style="margin-top:12px" (click)="loadDailyReports()">Retry</button>
+      </div>
+      <div class="empty-state" *ngIf="!attendanceTodayLoading && !attendanceTodayError && attendanceToday.length === 0">No attendance records for this date.</div>
       <div *ngFor="let a of attendanceToday" class="attend-row">
         <div class="attend-info">
           <div class="attend-name">{{ a.username }}</div>
@@ -606,7 +622,15 @@
 
       <!-- Equipment Scan Records -->
       <div class="section-label" style="margin-top:24px">Equipment QR Scan Records ({{ selectedReportDate }})</div>
-      <div class="empty-state" *ngIf="equipmentScanLogs.length === 0">No equipment scans for this date.</div>
+      <div class="empty-state" *ngIf="equipmentScanLogsLoading">
+        <ion-spinner name="crescent"></ion-spinner> Loading equipment scan records...
+      </div>
+      <div class="empty-state" *ngIf="!equipmentScanLogsLoading && equipmentScanLogsError">
+        <ion-icon name="cloud-offline-outline" style="font-size:2rem;margin-bottom:8px;"></ion-icon><br/>
+        Could not load equipment scan records. Check the server connection.
+        <br/><button class="submit-btn" style="margin-top:12px" (click)="loadDailyReports()">Retry</button>
+      </div>
+      <div class="empty-state" *ngIf="!equipmentScanLogsLoading && !equipmentScanLogsError && equipmentScanLogs.length === 0">No equipment scans for this date.</div>
       <div *ngFor="let log of equipmentScanLogs" class="attend-row">
         <div class="attend-info">
           <div class="attend-name">{{ log.username }}</div>

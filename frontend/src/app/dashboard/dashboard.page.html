@@ -80,7 +80,7 @@
     <div class="workout-count" *ngIf="todayWorkouts.length > 0">
       {{ todayWorkouts.length }} workout{{ todayWorkouts.length === 1 ? '' : 's' }} scheduled today
     </div>
-    <div class="card fade-up workout-card" *ngFor="let workout of todayWorkouts; let workoutIndex = index">
+    <div class="card fade-up workout-card" *ngFor="let workout of displayedTodayWorkouts">
       <div class="workout-header">
         <div class="workout-title-wrap">
           <div>
@@ -107,13 +107,20 @@
         <ng-container *ngIf="isSessionTimerActive(workout)">
           <div class="session-timer-live">
             <span class="session-timer-dot"></span>
-            <span class="session-timer-value">{{ getElapsedLabel(workout) }}</span>
+            <span class="session-timer-value" [class.exceeded]="isDurationReached(workout)">{{ getElapsedLabel(workout) }}</span>
           </div>
           <button type="button" class="session-timer-btn stop" (click)="stopWorkoutSession(workout)">
             <ion-icon name="stop-outline"></ion-icon>
             <span>Stop</span>
           </button>
         </ng-container>
+      </div>
+      <!-- Duration-reached notice: informational only. The timer keeps running
+           and Stop stays manual — this never auto-ends the session, it just
+           lets the member know their set duration is up. -->
+      <div class="session-timer-alert" *ngIf="isSessionTimerActive(workout) && isDurationReached(workout)">
+        <ion-icon name="alarm-outline"></ion-icon>
+        <span>Duration reached — keep going or tap Stop whenever you're ready.</span>
       </div>
       <div class="session-timer-done" *ngIf="workout.status === 'done' && workout.actualMinutes">
         <ion-icon name="checkmark-circle-outline"></ion-icon>
@@ -129,7 +136,7 @@
         *ngFor="let ex of workout.exercises; let i = index"
         [class.completed]="ex.done"
         [class.disabled]="workout.status === 'missed' || !isWorkoutStillActive(workout.time)"
-        (click)="toggleExercise(workoutIndex, i)">
+        (click)="toggleExercise(workout, i)">
         <div class="ex-dot" [style.background]="ex.color"></div>
         <div class="ex-name">{{ ex.name }}</div>
         <div class="ex-detail">{{ ex.sets }} × {{ ex.reps }}</div>
@@ -142,6 +149,16 @@
         <span class="workout-progress-label">{{ getCompletedExercises(workout) }}/{{ workout.exercises.length }} done</span>
       </div>
     </div>
+    <!-- "View all" toggle: only shown once there's more than one session
+         today, since with just one there's nothing extra to reveal. -->
+    <button
+      type="button"
+      class="workout-view-all-btn fade-up"
+      *ngIf="todayWorkouts.length > 1"
+      (click)="toggleShowAllWorkouts()">
+      <span>{{ showAllWorkouts ? 'Show less' : 'View all ' + todayWorkouts.length + ' sessions' }}</span>
+      <ion-icon [name]="showAllWorkouts ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+    </button>
     <ng-template [ngIf]="todayWorkouts.length === 0" #noWorkout>
       <div class="card fade-up empty-state">
         <ion-icon name="moon-outline" class="empty-state-icon"></ion-icon>
@@ -278,51 +295,57 @@
   (unreadCountChange)="onUnreadCountChange($event)">
 </app-notification-panel>
 
-<!-- Stat Card Detail Overlay -->
-<!-- Tapping any "This Month" stat card opens this panel, themed to match that
-     card's accent color, with content specific to the stat that was tapped. -->
-<div class="notif-overlay" *ngIf="statDetailOpen" (click)="closeStatDetail()">
-  <div
-    class="notif-overlay-card stat-detail-card"
-    [class.theme-sessions]="statDetailOpen === 'sessions'"
-    [class.theme-streak]="statDetailOpen === 'streak'"
-    [class.theme-avg]="statDetailOpen === 'avg'"
-    [class.theme-upcoming]="statDetailOpen === 'upcoming'"
-    (click)="$event.stopPropagation()">
+<!-- Stat Card Detail Dropdown -->
+<!-- Tapping any "This Month" stat card opens this bottom-sheet dropdown --
+     same ion-modal pattern as the shared Notifications panel (see
+     shared/notification-panel/) -- themed to match that card's accent
+     color. No close button by design: dismiss by swiping the sheet down
+     or tapping the backdrop, same as the Notifications panel. -->
+<ion-modal
+  [isOpen]="!!statDetailOpen"
+  (didDismiss)="closeStatDetail()"
+  [breakpoints]="[0, 0.75, 1]"
+  [initialBreakpoint]="0.75">
+  <ng-template>
+    <ion-content class="modal-content">
+      <div
+        class="stat-detail-sheet"
+        [class.theme-sessions]="statDetailOpen === 'sessions'"
+        [class.theme-streak]="statDetailOpen === 'streak'"
+        [class.theme-avg]="statDetailOpen === 'avg'"
+        [class.theme-upcoming]="statDetailOpen === 'upcoming'">
+        <div class="modal-handle"></div>
 
-    <div class="notif-panel-header">
-      <div class="notif-header-left">
-        <div class="stat-detail-icon-wrap">
-          <ion-icon
-            [name]="statDetailOpen === 'sessions' ? 'barbell-outline'
-                   : statDetailOpen === 'streak'   ? (dayStreak > 0 ? 'flame' : 'flame-outline')
-                   : statDetailOpen === 'avg'      ? 'time-outline'
-                   : 'calendar-outline'">
-          </ion-icon>
-        </div>
-        <div>
-          <div class="notif-header-title">
-            {{ statDetailOpen === 'sessions' ? 'Sessions This Month'
-             : statDetailOpen === 'streak'   ? 'Day Streak'
-             : statDetailOpen === 'avg'      ? 'Avg Min / Session'
-             : 'Upcoming Schedules' }}
+        <div class="notif-panel-header">
+          <div class="notif-header-left">
+            <div class="stat-detail-icon-wrap">
+              <ion-icon
+                [name]="statDetailOpen === 'sessions' ? 'barbell-outline'
+                       : statDetailOpen === 'streak'   ? (dayStreak > 0 ? 'flame' : 'flame-outline')
+                       : statDetailOpen === 'avg'      ? 'time-outline'
+                       : 'calendar-outline'">
+              </ion-icon>
+            </div>
+            <div>
+              <div class="notif-header-title">
+                {{ statDetailOpen === 'sessions' ? 'Sessions This Month'
+                 : statDetailOpen === 'streak'   ? 'Day Streak'
+                 : statDetailOpen === 'avg'      ? 'Avg Min / Session'
+                 : 'Upcoming Schedules' }}
+              </div>
+              <div class="notif-header-sub">
+                {{ statDetailOpen === 'sessions' ? (sessionsThisMonth + ' completed this month')
+                 : statDetailOpen === 'streak'   ? (dayStreak + (dayStreak === 1 ? ' day' : ' days') + ' in a row')
+                 : statDetailOpen === 'avg'      ? (avgMinutes + ' min average')
+                 : (upcomingCount + ' scheduled this month') }}
+              </div>
+            </div>
           </div>
-          <div class="notif-header-sub">
-            {{ statDetailOpen === 'sessions' ? (sessionsThisMonth + ' completed this month')
-             : statDetailOpen === 'streak'   ? (dayStreak + (dayStreak === 1 ? ' day' : ' days') + ' in a row')
-             : statDetailOpen === 'avg'      ? (avgMinutes + ' min average')
-             : (upcomingCount + ' scheduled this month') }}
-          </div>
         </div>
-      </div>
-      <button class="notif-icon-btn notif-dismiss-btn" (click)="closeStatDetail()" title="Close">
-        <ion-icon name="close-outline"></ion-icon>
-      </button>
-    </div>
 
-    <div class="notif-divider"></div>
+        <div class="notif-divider"></div>
 
-    <div class="notif-scroll-wrap">
+        <div class="notif-scroll-wrap">
 
       <!-- Sessions this month: full list of completed sessions -->
       <ng-container *ngIf="statDetailOpen === 'sessions'">
@@ -394,6 +417,61 @@
         </div>
       </ng-container>
 
+        </div>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<!-- Duration Reached Prompt -->
+<!-- Shown once per Start→Stop cycle when a running session's elapsed time
+     crosses its scheduled duration (see checkDurationAlerts() in
+     dashboard.page.ts, which also plays a beep at the same moment this
+     opens). Purely a prompt — the timer itself never stops on its own;
+     "Stop Session" here calls the same stopWorkoutSession() the card's own
+     Stop button uses, "Keep Going" just closes this and leaves the timer
+     running untouched. -->
+<div
+  class="notif-overlay"
+  *ngIf="durationPromptWorkout as promptWorkout"
+  (click)="dismissDurationPrompt()">
+  <div
+    class="notif-overlay-card duration-prompt-card"
+    role="alertdialog"
+    aria-modal="true"
+    [attr.aria-label]="'Duration reached for ' + promptWorkout.name"
+    (click)="$event.stopPropagation()">
+    <div class="notif-panel-header">
+      <div class="notif-header-left">
+        <div class="stat-detail-icon-wrap duration-prompt-icon">
+          <ion-icon name="alarm-outline"></ion-icon>
+        </div>
+        <div>
+          <div class="notif-header-title">Duration Reached</div>
+          <div class="notif-header-sub">{{ promptWorkout.name }} &middot; {{ promptWorkout.duration }} scheduled</div>
+        </div>
+      </div>
+      <button class="notif-icon-btn notif-dismiss-btn" (click)="dismissDurationPrompt()" title="Keep going">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+
+    <div class="notif-divider"></div>
+
+    <div class="notif-scroll-wrap">
+      <p class="duration-prompt-text">
+        You've reached your scheduled {{ promptWorkout.duration }} for {{ promptWorkout.name }}.
+        Stop here, or keep going &mdash; your timer keeps running either way.
+      </p>
+      <div class="duration-prompt-actions">
+        <button type="button" class="duration-prompt-stop-btn" (click)="stopSessionFromPrompt()">
+          <ion-icon name="stop-outline"></ion-icon>
+          <span>Stop Session</span>
+        </button>
+        <button type="button" class="duration-prompt-keep-btn" (click)="dismissDurationPrompt()">
+          Keep Going
+        </button>
+      </div>
     </div>
   </div>
 </div>

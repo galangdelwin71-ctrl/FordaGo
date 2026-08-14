@@ -1,137 +1,142 @@
 <!-- notification-panel.component.html -->
-<!-- Single shared notifications dropdown. Visibility is controlled by the
-     [isOpen] input on the root wrapper; internal list/detail switching is
+<!-- Single shared notifications bottom sheet. Visibility is controlled by
+     the [isOpen] input on ion-modal; internal list/detail switching is
      controlled by the component's own `view` state (not two separate
-     *ngIf overlays like the old per-page pattern). -->
-<div class="notif-overlay" *ngIf="isOpen" (click)="close()">
-  <div class="notif-overlay-card" (click)="$event.stopPropagation()">
+     *ngIf overlays like the old per-page pattern). Presented as an inline
+     ion-modal with breakpoints -- the same slide-up-from-bottom, drag-
+     handle, swipe-to-dismiss pattern already used by every other modal in
+     the app (see schedule.page.html's Add Workout / History / Week Plan
+     modals) -- instead of the previous centered dropdown card. -->
+<ion-modal
+  [isOpen]="isOpen"
+  (didDismiss)="close()"
+  [breakpoints]="[0, 0.75, 1]"
+  [initialBreakpoint]="0.75">
+  <ng-template>
+    <ion-content class="modal-content">
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
 
-    <!-- ── List view ─────────────────────────────────────────── -->
-    <ng-container *ngIf="view === 'list'; else detailView">
+        <!-- ── List view ─────────────────────────────────────────── -->
+        <ng-container *ngIf="view === 'list'; else detailView">
 
-      <div class="notif-panel-header">
-        <div class="notif-header-left">
-          <div class="notif-header-icon-wrap">
-            <ion-icon name="notifications" class="notif-header-icon"></ion-icon>
-          </div>
-          <div>
-            <div class="notif-header-title">Notifications</div>
-            <div class="notif-header-sub">
-              {{ unreadCount > 0 ? unreadCount + ' unread' : 'All caught up' }}
+          <div class="notif-panel-header">
+            <div class="notif-header-left">
+              <div class="notif-header-icon-wrap">
+                <ion-icon name="notifications" class="notif-header-icon"></ion-icon>
+              </div>
+              <div>
+                <div class="notif-header-title">Notifications</div>
+                <div class="notif-header-sub">
+                  {{ unreadCount > 0 ? unreadCount + ' unread' : 'All caught up' }}
+                </div>
+              </div>
+            </div>
+            <div class="notif-header-actions">
+              <button
+                type="button"
+                class="notif-icon-btn notif-markread-btn"
+                *ngIf="unreadCount > 0"
+                (click)="markAllRead()"
+                title="Mark all read"
+                aria-label="Mark all notifications as read">
+                <ion-icon name="checkmark-done-outline"></ion-icon>
+              </button>
+              <button
+                type="button"
+                class="notif-icon-btn notif-dismiss-btn"
+                (click)="close()"
+                title="Close"
+                aria-label="Close notifications">
+                <ion-icon name="close-outline"></ion-icon>
+              </button>
             </div>
           </div>
-        </div>
-        <div class="notif-header-actions">
-          <button
-            type="button"
-            class="notif-icon-btn notif-markread-btn"
-            *ngIf="unreadCount > 0"
-            (click)="markAllRead()"
-            title="Mark all read"
-            aria-label="Mark all notifications as read">
-            <ion-icon name="checkmark-done-outline"></ion-icon>
-          </button>
-          <button
-            type="button"
-            class="notif-icon-btn notif-dismiss-btn"
-            (click)="close()"
-            title="Close"
-            aria-label="Close notifications">
-            <ion-icon name="close-outline"></ion-icon>
-          </button>
-        </div>
-      </div>
 
-      <div class="notif-divider"></div>
+          <div class="notif-divider"></div>
 
-      <div class="notif-scroll-wrap">
-        <div class="notif-empty-state" *ngIf="notifications.length === 0">
-          <div class="notif-empty-glow"></div>
-          <ion-icon name="notifications-off-outline" class="notif-empty-icon"></ion-icon>
-          <div class="notif-empty-title">You're all caught up!</div>
-          <div class="notif-empty-sub">No new notifications right now.</div>
-        </div>
+          <div class="notif-scroll-wrap">
+            <div class="notif-empty-state" *ngIf="notifications.length === 0">
+              <div class="notif-empty-glow"></div>
+              <ion-icon name="notifications-off-outline" class="notif-empty-icon"></ion-icon>
+              <div class="notif-empty-title">You're all caught up!</div>
+              <div class="notif-empty-sub">No new notifications right now.</div>
+            </div>
 
-        <button
-          type="button"
-          class="notif-panel-item"
-          *ngFor="let notif of notifications"
-          [class.is-unread]="notif.unread"
-          (click)="openNotification(notif)">
-          <div class="notif-item-left">
-            <div class="notif-item-avatar" [class.is-unread]="notif.unread">
-              <ion-icon name="megaphone-outline"></ion-icon>
+            <button
+              type="button"
+              class="notif-panel-item"
+              *ngFor="let notif of notifications"
+              [class.is-unread]="notif.unread"
+              (click)="openNotification(notif)">
+              <div class="notif-item-left">
+                <div class="notif-item-avatar" [class.is-unread]="notif.unread">
+                  <ion-icon name="megaphone-outline"></ion-icon>
+                </div>
+              </div>
+              <div class="notif-item-body">
+                <div class="notif-item-top">
+                  <span class="notif-item-title">{{ notif.title }}</span>
+                  <span class="notif-new-badge" *ngIf="notif.unread">New</span>
+                </div>
+                <div class="notif-item-msg">{{ notif.message }}</div>
+                <div class="notif-item-meta" *ngIf="notif.createdAt">
+                  <ion-icon name="time-outline"></ion-icon>
+                  {{ notif.createdAt | date:'MMM d · h:mm a' }}
+                </div>
+              </div>
+              <div class="notif-item-chevron">
+                <ion-icon name="chevron-forward-outline"></ion-icon>
+              </div>
+            </button>
+          </div>
+
+        </ng-container>
+
+        <!-- ── Detail view ───────────────────────────────────────── -->
+        <ng-template #detailView>
+
+          <div class="notif-panel-header notif-detail-header">
+            <button type="button" class="notif-back-btn" (click)="backToList()">
+              <ion-icon name="chevron-back-outline"></ion-icon>
+              All Notifications
+            </button>
+          </div>
+
+          <div class="notif-scroll-wrap">
+            <div class="notif-detail-hero">
+              <div class="notif-detail-hero-glow"></div>
+              <div class="notif-detail-hero-icon-wrap">
+                <ion-icon name="megaphone-outline"></ion-icon>
+              </div>
+              <div class="notif-detail-hero-title">{{ selectedNotification?.title }}</div>
+              <div class="notif-detail-hero-date" *ngIf="selectedNotification?.createdAt">
+                <ion-icon name="time-outline"></ion-icon>
+                {{ selectedNotification?.createdAt | date:'MMMM d, y · h:mm a' }}
+              </div>
+            </div>
+
+            <div class="notif-detail-body-wrap">
+              <div class="notif-detail-body">{{ selectedNotification?.message }}</div>
+            </div>
+
+            <!-- Suggested home workouts, shown only when the notification carries
+                 them (currently: missed-workout alerts from NotificationCenterService). -->
+            <div class="notif-home-guide" *ngIf="(selectedNotification?.homeExercises?.length ?? 0) > 0">
+              <div class="notif-home-title">
+                <ion-icon name="barbell-outline"></ion-icon>
+                Suggested Home Workouts
+              </div>
+              <div class="notif-home-item" *ngFor="let ex of selectedNotification?.homeExercises; let i = index">
+                <span class="notif-home-num">{{ i + 1 }}</span>
+                <span class="notif-home-text">{{ ex }}</span>
+              </div>
             </div>
           </div>
-          <div class="notif-item-body">
-            <div class="notif-item-top">
-              <span class="notif-item-title">{{ notif.title }}</span>
-              <span class="notif-new-badge" *ngIf="notif.unread">New</span>
-            </div>
-            <div class="notif-item-msg">{{ notif.message }}</div>
-            <div class="notif-item-meta" *ngIf="notif.createdAt">
-              <ion-icon name="time-outline"></ion-icon>
-              {{ notif.createdAt | date:'MMM d · h:mm a' }}
-            </div>
-          </div>
-          <div class="notif-item-chevron">
-            <ion-icon name="chevron-forward-outline"></ion-icon>
-          </div>
-        </button>
+
+        </ng-template>
+
       </div>
-
-    </ng-container>
-
-    <!-- ── Detail view ───────────────────────────────────────── -->
-    <ng-template #detailView>
-
-      <div class="notif-panel-header notif-detail-header">
-        <button type="button" class="notif-back-btn" (click)="backToList()">
-          <ion-icon name="chevron-back-outline"></ion-icon>
-          All Notifications
-        </button>
-        <button
-          type="button"
-          class="notif-icon-btn notif-dismiss-btn"
-          (click)="close()"
-          title="Close"
-          aria-label="Close notifications">
-          <ion-icon name="close-outline"></ion-icon>
-        </button>
-      </div>
-
-      <div class="notif-scroll-wrap">
-        <div class="notif-detail-hero">
-          <div class="notif-detail-hero-glow"></div>
-          <div class="notif-detail-hero-icon-wrap">
-            <ion-icon name="megaphone-outline"></ion-icon>
-          </div>
-          <div class="notif-detail-hero-title">{{ selectedNotification?.title }}</div>
-          <div class="notif-detail-hero-date" *ngIf="selectedNotification?.createdAt">
-            <ion-icon name="time-outline"></ion-icon>
-            {{ selectedNotification?.createdAt | date:'MMMM d, y · h:mm a' }}
-          </div>
-        </div>
-
-        <div class="notif-detail-body-wrap">
-          <div class="notif-detail-body">{{ selectedNotification?.message }}</div>
-        </div>
-
-        <!-- Suggested home workouts, shown only when the notification carries
-             them (currently: missed-workout alerts from NotificationCenterService). -->
-        <div class="notif-home-guide" *ngIf="(selectedNotification?.homeExercises?.length ?? 0) > 0">
-          <div class="notif-home-title">
-            <ion-icon name="barbell-outline"></ion-icon>
-            Suggested Home Workouts
-          </div>
-          <div class="notif-home-item" *ngFor="let ex of selectedNotification?.homeExercises; let i = index">
-            <span class="notif-home-num">{{ i + 1 }}</span>
-            <span class="notif-home-text">{{ ex }}</span>
-          </div>
-        </div>
-      </div>
-
-    </ng-template>
-
-  </div>
-</div>
+    </ion-content>
+  </ng-template>
+</ion-modal>

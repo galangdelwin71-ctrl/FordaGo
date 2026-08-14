@@ -16,13 +16,14 @@
 // badge in sync, without touching HttpClient directly.
 import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonIcon } from '@ionic/angular/standalone';
+import { IonContent, IonIcon, IonModal } from '@ionic/angular/standalone';
+import { Subscription } from 'rxjs';
 import { NotificationCenterService, AppNotificationItem } from '../../services/notification-center.service';
 
 @Component({
   selector: 'app-notification-panel',
   standalone: true,
-  imports: [CommonModule, IonIcon],
+  imports: [CommonModule, IonContent, IonIcon, IonModal],
   templateUrl: './notification-panel.component.html',
   styleUrls: ['./notification-panel.component.scss'],
 })
@@ -41,8 +42,19 @@ export class NotificationPanelComponent implements OnInit, OnDestroy, OnChanges 
   view: 'list' | 'detail' = 'list';
   selectedNotification: AppNotificationItem | null = null;
 
-  private refreshTimer: ReturnType<typeof setInterval> | null = null;
-  private isDestroyed = false;
+  // Subscribes to NotificationCenterService's single shared poll/publish
+  // stream instead of running its own setInterval + loadNotifications()
+  // call. This component is embedded on nearly every page (dashboard,
+  // schedule, equipment, inventory, profile, qr-scanner), and since Ionic
+  // doesn't always fully destroy a previous page's component when
+  // navigating, an independent per-instance timer here meant several
+  // overlapping 15s polls could be live at once — each resolving at a
+  // slightly different time and racing to overwrite `notifications`,
+  // which is what made the list appear to reorder itself (an entry
+  // "jumping" from the middle to the edge, or splitting apart from a
+  // duplicate) between refreshes. One shared BehaviorSubject means every
+  // instance renders the exact same list at the exact same time.
+  private subscription?: Subscription;
 
   get unreadCount(): number {
     return this.notifications.filter((item) => item.unread).length;
@@ -51,51 +63,41 @@ export class NotificationPanelComponent implements OnInit, OnDestroy, OnChanges 
   constructor(private notificationCenter: NotificationCenterService) {}
 
   ngOnInit(): void {
-    // Load immediately (so the header badge is correct even before the
-    // panel is ever opened) and keep polling in the background, same
-    // cadence the dashboard previously used on its own.
-    void this.refresh();
-    this.refreshTimer = setInterval(() => {
-      void this.refresh();
-    }, 15000);
+    // Safe to call from every instance — only the first call actually
+    // starts the timer (see NotificationCenterService.startPolling()).
+    this.notificationCenter.startPolling();
+    this.subscription = this.notificationCenter.notifications$.subscribe((data) => {
+      this.notifications = data;
+      this.unreadCountChange.emit(this.unreadCount);
+    });
   }
 
   ngOnDestroy(): void {
-    this.isDestroyed = true;
-    if (this.refreshTimer) {
-      clearInterval(this.refreshTimer);
-      this.refreshTimer = null;
-    }
+    this.subscription?.unsubscribe();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['isOpen'] && this.isOpen) {
       this.view = 'list';
       this.selectedNotification = null;
-      void this.refresh();
+      void this.notificationCenter.refreshNotifications();
     }
-  }
-
-  private async refresh(): Promise<void> {
-    try {
-      const data = await this.notificationCenter.loadNotifications();
-      if (this.isDestroyed) return;
-      this.notifications = data;
-    } catch {
-      // Keep whatever was last loaded if a refresh fails; the badge/panel
-      // simply won't reflect brand-new notifications until the next tick.
-    }
-    this.unreadCountChange.emit(this.unreadCount);
   }
 
   close(): void {
     this.closed.emit();
   }
 
+  // NotificationCenterService.markAllRead()/markRead() now publish the
+  // updated read-state to the shared notifications$ stream themselves (see
+  // the service), so this component no longer needs to hand-mutate its own
+  // `notifications` array afterward — the subscription in ngOnInit() picks
+  // up the change automatically. Keeping a second, separate mutation here
+  // was itself a source of drift: if this local copy and the service's
+  // published copy ever disagreed (e.g. a poll landing in between), the
+  // panel could flash stale read/unread state for a tick.
   async markAllRead(): Promise<void> {
     await this.notificationCenter.markAllRead(this.notifications);
-    this.notifications = this.notifications.map((item) => ({ ...item, unread: false }));
-    this.unreadCountChange.emit(this.unreadCount);
   }
 
   async openNotification(notification: AppNotificationItem): Promise<void> {
@@ -108,12 +110,8 @@ export class NotificationPanelComponent implements OnInit, OnDestroy, OnChanges 
 
     await this.notificationCenter.markRead(notification);
 
-    this.notifications = this.notifications.map((item) => (
-      item.id === notification.id && item.source === notification.source
-        ? { ...item, unread: false }
-        : item
-    ));
-
+    // Keep the open detail view's own local copy in sync (it's a snapshot
+    // captured above, not part of the `notifications` array reference).
     if (
       this.selectedNotification &&
       this.selectedNotification.id === notification.id &&
@@ -121,8 +119,6 @@ export class NotificationPanelComponent implements OnInit, OnDestroy, OnChanges 
     ) {
       this.selectedNotification = { ...this.selectedNotification, unread: false };
     }
-
-    this.unreadCountChange.emit(this.unreadCount);
   }
 
   backToList(): void {

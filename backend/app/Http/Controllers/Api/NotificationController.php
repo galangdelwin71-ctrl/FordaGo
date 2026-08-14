@@ -35,18 +35,32 @@ class NotificationController extends Controller
 
     /**
      * GET /api/notifications
-     * Staff: all notifications. Members: own + broadcasts (user_id IS NULL).
+     * Staff: all notifications. Members: own notices (any time) + broadcasts
+     * (user_id IS NULL) that were sent on/after the member's own signup date.
+     * Without that second condition every member — including one who just
+     * created their account seconds ago — would see the FULL history of
+     * every broadcast/system notice ever sent (old QA/test broadcasts,
+     * announcements meant for a different cohort, etc.), which is not
+     * accurate for them.
      */
     public function index(Request $request)
     {
-        $isStaff = in_array($request->user()->role, ['admin', 'super_admin', 'employee'], true);
+        $user = $request->user();
+        $isStaff = in_array($user->role, ['admin', 'super_admin', 'employee'], true);
 
-        $rows = $isStaff
-            ? Notification::orderByDesc('created_at')->get()
-            : Notification::where(fn ($q) => $q
-                ->where('user_id', $request->user()->id)
-                ->orWhereNull('user_id')
-            )->orderByDesc('created_at')->get();
+        if ($isStaff) {
+            return response()->json(Notification::orderByDesc('created_at')->get());
+        }
+
+        $rows = Notification::where(fn ($q) => $q
+                ->where('user_id', $user->id)
+                ->orWhere(fn ($broadcast) => $broadcast
+                    ->whereNull('user_id')
+                    ->where('created_at', '>=', $user->created_at)
+                )
+            )
+            ->orderByDesc('created_at')
+            ->get();
 
         return response()->json($rows);
     }
@@ -83,6 +97,7 @@ class NotificationController extends Controller
         $sessionTitle  = trim((string) $request->input('sessionTitle', ''));
         $dayLabel      = trim((string) $request->input('dayLabel', ''));
         $homeExercises = is_array($request->input('homeExercises')) ? $request->input('homeExercises') : [];
+        $sessionKey    = trim((string) $request->input('sessionKey', ''));
 
         if (! $sessionTitle || ! $dayLabel) {
             return response()->json(['message' => 'sessionTitle and dayLabel are required.'], 400);
@@ -92,11 +107,24 @@ class NotificationController extends Controller
         $body  = "You missed your {$sessionTitle} session on {$dayLabel}.\n\n"
                . $this->formatHomeWorkoutList($homeExercises);
 
-        Notification::create([
-            'user_id' => $request->user()->id,
-            'title'   => $title,
-            'message' => $body,
-        ]);
+        // Dedup on (user_id, session_key) when the client sends one — the
+        // frontend already builds a stable key per session/day (see
+        // NotificationCenterService.notifyMissedWorkout()), so a retry or a
+        // reinstalled/cleared client re-reporting the same missed session
+        // updates the existing row instead of creating a duplicate. Falls
+        // back to a plain create() for older clients that don't send one yet.
+        if ($sessionKey !== '') {
+            Notification::updateOrCreate(
+                ['user_id' => $request->user()->id, 'session_key' => $sessionKey],
+                ['title' => $title, 'message' => $body]
+            );
+        } else {
+            Notification::create([
+                'user_id' => $request->user()->id,
+                'title'   => $title,
+                'message' => $body,
+            ]);
+        }
 
         // SMS (best-effort)
         $user      = User::find($request->user()->id);

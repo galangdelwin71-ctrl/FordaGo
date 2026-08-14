@@ -27,18 +27,34 @@ const authGuard: CanActivateFn = () => {
   return false;
 };
 
-// Guard (Stage 5): the inverse of authGuard — if a member is already
+// Guard (Stage 5): the inverse of authGuard — if someone is already
 // logged in (valid token present), keep them off /login entirely and send
-// them to /dashboard instead. This is what makes it safe for the back
-// button handler in app.component.ts to fall back to plain browser history
-// navigation: even if that history happens to contain a stale /login
-// entry, landing on it while logged in just bounces straight back out.
+// them to the page that matches their role: /admin for admin/super_admin/
+// employee, /dashboard for regular members. This is what makes it safe for
+// the back button handler in app.component.ts to fall back to plain
+// browser history navigation: even if that history happens to contain a
+// stale /login entry, landing on it while logged in just bounces straight
+// back out to the CORRECT side of the app — not always the member
+// dashboard, which would be wrong for a logged-in admin/staff account.
 const guestGuard: CanActivateFn = () => {
   const token = localStorage.getItem('token');
   if (!token) return true;
 
   const router = inject(Router);
-  router.navigate(['/dashboard']);
+
+  let destination = '/dashboard';
+  try {
+    const rawUser = localStorage.getItem('user');
+    const parsedUser = rawUser ? JSON.parse(rawUser) : null;
+    if (['admin', 'super_admin', 'employee'].includes(parsedUser?.role)) {
+      destination = '/admin';
+    }
+  } catch {
+    // Malformed 'user' entry — fall back to the member dashboard rather
+    // than block navigation entirely.
+  }
+
+  router.navigate([destination]);
   return false;
 };
 

@@ -6,12 +6,15 @@ import { App } from '@capacitor/app';
 import { addIcons } from 'ionicons';
 import {
   addOutline,
+  alarmOutline,
   alertCircleOutline,
   arrowBackOutline,
   arrowForwardOutline,
   bagHandleOutline,
   barChartOutline,
   barbellOutline,
+  bodyOutline,
+  boatOutline,
   calendar,
   calendarNumberOutline,
   calendarOutline,
@@ -21,6 +24,7 @@ import {
   cartOutline,
   cashOutline,
   chatbubbleEllipsesOutline,
+  checkmarkCircle,
   checkmarkCircleOutline,
   checkmarkDoneOutline,
   checkmarkOutline,
@@ -35,9 +39,13 @@ import {
   cube,
   cubeOutline,
   diamondOutline,
+  ellipseOutline,
   eyeOffOutline,
   eyeOutline,
+  fitnessOutline,
+  flame,
   flameOutline,
+  flashOutline,
   giftOutline,
   home,
   homeOutline,
@@ -59,6 +67,8 @@ import {
   personAddOutline,
   personOutline,
   phonePortraitOutline,
+  playOutline,
+  qrCodeOutline,
   receiptOutline,
   refreshOutline,
   scan,
@@ -69,9 +79,14 @@ import {
   starOutline,
   statsChartOutline,
   stopCircleOutline,
+  stopOutline,
+  time,
   timeOutline,
+  todayOutline,
   trashOutline,
+  trendingUpOutline,
   trophyOutline,
+  walkOutline,
   warningOutline,
 } from 'ionicons/icons';
 
@@ -91,7 +106,13 @@ interface BackButtonListenerHandle {
 // (which, pre-fix, is exactly what kept bouncing logged-in members back to
 // /login). Kept as a Set for O(1) lookup and to make the "what counts as
 // root" policy explicit and easy to extend later.
-const BACK_BUTTON_ROOT_PATHS = new Set(['/dashboard', '/login']);
+// /admin is included alongside /dashboard/login: it's the entry point of
+// the admin side, so back-button-ing from there must never fall through to
+// plain browser history — that history can still contain a stale /login
+// entry from before the admin/staff account signed in, which is exactly
+// what let repeated back presses bounce an already-logged-in admin back to
+// the login screen.
+const BACK_BUTTON_ROOT_PATHS = new Set(['/dashboard', '/admin', '/login']);
 
 // Double-press-to-exit window: a second back press on a root page within
 // this many ms actually exits the app; otherwise we just show a warning
@@ -123,12 +144,15 @@ export class AppComponent implements OnDestroy {
   ) {
     addIcons({
       addOutline,
+      alarmOutline,
       alertCircleOutline,
       arrowBackOutline,
       arrowForwardOutline,
       bagHandleOutline,
       barChartOutline,
       barbellOutline,
+      bodyOutline,
+      boatOutline,
       calendar,
       calendarNumberOutline,
       calendarOutline,
@@ -138,6 +162,7 @@ export class AppComponent implements OnDestroy {
       cartOutline,
       cashOutline,
       chatbubbleEllipsesOutline,
+      checkmarkCircle,
       checkmarkCircleOutline,
       checkmarkDoneOutline,
       checkmarkOutline,
@@ -152,9 +177,13 @@ export class AppComponent implements OnDestroy {
       cube,
       cubeOutline,
       diamondOutline,
+      ellipseOutline,
       eyeOffOutline,
       eyeOutline,
+      fitnessOutline,
+      flame,
       flameOutline,
+      flashOutline,
       giftOutline,
       home,
       homeOutline,
@@ -176,6 +205,8 @@ export class AppComponent implements OnDestroy {
       personAddOutline,
       personOutline,
       phonePortraitOutline,
+      playOutline,
+      qrCodeOutline,
       receiptOutline,
       refreshOutline,
       scan,
@@ -186,9 +217,14 @@ export class AppComponent implements OnDestroy {
       starOutline,
       statsChartOutline,
       stopCircleOutline,
+      stopOutline,
+      time,
       timeOutline,
+      todayOutline,
       trashOutline,
+      trendingUpOutline,
       trophyOutline,
+      walkOutline,
       warningOutline,
     });
 

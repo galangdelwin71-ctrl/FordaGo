@@ -298,21 +298,21 @@ ion-content {
 }
 
 .workout-title {
-  font-size: 14px;
+  font-size: 17px;
   font-weight: 600;
   color: #fff;
   min-width: 0;
 }
 
 .workout-focus {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   color: rgba(255, 214, 0, 0.82);
   margin-top: 2px;
 }
 
 .workout-status {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   color: rgba(255,255,255,0.5);
   background: rgba(255,255,255,0.06);
@@ -335,7 +335,7 @@ ion-content {
 }
 
 .workout-badge {
-  font-size: 10px;
+  font-size: 12px;
   background: rgba(74,158,255,0.12);
   color: #4A9EFF;
   padding: 4px 10px;
@@ -373,18 +373,18 @@ ion-content {
   }
 
   .ex-name {
-    font-size: 13px;
+    font-size: 15px;
     color: rgba(255,255,255,0.85);
     flex: 1;
   }
 
   .ex-detail {
-    font-size: 11px;
+    font-size: 13px;
     color: rgba(255,255,255,0.35);
   }
 
   .ex-check {
-    font-size: 13px;
+    font-size: 15px;
     color: #00D68F;
     font-weight: 700;
   }
@@ -412,10 +412,51 @@ ion-content {
 }
 
 .workout-progress-label {
-  font-size: 11px;
+  font-size: 13px;
   color: rgba(255,255,255,0.35);
   flex-shrink: 0;
   font-weight: 600;
+}
+
+// "View all sessions" toggle — shown below the single displayed workout
+// card when more than one session is scheduled today. Deliberately a
+// plain outlined pill (not filled like .scan-btn) so it reads as a
+// secondary/expand action, not a primary CTA.
+.workout-view-all-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 11px;
+  margin: 2px 0 10px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--dash-border, rgba(255, 255, 255, 0.08));
+  color: var(--dash-muted, rgba(255, 255, 255, 0.48));
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  transition: opacity 150ms ease, transform 150ms ease;
+
+  &:active {
+    opacity: 0.7;
+    transform: scale(0.98);
+  }
+
+  ion-icon {
+    font-size: 16px;
+  }
+}
+
+:host-context(body.light-theme),
+:host-context(html.light-theme) {
+  .workout-view-all-btn {
+    background: rgba(15, 23, 42, 0.03);
+    border-color: rgba(15, 23, 42, 0.1);
+    color: rgba(15, 23, 42, 0.55);
+  }
 }
 
 // ── Activity Heatmap ──────────────────────────────────
@@ -1513,7 +1554,7 @@ ion-content {
 // only ever used inside this exercise list, so no separate class needed
 // here; safe to size/color it directly without affecting anything else.
 .ex-name {
-  font-size: 14px;
+  font-size: 16px;
 }
 
 :host-context(body.light-theme),
@@ -1543,7 +1584,7 @@ ion-content {
 
 .exercise-list-header-name,
 .exercise-list-header-detail {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -1764,21 +1805,21 @@ ion-content.fordago-page-content {
 
 
 /* =========================================================
-   STAT CARD DETAIL POPUP
+   DURATION REACHED PROMPT SHELL
    NOTE: the Notifications panel no longer lives in this file —
    it was extracted into shared/notification-panel/ (its own
    scoped .notif-overlay/.notif-overlay-card rules there don't
    leak here, and vice versa, thanks to Angular's per-component
-   style encapsulation). The .notif-overlay/.notif-overlay-card
-   classes below now style ONLY the stat-card detail popup that
-   still lives in this template.
+   style encapsulation). The stat-card detail dropdown ALSO no
+   longer uses these classes — it now renders as a real
+   <ion-modal> bottom sheet (see "STAT CARD DETAIL PANEL" below,
+   and .stat-detail-sheet). The .notif-overlay/.notif-overlay-card
+   classes below therefore style ONLY the Duration Reached Prompt,
+   which still renders as a plain overlay div in this template.
 
-   Tapping a "This Month" stat card opens a click-to-expand
-   popup, centered on screen and sized to fit its content (short
-   panels stay compact, longer lists grow up to a max-height and
-   then scroll) instead of taking over the full screen. A close
-   button always sits in the top-right of its header (see
-   .notif-dismiss-btn further up this file).
+   Centered on screen and sized to fit its content (short panels
+   stay compact, longer lists grow up to a max-height and then
+   scroll) instead of taking over the full screen.
    ========================================================= */
 .notif-overlay {
   position: fixed !important;
@@ -1827,13 +1868,28 @@ ion-content.fordago-page-content {
 
 /* =========================================================
    STAT CARD DETAIL PANEL
-   Tapping a "This Month" stat card opens a themed panel that
-   reuses the notif-overlay shell. Colors below reference the
-   same --dash-* variables as the stat cards themselves so each
-   panel matches its card's accent (yellow/orange/blue/green),
-   and automatically follows light/dark theme since --dash-text
-   and --dash-muted are already redefined per-theme above.
+   Tapping a "This Month" stat card opens a themed bottom-sheet
+   dropdown, rendered via a real <ion-modal> (same pattern as the
+   shared Notifications panel — see shared/notification-panel/).
+
+   IMPORTANT — no CSS custom properties (--dash-*) or
+   :host-context() below: Ionic portals a presented <ion-modal>'s
+   DOM out of this component's own subtree (into an app-level
+   overlay container appended to <body>), so it can stack above
+   everything regardless of where <ion-modal> was declared in the
+   template. Once relocated, these elements no longer have this
+   component's :host as an ancestor, so :host-scoped custom
+   properties stop inheriting and :host-context() stops matching
+   (see the identical note in notification-panel.component.scss).
+   Colors below are therefore literal values, matching the
+   --dash-* palette 1:1; the light-theme variant lives in
+   global.scss under body.light-theme ion-modal .stat-detail-*
+   instead of a :host-context() block here, for the same reason.
    ========================================================= */
+
+.stat-detail-sheet {
+  padding: 0 0 calc(18px + env(safe-area-inset-bottom));
+}
 
 .stats-grid .stat-card {
   cursor: pointer;
@@ -1858,32 +1914,32 @@ ion-content.fordago-page-content {
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--dash-text);
+  color: #ffffff;
   font-size: 18px;
 }
 
-.stat-detail-card.theme-sessions {
-  border-image: linear-gradient(90deg, var(--dash-yellow), transparent) 1 !important;
-  .stat-detail-icon-wrap { background: rgba(255, 214, 0, 0.14); border-color: rgba(255, 214, 0, 0.28); color: var(--dash-yellow); }
-  .stat-detail-hero-icon, .stat-detail-badge, .stat-detail-hero-value { color: var(--dash-yellow); }
+.stat-detail-sheet.theme-sessions {
+  border-top: 2px solid #FFD600;
+  .stat-detail-icon-wrap { background: rgba(255, 214, 0, 0.14); border-color: rgba(255, 214, 0, 0.28); color: #FFD600; }
+  .stat-detail-hero-icon, .stat-detail-badge, .stat-detail-hero-value { color: #FFD600; }
 }
 
-.stat-detail-card.theme-streak {
-  border-image: linear-gradient(90deg, var(--dash-orange), transparent) 1 !important;
-  .stat-detail-icon-wrap { background: rgba(255, 149, 0, 0.14); border-color: rgba(255, 149, 0, 0.28); color: var(--dash-orange); }
-  .stat-detail-hero-icon, .stat-detail-badge, .stat-detail-hero-value { color: var(--dash-orange); }
+.stat-detail-sheet.theme-streak {
+  border-top: 2px solid #FF9500;
+  .stat-detail-icon-wrap { background: rgba(255, 149, 0, 0.14); border-color: rgba(255, 149, 0, 0.28); color: #FF9500; }
+  .stat-detail-hero-icon, .stat-detail-badge, .stat-detail-hero-value { color: #FF9500; }
 }
 
-.stat-detail-card.theme-avg {
-  border-image: linear-gradient(90deg, var(--dash-blue), transparent) 1 !important;
-  .stat-detail-icon-wrap { background: rgba(74, 158, 255, 0.14); border-color: rgba(74, 158, 255, 0.28); color: var(--dash-blue); }
-  .stat-detail-hero-icon, .stat-detail-badge, .stat-detail-hero-value { color: var(--dash-blue); }
+.stat-detail-sheet.theme-avg {
+  border-top: 2px solid #4A9EFF;
+  .stat-detail-icon-wrap { background: rgba(74, 158, 255, 0.14); border-color: rgba(74, 158, 255, 0.28); color: #4A9EFF; }
+  .stat-detail-hero-icon, .stat-detail-badge, .stat-detail-hero-value { color: #4A9EFF; }
 }
 
-.stat-detail-card.theme-upcoming {
-  border-image: linear-gradient(90deg, var(--dash-green), transparent) 1 !important;
-  .stat-detail-icon-wrap { background: rgba(0, 214, 143, 0.14); border-color: rgba(0, 214, 143, 0.28); color: var(--dash-green); }
-  .stat-detail-hero-icon, .stat-detail-badge, .stat-detail-hero-value { color: var(--dash-green); }
+.stat-detail-sheet.theme-upcoming {
+  border-top: 2px solid #00D68F;
+  .stat-detail-icon-wrap { background: rgba(0, 214, 143, 0.14); border-color: rgba(0, 214, 143, 0.28); color: #00D68F; }
+  .stat-detail-hero-icon, .stat-detail-badge, .stat-detail-hero-value { color: #00D68F; }
 }
 
 .stat-detail-list-item {
@@ -1913,13 +1969,13 @@ ion-content.fordago-page-content {
 
 .stat-detail-name {
   margin-bottom: 2px;
-  color: var(--dash-text);
+  color: #ffffff;
   font-size: 13px;
   font-weight: 700;
 }
 
 .stat-detail-meta {
-  color: var(--dash-muted);
+  color: rgba(255, 255, 255, 0.48);
   font-size: 11px;
 }
 
@@ -1941,10 +1997,10 @@ ion-content.fordago-page-content {
   gap: 8px;
   padding: 40px 20px;
   text-align: center;
-  color: var(--dash-muted);
+  color: rgba(255, 255, 255, 0.48);
 
   ion-icon { font-size: 36px; opacity: 0.3; }
-  strong { color: var(--dash-text); font-size: 14px; }
+  strong { color: #ffffff; font-size: 14px; }
   span { font-size: 12px; }
 }
 
@@ -1974,14 +2030,14 @@ ion-content.fordago-page-content {
 
 .stat-detail-hero-value {
   margin-bottom: 6px;
-  color: var(--dash-text);
+  color: #ffffff;
   font-size: 26px;
   font-weight: 900;
 }
 
 .stat-detail-hero-caption {
   max-width: 280px;
-  color: var(--dash-muted);
+  color: rgba(255, 255, 255, 0.48);
   font-size: 13px;
   line-height: 1.5;
 }
@@ -1995,14 +2051,14 @@ ion-content.fordago-page-content {
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.07);
-  color: var(--dash-muted);
+  color: rgba(255, 255, 255, 0.48);
   font-size: 12px;
   line-height: 1.55;
 
   ion-icon {
     flex-shrink: 0;
     margin-top: 1px;
-    color: var(--dash-muted);
+    color: rgba(255, 255, 255, 0.48);
     font-size: 16px;
   }
 }
@@ -2076,6 +2132,38 @@ ion-content.fordago-page-content {
     font-size: 15px;
     font-weight: 800;
     letter-spacing: 0.3px;
+
+    // Once elapsed time passes the scheduled duration, tint the readout
+    // amber instead of the default white — purely visual, the timer keeps
+    // running and Stop stays manual (see isDurationReached() in
+    // dashboard.page.ts).
+    &.exceeded {
+      color: var(--dash-orange);
+    }
+  }
+}
+
+// Informational banner shown once a running session's elapsed time passes
+// its scheduled duration. Never auto-stops anything — just a heads-up,
+// alongside the ring/device notification fired once from
+// DashboardPage.checkDurationAlerts().
+.session-timer-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -4px 0 12px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  background: rgba(255, 149, 0, 0.1);
+  border: 1px solid rgba(255, 149, 0, 0.28);
+  color: var(--dash-orange);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+
+  ion-icon {
+    flex-shrink: 0;
+    font-size: 15px;
   }
 }
 
@@ -2089,11 +2177,11 @@ ion-content.fordago-page-content {
   background: rgba(0, 214, 143, 0.08);
   border: 1px solid rgba(0, 214, 143, 0.2);
   color: var(--dash-green);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
 
   ion-icon {
-    font-size: 14px;
+    font-size: 16px;
   }
 }
 
@@ -2112,6 +2200,102 @@ ion-content.fordago-page-content {
   .session-timer-done {
     background: rgba(5, 150, 105, 0.08);
     border-color: rgba(5, 150, 105, 0.2);
+  }
+
+  .session-timer-alert {
+    background: rgba(194, 65, 12, 0.08);
+    border-color: rgba(194, 65, 12, 0.24);
+    color: var(--dash-orange);
+  }
+}
+
+/* =========================================================
+   DURATION REACHED PROMPT
+   Reuses the .notif-overlay / .notif-overlay-card shell (see
+   "DURATION REACHED PROMPT SHELL" above) for the centered backdrop +
+   card chrome, and .stat-detail-icon-wrap for the icon badge —
+   only what's specific to this prompt (the orange icon theme,
+   the body copy, and the two action buttons) is defined here.
+   ========================================================= */
+
+.duration-prompt-card {
+  max-width: 380px !important;
+  // Overrides the accent-color top border/gradient this card inherits
+  // from the shared .notif-overlay-card base rule (see "DURATION REACHED
+  // PROMPT SHELL" above) — this prompt reads better as a plain neutral card, not
+  // themed to any one stat color. !important is required to beat that
+  // base rule's own !important at equal selector specificity; this block
+  // is defined later in the file so it wins the tie either way, but the
+  // explicit !important keeps that from being a fragile assumption.
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-image: none !important;
+}
+
+.duration-prompt-icon {
+  background: rgba(255, 149, 0, 0.14);
+  border-color: rgba(255, 149, 0, 0.28);
+  color: var(--dash-orange);
+}
+
+.duration-prompt-text {
+  margin: 4px 4px 16px;
+  color: var(--dash-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.duration-prompt-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 4px 4px;
+}
+
+.duration-prompt-stop-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  border: none;
+  background: var(--dash-red);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 150ms ease, opacity 150ms ease;
+
+  &:active { transform: scale(0.97); }
+
+  ion-icon { font-size: 16px; }
+}
+
+.duration-prompt-keep-btn {
+  width: 100%;
+  padding: 13px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--dash-text);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 150ms ease;
+
+  &:active { opacity: 0.7; }
+}
+
+:host-context(body.light-theme),
+:host-context(html.light-theme) {
+  .duration-prompt-card {
+    border-color: rgba(15, 23, 42, 0.09) !important;
+  }
+
+  .duration-prompt-keep-btn {
+    border-color: rgba(15, 23, 42, 0.14);
+    background: rgba(15, 23, 42, 0.04);
   }
 }
 
