@@ -2,8 +2,11 @@
 
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CoachController;
+use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\EquipmentController;
 use App\Http\Controllers\Api\InventoryController;
+use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PersonalRecordController;
 use App\Http\Controllers\Api\ReportsController;
@@ -137,6 +140,24 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/admin/attendance',   [ReportsController::class, 'adminAttendance'])->middleware('role:admin,super_admin,employee');
         Route::get('/admin/sales',        [ReportsController::class, 'adminSales'])->middleware('role:admin,super_admin,employee');
         Route::get('/admin/inventory',    [ReportsController::class, 'adminInventory'])->middleware('role:admin,super_admin,employee');
+    });
+
+    // ── Coaching & Chat (Coaching feature) ────────────────────────────────
+    Route::prefix('coaches')->group(function () {
+        Route::get('/',            [CoachController::class, 'index']);
+        Route::get('/profile/me',  [CoachController::class, 'myProfile']);
+        Route::put('/profile',     [CoachController::class, 'updateProfile']);
+        Route::get('/clients',     [CoachController::class, 'clients']);
+        Route::get('/{id}',        [CoachController::class, 'show'])->whereNumber('id');
+    });
+
+    Route::prefix('conversations')->group(function () {
+        Route::get('/',                                  [ConversationController::class, 'index']);
+        Route::post('/start',                            [ConversationController::class, 'start']);
+        Route::get('/{id}',                              [ConversationController::class, 'show'])->whereNumber('id');
+        Route::get('/{conversationId}/messages',         [MessageController::class, 'index'])->whereNumber('conversationId');
+        Route::post('/{conversationId}/messages',        [MessageController::class, 'store'])->whereNumber('conversationId');
+        Route::patch('/{conversationId}/read',           [MessageController::class, 'markRead'])->whereNumber('conversationId');
     });
 
 });
