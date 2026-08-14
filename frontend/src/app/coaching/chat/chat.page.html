@@ -1,0 +1,176 @@
+<!-- chat.page.html -->
+<ion-header [translucent]="false" class="fordago-app-header ion-no-border">
+  <ion-toolbar class="fordago-toolbar">
+    <div slot="start" class="chat-toolbar-start">
+      <button type="button" class="back-circle-btn" (click)="goBack()">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </button>
+
+      <div class="chat-partner-header" *ngIf="partner">
+        <div class="chat-partner-avatar">
+          <img *ngIf="partner.profile_image" [src]="partner.profile_image" />
+          <div *ngIf="!partner.profile_image" class="avatar-placeholder">
+            {{ (partner.first_name || partner.username || 'U').charAt(0) }}
+          </div>
+          <span class="online-indicator"></span>
+        </div>
+
+        <div class="chat-partner-meta">
+          <h4 class="partner-name">{{ partner.first_name }} {{ partner.last_name }}</h4>
+          <span class="partner-role-tag">{{ conversation?.partner_role === 'coach' ? 'Personal Coach' : 'Client' }}</span>
+        </div>
+      </div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="false" class="chat-content" [scrollY]="true">
+  <div class="chat-scroll-inner" #messagesContainer>
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="isLoading">
+      <ion-spinner name="crescent" color="warning"></ion-spinner>
+      <p>Loading messages...</p>
+    </div>
+
+    <!-- Empty Chat State -->
+    <div class="empty-chat-state" *ngIf="!isLoading && messages.length === 0">
+      <div class="empty-chat-icon">
+        <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+      </div>
+      <h3>Start the Conversation</h3>
+      <p>Say hello, share your fitness goals, or ask for a customized workout plan!</p>
+    </div>
+
+    <!-- Messages List -->
+    <div class="messages-flow" *ngIf="!isLoading && messages.length > 0">
+      <div
+        *ngFor="let msg of messages"
+        class="message-row"
+        [class.is-mine]="msg.sender_id === currentUserId"
+        [class.is-proposal]="msg.type === 'proposal'">
+
+        <!-- Incoming message avatar -->
+        <div class="msg-avatar-col" *ngIf="msg.sender_id !== currentUserId">
+          <img *ngIf="msg.sender && msg.sender.profile_image" [src]="msg.sender.profile_image" class="msg-avatar-img" />
+          <div *ngIf="!msg.sender || !msg.sender.profile_image" class="msg-avatar-ph">
+            {{ (msg.sender?.first_name || msg.sender?.username || 'U').charAt(0) }}
+          </div>
+        </div>
+
+        <div class="msg-bubble-wrap">
+
+          <!-- ── STANDARD TEXT MESSAGE ── -->
+          <div class="msg-bubble" *ngIf="msg.type !== 'proposal'">
+            <p class="msg-text">{{ msg.body }}</p>
+            <div class="msg-meta">
+              <span class="msg-time">{{ msg.created_at | date:'shortTime' }}</span>
+              <ion-icon
+                *ngIf="msg.sender_id === currentUserId"
+                [name]="msg.read_at ? 'checkmark-done-outline' : 'checkmark-outline'"
+                class="msg-status-icon"
+                [class.is-read]="msg.read_at">
+              </ion-icon>
+            </div>
+          </div>
+
+          <!-- ── WORKOUT PLAN PROPOSAL CARD ── -->
+          <div class="proposal-card-bubble" *ngIf="msg.type === 'proposal' && msg.proposal">
+            <div class="proposal-card-header">
+              <div class="proposal-badge">
+                <ion-icon name="sparkles"></ion-icon> Workout Plan Proposal
+              </div>
+              <span class="proposal-status" [class.accepted]="msg.proposal.status === 'accepted'">
+                {{ msg.proposal.status === 'accepted' ? 'Accepted' : 'Pending' }}
+              </span>
+            </div>
+
+            <!-- Session Details Strip -->
+            <div class="proposal-meta-strip">
+              <div class="meta-item">
+                <ion-icon name="calendar-outline"></ion-icon>
+                <span>{{ msg.proposal.session_date | date:'mediumDate' }}</span>
+              </div>
+              <div class="meta-item">
+                <ion-icon name="time-outline"></ion-icon>
+                <span>{{ msg.proposal.time_val }} {{ msg.proposal.time_ampm }} ({{ msg.proposal.duration_minutes }}m)</span>
+              </div>
+              <div class="meta-item price-item">
+                <ion-icon name="cash-outline"></ion-icon>
+                <span>₱{{ msg.proposal.price }}</span>
+              </div>
+            </div>
+
+            <!-- Exercises Preview List -->
+            <div class="proposal-exercises" *ngIf="msg.proposal.items && msg.proposal.items.length > 0">
+              <div class="ex-list-title">Custom Program ({{ msg.proposal.items.length }} exercises):</div>
+              <div class="ex-item-row" *ngFor="let item of msg.proposal.items">
+                <span class="ex-dot"></span>
+                <span class="ex-name">{{ item.name }}</span>
+                <span class="ex-reps">{{ item.sets }} sets × {{ item.reps }} reps</span>
+              </div>
+            </div>
+
+            <!-- Card Actions -->
+            <div class="proposal-card-actions">
+              <!-- If current user is client and status is pending -> "Use" button -->
+              <ng-container *ngIf="!isCoach && msg.proposal.status === 'pending'">
+                <button
+                  type="button"
+                  class="btn-use-plan"
+                  (click)="acceptProposal(msg.proposal)"
+                  [disabled]="isAcceptingProposalId === msg.proposal.id">
+                  <ion-spinner *ngIf="isAcceptingProposalId === msg.proposal.id" name="dots"></ion-spinner>
+                  <ng-container *ngIf="isAcceptingProposalId !== msg.proposal.id">
+                    <ion-icon name="checkmark-circle"></ion-icon>
+                    <span>Use &amp; Add to Schedule</span>
+                  </ng-container>
+                </button>
+              </ng-container>
+
+              <!-- If accepted -->
+              <div class="accepted-banner" *ngIf="msg.proposal.status === 'accepted'">
+                <ion-icon name="checkmark-circle"></ion-icon>
+                <span>Added to Client's Schedule</span>
+              </div>
+
+              <!-- If coach looking at pending -->
+              <div class="waiting-banner" *ngIf="isCoach && msg.proposal.status === 'pending'">
+                <ion-icon name="time-outline"></ion-icon>
+                <span>Waiting for client approval</span>
+              </div>
+            </div>
+
+            <div class="msg-meta proposal-meta">
+              <span class="msg-time">{{ msg.created_at | date:'shortTime' }}</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</ion-content>
+
+<!-- Chat Input Footer -->
+<ion-footer class="chat-footer ion-no-border">
+  <div class="chat-input-bar">
+    <input
+      type="text"
+      class="chat-text-input"
+      placeholder="Type a message..."
+      [(ngModel)]="newMessage"
+      (keyup.enter)="sendMessage()"
+    />
+    <button
+      type="button"
+      class="chat-send-btn"
+      [disabled]="!newMessage.trim() || isSending"
+      (click)="sendMessage()">
+      <ion-spinner *ngIf="isSending" name="dots"></ion-spinner>
+      <ion-icon *ngIf="!isSending" name="paper-plane-outline"></ion-icon>
+    </button>
+  </div>
+</ion-footer>

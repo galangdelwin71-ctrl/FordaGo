@@ -122,6 +122,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'chat/:conversationId',
+    loadComponent: () => import('./coaching/chat/chat.page').then(m => m.ChatPage),
+    canActivate: [authGuard],
+  },
+  {
     path: 'admin-reports',
     loadComponent: () => import('./admin-reports/admin-reports.page').then(m => m.AdminReportsPage),
     canActivate: [adminGuard],
