@@ -17,6 +17,10 @@
            buttons, so every page keeps the same right-to-left order. -->
       <ng-content select="[header-extra]"></ng-content>
 
+      <button type="button" class="coach-header-btn" (click)="coachingClick.emit()" aria-label="Open coaching">
+        <ion-icon name="person-circle-outline" aria-hidden="true"></ion-icon>
+      </button>
+
       <button type="button" class="equip-header-btn" (click)="equipmentClick.emit()" aria-label="Open equipment">
         <ion-icon name="barbell-outline" aria-hidden="true"></ion-icon>
       </button>

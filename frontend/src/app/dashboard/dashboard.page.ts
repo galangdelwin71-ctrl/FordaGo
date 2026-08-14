@@ -1475,6 +1475,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   goToInventory(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/inventory']);  }
   goToProfile():   void { this.closeOverlaysForNavigation(); this.router.navigate(['/profile']);    }
   goToEquipment(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/equipment']); }
+  goToCoaching():  void { this.closeOverlaysForNavigation(); this.router.navigate(['/coaching']);  }
 
   // ── Equipment ───────────────────────────────────────
   equipmentList: any[] = [];

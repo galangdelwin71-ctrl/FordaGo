@@ -1,0 +1,294 @@
+<!-- coaching.page.html -->
+<ion-header [translucent]="false" class="fordago-app-header ion-no-border">
+  <ion-toolbar class="fordago-toolbar">
+    <div slot="start" class="toolbar-brand">
+      <span class="brand-mark" aria-hidden="true">
+        <img src="/assets/icon/logo.png" class="brand-logo" alt="" />
+      </span>
+      <span class="toolbar-brand-copy">
+        <span class="toolbar-logo">FordaGO</span>
+        <span class="toolbar-subtitle">COACHING</span>
+      </span>
+    </div>
+
+    <div slot="end" class="header-end">
+      <button type="button" class="coach-header-btn" (click)="openEditCoachProfile()" title="Coach Profile Settings">
+        <ion-icon name="create-outline"></ion-icon>
+      </button>
+
+      <button
+        type="button"
+        class="notif-bell-btn"
+        [class.has-unread]="unreadNotifCount > 0"
+        (click)="openNotifPanel()"
+        aria-label="Open notifications">
+        <ion-icon name="notifications-outline"></ion-icon>
+        <span class="notif-bell-badge" *ngIf="unreadNotifCount > 0">{{ unreadNotifCount }}</span>
+      </button>
+
+      <button type="button" class="profile-button" (click)="goToProfile()" aria-label="Open profile">
+        <span class="avatar" *ngIf="!profileImage">{{ initials }}</span>
+        <img *ngIf="profileImage" [src]="profileImage" alt="Profile" class="avatar avatar-img" />
+      </button>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="false" class="fordago-page-content" [scrollY]="true">
+  <div class="scroll-wrap">
+
+    <!-- Page Header & Banner -->
+    <div class="page-title-wrap">
+      <div class="page-title">Personal Coaches</div>
+      <div class="page-sub">Connect with top trainers &amp; get custom workout plans</div>
+    </div>
+
+    <!-- Segmented Tabs: Explore vs Messages -->
+    <div class="coaching-nav-tabs">
+      <button
+        type="button"
+        class="coaching-tab-btn"
+        [class.is-active]="activeTab === 'explore'"
+        (click)="setTab('explore')">
+        <ion-icon name="sparkles-outline"></ion-icon>
+        <span>Explore Coaches</span>
+      </button>
+
+      <button
+        type="button"
+        class="coaching-tab-btn"
+        [class.is-active]="activeTab === 'conversations'"
+        (click)="setTab('conversations')">
+        <ion-icon name="chatbubbles-outline"></ion-icon>
+        <span>Active Chats</span>
+        <span class="badge-count" *ngIf="conversations.length > 0">{{ conversations.length }}</span>
+      </button>
+    </div>
+
+    <!-- ── EXPLORE COACHES TAB ───────────────────────────── -->
+    <ng-container *ngIf="activeTab === 'explore'">
+
+      <!-- Search Input -->
+      <div class="search-wrap">
+        <ion-icon name="search-outline" class="search-icon-ion"></ion-icon>
+        <input
+          class="search-input"
+          type="text"
+          placeholder="Search coach by name or specialty..."
+          [(ngModel)]="searchQuery"
+          (ngModelChange)="onSearchChange()"
+        />
+      </div>
+
+      <!-- Specialty Pills -->
+      <div class="cat-row">
+        <div
+          *ngFor="let spec of specialties"
+          class="cat-chip"
+          [class.active]="activeSpecialty === spec"
+          (click)="selectSpecialty(spec)">
+          {{ spec }}
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div class="loading-state" *ngIf="isLoading">
+        <ion-spinner name="crescent" color="warning"></ion-spinner>
+        <p>Loading expert coaches...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" *ngIf="!isLoading && coaches.length === 0">
+        <div class="empty-icon-wrap">
+          <ion-icon name="barbell-outline"></ion-icon>
+        </div>
+        <h3>No Coaches Found</h3>
+        <p>No trainers match your search. Check back soon or set up your own coach profile!</p>
+        <button type="button" class="empty-cta-btn" (click)="openEditCoachProfile()">
+          <ion-icon name="create-outline"></ion-icon> Become a Coach
+        </button>
+      </div>
+
+      <!-- Coaches Grid -->
+      <div class="coaches-grid" *ngIf="!isLoading && coaches.length > 0">
+        <div class="coach-card" *ngFor="let coach of coaches">
+          <div class="coach-card-header">
+            <div class="coach-avatar-wrap">
+              <img *ngIf="coach.profile_image" [src]="coach.profile_image" class="coach-avatar-img" [alt]="coach.first_name" />
+              <div *ngIf="!coach.profile_image" class="coach-avatar-placeholder">
+                {{ (coach.first_name || coach.username || 'C').charAt(0) }}
+              </div>
+              <span class="verified-dot" title="Verified Coach">✓</span>
+            </div>
+
+            <div class="coach-meta">
+              <h4 class="coach-name">{{ coach.first_name }} {{ coach.last_name }}</h4>
+              <div class="coach-username">&#64;{{ coach.username }}</div>
+              <span class="specialty-badge">{{ coach.specialty || 'Personal Training' }}</span>
+            </div>
+
+            <div class="coach-rate-badge">
+              <span class="rate-val">₱{{ coach.rate || 500 }}</span>
+              <span class="rate-label">/ session</span>
+            </div>
+          </div>
+
+          <p class="coach-bio">{{ coach.bio || 'Dedicated trainer focused on helping you reach peak performance safely and effectively.' }}</p>
+
+          <div class="coach-card-actions">
+            <button type="button" class="btn-profile" (click)="viewCoach(coach)">
+              View Profile
+            </button>
+            <button type="button" class="btn-message" (click)="startChat(coach)">
+              <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+              Message
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </ng-container>
+
+    <!-- ── ACTIVE CHATS / CONVERSATIONS TAB ─────────────── -->
+    <ng-container *ngIf="activeTab === 'conversations'">
+      <div class="conversations-list">
+        <div class="empty-state" *ngIf="conversations.length === 0">
+          <div class="empty-icon-wrap">
+            <ion-icon name="chatbubbles-outline"></ion-icon>
+          </div>
+          <h3>No Active Chats Yet</h3>
+          <p>Explore our coaches and send a message to start custom training sessions.</p>
+          <button type="button" class="empty-cta-btn" (click)="setTab('explore')">
+            <ion-icon name="sparkles-outline"></ion-icon> Browse Coaches
+          </button>
+        </div>
+
+        <div
+          class="convo-card"
+          *ngFor="let convo of conversations"
+          (click)="openConversation(convo)">
+          <div class="convo-avatar-wrap">
+            <img *ngIf="convo.partner.profile_image" [src]="convo.partner.profile_image" class="convo-avatar-img" />
+            <div *ngIf="!convo.partner.profile_image" class="convo-avatar-placeholder">
+              {{ (convo.partner.first_name || convo.partner.username || 'U').charAt(0) }}
+            </div>
+            <span class="unread-dot" *ngIf="convo.unread_count > 0"></span>
+          </div>
+
+          <div class="convo-info">
+            <div class="convo-top-row">
+              <h4 class="convo-name">{{ convo.partner.first_name }} {{ convo.partner.last_name }}</h4>
+              <span class="convo-time">{{ convo.updated_at | date:'shortTime' }}</span>
+            </div>
+            <div class="convo-role-tag">{{ convo.partner_role === 'coach' ? 'Personal Coach' : 'Client' }}</div>
+            <p class="convo-last-msg" [class.is-unread]="convo.unread_count > 0">
+              {{ convo.latest_message?.body || 'Start the conversation...' }}
+            </p>
+          </div>
+
+          <div class="convo-unread-pill" *ngIf="convo.unread_count > 0">
+            {{ convo.unread_count }}
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <div class="page-bottom-space" aria-hidden="true"></div>
+
+  </div>
+</ion-content>
+
+<!-- Bottom Nav -->
+<ion-footer class="fordago-app-footer ion-no-border">
+  <nav class="fordago-bottom-nav" aria-label="Main navigation">
+    <button type="button" class="fordago-nav-item" (click)="goToDashboard()" aria-label="Home">
+      <span class="fordago-nav-icon"><ion-icon name="home-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Home</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item" (click)="goToSchedule()" aria-label="Schedule">
+      <span class="fordago-nav-icon"><ion-icon name="calendar-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Schedule</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item is-active" aria-label="Coaches">
+      <span class="fordago-nav-icon"><ion-icon name="person-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Coaching</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item" (click)="goToInventory()" aria-label="Shop">
+      <span class="fordago-nav-icon"><ion-icon name="bag-handle-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Shop</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item" (click)="goToProfile()" aria-label="Profile">
+      <span class="fordago-nav-icon"><ion-icon name="person-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Profile</span>
+    </button>
+  </nav>
+</ion-footer>
+
+<!-- Notifications panel component -->
+<app-notification-panel
+  [isOpen]="notifPanelOpen"
+  (closed)="closeNotifPanel()"
+  (unreadCountChange)="onUnreadCountChange($event)">
+</app-notification-panel>
+
+<!-- ── Coach Profile Modal ───────────────────────────── -->
+<ion-modal [isOpen]="isProfileModalOpen" (didDismiss)="closeEditCoachProfile()" class="coach-modal">
+  <ng-template>
+    <div class="modal-wrapper">
+      <div class="modal-header">
+        <h3>Coach Profile Settings</h3>
+        <button type="button" class="modal-close-btn" (click)="closeEditCoachProfile()">
+          <ion-icon name="close-outline"></ion-icon>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Specialty / Focus</label>
+          <select [(ngModel)]="myCoachProfile.specialty" class="form-input">
+            <option value="Personal Training">Personal Training</option>
+            <option value="Strength">Strength &amp; Conditioning</option>
+            <option value="Bodybuilding">Bodybuilding</option>
+            <option value="Weight Loss">Weight Loss &amp; Fat Burning</option>
+            <option value="HIIT">HIIT &amp; Functional Training</option>
+            <option value="Cardio">Cardio &amp; Endurance</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Session Rate (₱ per workout plan / session)</label>
+          <input
+            type="number"
+            class="form-input"
+            [(ngModel)]="myCoachProfile.rate"
+            min="0"
+            step="50"
+            placeholder="500"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Coach Bio &amp; Qualifications</label>
+          <textarea
+            class="form-textarea"
+            rows="4"
+            [(ngModel)]="myCoachProfile.bio"
+            placeholder="Describe your training philosophy, certifications, and workout experience..."
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" (click)="closeEditCoachProfile()">Cancel</button>
+        <button type="button" class="btn-save" (click)="saveCoachProfile()" [disabled]="isSavingProfile">
+          <ion-spinner *ngIf="isSavingProfile" name="dots"></ion-spinner>
+          <span *ngIf="!isSavingProfile">Save Coach Profile</span>
+        </button>
+      </div>
+    </div>
+  </ng-template>
+</ion-modal>

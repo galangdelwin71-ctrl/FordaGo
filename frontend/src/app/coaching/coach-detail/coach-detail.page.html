@@ -1,0 +1,110 @@
+<!-- coach-detail.page.html -->
+<ion-header [translucent]="false" class="fordago-app-header ion-no-border">
+  <ion-toolbar class="fordago-toolbar">
+    <div slot="start" class="toolbar-brand">
+      <button type="button" class="back-circle-btn" (click)="goBack()">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </button>
+      <span class="toolbar-brand-copy">
+        <span class="toolbar-logo">Coach Profile</span>
+      </span>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="false" class="fordago-page-content" [scrollY]="true">
+  <div class="scroll-wrap">
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="isLoading">
+      <ion-spinner name="crescent" color="warning"></ion-spinner>
+      <p>Loading coach profile...</p>
+    </div>
+
+    <!-- Coach Content -->
+    <div class="coach-profile-content" *ngIf="!isLoading && coach">
+
+      <!-- Hero Header -->
+      <div class="coach-hero-card">
+        <div class="hero-avatar-wrap">
+          <img *ngIf="coach.profile_image" [src]="coach.profile_image" class="hero-avatar-img" />
+          <div *ngIf="!coach.profile_image" class="hero-avatar-placeholder">
+            {{ (coach.first_name || coach.username || 'C').charAt(0) }}
+          </div>
+          <div class="verified-badge">
+            <ion-icon name="checkmark-circle"></ion-icon> Verified Trainer
+          </div>
+        </div>
+
+        <h2 class="hero-name">{{ coach.first_name }} {{ coach.last_name }}</h2>
+        <div class="hero-handle">&#64;{{ coach.username }}</div>
+
+        <div class="hero-pills">
+          <span class="hero-pill specialty">
+            <ion-icon name="ribbon-outline"></ion-icon>
+            {{ coach.specialty || 'Personal Trainer' }}
+          </span>
+          <span class="hero-pill rate">
+            <ion-icon name="cash-outline"></ion-icon>
+            ₱{{ coach.rate || 500 }} / session
+          </span>
+        </div>
+      </div>
+
+      <!-- About Section -->
+      <div class="section-box">
+        <h3 class="section-title">
+          <ion-icon name="fitness-outline"></ion-icon>
+          About &amp; Training Philosophy
+        </h3>
+        <p class="section-text">
+          {{ coach.bio || 'Dedicated FordaGO fitness trainer focused on helping you reach peak performance safely and effectively through customized programming and nutrition guidance.' }}
+        </p>
+      </div>
+
+      <!-- What to Expect Box -->
+      <div class="section-box">
+        <h3 class="section-title">
+          <ion-icon name="shield-checkmark-outline"></ion-icon>
+          What You Get
+        </h3>
+        <div class="feature-list">
+          <div class="feature-item">
+            <span class="check-icon">✓</span>
+            <div>
+              <strong>Custom Tailored Workouts</strong>
+              <p>Personalized exercises, sets, reps, and target duration sent directly to your app.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <span class="check-icon">✓</span>
+            <div>
+              <strong>One-Click Schedule Sync</strong>
+              <p>Accept proposed workout plans with one tap to auto-populate your Schedule.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <span class="check-icon">✓</span>
+            <div>
+              <strong>Direct Real-time Chat</strong>
+              <p>Instant messaging for form check, questions, and weekly adjustments.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Floating Action CTA -->
+      <div class="cta-bottom-wrap">
+        <button type="button" class="btn-chat-now" (click)="startChat()" [disabled]="isStartingChat">
+          <ion-spinner *ngIf="isStartingChat" name="dots"></ion-spinner>
+          <ng-container *ngIf="!isStartingChat">
+            <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+            <span>Message Coach &amp; Get Plan</span>
+          </ng-container>
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+</ion-content>

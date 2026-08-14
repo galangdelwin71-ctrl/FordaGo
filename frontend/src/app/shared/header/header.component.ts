@@ -40,6 +40,7 @@ export class HeaderComponent {
   /** Fallback initials shown in the avatar circle when there is no photo. */
   @Input() initials = 'U';
 
+  @Output() coachingClick = new EventEmitter<void>();
   @Output() equipmentClick = new EventEmitter<void>();
   @Output() notifClick = new EventEmitter<void>();
   @Output() profileClick = new EventEmitter<void>();

@@ -112,6 +112,16 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'coaching',
+    loadComponent: () => import('./coaching/coaching.page').then(m => m.CoachingPage),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'coach/:id',
+    loadComponent: () => import('./coaching/coach-detail/coach-detail.page').then(m => m.CoachDetailPage),
+    canActivate: [authGuard],
+  },
+  {
     path: 'admin-reports',
     loadComponent: () => import('./admin-reports/admin-reports.page').then(m => m.AdminReportsPage),
     canActivate: [adminGuard],
