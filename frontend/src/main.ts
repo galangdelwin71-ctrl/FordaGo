@@ -7,6 +7,7 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { routes } from './app/app.routes';
 import { AppComponent } from './app/app.component';
 import { ngrokInterceptor } from './ngrok.interceptor';
+import { authInterceptor } from './app/services/auth.interceptor';
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -20,8 +21,11 @@ bootstrapApplication(AppComponent, {
     // header and bottom nav read as a fixed, persistent shell.
     provideIonicAngular({ animated: false }),
     provideRouter(routes, withPreloading(PreloadAllModules)),
+    // authInterceptor attaches the bearer token; ngrokInterceptor skips the
+    // ngrok browser-warning page. Order doesn't matter here — both clone
+    // the request via setHeaders on independent header keys.
     provideHttpClient(
-  withInterceptors([ngrokInterceptor])
+      withInterceptors([authInterceptor, ngrokInterceptor])
     ),
   ],
 });

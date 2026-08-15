@@ -1,23 +1,27 @@
-import { Injectable } from '@angular/core';
-import { HttpInterceptor, HttpRequest, HttpHandler } from '@angular/common/http';
+import { HttpInterceptorFn } from '@angular/common/http';
+import { inject } from '@angular/core';
 import { AuthService } from './auth.service';
 
-@Injectable()
-export class AuthInterceptor implements HttpInterceptor {
-  constructor(private auth: AuthService) {}
+/**
+ * Attaches `Authorization: Bearer <token>` to every outgoing request when a
+ * token is present. Every backend route except /auth/* requires
+ * auth:sanctum (bearer-token auth, not session cookies — see
+ * User::HasApiTokens), so without this every authenticated request would
+ * fail with 401 Unauthenticated.
+ *
+ * (Was previously a class implementing HttpInterceptor, but that class was
+ * never registered via HTTP_INTERCEPTORS and had no effect — converted to
+ * a functional interceptor so it can be registered the same way as
+ * ngrokInterceptor in main.ts's withInterceptors([...]).)
+ */
+export const authInterceptor: HttpInterceptorFn = (req, next) => {
+  const token = inject(AuthService).token;
 
-  intercept(req: HttpRequest<any>, next: HttpHandler) {
-    const token = this.auth.token;
-    const headers: Record<string, string> = {
-      // Skips ngrok's free-tier HTML interstitial warning page so API
-      // responses stay valid JSON when the backend is tunneled via ngrok.
-      // Harmless no-op against Laravel or any other real backend.
-      'ngrok-skip-browser-warning': 'true'
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    req = req.clone({ setHeaders: headers });
-    return next.handle(req);
+  if (!token) {
+    return next(req);
   }
-}
+
+  return next(req.clone({
+    setHeaders: { Authorization: `Bearer ${token}` },
+  }));
+};
