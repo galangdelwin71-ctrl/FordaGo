@@ -120,10 +120,6 @@ export class CoachingService {
     return this.http.get<any>(`${this.apiUrl}/coaches/profile/me`);
   }
 
-  updateCoachProfile(data: { bio?: string; specialty?: string; photo_url?: string; rate?: number }): Observable<any> {
-    return this.http.put<any>(`${this.apiUrl}/coaches/profile`, data);
-  }
-
   getCoachClients(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/coaches/clients`);
   }
@@ -187,5 +183,42 @@ export class CoachingService {
 
   cancelProposal(id: number): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/proposals/${id}/cancel`, {});
+  }
+
+  // ── Admin: Coach account management (admin/super_admin only) ─────
+  // Coach accounts can only be created or edited here — there is no
+  // self-service "become a coach" path anywhere else in the app.
+
+  getAdminCoaches(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/admin/coaches`);
+  }
+
+  createCoach(payload: {
+    user_id?: number;
+    username?: string;
+    email?: string;
+    password?: string;
+    phone?: string;
+    gender?: string;
+    bio?: string;
+    specialty?: string;
+    photo_url?: string;
+    rate?: number;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/admin/coaches`, payload);
+  }
+
+  updateAdminCoach(userId: number, payload: {
+    bio?: string;
+    specialty?: string;
+    photo_url?: string;
+    rate?: number;
+    is_active?: boolean;
+  }): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/admin/coaches/${userId}`, payload);
+  }
+
+  deleteAdminCoach(userId: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/admin/coaches/${userId}`);
   }
 }

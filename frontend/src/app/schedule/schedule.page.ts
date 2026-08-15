@@ -19,6 +19,7 @@ import { WorkoutTrackerService } from '../services/workout-tracker.service';
 import { NoNegativeDirective } from '../directives/no-negative.directive';
 import { HeaderComponent } from '../shared/header/header.component';
 import { NotificationPanelComponent } from '../shared/notification-panel/notification-panel.component';
+import { ExerciseListEditorComponent } from '../shared/exercise-list-editor/exercise-list-editor.component';
 import { API_BASE_URL } from '../config/api.config';
 import { buildExercisesFromTemplate } from '../data/workout-templates';
 import type { WeekPlanTemplateDay, StoredWorkoutSession } from '../services/workout-tracker.service';
@@ -111,6 +112,7 @@ export interface WorkoutHistoryItem {
     NoNegativeDirective,
     HeaderComponent,
     NotificationPanelComponent,
+    ExerciseListEditorComponent,
   ],
 })
 export class SchedulePage implements OnInit, OnDestroy {
@@ -1066,18 +1068,6 @@ export class SchedulePage implements OnInit, OnDestroy {
     return items.sort((a, b) => b.dateKey.localeCompare(a.dateKey));
   }
 
-  // ── Exercise editing in edit panel ────────────────────────
-  addExerciseToBuffer(): void {
-    this.editBuffer.exercises = [
-      ...this.editBuffer.exercises,
-      { name: '', sets: null as unknown as number, reps: '' },
-    ];
-  }
-
-  removeExerciseFromBuffer(index: number): void {
-    this.editBuffer.exercises = this.editBuffer.exercises.filter((_, i) => i !== index);
-  }
-
   // ── Week Plan ─────────────────────────────────────────────
   private buildDefaultWeekPlanDays(): WeekPlanDay[] {
     const defaults = ['Upper Body','Cardio & Core','Rest Day','Upper Body','Full Body','Lower Body / Leg Day','Rest Day'];
@@ -1111,25 +1101,6 @@ export class SchedulePage implements OnInit, OnDestroy {
     day.isRest = day.title === 'Rest Day';
     if (day.isRest) { day.customTarget = ''; }
     day.exercises = [];
-  }
-
-  addWeekPlanExercise(dayIndex: number): void {
-    this.weekPlanDays[dayIndex].exercises = [
-      ...(this.weekPlanDays[dayIndex].exercises ?? []),
-      { name: '', sets: null as unknown as number, reps: '' },
-    ];
-  }
-
-  removeWeekPlanExercise(dayIndex: number, exIndex: number): void {
-    this.weekPlanDays[dayIndex].exercises = this.weekPlanDays[dayIndex].exercises.filter((_, i) => i !== exIndex);
-  }
-
-  addNewWorkoutExercise(): void {
-    this.newWorkoutExercises = [...this.newWorkoutExercises, { name: '', sets: null as unknown as number, reps: '' }];
-  }
-
-  removeNewWorkoutExercise(index: number): void {
-    this.newWorkoutExercises = this.newWorkoutExercises.filter((_, i) => i !== index);
   }
 
   saveWeekPlan(): void {

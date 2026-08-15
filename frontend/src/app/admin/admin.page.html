@@ -81,6 +81,9 @@
       <button class="tab-btn" [class.active]="activeTab==='attendance'" (click)="activeTab='attendance'">
         <ion-icon name="clipboard-outline"></ion-icon> Attendance
       </button>
+      <button class="tab-btn" *ngIf="canManageCoaches" [class.active]="activeTab==='coaches'" (click)="activeTab='coaches'">
+        <ion-icon name="fitness-outline"></ion-icon> Coaches
+      </button>
       <button class="tab-btn reports-btn" (click)="router.navigate(['/admin-reports'])">
         <ion-icon name="bar-chart-outline"></ion-icon> Reports
       </button>
@@ -636,6 +639,148 @@
           <div class="attend-name">{{ log.username }}</div>
           <div class="attend-meta">{{ log.equipment_name }} · Code: {{ log.equipment_code || '-' }}</div>
           <div class="attend-pay">Scanned at: {{ log.scanned_at | date:'h:mm a' }}</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ═════════════════════════════════════════════ -->
+    <!-- TAB: COACHES  (admin/super_admin only)         -->
+    <!-- ═════════════════════════════════════════════ -->
+    <div *ngIf="activeTab==='coaches' && canManageCoaches">
+
+      <div class="section-header-row">
+        <span class="section-label" style="margin:0">Coach Accounts</span>
+        <div class="header-actions">
+          <button class="refresh-btn" (click)="loadCoaches()" title="Refresh list">
+            <ion-icon name="refresh-outline"></ion-icon>
+            Refresh
+          </button>
+          <button class="add-btn" (click)="toggleAddCoach()">{{ showAddCoach ? '✕ Cancel' : '+ Add Coach' }}</button>
+        </div>
+      </div>
+
+      <!-- Add Coach Form -->
+      <div class="inline-form" *ngIf="showAddCoach">
+        <div class="form-title">New Coach</div>
+
+        <div class="filter-row">
+          <div class="filter-group">
+            <button class="filter-chip" [class.active]="coachFormMode==='new'" (click)="coachFormMode='new'">New Account</button>
+            <button class="filter-chip" [class.active]="coachFormMode==='promote'" (click)="coachFormMode='promote'">Promote Existing Member</button>
+          </div>
+        </div>
+
+        <!-- New account fields -->
+        <ng-container *ngIf="coachFormMode==='new'">
+          <input class="field-input" type="text"     placeholder="Username *"              [(ngModel)]="newCoach.username" />
+          <input class="field-input" type="email"    placeholder="Email *"                 [(ngModel)]="newCoach.email" />
+          <input class="field-input" type="password" placeholder="Password *"              [(ngModel)]="newCoach.password" />
+          <input class="field-input" type="tel"      placeholder="Phone number (optional)" [(ngModel)]="newCoach.phone" />
+          <select class="field-input" [(ngModel)]="newCoach.gender">
+            <option value="">Gender (optional)</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+          </select>
+        </ng-container>
+
+        <!-- Promote existing member -->
+        <select class="field-input" *ngIf="coachFormMode==='promote'" [(ngModel)]="newCoach.user_id">
+          <option [ngValue]="null">Select a member to promote *</option>
+          <option *ngFor="let m of promotableMembers" [ngValue]="m.id">{{ m.username }} ({{ m.email }})</option>
+        </select>
+        <div class="empty-state" *ngIf="coachFormMode==='promote' && promotableMembers.length === 0">
+          No eligible members — everyone already has a coach profile.
+        </div>
+
+        <!-- Shared coach profile fields -->
+        <textarea class="field-input" placeholder="Bio (optional)" [(ngModel)]="newCoach.bio" rows="2" style="resize:vertical;"></textarea>
+        <input class="field-input" type="text"   placeholder="Specialty (e.g. Strength & Conditioning)" [(ngModel)]="newCoach.specialty" />
+        <input class="field-input" type="number" placeholder="Session rate (₱)" [(ngModel)]="newCoach.rate" appNoNegative pattern="[0-9]*(\.[0-9]{1,2})?" />
+
+        <div class="image-upload-wrap">
+          <label class="image-upload-label">Coach Photo</label>
+          <label class="image-upload-btn">
+            <ion-icon name="camera-outline"></ion-icon>
+            <span>{{ newCoach.photo_url ? 'Change Photo' : 'Upload Photo' }}</span>
+            <input type="file" accept="image/*" style="display:none" (change)="onCoachImageChange($event, 'new')" />
+          </label>
+          <img *ngIf="newCoach.photo_url" [src]="newCoach.photo_url" class="image-preview" />
+        </div>
+
+        <button class="submit-btn" (click)="saveCoach()">Save Coach</button>
+      </div>
+
+      <!-- Edit Coach Form -->
+      <div class="inline-form" *ngIf="editingCoach">
+        <div class="form-title">Edit Coach — {{ editingCoach.username }}</div>
+        <textarea class="field-input" placeholder="Bio (optional)" [(ngModel)]="editingCoach.bio" rows="2" style="resize:vertical;"></textarea>
+        <input class="field-input" type="text"   placeholder="Specialty" [(ngModel)]="editingCoach.specialty" />
+        <input class="field-input" type="number" placeholder="Session rate (₱)" [(ngModel)]="editingCoach.rate" appNoNegative pattern="[0-9]*(\.[0-9]{1,2})?" />
+
+        <div class="image-upload-wrap">
+          <label class="image-upload-label">Coach Photo</label>
+          <label class="image-upload-btn">
+            <ion-icon name="camera-outline"></ion-icon>
+            <span>{{ editingCoach.photo_url ? 'Change Photo' : 'Upload Photo' }}</span>
+            <input type="file" accept="image/*" style="display:none" (change)="onCoachImageChange($event, 'edit')" />
+          </label>
+          <img *ngIf="editingCoach.photo_url" [src]="editingCoach.photo_url" class="image-preview" />
+        </div>
+
+        <div class="form-actions">
+          <button class="submit-btn" (click)="updateCoach()">Update</button>
+          <button class="cancel-btn" (click)="editingCoach=null">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Filter row -->
+      <div class="filter-row">
+        <div class="filter-group">
+          <span class="filter-label">Status:</span>
+          <button class="filter-chip" [class.active]="coachStatusFilter==='all'"      (click)="coachStatusFilter='all'">All</button>
+          <button class="filter-chip active" [class.active]="coachStatusFilter==='active'"   (click)="coachStatusFilter='active'">Active</button>
+          <button class="filter-chip pending" [class.active]="coachStatusFilter==='inactive'" (click)="coachStatusFilter='inactive'">Inactive</button>
+        </div>
+      </div>
+
+      <input class="search-input" type="text" placeholder="Search by name, email, or specialty…"
+        [(ngModel)]="coachSearch" />
+
+      <div class="empty-state" *ngIf="coachesLoading">
+        <ion-spinner name="crescent"></ion-spinner> Loading coaches...
+      </div>
+      <div class="empty-state" *ngIf="!coachesLoading && coachesError">
+        <ion-icon name="cloud-offline-outline" style="font-size:2rem;margin-bottom:8px;"></ion-icon><br/>
+        Could not load coaches. Check the server connection.
+        <br/><button class="submit-btn" style="margin-top:12px" (click)="loadCoaches()">Retry</button>
+      </div>
+      <div class="empty-state" *ngIf="!coachesLoading && !coachesError && filteredCoaches.length === 0">No coaches found.</div>
+
+      <div *ngFor="let c of filteredCoaches" class="member-row" [class.pending-row]="!c.is_active">
+        <div class="member-info">
+          <img *ngIf="c.profile_image" [src]="c.profile_image" class="member-avatar" style="object-fit:cover;" alt="{{ c.username }}" />
+          <ion-icon *ngIf="!c.profile_image" name="person-circle-outline" class="member-avatar" style="font-size:40px;"></ion-icon>
+          <div style="min-width:0;flex:1">
+            <div class="member-name">{{ c.username }}</div>
+            <div class="member-meta">{{ c.email }} <span *ngIf="c.specialty">· {{ c.specialty }}</span></div>
+            <div class="member-plan">
+              ₱{{ c.rate || 0 }} / session
+              <span class="membership-status-badge" [class.pending]="!c.is_active" [class.active]="c.is_active">
+                {{ c.is_active ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="row-actions">
+          <button class="act-btn edit" (click)="editCoach(c)"><ion-icon name="create-outline"></ion-icon> Edit</button>
+          <button class="act-btn approve-btn" *ngIf="!c.is_active" (click)="reactivateCoach(c)">
+            <ion-icon name="checkmark-circle-outline"></ion-icon> Reactivate
+          </button>
+          <button class="act-btn del" *ngIf="c.is_active" (click)="deactivateCoach(c)">
+            <ion-icon name="close-circle-outline"></ion-icon> Deactivate
+          </button>
         </div>
       </div>
 

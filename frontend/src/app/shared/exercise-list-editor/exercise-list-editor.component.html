@@ -1,0 +1,47 @@
+<!-- exercise-list-editor.component.html -->
+<div class="edit-exercises-section">
+  <div class="edit-exercises-header">
+    <span class="edit-exercises-title">{{ title }}</span>
+    <button type="button" class="add-ex-btn" (click)="addExercise()">
+      <ion-icon name="add-outline"></ion-icon> {{ addButtonLabel }}
+    </button>
+  </div>
+
+  <div class="wplan-exercises-empty" *ngIf="exercises.length === 0">
+    {{ emptyHint }}
+  </div>
+
+  <div class="edit-exercise-rows">
+    <div class="edit-exercise-row" *ngFor="let ex of exercises; let i = index; trackBy: trackByIndex">
+      <input
+        class="ex-edit-name"
+        type="text"
+        placeholder="e.g. Bench Press"
+        [ngModel]="ex.name"
+        (ngModelChange)="updateExercise(i, { name: $event })" />
+      <input
+        class="ex-edit-sets"
+        type="number"
+        [min]="1"
+        appNoNegative
+        placeholder="Sets"
+        pattern="[0-9]*"
+        [ngModel]="ex.sets"
+        (ngModelChange)="updateExercise(i, { sets: $event })" />
+      <input
+        class="ex-edit-reps"
+        type="text"
+        placeholder="Reps"
+        [ngModel]="ex.reps"
+        (ngModelChange)="updateExercise(i, { reps: $event })" />
+      <button
+        type="button"
+        class="ex-del-btn"
+        *ngIf="exercises.length > minItems"
+        (click)="removeExercise(i)"
+        title="Remove exercise">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+  </div>
+</div>

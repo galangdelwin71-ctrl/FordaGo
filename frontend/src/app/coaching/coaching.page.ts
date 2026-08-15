@@ -9,7 +9,6 @@ import {
   IonFooter,
   IonIcon,
   IonSpinner,
-  IonModal,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -27,7 +26,6 @@ import {
   notificationsOutline,
   checkmarkCircleOutline,
   closeOutline,
-  createOutline,
   arrowForwardOutline,
   sparklesOutline,
 } from 'ionicons/icons';
@@ -51,7 +49,6 @@ import { NotificationPanelComponent } from '../shared/notification-panel/notific
     IonFooter,
     IonIcon,
     IonSpinner,
-    IonModal,
     NotificationPanelComponent,
   ],
 })
@@ -79,16 +76,6 @@ export class CoachingPage implements OnInit {
   notifPanelOpen = false;
   unreadNotifCount = 0;
 
-  // Coach Profile Modal
-  isProfileModalOpen = false;
-  isSavingProfile = false;
-  myCoachProfile = {
-    bio: '',
-    specialty: 'Personal Training',
-    rate: 500,
-    photo_url: '',
-  };
-
   constructor(
     private router: Router,
     private auth: AuthService,
@@ -110,7 +97,6 @@ export class CoachingPage implements OnInit {
       notificationsOutline,
       checkmarkCircleOutline,
       closeOutline,
-      createOutline,
       arrowForwardOutline,
       sparklesOutline,
     });
@@ -119,7 +105,6 @@ export class CoachingPage implements OnInit {
   ngOnInit() {
     this.loadCoaches();
     this.loadConversations();
-    this.loadMyCoachProfile();
   }
 
   get user() {
@@ -160,22 +145,6 @@ export class CoachingPage implements OnInit {
       error: (err) => {
         console.error('Failed to load conversations', err);
       },
-    });
-  }
-
-  loadMyCoachProfile() {
-    this.coachingService.getMyCoachProfile().subscribe({
-      next: (res) => {
-        if (res) {
-          this.myCoachProfile = {
-            bio: res.bio || '',
-            specialty: res.specialty || 'Personal Training',
-            rate: res.rate || 500,
-            photo_url: res.profile_image || '',
-          };
-        }
-      },
-      error: () => {},
     });
   }
 
@@ -221,29 +190,6 @@ export class CoachingPage implements OnInit {
 
   openConversation(convo: Conversation) {
     this.router.navigate(['/chat', convo.id]);
-  }
-
-  openEditCoachProfile() {
-    this.isProfileModalOpen = true;
-  }
-
-  closeEditCoachProfile() {
-    this.isProfileModalOpen = false;
-  }
-
-  saveCoachProfile() {
-    this.isSavingProfile = true;
-    this.coachingService.updateCoachProfile(this.myCoachProfile).subscribe({
-      next: () => {
-        this.isSavingProfile = false;
-        this.isProfileModalOpen = false;
-        this.loadCoaches();
-      },
-      error: (err) => {
-        this.isSavingProfile = false;
-        console.error('Failed to update coach profile', err);
-      },
-    });
   }
 
   // ── Navigation ───────────────────────────────────────

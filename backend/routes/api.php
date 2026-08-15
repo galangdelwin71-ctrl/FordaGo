@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AdminCoachController;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CoachController;
@@ -143,13 +144,24 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/admin/inventory',    [ReportsController::class, 'adminInventory'])->middleware('role:admin,super_admin,employee');
     });
 
-    // ── Coaching & Chat (Coaching feature) ────────────────────────────────
+    // ── Coaching & Chat (Coaching feature) ─────────────────────────────────
+    // Read-only for regular users: browsing active coaches, viewing your own
+    // coach profile (if you have one), listing a coach's clients. Creating
+    // or editing a coach account is admin-only — see admin/coaches below.
+    // There is intentionally NO self-service "become a coach" route here.
     Route::prefix('coaches')->group(function () {
         Route::get('/',            [CoachController::class, 'index']);
         Route::get('/profile/me',  [CoachController::class, 'myProfile']);
-        Route::put('/profile',     [CoachController::class, 'updateProfile']);
         Route::get('/clients',     [CoachController::class, 'clients']);
         Route::get('/{id}',        [CoachController::class, 'show'])->whereNumber('id');
+    });
+
+    // ── Admin-only coach account management ────────────────────────────────
+    Route::prefix('admin/coaches')->middleware('role:admin,super_admin')->group(function () {
+        Route::get('/',             [AdminCoachController::class, 'index']);
+        Route::post('/',            [AdminCoachController::class, 'store']);
+        Route::put('/{userId}',     [AdminCoachController::class, 'update'])->whereNumber('userId');
+        Route::delete('/{userId}',  [AdminCoachController::class, 'destroy'])->whereNumber('userId');
     });
 
     Route::prefix('conversations')->group(function () {

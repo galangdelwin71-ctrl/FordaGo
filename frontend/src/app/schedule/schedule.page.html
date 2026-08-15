@@ -178,24 +178,10 @@
             </div>
 
             <!-- Exercise Editor -->
-            <div class="edit-exercises-section">
-              <div class="edit-exercises-header">
-                <span class="edit-exercises-title">Exercises</span>
-                <button class="add-ex-btn" (click)="addExerciseToBuffer()">
-                  <ion-icon name="add-outline"></ion-icon> Add
-                </button>
-              </div>
-              <div class="edit-exercise-rows">
-                <div class="edit-exercise-row" *ngFor="let ex of editBuffer.exercises; let j = index">
-                  <input class="ex-edit-name" type="text" placeholder="Exercise name" [(ngModel)]="editBuffer.exercises[j].name" />
-                  <input class="ex-edit-sets" type="number" [min]="1" appNoNegative placeholder="Sets" pattern="[0-9]*" [(ngModel)]="editBuffer.exercises[j].sets" />
-                  <input class="ex-edit-reps" type="text" placeholder="Reps" [(ngModel)]="editBuffer.exercises[j].reps" />
-                  <button class="ex-del-btn" (click)="removeExerciseFromBuffer(j)">
-                    <ion-icon name="close-outline"></ion-icon>
-                  </button>
-                </div>
-              </div>
-            </div>
+            <app-exercise-list-editor
+              [(exercises)]="editBuffer.exercises"
+              title="Exercises">
+            </app-exercise-list-editor>
 
             <div class="edit-actions">
               <button class="edit-save" (click)="saveEdit(sessionIndex(s))">Save changes</button>
@@ -424,27 +410,11 @@
         </div>
 
         <!-- Exercise Editor -->
-        <div class="edit-exercises-section">
-          <div class="edit-exercises-header">
-            <span class="edit-exercises-title">My Exercises <span class="label-optional">(Optional)</span></span>
-            <button class="add-ex-btn" (click)="addNewWorkoutExercise()">
-              <ion-icon name="add-outline"></ion-icon> Add
-            </button>
-          </div>
-          <div class="wplan-exercises-empty" *ngIf="newWorkoutExercises.length === 0">
-            Leave empty to use recommended exercises, or add your own below
-          </div>
-          <div class="edit-exercise-rows">
-            <div class="edit-exercise-row" *ngFor="let ex of newWorkoutExercises; let j = index">
-              <input class="ex-edit-name" type="text" placeholder="e.g. Bench Press" [(ngModel)]="newWorkoutExercises[j].name" />
-              <input class="ex-edit-sets" type="number" [min]="1" appNoNegative placeholder="Sets" pattern="[0-9]*" [(ngModel)]="newWorkoutExercises[j].sets" />
-              <input class="ex-edit-reps" type="text" placeholder="Reps" [(ngModel)]="newWorkoutExercises[j].reps" />
-              <button class="ex-del-btn" (click)="removeNewWorkoutExercise(j)">
-                <ion-icon name="close-outline"></ion-icon>
-              </button>
-            </div>
-          </div>
-        </div>
+        <app-exercise-list-editor
+          [(exercises)]="newWorkoutExercises"
+          title="My Exercises (Optional)"
+          emptyHint="Leave empty to use recommended exercises, or add your own below">
+        </app-exercise-list-editor>
 
         <div class="modal-actions">
           <button class="btn btn-secondary" (click)="closeAddModal()">Cancel</button>
@@ -645,27 +615,12 @@
             </div>
 
             <!-- Exercise Editor -->
-            <div class="edit-exercises-section">
-              <div class="edit-exercises-header">
-                <span class="edit-exercises-title">My Exercises</span>
-                <button class="add-ex-btn" (click)="addWeekPlanExercise(weekPlanActiveDay)">
-                  <ion-icon name="add-outline"></ion-icon> Add Exercise
-                </button>
-              </div>
-              <div class="wplan-exercises-empty" *ngIf="(day.exercises?.length ?? 0) === 0">
-                Tap "Add Exercise" to list your own exercises for this day
-              </div>
-              <div class="edit-exercise-rows">
-                <div class="edit-exercise-row" *ngFor="let ex of day.exercises; let j = index">
-                  <input class="ex-edit-name" type="text" placeholder="e.g. Bench Press" [(ngModel)]="weekPlanDays[weekPlanActiveDay].exercises[j].name" />
-                  <input class="ex-edit-sets" type="number" [min]="1" appNoNegative placeholder="Sets" pattern="[0-9]*" [(ngModel)]="weekPlanDays[weekPlanActiveDay].exercises[j].sets" />
-                  <input class="ex-edit-reps" type="text" placeholder="Reps" [(ngModel)]="weekPlanDays[weekPlanActiveDay].exercises[j].reps" />
-                  <button class="ex-del-btn" (click)="removeWeekPlanExercise(weekPlanActiveDay, j)">
-                    <ion-icon name="close-outline"></ion-icon>
-                  </button>
-                </div>
-              </div>
-            </div>
+            <app-exercise-list-editor
+              [(exercises)]="weekPlanDays[weekPlanActiveDay].exercises"
+              title="My Exercises"
+              addButtonLabel="Add Exercise"
+              emptyHint='Tap "Add Exercise" to list your own exercises for this day'>
+            </app-exercise-list-editor>
           </ng-container>
         </div>
 

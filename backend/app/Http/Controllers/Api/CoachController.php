@@ -8,20 +8,29 @@ use App\Models\Conversation;
 use App\Models\User;
 use Illuminate\Http\Request;
 
+/**
+ * Client-facing, READ-ONLY coach endpoints.
+ *
+ * Coach accounts can only be created or edited by an admin/super_admin —
+ * see AdminCoachController. There is intentionally no write/self-service
+ * endpoint in this controller.
+ */
 class CoachController extends Controller
 {
     /**
      * GET /api/coaches
-     * List all coaches with their profile details, specialties, and rates.
+     * List active coaches with their profile details, specialties, and rates.
      */
     public function index(Request $request)
     {
         $search = trim((string) $request->input('search', ''));
         $specialty = trim((string) $request->input('specialty', ''));
 
-        // Query users who have a coachProfile or role='coach'/'employee'/'admin'
+        // Only users with an ACTIVE coach profile are visible to clients.
         $query = User::with('coachProfile')
-            ->whereHas('coachProfile');
+            ->whereHas('coachProfile', function ($p) {
+                $p->where('is_active', true);
+            });
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
@@ -64,13 +73,13 @@ class CoachController extends Controller
 
     /**
      * GET /api/coaches/{id}
-     * Get specific coach profile details.
+     * Get specific coach profile details (must be active).
      */
     public function show(int $id)
     {
         $user = User::with('coachProfile')->find($id);
 
-        if (! $user) {
+        if (! $user || ! $user->coachProfile || ! $user->coachProfile->is_active) {
             return response()->json(['message' => 'Coach not found'], 404);
         }
 
@@ -93,7 +102,9 @@ class CoachController extends Controller
 
     /**
      * GET /api/coaches/profile/me
-     * Get the authenticated user's own coach profile.
+     * Get the authenticated user's own coach profile, if they have one.
+     * Read-only — safe to leave open to any authenticated user, since it
+     * only ever returns the caller's own data and creates nothing.
      */
     public function myProfile(Request $request)
     {
@@ -110,38 +121,8 @@ class CoachController extends Controller
             'bio'           => $profile?->bio ?: '',
             'specialty'     => $profile?->specialty ?: 'Personal Training',
             'rate'          => $profile?->rate ? (float) $profile->rate : 0.00,
+            'is_active'     => (bool) ($profile?->is_active ?? false),
             'has_profile'   => (bool) $profile,
-        ]);
-    }
-
-    /**
-     * PUT /api/coaches/profile
-     * Update or create the authenticated user's coach profile.
-     */
-    public function updateProfile(Request $request)
-    {
-        $request->validate([
-            'bio'        => 'nullable|string|max:1000',
-            'specialty'  => 'nullable|string|max:100',
-            'photo_url'  => 'nullable|string',
-            'rate'       => 'nullable|numeric|min:0',
-        ]);
-
-        $user = $request->user();
-
-        $profile = CoachProfile::updateOrCreate(
-            ['user_id' => $user->id],
-            [
-                'bio'       => $request->input('bio'),
-                'specialty' => $request->input('specialty', 'Personal Training'),
-                'photo_url' => $request->input('photo_url') ?: $user->profile_image,
-                'rate'      => $request->input('rate', 0.00),
-            ]
-        );
-
-        return response()->json([
-            'message' => 'Coach profile updated successfully',
-            'profile' => $profile,
         ]);
     }
 

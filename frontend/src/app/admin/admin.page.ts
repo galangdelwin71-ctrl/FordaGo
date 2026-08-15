@@ -11,6 +11,7 @@ import QRCode from 'qrcode';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { API_BASE_URL } from '../config/api.config';
+import { CoachingService } from '../services/coaching.service';
 
 @Component({
   selector: 'app-admin',
@@ -25,7 +26,7 @@ export class AdminPage implements OnInit {
   private readonly productImageQuality = 0.82;
   private readonly maxProductImagePayloadLength = 8_000_000;
 
-  activeTab: 'overview' | 'members' | 'schedule' | 'inventory' | 'equipment' | 'notifs' | 'attendance' = 'overview';
+  activeTab: 'overview' | 'members' | 'schedule' | 'inventory' | 'equipment' | 'coaches' | 'notifs' | 'attendance' = 'overview';
   private readonly api = this.resolveApiBase();
 
   private resolveApiBase(): string {
@@ -41,6 +42,10 @@ export class AdminPage implements OnInit {
     if (this.isEmployee) return 'Employee Panel';
     return 'Admin Panel';
   }
+  /** Coach account management is admin/super_admin only — backend enforces
+   *  this via role:admin,super_admin on /admin/coaches (employees excluded),
+   *  so the tab itself is hidden for employees rather than shown-then-403ing. */
+  get canManageCoaches(): boolean { return !this.isEmployee; }
   /** Roles the current user is allowed to assign when creating accounts */
   get assignableRoles(): { value: string; label: string }[] {
     if (this.isSuperAdmin) {
@@ -187,6 +192,54 @@ export class AdminPage implements OnInit {
   isLoadingQrCode = false;
   qrCodeError = '';
 
+  // ── Coaches ──────────────────────────────────────────
+  coaches: any[] = [];
+  coachesLoading = false;
+  coachesError = false;
+  coachSearch = '';
+  coachStatusFilter: 'all' | 'active' | 'inactive' = 'all';
+
+  showAddCoach = false;
+  editingCoach: any = null;
+  /** 'new' creates a brand-new user+coach account; 'promote' attaches a
+   *  coach profile to an existing member (see AdminCoachController::store). */
+  coachFormMode: 'new' | 'promote' = 'new';
+  newCoach = {
+    user_id: null as number | null,
+    username: '',
+    email: '',
+    password: '',
+    phone: '',
+    gender: '',
+    bio: '',
+    specialty: '',
+    photo_url: '',
+    rate: 0,
+  };
+
+  get filteredCoaches() {
+    const q = this.coachSearch.trim().toLowerCase();
+    return this.coaches.filter(c => {
+      const matchesSearch = !q
+        || c.username?.toLowerCase().includes(q)
+        || c.email?.toLowerCase().includes(q)
+        || c.specialty?.toLowerCase().includes(q);
+      const matchesStatus = this.coachStatusFilter === 'all'
+        ? true
+        : this.coachStatusFilter === 'active'
+          ? !!c.is_active
+          : !c.is_active;
+      return matchesSearch && matchesStatus;
+    });
+  }
+
+  /** Members who don't already have a coach profile — the only valid pool
+   *  for the "promote existing user" flow. */
+  get promotableMembers() {
+    const coachUserIds = new Set(this.coaches.map(c => c.user_id));
+    return this.members.filter(m => !coachUserIds.has(m.id));
+  }
+
   // ── Membership edit ──────────────────────────────────
   editingMembershipFor: any = null;
   membershipForm = { membership_type: 'premium', membership_expiry: '' };
@@ -194,7 +247,8 @@ export class AdminPage implements OnInit {
   constructor(
     private auth: AuthService,
     public router: Router,
-    private http: HttpClient
+    private http: HttpClient,
+    private coaching: CoachingService
   ) {}
 
   // ── Members load state ──────────────────────────────────
@@ -286,7 +340,30 @@ export class AdminPage implements OnInit {
       }
     });
 
+    // Coaches — admin/super_admin only; the backend 403s an employee token,
+    // so skip the call entirely rather than firing a request we know will
+    // fail and flipping coachesError on for a tab the employee never sees.
+    if (this.canManageCoaches) {
+      this.loadCoaches();
+    }
+
     this.loadDailyReports();
+  }
+
+  loadCoaches() {
+    this.coachesLoading = true;
+    this.coachesError   = false;
+    this.coaching.getAdminCoaches().subscribe({
+      next: data => {
+        this.coachesLoading = false;
+        this.coaches = data;
+      },
+      error: () => {
+        this.coachesLoading = false;
+        this.coachesError   = true;
+        this.coaches = [];
+      }
+    });
   }
 
   private toIsoDate(date: Date): string {
@@ -391,6 +468,7 @@ export class AdminPage implements OnInit {
   toggleAddSession()   { this.showAddSession   = !this.showAddSession;   this.editingSession   = null; }
   toggleAddProduct()   { this.showAddProduct   = !this.showAddProduct;   this.editingProduct   = null; }
   toggleAddEquipment() { this.showAddEquipment = !this.showAddEquipment; this.editingEquipment = null; }
+  toggleAddCoach()     { this.showAddCoach     = !this.showAddCoach;     this.editingCoach     = null; this.coachFormMode = 'new'; }
 
   // ── Members actions ──────────────────────────────────
   openAddMember() { this.toggleAddMember(); }
@@ -681,6 +759,138 @@ export class AdminPage implements OnInit {
         next: () => this.equipment = this.equipment.filter(x => x.id !== e.id),
         error: () => alert('Failed to delete equipment')
       });
+    });
+  }
+
+  // ── Coaches actions ────────────────────────────────────
+  openAddCoach() { this.toggleAddCoach(); }
+
+  editCoach(c: any) {
+    // The list endpoint returns the display field `profile_image` (photo_url
+    // falling back to the user's own avatar) but the update endpoint takes
+    // `photo_url` — seed the edit form from whichever image is currently
+    // showing so the preview isn't blank on open.
+    this.editingCoach = { ...c, photo_url: c.profile_image || '' };
+    this.showAddCoach = false;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async onCoachImageChange(event: Event, target: 'new' | 'edit'): Promise<void> {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+
+    try {
+      const result = await this.optimizeProductImage(file);
+
+      if (result.length > this.maxProductImagePayloadLength) {
+        alert('Image is still too large. Please choose a smaller photo.');
+        return;
+      }
+
+      if (target === 'new') {
+        this.newCoach.photo_url = result;
+      } else if (this.editingCoach) {
+        this.editingCoach.photo_url = result;
+      }
+    } catch {
+      alert('Failed to process image');
+    } finally {
+      (event.target as HTMLInputElement).value = '';
+    }
+  }
+
+  saveCoach() {
+    const isPromote = this.coachFormMode === 'promote';
+
+    if (isPromote && !this.newCoach.user_id) {
+      alert('Please select a member to promote.');
+      return;
+    }
+    if (!isPromote && (!this.newCoach.username || !this.newCoach.email || !this.newCoach.password)) {
+      alert('Username, email and password are required for a new coach account.');
+      return;
+    }
+
+    const rate = Number(this.newCoach.rate) || 0;
+    if (rate < 0) {
+      alert('Rate cannot be negative.');
+      return;
+    }
+
+    const payload: any = {
+      bio: this.newCoach.bio,
+      specialty: this.newCoach.specialty,
+      photo_url: this.newCoach.photo_url,
+      rate,
+    };
+
+    if (isPromote) {
+      payload.user_id = this.newCoach.user_id;
+    } else {
+      payload.username = this.newCoach.username;
+      payload.email    = this.newCoach.email;
+      payload.password = this.newCoach.password;
+      payload.phone    = this.newCoach.phone;
+      payload.gender   = this.newCoach.gender;
+    }
+
+    this.coaching.createCoach(payload).subscribe({
+      next: () => {
+        this.newCoach = { user_id: null, username: '', email: '', password: '', phone: '', gender: '', bio: '', specialty: '', photo_url: '', rate: 0 };
+        this.coachFormMode = 'new';
+        this.showAddCoach = false;
+        this.loadCoaches();
+      },
+      error: (e) => alert(e?.error?.message || 'Failed to create coach')
+    });
+  }
+
+  updateCoach() {
+    if (!this.editingCoach) return;
+
+    const rate = Number(this.editingCoach.rate) || 0;
+    if (rate < 0) {
+      alert('Rate cannot be negative.');
+      return;
+    }
+
+    const payload = {
+      bio: this.editingCoach.bio,
+      specialty: this.editingCoach.specialty,
+      photo_url: this.editingCoach.photo_url,
+      rate,
+    };
+
+    this.coaching.updateAdminCoach(this.editingCoach.user_id, payload).subscribe({
+      next: () => { this.editingCoach = null; this.loadCoaches(); },
+      error: (e) => alert(e?.error?.message || 'Failed to update coach')
+    });
+  }
+
+  // Soft-deactivate (backend never hard-deletes coach_profiles — see
+  // AdminCoachController::destroy). Reversible via reactivateCoach(), so
+  // this uses a plain confirm() rather than the destructive confirmDialog
+  // component, whose copy ("This action cannot be undone") would be wrong here.
+  deactivateCoach(c: any) {
+    const ok = confirm(`Deactivate ${c.username} as a coach? Their profile is kept and can be reactivated later.`);
+    if (!ok) return;
+
+    this.coaching.deleteAdminCoach(c.user_id).subscribe({
+      next: () => {
+        const idx = this.coaches.findIndex(x => x.user_id === c.user_id);
+        if (idx !== -1) this.coaches[idx].is_active = false;
+      },
+      error: (e) => alert(e?.error?.message || 'Failed to deactivate coach')
+    });
+  }
+
+  reactivateCoach(c: any) {
+    this.coaching.updateAdminCoach(c.user_id, { is_active: true }).subscribe({
+      next: () => {
+        const idx = this.coaches.findIndex(x => x.user_id === c.user_id);
+        if (idx !== -1) this.coaches[idx].is_active = true;
+      },
+      error: (e) => alert(e?.error?.message || 'Failed to reactivate coach')
     });
   }
 

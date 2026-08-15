@@ -1,0 +1,142 @@
+// exercise-list-editor.component.scss
+// Ported from schedule.page.scss's "Exercise Edit Rows in Edit Panel"
+// section (dark default) plus its light-theme override — this markup used
+// to live directly in schedule.page.html, so schedule.page.scss's rules
+// applied directly. Now that it's its own component, Angular's view
+// encapsulation means those page-level rules no longer reach this
+// template, so the rules are reproduced here as this component's own
+// scoped styles instead.
+
+:host {
+  display: block;
+}
+
+.edit-exercises-section {
+  margin-bottom: 10px;
+}
+
+.edit-exercises-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.edit-exercises-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.add-ex-btn {
+  height: 28px;
+  padding: 0 16px;
+  border-radius: 8px;
+  background: #FFD600;
+  border: none;
+  color: #222;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  box-shadow: 0 2px 10px rgba(255, 214, 0, 0.13);
+  transition: filter 0.15s, box-shadow 0.15s;
+
+  ion-icon { font-size: 15px; color: #222; }
+  &:active { filter: brightness(0.95); box-shadow: none; }
+}
+
+.edit-exercise-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.edit-exercise-row {
+  // Widened sets/reps columns so 2-digit + "10-12"-style ranges fit
+  // without clipping; delete button matched to the taller input height.
+  display: grid;
+  grid-template-columns: 1fr 58px 84px 30px;
+  gap: 6px;
+  align-items: center;
+}
+
+.ex-edit-name,
+.ex-edit-sets,
+.ex-edit-reps {
+  height: 38px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 8px;
+  padding: 0 9px;
+  color: #FFFFFF;
+  font-size: 14px;
+  outline: none;
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: border-color 0.15s;
+
+  &:focus { border-color: rgba(255, 214, 0, 0.25); }
+}
+
+.ex-del-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 0.5px solid rgba(239, 68, 68, 0.18);
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  ion-icon { font-size: 14px; }
+  &:active { opacity: 0.7; }
+}
+
+.wplan-exercises-empty {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.35);
+  padding: 8px 4px;
+  font-style: italic;
+}
+
+// ── Light Mode ────────────────────────────────────────────
+:host-context(body.light-theme) {
+  .edit-exercises-title {
+    color: #000000;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .add-ex-btn {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.25);
+    color: #d97706;
+  }
+
+  .ex-edit-name,
+  .ex-edit-sets,
+  .ex-edit-reps {
+    background: rgba(15, 23, 42, 0.05);
+    border-color: rgba(15, 23, 42, 0.12);
+    color: #0f172a;
+
+    &:focus { border-color: rgba(245, 158, 11, 0.4); }
+  }
+
+  .wplan-exercises-empty {
+    color: #000000;
+    font-size: 12px;
+    font-weight: 500;
+    opacity: 0.75;
+  }
+}

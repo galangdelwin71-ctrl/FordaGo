@@ -12,10 +12,6 @@
     </div>
 
     <div slot="end" class="header-end">
-      <button type="button" class="coach-header-btn" (click)="openEditCoachProfile()" title="Coach Profile Settings">
-        <ion-icon name="create-outline"></ion-icon>
-      </button>
-
       <button
         type="button"
         class="notif-bell-btn"
@@ -103,10 +99,7 @@
           <ion-icon name="barbell-outline"></ion-icon>
         </div>
         <h3>No Coaches Found</h3>
-        <p>No trainers match your search. Check back soon or set up your own coach profile!</p>
-        <button type="button" class="empty-cta-btn" (click)="openEditCoachProfile()">
-          <ion-icon name="create-outline"></ion-icon> Become a Coach
-        </button>
+        <p>No trainers match your search right now. Please check back soon.</p>
       </div>
 
       <!-- Coaches Grid -->
@@ -234,61 +227,3 @@
   (closed)="closeNotifPanel()"
   (unreadCountChange)="onUnreadCountChange($event)">
 </app-notification-panel>
-
-<!-- ── Coach Profile Modal ───────────────────────────── -->
-<ion-modal [isOpen]="isProfileModalOpen" (didDismiss)="closeEditCoachProfile()" class="coach-modal">
-  <ng-template>
-    <div class="modal-wrapper">
-      <div class="modal-header">
-        <h3>Coach Profile Settings</h3>
-        <button type="button" class="modal-close-btn" (click)="closeEditCoachProfile()">
-          <ion-icon name="close-outline"></ion-icon>
-        </button>
-      </div>
-
-      <div class="modal-body">
-        <div class="form-group">
-          <label>Specialty / Focus</label>
-          <select [(ngModel)]="myCoachProfile.specialty" class="form-input">
-            <option value="Personal Training">Personal Training</option>
-            <option value="Strength">Strength &amp; Conditioning</option>
-            <option value="Bodybuilding">Bodybuilding</option>
-            <option value="Weight Loss">Weight Loss &amp; Fat Burning</option>
-            <option value="HIIT">HIIT &amp; Functional Training</option>
-            <option value="Cardio">Cardio &amp; Endurance</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>Session Rate (₱ per workout plan / session)</label>
-          <input
-            type="number"
-            class="form-input"
-            [(ngModel)]="myCoachProfile.rate"
-            min="0"
-            step="50"
-            placeholder="500"
-          />
-        </div>
-
-        <div class="form-group">
-          <label>Coach Bio &amp; Qualifications</label>
-          <textarea
-            class="form-textarea"
-            rows="4"
-            [(ngModel)]="myCoachProfile.bio"
-            placeholder="Describe your training philosophy, certifications, and workout experience..."
-          ></textarea>
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button type="button" class="btn-cancel" (click)="closeEditCoachProfile()">Cancel</button>
-        <button type="button" class="btn-save" (click)="saveCoachProfile()" [disabled]="isSavingProfile">
-          <ion-spinner *ngIf="isSavingProfile" name="dots"></ion-spinner>
-          <span *ngIf="!isSavingProfile">Save Coach Profile</span>
-        </button>
-      </div>
-    </div>
-  </ng-template>
-</ion-modal>
