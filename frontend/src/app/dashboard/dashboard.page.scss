@@ -227,6 +227,30 @@ ion-content {
       color: var(--text-muted);
       font-weight: 500;
     }
+
+    .rest-day-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      font-size: 10px;
+      color: rgba(139, 92, 246, 0.85);
+      margin-top: 6px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      
+      ion-icon {
+        font-size: 12px;
+      }
+    }
+
+    &.on-rest-day {
+      border-color: rgba(139, 92, 246, 0.3) !important;
+      
+      &::before {
+        background: radial-gradient(circle at top right, rgba(139, 92, 246, 0.1) 0%, transparent 60%) !important;
+      }
+    }
   }
 }
 

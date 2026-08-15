@@ -156,6 +156,10 @@ export class DashboardPage implements OnInit, OnDestroy {
   avgMinutes        = 0;
   upcomingCount     = 0;
   totalMinutesThisMonth = 0;
+  
+  // Rest day tracking for better streak UX
+  isTodayRestDay = false;
+  hasTodayCompletedWorkout = false;
 
   // ── Stat Card Detail Panel ───────────────────────────
   // Tapping a "This Month" stat card opens a themed detail panel.
@@ -174,6 +178,11 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   // Motivational copy shown inside the Day Streak detail panel.
   get streakMotivation(): string {
+    // Special message when on rest day with active streak
+    if (this.isTodayRestDay && this.dayStreak > 0) {
+      return `Rest day! Your ${this.dayStreak}-day streak is safe. Recovery is part of the process.`;
+    }
+    
     if (this.dayStreak === 0) {
       return 'No active streak yet — complete a workout today to light the fire!';
     }
@@ -183,7 +192,7 @@ export class DashboardPage implements OnInit, OnDestroy {
     if (this.dayStreak < 7) {
       return `${this.dayStreak} days strong! You're building a real habit — don't stop now.`;
     }
-    return `${this.dayStreak} days on fire! One missed day resets it to zero, so keep showing up.`;
+    return `${this.dayStreak} days on fire! Rest days are OK, but missed workouts reset it to zero.`;
   }
 
   // ── Today's Workout ──────────────────────────────────
@@ -693,6 +702,12 @@ export class DashboardPage implements OnInit, OnDestroy {
     // without breaking or extending it; anything else — a missed session,
     // or a blank day with no record at all — ends the streak here.
     // (Stage 3: streak logic fix so rest days no longer reset progress.)
+    
+    // Check today's status for better UX messaging (reuse todaySessions from above)
+    this.isTodayRestDay = todaySessions.some(session => session.isRestDay);
+    this.hasTodayCompletedWorkout = todaySessions.some(session => session.status === 'done');
+    
+    // Calculate streak counting backward through completed days and rest days
     let streak = 0;
     const cursor = new Date(today);
     while (true) {

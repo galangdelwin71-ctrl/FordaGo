@@ -51,10 +51,14 @@
         <div class="stat-label">Sessions this month</div>
       </div>
       <div class="stat-card streak-card fade-up" role="button" tabindex="0"
+           [class.on-rest-day]="isTodayRestDay && dayStreak > 0"
            (click)="openStatDetail('streak')" (keyup.enter)="openStatDetail('streak')">
         <ion-icon name="flame-outline" class="stat-icon amber-icon"></ion-icon>
         <div class="stat-value amber">{{ dayStreak }}</div>
         <div class="stat-label">Day streak</div>
+        <div class="rest-day-badge" *ngIf="isTodayRestDay && dayStreak > 0">
+          <ion-icon name="moon-outline"></ion-icon> Rest Day
+        </div>
       </div>
       <div class="stat-card average-card fade-up" role="button" tabindex="0"
            (click)="openStatDetail('avg')" (keyup.enter)="openStatDetail('avg')">
