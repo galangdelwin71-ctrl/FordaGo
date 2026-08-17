@@ -3,36 +3,23 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
-  IonHeader,
-  IonToolbar,
   IonContent,
   IonFooter,
   IonIcon,
-  IonSpinner,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
   personOutline,
-  chatbubbleEllipsesOutline,
-  chatbubblesOutline,
-  searchOutline,
-  star,
-  cashOutline,
-  barbellOutline,
   homeOutline,
   calendarOutline,
   scanOutline,
   bagHandleOutline,
-  notificationsOutline,
-  checkmarkCircleOutline,
-  closeOutline,
-  arrowForwardOutline,
-  sparklesOutline,
 } from 'ionicons/icons';
 import { AuthService } from '../services/auth.service';
-import { CoachingService, Coach, Conversation } from '../services/coaching.service';
-import { NotificationCenterService } from '../services/notification-center.service';
+import { HeaderComponent } from '../shared/header/header.component';
 import { NotificationPanelComponent } from '../shared/notification-panel/notification-panel.component';
+import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.component';
+import { CoachingNavService } from '../services/coaching-nav.service';
 
 @Component({
   selector: 'app-coaching',
@@ -43,72 +30,85 @@ import { NotificationPanelComponent } from '../shared/notification-panel/notific
   imports: [
     CommonModule,
     FormsModule,
-    IonHeader,
-    IonToolbar,
     IonContent,
     IonFooter,
     IonIcon,
-    IonSpinner,
+    HeaderComponent,
     NotificationPanelComponent,
+    CoachingPanelComponent,
   ],
 })
 export class CoachingPage implements OnInit {
-  activeTab: 'explore' | 'conversations' = 'explore';
-  searchQuery = '';
-  activeSpecialty = 'All';
-
-  specialties: string[] = [
-    'All',
-    'Strength',
-    'Bodybuilding',
-    'Weight Loss',
-    'HIIT',
-    'Cardio',
-    'Personal Training',
-  ];
-
-  coaches: Coach[] = [];
-  conversations: Conversation[] = [];
-  isLoading = true;
-  isStartingChat = false;
-
   // Notification panel state
   notifPanelOpen = false;
   unreadNotifCount = 0;
 
+  /**
+   * Coaching panel state. Also forced open on init for coach accounts --
+   * see ngOnInit() -- since they have no separate landing screen to fall
+   * back to when closed.
+   */
+  coachingPanelOpen = false;
+  /** Set from CoachingNavService.consumeReopen() in ngOnInit() when this page is reached via ChatPage's back button -- see coaching-nav.service.ts. Cleared whenever the panel closes (closeCoachingPanel()) so it never silently re-applies to a later, unrelated open. */
+  coachingPanelInitialTab: 'conversations' | 'clients' | 'explore' | null = null;
+
   constructor(
     private router: Router,
     private auth: AuthService,
-    private coachingService: CoachingService,
-    private notifCenter: NotificationCenterService,
+    private coachingNav: CoachingNavService,
   ) {
     addIcons({
       personOutline,
-      chatbubbleEllipsesOutline,
-      chatbubblesOutline,
-      searchOutline,
-      star,
-      cashOutline,
-      barbellOutline,
       homeOutline,
       calendarOutline,
       scanOutline,
       bagHandleOutline,
-      notificationsOutline,
-      checkmarkCircleOutline,
-      closeOutline,
-      arrowForwardOutline,
-      sparklesOutline,
     });
   }
 
   ngOnInit() {
-    this.loadCoaches();
-    this.loadConversations();
+    // Reopen straight to Messages if we landed here via ChatPage's back
+    // button (see coaching-nav.service.ts) -- checked first since it's a
+    // more specific instruction than the coach-account default below, and
+    // both branches just result in the panel opening either way.
+    this.applyPendingCoachingReopen();
+    if (this.coachingPanelOpen) {
+      return;
+    }
+
+    // A coach account has no member-facing "Browse Coaches" landing here --
+    // the coaching panel (rendered as app-coach-dashboard content, see
+    // CoachingPanelComponent) IS this account's coaching management
+    // screen, so skip straight to it instead of showing the member-only
+    // "Ready to Level Up? / Browse Coaches" card, which never applied to a
+    // coach in the first place.
+    if (this.auth.isCoachAccount()) {
+      this.coachingPanelOpen = true;
+    }
   }
 
-  get user() {
-    return this.auth.user;
+  /**
+   * Re-applies a pending coaching-panel reopen on every re-entry into this
+   * page, not just its first creation. Ionic's router-outlet caches
+   * previously-visited pages, so navigating Coaching -> Chat -> back
+   * reuses the SAME CoachingPage instance instead of destroying/
+   * recreating it -- ngOnInit() never runs again on that path, only
+   * ionViewWillEnter() does. Without this hook, requestReopen('conversations')
+   * set by ChatPage.goBack() (see coaching-nav.service.ts) was silently
+   * dropped and the panel never reopened, stranding the member on a blank
+   * Coaching page instead of back in Personal Coaches/Messages.
+   */
+  ionViewWillEnter(): void {
+    this.applyPendingCoachingReopen();
+  }
+
+  /** One-shot: consumeReopen() clears itself, so a normal visit/re-entry to this page is completely unaffected. */
+  private applyPendingCoachingReopen(): void {
+    const pendingTab = this.coachingNav.consumeReopen();
+    if (pendingTab) {
+      this.coachingPanelInitialTab = pendingTab;
+      this.coachingPanelOpen = true;
+    }
   }
 
   get profileImage() {
@@ -123,73 +123,35 @@ export class CoachingPage implements OnInit {
     return (f + l).toUpperCase() || 'U';
   }
 
-  loadCoaches() {
-    this.isLoading = true;
-    this.coachingService.getCoaches(this.searchQuery, this.activeSpecialty).subscribe({
-      next: (res) => {
-        this.coaches = res || [];
-        this.isLoading = false;
-      },
-      error: (err) => {
-        console.error('Failed to load coaches', err);
-        this.isLoading = false;
-      },
-    });
-  }
-
-  loadConversations() {
-    this.coachingService.getConversations().subscribe({
-      next: (res) => {
-        this.conversations = res || [];
-      },
-      error: (err) => {
-        console.error('Failed to load conversations', err);
-      },
-    });
-  }
-
-  onSearchChange() {
-    this.loadCoaches();
-  }
-
-  selectSpecialty(spec: string) {
-    this.activeSpecialty = spec;
-    this.loadCoaches();
-  }
-
-  setTab(tab: 'explore' | 'conversations') {
-    this.activeTab = tab;
-    if (tab === 'conversations') {
-      this.loadConversations();
+  // ── Coaching Panel ────────────────────────────────────
+  // Routes through open/closeCoachingPanel() rather than flipping
+  // coachingPanelOpen directly -- closeCoachingPanel() also resets
+  // coachingPanelInitialTab, so a header-icon close after a deep-linked
+  // Messages open (see ngOnInit()) doesn't leave a stale override that
+  // silently reopens on Messages next time.
+  onCoachingClick() {
+    if (this.coachingPanelOpen) {
+      this.closeCoachingPanel();
     } else {
-      this.loadCoaches();
+      this.openCoachingPanel();
     }
   }
 
-  viewCoach(coach: Coach) {
-    this.router.navigate(['/coach', coach.id]);
+  openCoachingPanel() {
+    this.coachingPanelOpen = true;
   }
 
-  startChat(coach: Coach) {
-    if (this.isStartingChat) return;
-    this.isStartingChat = true;
-
-    this.coachingService.startConversation({ target_user_id: coach.user_id || coach.id }).subscribe({
-      next: (convo) => {
-        this.isStartingChat = false;
-        if (convo && convo.id) {
-          this.router.navigate(['/chat', convo.id]);
-        }
-      },
-      error: (err) => {
-        this.isStartingChat = false;
-        console.error('Failed to start chat', err);
-      },
-    });
-  }
-
-  openConversation(convo: Conversation) {
-    this.router.navigate(['/chat', convo.id]);
+  closeCoachingPanel() {
+    // A coach account has no landing screen to close BACK to (see
+    // ngOnInit()) -- closing here would otherwise strand the coach on a
+    // blank/member-only view with no way back into their own dashboard
+    // except the header icon, so immediately reopen instead of closing.
+    if (this.auth.isCoachAccount()) {
+      this.coachingPanelInitialTab = null;
+      return;
+    }
+    this.coachingPanelOpen = false;
+    this.coachingPanelInitialTab = null;
   }
 
   // ── Navigation ───────────────────────────────────────
@@ -200,6 +162,7 @@ export class CoachingPage implements OnInit {
   goToProfile() { this.router.navigate(['/profile']); }
   goToEquipment() { this.router.navigate(['/equipment']); }
 
+  // ── Notification Panel ────────────────────────────────
   openNotifPanel() { this.notifPanelOpen = true; }
   closeNotifPanel() { this.notifPanelOpen = false; }
   onUnreadCountChange(count: number) { this.unreadNotifCount = count; }

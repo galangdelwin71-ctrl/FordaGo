@@ -673,6 +673,8 @@
 
         <!-- New account fields -->
         <ng-container *ngIf="coachFormMode==='new'">
+          <input class="field-input" type="text"     placeholder="First name *"           [(ngModel)]="newCoach.first_name" />
+          <input class="field-input" type="text"     placeholder="Last name *"            [(ngModel)]="newCoach.last_name" />
           <input class="field-input" type="text"     placeholder="Username *"              [(ngModel)]="newCoach.username" />
           <input class="field-input" type="email"    placeholder="Email *"                 [(ngModel)]="newCoach.email" />
           <input class="field-input" type="password" placeholder="Password *"              [(ngModel)]="newCoach.password" />

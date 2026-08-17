@@ -30,12 +30,15 @@ const authGuard: CanActivateFn = () => {
 // Guard (Stage 5): the inverse of authGuard — if someone is already
 // logged in (valid token present), keep them off /login entirely and send
 // them to the page that matches their role: /admin for admin/super_admin/
-// employee, /dashboard for regular members. This is what makes it safe for
-// the back button handler in app.component.ts to fall back to plain
-// browser history navigation: even if that history happens to contain a
-// stale /login entry, landing on it while logged in just bounces straight
-// back out to the CORRECT side of the app — not always the member
-// dashboard, which would be wrong for a logged-in admin/staff account.
+// employee, /dashboard for everyone else (including coach accounts — a
+// coach is just a normal member account with an extra coaching panel
+// reachable from the header; there is no separate coach shell/route to
+// redirect into). This is what makes it safe for the back button handler
+// in app.component.ts to fall back to plain browser history navigation:
+// even if that history happens to contain a stale /login entry, landing
+// on it while logged in just bounces straight back out to the CORRECT
+// side of the app — not always the member dashboard, which would be wrong
+// for a logged-in admin/staff account.
 const guestGuard: CanActivateFn = () => {
   const token = localStorage.getItem('token');
   if (!token) return true;

@@ -1,190 +1,49 @@
 <!-- coaching.page.html -->
-<ion-header [translucent]="false" class="fordago-app-header ion-no-border">
-  <ion-toolbar class="fordago-toolbar">
-    <div slot="start" class="toolbar-brand">
-      <span class="brand-mark" aria-hidden="true">
-        <img src="/assets/icon/logo.png" class="brand-logo" alt="" />
-      </span>
-      <span class="toolbar-brand-copy">
-        <span class="toolbar-logo">FordaGO</span>
-        <span class="toolbar-subtitle">COACHING</span>
-      </span>
-    </div>
+<app-header
+  subtitle="COACHING"
+  [unreadCount]="unreadNotifCount"
+  [profileImage]="profileImage"
+  [initials]="initials"
+  (coachingClick)="onCoachingClick()"
+  (equipmentClick)="goToEquipment()"
+  (notifClick)="openNotifPanel()"
+  (profileClick)="goToProfile()">
+</app-header>
 
-    <div slot="end" class="header-end">
-      <button
-        type="button"
-        class="notif-bell-btn"
-        [class.has-unread]="unreadNotifCount > 0"
-        (click)="openNotifPanel()"
-        aria-label="Open notifications">
-        <ion-icon name="notifications-outline"></ion-icon>
-        <span class="notif-bell-badge" *ngIf="unreadNotifCount > 0">{{ unreadNotifCount }}</span>
-      </button>
+<!-- Coaching screen: in-flow replacement for ion-content below. Only one
+     of these two renders at a time -- header and footer stay untouched
+     siblings either way. -->
+<app-coaching-panel
+  *ngIf="coachingPanelOpen"
+  [isOpen]="coachingPanelOpen"
+  [initialTab]="coachingPanelInitialTab"
+  (closed)="closeCoachingPanel()">
+</app-coaching-panel>
 
-      <button type="button" class="profile-button" (click)="goToProfile()" aria-label="Open profile">
-        <span class="avatar" *ngIf="!profileImage">{{ initials }}</span>
-        <img *ngIf="profileImage" [src]="profileImage" alt="Profile" class="avatar avatar-img" />
-      </button>
-    </div>
-  </ion-toolbar>
-</ion-header>
-
-<ion-content [fullscreen]="false" class="fordago-page-content" [scrollY]="true">
+<ion-content *ngIf="!coachingPanelOpen" [fullscreen]="false" class="fordago-page-content" [scrollY]="true">
   <div class="scroll-wrap">
 
-    <!-- Page Header & Banner -->
+    <!-- Welcome Section -->
     <div class="page-title-wrap">
-      <div class="page-title">Personal Coaches</div>
-      <div class="page-sub">Connect with top trainers &amp; get custom workout plans</div>
+      <div class="page-title">Personal Coaching</div>
+      <div class="page-sub">Click the coaching icon in the header to explore trainers &amp; connect with coaches</div>
     </div>
 
-    <!-- Segmented Tabs: Explore vs Messages -->
-    <div class="coaching-nav-tabs">
-      <button
-        type="button"
-        class="coaching-tab-btn"
-        [class.is-active]="activeTab === 'explore'"
-        (click)="setTab('explore')">
-        <ion-icon name="sparkles-outline"></ion-icon>
-        <span>Explore Coaches</span>
-      </button>
-
-      <button
-        type="button"
-        class="coaching-tab-btn"
-        [class.is-active]="activeTab === 'conversations'"
-        (click)="setTab('conversations')">
-        <ion-icon name="chatbubbles-outline"></ion-icon>
-        <span>Active Chats</span>
-        <span class="badge-count" *ngIf="conversations.length > 0">{{ conversations.length }}</span>
-      </button>
+    <!-- Quick Action Card -->
+    <div class="coaching-cta-card">
+      <div class="cta-icon-wrap">
+        <ion-icon name="person-outline"></ion-icon>
+      </div>
+      <div class="cta-content">
+        <h3>Ready to Level Up?</h3>
+        <p>Connect with expert trainers and get personalized workout plans tailored to your goals.</p>
+        <button type="button" class="cta-button" (click)="openCoachingPanel()">
+          <ion-icon name="person-outline"></ion-icon>
+          Browse Coaches
+        </button>
+      </div>
     </div>
 
-    <!-- ── EXPLORE COACHES TAB ───────────────────────────── -->
-    <ng-container *ngIf="activeTab === 'explore'">
-
-      <!-- Search Input -->
-      <div class="search-wrap">
-        <ion-icon name="search-outline" class="search-icon-ion"></ion-icon>
-        <input
-          class="search-input"
-          type="text"
-          placeholder="Search coach by name or specialty..."
-          [(ngModel)]="searchQuery"
-          (ngModelChange)="onSearchChange()"
-        />
-      </div>
-
-      <!-- Specialty Pills -->
-      <div class="cat-row">
-        <div
-          *ngFor="let spec of specialties"
-          class="cat-chip"
-          [class.active]="activeSpecialty === spec"
-          (click)="selectSpecialty(spec)">
-          {{ spec }}
-        </div>
-      </div>
-
-      <!-- Loading State -->
-      <div class="loading-state" *ngIf="isLoading">
-        <ion-spinner name="crescent" color="warning"></ion-spinner>
-        <p>Loading expert coaches...</p>
-      </div>
-
-      <!-- Empty State -->
-      <div class="empty-state" *ngIf="!isLoading && coaches.length === 0">
-        <div class="empty-icon-wrap">
-          <ion-icon name="barbell-outline"></ion-icon>
-        </div>
-        <h3>No Coaches Found</h3>
-        <p>No trainers match your search right now. Please check back soon.</p>
-      </div>
-
-      <!-- Coaches Grid -->
-      <div class="coaches-grid" *ngIf="!isLoading && coaches.length > 0">
-        <div class="coach-card" *ngFor="let coach of coaches">
-          <div class="coach-card-header">
-            <div class="coach-avatar-wrap">
-              <img *ngIf="coach.profile_image" [src]="coach.profile_image" class="coach-avatar-img" [alt]="coach.first_name" />
-              <div *ngIf="!coach.profile_image" class="coach-avatar-placeholder">
-                {{ (coach.first_name || coach.username || 'C').charAt(0) }}
-              </div>
-              <span class="verified-dot" title="Verified Coach">✓</span>
-            </div>
-
-            <div class="coach-meta">
-              <h4 class="coach-name">{{ coach.first_name }} {{ coach.last_name }}</h4>
-              <div class="coach-username">&#64;{{ coach.username }}</div>
-              <span class="specialty-badge">{{ coach.specialty || 'Personal Training' }}</span>
-            </div>
-
-            <div class="coach-rate-badge">
-              <span class="rate-val">₱{{ coach.rate || 500 }}</span>
-              <span class="rate-label">/ session</span>
-            </div>
-          </div>
-
-          <p class="coach-bio">{{ coach.bio || 'Dedicated trainer focused on helping you reach peak performance safely and effectively.' }}</p>
-
-          <div class="coach-card-actions">
-            <button type="button" class="btn-profile" (click)="viewCoach(coach)">
-              View Profile
-            </button>
-            <button type="button" class="btn-message" (click)="startChat(coach)">
-              <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
-              Message
-            </button>
-          </div>
-        </div>
-      </div>
-
-    </ng-container>
-
-    <!-- ── ACTIVE CHATS / CONVERSATIONS TAB ─────────────── -->
-    <ng-container *ngIf="activeTab === 'conversations'">
-      <div class="conversations-list">
-        <div class="empty-state" *ngIf="conversations.length === 0">
-          <div class="empty-icon-wrap">
-            <ion-icon name="chatbubbles-outline"></ion-icon>
-          </div>
-          <h3>No Active Chats Yet</h3>
-          <p>Explore our coaches and send a message to start custom training sessions.</p>
-          <button type="button" class="empty-cta-btn" (click)="setTab('explore')">
-            <ion-icon name="sparkles-outline"></ion-icon> Browse Coaches
-          </button>
-        </div>
-
-        <div
-          class="convo-card"
-          *ngFor="let convo of conversations"
-          (click)="openConversation(convo)">
-          <div class="convo-avatar-wrap">
-            <img *ngIf="convo.partner.profile_image" [src]="convo.partner.profile_image" class="convo-avatar-img" />
-            <div *ngIf="!convo.partner.profile_image" class="convo-avatar-placeholder">
-              {{ (convo.partner.first_name || convo.partner.username || 'U').charAt(0) }}
-            </div>
-            <span class="unread-dot" *ngIf="convo.unread_count > 0"></span>
-          </div>
-
-          <div class="convo-info">
-            <div class="convo-top-row">
-              <h4 class="convo-name">{{ convo.partner.first_name }} {{ convo.partner.last_name }}</h4>
-              <span class="convo-time">{{ convo.updated_at | date:'shortTime' }}</span>
-            </div>
-            <div class="convo-role-tag">{{ convo.partner_role === 'coach' ? 'Personal Coach' : 'Client' }}</div>
-            <p class="convo-last-msg" [class.is-unread]="convo.unread_count > 0">
-              {{ convo.latest_message?.body || 'Start the conversation...' }}
-            </p>
-          </div>
-
-          <div class="convo-unread-pill" *ngIf="convo.unread_count > 0">
-            {{ convo.unread_count }}
-          </div>
-        </div>
-      </div>
-    </ng-container>
 
     <div class="page-bottom-space" aria-hidden="true"></div>
 

@@ -16,7 +16,7 @@
         </div>
 
         <div class="chat-partner-meta">
-          <h4 class="partner-name">{{ partner.first_name }} {{ partner.last_name }}</h4>
+          <h4 class="partner-name">{{ partnerDisplayName }}</h4>
           <span class="partner-role-tag">{{ conversation?.partner_role === 'coach' ? 'Personal Coach' : 'Client' }}</span>
         </div>
       </div>
@@ -38,6 +38,20 @@
     <div class="success-banner fade-in" *ngIf="successFeedback">
       <ion-icon name="checkmark-circle"></ion-icon>
       <span>{{ successFeedback }}</span>
+    </div>
+
+    <!-- Conversation Request Status (client side only -- a coach manages
+         these via the Requests tab on their own dashboard instead). Shown
+         while the coach hasn't yet accepted/declined this conversation,
+         so the member knows to wait for a reply rather than assuming the
+         coach is simply not responding. See Conversation.status. -->
+    <div class="request-status-banner pending" *ngIf="!isCoach && conversation?.status === 'pending'">
+      <ion-icon name="time-outline"></ion-icon>
+      <span>Waiting for {{ partnerDisplayName || 'the coach' }} to accept your request...</span>
+    </div>
+    <div class="request-status-banner declined" *ngIf="!isCoach && conversation?.status === 'declined'">
+      <ion-icon name="close-circle-outline"></ion-icon>
+      <span>{{ partnerDisplayName || 'This coach' }} didn't accept your request.</span>
     </div>
 
     <!-- Loading State -->
@@ -228,6 +242,30 @@
         <div class="form-alert" *ngIf="proposalError">
           <ion-icon name="alert-circle-outline"></ion-icon>
           <span>{{ proposalError }}</span>
+        </div>
+
+        <!-- Saved Programs picker: hydrates the whole form below from a
+             template built ahead of time via the "Create Program" Quick
+             Action on the Coach Dashboard, instead of typing a routine
+             from scratch every time. Only shown once programs actually
+             exist -- an empty state here would just be noise for a coach
+             who hasn't created any yet, and "Create Program" already lives
+             one tap away on the dashboard. -->
+        <div class="quick-ex-section" *ngIf="isLoadingSavedPrograms || savedPrograms.length > 0">
+          <label>Use a Saved Program</label>
+          <div class="loading-state" *ngIf="isLoadingSavedPrograms">
+            <ion-spinner name="crescent" color="warning"></ion-spinner>
+          </div>
+          <div class="quick-chips" *ngIf="!isLoadingSavedPrograms">
+            <button
+              type="button"
+              class="quick-chip-btn"
+              *ngFor="let program of savedPrograms"
+              (click)="applyProgram(program)"
+              [title]="program.description || program.name">
+              <ion-icon name="clipboard-outline"></ion-icon> {{ program.name }}
+            </button>
+          </div>
         </div>
 
         <!-- Date & Time Grid -->

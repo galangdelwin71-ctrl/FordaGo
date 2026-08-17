@@ -18,6 +18,7 @@ import { ThemeService } from '../services/theme.service';
 import { NoNegativeDirective } from '../directives/no-negative.directive';
 import { HeaderComponent } from '../shared/header/header.component';
 import { NotificationPanelComponent } from '../shared/notification-panel/notification-panel.component';
+import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.component';
 import { API_BASE_URL } from '../config/api.config';
 
 // ── Interfaces ────────────────────────────────────────
@@ -67,6 +68,7 @@ export interface ProgressHistoryItem {
     NoNegativeDirective,
     HeaderComponent,
     NotificationPanelComponent,
+    CoachingPanelComponent,
   ],
 })
 export class ProfilePage implements OnInit {
@@ -450,9 +452,23 @@ export class ProfilePage implements OnInit {
     this.unreadCount = count;
   }
 
+  // ── Coaching screen ────────────────────────────────────────
+  // In-flow replacement for ion-content (see profile.page.html) rather
+  // than an overlay -- header and footer are untouched siblings either way.
+  coachingPanelOpen = false;
+
+  onCoachingClick(): void {
+    this.coachingPanelOpen = !this.coachingPanelOpen;
+  }
+
+  closeCoachingPanel(): void {
+    this.coachingPanelOpen = false;
+  }
+
   private closeOverlaysForNavigation(): void {
     this.notifPanelOpen = false;
     this.logoutModalOpen = false;
+    this.coachingPanelOpen = false;
   }
 
   // ── Navigation ────────────────────────────────────────

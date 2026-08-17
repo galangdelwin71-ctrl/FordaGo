@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CoachProfile;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -46,6 +47,7 @@ class ConversationController extends Controller
                 'coach_id'        => $convo->coach_id,
                 'client_id'       => $convo->client_id,
                 'is_coach'        => $isCoach,
+                'status'          => $convo->status,
                 'partner'         => $partner,
                 'partner_role'    => $isCoach ? 'client' : 'coach',
                 'latest_message'  => $convo->latestMessage,
@@ -110,9 +112,19 @@ class ConversationController extends Controller
             }
         }
 
+        // A client starting a fresh thread with a coach requires that
+        // coach's approval (Requests tab). A coach reaching out to a
+        // prospective client doesn't need to approve their own message —
+        // that thread is active immediately. Only applies to brand-new
+        // conversations; firstOrCreate() never touches the status of one
+        // that already exists.
+        $initialStatus = ((int) $authId === (int) $clientId)
+            ? Conversation::STATUS_PENDING
+            : Conversation::STATUS_ACTIVE;
+
         $conversation = Conversation::firstOrCreate(
             ['coach_id' => $coachId, 'client_id' => $clientId],
-            ['created_at' => now(), 'updated_at' => now()]
+            ['status' => $initialStatus, 'created_at' => now(), 'updated_at' => now()]
         );
 
         $conversation->loadMissing([
@@ -128,6 +140,7 @@ class ConversationController extends Controller
             'coach_id'     => $conversation->coach_id,
             'client_id'    => $conversation->client_id,
             'is_coach'     => $isCoach,
+            'status'       => $conversation->status,
             'coach'        => $conversation->coach,
             'client'       => $conversation->client,
             'partner'      => $isCoach ? $conversation->client : $conversation->coach,
@@ -165,11 +178,85 @@ class ConversationController extends Controller
             'coach_id'     => $conversation->coach_id,
             'client_id'    => $conversation->client_id,
             'is_coach'     => $isCoach,
+            'status'       => $conversation->status,
             'coach'        => $conversation->coach,
             'client'       => $conversation->client,
             'partner'      => $isCoach ? $conversation->client : $conversation->coach,
             'partner_role' => $isCoach ? 'client' : 'coach',
             'created_at'   => $conversation->created_at,
+        ]);
+    }
+
+    /**
+     * POST /api/conversations/{id}/accept
+     * Coach accepts a pending client request -> conversation becomes active
+     * and shows up in the coach's normal Messages/My Clients list.
+     */
+    public function accept(int $id, Request $request)
+    {
+        $userId = $request->user()->id;
+
+        $conversation = Conversation::find($id);
+        if (! $conversation) {
+            return response()->json(['message' => 'Conversation not found.'], 404);
+        }
+
+        if ((int) $conversation->coach_id !== (int) $userId) {
+            return response()->json(['message' => 'Only the coach can accept this request.'], 403);
+        }
+
+        if (! $conversation->isPending()) {
+            return response()->json([
+                'message'      => 'This request is not pending.',
+                'conversation' => $conversation,
+            ], 400);
+        }
+
+        $conversation->update(['status' => Conversation::STATUS_ACTIVE]);
+
+        Notification::create([
+            'user_id' => $conversation->client_id,
+            'title'   => 'Request Accepted',
+            'message' => 'Your coach accepted your request. You can now chat and book sessions.',
+        ]);
+
+        return response()->json([
+            'message'      => 'Request accepted.',
+            'conversation' => $conversation,
+        ]);
+    }
+
+    /**
+     * POST /api/conversations/{id}/decline
+     * Coach declines a pending client request. Kept (not deleted) for audit
+     * — hidden from both sides' active lists by the frontend filtering on
+     * status, same as ProposalController::cancel()'s 'expired' pattern.
+     */
+    public function decline(int $id, Request $request)
+    {
+        $userId = $request->user()->id;
+
+        $conversation = Conversation::find($id);
+        if (! $conversation) {
+            return response()->json(['message' => 'Conversation not found.'], 404);
+        }
+
+        if ((int) $conversation->coach_id !== (int) $userId) {
+            return response()->json(['message' => 'Only the coach can decline this request.'], 403);
+        }
+
+        if (! $conversation->isPending()) {
+            return response()->json([
+                'message'      => 'This request is not pending.',
+                'conversation' => $conversation,
+            ], 400);
+        }
+
+        $conversation->update(['status' => Conversation::STATUS_DECLINED]);
+
+        return response()->json([
+            'message'      => 'Request declined.',
+            'conversation' => $conversation,
         ]);
     }
 }

@@ -1,5 +1,5 @@
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
@@ -33,10 +33,13 @@ import {
   alertCircleOutline,
   barbellOutline,
   locationOutline,
+  closeCircleOutline,
+  clipboardOutline,
 } from 'ionicons/icons';
 import { AuthService } from '../../services/auth.service';
-import { CoachingService, Conversation, Message, WorkoutPlanProposal } from '../../services/coaching.service';
+import { CoachingService, Conversation, Message, WorkoutPlanProposal, CoachProgram } from '../../services/coaching.service';
 import { EchoService } from '../../services/echo.service';
+import { CoachingNavService } from '../../services/coaching-nav.service';
 
 interface ProposalFormExercise {
   name: string;
@@ -82,6 +85,17 @@ export class ChatPage implements OnInit, OnDestroy {
   proposalError = '';
   successFeedback = '';
 
+  // Saved reusable programs ("Create Program" Quick Action on the Coach
+  // Dashboard, see CoachProgramController) that this coach can load into
+  // the proposal form below instead of typing a routine from scratch every
+  // time. Loaded lazily on first openProposalModal() -- see
+  // loadSavedProgramsIfNeeded() -- and cached for the lifetime of this
+  // chat visit; the Manage Programs modal on the dashboard is the only
+  // place programs are created/edited, this is just a read-only picker.
+  savedPrograms: CoachProgram[] = [];
+  isLoadingSavedPrograms = false;
+  private savedProgramsLoaded = false;
+
   quickExercises: string[] = [
     'Barbell Bench Press',
     'Barbell Back Squat',
@@ -114,9 +128,11 @@ export class ChatPage implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
+    private location: Location,
     private auth: AuthService,
     private coachingService: CoachingService,
     private echoService: EchoService,
+    private coachingNav: CoachingNavService,
   ) {
     addIcons({
       arrowBackOutline,
@@ -139,6 +155,8 @@ export class ChatPage implements OnInit, OnDestroy {
       alertCircleOutline,
       barbellOutline,
       locationOutline,
+      closeCircleOutline,
+      clipboardOutline,
     });
   }
 
@@ -170,6 +188,20 @@ export class ChatPage implements OnInit, OnDestroy {
 
   get partner() {
     return this.conversation?.partner;
+  }
+
+  /**
+   * Display name for the chat header. Falls back to username, then a
+   * generic label, so the header is never left blank -- first_name/
+   * last_name are optional on User (see AdminCoachController::store()),
+   * so a coach account created with only username/email would otherwise
+   * render an empty <h4> here.
+   */
+  get partnerDisplayName(): string {
+    const p = this.partner;
+    if (!p) return '';
+    const full = `${p.first_name || ''} ${p.last_name || ''}`.trim();
+    return full || p.username || 'FordaGO User';
   }
 
   private getDefaultTomorrowDate(): string {
@@ -268,6 +300,55 @@ export class ChatPage implements OnInit, OnDestroy {
   openProposalModal() {
     this.proposalError = '';
     this.isProposalModalOpen = true;
+    this.loadSavedProgramsIfNeeded();
+  }
+
+  /**
+   * Lazily fetches this coach's saved programs the first time the
+   * proposal modal is opened in this chat visit -- the list is scoped to
+   * the coach's own rows server-side (see CoachProgramController::index()),
+   * cheap to load, but no need to refetch on every re-open of the same
+   * modal. Guarded by isCoach so this never fires for a client account
+   * (the template only renders the "Propose Plan" trigger for isCoach, but
+   * this keeps the method itself safe if ever called directly).
+   */
+  private loadSavedProgramsIfNeeded(): void {
+    if (!this.isCoach || this.savedProgramsLoaded || this.isLoadingSavedPrograms) return;
+    this.isLoadingSavedPrograms = true;
+    this.coachingService.getPrograms().subscribe({
+      next: (res) => {
+        this.savedPrograms = res || [];
+        this.isLoadingSavedPrograms = false;
+        this.savedProgramsLoaded = true;
+      },
+      error: (err) => {
+        console.error('Failed to load saved programs', err);
+        this.isLoadingSavedPrograms = false;
+      },
+    });
+  }
+
+  /**
+   * "Use this program" -- hydrates the proposal form from a saved
+   * template (see CoachProgramController's own doc-comment: programs exist
+   * specifically to seed this form instead of the coach starting blank
+   * every time). Location is deliberately left untouched: a CoachProgram
+   * doesn't carry one (see CoachProgram model), so whatever the coach
+   * already typed/defaulted stays as-is. Session date is likewise
+   * untouched -- a template has no date of its own.
+   */
+  applyProgram(program: CoachProgram): void {
+    this.proposalForm.duration_minutes = program.duration_minutes || this.proposalForm.duration_minutes;
+    this.proposalForm.price = program.price ?? this.proposalForm.price;
+    if (program.items && program.items.length > 0) {
+      this.proposalForm.items = program.items.map((item) => ({
+        name: item.name || '',
+        sets: item.sets ?? 3,
+        reps: item.reps ?? 10,
+        description: item.description || '',
+      }));
+    }
+    this.showToast(`Loaded "${program.name}" — review details before sending.`);
   }
 
   closeProposalModal() {
@@ -372,7 +453,27 @@ export class ChatPage implements OnInit, OnDestroy {
     }, 100);
   }
 
+  /**
+   * Back button on a chat thread returns to whichever page the member
+   * actually came from (Dashboard, Schedule, or the Coaching page --
+   * the coaching panel opens as an overlay on top of all three), instead
+   * of always forcing a hard navigation to '/coaching'. That hardcoded
+   * redirect used to leave the bottom nav showing "Coaching" as the
+   * active tab even when the member had opened the chat from Dashboard
+   * or Schedule, and never actually returned them to that page.
+   * Location.back() walks the real browser/router history one step,
+   * which is always exactly the page + state the member was already on
+   * before openConversation()/openClientChat() pushed this /chat/:id
+   * route -- see CoachingPanelComponent.openConversation().
+   */
   goBack() {
-    this.router.navigate(['/coaching']);
+    // Both roles land on the panel's 'conversations' tab -- see
+    // CoachingPanelComponent.applyRequestedTab(), which maps this onto
+    // coachTab = 'messages' for a coach account or activeTab =
+    // 'conversations' for a member, so either side of a chat returns to
+    // their own Messages view instead of whatever tab the panel would
+    // otherwise default to.
+    this.coachingNav.requestReopen('conversations');
+    this.location.back();
   }
 }

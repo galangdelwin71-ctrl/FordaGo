@@ -19,9 +19,11 @@ import { WorkoutTrackerService } from '../services/workout-tracker.service';
 import { NoNegativeDirective } from '../directives/no-negative.directive';
 import { HeaderComponent } from '../shared/header/header.component';
 import { NotificationPanelComponent } from '../shared/notification-panel/notification-panel.component';
+import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.component';
+import { CoachingNavService } from '../services/coaching-nav.service';
 import { ExerciseListEditorComponent } from '../shared/exercise-list-editor/exercise-list-editor.component';
 import { API_BASE_URL } from '../config/api.config';
-import { buildExercisesFromTemplate } from '../data/workout-templates';
+import { buildExercisesFromTemplate, workoutTypes as sharedWorkoutTypes, getSuggestedTargets as sharedGetSuggestedTargets, getTargetPlaceholder as sharedGetTargetPlaceholder } from '../data/workout-templates';
 import type { WeekPlanTemplateDay, StoredWorkoutSession } from '../services/workout-tracker.service';
 
 // ── Interfaces ────────────────────────────────────────────
@@ -112,6 +114,7 @@ export interface WorkoutHistoryItem {
     NoNegativeDirective,
     HeaderComponent,
     NotificationPanelComponent,
+    CoachingPanelComponent,
     ExerciseListEditorComponent,
   ],
 })
@@ -129,62 +132,16 @@ export class SchedulePage implements OnInit, OnDestroy {
     'July','August','September','October','November','December',
   ];
 
-  readonly workoutTypes = [
-    'Upper Body',
-    'Lower Body / Leg Day',
-    'Cardio & Core',
-    'Full Body',
-    'Mobility & Stretch',
-    'Rest Day',
-  ];
+  readonly workoutTypes = sharedWorkoutTypes;
 
   readonly coaches   = ['Coach Ethan', 'Coach Ryza', 'Coach Marco'];
   readonly locations = ['Gym Floor B','Cardio Area','Weights Area','Functional Zone','Home'];
   readonly durationOptions = ['30 min','45 min','60 min','75 min','90 min'];
 
   // ── Suggested targets per workout type ───────────────────
-  private readonly suggestedTargetsMap: Record<string, string[]> = {
-    'Upper Body': [
-      'Back & Bicep',
-      'Chest & Tricep',
-      'Shoulders',
-      'Back & Rear Delt',
-      'Chest & Shoulder',
-      'Arms (Bi & Tri)',
-    ],
-    'Lower Body / Leg Day': [
-      'Quads & Glutes',
-      'Hamstrings & Glutes',
-      'Calves & Quads',
-      'Glutes Focus',
-      'Full Legs',
-    ],
-    'Cardio & Core': [
-      'HIIT',
-      'Steady State',
-      'Core & Abs',
-      'Jump Rope HIIT',
-      'Treadmill + Core',
-    ],
-    'Full Body': [
-      'Push / Pull / Legs',
-      'Compound Lifts',
-      'Circuit Training',
-      'Functional Strength',
-    ],
-    'Mobility & Stretch': [
-      'Hip Flexors',
-      'Upper Back',
-      'Full Body Stretch',
-      'Shoulder Mobility',
-      'Spine & Core',
-    ],
-    'Rest Day': [
-      'Light Walk',
-      'Foam Rolling',
-      'Active Recovery',
-    ],
-  };
+  // getSuggestedTargets()/getTargetPlaceholder() below delegate directly to
+  // ../data/workout-templates.ts (shared with the coach's Propose Workout
+  // Plan modal) — no local copy of the map is kept here anymore.
 
   // Home workout alternatives per workout type (string format for hw-card)
   private readonly homeWorkoutMap: Record<string, string[]> = {
@@ -340,16 +297,54 @@ export class SchedulePage implements OnInit, OnDestroy {
     private http: HttpClient,
     private auth: AuthService,
     private notificationCenter: NotificationCenterService,
-    private workoutTracker: WorkoutTrackerService
+    private workoutTracker: WorkoutTrackerService,
+    private coachingNav: CoachingNavService
   ) {}
 
+  /**
+   * Reopens the coaching panel straight to Messages if we landed here via
+   * ChatPage's back button (see coaching-nav.service.ts). One-shot --
+   * consumeReopen() clears itself, so a normal visit to Schedule is
+   * completely unaffected.
+   *
+   * Called from BOTH ngOnInit() (first mount) and ionViewWillEnter()
+   * (every re-entry) -- Ionic's router-outlet caches previously-visited
+   * pages, so navigating Schedule -> Chat -> back reuses the SAME
+   * SchedulePage instance instead of destroying/recreating it, and only
+   * fires ionViewWillEnter(), never ngOnInit() again. Relying on ngOnInit()
+   * alone silently dropped the pending tab on that path, leaving the
+   * member stranded on a plain Schedule page instead of back in Personal
+   * Coaches/Messages.
+   */
+  private applyPendingCoachingReopen(): void {
+    const pendingCoachTab = this.coachingNav.consumeReopen();
+    if (pendingCoachTab) {
+      this.coachingPanelInitialTab = pendingCoachTab;
+      this.coachingPanelOpen = true;
+    }
+  }
+
   ngOnInit(): void {
+    this.applyPendingCoachingReopen();
+
     this.applyUserContext();
     this.workoutTracker.startAutoSync();
     this.seedWeekSessions();
     this.seedMonthSessions();
     this.buildWeekStrip();
     this.renderSessions();
+    // Pull server-side sessions into the local store — e.g. a workout plan
+    // a coach proposed and the member just accepted in chat, which
+    // ProposalController::accept() writes straight into workout_sessions
+    // on the backend. Without this call the Schedule page NEVER learns
+    // about that row unless the member happens to visit the Dashboard
+    // first (the only other page that calls pullFromServer()) — the local
+    // store above is only seeded from templates, not synced from the
+    // server, so an accepted proposal silently never showed up here.
+    // Fire-and-forget: writeStore() inside pullFromServer() fires
+    // updates$, which the subscription below already listens to, so the
+    // currently-viewed day updates itself the moment the pull resolves.
+    void this.workoutTracker.pullFromServer();
     // Keep the displayed sessions in sync with the tracker's background
     // store even while the member stays on this page without navigating
     // away and back — e.g. the periodic 15s status poll in
@@ -368,11 +363,18 @@ export class SchedulePage implements OnInit, OnDestroy {
   }
 
   ionViewWillEnter(): void {
+    this.applyPendingCoachingReopen();
+
     this.applyUserContext();
     this.workoutTracker.syncStoreStatuses();
     this.seedMonthSessions();
     this.buildWeekStrip();
     this.renderSessions();
+    // Same reasoning as ngOnInit() above — re-pull on every re-entry (not
+    // just first mount) so a proposal accepted in chat, then immediately
+    // followed by Schedule via the bottom nav, shows up without the member
+    // needing to detour through the Dashboard first.
+    void this.workoutTracker.pullFromServer();
   }
 
   private applyUserContext(): void {
@@ -574,15 +576,11 @@ export class SchedulePage implements OnInit, OnDestroy {
   // ── Suggested targets & target placeholder ────────────────
 
   getSuggestedTargets(workoutType: string): string[] {
-    return this.suggestedTargetsMap[workoutType] ?? [];
+    return sharedGetSuggestedTargets(workoutType);
   }
 
   getTargetPlaceholder(workoutType: string): string {
-    const suggestions = this.suggestedTargetsMap[workoutType];
-    if (suggestions?.length) {
-      return `e.g. ${suggestions[0]}, ${suggestions[1] ?? ''}`.replace(/, $/, '');
-    }
-    return 'Enter your focus area...';
+    return sharedGetTargetPlaceholder(workoutType);
   }
 
   selectTarget(target: string): void {
@@ -1018,12 +1016,30 @@ export class SchedulePage implements OnInit, OnDestroy {
     this.unreadCount = count;
   }
 
+  // ── Coaching screen ────────────────────────────────────────
+  // In-flow replacement for ion-content (see schedule.page.html) rather
+  // than an overlay -- header and footer are untouched siblings either way.
+  coachingPanelOpen = false;
+  /** Set from CoachingNavService.consumeReopen() in ngOnInit() when this page is reached via ChatPage's back button -- see coaching-nav.service.ts. Cleared whenever the panel closes (closeOverlaysForNavigation()/closeCoachingPanel()) so it never silently re-applies to a later, unrelated open. */
+  coachingPanelInitialTab: 'conversations' | 'clients' | 'explore' | null = null;
+
+  onCoachingClick(): void {
+    this.coachingPanelOpen = !this.coachingPanelOpen;
+  }
+
+  closeCoachingPanel(): void {
+    this.coachingPanelOpen = false;
+    this.coachingPanelInitialTab = null;
+  }
+
   private closeOverlaysForNavigation(): void {
     this.notifPanelOpen = false;
     this.homeWorkoutModalOpen = false;
     this.historyModalOpen = false;
     this.weekPlanModalOpen = false;
     this.addModalOpen = false;
+    this.coachingPanelOpen = false;
+    this.coachingPanelInitialTab = null;
   }
 
   // ── Navigation ───────────────────────────────────────────

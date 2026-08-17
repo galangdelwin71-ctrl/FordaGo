@@ -97,4 +97,16 @@ class User extends Authenticatable
     {
         return $this->coachProfile()->exists();
     }
+
+    /** Weekly availability slots this user set up as a coach. */
+    public function coachAvailability()
+    {
+        return $this->hasMany(CoachAvailability::class, 'coach_id');
+    }
+
+    /** Reusable workout plan templates this user built as a coach. */
+    public function coachPrograms()
+    {
+        return $this->hasMany(CoachProgram::class, 'coach_id');
+    }
 }

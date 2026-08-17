@@ -4,13 +4,25 @@
   [unreadCount]="unreadCount"
   [profileImage]="profileImage"
   [initials]="initials"
-  (coachingClick)="goToCoaching()"
+  (coachingClick)="onCoachingClick()"
   (equipmentClick)="goToEquipment()"
   (notifClick)="openNotifPanel()"
   (profileClick)="goToProfile()">
 </app-header>
 
-<ion-content [fullscreen]="false" class="fordago-page-content" [scrollY]="true">
+<!-- Coaching screen: in-flow replacement for ion-content below (header
+     and footer are untouched siblings either way -- see coaching-panel
+     .component.scss for the flex sizing that makes this occupy the exact
+     slot ion-content normally fills). Only one of these two renders at a
+     time. -->
+<app-coaching-panel
+  *ngIf="coachingPanelOpen"
+  [isOpen]="coachingPanelOpen"
+  [initialTab]="coachingPanelInitialTab"
+  (closed)="closeCoachingPanel()">
+</app-coaching-panel>
+
+<ion-content *ngIf="!coachingPanelOpen" [fullscreen]="false" class="fordago-page-content" [scrollY]="true">
   <div class="content-inner">
 
     <!-- Greeting -->

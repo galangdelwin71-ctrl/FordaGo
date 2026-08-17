@@ -10,6 +10,9 @@ class WorkoutSession extends Model
 
     protected $fillable = [
         'user_id',
+        'coach_id',
+        'proposal_id',
+        'booking_id',
         'session_date',
         'client_session_id',
         'title',
@@ -39,5 +42,23 @@ class WorkoutSession extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /** Nullable: only set when this session came from an accepted coach proposal. */
+    public function coach()
+    {
+        return $this->belongsTo(User::class, 'coach_id');
+    }
+
+    /** Nullable: the proposal that generated this session, if any. */
+    public function proposal()
+    {
+        return $this->belongsTo(WorkoutPlanProposal::class, 'proposal_id');
+    }
+
+    /** Nullable: the public-class booking that generated this session, if any. */
+    public function booking()
+    {
+        return $this->belongsTo(ProgramBooking::class, 'booking_id');
     }
 }

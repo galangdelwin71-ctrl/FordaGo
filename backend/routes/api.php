@@ -3,13 +3,16 @@
 use App\Http\Controllers\Api\AdminCoachController;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CoachAvailabilityController;
 use App\Http\Controllers\Api\CoachController;
+use App\Http\Controllers\Api\CoachProgramController;
 use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\EquipmentController;
 use App\Http\Controllers\Api\InventoryController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PersonalRecordController;
+use App\Http\Controllers\Api\ProgramBookingController;
 use App\Http\Controllers\Api\ProposalController;
 use App\Http\Controllers\Api\ReportsController;
 use App\Http\Controllers\Api\ScheduleController;
@@ -150,9 +153,31 @@ Route::middleware('auth:sanctum')->group(function () {
     // or editing a coach account is admin-only — see admin/coaches below.
     // There is intentionally NO self-service "become a coach" route here.
     Route::prefix('coaches')->group(function () {
-        Route::get('/',            [CoachController::class, 'index']);
-        Route::get('/profile/me',  [CoachController::class, 'myProfile']);
-        Route::get('/clients',     [CoachController::class, 'clients']);
+        Route::get('/',                 [CoachController::class, 'index']);
+        Route::get('/dashboard-stats',  [CoachController::class, 'dashboardStats']);
+        Route::get('/requests',         [CoachController::class, 'requests']);
+        Route::get('/profile/me',       [CoachController::class, 'myProfile']);
+        Route::put('/profile/me',       [CoachController::class, 'updateMyProfile']);
+        Route::get('/clients',          [CoachController::class, 'clients']);
+
+        // Self-service weekly availability ("Set Availability").
+        Route::get('/availability',     [CoachAvailabilityController::class, 'index']);
+        Route::post('/availability',    [CoachAvailabilityController::class, 'store']);
+        Route::put('/availability/{id}',    [CoachAvailabilityController::class, 'update'])->whereNumber('id');
+        Route::delete('/availability/{id}', [CoachAvailabilityController::class, 'destroy'])->whereNumber('id');
+
+        // Self-service reusable workout templates ("Create Program").
+        Route::get('/programs',         [CoachProgramController::class, 'index']);
+        Route::post('/programs',        [CoachProgramController::class, 'store']);
+        Route::get('/programs/{id}',    [CoachProgramController::class, 'show'])->whereNumber('id');
+        Route::put('/programs/{id}',    [CoachProgramController::class, 'update'])->whereNumber('id');
+        Route::delete('/programs/{id}', [CoachProgramController::class, 'destroy'])->whereNumber('id');
+
+        // Roster for a public group class the coach owns (see programs/public below).
+        Route::get('/programs/{id}/bookings', [ProgramBookingController::class, 'roster'])->whereNumber('id');
+
+        // Keep this LAST in the group — {id} would otherwise shadow the
+        // static segments above for any all-numeric path.
         Route::get('/{id}',        [CoachController::class, 'show'])->whereNumber('id');
     });
 
@@ -168,6 +193,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/',                                  [ConversationController::class, 'index']);
         Route::post('/start',                            [ConversationController::class, 'start']);
         Route::get('/{id}',                              [ConversationController::class, 'show'])->whereNumber('id');
+        Route::post('/{id}/accept',                      [ConversationController::class, 'accept'])->whereNumber('id');
+        Route::post('/{id}/decline',                     [ConversationController::class, 'decline'])->whereNumber('id');
         Route::get('/{conversationId}/messages',         [MessageController::class, 'index'])->whereNumber('conversationId');
         Route::post('/{conversationId}/messages',        [MessageController::class, 'store'])->whereNumber('conversationId');
         Route::patch('/{conversationId}/read',           [MessageController::class, 'markRead'])->whereNumber('conversationId');
@@ -179,6 +206,17 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{id}',          [ProposalController::class, 'show'])->whereNumber('id');
         Route::post('/{id}/accept',  [ProposalController::class, 'accept'])->whereNumber('id');
         Route::post('/{id}/cancel',  [ProposalController::class, 'cancel'])->whereNumber('id');
+    });
+
+    // ── Public group classes ("Avail" flow) ────────────────────────────────
+    // Any authenticated member can browse and instant-book a seat, distinct
+    // from the 1-on-1 proposal flow above. Pay-at-gym only for now — see
+    // ProgramBookingController for why.
+    Route::prefix('programs')->group(function () {
+        Route::get('/public',            [ProgramBookingController::class, 'publicIndex']);
+        Route::get('/public/{id}',       [ProgramBookingController::class, 'publicShow'])->whereNumber('id');
+        Route::post('/{id}/book',        [ProgramBookingController::class, 'book'])->whereNumber('id');
+        Route::post('/{id}/book/cancel', [ProgramBookingController::class, 'cancel'])->whereNumber('id');
     });
 
 });

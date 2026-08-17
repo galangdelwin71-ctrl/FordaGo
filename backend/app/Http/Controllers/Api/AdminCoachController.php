@@ -105,6 +105,9 @@ class AdminCoachController extends Controller
                     if (! $username || ! $rawEmail || ! $password) {
                         abort(400, 'Username, email and password are required for a new coach account.');
                     }
+                    if ($firstName === '' || $lastName === '') {
+                        abort(400, 'First name and last name are required for a new coach account.');
+                    }
                     if (! preg_match('/^[^@\s]+@[^@\s]+\.[^@\s]+$/', $rawEmail)) {
                         abort(400, 'Invalid email format.');
                     }
@@ -128,8 +131,8 @@ class AdminCoachController extends Controller
                         'role'              => 'user',
                         'phone'             => $phone !== '' ? $phone : null,
                         'gender'            => $gender,
-                        'first_name'        => $firstName ?: null,
-                        'last_name'         => $lastName ?: null,
+                        'first_name'        => $firstName,
+                        'last_name'         => $lastName,
                         'membership_status' => 'active',
                     ]);
                 }

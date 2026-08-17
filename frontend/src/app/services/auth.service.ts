@@ -75,6 +75,17 @@ export class AuthService {
     return ['admin', 'super_admin', 'employee'].includes(this.user?.role);
   }
 
+  /**
+   * True only for accounts with an actual coach_profiles row (see
+   * AdminCoachController) — coach accounts deliberately keep role='user',
+   * so this can never be derived from `role`. Backed by `has_coach_profile`
+   * on the stored user object, set by AuthController::login()/UserController
+   * ::me() (see docs/COACH_DASHBOARD_PLAN.md §3.1).
+   */
+  isCoachAccount(): boolean {
+    return !!this.user?.has_coach_profile;
+  }
+
   updateCurrentUser(patch: Record<string, any>) {
     const current = this.userSubject.value;
     if (!current) return;

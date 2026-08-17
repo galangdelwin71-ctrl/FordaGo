@@ -211,6 +211,8 @@ export class AdminPage implements OnInit {
     password: '',
     phone: '',
     gender: '',
+    first_name: '',
+    last_name: '',
     bio: '',
     specialty: '',
     photo_url: '',
@@ -810,6 +812,10 @@ export class AdminPage implements OnInit {
       alert('Username, email and password are required for a new coach account.');
       return;
     }
+    if (!isPromote && (!this.newCoach.first_name.trim() || !this.newCoach.last_name.trim())) {
+      alert('First name and last name are required for a new coach account.');
+      return;
+    }
 
     const rate = Number(this.newCoach.rate) || 0;
     if (rate < 0) {
@@ -827,16 +833,18 @@ export class AdminPage implements OnInit {
     if (isPromote) {
       payload.user_id = this.newCoach.user_id;
     } else {
-      payload.username = this.newCoach.username;
-      payload.email    = this.newCoach.email;
-      payload.password = this.newCoach.password;
-      payload.phone    = this.newCoach.phone;
-      payload.gender   = this.newCoach.gender;
+      payload.username   = this.newCoach.username;
+      payload.email      = this.newCoach.email;
+      payload.password   = this.newCoach.password;
+      payload.phone      = this.newCoach.phone;
+      payload.gender     = this.newCoach.gender;
+      payload.first_name = this.newCoach.first_name.trim();
+      payload.last_name  = this.newCoach.last_name.trim();
     }
 
     this.coaching.createCoach(payload).subscribe({
       next: () => {
-        this.newCoach = { user_id: null, username: '', email: '', password: '', phone: '', gender: '', bio: '', specialty: '', photo_url: '', rate: 0 };
+        this.newCoach = { user_id: null, username: '', email: '', password: '', phone: '', gender: '', first_name: '', last_name: '', bio: '', specialty: '', photo_url: '', rate: 0 };
         this.coachFormMode = 'new';
         this.showAddCoach = false;
         this.loadCoaches();

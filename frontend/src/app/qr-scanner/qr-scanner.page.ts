@@ -12,6 +12,7 @@ import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
 import { Html5Qrcode } from 'html5-qrcode';
 import { HeaderComponent } from '../shared/header/header.component';
+import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.component';
 import { API_BASE_URL } from '../config/api.config';
 
 // ── Interfaces ────────────────────────────────────────────
@@ -51,6 +52,7 @@ export interface EquipmentTutorial {
     IonIcon,
     IonModal,
     HeaderComponent,
+    CoachingPanelComponent,
   ],
 })
 export class QrScannerPage implements OnInit, OnDestroy {
@@ -555,8 +557,31 @@ export class QrScannerPage implements OnInit, OnDestroy {
     this.activeEquipment   = null;
   }
 
+  // ── Coaching screen ────────────────────────────────────────
+  // In-flow replacement for ion-content (see qr-scanner.page.html) rather
+  // than an overlay -- header and footer are untouched siblings either way.
+  coachingPanelOpen = false;
+
+  onCoachingClick(): void {
+    const opening = !this.coachingPanelOpen;
+    // Opening the coaching screen removes ion-content (and the camera's
+    // target <div> inside it) from the DOM entirely, unlike the old
+    // absolutely-positioned overlay which just visually covered it while
+    // the camera kept running underneath. Stop any in-progress scan first
+    // so html5-qrcode isn't left holding a reference to a detached element
+    // (dangling camera stream / stray errors on its next stop() call).
+    if (opening && this.isScanning) {
+      void this.stopScan();
+    }
+    this.coachingPanelOpen = opening;
+  }
+
+  closeCoachingPanel(): void {
+    this.coachingPanelOpen = false;
+  }
+
   // ── Navigation ────────────────────────────────────────
-  private closeOverlaysForNavigation(): void { this.notifPanelOpen = false; this.notifDetailOpen = false; this.selectedNotification = null; }
+  private closeOverlaysForNavigation(): void { this.notifPanelOpen = false; this.notifDetailOpen = false; this.selectedNotification = null; this.coachingPanelOpen = false; }
 
   goBack():        void { this.closeOverlaysForNavigation(); this.router.navigate(['/dashboard']); }
   goToDashboard(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/dashboard']); }

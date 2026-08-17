@@ -1,0 +1,1543 @@
+// coaching-panel.component.scss
+//
+// In-flow full-bleed coaching screen. This is NOT a fixed-position overlay
+// or side drawer -- :host is a normal flex child sized to fill the exact
+// slot <ion-content> would occupy (between app-header and ion-footer),
+// because the parent page's root has `display:flex; flex-direction:column`
+// (see .ion-page.fordago-page in global.scss) and only ever renders ONE of
+// <ion-content> / <app-coaching-panel> at a time via *ngIf. Header and
+// footer are untouched siblings, so they always stay visible.
+//
+// Color tokens use var(--token, #fallback) rather than a bare var(--token):
+// theme/variables.scss (which defines --accent-lime, --bg-primary, etc.) is
+// only wired into the Karma test build in angular.json, not the actual app
+// build, so those custom properties are not guaranteed to exist on :root at
+// runtime. The fallback keeps this component correct either way, and it
+// will pick up the real token automatically if that build config is fixed.
+//
+// The `cd-` prefixed classes below are the Coach Dashboard content, ported
+// in full from the old standalone /coach-dashboard route (now retired —
+// see coaching-panel.component.ts). They are deliberately namespaced so
+// they never collide with this file's own pre-existing .card/.empty-state/
+// etc. classes used by the member Explore/Messages flow further down.
+
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-height: 0;
+  height: 0;
+  width: 100%;
+  overflow: hidden;
+  background: var(--bg-primary, #06080f);
+}
+
+// ── Panel Header ──────────────────────────────────────────
+.panel-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid var(--border-secondary, rgba(255, 255, 255, 0.08));
+}
+
+.panel-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.panel-header-icon-wrap {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-dim, rgba(255, 214, 0, 0.1));
+  border: 1px solid var(--accent-border, rgba(255, 214, 0, 0.25));
+  color: var(--accent-lime, #ffd600);
+  font-size: 21px;
+}
+
+.panel-header-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-primary, #ffffff);
+  letter-spacing: -0.4px;
+  line-height: 1.15;
+}
+
+.panel-header-sub {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--text-muted, rgba(255, 255, 255, 0.5));
+}
+
+.panel-close-btn {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid var(--accent-border, rgba(255, 214, 0, 0.3));
+  background: var(--accent-dim, rgba(255, 214, 0, 0.12));
+  color: var(--accent-lime, #ffd600);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 19px;
+  padding: 0;
+
+  &:active {
+    transform: scale(0.95);
+    background: rgba(255, 214, 0, 0.25);
+  }
+}
+
+// ── Member Tabs (Explore / Messages) ────────────────────────
+.panel-tabs {
+  flex: 0 0 auto;
+  display: flex;
+  background: var(--overlay-light, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border-secondary, rgba(255, 255, 255, 0.08));
+  border-radius: 16px;
+  padding: 4px;
+  gap: 6px;
+  margin: 16px 16px 0;
+
+  .panel-tab-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-tertiary, rgba(255, 255, 255, 0.6));
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+
+    ion-icon { font-size: 16px; }
+
+    &.is-active {
+      background: var(--accent-lime, #ffd600);
+      color: var(--bg-primary, #06080f);
+      font-weight: 700;
+      box-shadow: 0 4px 16px rgba(255, 214, 0, 0.3);
+
+      .tab-badge-count {
+        background: var(--bg-primary, #06080f);
+        color: var(--accent-lime, #ffd600);
+      }
+    }
+
+    .tab-badge-count {
+      background: var(--accent-dim, rgba(255, 214, 0, 0.2));
+      color: var(--accent-lime, #ffd600);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 10px;
+    }
+  }
+}
+
+// ── Scrollable Content Area ─────────────────────────────────
+.panel-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 14px 16px 24px;
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb {
+    background: var(--overlay-heavy, rgba(255, 255, 255, 0.15));
+    border-radius: 4px;
+  }
+}
+
+// ── Search (Explore Coaches) ─────────────────────────────────
+.search-wrap {
+  position: relative;
+  margin-bottom: 12px;
+
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted, rgba(255, 255, 255, 0.4));
+    font-size: 16px;
+    pointer-events: none;
+  }
+
+  .search-input {
+    width: 100%;
+    box-sizing: border-box;
+    background: var(--overlay-light, rgba(255, 255, 255, 0.05));
+    border: 1px solid var(--border-primary, rgba(255, 255, 255, 0.1));
+    border-radius: 12px;
+    padding: 10px 14px 10px 38px;
+    color: var(--text-primary, #ffffff);
+    font-size: 13px;
+    outline: none;
+    transition: all 0.2s ease;
+
+    &::placeholder { color: var(--text-muted, rgba(255, 255, 255, 0.35)); }
+    &:focus {
+      border-color: var(--accent-border, rgba(255, 214, 0, 0.5));
+      background: var(--overlay-medium, rgba(255, 255, 255, 0.07));
+    }
+  }
+}
+
+// ── Specialty Pills ────────────────────────────────────────
+.specialty-row {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  margin-bottom: 14px;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar { display: none; }
+
+  .specialty-chip {
+    flex-shrink: 0;
+    padding: 6px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border-primary, rgba(255, 255, 255, 0.12));
+    background: var(--overlay-light, rgba(255, 255, 255, 0.04));
+    color: var(--text-tertiary, rgba(255, 255, 255, 0.65));
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+
+    &.active {
+      background: rgba(255, 214, 0, 0.15);
+      border-color: var(--accent-border, rgba(255, 214, 0, 0.35));
+      color: var(--accent-lime, #ffd600);
+    }
+  }
+}
+
+// ── Loading & Empty States (member flow) ─────────────────────
+.loading-state,
+.empty-state {
+  text-align: center;
+  padding: 30px 16px;
+
+  p {
+    color: var(--text-muted, rgba(255, 255, 255, 0.5));
+    font-size: 12px;
+    margin-top: 8px;
+  }
+}
+
+.empty-state {
+  .empty-icon-wrap {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 12px;
+    background: var(--accent-dim, rgba(255, 214, 0, 0.1));
+    border: 1px solid var(--accent-border, rgba(255, 214, 0, 0.2));
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-lime, #ffd600);
+    font-size: 26px;
+  }
+
+  h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary, #ffffff);
+    margin-bottom: 4px;
+  }
+
+  .empty-cta-btn {
+    margin-top: 14px;
+    background: var(--accent-lime, #ffd600);
+    color: var(--bg-primary, #06080f);
+    border: none;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 9px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+
+// ── Coach Cards (Explore Coaches) ────────────────────────────
+.coach-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.coach-card {
+  background: var(--overlay-light, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border-secondary, rgba(255, 255, 255, 0.08));
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.coach-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.coach-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.coach-avatar-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--accent-border, rgba(255, 214, 0, 0.3));
+}
+
+.coach-avatar-placeholder {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--accent-dim, rgba(255, 214, 0, 0.15));
+  border: 2px solid var(--accent-border, rgba(255, 214, 0, 0.3));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-lime, #ffd600);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.coach-verified-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 16px;
+  height: 16px;
+  background: var(--accent-green, #00d68f);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bg-primary, #0d111e);
+
+  ion-icon { font-size: 9px; color: #fff; }
+}
+
+.coach-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.coach-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary, #ffffff);
+  margin: 0 0 2px;
+}
+
+.coach-username {
+  font-size: 11px;
+  color: var(--text-muted, rgba(255, 255, 255, 0.5));
+}
+
+.coach-specialty {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent-lime, #ffd600);
+  background: var(--accent-dim, rgba(255, 214, 0, 0.1));
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.coach-rate {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.coach-rate-amount {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--accent-lime, #ffd600);
+}
+
+.coach-rate-label {
+  display: block;
+  font-size: 9px;
+  color: var(--text-muted, rgba(255, 255, 255, 0.4));
+}
+
+.coach-bio {
+  font-size: 11px;
+  color: var(--text-tertiary, rgba(255, 255, 255, 0.55));
+  line-height: 1.5;
+  margin: 8px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.coach-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.coach-btn {
+  flex: 1;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+
+  ion-icon { font-size: 14px; }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
+.coach-btn-view {
+  background: var(--overlay-medium, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--border-primary, rgba(255, 255, 255, 0.1));
+  color: var(--text-primary, #ffffff);
+}
+
+.coach-btn-message {
+  background: var(--accent-lime, #ffd600);
+  border: none;
+  color: var(--bg-primary, #06080f);
+}
+
+// ── Conversations List (member Messages tab) ─────────────────
+.convo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.convo-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: var(--overlay-light, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border-secondary, rgba(255, 255, 255, 0.08));
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:active {
+    transform: scale(0.98);
+    background: var(--overlay-medium, rgba(255, 255, 255, 0.06));
+  }
+}
+
+.convo-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.convo-avatar-img {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.convo-avatar-placeholder {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--accent-dim, rgba(255, 214, 0, 0.15));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-lime, #ffd600);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.convo-unread-dot {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  background: var(--accent-red, #ff4461);
+  border-radius: 50%;
+  border: 2px solid var(--bg-primary, #0d111e);
+}
+
+.convo-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.convo-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.convo-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary, #ffffff);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.convo-time {
+  font-size: 10px;
+  color: var(--text-muted, rgba(255, 255, 255, 0.4));
+  flex-shrink: 0;
+}
+
+.convo-role-tag {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-muted, rgba(255, 255, 255, 0.5));
+  margin-top: 2px;
+}
+
+.convo-last-msg {
+  font-size: 11px;
+  color: var(--text-muted, rgba(255, 255, 255, 0.5));
+  margin: 4px 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  &.is-unread {
+    color: var(--text-secondary, rgba(255, 255, 255, 0.8));
+    font-weight: 600;
+  }
+}
+
+.convo-unread-pill {
+  background: var(--accent-red, #ff4461);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+// ── Class Cards (Browse Classes / "Avail" flow) ──────────────
+// Reuses .coach-card/.coach-btn etc. from Explore Coaches above -- only
+// the class-specific schedule/capacity bits get their own classes here.
+.class-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 8px 0;
+}
+
+.class-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary, rgba(255, 255, 255, 0.6));
+
+  ion-icon { font-size: 13px; color: var(--accent-lime, #ffd600); }
+}
+
+.class-capacity-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.class-spots {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--accent-green, #00d68f);
+
+  &.is-full { color: var(--accent-red, #ff4461); }
+}
+
+.coach-btn-cancel {
+  background: rgba(255,68,97,0.1);
+  border: 1px solid rgba(255,68,97,0.22);
+  color: var(--accent-red, #ff4461);
+}
+
+// ═══════════════════════════════════════════════════════════
+// COACH DASHBOARD content (isCoach === true) — `cd-` namespace
+// ═══════════════════════════════════════════════════════════
+
+.cd-title-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.cd-settings-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 11px;
+  border: 1px solid var(--border-secondary, rgba(255, 255, 255, 0.08));
+  background: var(--overlay-light, rgba(255, 255, 255, 0.04));
+  color: var(--text-secondary, rgba(255, 255, 255, 0.75));
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+
+  ion-icon { font-size: 15px; }
+  &:active { opacity: 0.7; }
+}
+
+.cd-card {
+  background: var(--overlay-light, rgba(255, 255, 255, 0.04));
+  border-radius: 18px;
+  padding: 16px;
+  border: 1px solid var(--border-secondary, rgba(255, 255, 255, 0.08));
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cd-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 26px 16px;
+  font-size: 13px;
+  color: var(--text-muted, rgba(255, 255, 255, 0.5));
+  text-align: center;
+
+  .cd-empty-state-icon {
+    font-size: 30px;
+    color: var(--text-tertiary, rgba(255, 255, 255, 0.35));
+    margin-bottom: 4px;
+  }
+
+  &.cd-dashed {
+    border: 1.5px dashed var(--border-primary, rgba(255, 255, 255, 0.1));
+    background: transparent;
+    border-radius: 18px;
+    padding: 30px 20px;
+
+    strong {
+      color: var(--text-primary, #ffffff);
+      font-size: 14px;
+    }
+
+    span {
+      max-width: 260px;
+      font-size: 12px;
+      line-height: 1.55;
+      color: var(--text-muted, rgba(255, 255, 255, 0.5));
+    }
+  }
+}
+
+.cd-empty-state-icon-ring {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 4px;
+  border-radius: 16px;
+  border: 1px solid var(--accent-border, rgba(255, 214, 0, 0.25));
+  background: var(--accent-dim, rgba(255, 214, 0, 0.1));
+  color: var(--accent-lime, #ffd600);
+
+  ion-icon { font-size: 24px; }
+}
+
+.cd-preview-profile-btn {
+  margin-top: 6px;
+  padding: 11px 20px;
+  border-radius: 12px;
+  border: none;
+  background: var(--accent-lime, #ffd600);
+  color: #000;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(255, 214, 0, 0.3);
+  transition: transform 0.15s;
+  &:active { transform: scale(0.97); }
+}
+
+// ── Coach Profile Card ───────────────────────────────────
+.cd-profile-card {
+  display: flex;
+  gap: 14px;
+  padding: 16px;
+  margin-bottom: 12px;
+  border-radius: 20px;
+  background: var(--overlay-light, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--accent-border, rgba(255, 214, 0, 0.25));
+}
+
+.cd-profile-avatar {
+  width: 60px;
+  height: 60px;
+  flex: 0 0 60px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: var(--accent-dim, rgba(255, 214, 0, 0.1));
+  border: 1px solid var(--accent-border, rgba(255, 214, 0, 0.25));
+  color: var(--accent-lime, #ffd600);
+  font-size: 20px;
+  font-weight: 800;
+
+  img { width: 100%; height: 100%; object-fit: cover; }
+}
+
+.cd-profile-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.cd-profile-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cd-profile-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-primary, #ffffff);
+}
+
+.cd-profile-price {
+  flex-shrink: 0;
+  text-align: right;
+
+  .cd-price-amount {
+    display: block;
+    font-size: 16px;
+    font-weight: 900;
+    color: var(--accent-lime, #ffd600);
+    line-height: 1.1;
+  }
+
+  .cd-price-unit {
+    font-size: 9px;
+    color: var(--text-muted, rgba(255, 255, 255, 0.5));
+    font-weight: 600;
+  }
+}
+
+.cd-profile-specialty {
+  display: inline-block;
+  margin-top: 5px;
+  padding: 2px 9px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent-lime, #ffd600);
+  background: var(--accent-dim, rgba(255, 214, 0, 0.1));
+  border: 1px solid var(--accent-border, rgba(255, 214, 0, 0.25));
+}
+
+.cd-profile-bio {
+  margin: 7px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted, rgba(255, 255, 255, 0.5));
+}
+
+.cd-profile-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 9px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent-green, #00d68f);
+
+  .cd-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-green, #00d68f);
+    box-shadow: 0 0 6px rgba(0,214,143,0.5);
+  }
+
+  &.is-inactive {
+    color: var(--text-tertiary, rgba(255, 255, 255, 0.35));
+    .cd-status-dot { background: var(--text-tertiary, rgba(255, 255, 255, 0.35)); box-shadow: none; }
+  }
+}
+
+// ── Stats Grid ───────────────────────────────────────────
+.cd-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.cd-stat-card {
+  min-width: 0;
+  padding: 13px 7px 12px;
+  border-radius: 15px;
+  background: var(--overlay-light, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border-secondary, rgba(255, 255, 255, 0.08));
+  text-align: center;
+
+  .cd-stat-icon {
+    display: block;
+    margin: 0 auto 8px;
+    font-size: 20px;
+
+    &.accent-icon { color: var(--accent-lime, #ffd600); }
+    &.amber-icon  { color: var(--accent-amber, #ff9500); }
+    &.blue-icon   { color: var(--accent-blue, #4a9eff); }
+    &.green-icon  { color: var(--accent-green, #00d68f); }
+  }
+
+  .cd-stat-value {
+    margin-bottom: 4px;
+    font-size: 19px;
+    font-weight: 900;
+    letter-spacing: -0.3px;
+    color: var(--text-primary, #ffffff);
+
+    &.amber { color: var(--accent-amber, #ff9500); }
+    &.blue  { color: var(--accent-blue, #4a9eff); }
+    &.green { color: var(--accent-green, #00d68f); }
+  }
+
+  .cd-stat-label {
+    font-size: 9px;
+    font-weight: 750;
+    color: var(--text-muted, rgba(255, 255, 255, 0.5));
+    text-transform: uppercase;
+    letter-spacing: 0.2px;
+  }
+}
+
+@media (max-width: 350px) {
+  .cd-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+// ── Section Label / Heading Row ───────────────────────────
+.cd-section-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-muted, rgba(255, 255, 255, 0.5));
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin: 20px 0 10px;
+}
+
+.cd-section-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 20px 0 10px;
+}
+
+.cd-text-link-btn {
+  border: none;
+  background: transparent;
+  color: var(--accent-lime, #ffd600);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 0;
+  &:active { opacity: 0.7; }
+}
+
+// ── Quick Actions ──────────────────────────────────────────
+.cd-quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.cd-quick-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 6px;
+  border-radius: 15px;
+  border: 1px solid var(--border-secondary, rgba(255, 255, 255, 0.08));
+  background: var(--overlay-light, rgba(255, 255, 255, 0.04));
+  color: var(--text-secondary, rgba(255, 255, 255, 0.75));
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.15s;
+
+  ion-icon { font-size: 21px; color: var(--accent-lime, #ffd600); }
+
+  &:active {
+    transform: scale(0.96);
+    background: var(--overlay-medium, rgba(255, 255, 255, 0.07));
+  }
+}
+
+// ── Coach Dashboard internal tabs ─────────────────────────
+.cd-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  margin-bottom: 4px;
+  border-radius: 15px;
+  background: var(--overlay-light, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border-secondary, rgba(255, 255, 255, 0.08));
+}
+
+.cd-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 38px;
+  border-radius: 11px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted, rgba(255, 255, 255, 0.5));
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.15s, color 0.15s;
+
+  ion-icon { font-size: 15px; }
+
+  &.is-active {
+    background: var(--accent-lime, #ffd600);
+    color: #000;
+  }
+
+  .cd-tab-badge {
+    position: absolute;
+    top: 2px;
+    right: 6px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: var(--accent-red, #ff4461);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 800;
+  }
+}
+
+// ── Session / Client / Request rows ───────────────────────
+.cd-session-item,
+.cd-client-item,
+.cd-request-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  margin-bottom: 8px;
+  border-radius: 16px;
+  background: var(--overlay-light, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border-secondary, rgba(255, 255, 255, 0.08));
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+
+  &:active { background: var(--overlay-medium, rgba(255, 255, 255, 0.07)); }
+}
+
+.cd-request-item { cursor: default; }
+.cd-roster-item { cursor: default; }
+
+.cd-session-avatar {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: var(--accent-dim, rgba(255, 214, 0, 0.1));
+  border: 1px solid var(--accent-border, rgba(255, 214, 0, 0.25));
+  color: var(--accent-lime, #ffd600);
+  font-size: 15px;
+  font-weight: 800;
+
+  img { width: 100%; height: 100%; object-fit: cover; }
+
+  .cd-session-avatar-dot {
+    position: absolute;
+    right: -1px;
+    bottom: -1px;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: var(--accent-green, #00d68f);
+    border: 2px solid var(--bg-secondary, #0b0e1a);
+  }
+}
+
+.cd-session-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.cd-session-name {
+  font-size: 13.5px;
+  font-weight: 750;
+  color: var(--text-primary, #ffffff);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cd-session-time {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--accent-lime, #ffd600);
+  font-weight: 650;
+
+  ion-icon { font-size: 12px; }
+}
+
+.cd-session-focus {
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: var(--text-muted, rgba(255, 255, 255, 0.5));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cd-session-view-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 30px;
+  padding: 0 11px;
+  border-radius: 10px;
+  border: 1px solid var(--accent-border, rgba(255, 214, 0, 0.25));
+  background: var(--accent-dim, rgba(255, 214, 0, 0.1));
+  color: var(--accent-lime, #ffd600);
+  font-size: 11px;
+  font-weight: 750;
+  cursor: pointer;
+
+  ion-icon { font-size: 13px; }
+  &:active { opacity: 0.7; }
+}
+
+.cd-client-chevron {
+  flex-shrink: 0;
+  font-size: 16px;
+  color: var(--text-tertiary, rgba(255, 255, 255, 0.35));
+}
+
+.cd-unread-badge {
+  flex-shrink: 0;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--accent-red, #ff4461);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.cd-request-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.cd-request-accept-btn,
+.cd-request-decline-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: opacity 0.15s;
+
+  ion-icon { font-size: 18px; }
+  &:active { opacity: 0.7; }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+
+.cd-request-accept-btn {
+  background: rgba(0,214,143,0.12);
+  border-color: rgba(0,214,143,0.25);
+  color: var(--accent-green, #00d68f);
+}
+
+.cd-request-decline-btn {
+  background: rgba(255,68,97,0.1);
+  border-color: rgba(255,68,97,0.22);
+  color: var(--accent-red, #ff4461);
+}
+
+// ── Coach Dashboard modal shell (Manage Profile / Set Availability / Create Program) ──
+// Rendered inside <ng-template> without ion-content (see .html) since this
+// panel isn't a full ion-page — .cd-modal-content supplies the same visual
+// shell/scroll behavior ion-content + .ion-padding normally would.
+.cd-modal-content {
+  background: var(--bg-secondary, #0b0e1a);
+  min-height: 100%;
+  box-sizing: border-box;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.cd-modal-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.12);
+  margin: 0 auto 18px;
+}
+
+.cd-modal-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin-bottom: 18px;
+  letter-spacing: -0.3px;
+}
+
+.cd-form-group {
+  margin-bottom: 14px;
+}
+
+.cd-form-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 7px;
+}
+
+.cd-form-input,
+.cd-form-select {
+  width: 100%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: #FFFFFF;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+
+  &::placeholder { color: rgba(255,255,255,0.3); }
+  &:focus { border-color: rgba(255,214,0,0.35); }
+}
+
+textarea.cd-form-input {
+  resize: vertical;
+  min-height: 74px;
+  line-height: 1.5;
+}
+
+select.cd-form-select {
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23FFD600' stroke-width='2.5'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 14px;
+  padding-right: 34px;
+
+  option { background: var(--bg-secondary, #0b0e1a); color: #FFFFFF; }
+}
+
+.cd-form-row {
+  display: flex;
+  gap: 10px;
+
+  .cd-flex-1 { flex: 1; min-width: 0; }
+}
+
+.cd-form-error {
+  margin: -4px 0 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--accent-red, #ff4461);
+}
+
+.cd-modal-actions {
+  margin-top: 18px;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.cd-modal-save-btn {
+  width: 100%;
+  padding: 15px;
+  background: var(--accent-lime, #ffd600);
+  color: #000;
+  font-size: 15px;
+  font-weight: 800;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(255, 214, 0, 0.3);
+  transition: transform 0.15s, opacity 0.15s;
+
+  &:active { transform: scale(0.97); }
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+}
+
+// ── Set Availability modal specifics ──────────────────────
+.cd-availability-list { flex-direction: column; align-items: stretch; }
+
+.cd-availability-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+
+  &:last-child { border-bottom: none; }
+}
+
+.cd-availability-day {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.cd-availability-time {
+  font-size: 12px;
+  color: rgba(255,255,255,0.55);
+  font-weight: 600;
+}
+
+.cd-availability-remove-btn {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  border: 1px solid rgba(255,68,97,0.22);
+  background: rgba(255,68,97,0.08);
+  color: var(--accent-red, #ff4461);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+
+  ion-icon { font-size: 15px; }
+  &:active { opacity: 0.7; }
+}
+
+// ── Create Program modal specifics ────────────────────────
+.cd-program-list { flex-direction: column; align-items: stretch; margin-bottom: 4px; }
+
+.cd-program-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+
+  &:last-child { border-bottom: none; }
+}
+
+.cd-program-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.cd-roster-btn {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  border: 1px solid var(--accent-border, rgba(255, 214, 0, 0.25));
+  background: var(--accent-dim, rgba(255, 214, 0, 0.1));
+  color: var(--accent-lime, #ffd600);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+
+  ion-icon { font-size: 15px; }
+  &:active { opacity: 0.7; }
+}
+
+.cd-public-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--accent-lime, #ffd600);
+  background: var(--accent-dim, rgba(255, 214, 0, 0.12));
+  border: 1px solid var(--accent-border, rgba(255, 214, 0, 0.25));
+}
+
+.cd-checkbox-row { margin-bottom: 16px; }
+
+.cd-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.75));
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.cd-checkbox {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent-lime, #ffd600);
+  cursor: pointer;
+}
+
+.cd-program-item-row {
+  display: grid;
+  grid-template-columns: 1fr 58px 58px 30px;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.cd-program-item-name { min-width: 0; }
+
+.cd-program-item-num {
+  padding: 12px 8px;
+  text-align: center;
+}
+
+.cd-program-item-remove-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  border: 1px solid rgba(255,68,97,0.2);
+  background: rgba(255,68,97,0.07);
+  color: var(--accent-red, #ff4461);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  ion-icon { font-size: 14px; }
+  &:active { opacity: 0.7; }
+  &:disabled { opacity: 0.35; cursor: not-allowed; }
+}
+
+.cd-add-item-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 10px;
+  border-radius: 11px;
+  border: 1px dashed rgba(255,214,0,0.3);
+  background: var(--accent-dim, rgba(255, 214, 0, 0.1));
+  color: var(--accent-lime, #ffd600);
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+
+  ion-icon { font-size: 15px; }
+  &:active { opacity: 0.7; }
+}
+
+// ── Light Theme ────────────────────────────────────────────
+:host-context(body.light-theme),
+:host-context(html.light-theme) {
+  background: #ffffff;
+
+  .panel-header {
+    border-bottom-color: rgba(15, 23, 42, 0.1);
+  }
+
+  .panel-header-icon-wrap {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+  }
+
+  .panel-header-title { color: #0f172a; }
+  .panel-header-sub { color: rgba(15, 23, 42, 0.5); }
+
+  .panel-close-btn {
+    background: rgba(15, 23, 42, 0.05);
+    border-color: rgba(15, 23, 42, 0.1);
+    color: rgba(15, 23, 42, 0.7);
+  }
+
+  .panel-tabs {
+    background: rgba(15, 23, 42, 0.04);
+    border-color: rgba(15, 23, 42, 0.08);
+
+    .panel-tab-btn {
+      color: rgba(15, 23, 42, 0.55);
+
+      &.is-active {
+        background: #f59e0b;
+        color: #ffffff;
+
+        .tab-badge-count {
+          background: rgba(255, 255, 255, 0.3);
+          color: #ffffff;
+        }
+      }
+
+      .tab-badge-count {
+        background: rgba(245, 158, 11, 0.15);
+        color: #f59e0b;
+      }
+    }
+  }
+
+  .search-wrap .search-input {
+    background: rgba(15, 23, 42, 0.04);
+    border-color: rgba(15, 23, 42, 0.1);
+    color: #0f172a;
+
+    &::placeholder { color: rgba(15, 23, 42, 0.4); }
+  }
+
+  .specialty-row .specialty-chip {
+    background: rgba(15, 23, 42, 0.04);
+    border-color: rgba(15, 23, 42, 0.1);
+    color: rgba(15, 23, 42, 0.65);
+
+    &.active {
+      background: rgba(245, 158, 11, 0.12);
+      border-color: rgba(245, 158, 11, 0.25);
+      color: #f59e0b;
+    }
+  }
+
+  .coach-card {
+    background: rgba(15, 23, 42, 0.03);
+    border-color: rgba(15, 23, 42, 0.08);
+  }
+
+  .coach-name, .convo-name { color: #0f172a; }
+  .coach-bio, .convo-last-msg { color: rgba(15, 23, 42, 0.6); }
+
+  .coach-btn-view {
+    background: rgba(15, 23, 42, 0.05);
+    border-color: rgba(15, 23, 42, 0.1);
+    color: #0f172a;
+  }
+
+  .convo-card {
+    background: rgba(15, 23, 42, 0.03);
+    border-color: rgba(15, 23, 42, 0.08);
+  }
+
+  .empty-state h3 { color: #0f172a; }
+
+  // Coach dashboard light-theme overrides
+  --text-primary: #0f172a;
+  --text-secondary: rgba(15,23,42,0.7);
+  --text-muted: rgba(15,23,42,0.5);
+  --text-tertiary: rgba(15,23,42,0.35);
+  --accent-lime: #d97706;
+  --accent-border: rgba(217,119,6,0.25);
+  --accent-dim: rgba(217,119,6,0.1);
+  --overlay-light: #ffffff;
+  --overlay-medium: #f8f9fa;
+  --border-secondary: rgba(15,23,42,0.09);
+  --border-primary: rgba(15,23,42,0.14);
+  --bg-secondary: #ffffff;
+
+  .cd-card,
+  .cd-profile-card,
+  .cd-stat-card,
+  .cd-quick-action-btn,
+  .cd-tabs,
+  .cd-session-item,
+  .cd-client-item,
+  .cd-request-item {
+    box-shadow: 0 2px 10px rgba(15,23,42,0.05);
+  }
+
+  .cd-tab.is-active { color: #fff; }
+  .cd-session-avatar-dot { border-color: #ffffff; }
+  .cd-empty-state.cd-dashed { border-color: rgba(15,23,42,0.16); }
+}

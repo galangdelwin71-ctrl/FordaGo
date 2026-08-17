@@ -4,15 +4,25 @@
   [unreadCount]="unreadCount"
   [profileImage]="profileImage"
   [initials]="initials"
+  (coachingClick)="onCoachingClick()"
   (equipmentClick)="goToEquipment()"
   (notifClick)="openNotifPanel()"
   (profileClick)="goToProfile()">
 </app-header>
 
+<!-- Coaching screen: in-flow replacement for ion-content below. Only one
+     of these two renders at a time -- header and footer stay untouched
+     siblings either way. -->
+<app-coaching-panel
+  *ngIf="coachingPanelOpen"
+  [isOpen]="coachingPanelOpen"
+  (closed)="closeCoachingPanel()">
+</app-coaching-panel>
+
 <!-- Cart / Pending Orders shortcuts -- moved off the header per request.
      Floating stack pinned to the bottom-right, sitting just above the
      bottom nav bar so it never overlaps page content or the footer. -->
-<div class="shop-fab-stack" [class.fabs-hidden]="anyModalOpen">
+<div class="shop-fab-stack" *ngIf="!coachingPanelOpen" [class.fabs-hidden]="anyModalOpen">
   <button type="button" class="shop-fab-btn" (click)="openCart()" aria-label="Open cart">
     <ion-icon name="cart-outline" aria-hidden="true"></ion-icon>
     <span class="shop-fab-badge" *ngIf="cartItemCount > 0">{{ cartItemCount }}</span>
@@ -23,7 +33,7 @@
   </button>
 </div>
 
-<ion-content [fullscreen]="false" class="shop-content fordago-page-content" [scrollY]="true">
+<ion-content *ngIf="!coachingPanelOpen" [fullscreen]="false" class="shop-content fordago-page-content" [scrollY]="true">
   <div class="scroll-wrap">
 
     <!-- Section Label -->

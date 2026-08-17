@@ -68,7 +68,15 @@ class UserController extends Controller
             return response()->json(['message' => 'User not found'], 404);
         }
 
-        return response()->json($user);
+        // Same flag AuthController::login() returns, exposed here too so an
+        // existing session (token already issued before this field existed,
+        // or the app's own periodic /users/me refresh) picks up coach status
+        // without forcing a re-login. See AuthController::login() for why
+        // this can't just be $user->role — coach accounts keep role='user'.
+        $payload = $user->toArray();
+        $payload['has_coach_profile'] = $user->isCoach();
+
+        return response()->json($payload);
     }
 
     /**

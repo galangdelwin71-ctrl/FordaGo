@@ -238,20 +238,25 @@ class AuthController extends Controller
         return response()->json([
             'token' => $token,
             'user'  => [
-                'id'                => $user->id,
-                'username'          => $user->username,
-                'first_name'        => $user->first_name ?? '',
-                'last_name'         => $user->last_name  ?? '',
-                'email'             => $user->email,
-                'role'              => $user->role,
-                'phone'             => $user->phone,
-                'gender'            => $user->gender,
-                'profile_image'     => $user->profile_image,
-                'membership_type'   => $user->membership_type,
-                'membership_status' => $user->membership_status,
-                'payment_method'    => $user->payment_method,
-                'membership_expiry' => $user->membership_expiry,
-                'created_at'        => $user->created_at,
+                'id'                 => $user->id,
+                'username'           => $user->username,
+                'first_name'         => $user->first_name ?? '',
+                'last_name'          => $user->last_name  ?? '',
+                'email'              => $user->email,
+                'role'               => $user->role,
+                'phone'              => $user->phone,
+                'gender'             => $user->gender,
+                'profile_image'      => $user->profile_image,
+                'membership_type'    => $user->membership_type,
+                'membership_status'  => $user->membership_status,
+                'payment_method'     => $user->payment_method,
+                'membership_expiry'  => $user->membership_expiry,
+                'created_at'         => $user->created_at,
+                // Coach accounts keep role = 'user' (see AdminCoachController)
+                // and are distinguished only by owning a coach_profiles row.
+                // Exposed here so the frontend can route/guard coach-only
+                // pages right after login without an extra round trip.
+                'has_coach_profile'  => $user->isCoach(),
             ],
         ]);
     }

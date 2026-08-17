@@ -4,12 +4,22 @@
   [unreadCount]="unreadCount"
   [profileImage]="profile.profileImage"
   [initials]="profile.initials"
+  (coachingClick)="onCoachingClick()"
   (equipmentClick)="goToEquipment()"
   (notifClick)="openNotifPanel()"
   (profileClick)="goToProfile()">
 </app-header>
 
-<ion-content [fullscreen]="false" class="fordago-page-content" [scrollY]="true">
+<!-- Coaching screen: in-flow replacement for ion-content below. Only one
+     of these two renders at a time -- header and footer stay untouched
+     siblings either way. -->
+<app-coaching-panel
+  *ngIf="coachingPanelOpen"
+  [isOpen]="coachingPanelOpen"
+  (closed)="closeCoachingPanel()">
+</app-coaching-panel>
+
+<ion-content *ngIf="!coachingPanelOpen" [fullscreen]="false" class="fordago-page-content" [scrollY]="true">
   <div class="content-inner">
 
     <!-- Profile Hero Section -->

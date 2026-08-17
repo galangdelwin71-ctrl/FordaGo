@@ -354,3 +354,80 @@ export function buildExercisesFromTemplate(title: string, customTarget?: string)
   }
   return (exerciseDatabase[title] ?? []).map(ex => ({ ...ex }));
 }
+
+// ── Workout type / target picker (shared) ───────────────────────────────
+//
+// Single source of truth for the "Workout Type → Specific Target →
+// recommended exercises" picker used by BOTH the member-facing Schedule
+// page's "Add Workout" modal AND the coach's "Propose Workout Plan" modal
+// (coaching/chat/chat.page.ts). Previously this list + the suggested-target
+// map lived only inside schedule.page.ts, so the two "add exercises" flows
+// could silently drift apart (e.g. a coach could never propose a Rest Day
+// target the member-side picker already offered). Keeping it here means
+// both consumers read the exact same list.
+
+export const workoutTypes: string[] = [
+  'Upper Body',
+  'Lower Body / Leg Day',
+  'Cardio & Core',
+  'Full Body',
+  'Mobility & Stretch',
+  'Rest Day',
+];
+
+export const suggestedTargetsMap: Record<string, string[]> = {
+  'Upper Body': [
+    'Back & Bicep',
+    'Chest & Tricep',
+    'Shoulders',
+    'Back & Rear Delt',
+    'Chest & Shoulder',
+    'Arms (Bi & Tri)',
+  ],
+  'Lower Body / Leg Day': [
+    'Quads & Glutes',
+    'Hamstrings & Glutes',
+    'Calves & Quads',
+    'Glutes Focus',
+    'Full Legs',
+  ],
+  'Cardio & Core': [
+    'HIIT',
+    'Steady State',
+    'Core & Abs',
+    'Jump Rope HIIT',
+    'Treadmill + Core',
+  ],
+  'Full Body': [
+    'Push / Pull / Legs',
+    'Compound Lifts',
+    'Circuit Training',
+    'Functional Strength',
+  ],
+  'Mobility & Stretch': [
+    'Hip Flexors',
+    'Upper Back',
+    'Full Body Stretch',
+    'Shoulder Mobility',
+    'Spine & Core',
+  ],
+  'Rest Day': [
+    'Light Walk',
+    'Foam Rolling',
+    'Active Recovery',
+  ],
+};
+
+/** All suggested targets for a workout type, or [] if it has none (e.g. an unrecognized type). */
+export function getSuggestedTargets(workoutType: string): string[] {
+  return suggestedTargetsMap[workoutType] ?? [];
+}
+
+/** Placeholder copy for the free-text target input, seeded from the first couple of suggestions. */
+export function getTargetPlaceholder(workoutType: string): string {
+  const suggestions = suggestedTargetsMap[workoutType];
+  if (suggestions?.length) {
+    return `e.g. ${suggestions[0]}, ${suggestions[1] ?? ''}`.replace(/, $/, '');
+  }
+  return 'Enter your focus area...';
+}

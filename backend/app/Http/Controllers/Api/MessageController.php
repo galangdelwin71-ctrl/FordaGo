@@ -69,6 +69,17 @@ class MessageController extends Controller
             return response()->json(['message' => 'Unauthorized to send messages in this conversation.'], 403);
         }
 
+        if ($conversation->isDeclined()) {
+            return response()->json(['message' => 'This conversation was declined and can no longer receive messages.'], 400);
+        }
+
+        // A coach replying to a pending request implicitly accepts it —
+        // matches ConversationController::accept(), just without requiring
+        // an extra tap when the coach just answers in chat.
+        if ($conversation->isPending() && (int) $conversation->coach_id === (int) $userId) {
+            $conversation->status = Conversation::STATUS_ACTIVE;
+        }
+
         $message = Message::create([
             'conversation_id' => $conversationId,
             'sender_id'       => $userId,

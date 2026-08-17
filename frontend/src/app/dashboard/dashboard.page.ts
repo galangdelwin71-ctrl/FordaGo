@@ -9,9 +9,11 @@ import { HttpClient } from '@angular/common/http';
 import { Subscription } from 'rxjs';
 import { WorkoutTrackerService, StoredWorkoutSession } from '../services/workout-tracker.service';
 import { NotificationCenterService } from '../services/notification-center.service';
+import { CoachingNavService } from '../services/coaching-nav.service';
 import { NoNegativeDirective } from '../directives/no-negative.directive';
 import { HeaderComponent } from '../shared/header/header.component';
 import { NotificationPanelComponent } from '../shared/notification-panel/notification-panel.component';
+import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.component';
 import { API_BASE_URL } from '../config/api.config';
 
 // ─────────────────────────────────────────────────────
@@ -131,9 +133,14 @@ export interface PrForm {
   styleUrls: ['./dashboard.page.scss'],
   standalone: true,
   host: { class: 'ion-page fordago-page' },
-  imports: [CommonModule, FormsModule, IonContent, IonFooter, IonIcon, IonModal, IonInput, NoNegativeDirective, HeaderComponent, NotificationPanelComponent],
+  imports: [CommonModule, FormsModule, IonContent, IonFooter, IonIcon, IonModal, IonInput, NoNegativeDirective, HeaderComponent, NotificationPanelComponent, CoachingPanelComponent],
 })
 export class DashboardPage implements OnInit, OnDestroy {
+  // ── Coaching Panel ───────────────────────────────────
+  coachingPanelOpen = false;
+  /** Set from CoachingNavService.consumeReopen() in ngOnInit() when this page is reached via ChatPage's back button -- see coaching-nav.service.ts. Cleared whenever the panel closes (closeOverlaysForNavigation()/closeCoachingPanel()) so it never silently re-applies to a later, unrelated open. */
+  coachingPanelInitialTab: 'conversations' | 'clients' | 'explore' | null = null;
+
   // ── Member Info ──────────────────────────────────────
   memberName      = '';
   initials        = '';
@@ -1309,6 +1316,8 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.notifPanelOpen = false;
     this.prModalOpen = false;
     this.statDetailOpen = null;
+    this.coachingPanelOpen = false;
+    this.coachingPanelInitialTab = null;
   }
 
   // ── Navigation ───────────────────────────────────────
@@ -1317,7 +1326,8 @@ export class DashboardPage implements OnInit, OnDestroy {
     private auth: AuthService,
     private http: HttpClient,
     private workoutTracker: WorkoutTrackerService,
-    private notificationCenter: NotificationCenterService
+    private notificationCenter: NotificationCenterService,
+    private coachingNav: CoachingNavService
   ) {}
 
   onLogoError(event: Event): void {
@@ -1343,12 +1353,38 @@ export class DashboardPage implements OnInit, OnDestroy {
     return API_BASE_URL;
   }
 
+  /**
+   * Reopens the coaching panel straight to Messages if we landed here via
+   * ChatPage's back button (see coaching-nav.service.ts). One-shot --
+   * consumeReopen() clears itself, so a normal visit to Dashboard is
+   * completely unaffected.
+   *
+   * Called from BOTH ngOnInit() (first mount) and ionViewWillEnter()
+   * (every re-entry) -- Ionic's router-outlet caches previously-visited
+   * pages, so navigating Dashboard -> Chat -> back reuses the SAME
+   * DashboardPage instance instead of destroying/recreating it, and only
+   * fires ionViewWillEnter(), never ngOnInit() again. Relying on ngOnInit()
+   * alone silently dropped the pending tab on that path, leaving the
+   * member stranded on a plain Dashboard instead of back in Personal
+   * Coaches/Messages.
+   */
+  private applyPendingCoachingReopen(): void {
+    const pendingCoachTab = this.coachingNav.consumeReopen();
+    if (pendingCoachTab) {
+      this.coachingPanelInitialTab = pendingCoachTab;
+      this.coachingPanelOpen = true;
+    }
+  }
+
   ngOnInit(): void {
     // Redirect to login if not authenticated
     if (!this.auth.user) {
       this.router.navigate(['/login']);
       return;
     }
+
+    this.applyPendingCoachingReopen();
+
     this.workoutTracker.startAutoSync();
     this.userSubscription = this.auth.user$.subscribe((user) => {
       if (!user) return;
@@ -1374,6 +1410,8 @@ export class DashboardPage implements OnInit, OnDestroy {
     if (!this.auth.user) {
       return;
     }
+
+    this.applyPendingCoachingReopen();
 
     this.applyUserContext(this.auth.user);
     this.workoutTracker.syncStoreStatuses();
@@ -1490,7 +1528,26 @@ export class DashboardPage implements OnInit, OnDestroy {
   goToInventory(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/inventory']);  }
   goToProfile():   void { this.closeOverlaysForNavigation(); this.router.navigate(['/profile']);    }
   goToEquipment(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/equipment']); }
-  goToCoaching():  void { this.closeOverlaysForNavigation(); this.router.navigate(['/coaching']);  }
+
+  closeCoachingPanel(): void {
+    this.coachingPanelOpen = false;
+    this.coachingPanelInitialTab = null;
+  }
+
+  // Toggle, not force-open: matches Schedule/Profile/Equipment/Inventory/
+  // QR Scanner, so tapping the header coach icon a second time closes the
+  // panel instead of just re-opening it every time.
+  //
+  // The desired next state is captured BEFORE closeOverlaysForNavigation()
+  // runs, because that helper also resets coachingPanelOpen = false (so
+  // navigating away always closes the panel too) -- calling it first and
+  // THEN negating the now-already-false flag would make this always open
+  // and never close.
+  onCoachingClick(): void {
+    const nextOpen = !this.coachingPanelOpen;
+    this.closeOverlaysForNavigation();
+    this.coachingPanelOpen = nextOpen;
+  }
 
   // ── Equipment ───────────────────────────────────────
   equipmentList: any[] = [];

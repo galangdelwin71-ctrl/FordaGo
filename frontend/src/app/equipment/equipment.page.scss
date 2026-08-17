@@ -35,47 +35,8 @@
   --transition-smooth: 0.3s cubic-bezier(0.4,0,0.2,1);
 }
 
-// ── Toolbar -------------------------------------------
-ion-toolbar {
-  --background: transparent;
-  --border-width: 0;
-  --padding-start: 16px;
-  --padding-end: 16px;
-}
-
 ion-content {
   --background: var(--bg-primary);
-}
-
-// -- Header Brand --------------------------------------
-.toolbar-brand {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  .brand-logo {
-    width: 34px;
-    height: 34px;
-    flex-shrink: 0;
-    filter: drop-shadow(0 0 8px rgba(255,214,0,0.4));
-  }
-
-.toolbar-logo {
-  font-size: 20px;
-  font-weight: 800;
-  background: linear-gradient(135deg, var(--accent-lime) 0%, var(--accent-amber) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  letter-spacing: -0.5px;
-}
-}
-
-.header-end {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding-right: 4px;
 }
 
 // -- Scroll Wrap ---------------------------------------
@@ -296,44 +257,6 @@ ion-content {
     letter-spacing: 0.3px;
   }
 }
-
-// -- Header Notification Bell ---------------------------
-.notif-bell-btn {
-  position: relative;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.08);
-  color: rgba(255,255,255,0.72);
-  cursor: pointer;
-  padding: 7px 8px;
-  line-height: 0;
-  border-radius: 12px;
-  transition: background 0.15s;
-  ion-icon { font-size: 20px; display: block; }
-  &:active { background: rgba(255,255,255,0.12); }
-}
-
-.notif-bell-badge {
-  position: absolute;
-  top: 0; right: 0;
-  background: #FF4461;
-  color: #fff;
-  font-size: 9px;
-  font-weight: 700;
-  border-radius: 10px;
-  padding: 1px 4px;
-  min-width: 14px;
-  text-align: center;
-  line-height: 12px;
-}
-
-.avatar {
-  width: 34px; height: 34px; border-radius: 50%;
-  display: grid; place-items: center;
-  background: linear-gradient(145deg,#FFD600,#F5C400);
-  color: #111; font-weight: 900; font-size: 0.82rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.24); overflow: hidden; flex-shrink: 0;
-}
-.avatar-img    { object-fit: cover; border: 1px solid rgba(255,214,0,0.45); }
 
 // -- Modal ---------------------------------------------
 .equipment-modal-backdrop {
@@ -571,19 +494,9 @@ ion-content {
     .equip-weight { color: #d97706; }
   }
 
-  // Header (this page renders its own header markup rather than
-  // app-header, so it needs its own overrides for the icon buttons)
-  .toolbar-logo {
-    background: linear-gradient(135deg, #d97706 0%, #ea580c 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-  }
-  .equip-header-btn,
-  .notif-bell-btn {
-    background: rgba(15, 23, 42, 0.05);
-    border-color: rgba(15, 23, 42, 0.1);
-    color: rgba(15, 23, 42, 0.6);
-  }
+  // Header styling (logo, coach/equip/notif buttons, avatar) now lives
+  // entirely in shared/header/header.component.scss -- this page renders
+  // <app-header> instead of its own markup, so no overrides belong here.
 
   // Equipment detail modal
   .equipment-modal-backdrop { background: rgba(15, 23, 42, 0.45); }

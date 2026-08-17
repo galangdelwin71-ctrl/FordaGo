@@ -1,40 +1,27 @@
 <!-- equipment.page.html -->
-<ion-header [translucent]="false" class="fordago-app-header ion-no-border">
-  <ion-toolbar class="fordago-toolbar">
-    <div slot="start" class="toolbar-brand">
-      <span class="brand-mark" aria-hidden="true">
-        <img src="/assets/icon/logo.png" class="brand-logo" alt="" />
-      </span>
-      <span class="toolbar-brand-copy">
-        <span class="toolbar-logo">FordaGO</span>
-        <span class="toolbar-subtitle">EQUIPMENT</span>
-      </span>
-    </div>
+<app-header
+  subtitle="EQUIPMENT"
+  [unreadCount]="unreadCount"
+  [profileImage]="profileImage"
+  [initials]="initials"
+  (coachingClick)="onCoachingClick()"
+  (equipmentClick)="goToEquipment()"
+  (notifClick)="openNotifPanel()"
+  (profileClick)="goToProfile()">
+</app-header>
 
-    <div slot="end" class="header-end">
-      <button type="button" class="equip-header-btn" (click)="goToEquipment()" aria-label="Open equipment">
-        <ion-icon name="barbell-outline" aria-hidden="true"></ion-icon>
-      </button>
+<!-- Coaching screen: in-flow replacement for ion-content below (header
+     and footer are untouched siblings either way -- see coaching-panel
+     .component.scss for the flex sizing that makes this occupy the exact
+     slot ion-content normally fills). Only one of these two renders at a
+     time. -->
+<app-coaching-panel
+  *ngIf="coachingPanelOpen"
+  [isOpen]="coachingPanelOpen"
+  (closed)="closeCoachingPanel()">
+</app-coaching-panel>
 
-      <button
-        type="button"
-        class="notif-bell-btn"
-        [class.has-unread]="unreadCount > 0"
-        (click)="openNotifPanel()"
-        aria-label="Open notifications">
-        <ion-icon name="notifications-outline" aria-hidden="true"></ion-icon>
-        <span class="notif-bell-badge" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
-      </button>
-
-      <button type="button" class="profile-button" (click)="goToProfile()" aria-label="Open profile">
-        <span class="avatar" *ngIf="!profileImage">{{ initials || 'U' }}</span>
-        <img *ngIf="profileImage" [src]="profileImage" alt="Profile" class="avatar avatar-img" />
-      </button>
-    </div>
-  </ion-toolbar>
-</ion-header>
-
-<ion-content [fullscreen]="false" class="fordago-page-content" [scrollY]="true">
+<ion-content *ngIf="!coachingPanelOpen" [fullscreen]="false" class="fordago-page-content" [scrollY]="true">
   <div class="scroll-wrap">
 
     <!-- Page Title -->

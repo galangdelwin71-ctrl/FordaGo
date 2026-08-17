@@ -406,6 +406,37 @@ body.light-theme {
 
     .form-label { color: rgba(15,23,42,0.5) !important; }
 
+    /* Coach Dashboard modals (Manage Profile / Set Availability / Create
+       Program — see coach-dashboard.page.html's `.coach-modal` class on
+       each modal's ion-content). These use PLAIN <input>/<select>/
+       <textarea> elements, not ion-input/ion-select like the Personal
+       Record modal above, so the --background/--color Ionic-shadow-part
+       overrides on the shared .form-select/.form-input rule just above
+       do nothing here — plain elements need literal `background`/`color`
+       instead. Scoped under .coach-modal specifically so it can't leak
+       onto the Dashboard's own .form-input/.form-select (real ion-input/
+       ion-select there, styled correctly by the rule above). */
+    .coach-modal {
+      .form-input,
+      .form-select {
+        background: rgba(15,23,42,0.05) !important;
+        border-color: rgba(15,23,42,0.12) !important;
+        color: #0f172a !important;
+        &::placeholder { color: rgba(15,23,42,0.35) !important; }
+      }
+      select.form-select option {
+        background: #ffffff !important;
+        color: #0f172a !important;
+      }
+      select.form-select {
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d97706' stroke-width='2.5'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+      }
+      .form-error { color: #dc2626 !important; }
+      .availability-day, .program-row .session-name { color: #0f172a !important; }
+      .availability-time, .program-row .session-focus { color: rgba(15,23,42,0.55) !important; }
+      .availability-row, .program-row { border-bottom-color: rgba(15,23,42,0.08) !important; }
+    }
+
     /* Labels */
     .field-label {
       color: #000000 !important;
@@ -960,6 +991,7 @@ ion-toolbar.fordago-toolbar {
 }
 
 .fordago-app-header .notif-bell-btn,
+.fordago-app-header .coach-header-btn,
 .fordago-app-header .equip-header-btn,
 .fordago-app-header .profile-button,
 .fordago-app-header .cart-btn,
@@ -982,6 +1014,7 @@ ion-toolbar.fordago-toolbar {
 }
 
 .fordago-app-header .notif-bell-btn ion-icon,
+.fordago-app-header .coach-header-btn ion-icon,
 .fordago-app-header .equip-header-btn ion-icon,
 .fordago-app-header .cart-btn ion-icon,
 .fordago-app-header .cart-icon-btn ion-icon {
@@ -1205,6 +1238,7 @@ ion-toolbar.fordago-toolbar {
 
   .fordago-app-header .notif-bell-btn,
   .fordago-app-header .equip-header-btn,
+  .fordago-app-header .coach-header-btn,
   .fordago-app-header .profile-button,
   .fordago-app-header .cart-btn,
   .fordago-app-header .cart-icon-btn,
@@ -1281,8 +1315,10 @@ html.light-theme .fordago-app-header .toolbar-subtitle {
 }
 
 body.light-theme .fordago-app-header .notif-bell-btn,
+body.light-theme .fordago-app-header .coach-header-btn,
 body.light-theme .fordago-app-header .equip-header-btn,
 html.light-theme .fordago-app-header .notif-bell-btn,
+html.light-theme .fordago-app-header .coach-header-btn,
 html.light-theme .fordago-app-header .equip-header-btn {
   border-color: rgba(15,23,42,.12) !important;
   background: rgba(15,23,42,.045) !important;
@@ -1290,8 +1326,10 @@ html.light-theme .fordago-app-header .equip-header-btn {
 }
 
 body.light-theme .fordago-app-header .notif-bell-btn ion-icon,
+body.light-theme .fordago-app-header .coach-header-btn ion-icon,
 body.light-theme .fordago-app-header .equip-header-btn ion-icon,
 html.light-theme .fordago-app-header .notif-bell-btn ion-icon,
+html.light-theme .fordago-app-header .coach-header-btn ion-icon,
 html.light-theme .fordago-app-header .equip-header-btn ion-icon {
   color: #0f172a !important;
 }

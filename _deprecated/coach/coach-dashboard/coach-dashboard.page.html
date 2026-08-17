@@ -1,0 +1,467 @@
+<!-- coach-dashboard.page.html -->
+<app-header
+  subtitle="COACH"
+  [unreadCount]="unreadCount"
+  [profileImage]="profileImage"
+  [initials]="initials"
+  (coachingClick)="onCoachingHeaderClick()"
+  (equipmentClick)="goToEquipment()"
+  (notifClick)="openNotifPanel()"
+  (profileClick)="goToProfile()">
+</app-header>
+
+<ion-content [fullscreen]="false" class="fordago-page-content" [scrollY]="true">
+  <div class="content-inner">
+
+    <!-- Page title -->
+    <div class="page-title-row fade-up">
+      <div class="page-title-left">
+        <span class="page-title-icon" aria-hidden="true"><ion-icon name="barbell-outline"></ion-icon></span>
+        <div>
+          <div class="page-title">Coach Dashboard</div>
+          <div class="page-subtitle">Manage your clients &amp; coaching</div>
+        </div>
+      </div>
+      <button type="button" class="settings-btn" (click)="goToProfile()">
+        <ion-icon name="settings-outline"></ion-icon>
+        <span>Settings</span>
+      </button>
+    </div>
+
+    <!-- Profile card -->
+    <div class="coach-profile-card fade-up" *ngIf="!isLoadingProfile && profile">
+      <div class="coach-profile-avatar">
+        <img *ngIf="profile.profile_image" [src]="profile.profile_image" alt="" />
+        <span *ngIf="!profile.profile_image">{{ initials }}</span>
+      </div>
+      <div class="coach-profile-body">
+        <div class="coach-profile-top">
+          <div class="coach-profile-name">&#64;{{ profile.username }}</div>
+          <div class="coach-profile-price" *ngIf="profile.rate">
+            <span class="price-amount">&#8369;{{ profile.rate }}</span>
+            <span class="price-unit">/ session</span>
+          </div>
+        </div>
+        <span class="coach-profile-specialty" *ngIf="profile.specialty">{{ profile.specialty }}</span>
+        <p class="coach-profile-bio" *ngIf="profile.bio">{{ profile.bio }}</p>
+        <div class="coach-profile-status" [class.is-inactive]="!profile.is_active">
+          <span class="status-dot"></span>
+          {{ profile.is_active ? 'Accepting clients' : 'Not accepting clients' }}
+        </div>
+      </div>
+    </div>
+    <div class="card fade-up" *ngIf="isLoadingProfile">
+      <ion-spinner name="crescent" color="warning"></ion-spinner>
+    </div>
+
+    <!-- Stats row -->
+    <div class="coach-stats-grid fade-up">
+      <div class="coach-stat-card">
+        <ion-icon name="people-outline" class="stat-icon accent-icon"></ion-icon>
+        <div class="stat-value">{{ isLoadingStats ? '–' : stats.active_clients }}</div>
+        <div class="stat-label">Active Clients</div>
+        <div class="stat-caption">0 new this week</div>
+      </div>
+      <div class="coach-stat-card">
+        <ion-icon name="calendar-outline" class="stat-icon blue-icon"></ion-icon>
+        <div class="stat-value blue">{{ isLoadingStats ? '–' : stats.sessions_today }}</div>
+        <div class="stat-label">Sessions Today</div>
+        <div class="stat-caption">{{ todaySessions.length }} upcoming</div>
+      </div>
+      <div class="coach-stat-card">
+        <ion-icon name="mail-unread-outline" class="stat-icon amber-icon"></ion-icon>
+        <div class="stat-value amber">{{ isLoadingStats ? '–' : stats.pending_requests }}</div>
+        <div class="stat-label">Requests</div>
+        <div class="stat-caption">Needs response</div>
+      </div>
+      <div class="coach-stat-card">
+        <ion-icon name="cash-outline" class="stat-icon green-icon"></ion-icon>
+        <div class="stat-value green">{{ isLoadingStats ? '–' : ('\u20B1' + stats.earnings_this_month) }}</div>
+        <div class="stat-label">Earnings</div>
+        <div class="stat-caption">This month</div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="section-label">Quick Actions</div>
+    <div class="quick-actions-grid fade-up">
+      <button type="button" class="quick-action-btn" (click)="openAvailabilityModal()">
+        <ion-icon name="time-outline"></ion-icon>
+        <span>Set Availability</span>
+      </button>
+      <button type="button" class="quick-action-btn" (click)="openProgramModal()">
+        <ion-icon name="clipboard-outline"></ion-icon>
+        <span>Create Program</span>
+      </button>
+      <button type="button" class="quick-action-btn" (click)="openProfileModal()">
+        <ion-icon name="person-outline"></ion-icon>
+        <span>Manage Profile</span>
+      </button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="coach-tabs fade-up">
+      <button type="button" class="coach-tab" [class.is-active]="activeTab === 'clients'" (click)="setTab('clients')">
+        <ion-icon name="people-outline"></ion-icon>
+        <span>My Clients</span>
+      </button>
+      <button type="button" class="coach-tab" [class.is-active]="activeTab === 'requests'" (click)="setTab('requests')">
+        <ion-icon name="mail-unread-outline"></ion-icon>
+        <span>Requests</span>
+        <span class="coach-tab-badge" *ngIf="stats.pending_requests > 0">{{ stats.pending_requests }}</span>
+      </button>
+      <button type="button" class="coach-tab" [class.is-active]="activeTab === 'messages'" (click)="setTab('messages')">
+        <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+        <span>Messages</span>
+      </button>
+    </div>
+
+    <!-- Today's Sessions -->
+    <div class="section-heading-row">
+      <div class="section-label" style="margin: 0;">Today's Sessions</div>
+      <button type="button" class="text-link-btn" (click)="goToSchedule()">View schedule</button>
+    </div>
+    <div class="card fade-up" *ngIf="isLoadingTodaySessions">
+      <ion-spinner name="crescent" color="warning"></ion-spinner>
+    </div>
+    <ng-container *ngIf="!isLoadingTodaySessions">
+      <div class="session-item fade-up" *ngFor="let session of todaySessions" (click)="openClientChat(session.proposalId)">
+        <div class="session-avatar">
+          <img *ngIf="session.clientAvatar" [src]="session.clientAvatar" alt="" />
+          <span *ngIf="!session.clientAvatar">{{ session.clientName.charAt(0) }}</span>
+          <span class="session-avatar-dot"></span>
+        </div>
+        <div class="session-info">
+          <div class="session-name">{{ session.clientName }}</div>
+          <div class="session-time"><ion-icon name="time-outline"></ion-icon> {{ session.timeLabel }}</div>
+          <div class="session-focus">{{ session.focus }}</div>
+        </div>
+        <button type="button" class="session-view-btn">
+          <span>View</span>
+          <ion-icon name="chevron-forward-outline"></ion-icon>
+        </button>
+      </div>
+      <div class="empty-state card fade-up" *ngIf="todaySessions.length === 0">
+        <ion-icon name="calendar-outline" class="empty-state-icon"></ion-icon>
+        <div>No sessions scheduled for today.</div>
+      </div>
+    </ng-container>
+
+    <!-- Tab content -->
+    <div class="section-label">
+      {{ activeTab === 'clients' ? 'My Clients' : activeTab === 'requests' ? 'Requests' : 'Messages' }}
+    </div>
+
+    <!-- My Clients -->
+    <ng-container *ngIf="activeTab === 'clients'">
+      <div class="card fade-up" *ngIf="isLoadingClients">
+        <ion-spinner name="crescent" color="warning"></ion-spinner>
+      </div>
+      <ng-container *ngIf="!isLoadingClients">
+        <div class="client-item fade-up" *ngFor="let item of clients" (click)="openClientChat(item.conversation_id)">
+          <div class="session-avatar">
+            <img *ngIf="item.client.profile_image" [src]="item.client.profile_image" alt="" />
+            <span *ngIf="!item.client.profile_image">{{ (item.client.first_name || item.client.username).charAt(0) }}</span>
+          </div>
+          <div class="session-info">
+            <div class="session-name">{{ item.client.first_name }} {{ item.client.last_name }}</div>
+            <div class="session-focus" *ngIf="item.next_session">
+              Next: {{ item.next_session.session_date }} · {{ item.next_session.time_val }} {{ item.next_session.time_ampm }}
+            </div>
+            <div class="session-focus" *ngIf="!item.next_session && item.latest_message">{{ item.latest_message.body }}</div>
+          </div>
+          <ion-icon name="chevron-forward-outline" class="client-chevron"></ion-icon>
+        </div>
+        <div class="empty-state card fade-up dashed" *ngIf="clients.length === 0">
+          <div class="empty-state-icon-ring"><ion-icon name="people-outline"></ion-icon></div>
+          <strong>No Clients Yet</strong>
+          <span>Members who message you will appear here so you can chat and set up their sessions.</span>
+          <button type="button" class="preview-profile-btn" (click)="previewProfile()">Preview Coach Profile</button>
+        </div>
+      </ng-container>
+    </ng-container>
+
+    <!-- Requests -->
+    <ng-container *ngIf="activeTab === 'requests'">
+      <div class="card fade-up" *ngIf="isLoadingRequests">
+        <ion-spinner name="crescent" color="warning"></ion-spinner>
+      </div>
+      <ng-container *ngIf="!isLoadingRequests">
+        <div class="request-item fade-up" *ngFor="let item of requests">
+          <div class="session-avatar">
+            <img *ngIf="item.client.profile_image" [src]="item.client.profile_image" alt="" />
+            <span *ngIf="!item.client.profile_image">{{ (item.client.first_name || item.client.username).charAt(0) }}</span>
+          </div>
+          <div class="session-info">
+            <div class="session-name">{{ item.client.first_name }} {{ item.client.last_name }}</div>
+            <div class="session-focus" *ngIf="item.latest_message">{{ item.latest_message.body }}</div>
+          </div>
+          <div class="request-actions">
+            <button
+              type="button"
+              class="request-accept-btn"
+              [disabled]="requestActionInFlightId === item.conversation_id"
+              (click)="acceptRequest(item)">
+              <ion-icon name="checkmark-circle-outline"></ion-icon>
+            </button>
+            <button
+              type="button"
+              class="request-decline-btn"
+              [disabled]="requestActionInFlightId === item.conversation_id"
+              (click)="declineRequest(item)">
+              <ion-icon name="close-circle-outline"></ion-icon>
+            </button>
+          </div>
+        </div>
+        <div class="empty-state card fade-up dashed" *ngIf="requests.length === 0">
+          <div class="empty-state-icon-ring"><ion-icon name="mail-unread-outline"></ion-icon></div>
+          <strong>No Pending Requests</strong>
+          <span>New client requests will show up here for you to accept or decline.</span>
+        </div>
+      </ng-container>
+    </ng-container>
+
+    <!-- Messages -->
+    <ng-container *ngIf="activeTab === 'messages'">
+      <div class="card fade-up" *ngIf="isLoadingConversations">
+        <ion-spinner name="crescent" color="warning"></ion-spinner>
+      </div>
+      <ng-container *ngIf="!isLoadingConversations">
+        <div class="client-item fade-up" *ngFor="let convo of conversations" (click)="openClientChat(convo.id)">
+          <div class="session-avatar">
+            <img *ngIf="convo.partner.profile_image" [src]="convo.partner.profile_image" alt="" />
+            <span *ngIf="!convo.partner.profile_image">{{ (convo.partner.first_name || convo.partner.username).charAt(0) }}</span>
+          </div>
+          <div class="session-info">
+            <div class="session-name">{{ convo.partner.first_name }} {{ convo.partner.last_name }}</div>
+            <div class="session-focus" *ngIf="convo.latest_message">{{ convo.latest_message.body }}</div>
+          </div>
+          <span class="unread-badge" *ngIf="convo.unread_count > 0">{{ convo.unread_count }}</span>
+        </div>
+        <div class="empty-state card fade-up dashed" *ngIf="conversations.length === 0">
+          <div class="empty-state-icon-ring"><ion-icon name="chatbubble-ellipses-outline"></ion-icon></div>
+          <strong>No Messages Yet</strong>
+          <span>Conversations with your clients will appear here.</span>
+        </div>
+      </ng-container>
+    </ng-container>
+
+    <div class="page-bottom-space" aria-hidden="true"></div>
+  </div>
+</ion-content>
+
+<ion-footer class="fordago-app-footer ion-no-border">
+  <nav class="fordago-bottom-nav" aria-label="Coach navigation">
+    <button type="button" class="fordago-nav-item is-active" (click)="goToDashboard()" aria-label="Dashboard">
+      <span class="fordago-nav-icon"><ion-icon name="grid-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Dashboard</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item" (click)="goToClients()" aria-label="Clients">
+      <span class="fordago-nav-icon"><ion-icon name="people-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Clients</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item fordago-scan-item" (click)="goToQr()" aria-label="Scan">
+      <span class="fordago-scan-button"><ion-icon name="scan-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Scan</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item" (click)="goToMessages()" aria-label="Messages">
+      <span class="fordago-nav-icon"><ion-icon name="chatbubble-ellipses-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Messages</span>
+    </button>
+
+    <button type="button" class="fordago-nav-item" (click)="goToProfile()" aria-label="Profile">
+      <span class="fordago-nav-icon"><ion-icon name="person-outline"></ion-icon></span>
+      <span class="fordago-nav-label">Profile</span>
+    </button>
+  </nav>
+</ion-footer>
+
+<app-notification-panel
+  [isOpen]="notifPanelOpen"
+  (closed)="closeNotifPanel()"
+  (unreadCountChange)="onUnreadCountChange($event)">
+</app-notification-panel>
+
+<!-- Manage Profile modal -->
+<ion-modal
+  [isOpen]="profileModalOpen"
+  (didDismiss)="closeProfileModal()"
+  [breakpoints]="[0, 0.6, 0.9]"
+  [initialBreakpoint]="0.6">
+  <ng-template>
+    <ion-content class="ion-padding modal-content coach-modal">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Manage Profile</div>
+
+      <div class="form-group">
+        <label class="form-label">Specialty</label>
+        <input type="text" [(ngModel)]="profileForm.specialty" placeholder="e.g. Strength &amp; Conditioning" class="form-input" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Bio</label>
+        <textarea [(ngModel)]="profileForm.bio" placeholder="Tell clients about your coaching style" rows="3" class="form-input"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Photo URL</label>
+        <input type="text" [(ngModel)]="profileForm.photo_url" placeholder="https://…" class="form-input" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Rate per Session (&#8369;)</label>
+        <input type="number" appNoNegative [(ngModel)]="profileForm.rate" placeholder="0" class="form-input" />
+      </div>
+
+      <div class="form-error" *ngIf="profileFormError">{{ profileFormError }}</div>
+
+      <div class="modal-actions">
+        <button class="modal-save-btn" [disabled]="isSavingProfile" (click)="saveProfile()">
+          {{ isSavingProfile ? 'Saving…' : 'Save Changes' }}
+        </button>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<!-- Set Availability modal -->
+<ion-modal
+  [isOpen]="availabilityModalOpen"
+  (didDismiss)="closeAvailabilityModal()"
+  [breakpoints]="[0, 0.65, 0.9]"
+  [initialBreakpoint]="0.65">
+  <ng-template>
+    <ion-content class="ion-padding modal-content coach-modal">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Set Availability</div>
+
+      <div class="card availability-list" *ngIf="!isLoadingAvailability">
+        <div class="empty-state" *ngIf="availabilitySlots.length === 0">
+          <ion-icon name="time-outline" class="empty-state-icon"></ion-icon>
+          <div>No availability slots yet.</div>
+        </div>
+        <div class="availability-row" *ngFor="let slot of availabilitySlots">
+          <span class="availability-day">{{ dayNames[slot.day_of_week] }}</span>
+          <span class="availability-time">{{ slot.start_time }} – {{ slot.end_time }}</span>
+          <button type="button" class="availability-remove-btn" (click)="removeAvailabilitySlot(slot)">
+            <ion-icon name="trash-outline"></ion-icon>
+          </button>
+        </div>
+      </div>
+      <div class="card" *ngIf="isLoadingAvailability">
+        <ion-spinner name="crescent" color="warning"></ion-spinner>
+      </div>
+
+      <div class="modal-title" style="font-size: 14px; margin-top: 18px;">Add Slot</div>
+
+      <div class="form-group">
+        <label class="form-label">Day</label>
+        <select [(ngModel)]="newSlot.day_of_week" class="form-select">
+          <option *ngFor="let day of dayNames; let i = index" [value]="i">{{ day }}</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label class="form-label">Start Time</label>
+          <input type="time" [(ngModel)]="newSlot.start_time" class="form-input" />
+        </div>
+        <div class="form-group flex-1">
+          <label class="form-label">End Time</label>
+          <input type="time" [(ngModel)]="newSlot.end_time" class="form-input" />
+        </div>
+      </div>
+
+      <div class="form-error" *ngIf="availabilityError">{{ availabilityError }}</div>
+
+      <div class="modal-actions">
+        <button class="modal-save-btn" (click)="addAvailabilitySlot()">Add Slot</button>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<!-- Create Program modal -->
+<ion-modal
+  [isOpen]="programModalOpen"
+  (didDismiss)="closeProgramModal()"
+  [breakpoints]="[0, 0.7, 0.95]"
+  [initialBreakpoint]="0.7">
+  <ng-template>
+    <ion-content class="ion-padding modal-content coach-modal">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Create Program</div>
+
+      <div class="card program-list" *ngIf="!isLoadingPrograms && programs.length > 0">
+        <div class="program-row" *ngFor="let program of programs">
+          <div class="session-info">
+            <div class="session-name">{{ program.name }}</div>
+            <div class="session-focus">{{ program.workout_type }} · {{ program.duration_minutes }} min · &#8369;{{ program.price }}</div>
+          </div>
+          <button type="button" class="availability-remove-btn" (click)="deleteProgram(program)">
+            <ion-icon name="trash-outline"></ion-icon>
+          </button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Program Name</label>
+        <input type="text" [(ngModel)]="programForm.name" placeholder="e.g. 8-Week Strength Builder" class="form-input" />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label class="form-label">Workout Type</label>
+          <input type="text" [(ngModel)]="programForm.workout_type" placeholder="Strength" class="form-input" />
+        </div>
+        <div class="form-group flex-1">
+          <label class="form-label">Target</label>
+          <input type="text" [(ngModel)]="programForm.target" placeholder="Upper Body" class="form-input" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label class="form-label">Duration (min)</label>
+          <input type="number" appNoNegative [(ngModel)]="programForm.duration_minutes" class="form-input" />
+        </div>
+        <div class="form-group flex-1">
+          <label class="form-label">Price (&#8369;)</label>
+          <input type="number" appNoNegative [(ngModel)]="programForm.price" class="form-input" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea [(ngModel)]="programForm.description" rows="3" class="form-input"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Exercises</label>
+        <div class="program-item-row" *ngFor="let item of programForm.items; let i = index">
+          <input type="text" [(ngModel)]="item.name" placeholder="Exercise name" class="form-input program-item-name" />
+          <input type="number" appNoNegative [(ngModel)]="item.sets" placeholder="Sets" class="form-input program-item-num" />
+          <input type="number" appNoNegative [(ngModel)]="item.reps" placeholder="Reps" class="form-input program-item-num" />
+          <button type="button" class="program-item-remove-btn" (click)="removeProgramItem(i)" [disabled]="programForm.items!.length <= 1">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+        </div>
+        <button type="button" class="add-item-btn" (click)="addProgramItem()">
+          <ion-icon name="add-outline"></ion-icon>
+          <span>Add Exercise</span>
+        </button>
+      </div>
+
+      <div class="form-error" *ngIf="programFormError">{{ programFormError }}</div>
+
+      <div class="modal-actions">
+        <button class="modal-save-btn" [disabled]="isSavingProgram" (click)="saveProgram()">
+          {{ isSavingProgram ? 'Saving…' : 'Save Program' }}
+        </button>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>

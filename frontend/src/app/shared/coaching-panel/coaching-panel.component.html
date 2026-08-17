@@ -1,0 +1,781 @@
+<!-- coaching-panel.component.html -->
+<!--
+  In-flow coaching screen -- NOT a modal/drawer overlay.
+  The parent page only renders this element (via *ngIf) in the exact spot
+  it would otherwise render <ion-content>, so app-header above and
+  ion-footer below stay untouched and visible. See :host in the .scss for
+  the flex sizing that makes this fill the same slot ion-content normally
+  occupies.
+
+  Coach accounts (isCoach) render the FULL coach dashboard content below
+  (profile card, stats, quick actions, its own My Clients/Requests/
+  Messages tabs) instead of the member Explore/Messages tab bar -- see
+  panel-tabs' *ngIf="!isCoach". This is the account's single entry point
+  into coaching management; everything else about the account (bottom
+  nav, other pages) stays identical to a regular member.
+-->
+<div class="panel-header">
+  <div class="panel-header-left">
+    <div class="panel-header-icon-wrap">
+      <ion-icon [name]="isCoach ? 'person-circle-outline' : 'person-outline'" class="panel-header-icon"></ion-icon>
+    </div>
+    <div>
+      <h2 class="panel-header-title">{{ isCoach ? 'Coach Dashboard' : 'Personal Coaches' }}</h2>
+      <p class="panel-header-sub">{{ isCoach ? 'Manage your clients & coaching' : 'Connect with top trainers' }}</p>
+    </div>
+  </div>
+  <button
+    type="button"
+    class="panel-close-btn"
+    (click)="close()"
+    aria-label="Close coaching panel">
+    <ion-icon name="close-outline"></ion-icon>
+  </button>
+</div>
+
+<!-- Member tabs: coach accounts skip this entirely -- their tabs live
+     inside the dashboard content below (cd-tabs). -->
+<div class="panel-tabs" *ngIf="!isLoadingProfile && !isCoach">
+  <button
+    type="button"
+    class="panel-tab-btn"
+    [class.is-active]="activeTab === 'explore'"
+    (click)="setTab('explore')">
+    <ion-icon name="sparkles-outline"></ion-icon>
+    <span>Explore Coaches</span>
+  </button>
+
+  <button
+    type="button"
+    class="panel-tab-btn"
+    [class.is-active]="activeTab === 'conversations'"
+    (click)="setTab('conversations')">
+    <ion-icon name="chatbubbles-outline"></ion-icon>
+    <span>Messages</span>
+    <span class="tab-badge-count" *ngIf="conversations.length > 0">{{ conversations.length }}</span>
+  </button>
+
+  <button
+    type="button"
+    class="panel-tab-btn"
+    [class.is-active]="activeTab === 'classes'"
+    (click)="setTab('classes')">
+    <ion-icon name="barbell-outline"></ion-icon>
+    <span>Classes</span>
+  </button>
+</div>
+
+<!-- Scrollable Content -->
+<div class="panel-content">
+
+  <!-- Resolving whether this account is a coach or a member (see
+       loadMyProfile()) -- shown instead of the tabs/lists below so a coach
+       account never flashes the member "Explore Coaches" view, or vice
+       versa, while that request is in flight. -->
+  <div class="loading-state" *ngIf="isLoadingProfile">
+    <ion-spinner name="crescent" color="warning"></ion-spinner>
+    <p>Loading...</p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       COACH DASHBOARD (isCoach === true) — full dashboard content
+       ══════════════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="!isLoadingProfile && isCoach">
+
+    <!-- Settings shortcut -->
+    <div class="cd-title-row">
+      <button type="button" class="cd-settings-btn" (click)="openSettings()">
+        <ion-icon name="settings-outline"></ion-icon>
+        <span>Settings</span>
+      </button>
+    </div>
+
+    <!-- Profile card -->
+    <div class="cd-profile-card" *ngIf="myProfile">
+      <div class="cd-profile-avatar">
+        <img *ngIf="myProfile.profile_image" [src]="myProfile.profile_image" alt="" />
+        <span *ngIf="!myProfile.profile_image">{{ (myProfile.first_name || myProfile.username || 'C').charAt(0) }}</span>
+      </div>
+      <div class="cd-profile-body">
+        <div class="cd-profile-top">
+          <div class="cd-profile-name">&#64;{{ myProfile.username }}</div>
+          <div class="cd-profile-price" *ngIf="myProfile.rate">
+            <span class="cd-price-amount">&#8369;{{ myProfile.rate }}</span>
+            <span class="cd-price-unit">/ session</span>
+          </div>
+        </div>
+        <span class="cd-profile-specialty" *ngIf="myProfile.specialty">{{ myProfile.specialty }}</span>
+        <p class="cd-profile-bio" *ngIf="myProfile.bio">{{ myProfile.bio }}</p>
+        <div class="cd-profile-status" [class.is-inactive]="!myProfile.is_active">
+          <span class="cd-status-dot"></span>
+          {{ myProfile.is_active ? 'Accepting clients' : 'Not accepting clients' }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="cd-stats-grid">
+      <div class="cd-stat-card">
+        <ion-icon name="people-outline" class="cd-stat-icon accent-icon"></ion-icon>
+        <div class="cd-stat-value">{{ isLoadingStats ? '–' : stats.active_clients }}</div>
+        <div class="cd-stat-label">Active Clients</div>
+      </div>
+      <div class="cd-stat-card">
+        <ion-icon name="calendar-outline" class="cd-stat-icon blue-icon"></ion-icon>
+        <div class="cd-stat-value blue">{{ isLoadingStats ? '–' : stats.sessions_today }}</div>
+        <div class="cd-stat-label">Sessions Today</div>
+      </div>
+      <div class="cd-stat-card">
+        <ion-icon name="mail-unread-outline" class="cd-stat-icon amber-icon"></ion-icon>
+        <div class="cd-stat-value amber">{{ isLoadingStats ? '–' : stats.pending_requests }}</div>
+        <div class="cd-stat-label">Requests</div>
+      </div>
+      <div class="cd-stat-card">
+        <ion-icon name="cash-outline" class="cd-stat-icon green-icon"></ion-icon>
+        <div class="cd-stat-value green">{{ isLoadingStats ? '–' : ('\u20B1' + stats.earnings_this_month) }}</div>
+        <div class="cd-stat-label">Earnings</div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="cd-section-label">Quick Actions</div>
+    <div class="cd-quick-actions-grid">
+      <button type="button" class="cd-quick-action-btn" (click)="openAvailabilityModal()">
+        <ion-icon name="time-outline"></ion-icon>
+        <span>Set Availability</span>
+      </button>
+      <button type="button" class="cd-quick-action-btn" (click)="openProgramModal()">
+        <ion-icon name="clipboard-outline"></ion-icon>
+        <span>Create Program</span>
+      </button>
+      <button type="button" class="cd-quick-action-btn" (click)="openProfileModal()">
+        <ion-icon name="person-outline"></ion-icon>
+        <span>Manage Profile</span>
+      </button>
+    </div>
+
+    <!-- Coach dashboard tabs -->
+    <div class="cd-tabs">
+      <button type="button" class="cd-tab" [class.is-active]="coachTab === 'clients'" (click)="setCoachTab('clients')">
+        <ion-icon name="people-outline"></ion-icon>
+        <span>My Clients</span>
+      </button>
+      <button type="button" class="cd-tab" [class.is-active]="coachTab === 'requests'" (click)="setCoachTab('requests')">
+        <ion-icon name="mail-unread-outline"></ion-icon>
+        <span>Requests</span>
+        <span class="cd-tab-badge" *ngIf="stats.pending_requests > 0">{{ stats.pending_requests }}</span>
+      </button>
+      <button type="button" class="cd-tab" [class.is-active]="coachTab === 'messages'" (click)="setCoachTab('messages')">
+        <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+        <span>Messages</span>
+      </button>
+    </div>
+
+    <!-- Today's Sessions -->
+    <div class="cd-section-heading-row">
+      <div class="cd-section-label" style="margin: 0;">Today's Sessions</div>
+      <button type="button" class="cd-text-link-btn" (click)="goToSchedule()">View schedule</button>
+    </div>
+    <div class="cd-card" *ngIf="isLoadingTodaySessions">
+      <ion-spinner name="crescent" color="warning"></ion-spinner>
+    </div>
+    <ng-container *ngIf="!isLoadingTodaySessions">
+      <div class="cd-session-item" *ngFor="let session of todaySessions" (click)="openTodaySession(session)">
+        <div class="cd-session-avatar">
+          <img *ngIf="session.clientAvatar" [src]="session.clientAvatar" alt="" />
+          <span *ngIf="!session.clientAvatar">{{ session.clientName.charAt(0) }}</span>
+          <span class="cd-session-avatar-dot"></span>
+        </div>
+        <div class="cd-session-info">
+          <div class="cd-session-name">{{ session.clientName }}</div>
+          <div class="cd-session-time"><ion-icon name="time-outline"></ion-icon> {{ session.timeLabel }}</div>
+          <div class="cd-session-focus">{{ session.focus }}</div>
+        </div>
+        <button type="button" class="cd-session-view-btn">
+          <span>View</span>
+          <ion-icon name="chevron-forward-outline"></ion-icon>
+        </button>
+      </div>
+      <div class="cd-empty-state cd-card" *ngIf="todaySessions.length === 0">
+        <ion-icon name="calendar-outline" class="cd-empty-state-icon"></ion-icon>
+        <div>No sessions scheduled for today.</div>
+      </div>
+    </ng-container>
+
+    <!-- Coach tab content -->
+    <div class="cd-section-label">
+      {{ coachTab === 'clients' ? 'My Clients' : coachTab === 'requests' ? 'Requests' : 'Messages' }}
+    </div>
+
+    <!-- My Clients -->
+    <ng-container *ngIf="coachTab === 'clients'">
+      <div class="cd-card" *ngIf="isLoadingClients">
+        <ion-spinner name="crescent" color="warning"></ion-spinner>
+      </div>
+      <ng-container *ngIf="!isLoadingClients">
+        <div class="cd-client-item" *ngFor="let item of clients" (click)="openClientChat(item)">
+          <div class="cd-session-avatar">
+            <img *ngIf="item.client.profile_image" [src]="item.client.profile_image" alt="" />
+            <span *ngIf="!item.client.profile_image">{{ (item.client.first_name || item.client.username).charAt(0) }}</span>
+          </div>
+          <div class="cd-session-info">
+            <div class="cd-session-name">{{ item.client.first_name }} {{ item.client.last_name }}</div>
+            <div class="cd-session-focus" *ngIf="item.next_session">
+              Next: {{ item.next_session.session_date }} · {{ item.next_session.time_val }} {{ item.next_session.time_ampm }}
+            </div>
+            <div class="cd-session-focus" *ngIf="!item.next_session && item.latest_message">{{ item.latest_message.body }}</div>
+          </div>
+          <ion-icon name="chevron-forward-outline" class="cd-client-chevron"></ion-icon>
+        </div>
+        <div class="cd-empty-state cd-card cd-dashed" *ngIf="clients.length === 0">
+          <div class="cd-empty-state-icon-ring"><ion-icon name="people-outline"></ion-icon></div>
+          <strong>No Clients Yet</strong>
+          <span>Members who message you will appear here so you can chat and set up their sessions.</span>
+        </div>
+      </ng-container>
+    </ng-container>
+
+    <!-- Requests -->
+    <ng-container *ngIf="coachTab === 'requests'">
+      <div class="cd-card" *ngIf="isLoadingRequests">
+        <ion-spinner name="crescent" color="warning"></ion-spinner>
+      </div>
+      <ng-container *ngIf="!isLoadingRequests">
+        <div class="cd-request-item" *ngFor="let item of requests">
+          <div class="cd-session-avatar">
+            <img *ngIf="item.client.profile_image" [src]="item.client.profile_image" alt="" />
+            <span *ngIf="!item.client.profile_image">{{ (item.client.first_name || item.client.username).charAt(0) }}</span>
+          </div>
+          <div class="cd-session-info">
+            <div class="cd-session-name">{{ item.client.first_name }} {{ item.client.last_name }}</div>
+            <div class="cd-session-focus" *ngIf="item.latest_message">{{ item.latest_message.body }}</div>
+          </div>
+          <div class="cd-request-actions">
+            <button
+              type="button"
+              class="cd-request-accept-btn"
+              [disabled]="requestActionInFlightId === item.conversation_id"
+              (click)="acceptRequest(item)">
+              <ion-icon name="checkmark-circle-outline"></ion-icon>
+            </button>
+            <button
+              type="button"
+              class="cd-request-decline-btn"
+              [disabled]="requestActionInFlightId === item.conversation_id"
+              (click)="declineRequest(item)">
+              <ion-icon name="close-circle-outline"></ion-icon>
+            </button>
+          </div>
+        </div>
+        <div class="cd-empty-state cd-card cd-dashed" *ngIf="requests.length === 0">
+          <div class="cd-empty-state-icon-ring"><ion-icon name="mail-unread-outline"></ion-icon></div>
+          <strong>No Pending Requests</strong>
+          <span>New client requests will show up here for you to accept or decline.</span>
+        </div>
+      </ng-container>
+    </ng-container>
+
+    <!-- Messages -->
+    <ng-container *ngIf="coachTab === 'messages'">
+      <div class="cd-client-item" *ngFor="let convo of conversations" (click)="openConversation(convo)">
+        <div class="cd-session-avatar">
+          <img *ngIf="convo.partner.profile_image" [src]="convo.partner.profile_image" alt="" />
+          <span *ngIf="!convo.partner.profile_image">{{ (convo.partner.first_name || convo.partner.username).charAt(0) }}</span>
+        </div>
+        <div class="cd-session-info">
+          <div class="cd-session-name">{{ convo.partner.first_name }} {{ convo.partner.last_name }}</div>
+          <div class="cd-session-focus" *ngIf="convo.latest_message">{{ convo.latest_message.body }}</div>
+        </div>
+        <span class="cd-unread-badge" *ngIf="convo.unread_count > 0">{{ convo.unread_count }}</span>
+      </div>
+      <div class="cd-empty-state cd-card cd-dashed" *ngIf="conversations.length === 0">
+        <div class="cd-empty-state-icon-ring"><ion-icon name="chatbubble-ellipses-outline"></ion-icon></div>
+        <strong>No Messages Yet</strong>
+        <span>Conversations with your clients will appear here.</span>
+      </div>
+    </ng-container>
+
+  </ng-container>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       MEMBER FLOW (isCoach === false) — unchanged from before
+       ══════════════════════════════════════════════════════════════ -->
+
+  <!-- EXPLORE COACHES TAB -->
+  <ng-container *ngIf="!isLoadingProfile && !isCoach && activeTab === 'explore'">
+
+    <!-- Search Input -->
+    <div class="search-wrap">
+      <ion-icon name="search-outline" class="search-icon"></ion-icon>
+      <input
+        class="search-input"
+        type="text"
+        placeholder="Search coach by name or specialty..."
+        [(ngModel)]="searchQuery"
+        (ngModelChange)="onSearchChange()"
+      />
+    </div>
+
+    <!-- Specialty Pills -->
+    <div class="specialty-row">
+      <div
+        *ngFor="let spec of specialties"
+        class="specialty-chip"
+        [class.active]="activeSpecialty === spec"
+        (click)="selectSpecialty(spec)">
+        {{ spec }}
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="isLoading">
+      <ion-spinner name="crescent" color="warning"></ion-spinner>
+      <p>Loading expert coaches...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!isLoading && coaches.length === 0">
+      <div class="empty-icon-wrap">
+        <ion-icon name="person-outline"></ion-icon>
+      </div>
+      <h3>No Coaches Found</h3>
+      <p>No trainers match your search right now. Please check back soon.</p>
+    </div>
+
+    <!-- Coach List -->
+    <div class="coach-list" *ngIf="!isLoading && coaches.length > 0">
+      <div class="coach-card" *ngFor="let coach of coaches">
+        <div class="coach-card-header">
+          <div class="coach-avatar-wrap">
+            <img *ngIf="coach.profile_image" [src]="coach.profile_image" [alt]="coach.first_name" class="coach-avatar-img" />
+            <div *ngIf="!coach.profile_image" class="coach-avatar-placeholder">
+              {{ (coach.first_name || coach.username || 'C').charAt(0) }}
+            </div>
+            <span class="coach-verified-badge">
+              <ion-icon name="checkmark-circle-outline"></ion-icon>
+            </span>
+          </div>
+
+          <div class="coach-info">
+            <h4 class="coach-name">{{ coach.first_name }} {{ coach.last_name }}</h4>
+            <div class="coach-username">&#64;{{ coach.username }}</div>
+            <span class="coach-specialty">{{ coach.specialty || 'Personal Training' }}</span>
+          </div>
+
+          <div class="coach-rate">
+            <span class="coach-rate-amount">&#8369;{{ coach.rate || 500 }}</span>
+            <span class="coach-rate-label">/ session</span>
+          </div>
+        </div>
+
+        <p class="coach-bio">
+          {{ coach.bio || 'Dedicated trainer focused on helping you reach peak performance safely and effectively.' }}
+        </p>
+
+        <div class="coach-actions">
+          <button type="button" class="coach-btn coach-btn-view" (click)="viewCoach(coach)">
+            View Profile
+          </button>
+          <button type="button" class="coach-btn coach-btn-message" [disabled]="isStartingChat" (click)="startChat(coach)">
+            <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+            {{ isStartingChat ? 'Sending…' : 'Send Request' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- CONVERSATIONS TAB -->
+  <ng-container *ngIf="!isLoadingProfile && !isCoach && activeTab === 'conversations'">
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="conversations.length === 0">
+      <div class="empty-icon-wrap">
+        <ion-icon name="chatbubbles-outline"></ion-icon>
+      </div>
+      <h3>No Messages Yet</h3>
+      <p>Explore our coaches and send a message to start custom training sessions.</p>
+      <button type="button" class="empty-cta-btn" (click)="setTab('explore')">
+        <ion-icon name="sparkles-outline"></ion-icon> Browse Coaches
+      </button>
+    </div>
+
+    <!-- Conversations List -->
+    <div class="convo-list" *ngIf="conversations.length > 0">
+      <div
+        class="convo-card"
+        *ngFor="let convo of conversations"
+        (click)="openConversation(convo)">
+        <div class="convo-avatar-wrap">
+          <img *ngIf="convo.partner.profile_image" [src]="convo.partner.profile_image" class="convo-avatar-img" />
+          <div *ngIf="!convo.partner.profile_image" class="convo-avatar-placeholder">
+            {{ (convo.partner.first_name || convo.partner.username || 'U').charAt(0) }}
+          </div>
+          <span class="convo-unread-dot" *ngIf="convo.unread_count > 0"></span>
+        </div>
+
+        <div class="convo-info">
+          <div class="convo-top-row">
+            <h4 class="convo-name">{{ convo.partner.first_name }} {{ convo.partner.last_name }}</h4>
+            <span class="convo-time">{{ convo.updated_at | date:'shortTime' }}</span>
+          </div>
+          <div class="convo-role-tag">{{ convo.partner_role === 'coach' ? 'Personal Coach' : 'Client' }}</div>
+          <p class="convo-last-msg" [class.is-unread]="convo.unread_count > 0">
+            {{ convo.latest_message?.body || 'Start the conversation...' }}
+          </p>
+        </div>
+
+        <div class="convo-unread-pill" *ngIf="convo.unread_count > 0">
+          {{ convo.unread_count }}
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- CLASSES TAB ("Avail" a public group class) -->
+  <ng-container *ngIf="!isLoadingProfile && !isCoach && activeTab === 'classes'">
+
+    <div class="cd-form-error" *ngIf="classActionError">{{ classActionError }}</div>
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="isLoadingClasses">
+      <ion-spinner name="crescent" color="warning"></ion-spinner>
+      <p>Loading classes...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!isLoadingClasses && publicPrograms.length === 0">
+      <div class="empty-icon-wrap">
+        <ion-icon name="barbell-outline"></ion-icon>
+      </div>
+      <h3>No Classes Posted Yet</h3>
+      <p>Public group classes from our coaches will show up here for you to avail.</p>
+    </div>
+
+    <!-- Class List -->
+    <div class="coach-list" *ngIf="!isLoadingClasses && publicPrograms.length > 0">
+      <div class="coach-card" *ngFor="let program of publicPrograms">
+        <div class="coach-card-header">
+          <div class="coach-avatar-wrap">
+            <img *ngIf="program.coach?.profile_image" [src]="program.coach?.profile_image" [alt]="program.coach?.first_name" class="coach-avatar-img" />
+            <div *ngIf="!program.coach?.profile_image" class="coach-avatar-placeholder">
+              {{ (program.coach?.first_name || program.coach?.username || 'C').charAt(0) }}
+            </div>
+          </div>
+
+          <div class="coach-info">
+            <h4 class="coach-name">{{ program.name }}</h4>
+            <div class="coach-username">with {{ program.coach?.first_name }} {{ program.coach?.last_name }}</div>
+            <span class="coach-specialty" *ngIf="program.workout_type">{{ program.workout_type }}</span>
+          </div>
+
+          <div class="coach-rate">
+            <span class="coach-rate-amount">&#8369;{{ program.price || 0 }}</span>
+            <span class="coach-rate-label">/ session</span>
+          </div>
+        </div>
+
+        <div class="class-meta-row">
+          <span class="class-meta-item" *ngIf="program.session_date">
+            <ion-icon name="calendar-outline"></ion-icon> {{ program.session_date }}
+          </span>
+          <span class="class-meta-item" *ngIf="program.time_val">
+            <ion-icon name="time-outline"></ion-icon> {{ program.time_val }} {{ program.time_ampm }}
+          </span>
+          <span class="class-meta-item" *ngIf="program.location">{{ program.location }}</span>
+        </div>
+
+        <div class="class-capacity-row">
+          <span class="class-spots" *ngIf="program.spots_left != null" [class.is-full]="program.is_full">
+            {{ program.is_full ? 'Class full' : (program.spots_left + ' spot' + (program.spots_left === 1 ? '' : 's') + ' left') }}
+          </span>
+          <span class="class-spots" *ngIf="program.already_booked">&#8226; You're in!</span>
+        </div>
+
+        <div class="coach-actions">
+          <button
+            type="button"
+            class="coach-btn coach-btn-cancel"
+            *ngIf="program.already_booked"
+            [disabled]="classActionInFlightId === program.id"
+            (click)="cancelClassBooking(program)">
+            {{ classActionInFlightId === program.id ? 'Cancelling…' : 'Cancel Booking' }}
+          </button>
+          <button
+            type="button"
+            class="coach-btn coach-btn-message"
+            *ngIf="!program.already_booked"
+            [disabled]="program.is_full || classActionInFlightId === program.id"
+            (click)="bookClass(program)">
+            {{ classActionInFlightId === program.id ? 'Booking…' : (program.is_full ? 'Class Full' : 'Avail') }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+</div>
+
+<!-- Manage Profile modal -->
+<ion-modal
+  [isOpen]="profileModalOpen"
+  (didDismiss)="closeProfileModal()"
+  [breakpoints]="[0, 0.6, 0.9]"
+  [initialBreakpoint]="0.6">
+  <ng-template>
+    <div class="cd-modal-content">
+      <div class="cd-modal-handle"></div>
+      <div class="cd-modal-title">Manage Profile</div>
+
+      <div class="cd-form-group">
+        <label class="cd-form-label">Specialty</label>
+        <input type="text" [(ngModel)]="profileForm.specialty" placeholder="e.g. Strength &amp; Conditioning" class="cd-form-input" />
+      </div>
+
+      <div class="cd-form-group">
+        <label class="cd-form-label">Bio</label>
+        <textarea [(ngModel)]="profileForm.bio" placeholder="Tell clients about your coaching style" rows="3" class="cd-form-input"></textarea>
+      </div>
+
+      <div class="cd-form-group">
+        <label class="cd-form-label">Photo URL</label>
+        <input type="text" [(ngModel)]="profileForm.photo_url" placeholder="https://…" class="cd-form-input" />
+      </div>
+
+      <div class="cd-form-group">
+        <label class="cd-form-label">Rate per Session (&#8369;)</label>
+        <input type="number" appNoNegative [(ngModel)]="profileForm.rate" placeholder="0" class="cd-form-input" />
+      </div>
+
+      <div class="cd-form-error" *ngIf="profileFormError">{{ profileFormError }}</div>
+
+      <div class="cd-modal-actions">
+        <button class="cd-modal-save-btn" [disabled]="isSavingProfile" (click)="saveProfile()">
+          {{ isSavingProfile ? 'Saving…' : 'Save Changes' }}
+        </button>
+      </div>
+    </div>
+  </ng-template>
+</ion-modal>
+
+<!-- Set Availability modal -->
+<ion-modal
+  [isOpen]="availabilityModalOpen"
+  (didDismiss)="closeAvailabilityModal()"
+  [breakpoints]="[0, 0.65, 0.9]"
+  [initialBreakpoint]="0.65">
+  <ng-template>
+    <div class="cd-modal-content">
+      <div class="cd-modal-handle"></div>
+      <div class="cd-modal-title">Set Availability</div>
+
+      <div class="cd-card cd-availability-list" *ngIf="!isLoadingAvailability">
+        <div class="cd-empty-state" *ngIf="availabilitySlots.length === 0">
+          <ion-icon name="time-outline" class="cd-empty-state-icon"></ion-icon>
+          <div>No availability slots yet.</div>
+        </div>
+        <div class="cd-availability-row" *ngFor="let slot of availabilitySlots">
+          <span class="cd-availability-day">{{ dayNames[slot.day_of_week] }}</span>
+          <span class="cd-availability-time">{{ slot.start_time }} – {{ slot.end_time }}</span>
+          <button type="button" class="cd-availability-remove-btn" (click)="removeAvailabilitySlot(slot)">
+            <ion-icon name="trash-outline"></ion-icon>
+          </button>
+        </div>
+      </div>
+      <div class="cd-card" *ngIf="isLoadingAvailability">
+        <ion-spinner name="crescent" color="warning"></ion-spinner>
+      </div>
+
+      <div class="cd-modal-title" style="font-size: 14px; margin-top: 18px;">Add Slot</div>
+
+      <div class="cd-form-group">
+        <label class="cd-form-label">Day</label>
+        <select [(ngModel)]="newSlot.day_of_week" class="cd-form-select">
+          <option *ngFor="let day of dayNames; let i = index" [value]="i">{{ day }}</option>
+        </select>
+      </div>
+
+      <div class="cd-form-row">
+        <div class="cd-form-group cd-flex-1">
+          <label class="cd-form-label">Start Time</label>
+          <input type="time" [(ngModel)]="newSlot.start_time" class="cd-form-input" />
+        </div>
+        <div class="cd-form-group cd-flex-1">
+          <label class="cd-form-label">End Time</label>
+          <input type="time" [(ngModel)]="newSlot.end_time" class="cd-form-input" />
+        </div>
+      </div>
+
+      <div class="cd-form-error" *ngIf="availabilityError">{{ availabilityError }}</div>
+
+      <div class="cd-modal-actions">
+        <button class="cd-modal-save-btn" (click)="addAvailabilitySlot()">Add Slot</button>
+      </div>
+    </div>
+  </ng-template>
+</ion-modal>
+
+<!-- Create Program modal -->
+<ion-modal
+  [isOpen]="programModalOpen"
+  (didDismiss)="closeProgramModal()"
+  [breakpoints]="[0, 0.7, 0.95]"
+  [initialBreakpoint]="0.7">
+  <ng-template>
+    <div class="cd-modal-content">
+      <div class="cd-modal-handle"></div>
+      <div class="cd-modal-title">Create Program</div>
+
+      <div class="cd-card cd-program-list" *ngIf="!isLoadingPrograms && programs.length > 0">
+        <div class="cd-program-row" *ngFor="let program of programs">
+          <div class="cd-session-info">
+            <div class="cd-session-name">
+              {{ program.name }}
+              <span class="cd-public-badge" *ngIf="program.is_public">Public</span>
+            </div>
+            <div class="cd-session-focus">{{ program.workout_type }} · {{ program.duration_minutes }} min · &#8369;{{ program.price }}</div>
+          </div>
+          <div class="cd-program-actions">
+            <button type="button" class="cd-roster-btn" *ngIf="program.is_public" (click)="openRosterModal(program)" aria-label="View roster">
+              <ion-icon name="people-outline"></ion-icon>
+            </button>
+            <button type="button" class="cd-availability-remove-btn" (click)="deleteProgram(program)" aria-label="Delete program">
+              <ion-icon name="trash-outline"></ion-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cd-form-group">
+        <label class="cd-form-label">Program Name</label>
+        <input type="text" [(ngModel)]="programForm.name" placeholder="e.g. 8-Week Strength Builder" class="cd-form-input" />
+      </div>
+
+      <div class="cd-form-row">
+        <div class="cd-form-group cd-flex-1">
+          <label class="cd-form-label">Workout Type</label>
+          <input type="text" [(ngModel)]="programForm.workout_type" placeholder="Strength" class="cd-form-input" />
+        </div>
+        <div class="cd-form-group cd-flex-1">
+          <label class="cd-form-label">Target</label>
+          <input type="text" [(ngModel)]="programForm.target" placeholder="Upper Body" class="cd-form-input" />
+        </div>
+      </div>
+
+      <div class="cd-form-row">
+        <div class="cd-form-group cd-flex-1">
+          <label class="cd-form-label">Duration (min)</label>
+          <input type="number" appNoNegative [(ngModel)]="programForm.duration_minutes" class="cd-form-input" />
+        </div>
+        <div class="cd-form-group cd-flex-1">
+          <label class="cd-form-label">Price (&#8369;)</label>
+          <input type="number" appNoNegative [(ngModel)]="programForm.price" class="cd-form-input" />
+        </div>
+      </div>
+
+      <div class="cd-form-group cd-checkbox-row">
+        <label class="cd-checkbox-label">
+          <input type="checkbox" [(ngModel)]="programForm.is_public" class="cd-checkbox" />
+          <span>Make this a public group class (members can instantly book a seat)</span>
+        </label>
+      </div>
+
+      <ng-container *ngIf="programForm.is_public">
+        <div class="cd-form-row">
+          <div class="cd-form-group cd-flex-1">
+            <label class="cd-form-label">Capacity (seats)</label>
+            <input type="number" appNoNegative [(ngModel)]="programForm.capacity" placeholder="10" class="cd-form-input" />
+          </div>
+          <div class="cd-form-group cd-flex-1">
+            <label class="cd-form-label">Location</label>
+            <input type="text" [(ngModel)]="programForm.location" placeholder="FordaGO Gym" class="cd-form-input" />
+          </div>
+        </div>
+
+        <div class="cd-form-group">
+          <label class="cd-form-label">Class Date</label>
+          <input type="date" [(ngModel)]="programForm.session_date" class="cd-form-input" />
+        </div>
+
+        <div class="cd-form-row">
+          <div class="cd-form-group cd-flex-1">
+            <label class="cd-form-label">Time</label>
+            <input type="text" [(ngModel)]="programForm.time_val" placeholder="e.g. 6:00" class="cd-form-input" />
+          </div>
+          <div class="cd-form-group cd-flex-1">
+            <label class="cd-form-label">AM / PM</label>
+            <select [(ngModel)]="programForm.time_ampm" class="cd-form-select">
+              <option value="AM">AM</option>
+              <option value="PM">PM</option>
+            </select>
+          </div>
+        </div>
+      </ng-container>
+
+      <div class="cd-form-group">
+        <label class="cd-form-label">Description</label>
+        <textarea [(ngModel)]="programForm.description" rows="3" class="cd-form-input"></textarea>
+      </div>
+
+      <div class="cd-form-group">
+        <label class="cd-form-label">Exercises</label>
+        <div class="cd-program-item-row" *ngFor="let item of programForm.items; let i = index">
+          <input type="text" [(ngModel)]="item.name" placeholder="Exercise name" class="cd-form-input cd-program-item-name" />
+          <input type="number" appNoNegative [(ngModel)]="item.sets" placeholder="Sets" class="cd-form-input cd-program-item-num" />
+          <input type="number" appNoNegative [(ngModel)]="item.reps" placeholder="Reps" class="cd-form-input cd-program-item-num" />
+          <button type="button" class="cd-program-item-remove-btn" (click)="removeProgramItem(i)" [disabled]="programForm.items!.length <= 1">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+        </div>
+        <button type="button" class="cd-add-item-btn" (click)="addProgramItem()">
+          <ion-icon name="add-outline"></ion-icon>
+          <span>Add Exercise</span>
+        </button>
+      </div>
+
+      <div class="cd-form-error" *ngIf="programFormError">{{ programFormError }}</div>
+
+      <div class="cd-modal-actions">
+        <button class="cd-modal-save-btn" [disabled]="isSavingProgram" (click)="saveProgram()">
+          {{ isSavingProgram ? 'Saving…' : 'Save Program' }}
+        </button>
+      </div>
+    </div>
+  </ng-template>
+</ion-modal>
+
+<!-- Roster modal (who availed a public group class) -->
+<ion-modal
+  [isOpen]="rosterModalOpen"
+  (didDismiss)="closeRosterModal()"
+  [breakpoints]="[0, 0.6, 0.9]"
+  [initialBreakpoint]="0.6">
+  <ng-template>
+    <div class="cd-modal-content">
+      <div class="cd-modal-handle"></div>
+      <div class="cd-modal-title">{{ rosterProgram?.name || 'Class Roster' }}</div>
+
+      <div class="cd-card" *ngIf="isLoadingRoster">
+        <ion-spinner name="crescent" color="warning"></ion-spinner>
+      </div>
+
+      <ng-container *ngIf="!isLoadingRoster">
+        <div class="cd-client-item cd-roster-item" *ngFor="let booking of rosterBookings">
+          <div class="cd-session-avatar">
+            <img *ngIf="booking.member?.profile_image" [src]="booking.member?.profile_image" alt="" />
+            <span *ngIf="!booking.member?.profile_image">{{ (booking.member?.first_name || booking.member?.username || 'M').charAt(0) }}</span>
+          </div>
+          <div class="cd-session-info">
+            <div class="cd-session-name">{{ booking.member?.first_name }} {{ booking.member?.last_name }}</div>
+            <div class="cd-session-focus">{{ booking.payment_status === 'paid' ? 'Paid' : 'Pay at gym' }}</div>
+          </div>
+        </div>
+        <div class="cd-empty-state cd-card cd-dashed" *ngIf="rosterBookings.length === 0">
+          <div class="cd-empty-state-icon-ring"><ion-icon name="people-outline"></ion-icon></div>
+          <strong>No Bookings Yet</strong>
+          <span>Members who avail a seat in this class will appear here.</span>
+        </div>
+      </ng-container>
+    </div>
+  </ng-template>
+</ion-modal>

@@ -5,8 +5,6 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
-  IonHeader,
-  IonToolbar,
   IonContent,
   IonFooter,
   IonIcon,
@@ -14,7 +12,9 @@ import {
 } from '@ionic/angular/standalone';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
+import { HeaderComponent } from '../shared/header/header.component';
 import { NotificationPanelComponent } from '../shared/notification-panel/notification-panel.component';
+import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.component';
 import { API_BASE_URL } from '../config/api.config';
 
 export type EquipmentCategory = 'All' | 'Strength' | 'Cardio' | 'Machines' | 'Free Weights' | string;
@@ -39,13 +39,13 @@ export interface EquipmentItem {
   imports: [
     CommonModule,
     FormsModule,
-    IonHeader,
-    IonToolbar,
     IonContent,
     IonFooter,
     IonIcon,
     IonSpinner,
+    HeaderComponent,
     NotificationPanelComponent,
+    CoachingPanelComponent,
   ],
 })
 export class EquipmentPage implements OnInit {
@@ -85,6 +85,19 @@ export class EquipmentPage implements OnInit {
 
   onUnreadCountChange(count: number): void {
     this.unreadCount = count;
+  }
+
+  // ── Coaching screen ────────────────────────────────────────
+  // In-flow replacement for ion-content (see equipment.page.html) rather
+  // than an overlay -- header and footer are untouched siblings either way.
+  coachingPanelOpen = false;
+
+  onCoachingClick(): void {
+    this.coachingPanelOpen = !this.coachingPanelOpen;
+  }
+
+  closeCoachingPanel(): void {
+    this.coachingPanelOpen = false;
   }
 
   ngOnInit(): void {
@@ -160,7 +173,7 @@ export class EquipmentPage implements OnInit {
   }
 
   // ── Navigation ────────────────────────────────────────
-  private closeOverlaysForNavigation(): void { this.notifPanelOpen = false; }
+  private closeOverlaysForNavigation(): void { this.notifPanelOpen = false; this.coachingPanelOpen = false; }
 
   goBack(): void        { this.closeOverlaysForNavigation(); this.router.navigate(['/dashboard']); }
   goToDashboard(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/dashboard']); }

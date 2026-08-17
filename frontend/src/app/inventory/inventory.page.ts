@@ -13,6 +13,7 @@ import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
 import { HeaderComponent } from '../shared/header/header.component';
 import { NotificationPanelComponent } from '../shared/notification-panel/notification-panel.component';
+import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.component';
 import { API_BASE_URL } from '../config/api.config';
 
 export interface Product {
@@ -76,6 +77,7 @@ export interface OrderGroup {
     IonModal,
     HeaderComponent,
     NotificationPanelComponent,
+    CoachingPanelComponent,
   ],
 })
 export class InventoryPage implements OnInit {
@@ -842,8 +844,21 @@ export class InventoryPage implements OnInit {
     this.unreadCount = count;
   }
 
+  // ── Coaching screen ────────────────────────────────────────
+  // In-flow replacement for ion-content (see inventory.page.html) rather
+  // than an overlay -- header and footer are untouched siblings either way.
+  coachingPanelOpen = false;
+
+  onCoachingClick(): void {
+    this.coachingPanelOpen = !this.coachingPanelOpen;
+  }
+
+  closeCoachingPanel(): void {
+    this.coachingPanelOpen = false;
+  }
+
   // ── Navigation ────────────────────────────────────────
-  private closeOverlaysForNavigation(): void { this.notifPanelOpen = false; }
+  private closeOverlaysForNavigation(): void { this.notifPanelOpen = false; this.coachingPanelOpen = false; }
 
   goToDashboard(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/dashboard']); }
   goToSchedule(): void  { this.closeOverlaysForNavigation(); this.router.navigate(['/schedule']); }
