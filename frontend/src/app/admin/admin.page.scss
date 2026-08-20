@@ -1595,31 +1595,10 @@ ion-content.admin-content {
 
 .input-with-icon-wrap {
   position: relative;
-  display: flex;
-  align-items: center;
   width: 100%;
 
   .field-input {
-    padding-right: 40px;
     margin-bottom: 8px;
-  }
-
-  .picker-trailing-icon {
-    position: absolute;
-    right: 12px;
-    top: calc(50% - 4px);
-    transform: translateY(-50%);
-    font-size: 20px;
-    color: #ca8a04;
-    cursor: pointer;
-    pointer-events: auto;
-    transition: transform 0.16s ease, color 0.16s ease;
-    z-index: 2;
-
-    &:hover {
-      transform: translateY(-50%) scale(1.18);
-      color: #854d0e;
-    }
   }
 }
 
@@ -1632,17 +1611,16 @@ input[type="time"],
 
   &::-webkit-calendar-picker-indicator {
     display: block !important;
-    opacity: 0.85 !important;
+    opacity: 1 !important;
     cursor: pointer;
     font-size: 18px;
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     filter: invert(42%) sepia(85%) saturate(750%) hue-rotate(5deg) brightness(85%) contrast(95%);
     transition: transform 0.16s ease;
 
     &:hover {
-      transform: scale(1.15);
-      opacity: 1 !important;
+      transform: scale(1.18);
     }
   }
 }

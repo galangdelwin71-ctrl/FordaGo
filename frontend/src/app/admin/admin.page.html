@@ -370,7 +370,6 @@
             <label class="field-lbl"><ion-icon name="calendar-outline"></ion-icon> Date *</label>
             <div class="input-with-icon-wrap">
               <input class="field-input input-iconic date-time-field" type="date" [(ngModel)]="newSession.date" #newDateInput (click)="openPicker(newDateInput)" />
-              <ion-icon name="calendar" class="picker-trailing-icon" (click)="openPicker(newDateInput)"></ion-icon>
             </div>
             <div class="quick-pill-row">
               <button type="button" class="quick-pill" (click)="setQuickDate(0, 'new')">Today</button>
@@ -383,7 +382,6 @@
             <label class="field-lbl"><ion-icon name="time-outline"></ion-icon> Time (e.g. 09:00 AM)</label>
             <div class="input-with-icon-wrap">
               <input class="field-input input-iconic date-time-field" type="time" [(ngModel)]="newSession.time" #newTimeInput (click)="openPicker(newTimeInput)" />
-              <ion-icon name="time" class="picker-trailing-icon" (click)="openPicker(newTimeInput)"></ion-icon>
             </div>
             <div class="quick-pill-row">
               <button type="button" class="quick-pill" (click)="setQuickTime('07:00', 'new')">7 AM</button>
@@ -469,7 +467,6 @@
             <label class="field-lbl"><ion-icon name="calendar-outline"></ion-icon> Date *</label>
             <div class="input-with-icon-wrap">
               <input class="field-input input-iconic date-time-field" type="date" [(ngModel)]="editingSession.date" #editDateInput (click)="openPicker(editDateInput)" />
-              <ion-icon name="calendar" class="picker-trailing-icon" (click)="openPicker(editDateInput)"></ion-icon>
             </div>
             <div class="quick-pill-row">
               <button type="button" class="quick-pill" (click)="setQuickDate(0, 'edit')">Today</button>
@@ -482,7 +479,6 @@
             <label class="field-lbl"><ion-icon name="time-outline"></ion-icon> Time</label>
             <div class="input-with-icon-wrap">
               <input class="field-input input-iconic date-time-field" type="time" [(ngModel)]="editingSession.time" #editTimeInput (click)="openPicker(editTimeInput)" />
-              <ion-icon name="time" class="picker-trailing-icon" (click)="openPicker(editTimeInput)"></ion-icon>
             </div>
             <div class="quick-pill-row">
               <button type="button" class="quick-pill" (click)="setQuickTime('07:00', 'edit')">7 AM</button>
