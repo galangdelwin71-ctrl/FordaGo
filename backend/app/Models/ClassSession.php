@@ -18,16 +18,20 @@ class ClassSession extends Model
 
     protected $fillable = [
         'title',
+        'description',
         'date',
         'time',
         'location',
         'coach',
+        'member_ids',
+        'member_names',
     ];
 
     protected function casts(): array
     {
         return [
-            'date' => 'date',
+            'date' => 'date:Y-m-d',
+            'member_ids' => 'array',
             'created_at' => 'datetime',
         ];
     }

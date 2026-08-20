@@ -100,6 +100,12 @@ export class AdminPage implements OnInit {
   memberSearch = '';
   memberStatusFilter: 'all' | 'pending' | 'active' = 'all';
   memberTypeFilter: 'all' | 'premium' | 'daily' = 'all';
+  showAllMembers = false;
+  latestMemberId: number | null = null;
+
+  toggleShowAllMembers() {
+    this.showAllMembers = !this.showAllMembers;
+  }
 
   get pendingMembers() {
     return this.members.filter(m => m.membership_status !== 'active' && m.role !== 'admin');
@@ -121,6 +127,13 @@ export class AdminPage implements OnInit {
           : m.membership_type !== 'daily';
       return matchesSearch && matchesStatus && matchesType;
     });
+  }
+
+  get displayedMembers() {
+    if (this.showAllMembers || this.memberSearch.trim()) {
+      return this.filteredMembers;
+    }
+    return this.filteredMembers.slice(0, 3);
   }
 
   // ── Schedule ─────────────────────────────────────────
@@ -206,6 +219,46 @@ export class AdminPage implements OnInit {
   isLoadingQrCode = false;
   qrCodeError = '';
 
+  attendanceSearch = '';
+  attendanceStatusFilter: 'all' | 'pending' | 'paid' = 'all';
+  attendanceTypeFilter: 'all' | 'premium' | 'daily' = 'all';
+  attendanceViewMode: 'attendance' | 'equipment' = 'attendance';
+
+  get isTodaySelected(): boolean {
+    return this.selectedReportDate === this.toIsoDate(new Date());
+  }
+
+  get filteredAttendance() {
+    const q = this.attendanceSearch.trim().toLowerCase();
+    return this.attendanceToday.filter(a => {
+      const matchesSearch = !q
+        || a.username?.toLowerCase().includes(q)
+        || a.email?.toLowerCase().includes(q);
+      const matchesStatus = this.attendanceStatusFilter === 'all'
+        ? true
+        : this.attendanceStatusFilter === 'pending'
+          ? a.payment_status === 'pending'
+          : a.payment_status === 'paid';
+      const matchesType = this.attendanceTypeFilter === 'all'
+        ? true
+        : this.attendanceTypeFilter === 'daily'
+          ? (a.membership_type === 'daily' || a.user_plan === 'daily')
+          : (a.membership_type !== 'daily' && a.user_plan !== 'daily');
+      return matchesSearch && matchesStatus && matchesType;
+    });
+  }
+
+  get filteredEquipmentScanLogs() {
+    const q = this.attendanceSearch.trim().toLowerCase();
+    return this.equipmentScanLogs.filter(log => {
+      return !q
+        || log.username?.toLowerCase().includes(q)
+        || log.email?.toLowerCase().includes(q)
+        || log.equipment_name?.toLowerCase().includes(q)
+        || log.equipment_code?.toLowerCase().includes(q);
+    });
+  }
+
   // ── Coaches ──────────────────────────────────────────
   coaches: any[] = [];
   coachesLoading = false;
@@ -288,8 +341,21 @@ export class AdminPage implements OnInit {
     this.http.get<any[]>(`${this.api}/users`, { headers }).subscribe({
       next: data => {
         this.membersLoading = false;
-        this.members = data.map(m => ({ ...m, initials: this.getInitials(m.username) }));
+        // Sort newest created accounts to the top (by created_at desc or id desc)
+        const sorted = [...data].sort((a, b) => {
+          if (a.created_at && b.created_at) {
+            const diff = new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            if (diff !== 0) return diff;
+          }
+          return (Number(b.id) || 0) - (Number(a.id) || 0);
+        });
+        this.members = sorted.map(m => ({ ...m, initials: this.getInitials(m.username) }));
         this.totalMembers = data.length;
+        if (sorted.length > 0) {
+          this.latestMemberId = sorted[0].id;
+        } else {
+          this.latestMemberId = null;
+        }
         this.expiringMembers = data
           .filter(m => m.daysLeft !== undefined && m.daysLeft <= 7 && m.daysLeft >= 0)
           .map(m => ({ ...m, initials: this.getInitials(m.username) }));
@@ -299,6 +365,7 @@ export class AdminPage implements OnInit {
         this.membersError   = true;
         this.members = [];
         this.totalMembers = 0;
+        this.latestMemberId = null;
       }
     });
 
@@ -449,7 +516,17 @@ export class AdminPage implements OnInit {
     membership_type: 'premium' as 'daily' | 'premium',
     payment_method: 'cash' as 'cash' | 'gcash',
   };
-  newSession   = { title: '', date: '', time: '', location: '', coach: '' };
+  newSession = {
+    title: '',
+    description: '',
+    date: '',
+    time: '',
+    location: '',
+    coach: '',
+    member_ids: [] as number[],
+    member_names: [] as string[],
+  };
+  memberTagSearch = '';
   newProduct   = { name: '', brand: '', price: 0, stock: 0, image_url: '', thumbnail_url: '' };
   newEquipment = { name: '', category: '', icon: '', status: 'available', image_url: '', thumbnail_url: '', description: '', weight_scale: '' };
 
@@ -482,10 +559,78 @@ export class AdminPage implements OnInit {
   }
 
   toggleAddMember()    { this.showAddMember    = !this.showAddMember;    this.editingMember    = null; }
-  toggleAddSession()   { this.showAddSession   = !this.showAddSession;   this.editingSession   = null; }
+  toggleAddSession()   {
+    this.showAddSession   = !this.showAddSession;
+    this.editingSession   = null;
+    if (this.showAddSession && !this.newSession.date) {
+      this.newSession.date = this.toIsoDate(new Date());
+    }
+  }
   toggleAddProduct()   { this.showAddProduct   = !this.showAddProduct;   this.editingProduct   = null; }
   toggleAddEquipment() { this.showAddEquipment = !this.showAddEquipment; this.editingEquipment = null; }
   toggleAddCoach()     { this.showAddCoach     = !this.showAddCoach;     this.editingCoach     = null; this.coachFormMode = 'new'; }
+
+  // ── Member tagging & Quick Schedule helpers ──────────
+  get filteredMentionMembers() {
+    const q = this.memberTagSearch.trim().toLowerCase();
+    if (!q) return this.members.slice(0, 8);
+    return this.members.filter(m =>
+      m.username?.toLowerCase().includes(q) ||
+      m.email?.toLowerCase().includes(q)
+    ).slice(0, 8);
+  }
+
+  toggleMemberMention(m: any, target: 'new' | 'edit') {
+    const form = target === 'new' ? this.newSession : this.editingSession;
+    if (!form) return;
+    if (!form.member_ids) form.member_ids = [];
+    if (!form.member_names) form.member_names = [];
+
+    const idx = form.member_ids.indexOf(m.id);
+    if (idx >= 0) {
+      form.member_ids.splice(idx, 1);
+      form.member_names.splice(idx, 1);
+    } else {
+      form.member_ids.push(m.id);
+      form.member_names.push(m.username);
+    }
+  }
+
+  isMemberMentioned(memberId: number, target: 'new' | 'edit'): boolean {
+    const form = target === 'new' ? this.newSession : this.editingSession;
+    return form?.member_ids?.includes(memberId) || false;
+  }
+
+  removeMentionedMember(memberId: number, target: 'new' | 'edit') {
+    const form = target === 'new' ? this.newSession : this.editingSession;
+    if (!form || !form.member_ids) return;
+    const idx = form.member_ids.indexOf(memberId);
+    if (idx >= 0) {
+      form.member_ids.splice(idx, 1);
+      if (form.member_names && form.member_names.length > idx) {
+        form.member_names.splice(idx, 1);
+      }
+    }
+  }
+
+  setQuickDate(offsetDays: number, target: 'new' | 'edit') {
+    const d = new Date();
+    d.setDate(d.getDate() + offsetDays);
+    const dateStr = this.toIsoDate(d);
+    if (target === 'new') {
+      this.newSession.date = dateStr;
+    } else if (this.editingSession) {
+      this.editingSession.date = dateStr;
+    }
+  }
+
+  setQuickTime(timeStr: string, target: 'new' | 'edit') {
+    if (target === 'new') {
+      this.newSession.time = timeStr;
+    } else if (this.editingSession) {
+      this.editingSession.time = timeStr;
+    }
+  }
 
   // ── Members actions ──────────────────────────────────
   openAddMember() { this.toggleAddMember(); }
@@ -522,7 +667,13 @@ export class AdminPage implements OnInit {
     this.askConfirm('Member', m.username, () => {
       const headers = { Authorization: `Bearer ${this.auth.token}` };
       this.http.delete(`${this.api}/users/${m.id}`, { headers }).subscribe({
-        next: () => { this.members = this.members.filter(x => x.id !== m.id); this.totalMembers--; },
+        next: () => {
+          this.members = this.members.filter(x => x.id !== m.id);
+          this.totalMembers--;
+          if (this.latestMemberId === m.id) {
+            this.latestMemberId = this.members.length > 0 ? this.members[0].id : null;
+          }
+        },
         error: () => alert('Failed to delete member')
       });
     });
@@ -532,30 +683,80 @@ export class AdminPage implements OnInit {
   openAddSession() { this.toggleAddSession(); }
 
   editSession(s: any) {
-    this.editingSession = { ...s };
+    let memberIds: number[] = [];
+    let memberNames: string[] = [];
+
+    if (Array.isArray(s.member_ids)) {
+      memberIds = [...s.member_ids];
+    } else if (typeof s.member_ids === 'string') {
+      try {
+        const parsed = JSON.parse(s.member_ids);
+        if (Array.isArray(parsed)) memberIds = parsed;
+      } catch {}
+    }
+
+    if (Array.isArray(s.member_names)) {
+      memberNames = [...s.member_names];
+    } else if (typeof s.member_names === 'string') {
+      memberNames = s.member_names.split(',').map((x: string) => x.trim()).filter(Boolean);
+    }
+
+    this.editingSession = {
+      ...s,
+      description: s.description || '',
+      member_ids: memberIds,
+      member_names: memberNames,
+    };
     this.showAddSession = false;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   saveSession() {
-    if (!this.newSession.title || !this.newSession.date) return;
+    if (!this.newSession.title.trim()) {
+      alert('Please enter a session title');
+      return;
+    }
+    if (!this.newSession.date) {
+      alert('Please select a date for the session');
+      return;
+    }
+
     const headers = { Authorization: `Bearer ${this.auth.token}` };
+    const mentionedCount = this.newSession.member_ids?.length || 0;
+
     this.http.post<any>(`${this.api}/schedule`, this.newSession, { headers }).subscribe({
       next: (s) => {
         this.sessions.unshift(s);
-        this.newSession = { title: '', date: '', time: '', location: '', coach: '' };
+        this.newSession = {
+          title: '',
+          description: '',
+          date: '',
+          time: '',
+          location: '',
+          coach: '',
+          member_ids: [],
+          member_names: [],
+        };
         this.showAddSession = false;
+        if (mentionedCount > 0) {
+          alert(`Session saved! In-app notification sent to ${mentionedCount} tagged member(s).`);
+        }
       },
-      error: () => alert('Failed to add session')
+      error: (e) => {
+        alert(e.error?.message || 'Failed to add session. Please check your connection.');
+      }
     });
   }
 
   updateSession() {
-    if (!this.editingSession) return;
+    if (!this.editingSession || !this.editingSession.title || !this.editingSession.date) return;
     const headers = { Authorization: `Bearer ${this.auth.token}` };
     this.http.put(`${this.api}/schedule/${this.editingSession.id}`, this.editingSession, { headers }).subscribe({
-      next: () => { this.editingSession = null; this.loadAll(); },
-      error: () => alert('Failed to update session')
+      next: () => {
+        this.editingSession = null;
+        this.loadAll();
+      },
+      error: (e) => alert(e.error?.message || 'Failed to update session')
     });
   }
 
@@ -1136,13 +1337,32 @@ export class AdminPage implements OnInit {
     });
   }
 
+  setTodayReportDate() {
+    this.selectedReportDate = this.toIsoDate(new Date());
+    this.loadDailyReports();
+  }
+
+  deleteAttendance(a: any) {
+    this.askConfirm('Attendance Record', `${a.username} (${this.formatDateTime(a.check_in_time)})`, () => {
+      const headers = { Authorization: `Bearer ${this.auth.token}` };
+      this.http.put(`${this.api}/attendance/${a.id}/reject`, {}, { headers }).subscribe({
+        next: () => {
+          this.attendancePending = this.attendancePending.filter(x => x.id !== a.id);
+          this.attendanceToday   = this.attendanceToday.filter(x => x.id !== a.id);
+        },
+        error: () => alert('Failed to delete attendance record')
+      });
+    });
+  }
+
   // ── Membership activation ─────────────────────────────
   openMembershipEdit(m: any) {
-    this.editingMembershipFor = m;
+    const targetMember = this.members.find(x => x.id === (m.user_id || m.id)) || m;
+    this.editingMembershipFor = targetMember;
     this.membershipForm = {
-      membership_type: m.membership_type || 'premium',
-      membership_expiry: m.membership_expiry
-        ? new Date(m.membership_expiry).toISOString().split('T')[0]
+      membership_type: targetMember.membership_type || targetMember.user_plan || 'premium',
+      membership_expiry: targetMember.membership_expiry
+        ? new Date(targetMember.membership_expiry).toISOString().split('T')[0]
         : '',
     };
   }

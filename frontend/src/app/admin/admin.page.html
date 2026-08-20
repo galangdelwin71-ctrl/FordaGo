@@ -136,7 +136,7 @@
     <div *ngIf="activeTab==='members'">
 
       <div class="section-header-row">
-        <span class="section-label" style="margin:0">All Members</span>
+        <span class="section-tag-chip">ALL MEMBERS</span>
         <div class="header-actions">
           <button class="refresh-btn" (click)="loadAll()" title="Refresh list">
             <ion-icon name="refresh-outline"></ion-icon>
@@ -152,23 +152,29 @@
           <ion-icon name="time-outline"></ion-icon>
           <span>Pending Verification ({{ pendingMembers.length }})</span>
         </div>
-        <div class="pending-card" *ngFor="let m of pendingMembers">
-          <div class="pending-card-info">
+        <div class="member-card pending-card" *ngFor="let m of pendingMembers">
+          <div class="member-card-main">
             <div class="member-avatar pending-avatar">{{ m.initials }}</div>
-            <div>
-              <div class="pending-name">{{ m.username }}</div>
-              <div class="pending-meta">{{ m.email }}</div>
-              <div class="pending-type-row">
+            <div class="member-card-details">
+              <div class="member-card-name-row">
+                <span class="member-name">{{ m.username }}</span>
+                <span class="role-badge">{{ m.role }}</span>
+              </div>
+              <div class="member-meta">{{ m.email }}</div>
+              <div class="card-chips-row">
                 <span class="type-chip" [class.daily]="m.membership_type === 'daily'" [class.premium]="m.membership_type !== 'daily'">
                   <ion-icon [name]="m.membership_type === 'daily' ? 'today-outline' : 'star-outline'"></ion-icon>
                   {{ m.membership_type === 'daily' ? 'Daily Pass' : 'Premium' }}
                 </span>
-                <span class="status-pill pending">Awaiting Verification</span>
+                <ion-icon name="star-outline" class="badge-star-icon"></ion-icon>
+                <span class="status-pill pending">
+                  <ion-icon name="time-outline"></ion-icon> Awaiting Verification
+                </span>
               </div>
             </div>
           </div>
-          <div class="pending-card-actions">
-            <button class="approve-btn" (click)="quickApprove(m)">
+          <div class="card-actions-row">
+            <button class="act-btn approve-btn" (click)="quickApprove(m)">
               <ion-icon name="checkmark-circle-outline"></ion-icon> Approve
             </button>
             <button class="act-btn plan-btn" (click)="openMembershipEdit(m)">
@@ -187,7 +193,7 @@
           <span class="filter-label">Status:</span>
           <button class="filter-chip" [class.active]="memberStatusFilter==='all'"     (click)="memberStatusFilter='all'">All</button>
           <button class="filter-chip pending" [class.active]="memberStatusFilter==='pending'"  (click)="memberStatusFilter='pending'">Pending</button>
-          <button class="filter-chip active"  [class.active]="memberStatusFilter==='active'"   (click)="memberStatusFilter='active'">Verified</button>
+          <button class="filter-chip active-chip"  [class.active]="memberStatusFilter==='active'"   (click)="memberStatusFilter='active'">Verified</button>
         </div>
         <div class="filter-group">
           <span class="filter-label">Type:</span>
@@ -247,8 +253,15 @@
         </div>
       </div>
 
-      <input class="search-input" type="text" placeholder="Search by name or email…"
-        [(ngModel)]="memberSearch" />
+      <!-- Search Input -->
+      <div class="search-input-wrap">
+        <ion-icon name="search-outline" class="search-icon"></ion-icon>
+        <input class="search-input-field" type="text" placeholder="Search by name or email…"
+          [(ngModel)]="memberSearch" />
+        <button class="clear-search-btn" *ngIf="memberSearch" (click)="memberSearch=''">
+          <ion-icon name="close-circle"></ion-icon>
+        </button>
+      </div>
 
       <div class="empty-state" *ngIf="membersLoading">
         <ion-spinner name="crescent"></ion-spinner> Loading members...
@@ -260,40 +273,64 @@
       </div>
       <div class="empty-state" *ngIf="!membersLoading && !membersError && filteredMembers.length === 0">No members found.</div>
 
-      <div *ngFor="let m of filteredMembers" class="member-row" [class.pending-row]="m.membership_status !== 'active'">
-        <div class="member-info">
+      <!-- Member Cards matching Reference Image -->
+      <div *ngFor="let m of displayedMembers" class="member-card" [class.pending-card]="m.membership_status !== 'active'" [class.newest-card]="m.id === latestMemberId">
+        <div class="member-card-main">
           <div class="member-avatar">{{ m.initials }}</div>
-          <div style="min-width:0;flex:1">
-            <div class="member-name">{{ m.username }}</div>
-            <div class="member-meta">{{ m.email }} · <span [class]="'role-'+m.role">{{ m.role }}</span></div>
-            <div class="member-plan">
-              {{ m.membership_type === 'daily' ? 'Daily Pass' : 'Premium' }}
-              <span class="plan-type-badge" [class.daily]="m.membership_type === 'daily'" [class.premium]="m.membership_type !== 'daily'">
+          <div class="member-card-details">
+            <div class="member-card-name-row">
+              <span class="member-name">{{ m.username }}</span>
+              <span class="role-badge">{{ m.role }}</span>
+              <span class="newest-chip" *ngIf="m.id === latestMemberId">
+                <ion-icon name="sparkles"></ion-icon> Newly Created
+              </span>
+            </div>
+            <div class="member-meta">{{ m.email }}</div>
+            <div class="card-chips-row">
+              <span class="type-chip" [class.daily]="m.membership_type === 'daily'" [class.premium]="m.membership_type !== 'daily'">
                 <ion-icon [name]="m.membership_type === 'daily' ? 'today-outline' : 'star-outline'"></ion-icon>
+                {{ m.membership_type === 'daily' ? 'Daily Pass' : 'Premium' }}
               </span>
-              <span class="membership-status-badge" [class.pending]="m.membership_status !== 'active'" [class.active]="m.membership_status === 'active'">
-                {{ m.membership_status === 'active' ? 'Verified' : 'Pending Verification' }}
+              <ion-icon name="star-outline" class="badge-star-icon"></ion-icon>
+              <span class="status-pill" [class.active]="m.membership_status === 'active'" [class.pending]="m.membership_status !== 'active'">
+                <ion-icon [name]="m.membership_status === 'active' ? 'checkmark-circle-outline' : 'time-outline'"></ion-icon>
+                {{ m.membership_status === 'active' ? 'Verified' : 'Pending' }}
               </span>
-              <span *ngIf="m.membership_expiry"> · Exp: {{ m.membership_expiry | date:'MMM d, yyyy' }}</span>
+              <span class="payment-note-pill" *ngIf="m.membership_expiry">Exp: {{ m.membership_expiry | date:'MMM d, yyyy' }}</span>
             </div>
           </div>
         </div>
         <!-- Approve / Decline row shown only for pending members -->
-        <div class="member-pending-actions" *ngIf="m.membership_status !== 'active'">
+        <div class="card-actions-row" *ngIf="m.membership_status !== 'active'">
           <button class="act-btn approve-btn" (click)="quickApprove(m)">
             <ion-icon name="checkmark-circle-outline"></ion-icon> Approve
+          </button>
+          <button class="act-btn plan-btn" (click)="openMembershipEdit(m)">
+            <ion-icon name="star-outline"></ion-icon> Plan
           </button>
           <button class="act-btn del" (click)="declineMember(m)">
             <ion-icon name="close-circle-outline"></ion-icon> Decline
           </button>
         </div>
-        <div class="row-actions">
+        <div class="card-actions-row" *ngIf="m.membership_status === 'active'">
           <button class="act-btn plan-btn" (click)="openMembershipEdit(m)">
             <ion-icon name="star-outline"></ion-icon> Plan
           </button>
-          <button class="act-btn edit" (click)="editMember(m)"><ion-icon name="create-outline"></ion-icon> Edit</button>
-          <button class="act-btn del"  (click)="deleteMember(m)"><ion-icon name="trash-outline"></ion-icon> Delete</button>
+          <button class="act-btn edit" (click)="editMember(m)">
+            <ion-icon name="create-outline"></ion-icon> Edit
+          </button>
+          <button class="act-btn del"  (click)="deleteMember(m)">
+            <ion-icon name="trash-outline"></ion-icon> Delete
+          </button>
         </div>
+      </div>
+
+      <!-- View More / Show Less Button -->
+      <div class="view-more-wrap" *ngIf="filteredMembers.length > 3 && !memberSearch">
+        <button class="view-more-btn" (click)="toggleShowAllMembers()">
+          <ion-icon [name]="showAllMembers ? 'chevron-up-circle-outline' : 'chevron-down-circle-outline'"></ion-icon>
+          <span>{{ showAllMembers ? 'Show Less' : 'View More (' + (filteredMembers.length - 3) + ' more members)' }}</span>
+        </button>
       </div>
 
     </div>
@@ -304,47 +341,257 @@
     <div *ngIf="activeTab==='schedule'">
 
       <div class="section-header-row">
-        <span class="section-label" style="margin:0">Sessions</span>
-        <button class="add-btn" (click)="toggleAddSession()">{{ showAddSession ? '✕ Cancel' : '+ Add Session' }}</button>
+        <span class="section-tag-chip">GYM SESSIONS</span>
+        <div class="header-actions">
+          <button class="refresh-btn" (click)="loadAll()" title="Refresh schedule">
+            <ion-icon name="refresh-outline"></ion-icon> Refresh
+          </button>
+          <button class="add-btn" (click)="toggleAddSession()">{{ showAddSession ? '✕ Cancel' : '+ Add Session' }}</button>
+        </div>
       </div>
 
       <!-- Add Session Form -->
-      <div class="inline-form" *ngIf="showAddSession">
-        <div class="form-title">New Session</div>
-        <input class="field-input" type="text"   placeholder="Title"    [(ngModel)]="newSession.title" />
-        <input class="field-input" type="date"                          [(ngModel)]="newSession.date" />
-        <input class="field-input" type="time"                          [(ngModel)]="newSession.time" />
-        <input class="field-input" type="text"   placeholder="Location" [(ngModel)]="newSession.location" />
-        <input class="field-input" type="text"   placeholder="Coach"    [(ngModel)]="newSession.coach" />
-        <button class="submit-btn" (click)="saveSession()">Save Session</button>
+      <div class="inline-form session-form-card" *ngIf="showAddSession">
+        <div class="form-title">
+          <ion-icon name="calendar-number-outline"></ion-icon> New Training Session
+        </div>
+
+        <!-- Title -->
+        <label class="field-lbl"><ion-icon name="fitness-outline"></ion-icon> Session Title *</label>
+        <input class="field-input" type="text" placeholder="e.g. Morning HIIT, Leg Day Bootcamp, Boxing..." [(ngModel)]="newSession.title" />
+
+        <!-- Description -->
+        <label class="field-lbl"><ion-icon name="document-text-outline"></ion-icon> Description / Notes</label>
+        <textarea class="field-input field-textarea" rows="2" placeholder="Session details, routine breakdown, gear required..." [(ngModel)]="newSession.description"></textarea>
+
+        <!-- Date & Time Grid -->
+        <div class="form-grid-2">
+          <div class="form-field-group">
+            <label class="field-lbl"><ion-icon name="calendar-outline"></ion-icon> Date *</label>
+            <div class="input-with-icon-wrap">
+              <input class="field-input input-iconic" type="date" [(ngModel)]="newSession.date" />
+            </div>
+            <div class="quick-pill-row">
+              <button type="button" class="quick-pill" (click)="setQuickDate(0, 'new')">Today</button>
+              <button type="button" class="quick-pill" (click)="setQuickDate(1, 'new')">Tomorrow</button>
+              <button type="button" class="quick-pill" (click)="setQuickDate(7, 'new')">+7 Days</button>
+            </div>
+          </div>
+
+          <div class="form-field-group">
+            <label class="field-lbl"><ion-icon name="time-outline"></ion-icon> Time (e.g. 09:00 AM)</label>
+            <div class="input-with-icon-wrap">
+              <input class="field-input input-iconic" type="time" [(ngModel)]="newSession.time" />
+            </div>
+            <div class="quick-pill-row">
+              <button type="button" class="quick-pill" (click)="setQuickTime('07:00', 'new')">7 AM</button>
+              <button type="button" class="quick-pill" (click)="setQuickTime('09:00', 'new')">9 AM</button>
+              <button type="button" class="quick-pill" (click)="setQuickTime('16:00', 'new')">4 PM</button>
+              <button type="button" class="quick-pill" (click)="setQuickTime('18:00', 'new')">6 PM</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Location & Coach Grid -->
+        <div class="form-grid-2">
+          <div class="form-field-group">
+            <label class="field-lbl"><ion-icon name="location-outline"></ion-icon> Location</label>
+            <input class="field-input" type="text" placeholder="e.g. Main Gym Floor, Studio A" [(ngModel)]="newSession.location" />
+          </div>
+          <div class="form-field-group">
+            <label class="field-lbl"><ion-icon name="person-outline"></ion-icon> Coach / Trainer</label>
+            <input class="field-input" type="text" placeholder="e.g. Coach Ethan, Coach Ryza" [(ngModel)]="newSession.coach" />
+          </div>
+        </div>
+
+        <!-- Mention Members Section -->
+        <div class="mention-section">
+          <label class="field-lbl">
+            <ion-icon name="people-outline"></ion-icon> Mention / Tag Members
+          </label>
+          <div class="mention-hint">Tag member accounts who scheduled this session to notify them automatically:</div>
+
+          <!-- Mentioned Member Chips -->
+          <div class="mentioned-chips-wrap" *ngIf="newSession.member_ids && newSession.member_ids.length > 0">
+            <span class="mentioned-chip" *ngFor="let id of newSession.member_ids; let i = index">
+              <ion-icon name="person-circle-outline"></ion-icon>
+              <span>@{{ newSession.member_names[i] || ('Member #' + id) }}</span>
+              <button type="button" class="remove-mention-btn" (click)="removeMentionedMember(id, 'new')" title="Remove member">✕</button>
+            </span>
+          </div>
+
+          <!-- Search member picker -->
+          <div class="mention-search-box">
+            <ion-icon name="search-outline"></ion-icon>
+            <input type="text" placeholder="Search member name or email to mention..." [(ngModel)]="memberTagSearch" />
+          </div>
+
+          <div class="member-select-list">
+            <button type="button"
+              *ngFor="let m of filteredMentionMembers"
+              class="member-select-item"
+              [class.selected]="isMemberMentioned(m.id, 'new')"
+              (click)="toggleMemberMention(m, 'new')">
+              <span class="member-mini-avatar">{{ m.initials }}</span>
+              <div class="member-mini-info">
+                <div class="member-mini-name">{{ m.username }}</div>
+                <div class="member-mini-email">{{ m.email }}</div>
+              </div>
+              <ion-icon [name]="isMemberMentioned(m.id, 'new') ? 'checkmark-circle' : 'add-circle-outline'" class="select-check-icon"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <button class="submit-btn" (click)="saveSession()">
+          <ion-icon name="calendar-outline"></ion-icon> Save Session
+        </button>
       </div>
 
       <!-- Edit Session Form -->
-      <div class="inline-form" *ngIf="editingSession">
-        <div class="form-title">Edit Session</div>
-        <input class="field-input" type="text" placeholder="Title"    [(ngModel)]="editingSession.title" />
-        <input class="field-input" type="date"                        [(ngModel)]="editingSession.date" />
-        <input class="field-input" type="time"                        [(ngModel)]="editingSession.time" />
-        <input class="field-input" type="text" placeholder="Location" [(ngModel)]="editingSession.location" />
-        <input class="field-input" type="text" placeholder="Coach"    [(ngModel)]="editingSession.coach" />
+      <div class="inline-form session-form-card" *ngIf="editingSession">
+        <div class="form-title">
+          <ion-icon name="create-outline"></ion-icon> Edit Session
+        </div>
+
+        <!-- Title -->
+        <label class="field-lbl"><ion-icon name="fitness-outline"></ion-icon> Session Title *</label>
+        <input class="field-input" type="text" placeholder="Title" [(ngModel)]="editingSession.title" />
+
+        <!-- Description -->
+        <label class="field-lbl"><ion-icon name="document-text-outline"></ion-icon> Description / Notes</label>
+        <textarea class="field-input field-textarea" rows="2" placeholder="Session details, routine breakdown, gear required..." [(ngModel)]="editingSession.description"></textarea>
+
+        <!-- Date & Time Grid -->
+        <div class="form-grid-2">
+          <div class="form-field-group">
+            <label class="field-lbl"><ion-icon name="calendar-outline"></ion-icon> Date *</label>
+            <div class="input-with-icon-wrap">
+              <input class="field-input input-iconic" type="date" [(ngModel)]="editingSession.date" />
+            </div>
+            <div class="quick-pill-row">
+              <button type="button" class="quick-pill" (click)="setQuickDate(0, 'edit')">Today</button>
+              <button type="button" class="quick-pill" (click)="setQuickDate(1, 'edit')">Tomorrow</button>
+              <button type="button" class="quick-pill" (click)="setQuickDate(7, 'edit')">+7 Days</button>
+            </div>
+          </div>
+
+          <div class="form-field-group">
+            <label class="field-lbl"><ion-icon name="time-outline"></ion-icon> Time</label>
+            <div class="input-with-icon-wrap">
+              <input class="field-input input-iconic" type="time" [(ngModel)]="editingSession.time" />
+            </div>
+            <div class="quick-pill-row">
+              <button type="button" class="quick-pill" (click)="setQuickTime('07:00', 'edit')">7 AM</button>
+              <button type="button" class="quick-pill" (click)="setQuickTime('09:00', 'edit')">9 AM</button>
+              <button type="button" class="quick-pill" (click)="setQuickTime('16:00', 'edit')">4 PM</button>
+              <button type="button" class="quick-pill" (click)="setQuickTime('18:00', 'edit')">6 PM</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Location & Coach Grid -->
+        <div class="form-grid-2">
+          <div class="form-field-group">
+            <label class="field-lbl"><ion-icon name="location-outline"></ion-icon> Location</label>
+            <input class="field-input" type="text" placeholder="Location" [(ngModel)]="editingSession.location" />
+          </div>
+          <div class="form-field-group">
+            <label class="field-lbl"><ion-icon name="person-outline"></ion-icon> Coach / Trainer</label>
+            <input class="field-input" type="text" placeholder="Coach" [(ngModel)]="editingSession.coach" />
+          </div>
+        </div>
+
+        <!-- Mention Members Section -->
+        <div class="mention-section">
+          <label class="field-lbl">
+            <ion-icon name="people-outline"></ion-icon> Mention / Tag Members
+          </label>
+          <div class="mention-hint">Tag member accounts who scheduled this session:</div>
+
+          <!-- Mentioned Member Chips -->
+          <div class="mentioned-chips-wrap" *ngIf="editingSession.member_ids && editingSession.member_ids.length > 0">
+            <span class="mentioned-chip" *ngFor="let id of editingSession.member_ids; let i = index">
+              <ion-icon name="person-circle-outline"></ion-icon>
+              <span>@{{ editingSession.member_names[i] || ('Member #' + id) }}</span>
+              <button type="button" class="remove-mention-btn" (click)="removeMentionedMember(id, 'edit')" title="Remove member">✕</button>
+            </span>
+          </div>
+
+          <!-- Search member picker -->
+          <div class="mention-search-box">
+            <ion-icon name="search-outline"></ion-icon>
+            <input type="text" placeholder="Search member name or email to mention..." [(ngModel)]="memberTagSearch" />
+          </div>
+
+          <div class="member-select-list">
+            <button type="button"
+              *ngFor="let m of filteredMentionMembers"
+              class="member-select-item"
+              [class.selected]="isMemberMentioned(m.id, 'edit')"
+              (click)="toggleMemberMention(m, 'edit')">
+              <span class="member-mini-avatar">{{ m.initials }}</span>
+              <div class="member-mini-info">
+                <div class="member-mini-name">{{ m.username }}</div>
+                <div class="member-mini-email">{{ m.email }}</div>
+              </div>
+              <ion-icon [name]="isMemberMentioned(m.id, 'edit') ? 'checkmark-circle' : 'add-circle-outline'" class="select-check-icon"></ion-icon>
+            </button>
+          </div>
+        </div>
+
         <div class="form-actions">
-          <button class="submit-btn" (click)="updateSession()">Update</button>
+          <button class="submit-btn" (click)="updateSession()">Update Session</button>
           <button class="cancel-btn" (click)="editingSession=null">Cancel</button>
         </div>
       </div>
 
-      <div class="empty-state" *ngIf="sessions.length === 0">No sessions scheduled.</div>
+      <div class="empty-state" *ngIf="sessions.length === 0">No sessions scheduled yet. Click "+ Add Session" above to create one.</div>
 
-      <div *ngFor="let s of sessions" class="session-row">
-        <div class="session-info">
-          <div class="session-title">{{ s.title }}</div>
-          <div class="session-meta">{{ s.date }} · {{ s.time }} · {{ s.location }}</div>
-          <div class="session-meta"><ion-icon name="person-outline"></ion-icon> {{ s.coach || 'No coach' }} · {{ s.membersCount || 0 }} members</div>
+      <!-- Session Cards -->
+      <div *ngFor="let s of sessions" class="member-card session-card">
+        <div class="member-card-main">
+          <div class="session-date-box">
+            <ion-icon name="calendar-outline"></ion-icon>
+            <span class="date-day">{{ s.date | date:'MMM d' }}</span>
+            <span class="date-time" *ngIf="s.time">{{ s.time }}</span>
+          </div>
+
+          <div class="member-card-details">
+            <div class="member-card-name-row">
+              <span class="member-name">{{ s.title }}</span>
+            </div>
+
+            <!-- Description -->
+            <div class="session-desc-text" *ngIf="s.description">
+              {{ s.description }}
+            </div>
+
+            <div class="card-chips-row">
+              <span class="type-chip daily" *ngIf="s.location">
+                <ion-icon name="location-outline"></ion-icon> {{ s.location }}
+              </span>
+              <span class="type-chip premium" *ngIf="s.coach">
+                <ion-icon name="person-outline"></ion-icon> {{ s.coach }}
+              </span>
+            </div>
+
+            <!-- Mentioned Members in Session Card -->
+            <div class="session-members-row" *ngIf="s.member_names">
+              <span class="session-members-label"><ion-icon name="people-outline"></ion-icon> Mentioned:</span>
+              <span class="session-member-tag" *ngFor="let name of (s.member_names.split ? s.member_names.split(',') : [s.member_names])">
+                @{{ name.trim() }}
+              </span>
+            </div>
+          </div>
         </div>
-        <div class="row-actions">
-          <span class="badge" [ngClass]="s.status">{{ s.status }}</span>
-          <button class="act-btn edit" (click)="editSession(s)"><ion-icon name="create-outline"></ion-icon> Edit</button>
-          <button class="act-btn del"  (click)="deleteSession(s)"><ion-icon name="trash-outline"></ion-icon> Delete</button>
+
+        <div class="card-actions-row">
+          <button class="act-btn edit" (click)="editSession(s)">
+            <ion-icon name="create-outline"></ion-icon> Edit
+          </button>
+          <button class="act-btn del" (click)="deleteSession(s)">
+            <ion-icon name="trash-outline"></ion-icon> Delete
+          </button>
         </div>
       </div>
 
@@ -545,15 +792,33 @@
     <!-- ══════════════════════════════════════════════ -->
     <div *ngIf="activeTab==='attendance'">
 
-      <!-- QR Code Display -->
-      <div class="section-label">Gym Check-in QR Code</div>
-      <div class="qr-card">
-        <div class="qr-desc">Show this QR code to members so they can scan it to check in. Daily Pass members must pay first before their attendance is confirmed.</div>
-        <button class="submit-btn" style="margin-bottom:12px" (click)="toggleGymQrCode()">
-          <ion-icon [name]="showQrCode ? 'eye-off-outline' : 'qr-code-outline'"></ion-icon>
-          {{ showQrCode ? 'Hide QR Code' : 'Show QR Code' }}
-        </button>
-        <div class="qr-display" *ngIf="showQrCode">
+      <!-- ── Section Header Row ──────────────────────── -->
+      <div class="section-header-row">
+        <span class="section-tag-chip">ALL ATTENDANCE</span>
+        <div class="header-actions">
+          <button class="refresh-btn" (click)="loadDailyReports()" title="Refresh attendance list">
+            <ion-icon name="refresh-outline"></ion-icon>
+            Refresh
+          </button>
+          <button class="add-btn" (click)="toggleGymQrCode()" title="Toggle Gym Attendance QR">
+            <ion-icon [name]="showQrCode ? 'eye-off-outline' : 'qr-code-outline'"></ion-icon>
+            {{ showQrCode ? '✕ Hide QR' : '+ Gym QR' }}
+          </button>
+          <button class="export-btn" (click)="exportAttendancePdf()" title="Export Attendance PDF">
+            <ion-icon name="download-outline"></ion-icon>
+            PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Gym QR Code Card (Collapsible) ─────────── -->
+      <div class="qr-card" *ngIf="showQrCode">
+        <div class="qr-header-row">
+          <div class="qr-badge"><ion-icon name="qr-code-outline"></ion-icon> Gym Check-in QR Code</div>
+          <button class="close-qr-btn" (click)="showQrCode=false">✕</button>
+        </div>
+        <div class="qr-desc">Show this QR code to members at the front desk to scan and check in. Daily Pass check-ins require payment confirmation.</div>
+        <div class="qr-display">
           <div class="qr-placeholder">
             <div class="qr-label">FORDAGO GYM</div>
             <div class="qr-loading" *ngIf="isLoadingQrCode">Generating attendance QR...</div>
@@ -561,81 +826,197 @@
             <img *ngIf="!isLoadingQrCode && gymQrImageUrl" [src]="gymQrImageUrl" alt="FordaGO attendance QR code" class="qr-image" />
             <div class="qr-code-val">{{ gymQrCode }}</div>
             <div class="qr-actions" *ngIf="!isLoadingQrCode && gymQrImageUrl">
-              <button class="act-btn edit" (click)="regenerateGymQrCode()">Regenerate</button>
-              <button class="act-btn" (click)="downloadGymQrCode()">Download</button>
+              <button class="act-btn edit" (click)="regenerateGymQrCode()">
+                <ion-icon name="refresh-outline"></ion-icon> Regenerate
+              </button>
+              <button class="act-btn plan-btn" (click)="downloadGymQrCode()">
+                <ion-icon name="download-outline"></ion-icon> Download
+              </button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Pending Payment Requests -->
-      <div class="section-label" style="margin-top:24px">
-        Pending Daily Payments
-        <span class="badge-count" *ngIf="attendancePending.length">{{ attendancePending.length }}</span>
-      </div>
-      <div class="empty-state" *ngIf="attendancePendingLoading">
-        <ion-spinner name="crescent"></ion-spinner> Loading pending payments...
-      </div>
-      <div class="empty-state" *ngIf="!attendancePendingLoading && attendancePendingError">
-        <ion-icon name="cloud-offline-outline" style="font-size:2rem;margin-bottom:8px;"></ion-icon><br/>
-        Could not load pending payments. Check the server connection.
-        <br/><button class="submit-btn" style="margin-top:12px" (click)="loadAll()">Retry</button>
-      </div>
-      <div class="empty-state" *ngIf="!attendancePendingLoading && !attendancePendingError && attendancePending.length === 0">No pending payments.</div>
-      <div *ngFor="let a of attendancePending" class="attend-row pending-row">
-        <div class="attend-info">
-          <div class="attend-name">{{ a.username }}</div>
-          <div class="attend-meta">{{ a.check_in_time | date:'h:mm a, MMM d' }} · Daily Pass · ₱100</div>
-          <div class="attend-pay">Payment: <strong>{{ a.payment_method || 'cash' | titlecase }}</strong></div>
+      <!-- ── Pending Daily Payments Section ──────────── -->
+      <div class="pending-alert-section" *ngIf="attendancePending.length > 0">
+        <div class="pending-alert-header">
+          <ion-icon name="time-outline"></ion-icon>
+          <span>Pending Daily Payments ({{ attendancePending.length }})</span>
         </div>
-        <div class="attend-actions">
-          <button class="act-btn edit" (click)="confirmCheckin(a)">
-            <ion-icon name="checkmark-outline"></ion-icon> Confirm
-          </button>
-          <button class="act-btn del"  (click)="rejectCheckin(a)">
-            <ion-icon name="close-outline"></ion-icon> Reject
-          </button>
+        <div class="member-card pending-card" *ngFor="let a of attendancePending">
+          <div class="member-card-main">
+            <div class="member-avatar pending-avatar">{{ a.initials }}</div>
+            <div class="member-card-details">
+              <div class="member-card-name-row">
+                <span class="member-name">{{ a.username }}</span>
+                <span class="role-badge">daily</span>
+              </div>
+              <div class="member-meta">{{ a.email || a.phone || 'Daily Visitor' }} · {{ a.check_in_time | date:'h:mm a, MMM d' }}</div>
+              <div class="card-chips-row">
+                <span class="type-chip daily">
+                  <ion-icon name="today-outline"></ion-icon> Daily Pass
+                </span>
+                <ion-icon name="star-outline" class="badge-star-icon"></ion-icon>
+                <span class="status-pill pending">
+                  <ion-icon name="time-outline"></ion-icon> Awaiting Payment
+                </span>
+                <span class="payment-note-pill">₱100 · {{ a.payment_method || 'cash' | titlecase }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-actions-row">
+            <button class="act-btn approve-btn" (click)="confirmCheckin(a)">
+              <ion-icon name="checkmark-circle-outline"></ion-icon> Confirm
+            </button>
+            <button class="act-btn plan-btn" (click)="openMembershipEdit(a)">
+              <ion-icon name="star-outline"></ion-icon> Plan
+            </button>
+            <button class="act-btn del" (click)="rejectCheckin(a)">
+              <ion-icon name="close-circle-outline"></ion-icon> Reject
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- Daily Check-ins -->
-      <div class="section-label" style="margin-top:24px">Attendance Records ({{ selectedReportDate }})</div>
-      <div class="empty-state" *ngIf="attendanceTodayLoading">
-        <ion-spinner name="crescent"></ion-spinner> Loading attendance records...
-      </div>
-      <div class="empty-state" *ngIf="!attendanceTodayLoading && attendanceTodayError">
-        <ion-icon name="cloud-offline-outline" style="font-size:2rem;margin-bottom:8px;"></ion-icon><br/>
-        Could not load attendance records. Check the server connection.
-        <br/><button class="submit-btn" style="margin-top:12px" (click)="loadDailyReports()">Retry</button>
-      </div>
-      <div class="empty-state" *ngIf="!attendanceTodayLoading && !attendanceTodayError && attendanceToday.length === 0">No attendance records for this date.</div>
-      <div *ngFor="let a of attendanceToday" class="attend-row">
-        <div class="attend-info">
-          <div class="attend-name">{{ a.username }}</div>
-          <div class="attend-meta">{{ a.check_in_time | date:'h:mm a' }} · {{ a.membership_type | titlecase }}</div>
+      <!-- ── Filter Chips ───────────────────────────── -->
+      <div class="filter-row">
+        <div class="filter-group">
+          <span class="filter-label">Status:</span>
+          <button class="filter-chip" [class.active]="attendanceStatusFilter==='all'" (click)="attendanceStatusFilter='all'">All</button>
+          <button class="filter-chip pending" [class.active]="attendanceStatusFilter==='pending'" (click)="attendanceStatusFilter='pending'">Pending</button>
+          <button class="filter-chip active-chip" [class.active]="attendanceStatusFilter==='paid'" (click)="attendanceStatusFilter='paid'">Verified</button>
         </div>
-        <span class="status-badge" [class.paid]="a.payment_status==='paid'" [class.pending]="a.payment_status==='pending'">
-          <ion-icon [name]="a.payment_status === 'paid' ? 'checkmark-circle-outline' : 'time-outline'"></ion-icon>
-          {{ a.payment_status === 'paid' ? 'Confirmed' : 'Pending' }}
-        </span>
+        <div class="filter-group">
+          <span class="filter-label">Type:</span>
+          <button class="filter-chip" [class.active]="attendanceTypeFilter==='all'" (click)="attendanceTypeFilter='all'">All</button>
+          <button class="filter-chip premium" [class.active]="attendanceTypeFilter==='premium'" (click)="attendanceTypeFilter='premium'">Premium</button>
+          <button class="filter-chip daily" [class.active]="attendanceTypeFilter==='daily'" (click)="attendanceTypeFilter='daily'">Daily Pass</button>
+        </div>
+        <div class="filter-group date-filter-group">
+          <span class="filter-label">Date:</span>
+          <input type="date" class="date-chip-input" [(ngModel)]="selectedReportDate" (change)="onReportDateChange()" />
+          <button class="filter-chip" [class.active]="isTodaySelected" (click)="setTodayReportDate()">Today</button>
+        </div>
       </div>
 
-      <!-- Equipment Scan Records -->
-      <div class="section-label" style="margin-top:24px">Equipment QR Scan Records ({{ selectedReportDate }})</div>
-      <div class="empty-state" *ngIf="equipmentScanLogsLoading">
-        <ion-spinner name="crescent"></ion-spinner> Loading equipment scan records...
+      <!-- ── Search Input ───────────────────────────── -->
+      <div class="search-input-wrap">
+        <ion-icon name="search-outline" class="search-icon"></ion-icon>
+        <input class="search-input-field" type="text" placeholder="Search by name or email…"
+          [(ngModel)]="attendanceSearch" />
+        <button class="clear-search-btn" *ngIf="attendanceSearch" (click)="attendanceSearch=''">
+          <ion-icon name="close-circle"></ion-icon>
+        </button>
       </div>
-      <div class="empty-state" *ngIf="!equipmentScanLogsLoading && equipmentScanLogsError">
-        <ion-icon name="cloud-offline-outline" style="font-size:2rem;margin-bottom:8px;"></ion-icon><br/>
-        Could not load equipment scan records. Check the server connection.
-        <br/><button class="submit-btn" style="margin-top:12px" (click)="loadDailyReports()">Retry</button>
+
+      <!-- ── View Mode Sub-tabs ─────────────────────── -->
+      <div class="view-mode-tabs">
+        <button class="view-tab-btn" [class.active]="attendanceViewMode==='attendance'" (click)="attendanceViewMode='attendance'">
+          <ion-icon name="people-outline"></ion-icon>
+          Member Check-ins ({{ filteredAttendance.length }})
+        </button>
+        <button class="view-tab-btn" [class.active]="attendanceViewMode==='equipment'" (click)="attendanceViewMode='equipment'">
+          <ion-icon name="barbell-outline"></ion-icon>
+          Equipment Scans ({{ filteredEquipmentScanLogs.length }})
+        </button>
       </div>
-      <div class="empty-state" *ngIf="!equipmentScanLogsLoading && !equipmentScanLogsError && equipmentScanLogs.length === 0">No equipment scans for this date.</div>
-      <div *ngFor="let log of equipmentScanLogs" class="attend-row">
-        <div class="attend-info">
-          <div class="attend-name">{{ log.username }}</div>
-          <div class="attend-meta">{{ log.equipment_name }} · Code: {{ log.equipment_code || '-' }}</div>
-          <div class="attend-pay">Scanned at: {{ log.scanned_at | date:'h:mm a' }}</div>
+
+      <!-- ── MEMBER ATTENDANCE TAB VIEW ──────────────── -->
+      <div *ngIf="attendanceViewMode==='attendance'">
+        <!-- Loading / Error / Empty States -->
+        <div class="empty-state" *ngIf="attendanceTodayLoading">
+          <ion-spinner name="crescent"></ion-spinner> Loading attendance records...
+        </div>
+        <div class="empty-state" *ngIf="!attendanceTodayLoading && attendanceTodayError">
+          <ion-icon name="cloud-offline-outline" style="font-size:2rem;margin-bottom:8px;"></ion-icon><br/>
+          Could not load attendance records. Check the server connection.
+          <br/><button class="submit-btn" style="margin-top:12px;max-width:180px;display:inline-flex;" (click)="loadDailyReports()">Retry</button>
+        </div>
+        <div class="empty-state" *ngIf="!attendanceTodayLoading && !attendanceTodayError && filteredAttendance.length === 0">
+          No attendance records found for {{ selectedReportDate || 'selected date' }}.
+        </div>
+
+        <!-- Attendance Cards Matching Reference Design -->
+        <div *ngFor="let a of filteredAttendance" class="member-card" [class.pending-card]="a.payment_status!=='paid'">
+          <div class="member-card-main">
+            <div class="member-avatar">{{ a.initials }}</div>
+            <div class="member-card-details">
+              <div class="member-card-name-row">
+                <span class="member-name">{{ a.username }}</span>
+                <span class="role-badge">{{ a.user_plan || a.membership_type || 'member' }}</span>
+              </div>
+              <div class="member-meta">{{ a.email || 'No email' }} · {{ a.check_in_time | date:'h:mm a' }}</div>
+              <div class="card-chips-row">
+                <span class="type-chip" [class.daily]="a.membership_type==='daily'||a.user_plan==='daily'" [class.premium]="a.membership_type!=='daily'&&a.user_plan!=='daily'">
+                  <ion-icon [name]="(a.membership_type==='daily'||a.user_plan==='daily') ? 'today-outline' : 'star-outline'"></ion-icon>
+                  {{ (a.membership_type==='daily'||a.user_plan==='daily') ? 'Daily Pass' : 'Premium' }}
+                </span>
+                <ion-icon name="star-outline" class="badge-star-icon"></ion-icon>
+                <span class="status-pill" [class.active]="a.payment_status==='paid'" [class.pending]="a.payment_status!=='paid'">
+                  <ion-icon [name]="a.payment_status==='paid' ? 'checkmark-circle-outline' : 'time-outline'"></ion-icon>
+                  {{ a.payment_status==='paid' ? 'Verified' : 'Pending' }}
+                </span>
+                <span class="payment-note-pill" *ngIf="a.payment_method">
+                  {{ a.payment_method | titlecase }}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="card-actions-row">
+            <button class="act-btn plan-btn" (click)="openMembershipEdit(a)">
+              <ion-icon name="star-outline"></ion-icon> Plan
+            </button>
+            <button class="act-btn edit" (click)="exportAttendancePdf()">
+              <ion-icon name="document-text-outline"></ion-icon> Log
+            </button>
+            <button class="act-btn del" (click)="deleteAttendance(a)">
+              <ion-icon name="trash-outline"></ion-icon> Delete
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── EQUIPMENT SCANS TAB VIEW ────────────────── -->
+      <div *ngIf="attendanceViewMode==='equipment'">
+        <div class="empty-state" *ngIf="equipmentScanLogsLoading">
+          <ion-spinner name="crescent"></ion-spinner> Loading equipment scan records...
+        </div>
+        <div class="empty-state" *ngIf="!equipmentScanLogsLoading && equipmentScanLogsError">
+          <ion-icon name="cloud-offline-outline" style="font-size:2rem;margin-bottom:8px;"></ion-icon><br/>
+          Could not load equipment scan records.
+          <br/><button class="submit-btn" style="margin-top:12px;max-width:180px;display:inline-flex;" (click)="loadDailyReports()">Retry</button>
+        </div>
+        <div class="empty-state" *ngIf="!equipmentScanLogsLoading && !equipmentScanLogsError && filteredEquipmentScanLogs.length === 0">
+          No equipment scans found for {{ selectedReportDate || 'selected date' }}.
+        </div>
+
+        <div *ngFor="let log of filteredEquipmentScanLogs" class="member-card">
+          <div class="member-card-main">
+            <div class="member-avatar equip-avatar">
+              <ion-icon name="barbell-outline"></ion-icon>
+            </div>
+            <div class="member-card-details">
+              <div class="member-card-name-row">
+                <span class="member-name">{{ log.username }}</span>
+                <span class="role-badge">{{ log.equipment_code || 'QR' }}</span>
+              </div>
+              <div class="member-meta">{{ log.email || 'No email' }} · Scanned at {{ log.scanned_at | date:'h:mm a' }}</div>
+              <div class="card-chips-row">
+                <span class="type-chip daily">
+                  <ion-icon name="barbell-outline"></ion-icon> {{ log.equipment_name }}
+                </span>
+                <ion-icon name="star-outline" class="badge-star-icon"></ion-icon>
+                <span class="status-pill active">
+                  <ion-icon name="checkmark-circle-outline"></ion-icon> Scanned
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="card-actions-row single">
+            <button class="act-btn edit" (click)="exportEquipmentLogsPdf()">
+              <ion-icon name="document-text-outline"></ion-icon> Export Log
+            </button>
+          </div>
         </div>
       </div>
 
