@@ -624,6 +624,19 @@ export class AdminPage implements OnInit {
     }
   }
 
+  openPicker(inputEl: HTMLInputElement) {
+    if (!inputEl) return;
+    try {
+      if (typeof (inputEl as any).showPicker === 'function') {
+        (inputEl as any).showPicker();
+      } else {
+        inputEl.focus();
+      }
+    } catch {
+      inputEl.focus();
+    }
+  }
+
   setQuickTime(timeStr: string, target: 'new' | 'edit') {
     if (target === 'new') {
       this.newSession.time = timeStr;
