@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Order;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -14,10 +15,38 @@ use Illuminate\Support\Str;
  */
 class InventoryController extends Controller
 {
+    /** Cache key for the full products list (see products()/invalidateProductsCache()). */
+    private const PRODUCTS_CACHE_KEY = 'products.all';
+
+    /**
+     * How long the products list stays cached before a natural refresh.
+     *
+     * Short on purpose (not the original 10 min) -- invalidateProductsCache()
+     * only fires on writes made THROUGH this controller (store/update/
+     * destroy/orders). A row added or edited directly in the database
+     * (phpMyAdmin, a seeder, a fresh migrate+seed -- all common during
+     * active dev/testing) bypasses that hook entirely, so the cache would
+     * otherwise keep serving a stale/empty snapshot for the full TTL with
+     * no way to know new data exists. 60s bounds that blind spot to
+     * something barely noticeable while still avoiding a re-query on every
+     * rapid tab switch, which was the actual goal of caching this list.
+     */
+    private const PRODUCTS_CACHE_TTL_MINUTES = 1;
+
     private function toNonNegative(mixed $value, float $fallback = 0): float
     {
         $parsed = floatval($value);
         return (is_finite($parsed) && $parsed >= 0) ? $parsed : $fallback;
+    }
+
+    /**
+     * Invalidate the cached products list. Called from every write path
+     * (store/update/destroy) so the cache can never serve stale data --
+     * correctness always wins over the cache's speed benefit.
+     */
+    private function invalidateProductsCache(): void
+    {
+        Cache::forget(self::PRODUCTS_CACHE_KEY);
     }
 
     // ── Products ──────────────────────────────────────────────────────────
@@ -25,7 +54,22 @@ class InventoryController extends Controller
     /** GET /api/inventory/products */
     public function products()
     {
-        return response()->json(Product::orderByDesc('created_at')->get());
+        // NOTE: see the identical note in EquipmentController::index() --
+        // ->toArray() is required here too, for the same reason: caching
+        // raw Product models through the file store hits config/cache.php's
+        // 'serializable_classes' => false on every cache HIT, silently
+        // corrupting them into unreadable __PHP_Incomplete_Class objects.
+        // Here it surfaced as the Shop tab intermittently rendering "No
+        // products available" -- the frontend treats a non-array response
+        // as an empty list rather than an error, so it never even showed a
+        // "couldn't load" message, just a silently empty shop.
+        $products = Cache::remember(
+            self::PRODUCTS_CACHE_KEY,
+            now()->addMinutes(self::PRODUCTS_CACHE_TTL_MINUTES),
+            fn () => Product::orderByDesc('created_at')->get()->toArray()
+        );
+
+        return response()->json($products);
     }
 
     /** POST /api/inventory/products */
@@ -40,12 +84,15 @@ class InventoryController extends Controller
         $stock = (int) $this->toNonNegative($request->input('stock'), 0);
 
         $product = Product::create([
-            'name'      => $name,
-            'brand'     => $request->input('brand') ?: null,
-            'price'     => $price,
-            'stock'     => $stock,
-            'image_url' => $request->input('image_url') ?: null,
+            'name'          => $name,
+            'brand'         => $request->input('brand') ?: null,
+            'price'         => $price,
+            'stock'         => $stock,
+            'image_url'     => $request->input('image_url') ?: null,
+            'thumbnail_url' => $request->input('thumbnail_url') ?: null,
         ]);
+
+        $this->invalidateProductsCache();
 
         return response()->json($product, 201);
     }
@@ -62,12 +109,15 @@ class InventoryController extends Controller
         $stock = (int) $this->toNonNegative($request->input('stock'), 0);
 
         $product->update([
-            'name'      => $request->input('name', $product->name),
-            'brand'     => $request->input('brand') ?: null,
-            'price'     => $price,
-            'stock'     => $stock,
-            'image_url' => $request->input('image_url') ?: null,
+            'name'          => $request->input('name', $product->name),
+            'brand'         => $request->input('brand') ?: null,
+            'price'         => $price,
+            'stock'         => $stock,
+            'image_url'     => $request->input('image_url') ?: null,
+            'thumbnail_url' => $request->input('thumbnail_url') ?: null,
         ]);
+
+        $this->invalidateProductsCache();
 
         return response()->json(['message' => 'Product updated']);
     }
@@ -80,6 +130,7 @@ class InventoryController extends Controller
             return response()->json(['message' => 'Product not found'], 404);
         }
         $product->delete();
+        $this->invalidateProductsCache();
         return response()->json(['message' => 'Product deleted']);
     }
 
@@ -147,6 +198,7 @@ class InventoryController extends Controller
 
             $total = $product->price * $qty;
             $product->decrement('stock', $qty);
+            $this->invalidateProductsCache();
 
             $order = Order::create([
                 'user_id'    => $request->user()->id,
@@ -248,6 +300,11 @@ class InventoryController extends Controller
                 ]);
             }
 
+            // One invalidation for the whole checkout, not per line item --
+            // every item above touched stock, so the cached list is stale
+            // regardless of how many products were involved.
+            $this->invalidateProductsCache();
+
             return response()->json([
                 'order_group_id' => $groupId,
                 'total'           => (float) $total,
@@ -308,6 +365,9 @@ class InventoryController extends Controller
                 $order->update(['status' => 'cancelled']);
             }
 
+            // One invalidation for the whole group, not per line item.
+            $this->invalidateProductsCache();
+
             return response()->json(['message' => 'Order cancelled']);
         });
     }
@@ -337,6 +397,7 @@ class InventoryController extends Controller
             // retried request) would incorrectly add stock back twice.
             if ($order->status !== 'rejected' && $order->product_id) {
                 Product::where('id', $order->product_id)->increment('stock', $order->quantity);
+                $this->invalidateProductsCache();
             }
 
             $order->update(['status' => 'rejected']);

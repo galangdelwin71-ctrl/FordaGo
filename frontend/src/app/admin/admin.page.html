@@ -33,17 +33,12 @@
 <ion-header [translucent]="false">
   <ion-toolbar class="admin-toolbar">
     <div class="toolbar-left" slot="start">
-      <img src="/assets/icon/logo.png" class="admin-brand-logo" alt="FordaGO" (error)="$event.target.src='/assets/icon/fordago-logo.svg'" />
+      <div class="brand-avatar">{{ panelInitials }}</div>
       <div class="toolbar-text">
         <span class="toolbar-logo">FordaGO</span>
         <span class="toolbar-role">{{ panelLabel }}</span>
       </div>
     </div>
-    <ion-buttons slot="end">
-      <button class="logout-btn" (click)="logout()">
-        <ion-icon name="log-out-outline"></ion-icon> Logout
-      </button>
-    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -53,10 +48,9 @@
     <!-- ── Tab Nav ───────────────────────────────────── -->
     <div class="admin-hero">
       <div class="admin-hero-copy">
-        <div class="admin-kicker">Control Center</div>
-        <div class="admin-heading">Manage members, schedules, orders, and attendance in one place.</div>
+        <div class="admin-heading">Control Center</div>
+        <div class="admin-subtext">Manage members, schedules, orders, and attendance in one place.</div>
       </div>
-      <div class="admin-hero-glow"></div>
     </div>
 
     <div class="tab-row">
@@ -95,31 +89,34 @@
     <div *ngIf="activeTab==='overview'">
 
       <div class="stats-grid">
-        <div class="stat-card accent">
-          <ion-icon name="people-outline" class="stat-icon gold"></ion-icon>
+        <div class="stat-card">
+          <div class="stat-icon-box people"><ion-icon name="people-outline"></ion-icon></div>
           <div class="stat-value">{{ totalMembers }}</div>
           <div class="stat-label">Total Members</div>
         </div>
         <div class="stat-card">
-          <ion-icon name="checkmark-circle-outline" class="stat-icon green"></ion-icon>
+          <div class="stat-icon-box checkins"><ion-icon name="checkmark-circle-outline"></ion-icon></div>
           <div class="stat-value green">{{ activeToday }}</div>
           <div class="stat-label">Check-ins Today</div>
         </div>
         <div class="stat-card">
-          <ion-icon name="cube-outline" class="stat-icon amber"></ion-icon>
+          <div class="stat-icon-box stock"><ion-icon name="cube-outline"></ion-icon></div>
           <div class="stat-value amber">{{ lowStockCount }}</div>
           <div class="stat-label">Low Stock Items</div>
         </div>
         <div class="stat-card">
-          <ion-icon name="receipt-outline" class="stat-icon blue"></ion-icon>
-          <div class="stat-value blue">{{ pendingOrders }}</div>
+          <div class="stat-icon-box orders"><ion-icon name="receipt-outline"></ion-icon></div>
+          <div class="stat-value red">{{ pendingOrders }}</div>
           <div class="stat-label">Pending Orders</div>
         </div>
       </div>
 
       <!-- Expiring memberships -->
-      <div class="section-label"><ion-icon name="warning-outline"></ion-icon> Expiring Soon (within 7 days)</div>
-      <div class="empty-state" *ngIf="expiringMembers.length === 0">No memberships expiring soon.</div>
+      <div class="section-label plain">Expiring Soon (Within 7 days)</div>
+      <div class="empty-card" *ngIf="expiringMembers.length === 0">
+        <div class="empty-card-icon"><ion-icon name="time-outline"></ion-icon></div>
+        <div class="empty-card-text">No memberships expiring soon</div>
+      </div>
       <div *ngFor="let m of expiringMembers" class="member-row warn">
         <div class="member-info">
           <div class="member-avatar">{{ m.initials }}</div>
@@ -787,6 +784,11 @@
       </div>
 
     </div>
+
+    <!-- ── Bottom Logout ─────────────────────────────── -->
+    <button class="logout-full-btn" (click)="logout()">
+      <ion-icon name="log-out-outline"></ion-icon> Logout
+    </button>
 
     <!-- Membership edit modal -->
     <div class="overlay" *ngIf="editingMembershipFor" (click)="editingMembershipFor=null"></div>

@@ -9,12 +9,13 @@ import { HttpClient } from '@angular/common/http';
 import { Subscription } from 'rxjs';
 import { WorkoutTrackerService, StoredWorkoutSession } from '../services/workout-tracker.service';
 import { NotificationCenterService } from '../services/notification-center.service';
-import { CoachingNavService } from '../services/coaching-nav.service';
+import { CoachingNavService, CoachingPanelTab } from '../services/coaching-nav.service';
+import { CoachingService } from '../services/coaching.service';
 import { NoNegativeDirective } from '../directives/no-negative.directive';
 import { HeaderComponent } from '../shared/header/header.component';
 import { NotificationPanelComponent } from '../shared/notification-panel/notification-panel.component';
 import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.component';
-import { API_BASE_URL } from '../config/api.config';
+import { API_URL } from '../config/api.config';
 
 // ─────────────────────────────────────────────────────
 // INTERFACES
@@ -138,8 +139,8 @@ export interface PrForm {
 export class DashboardPage implements OnInit, OnDestroy {
   // ── Coaching Panel ───────────────────────────────────
   coachingPanelOpen = false;
-  /** Set from CoachingNavService.consumeReopen() in ngOnInit() when this page is reached via ChatPage's back button -- see coaching-nav.service.ts. Cleared whenever the panel closes (closeOverlaysForNavigation()/closeCoachingPanel()) so it never silently re-applies to a later, unrelated open. */
-  coachingPanelInitialTab: 'conversations' | 'clients' | 'explore' | null = null;
+  /** Set from CoachingNavService.consumeReopen() in ngOnInit() when this page is reached via a back-navigation from chat/coach-profile -- see coaching-nav.service.ts. Cleared whenever the panel closes (closeOverlaysForNavigation()/closeCoachingPanel()) so it never silently re-applies to a later, unrelated open. */
+  coachingPanelInitialTab: CoachingPanelTab | null = null;
 
   // ── Member Info ──────────────────────────────────────
   memberName      = '';
@@ -1067,11 +1068,25 @@ export class DashboardPage implements OnInit, OnDestroy {
    * localStorage. If the request fails (offline, server down), falls back
    * to whatever was last cached so the UI still has something to show.
    */
+  // Guards loadPersonalRecords() against duplicate concurrent calls -- same
+  // pattern as EquipmentPage.isLoading (see equipment.page.ts): ngOnInit()
+  // AND ionViewWillEnter() both call loadPersonalRecords(), and
+  // ionViewWillEnter() also fires on first mount (not just re-entry), so
+  // without this flag the very first Dashboard load fired two simultaneous
+  // GET /api/personal-records requests. PersonalRecordController::index()
+  // has no Cache::remember() (confirmed -- it's a plain DB query), so this
+  // never corrupted a response the way the equipment cache race did; it was
+  // purely wasted duplicate network traffic, both requests landing on the
+  // same (correct) data.
+  private loadingPersonalRecords = false;
+
   private loadPersonalRecords(): void {
     if (!this.auth.token) {
       this.loadPersonalRecordsFromCache();
       return;
     }
+    if (this.loadingPersonalRecords) return;
+    this.loadingPersonalRecords = true;
 
     this.http
       .get<any[]>(`${this.api}/personal-records`, {
@@ -1079,10 +1094,12 @@ export class DashboardPage implements OnInit, OnDestroy {
       })
       .subscribe({
         next: (rows) => {
+          this.loadingPersonalRecords = false;
           this.personalRecords = (rows || []).map((row) => this.mapServerPr(row));
           this.savePersonalRecordsToCache();
         },
         error: () => {
+          this.loadingPersonalRecords = false;
           this.loadPersonalRecordsFromCache();
         },
       });
@@ -1300,6 +1317,19 @@ export class DashboardPage implements OnInit, OnDestroy {
   notifPanelOpen = false;
   unreadCount = 0;
 
+  /**
+   * Combined red-badge count shown on the header's coach/messaging icon:
+   * unread chat messages across every conversation, plus (for a coach
+   * account) pending client requests awaiting Accept/Decline. Loaded
+   * independently of whether the coaching panel is open -- CoachingPanelComponent
+   * is only mounted via *ngIf="coachingPanelOpen" (see dashboard.page.html),
+   * so this page fetches its own lightweight summary on load/re-entry so the
+   * badge is visible BEFORE the member ever opens the panel, mirroring how
+   * NotificationPanelComponent stays mounted and emits unreadCountChange for
+   * the bell badge above.
+   */
+  coachUnreadCount = 0;
+
   openNotifPanel(): void {
     this.notifPanelOpen = true;
   }
@@ -1327,7 +1357,8 @@ export class DashboardPage implements OnInit, OnDestroy {
     private http: HttpClient,
     private workoutTracker: WorkoutTrackerService,
     private notificationCenter: NotificationCenterService,
-    private coachingNav: CoachingNavService
+    private coachingNav: CoachingNavService,
+    private coachingService: CoachingService
   ) {}
 
   onLogoError(event: Event): void {
@@ -1350,7 +1381,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   private readonly api = this.resolveApiBase();
 
   private resolveApiBase(): string {
-    return API_BASE_URL;
+    return API_URL;
   }
 
   /**
@@ -1369,7 +1400,7 @@ export class DashboardPage implements OnInit, OnDestroy {
    * Coaches/Messages.
    */
   private applyPendingCoachingReopen(): void {
-    const pendingCoachTab = this.coachingNav.consumeReopen();
+    const pendingCoachTab = this.coachingNav.consumeReopen('dashboard');
     if (pendingCoachTab) {
       this.coachingPanelInitialTab = pendingCoachTab;
       this.coachingPanelOpen = true;
@@ -1421,6 +1452,7 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.loadAttendanceDates();
     this.loadUpcomingSessions();
     this.refreshDashboardFromSchedule();
+    this.loadCoachActivityBadge();
   }
 
   ngOnDestroy(): void {
@@ -1522,16 +1554,32 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.refreshDashboardFromSchedule();
   }
 
-  goToDashboard(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/dashboard']);  }
-  goToQr():        void { this.closeOverlaysForNavigation(); this.router.navigate(['/qr-scanner']); }
-  goToSchedule():  void { this.closeOverlaysForNavigation(); this.router.navigate(['/schedule']);   }
-  goToInventory(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/inventory']);  }
-  goToProfile():   void { this.closeOverlaysForNavigation(); this.router.navigate(['/profile']);    }
-  goToEquipment(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/equipment']); }
+  // NOTE: replaceUrl: true on every one of these — this is bottom-nav TAB
+  // navigation, not a drill-in (chat, coach profile, etc.). Without it,
+  // router.navigate() PUSHES a new history entry on every tab switch, so
+  // hopping Home -> Schedule -> Shop -> Profile silently balloons the
+  // browser/router history. A later Location.back() (on-screen back arrow
+  // or the hardware back button — see ChatPage.goBack() /
+  // app.component.ts's registerHardwareBackButton()) then walks that
+  // bloated stack and can land on a tab several taps ago instead of just
+  // closing whatever was actually pushed on top (e.g. a chat thread).
+  // replaceUrl keeps exactly ONE history entry for "whichever tab is
+  // currently active", matching how a bottom tab bar is expected to behave.
+  goToDashboard(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/dashboard'], { replaceUrl: true });  }
+  goToQr():        void { this.closeOverlaysForNavigation(); this.router.navigate(['/qr-scanner'], { replaceUrl: true }); }
+  goToSchedule():  void { this.closeOverlaysForNavigation(); this.router.navigate(['/schedule'], { replaceUrl: true });   }
+  goToInventory(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/inventory'], { replaceUrl: true });  }
+  goToProfile():   void { this.closeOverlaysForNavigation(); this.router.navigate(['/profile'], { replaceUrl: true });    }
+  goToEquipment(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/equipment'], { replaceUrl: true }); }
 
   closeCoachingPanel(): void {
     this.coachingPanelOpen = false;
     this.coachingPanelInitialTab = null;
+    // Re-fetch the badge count on close: opening the panel may have just
+    // marked messages read (see ChatPage) or resolved a request, so the
+    // header badge must reflect that immediately rather than waiting for
+    // the next full page re-entry.
+    this.loadCoachActivityBadge();
   }
 
   // Toggle, not force-open: matches Schedule/Profile/Equipment/Inventory/
@@ -1558,6 +1606,72 @@ export class DashboardPage implements OnInit, OnDestroy {
       headers: { Authorization: `Bearer ${this.auth.token}` }
     }).subscribe((data: any) => {
       this.equipmentList = data;
+    });
+  }
+
+  // ── Coach header badge (unread messages + pending requests) ───────
+
+  /**
+   * Fetches a fresh combined unread-activity count for the header's coach
+   * icon badge (see coachUnreadCount doc-comment above). Two independent
+   * requests, each guarded so a failure in one never blocks or zeroes out
+   * the other:
+   *  1. GET /conversations -- summed unread_count across every thread.
+   *     Works identically for both a member and a coach account, since
+   *     Conversation.unread_count is already scoped server-side to "messages
+   *     the OTHER party sent that I haven't read yet".
+   *  2. GET /coaches/profile/me -> (if has_profile) GET /coaches/dashboard-stats
+   *     -- pending_requests, coach accounts only. A member account has no
+   *     coach profile, so this branch simply contributes 0 and is skipped
+   *     silently rather than erroring.
+   * Each request writes its own running total independently rather than
+   * combining via forkJoin, so a slow/failed profile lookup never delays
+   * the (usually faster, and universally applicable) conversations count
+   * from reaching the badge.
+   */
+  private loadCoachActivityBadge(): void {
+    if (!this.auth.token) {
+      this.coachUnreadCount = 0;
+      return;
+    }
+
+    let unreadMessages = 0;
+    let pendingRequests = 0;
+    const applyTotal = () => {
+      this.coachUnreadCount = unreadMessages + pendingRequests;
+    };
+
+    this.coachingService.getConversations().subscribe({
+      next: (conversations) => {
+        unreadMessages = (conversations || []).reduce(
+          (sum, convo) => sum + (Number(convo.unread_count) || 0),
+          0
+        );
+        applyTotal();
+      },
+      error: (err) => {
+        console.warn('[Dashboard] failed to load conversations for coach badge', err);
+      },
+    });
+
+    this.coachingService.getMyCoachProfile().subscribe({
+      next: (profile) => {
+        if (!profile?.has_profile) return; // regular member -- no requests to count
+        this.coachingService.getDashboardStats().subscribe({
+          next: (stats) => {
+            pendingRequests = Number(stats?.pending_requests) || 0;
+            applyTotal();
+          },
+          error: (err) => {
+            console.warn('[Dashboard] failed to load dashboard stats for coach badge', err);
+          },
+        });
+      },
+      error: (err) => {
+        // Not fatal -- just means this account's role couldn't be resolved
+        // right now; unreadMessages (above) still applies on its own.
+        console.warn('[Dashboard] failed to resolve coach profile for badge', err);
+      },
     });
   }
 }

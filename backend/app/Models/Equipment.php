@@ -16,6 +16,7 @@ class Equipment extends Model
         'icon',
         'status',
         'image_url',
+        'thumbnail_url',
         'description',
         'weight_scale',
     ];

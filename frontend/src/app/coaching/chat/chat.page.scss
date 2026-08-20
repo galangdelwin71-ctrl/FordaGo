@@ -9,14 +9,26 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  flex: 1;
-  min-width: 0;
+  // !important is required here: ion-toolbar's own shadow-DOM CSS applies
+  // `::slotted([slot="start"])` to this element, which has higher
+  // specificity than a plain light-DOM class selector (pseudo-element +
+  // attribute selector beats a single class). Without !important that
+  // shadow rule wins and pins this div to its shrink-to-fit content
+  // width instead of filling the toolbar, which is what was truncating
+  // partner-name with an ellipsis even though visible black space
+  // remained to its right.
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
 }
 
 .chat-toolbar-end {
   display: flex;
   align-items: center;
   gap: 8px;
+  // Mirrors the note above -- pins this to its own content width so it
+  // never competes with .chat-toolbar-start for the flex-grow space.
+  flex: 0 0 auto !important;
 }
 
 .btn-propose-header {
@@ -62,8 +74,34 @@
 .chat-partner-header {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
+  flex: 1;
+  // Button reset -- this is now a <button> (was a <div>) so it's tap-
+  // gable to open the Partner Info modal, since the name next to it
+  // gets clipped with an ellipsis and this is the only way to read a
+  // long name in full without permanently widening the toolbar.
+  background: transparent;
+  border: none;
+  padding: 4px 2px;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: background 0.15s ease;
+
+  &:active {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .partner-header-chevron {
+    flex-shrink: 0;
+    font-size: 15px;
+    color: rgba(255, 214, 0, 0.55);
+    margin-left: -2px;
+  }
 
   .chat-partner-avatar {
     position: relative;
@@ -103,6 +141,7 @@
   }
 
   .chat-partner-meta {
+    flex: 1;
     min-width: 0;
 
     .partner-name {
@@ -117,9 +156,13 @@
     }
 
     .partner-role-tag {
+      display: block;
       font-size: 11px;
       color: #ffd600;
       font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   }
 }
@@ -260,7 +303,15 @@
       color: #06080f;
       border-bottom-right-radius: 4px;
 
-      .msg-time {
+      // Nested under .msg-meta (not just .msg-bubble) so this rule is
+      // strictly more specific than the generic ".msg-bubble .msg-meta
+      // .msg-time" rule further below (5 classes vs 4). Both previously
+      // tied at 4 classes, so the cascade fell back to source order and
+      // the LATER generic rule (white text, meant for dark incoming
+      // bubbles) silently won here too -- making the timestamp on every
+      // sent (yellow) bubble render as near-invisible white-on-yellow
+      // instead of the intended dark text.
+      .msg-meta .msg-time {
         color: rgba(6, 8, 15, 0.65);
       }
     }
@@ -345,7 +396,8 @@
 // ── Proposal Card Inside Bubble ──────────────────────
 .proposal-card-bubble {
   background: linear-gradient(150deg, #181d33 0%, #0d1222 100%);
-  border: 1.5px solid rgba(255, 214, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 2px solid rgba(255, 214, 0, 0.55);
   border-radius: 20px;
   padding: 16px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
@@ -401,8 +453,12 @@
       font-size: 12px;
       color: rgba(255, 255, 255, 0.8);
 
+      // Neutral/muted icon color (matches .session-coach / .session-meta
+      // icons elsewhere) instead of accent yellow on every row -- the
+      // price row below is the one line that's meant to stand out, via
+      // its own green accent, not every icon in the strip.
       ion-icon {
-        color: #ffd600;
+        color: rgba(255, 255, 255, 0.45);
         font-size: 14px;
       }
 
@@ -439,8 +495,9 @@
       }
 
       .ex-number {
-        background: rgba(255, 214, 0, 0.15);
+        background: rgba(255, 214, 0, 0.1);
         color: #ffd600;
+        border: 0.5px solid rgba(255, 214, 0, 0.25);
         width: 18px;
         height: 18px;
         border-radius: 50%;
@@ -470,10 +527,15 @@
       }
 
       .ex-reps {
-        color: #ffd600;
+        color: rgba(255, 255, 255, 0.75);
         font-weight: 700;
-        font-size: 11.5px;
+        font-size: 11px;
         white-space: nowrap;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 3px 8px;
+        border-radius: 7px;
+        flex-shrink: 0;
       }
     }
   }
@@ -542,7 +604,16 @@
 
 // ── Chat Input Footer ────────────────────────────────
 .chat-footer {
-  --background: rgba(6, 8, 15, 0.96);
+  // `--background` is NOT a supported CSS custom property on <ion-footer>
+  // itself (only <ion-toolbar> reads it) -- this page's footer has no
+  // <ion-toolbar> inside it, just a plain <div class="chat-input-bar">, so
+  // setting --background here was a silent no-op. What was actually
+  // showing through was the app-wide root background (--fordago-bg in
+  // global.scss, hardcoded dark with no light-theme variant), which is
+  // why this bar stayed dark in light mode even after that rule "matched".
+  // A literal `background` on the host element paints regardless of
+  // Ionic's internal variable support.
+  background: rgba(6, 8, 15, 0.96);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(16px);
   padding: 8px 14px 12px 14px;
@@ -634,10 +705,23 @@
     border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 24px;
     padding: 22px;
+    width: 100%;
     max-width: 560px;
     max-height: 90vh;
+    box-sizing: border-box;
     overflow-y: auto;
-    margin: auto;
+    overflow-x: hidden;
+    // Was `margin: auto`, which vertically CENTERED this card inside the
+    // ion-modal sheet's content slot. Because the sheet's slot height
+    // (breakpoint 0.75/0.96 of the viewport) is taller than the card's
+    // own content, centering split the leftover space evenly above AND
+    // below the card -- that's the thick black gap under the drag handle
+    // reported in the screenshot. Every other modal in the app
+    // (.modal-sheet in schedule.page.scss) anchors flush to the top
+    // instead of centering, so it never had this gap. `0 auto` keeps the
+    // horizontal centering (relevant once max-width: 560px caps it on
+    // wide/desktop screens) while anchoring it to the top vertically.
+    margin: 0 auto;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
 
     .modal-header {
@@ -660,8 +744,9 @@
         }
 
         h3 {
-          font-size: 20px;
+          font-size: 26px;
           font-weight: 800;
+          letter-spacing: -0.4px;
           color: #ffffff;
           margin: 0;
         }
@@ -701,55 +786,98 @@
       grid-template-columns: 1fr 1fr;
       gap: 12px;
       margin-bottom: 12px;
+
+      > .form-group {
+        min-width: 0;
+      }
     }
 
-    .form-grid-3 {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 10px;
+    .form-group-full {
       margin-bottom: 16px;
     }
 
-    .form-group {
-      label {
-        display: block;
-        font-size: 11.5px;
-        font-weight: 700;
-        color: rgba(255, 255, 255, 0.7);
-        margin-bottom: 5px;
+    // ── Shared field styles ──────────────────────────
+    // Matches the Add Workout modal's established design tokens
+    // (schedule.page.scss .field-label / .field-wrap / .field-icon):
+    // uppercase gold-accented labels + gold icon-prefixed 44px pill
+    // inputs. Defined once at .modal-wrapper level (not nested inside
+    // .form-group) so both the top form fields AND the exercise-routine
+    // cards below can reuse the exact same input styling instead of
+    // duplicating it.
+    .field-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      min-width: 0;
+
+      .field-icon {
+        position: absolute;
+        left: 12px;
+        font-size: 15px;
+        color: #ffd600;
+        z-index: 1;
+        pointer-events: none;
       }
 
       .form-input {
-        width: 100%;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 12px;
-        padding: 10px 12px;
+        padding-left: 38px;
+      }
+    }
+
+    .form-input {
+      width: 100%;
+      min-width: 0;
+      height: 44px;
+      box-sizing: border-box;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 0 12px;
+      color: #ffffff;
+      font-size: 13.5px;
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+
+      &:focus {
+        border-color: rgba(255, 214, 0, 0.35);
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      option {
+        background: #0d111e;
         color: #ffffff;
-        font-size: 13px;
-        outline: none;
+      }
+    }
 
-        &:focus {
-          border-color: #ffd600;
-          background: rgba(255, 255, 255, 0.08);
-        }
+    .form-group {
+      min-width: 0;
 
-        option {
-          background: #0d111e;
-          color: #ffffff;
-        }
+      label {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.55);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
       }
 
       .time-input-group {
         display: flex;
         gap: 6px;
+        min-width: 0;
+        width: 100%;
 
         .time-val {
           flex: 2;
+          min-width: 0;
         }
 
         .time-ampm {
           flex: 1;
+          min-width: 0;
+          padding-left: 12px;
         }
       }
     }
@@ -766,32 +894,76 @@
         margin-bottom: 6px;
       }
 
+      // Wraps onto multiple rows (Trainer Studio design) instead of a
+      // horizontal-scroll strip -- with 4-10 quick-add exercises this
+      // reads as a scannable grid rather than hiding options off-screen.
+      // Default state is neutral (matches .target-chip in the Add Workout
+      // modal) -- accent yellow only shows up on hover/press feedback,
+      // instead of every one of these 10 pills being solid yellow at
+      // rest, which read as far too much accent color for a single
+      // screen.
       .quick-chips {
         display: flex;
-        gap: 6px;
-        overflow-x: auto;
-        padding-bottom: 6px;
-        scrollbar-width: none;
-
-        &::-webkit-scrollbar {
-          display: none;
-        }
+        flex-wrap: wrap;
+        gap: 8px;
 
         .quick-chip-btn {
-          background: rgba(255, 214, 0, 0.08);
-          border: 1px solid rgba(255, 214, 0, 0.2);
-          color: #ffd600;
-          font-size: 11px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.09);
+          color: rgba(255, 255, 255, 0.68);
+          font-size: 12.5px;
           font-weight: 600;
-          padding: 5px 10px;
-          border-radius: 16px;
+          padding: 9px 14px;
+          border-radius: 12px;
           white-space: nowrap;
           cursor: pointer;
           transition: all 0.15s ease;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
 
           &:hover {
-            background: rgba(255, 214, 0, 0.15);
-            border-color: #ffd600;
+            background: rgba(255, 214, 0, 0.1);
+            border-color: rgba(255, 214, 0, 0.3);
+            color: #ffd600;
+          }
+
+          &:active {
+            transform: scale(0.96);
+          }
+        }
+      }
+
+      // Saved-program picker reuses .quick-chip-btn's base look but as a
+      // single full-width card per program (not a compact suggestion
+      // pill), matching the "DELWINS PROGRAM" button in the Trainer
+      // Studio design -- a coach is choosing an entire routine here, a
+      // higher-stakes action than adding one exercise, so it reads best
+      // as its own row rather than competing for space in a chip strip.
+      // Icon carries the only accent color; the label itself stays
+      // neutral white like the rest of the row.
+      .program-chips {
+        flex-direction: column;
+
+        .program-chip-btn {
+          width: 100%;
+          justify-content: flex-start;
+          padding: 12px 16px;
+          font-size: 13px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.4px;
+
+          ion-icon {
+            font-size: 15px;
+            flex-shrink: 0;
+            color: #ffd600;
+          }
+
+          &:hover {
+            color: rgba(255, 255, 255, 0.68);
+            background: rgba(255, 214, 0, 0.06);
+            border-color: rgba(255, 214, 0, 0.22);
           }
         }
       }
@@ -844,78 +1016,126 @@
           gap: 8px;
           margin-bottom: 8px;
 
+          // Two-digit "01" badge in a rounded-square chip (Trainer Studio
+          // design) instead of a bare "#1" label -- reads as a numbered
+          // routine step at a glance rather than a hash/id.
           .ex-index {
+            background: rgba(255, 214, 0, 0.14);
             color: #ffd600;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 800;
-            width: 20px;
+            min-width: 26px;
+            height: 26px;
+            padding: 0 4px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+          }
+
+          .ex-icon {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 16px;
+            flex-shrink: 0;
+          }
+
+          .ex-name-wrap {
+            flex: 1;
+            min-width: 0;
+
+            .form-input {
+              padding-left: 12px;
+            }
           }
 
           .ex-name-input {
-            flex: 1;
-            font-weight: 600;
+            font-weight: 700;
+            font-size: 14px;
           }
 
+          // Circular red button (Trainer Studio design) instead of a
+          // rounded-square -- matches the trash icon treatment in the
+          // read-only proposal card list further up this file.
           .btn-remove-ex {
             background: rgba(255, 68, 97, 0.12);
-            border: 1px solid rgba(255, 68, 97, 0.25);
+            border: 1px solid rgba(255, 68, 97, 0.3);
             color: #ff4461;
             width: 32px;
             height: 32px;
-            border-radius: 8px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 15px;
             cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.15s ease;
+
+            &:active {
+              transform: scale(0.92);
+              background: rgba(255, 68, 97, 0.2);
+            }
           }
         }
 
         .ex-card-bottom {
           display: flex;
           gap: 8px;
+          flex-wrap: wrap;
 
+          // Trainer Studio design shows Sets and Reps as two distinct
+          // bordered boxes with the × sign floating between them, rather
+          // than both fields sharing one pill container.
           .sets-reps-group {
             display: flex;
             align-items: center;
-            gap: 4px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 10px;
-            padding: 4px 8px;
+            gap: 6px;
+            flex-shrink: 0;
 
             .mini-field {
               display: flex;
               flex-direction: column;
               align-items: center;
+              background: rgba(255, 255, 255, 0.04);
+              border: 1px solid rgba(255, 255, 255, 0.08);
+              border-radius: 10px;
+              padding: 5px 12px;
+              min-width: 46px;
 
               .mini-label {
                 font-size: 9px;
                 color: rgba(255, 255, 255, 0.4);
                 font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.4px;
               }
 
               .mini-input {
-                width: 38px;
+                width: 100%;
                 background: transparent;
                 border: none;
                 color: #ffffff;
-                font-size: 13px;
-                font-weight: 700;
+                font-size: 15px;
+                font-weight: 800;
                 text-align: center;
                 outline: none;
               }
             }
 
             .sets-divider {
-              color: rgba(255, 255, 255, 0.3);
-              font-size: 12px;
+              color: rgba(255, 255, 255, 0.35);
+              font-size: 13px;
               font-weight: 700;
             }
           }
 
-          .ex-notes-input {
+          .ex-notes-wrap {
             flex: 1;
+            min-width: 160px;
+          }
+
+          .ex-notes-input {
             font-size: 12px;
           }
         }
@@ -929,6 +1149,7 @@
 
       button {
         flex: 1;
+        min-width: 0;
         padding: 13px;
         border-radius: 14px;
         font-size: 14px;
@@ -938,6 +1159,7 @@
         align-items: center;
         justify-content: center;
         gap: 8px;
+        white-space: nowrap;
       }
 
       .btn-cancel {
@@ -952,6 +1174,284 @@
         color: #06080f;
         box-shadow: 0 4px 16px rgba(255, 214, 0, 0.3);
       }
+    }
+
+    // ── Narrow-viewport collapse ────────────────────
+    // Every grid/flex child already has an explicit min-width: 0 (see
+    // above) so the 2-column Date/Time and Duration/Price grids never
+    // overflow -- but under ~360px (small/older devices) even 2 columns
+    // is too cramped to type into comfortably, so drop to a single
+    // column there. Location is already its own full-width row (see
+    // .form-group-full above), so it needs no special-casing here.
+    @media (max-width: 480px) {
+      padding: 16px;
+    }
+
+    @media (max-width: 360px) {
+      .form-grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+}
+
+// ── PARTNER INFO MODAL (tap header avatar/name) ──────
+// Previously had NO styling at all in this file, so it rendered with raw
+// browser/Ionic defaults -- plain unsized avatar, unstyled Close button
+// overlapping the role tag (see chat UI bug report screenshots). Built to
+// match the same bottom-sheet system already established by
+// .proposal-modal above: transparent ion-modal + themed inner wrapper,
+// #0d111e surface, #ffd600 gold accent, rgba(255,255,255,*) text tiers,
+// .btn-cancel-style close button.
+.partner-info-modal {
+  --background: transparent;
+
+  .partner-info-wrapper {
+    background: #0d111e;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 24px 24px 0 0;
+    padding: 10px 24px 28px 24px;
+    box-sizing: border-box;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .partner-info-handle {
+    width: 40px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.14);
+    margin: 0 0 18px 0;
+    flex-shrink: 0;
+  }
+
+  .partner-info-avatar {
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 2px solid rgba(255, 214, 0, 0.4);
+    box-shadow: 0 8px 24px rgba(255, 214, 0, 0.15);
+    margin-bottom: 14px;
+
+    img,
+    .avatar-placeholder {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .avatar-placeholder {
+      background: #1e243d;
+      color: #ffd600;
+      font-weight: 800;
+      font-size: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  .partner-info-name {
+    font-size: 19px;
+    font-weight: 800;
+    color: #ffffff;
+    margin: 0 0 6px 0;
+    line-height: 1.3;
+    word-break: break-word;
+  }
+
+  .partner-info-username {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 12px;
+
+    ion-icon {
+      font-size: 13px;
+    }
+  }
+
+  .partner-info-role-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 214, 0, 0.12);
+    border: 1px solid rgba(255, 214, 0, 0.3);
+    color: #ffd600;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    white-space: nowrap;
+
+    ion-icon {
+      font-size: 14px;
+    }
+  }
+
+  .partner-info-close-btn {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    padding: 13px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+
+    &:active {
+      background: rgba(255, 255, 255, 0.1);
+      transform: scale(0.98);
+    }
+  }
+}
+
+// ── Light Theme ────────────────────────────────────────────────
+// Everything above this point was written with literal dark-mode colors
+// only (#06080f/#0d111e backgrounds, #ffffff text) and no light-mode
+// branch at all, so toggling the app's light-mode setting had no visible
+// effect on this page -- white text stayed white on top of the now-white
+// ion-content background, i.e. unreadable, not just "not themed". This
+// block covers everything rendered directly by ChatPage's own template
+// (:host-context works here because none of it is portaled -- contrast
+// with .proposal-modal below, which IS an <ion-modal> and needs its
+// light-mode colors in global.scss instead, same reasoning as every other
+// ion-modal in this app -- see the comments there).
+:host-context(body.light-theme) {
+  .chat-content {
+    --background: #f4f5f8;
+  }
+
+  .back-circle-btn {
+    background: rgba(15, 23, 42, 0.05);
+    border-color: rgba(15, 23, 42, 0.12);
+    color: #0f172a;
+
+    &:active { background: rgba(15, 23, 42, 0.1); }
+  }
+
+  .chat-partner-header {
+    &:active { background: rgba(15, 23, 42, 0.05); }
+
+    .partner-header-chevron { color: rgba(217, 119, 6, 0.6); }
+
+    .chat-partner-avatar {
+      .avatar-placeholder { background: rgba(15, 23, 42, 0.06); color: #d97706; }
+      .online-indicator { border-color: #f4f5f8; }
+    }
+
+    .chat-partner-meta {
+      .partner-name { color: #0f172a; }
+      .partner-role-tag { color: #d97706; }
+    }
+  }
+
+  .btn-propose-header {
+    background: rgba(217, 119, 6, 0.1);
+    border-color: rgba(217, 119, 6, 0.3);
+    color: #d97706;
+
+    &:active { background: rgba(217, 119, 6, 0.18); }
+  }
+
+  .loading-state,
+  .empty-chat-state { color: rgba(15, 23, 42, 0.5); }
+
+  .empty-chat-icon {
+    background: rgba(217, 119, 6, 0.1);
+    color: #d97706;
+  }
+
+  .empty-propose-btn { box-shadow: 0 4px 14px rgba(217, 119, 6, 0.25); }
+
+  .message-row {
+    .msg-avatar-col .msg-avatar-ph { background: rgba(15, 23, 42, 0.06); color: #d97706; }
+
+    &:not(.is-mine) .msg-bubble {
+      background: #ffffff;
+      color: #0f172a;
+      border-color: rgba(15, 23, 42, 0.08);
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+
+      .msg-time { color: rgba(15, 23, 42, 0.45); }
+    }
+  }
+
+  // ── Proposal card bubble (read-only, inside the message list) ──
+  .proposal-card-bubble {
+    background: linear-gradient(150deg, #ffffff 0%, #f8f9fa 100%);
+    border-color: rgba(15, 23, 42, 0.08);
+    border-top-color: rgba(217, 119, 6, 0.5);
+    box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+
+    .proposal-card-header .proposal-badge { color: #d97706; }
+
+    .proposal-meta-strip {
+      background: rgba(15, 23, 42, 0.03);
+
+      .meta-item {
+        color: rgba(15, 23, 42, 0.75);
+        ion-icon { color: rgba(15, 23, 42, 0.4); }
+      }
+    }
+
+    .proposal-exercises {
+      .ex-list-title { color: rgba(15, 23, 42, 0.5); }
+
+      .ex-item-row {
+        border-bottom-color: rgba(15, 23, 42, 0.06);
+
+        .ex-number { background: rgba(217, 119, 6, 0.1); color: #d97706; border-color: rgba(217, 119, 6, 0.25); }
+        .ex-info {
+          .ex-name { color: #0f172a; }
+          .ex-desc { color: rgba(15, 23, 42, 0.45); }
+        }
+        .ex-reps { color: rgba(15, 23, 42, 0.7); background: rgba(15, 23, 42, 0.05); border-color: rgba(15, 23, 42, 0.08); }
+      }
+    }
+
+    .proposal-card-actions {
+      .waiting-banner { background: rgba(15, 23, 42, 0.04); color: rgba(15, 23, 42, 0.5); }
+    }
+
+    .proposal-meta .msg-time { color: rgba(15, 23, 42, 0.35); }
+  }
+
+  // ── Chat input footer ──
+  .chat-footer {
+    // See the default-rule comment above -- literal `background`, not
+    // `--background`, is what actually paints this element.
+    background: rgba(255, 255, 255, 0.97);
+    border-top-color: rgba(15, 23, 42, 0.08);
+  }
+
+  .chat-input-bar {
+    .chat-action-btn {
+      background: rgba(217, 119, 6, 0.1);
+      border-color: rgba(217, 119, 6, 0.3);
+      color: #d97706;
+      &:active { background: rgba(217, 119, 6, 0.18); }
+    }
+
+    .chat-text-input {
+      background: rgba(15, 23, 42, 0.05);
+      border-color: rgba(15, 23, 42, 0.12);
+      color: #0f172a;
+
+      &::placeholder { color: rgba(15, 23, 42, 0.35); }
+      &:focus { border-color: rgba(217, 119, 6, 0.45); background: rgba(15, 23, 42, 0.07); }
     }
   }
 }

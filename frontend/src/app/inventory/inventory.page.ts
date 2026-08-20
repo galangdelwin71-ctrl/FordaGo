@@ -14,7 +14,10 @@ import { AuthService } from '../services/auth.service';
 import { HeaderComponent } from '../shared/header/header.component';
 import { NotificationPanelComponent } from '../shared/notification-panel/notification-panel.component';
 import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.component';
-import { API_BASE_URL } from '../config/api.config';
+import { CoachingNavService, CoachingPanelTab } from '../services/coaching-nav.service';
+import { API_URL } from '../config/api.config';
+import { getCachedData, setCachedData } from '../utils/local-cache.util';
+import { CACHE_KEYS } from '../utils/cache-keys';
 
 export interface Product {
   id:                    string;
@@ -22,6 +25,10 @@ export interface Product {
   brand:                 string;
   icon:                  string;
   image_url?:            string;
+  // Stage 6 (Loading Speed Plan): small (~300px) rendition for the grid --
+  // falls back to image_url in normalizeApiProduct() below when a product
+  // has no thumbnail yet (older row not re-saved since the migration).
+  thumbnail_url?:        string;
   price:                 number;
   stock:                 number;
   description:           string;
@@ -268,6 +275,11 @@ export class InventoryPage implements OnInit {
   products: Product[] = [];
   productsLoading = false;
   productsLoadError = false;
+  // Stage 4: fixed-length dummy array purely to repeat the skeleton card
+  // markup N times in the template (*ngFor needs something to iterate --
+  // the values themselves are never read). 6 matches roughly one
+  // above-the-fold screen at the grid's 2-column layout.
+  readonly skeletonPlaceholders: ReadonlyArray<number> = [1, 2, 3, 4, 5, 6];
 
   // ── Order Modal State (product detail / add to cart) ──
   orderModalOpen        = false;
@@ -312,16 +324,22 @@ export class InventoryPage implements OnInit {
   ordersModalOpen = false;
   myOrders: Order[] = [];
 
-  private api = API_BASE_URL;
+  private api = API_URL;
 
   // ── Header avatar ─────────────────────────────────────
   initials     = '';
   profileImage = '';
 
-  constructor(private router: Router, private http: HttpClient, private auth: AuthService) {}
+  constructor(
+    private router: Router,
+    private http: HttpClient,
+    private auth: AuthService,
+    private coachingNav: CoachingNavService,
+  ) {}
 
   ngOnInit(): void {
-    this.loadProducts();
+    this.applyPendingCoachingReopen();
+    void this.loadProductsWithHydration();
     this.loadMyOrders();
   }
 
@@ -329,7 +347,66 @@ export class InventoryPage implements OnInit {
     this.loadProducts();
   }
 
+  // Guards Stage 3 cache hydration so it only ever runs (reads Preferences)
+  // ONCE per page instance, and any caller that shows up before it resolves
+  // awaits that SAME read instead of racing it -- see ionViewWillEnter()'s
+  // doc-comment: it can fire on the very first mount too, not just
+  // re-entry, so without this a fast ionViewWillEnter() could call
+  // loadProducts() while `products` is still empty and flash the spinner
+  // even though a cache exists.
+  private productsHydration: Promise<void> | null = null;
+
+  /**
+   * Stage 3 (local-first loading) entry point. Waits for the one-time cache
+   * hydration to finish -- so `products` is already populated from the last
+   * snapshot BEFORE loadProducts() decides whether to show the spinner --
+   * then runs the normal network load. Safe to call from multiple
+   * lifecycle hooks: hydration itself only ever runs once (see
+   * productsHydration above), and loadProducts() already guards against
+   * overlapping HTTP requests.
+   */
+  private async loadProductsWithHydration(): Promise<void> {
+    this.productsHydration ??= this.hydrateProductsFromCache();
+    await this.productsHydration;
+    this.loadProducts();
+  }
+
+  /**
+   * Reads the last cached product list (written by loadProducts() below)
+   * and shows it immediately, before the network request even starts.
+   * Purely additive -- if there's no cache yet (first-ever launch) or the
+   * read fails for any reason, this is a silent no-op and the page falls
+   * back to its normal first-load spinner. Never throws -- see
+   * getCachedData()'s own doc-comment in utils/local-cache.util.ts.
+   */
+  private async hydrateProductsFromCache(): Promise<void> {
+    const cached = await getCachedData<Product[]>(CACHE_KEYS.PRODUCTS);
+    if (Array.isArray(cached) && cached.length > 0) {
+      this.products = cached;
+    }
+  }
+
   ionViewWillEnter(): void {
+    // Re-applied on every re-entry, not just first mount -- Ionic's
+    // router-outlet caches this page instance, so navigating
+    // Shop -> coach profile/chat -> back reuses the SAME InventoryPage
+    // instance and only fires ionViewWillEnter(), never ngOnInit() again.
+    // See applyPendingCoachingReopen() / DashboardPage's identical helper.
+    this.applyPendingCoachingReopen();
+
+    // Re-fetch on every re-entry, mirroring EquipmentPage. Previously this
+    // only ran once from ngOnInit(), so if that very first load ever failed
+    // (cold-start race, brief network blip), the Shop tab stayed empty for
+    // the rest of the session -- switching tabs back to Shop never retried,
+    // only the manual "Retry" button did. loadProducts() guards against
+    // overlapping calls with productsLoading, so this is safe alongside the
+    // ngOnInit() call on first mount. Routed through loadProductsWithHydration()
+    // (not loadProducts() directly) so that on first mount this waits for
+    // Stage 3 cache hydration instead of racing it -- see that method's
+    // doc-comment. On later re-entries hydration is already resolved, so
+    // this adds no more than a microtask of delay.
+    void this.loadProductsWithHydration();
+
     const user = this.auth.user;
     const name = String(user?.username || '').trim();
     this.initials = name
@@ -337,6 +414,23 @@ export class InventoryPage implements OnInit {
       : 'U';
     this.profileImage = String(user?.profile_image || '').trim();
     this.notifPanelOpen = false;
+  }
+
+  /**
+   * Reopens the coaching panel to the exact tab it was on if we landed
+   * back here via ChatPage's/CoachDetailPage's back button (see
+   * coaching-nav.service.ts). One-shot -- consumeReopen() clears itself,
+   * so a normal visit to Shop is completely unaffected. Without this, the
+   * router correctly returned the member to Shop, but the panel itself
+   * never reopened -- see coaching-nav.service.ts's CoachingPanelHost
+   * doc-comment for the full history of this gap.
+   */
+  private applyPendingCoachingReopen(): void {
+    const pendingTab = this.coachingNav.consumeReopen('inventory');
+    if (pendingTab) {
+      this.coachingPanelInitialTab = pendingTab;
+      this.coachingPanelOpen = true;
+    }
   }
 
   // ── Load Products from API ─────────────────────────────
@@ -347,13 +441,26 @@ export class InventoryPage implements OnInit {
   // used to display 10 items that don't exist in the database ("phantom
   // products").
   private loadProducts(): void {
+    // Guard against overlapping calls -- ngOnInit() AND ionViewWillEnter()
+    // both call loadProducts() (the latter fires on first mount too, not
+    // just re-entry), so without this guard the first page load could fire
+    // two concurrent GET /inventory/products requests. Mirrors the same
+    // isLoading guard in EquipmentPage.loadEquipment().
+    if (this.productsLoading) { return; }
+
     if (!this.auth.token) {
       this.products = [];
       this.productsLoadError = false;
       return;
     }
 
-    this.productsLoading = true;
+    // Stage 3 (local-first / stale-while-revalidate): only show the
+    // spinner when there's nothing on screen yet. If hydrateProductsFromCache()
+    // (or a previous successful fetch this session) already populated
+    // `products`, this request runs silently in the background and the
+    // member keeps looking at the last-known list the whole time.
+    const hasExistingData = this.products.length > 0;
+    this.productsLoading = !hasExistingData;
     this.productsLoadError = false;
 
     const headers = { Authorization: `Bearer ${this.auth.token}` };
@@ -364,11 +471,22 @@ export class InventoryPage implements OnInit {
         this.products = apiList
           .map(product => this.normalizeApiProduct(product, this.fallbackProducts))
           .filter((product): product is Product => product !== null);
+        // Snapshot for the next cold start / re-entry. Fire-and-forget --
+        // a failed write here must never block or fail the page itself,
+        // see setCachedData()'s own doc-comment.
+        void setCachedData(CACHE_KEYS.PRODUCTS, this.products);
       },
       error: () => {
         this.productsLoading = false;
-        this.productsLoadError = true;
-        this.products = [];
+        // A background refresh failing while stale (cached) data is still
+        // on screen must NOT blank the page or show the error banner -- the
+        // member keeps browsing the last-known list, same as any other
+        // stale-while-revalidate UI. Only surface the error state when
+        // there was truly nothing to show to begin with.
+        if (!hasExistingData) {
+          this.productsLoadError = true;
+          this.products = [];
+        }
       }
     });
   }
@@ -384,6 +502,10 @@ export class InventoryPage implements OnInit {
     );
 
     const imageUrl = this.normalizeImageUrl(apiProduct?.image_url);
+    // Stage 6: falls back to the full image when a product has no
+    // thumbnail yet (older row, or the admin re-save that generates one
+    // hasn't happened) -- never a broken/blank grid card either way.
+    const thumbnailUrl = this.normalizeImageUrl(apiProduct?.thumbnail_url);
     const parsedPrice = Number(apiProduct?.price);
     const parsedStock = Number(apiProduct?.stock);
 
@@ -393,6 +515,7 @@ export class InventoryPage implements OnInit {
       brand: typeof apiProduct?.brand === 'string' && apiProduct.brand.trim() ? apiProduct.brand.trim() : (fallbackProduct?.brand || 'FordaGO'),
       icon: fallbackProduct?.icon || 'SUPP',
       image_url: imageUrl || fallbackProduct?.image_url || undefined,
+      thumbnail_url: thumbnailUrl || imageUrl || fallbackProduct?.image_url || undefined,
       price: Number.isFinite(parsedPrice) ? parsedPrice : (fallbackProduct?.price || 0),
       stock: Number.isFinite(parsedStock) ? parsedStock : (fallbackProduct?.stock || 0),
       description: fallbackProduct?.description || normalizedName,
@@ -425,7 +548,16 @@ export class InventoryPage implements OnInit {
   }
 
   handleProductImageError(product: Product): void {
-    product.image_url = undefined;
+    // Grid cards bind [src]="product.thumbnail_url" (see inventory.page.html) --
+    // a broken thumbnail should fall back to the full image before giving up
+    // entirely, since a bad/oversized thumbnail data URL is more likely to be
+    // the failure than the full-size one.
+    if (product.thumbnail_url && product.thumbnail_url !== product.image_url) {
+      product.thumbnail_url = product.image_url;
+    } else {
+      product.image_url = undefined;
+      product.thumbnail_url = undefined;
+    }
   }
 
   handleSelectedProductImageError(): void {
@@ -848,22 +980,34 @@ export class InventoryPage implements OnInit {
   // In-flow replacement for ion-content (see inventory.page.html) rather
   // than an overlay -- header and footer are untouched siblings either way.
   coachingPanelOpen = false;
+  /** Set from CoachingNavService.consumeReopen() when this page is reached via a back-navigation from chat/coach-profile -- see applyPendingCoachingReopen() and coaching-nav.service.ts. Cleared whenever the panel closes so it never silently re-applies to a later, unrelated open. */
+  coachingPanelInitialTab: CoachingPanelTab | null = null;
 
   onCoachingClick(): void {
-    this.coachingPanelOpen = !this.coachingPanelOpen;
+    const nextOpen = !this.coachingPanelOpen;
+    this.coachingPanelOpen = nextOpen;
+    if (!nextOpen) {
+      this.coachingPanelInitialTab = null;
+    }
   }
 
   closeCoachingPanel(): void {
     this.coachingPanelOpen = false;
+    this.coachingPanelInitialTab = null;
   }
 
   // ── Navigation ────────────────────────────────────────
-  private closeOverlaysForNavigation(): void { this.notifPanelOpen = false; this.coachingPanelOpen = false; }
+  private closeOverlaysForNavigation(): void { this.notifPanelOpen = false; this.coachingPanelOpen = false; this.coachingPanelInitialTab = null; }
 
-  goToDashboard(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/dashboard']); }
-  goToSchedule(): void  { this.closeOverlaysForNavigation(); this.router.navigate(['/schedule']); }
-  goToQr(): void        { this.closeOverlaysForNavigation(); this.router.navigate(['/qr-scanner']); }
-  goToInventory(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/inventory']); }
-  goToEquipment(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/equipment']); }
-  goToProfile(): void   { this.closeOverlaysForNavigation(); this.router.navigate(['/profile']); }
+  // NOTE: replaceUrl: true — see the matching note in dashboard.page.ts.
+  // Bottom-nav tab switches must REPLACE the current history entry, not
+  // push a new one, or Location.back() (on-screen arrow / hardware back)
+  // from a later drill-in page (e.g. chat) walks past several stale tab
+  // visits instead of returning to whichever tab was actually active.
+  goToDashboard(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/dashboard'], { replaceUrl: true }); }
+  goToSchedule(): void  { this.closeOverlaysForNavigation(); this.router.navigate(['/schedule'], { replaceUrl: true }); }
+  goToQr(): void        { this.closeOverlaysForNavigation(); this.router.navigate(['/qr-scanner'], { replaceUrl: true }); }
+  goToInventory(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/inventory'], { replaceUrl: true }); }
+  goToEquipment(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/equipment'], { replaceUrl: true }); }
+  goToProfile(): void   { this.closeOverlaysForNavigation(); this.router.navigate(['/profile'], { replaceUrl: true }); }
 }

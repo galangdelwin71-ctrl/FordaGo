@@ -2,6 +2,7 @@
 <app-header
   subtitle="AFFORDA GYM"
   [unreadCount]="unreadCount"
+  [coachUnreadCount]="coachUnreadCount"
   [profileImage]="profileImage"
   [initials]="initials"
   (coachingClick)="onCoachingClick()"
@@ -19,7 +20,9 @@
   *ngIf="coachingPanelOpen"
   [isOpen]="coachingPanelOpen"
   [initialTab]="coachingPanelInitialTab"
-  (closed)="closeCoachingPanel()">
+  hostPage="dashboard"
+  (closed)="closeCoachingPanel()"
+  (navigated)="closeCoachingPanel()">
 </app-coaching-panel>
 
 <ion-content *ngIf="!coachingPanelOpen" [fullscreen]="false" class="fordago-page-content" [scrollY]="true">
@@ -309,6 +312,7 @@
 <app-notification-panel
   [isOpen]="notifPanelOpen"
   (closed)="closeNotifPanel()"
+  (requestOpen)="openNotifPanel()"
   (unreadCountChange)="onUnreadCountChange($event)">
 </app-notification-panel>
 

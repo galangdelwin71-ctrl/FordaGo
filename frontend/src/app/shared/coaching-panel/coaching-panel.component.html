@@ -52,7 +52,7 @@
     (click)="setTab('conversations')">
     <ion-icon name="chatbubbles-outline"></ion-icon>
     <span>Messages</span>
-    <span class="tab-badge-count" *ngIf="conversations.length > 0">{{ conversations.length }}</span>
+    <span class="tab-badge-count" *ngIf="totalUnreadMessages > 0">{{ totalUnreadMessages }}</span>
   </button>
 
   <button
@@ -81,14 +81,6 @@
        COACH DASHBOARD (isCoach === true) — full dashboard content
        ══════════════════════════════════════════════════════════════ -->
   <ng-container *ngIf="!isLoadingProfile && isCoach">
-
-    <!-- Settings shortcut -->
-    <div class="cd-title-row">
-      <button type="button" class="cd-settings-btn" (click)="openSettings()">
-        <ion-icon name="settings-outline"></ion-icon>
-        <span>Settings</span>
-      </button>
-    </div>
 
     <!-- Profile card -->
     <div class="cd-profile-card" *ngIf="myProfile">
@@ -137,6 +129,34 @@
       </div>
     </div>
 
+    <!-- Today's Sessions -->
+    <div class="cd-section-label">Today's Sessions</div>
+    <div class="cd-card" *ngIf="isLoadingTodaySessions">
+      <ion-spinner name="crescent" color="warning"></ion-spinner>
+    </div>
+    <ng-container *ngIf="!isLoadingTodaySessions">
+      <div class="cd-session-item" *ngFor="let session of todaySessions" (click)="openTodaySession(session)">
+        <div class="cd-session-avatar">
+          <img *ngIf="session.clientAvatar" [src]="session.clientAvatar" alt="" />
+          <span *ngIf="!session.clientAvatar">{{ session.clientName.charAt(0) }}</span>
+          <span class="cd-session-avatar-dot"></span>
+        </div>
+        <div class="cd-session-info">
+          <div class="cd-session-name">{{ session.clientName }}</div>
+          <div class="cd-session-time"><ion-icon name="time-outline"></ion-icon> {{ session.timeLabel }}</div>
+          <div class="cd-session-focus">{{ session.focus }}</div>
+        </div>
+        <button type="button" class="cd-session-view-btn">
+          <span>View</span>
+          <ion-icon name="chevron-forward-outline"></ion-icon>
+        </button>
+      </div>
+      <div class="cd-empty-state cd-card" *ngIf="todaySessions.length === 0">
+        <ion-icon name="calendar-outline" class="cd-empty-state-icon"></ion-icon>
+        <div>No sessions scheduled for today.</div>
+      </div>
+    </ng-container>
+
     <!-- Quick Actions -->
     <div class="cd-section-label">Quick Actions</div>
     <div class="cd-quick-actions-grid">
@@ -170,37 +190,6 @@
         <span>Messages</span>
       </button>
     </div>
-
-    <!-- Today's Sessions -->
-    <div class="cd-section-heading-row">
-      <div class="cd-section-label" style="margin: 0;">Today's Sessions</div>
-      <button type="button" class="cd-text-link-btn" (click)="goToSchedule()">View schedule</button>
-    </div>
-    <div class="cd-card" *ngIf="isLoadingTodaySessions">
-      <ion-spinner name="crescent" color="warning"></ion-spinner>
-    </div>
-    <ng-container *ngIf="!isLoadingTodaySessions">
-      <div class="cd-session-item" *ngFor="let session of todaySessions" (click)="openTodaySession(session)">
-        <div class="cd-session-avatar">
-          <img *ngIf="session.clientAvatar" [src]="session.clientAvatar" alt="" />
-          <span *ngIf="!session.clientAvatar">{{ session.clientName.charAt(0) }}</span>
-          <span class="cd-session-avatar-dot"></span>
-        </div>
-        <div class="cd-session-info">
-          <div class="cd-session-name">{{ session.clientName }}</div>
-          <div class="cd-session-time"><ion-icon name="time-outline"></ion-icon> {{ session.timeLabel }}</div>
-          <div class="cd-session-focus">{{ session.focus }}</div>
-        </div>
-        <button type="button" class="cd-session-view-btn">
-          <span>View</span>
-          <ion-icon name="chevron-forward-outline"></ion-icon>
-        </button>
-      </div>
-      <div class="cd-empty-state cd-card" *ngIf="todaySessions.length === 0">
-        <ion-icon name="calendar-outline" class="cd-empty-state-icon"></ion-icon>
-        <div>No sessions scheduled for today.</div>
-      </div>
-    </ng-container>
 
     <!-- Coach tab content -->
     <div class="cd-section-label">
@@ -527,6 +516,22 @@
       <div class="cd-modal-handle"></div>
       <div class="cd-modal-title">Manage Profile</div>
 
+      <div class="cd-photo-editor">
+        <div class="cd-photo-preview" *ngIf="!profileForm.photo_url">{{ (myProfile?.first_name || myProfile?.username || 'C').charAt(0) }}</div>
+        <img *ngIf="profileForm.photo_url" [src]="profileForm.photo_url" alt="Profile preview" class="cd-photo-preview cd-photo-preview-img" />
+        <div class="cd-photo-actions">
+          <label class="cd-photo-btn" for="coachProfilePhotoInput">Upload Photo</label>
+          <button type="button" class="cd-photo-remove-btn" *ngIf="profileForm.photo_url" (click)="removeCoachPhoto()">Remove</button>
+        </div>
+        <input
+          id="coachProfilePhotoInput"
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          class="cd-photo-file-input"
+          (change)="onCoachPhotoSelected($event)"
+        />
+      </div>
+
       <div class="cd-form-group">
         <label class="cd-form-label">Specialty</label>
         <input type="text" [(ngModel)]="profileForm.specialty" placeholder="e.g. Strength &amp; Conditioning" class="cd-form-input" />
@@ -535,11 +540,6 @@
       <div class="cd-form-group">
         <label class="cd-form-label">Bio</label>
         <textarea [(ngModel)]="profileForm.bio" placeholder="Tell clients about your coaching style" rows="3" class="cd-form-input"></textarea>
-      </div>
-
-      <div class="cd-form-group">
-        <label class="cd-form-label">Photo URL</label>
-        <input type="text" [(ngModel)]="profileForm.photo_url" placeholder="https://…" class="cd-form-input" />
       </div>
 
       <div class="cd-form-group">
@@ -719,6 +719,12 @@
 
       <div class="cd-form-group">
         <label class="cd-form-label">Exercises</label>
+        <div class="cd-program-item-header" *ngIf="programForm.items && programForm.items.length > 0">
+          <span>Exercise Name</span>
+          <span>Sets</span>
+          <span>Reps</span>
+          <span aria-hidden="true"></span>
+        </div>
         <div class="cd-program-item-row" *ngFor="let item of programForm.items; let i = index">
           <input type="text" [(ngModel)]="item.name" placeholder="Exercise name" class="cd-form-input cd-program-item-name" />
           <input type="number" appNoNegative [(ngModel)]="item.sets" placeholder="Sets" class="cd-form-input cd-program-item-num" />

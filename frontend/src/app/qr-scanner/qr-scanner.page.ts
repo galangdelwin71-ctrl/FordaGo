@@ -13,7 +13,8 @@ import { AuthService } from '../services/auth.service';
 import { Html5Qrcode } from 'html5-qrcode';
 import { HeaderComponent } from '../shared/header/header.component';
 import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.component';
-import { API_BASE_URL } from '../config/api.config';
+import { CoachingNavService, CoachingPanelTab } from '../services/coaching-nav.service';
+import { API_URL } from '../config/api.config';
 
 // ── Interfaces ────────────────────────────────────────────
 
@@ -57,7 +58,7 @@ export interface EquipmentTutorial {
 })
 export class QrScannerPage implements OnInit, OnDestroy {
 
-  private readonly api = API_BASE_URL;
+  private readonly api = API_URL;
   private readonly scannerRegionId = 'fordago-qr-reader';
 
   // ── Equipment Library ─────────────────────────────────
@@ -175,7 +176,8 @@ export class QrScannerPage implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private http: HttpClient,
-    private auth: AuthService
+    private auth: AuthService,
+    private coachingNav: CoachingNavService,
   ) {}
 
   // ── Header avatar ─────────────────────────────────────
@@ -223,6 +225,7 @@ export class QrScannerPage implements OnInit, OnDestroy {
   closeAllNotifications(): void { this.notifPanelOpen = false; this.notifDetailOpen = false; this.selectedNotification = null; }
 
   ngOnInit(): void {
+    this.applyPendingCoachingReopen();
     this.loadMyAttendanceLogs();
     const user = this.auth.user;
     const name = String(user?.username || '').trim();
@@ -231,6 +234,28 @@ export class QrScannerPage implements OnInit, OnDestroy {
       : 'U';
     this.profileImage = String(user?.profile_image || '').trim();
     void this.checkCameraPermission();
+  }
+
+  /**
+   * Re-applies a pending coaching-panel reopen on every re-entry into this
+   * page, not just first mount -- Ionic's router-outlet caches this page
+   * instance, so navigating Scan -> coach profile/chat -> back reuses the
+   * SAME QrScannerPage instance and only fires ionViewWillEnter(), never
+   * ngOnInit() again (see the ionViewWillEnter() hook below). Without this,
+   * the router correctly returned the member to Scan, but the coaching
+   * panel itself never reopened -- see coaching-nav.service.ts's
+   * CoachingPanelHost doc-comment for the full history of this gap.
+   */
+  private applyPendingCoachingReopen(): void {
+    const pendingTab = this.coachingNav.consumeReopen('qr-scanner');
+    if (pendingTab) {
+      this.coachingPanelInitialTab = pendingTab;
+      this.coachingPanelOpen = true;
+    }
+  }
+
+  ionViewWillEnter(): void {
+    this.applyPendingCoachingReopen();
   }
 
   // ── Camera permission ──────────────────────────────────
@@ -561,6 +586,8 @@ export class QrScannerPage implements OnInit, OnDestroy {
   // In-flow replacement for ion-content (see qr-scanner.page.html) rather
   // than an overlay -- header and footer are untouched siblings either way.
   coachingPanelOpen = false;
+  /** Set from CoachingNavService.consumeReopen() when this page is reached via a back-navigation from chat/coach-profile -- see applyPendingCoachingReopen() and coaching-nav.service.ts. Cleared whenever the panel closes so it never silently re-applies to a later, unrelated open. */
+  coachingPanelInitialTab: CoachingPanelTab | null = null;
 
   onCoachingClick(): void {
     const opening = !this.coachingPanelOpen;
@@ -574,20 +601,29 @@ export class QrScannerPage implements OnInit, OnDestroy {
       void this.stopScan();
     }
     this.coachingPanelOpen = opening;
+    if (!opening) {
+      this.coachingPanelInitialTab = null;
+    }
   }
 
   closeCoachingPanel(): void {
     this.coachingPanelOpen = false;
+    this.coachingPanelInitialTab = null;
   }
 
   // ── Navigation ────────────────────────────────────────
-  private closeOverlaysForNavigation(): void { this.notifPanelOpen = false; this.notifDetailOpen = false; this.selectedNotification = null; this.coachingPanelOpen = false; }
+  private closeOverlaysForNavigation(): void { this.notifPanelOpen = false; this.notifDetailOpen = false; this.selectedNotification = null; this.coachingPanelOpen = false; this.coachingPanelInitialTab = null; }
 
-  goBack():        void { this.closeOverlaysForNavigation(); this.router.navigate(['/dashboard']); }
-  goToDashboard(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/dashboard']); }
-  goToSchedule():  void { this.closeOverlaysForNavigation(); this.router.navigate(['/schedule']); }
-  goToQr():        void { this.closeOverlaysForNavigation(); this.router.navigate(['/qr-scanner']); }
-  goToInventory(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/inventory']); }
-  goToEquipment(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/equipment']); }
-  goToProfile():   void { this.closeOverlaysForNavigation(); this.router.navigate(['/profile']); }
+  // NOTE: replaceUrl: true — see the matching note in dashboard.page.ts.
+  // Bottom-nav tab switches must REPLACE the current history entry, not
+  // push a new one, or Location.back() (on-screen arrow / hardware back)
+  // from a later drill-in page (e.g. chat) walks past several stale tab
+  // visits instead of returning to whichever tab was actually active.
+  goBack():        void { this.closeOverlaysForNavigation(); this.router.navigate(['/dashboard'], { replaceUrl: true }); }
+  goToDashboard(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/dashboard'], { replaceUrl: true }); }
+  goToSchedule():  void { this.closeOverlaysForNavigation(); this.router.navigate(['/schedule'], { replaceUrl: true }); }
+  goToQr():        void { this.closeOverlaysForNavigation(); this.router.navigate(['/qr-scanner'], { replaceUrl: true }); }
+  goToInventory(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/inventory'], { replaceUrl: true }); }
+  goToEquipment(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/equipment'], { replaceUrl: true }); }
+  goToProfile():   void { this.closeOverlaysForNavigation(); this.router.navigate(['/profile'], { replaceUrl: true }); }
 }

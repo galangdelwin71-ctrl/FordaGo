@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
-import { API_BASE_URL } from '../config/api.config';
+import { API_URL } from '../config/api.config';
 
 export interface UserProfile {
   id?: number;
@@ -19,7 +19,7 @@ export interface UserProfile {
 
 @Injectable({ providedIn: 'root' })
 export class ProfileService {
-  private apiUrl = `${API_BASE_URL}/users`;
+  private apiUrl = `${API_URL}/users`;
   private profileSubject = new BehaviorSubject<UserProfile | null>(null);
   public profile$ = this.profileSubject.asObservable();
 
@@ -56,7 +56,8 @@ export class ProfileService {
   private handleError(err: HttpErrorResponse) {
     let message: string;
     if (err.status === 0) {
-      message = 'Cannot reach the server.';
+      // See network-error.interceptor.ts for the actual message text.
+      message = err.error?.message || 'Cannot reach the server.';
     } else if (err.status === 404) {
       message = 'Profile not found.';
     } else {

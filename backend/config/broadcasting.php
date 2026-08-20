@@ -43,6 +43,14 @@ return [
             ],
             'client_options' => [
                 // Guzzle client options: https://docs.guzzlephp.org/en/stable/request-options.html
+                // Bounded so a dead/unreachable local Reverb server can never
+                // block the single-worker `php artisan serve` dev process for
+                // more than ~2s -- without this, a connection reset here (which
+                // happens often under RAM pressure on dev machines) stalls
+                // every other in-flight request (Equipment, Shop, PR, etc.)
+                // behind it since ShouldBroadcastNow runs synchronously.
+                'connect_timeout' => 1.0,
+                'timeout' => 2.0,
             ],
         ],
 

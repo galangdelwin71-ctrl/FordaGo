@@ -15,11 +15,12 @@ import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
 import { ProfileService, UserProfile } from '../services/profile.service';
 import { ThemeService } from '../services/theme.service';
+import { CoachingNavService, CoachingPanelTab } from '../services/coaching-nav.service';
 import { NoNegativeDirective } from '../directives/no-negative.directive';
 import { HeaderComponent } from '../shared/header/header.component';
 import { NotificationPanelComponent } from '../shared/notification-panel/notification-panel.component';
 import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.component';
-import { API_BASE_URL } from '../config/api.config';
+import { API_URL } from '../config/api.config';
 
 // ── Interfaces ────────────────────────────────────────
 export interface MemberProfile {
@@ -139,13 +140,14 @@ export class ProfilePage implements OnInit {
   logoutModalOpen            = false;
   isDarkMode                 = true;
 
-  private api = API_BASE_URL;
+  private api = API_URL;
 
   constructor(
     public router: Router,
     private auth: AuthService,
     private http: HttpClient,
-    private themeService: ThemeService
+    private themeService: ThemeService,
+    private coachingNav: CoachingNavService,
   ) {}
 
   ngOnInit(): void {
@@ -153,12 +155,14 @@ export class ProfilePage implements OnInit {
       this.router.navigate(['/login']);
       return;
     }
+    this.applyPendingCoachingReopen();
     this.loadProfile();
     this.isDarkMode = this.themeService.isDarkMode();
   }
 
   ionViewWillEnter(): void {
     if (!this.auth.user) return;
+    this.applyPendingCoachingReopen();
     this.loadProfile();
   }
 
@@ -432,7 +436,15 @@ export class ProfilePage implements OnInit {
   logout(): void {
     this.logoutModalOpen = false;
     this.auth.logout();
-    this.router.navigate(['/login']);
+    // replaceUrl: true -- logout is an auth boundary, same reasoning as
+    // login.page.ts's post-login navigate(). A plain push here left
+    // /login stacked UNDER the next account's /dashboard entry, so
+    // walking back far enough (or a stray extra back-pop) from a later
+    // drill-in page could resolve straight to a stale /login screen
+    // instead of the currently logged-in account's dashboard. Since /login
+    // has nothing meaningful to preserve as a "came from" page, replacing
+    // is strictly correct here, not just a back-button workaround.
+    this.router.navigate(['/login'], { replaceUrl: true });
   }
 
   // ── Notifications panel ────────────────────────────────
@@ -456,6 +468,8 @@ export class ProfilePage implements OnInit {
   // In-flow replacement for ion-content (see profile.page.html) rather
   // than an overlay -- header and footer are untouched siblings either way.
   coachingPanelOpen = false;
+  /** Set from CoachingNavService.consumeReopen() when this page is reached via ChatPage's back button -- see coaching-nav.service.ts and applyPendingCoachingReopen() below. Cleared whenever the panel closes so it never silently re-applies to a later, unrelated open. */
+  coachingPanelInitialTab: CoachingPanelTab | null = null;
 
   onCoachingClick(): void {
     this.coachingPanelOpen = !this.coachingPanelOpen;
@@ -463,38 +477,78 @@ export class ProfilePage implements OnInit {
 
   closeCoachingPanel(): void {
     this.coachingPanelOpen = false;
+    this.coachingPanelInitialTab = null;
+  }
+
+  /**
+   * Bound to CoachingPanelComponent's (navigated) output -- fired right
+   * before the panel sends the member to a full page (chat, coach
+   * profile, schedule). Unconditionally unmounts the panel, same as
+   * DashboardPage.closeCoachingPanel() / CoachingPage.onCoachingPanelNavigated().
+   * Profile previously had NO handler bound to this output at all, so
+   * opening a conversation from here left app-coaching-panel mounted
+   * underneath the destination route -- the exact stale-instance bug
+   * documented on CoachingPanelComponent.navigated, which froze all touch
+   * input on whatever page the member navigated back to.
+   */
+  onCoachingPanelNavigated(): void {
+    this.coachingPanelOpen = false;
+    this.coachingPanelInitialTab = null;
+  }
+
+  /**
+   * Reopens the coaching panel straight to Messages if we landed here via
+   * ChatPage's back button (see coaching-nav.service.ts). One-shot --
+   * consumeReopen() clears itself, so a normal visit to Profile is
+   * completely unaffected. Called from both ngOnInit() and
+   * ionViewWillEnter() for the same reason as DashboardPage's version:
+   * Ionic's router-outlet caches previously-visited pages, so re-entering
+   * Profile after a chat visit only fires ionViewWillEnter(), not ngOnInit().
+   */
+  private applyPendingCoachingReopen(): void {
+    const pendingTab = this.coachingNav.consumeReopen('profile');
+    if (pendingTab) {
+      this.coachingPanelInitialTab = pendingTab;
+      this.coachingPanelOpen = true;
+    }
   }
 
   private closeOverlaysForNavigation(): void {
     this.notifPanelOpen = false;
     this.logoutModalOpen = false;
     this.coachingPanelOpen = false;
+    this.coachingPanelInitialTab = null;
   }
 
   // ── Navigation ────────────────────────────────────────
+  // NOTE: replaceUrl: true — see the matching note in dashboard.page.ts.
+  // Bottom-nav tab switches must REPLACE the current history entry, not
+  // push a new one, or Location.back() (on-screen arrow / hardware back)
+  // from a later drill-in page (e.g. chat) walks past several stale tab
+  // visits instead of returning to whichever tab was actually active.
   goToDashboard(): void {
     this.closeOverlaysForNavigation();
-    this.router.navigate(['/dashboard']);
+    this.router.navigate(['/dashboard'], { replaceUrl: true });
   }
 
   goToSchedule(): void {
     this.closeOverlaysForNavigation();
-    this.router.navigate(['/schedule']);
+    this.router.navigate(['/schedule'], { replaceUrl: true });
   }
 
   goToQr(): void {
     this.closeOverlaysForNavigation();
-    this.router.navigate(['/qr-scanner']);
+    this.router.navigate(['/qr-scanner'], { replaceUrl: true });
   }
 
   goToInventory(): void {
     this.closeOverlaysForNavigation();
-    this.router.navigate(['/inventory']);
+    this.router.navigate(['/inventory'], { replaceUrl: true });
   }
 
   goToEquipment(): void {
     this.closeOverlaysForNavigation();
-    this.router.navigate(['/equipment']);
+    this.router.navigate(['/equipment'], { replaceUrl: true });
   }
 
   goToProfile(): void {

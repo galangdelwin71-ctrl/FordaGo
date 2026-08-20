@@ -3,7 +3,7 @@ import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from './auth.service';
 import { NotificationCenterService } from './notification-center.service';
-import { API_BASE_URL } from '../config/api.config';
+import { API_URL } from '../config/api.config';
 import { defaultSessionsByDayIdx, buildExercisesFromTemplate } from '../data/workout-templates';
 
 export type SessionStatus = 'upcoming' | 'optional' | 'missed' | 'done';
@@ -360,7 +360,7 @@ export class WorkoutTrackerService {
 
     try {
       const rows = await firstValueFrom(
-        this.http.get<any[]>(`${API_BASE_URL}/workout-sessions`, {
+        this.http.get<any[]>(`${API_URL}/workout-sessions`, {
           headers: { Authorization: `Bearer ${this.auth.token}` },
         })
       );
@@ -491,7 +491,7 @@ export class WorkoutTrackerService {
     };
 
     this.http
-      .post(`${API_BASE_URL}/workout-sessions`, body, {
+      .post(`${API_URL}/workout-sessions`, body, {
         headers: { Authorization: `Bearer ${this.auth.token}` },
       })
       .subscribe({
@@ -515,7 +515,7 @@ export class WorkoutTrackerService {
     if (!isoDate) return;
 
     this.http
-      .delete(`${API_BASE_URL}/workout-sessions/${encodeURIComponent(sessionId)}`, {
+      .delete(`${API_URL}/workout-sessions/${encodeURIComponent(sessionId)}`, {
         headers: { Authorization: `Bearer ${this.auth.token}` },
         params: { session_date: isoDate },
       })

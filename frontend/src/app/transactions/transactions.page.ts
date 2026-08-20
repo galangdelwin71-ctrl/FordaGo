@@ -14,7 +14,7 @@ import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { API_BASE_URL } from '../config/api.config';
+import { API_URL } from '../config/api.config';
 
 @Component({
   selector: 'app-transactions',
@@ -34,7 +34,7 @@ import { API_BASE_URL } from '../config/api.config';
   providers: [DecimalPipe, DatePipe],
 })
 export class TransactionsPage implements OnInit {
-  private api = API_BASE_URL;
+  private api = API_URL;
 
   period: 'all' | 'daily' | 'weekly' | 'monthly' = 'all';
   transactions: any[] = [];

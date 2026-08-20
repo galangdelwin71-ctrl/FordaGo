@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -35,11 +35,14 @@ import {
   locationOutline,
   closeCircleOutline,
   clipboardOutline,
+  chevronForwardOutline,
+  personCircleOutline,
+  atOutline,
+  saveOutline,
 } from 'ionicons/icons';
 import { AuthService } from '../../services/auth.service';
 import { CoachingService, Conversation, Message, WorkoutPlanProposal, CoachProgram } from '../../services/coaching.service';
 import { EchoService } from '../../services/echo.service';
-import { CoachingNavService } from '../../services/coaching-nav.service';
 
 interface ProposalFormExercise {
   name: string;
@@ -79,6 +82,15 @@ export class ChatPage implements OnInit, OnDestroy {
   isSending = false;
   isAcceptingProposalId: number | null = null;
 
+  /**
+   * Small info modal shown when the header avatar/name is tapped -- the
+   * header itself truncates a long name with an ellipsis (fixed-width
+   * toolbar slot next to the back button and, for a coach, the Propose
+   * Plan button), so this is the fallback for reading the partner's full
+   * name/username/role without needing more toolbar space.
+   */
+  partnerInfoOpen = false;
+
   // ── Proposal Builder Modal (Coach) ───────────────────
   isProposalModalOpen = false;
   isSubmittingProposal = false;
@@ -117,9 +129,9 @@ export class ChatPage implements OnInit, OnDestroy {
     price: 500,
     location: 'FordaGO Gym - Main Floor',
     items: [
-      { name: 'Barbell Bench Press', sets: 4, reps: 10, description: 'Warm-up with empty bar then progressive overload' },
-      { name: 'Lat Pulldown', sets: 3, reps: 12, description: 'Squeeze back at bottom' },
-      { name: 'Dumbbell Shoulder Press', sets: 3, reps: 10, description: 'Controlled tempo' },
+      { name: 'Barbell Bench Press', sets: 4, reps: 10, description: 'Warm-up with empty bar then progress gradually.' },
+      { name: 'Lat Pulldown', sets: 3, reps: 12, description: 'Squeeze back at bottom.' },
+      { name: 'Dumbbell Shoulder Press', sets: 3, reps: 10, description: 'Keep core tight and press overhead.' },
     ] as ProposalFormExercise[],
   };
 
@@ -132,7 +144,7 @@ export class ChatPage implements OnInit, OnDestroy {
     private auth: AuthService,
     private coachingService: CoachingService,
     private echoService: EchoService,
-    private coachingNav: CoachingNavService,
+    private zone: NgZone,
   ) {
     addIcons({
       arrowBackOutline,
@@ -157,6 +169,10 @@ export class ChatPage implements OnInit, OnDestroy {
       locationOutline,
       closeCircleOutline,
       clipboardOutline,
+      chevronForwardOutline,
+      personCircleOutline,
+      atOutline,
+      saveOutline,
     });
   }
 
@@ -210,6 +226,17 @@ export class ChatPage implements OnInit, OnDestroy {
     return tomorrow.toISOString().split('T')[0];
   }
 
+  // ── Partner Info Modal (tap avatar/name to view full name) ────────
+
+  openPartnerInfo(): void {
+    if (!this.partner) return;
+    this.partnerInfoOpen = true;
+  }
+
+  closePartnerInfo(): void {
+    this.partnerInfoOpen = false;
+  }
+
   loadConversation() {
     this.coachingService.getConversation(this.conversationId).subscribe({
       next: (res) => {
@@ -238,6 +265,15 @@ export class ChatPage implements OnInit, OnDestroy {
 
   /**
    * Real-time WebSocket listener with Laravel Reverb & Echo.
+   *
+   * EchoService now creates the underlying Pusher connection with
+   * NgZone.runOutsideAngular() (see echo.service.ts) so its internal
+   * reconnect/heartbeat timers can't flood Angular with change-detection
+   * cycles. Because of that, event callbacks registered on this channel
+   * also fire OUTSIDE the Angular zone by default -- any callback below
+   * that mutates component state (messages/proposal) must explicitly
+   * re-enter the zone with this.zone.run(), or the template simply won't
+   * update even though the data changed underneath it.
    */
   private setupEchoListener() {
     this.channelName = `conversation.${this.conversationId}`;
@@ -246,30 +282,32 @@ export class ChatPage implements OnInit, OnDestroy {
     if (channel) {
       // Listen for incoming messages
       channel.listen('.message.sent', (data: { message: Message; conversation_id: number }) => {
-        if (data && data.message) {
-          if (data.message.sender_id !== this.currentUserId) {
+        if (data && data.message && data.message.sender_id !== this.currentUserId) {
+          this.zone.run(() => {
             this.messages.push(data.message);
             this.scrollToBottom();
             this.coachingService.markMessagesRead(this.conversationId).subscribe();
-          }
+          });
         }
       });
 
       // Listen for new workout proposals
       channel.listen('.proposal.sent', (data: { proposal: WorkoutPlanProposal }) => {
         if (data && data.proposal) {
-          this.loadMessages();
+          this.zone.run(() => this.loadMessages());
         }
       });
 
       // Listen for accepted proposals
       channel.listen('.proposal.accepted', (data: { proposal: WorkoutPlanProposal }) => {
         if (data && data.proposal) {
-          const found = this.messages.find((m) => m.proposal && m.proposal.id === data.proposal.id);
-          if (found && found.proposal) {
-            found.proposal.status = 'accepted';
-            found.proposal.accepted_at = data.proposal.accepted_at;
-          }
+          this.zone.run(() => {
+            const found = this.messages.find((m) => m.proposal && m.proposal.id === data.proposal.id);
+            if (found && found.proposal) {
+              found.proposal.status = 'accepted';
+              found.proposal.accepted_at = data.proposal.accepted_at;
+            }
+          });
         }
       });
     }
@@ -454,26 +492,22 @@ export class ChatPage implements OnInit, OnDestroy {
   }
 
   /**
-   * Back button on a chat thread returns to whichever page the member
-   * actually came from (Dashboard, Schedule, or the Coaching page --
-   * the coaching panel opens as an overlay on top of all three), instead
-   * of always forcing a hard navigation to '/coaching'. That hardcoded
-   * redirect used to leave the bottom nav showing "Coaching" as the
-   * active tab even when the member had opened the chat from Dashboard
-   * or Schedule, and never actually returned them to that page.
-   * Location.back() walks the real browser/router history one step,
-   * which is always exactly the page + state the member was already on
-   * before openConversation()/openClientChat() pushed this /chat/:id
-   * route -- see CoachingPanelComponent.openConversation().
+   * Back button on a chat thread returns to whichever page + panel tab
+   * the member actually came from (Dashboard, Schedule, or the Coaching
+   * page -- the coaching panel opens as an overlay on top of all three),
+   * instead of always forcing a hard navigation to '/coaching' or to a
+   * hardcoded tab. Location.back() walks the real browser/router history
+   * one step, which is always exactly the page the member was already on
+   * before this /chat/:id route was pushed.
+   *
+   * The specific panel TAB to reopen on was already recorded before that
+   * push happened -- see CoachingPanelComponent.navigateAway(), called by
+   * every method that routes here (openConversation(), openClientChat(),
+   * startChat(), openTodaySession()). This method has nothing left to do
+   * but walk back; re-setting a tab here would just clobber that
+   * already-correct value with a guess.
    */
   goBack() {
-    // Both roles land on the panel's 'conversations' tab -- see
-    // CoachingPanelComponent.applyRequestedTab(), which maps this onto
-    // coachTab = 'messages' for a coach account or activeTab =
-    // 'conversations' for a member, so either side of a chat returns to
-    // their own Messages view instead of whatever tab the panel would
-    // otherwise default to.
-    this.coachingNav.requestReopen('conversations');
     this.location.back();
   }
 }

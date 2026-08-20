@@ -16,7 +16,10 @@
 <app-coaching-panel
   *ngIf="coachingPanelOpen"
   [isOpen]="coachingPanelOpen"
-  (closed)="closeCoachingPanel()">
+  hostPage="qr-scanner"
+  [initialTab]="coachingPanelInitialTab"
+  (closed)="closeCoachingPanel()"
+  (navigated)="closeCoachingPanel()">
 </app-coaching-panel>
 
 <ion-content *ngIf="!coachingPanelOpen" [fullscreen]="false" class="fordago-page-content" [scrollY]="true">

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   IonHeader,
@@ -45,6 +45,7 @@ export class CoachDetailPage implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
+    private location: Location,
     private coachingService: CoachingService,
   ) {
     addIcons({
@@ -101,7 +102,27 @@ export class CoachDetailPage implements OnInit {
     });
   }
 
+  /**
+   * Returns to the coaching panel's Explore tab (where this coach profile
+   * was opened from -- see CoachingPanelComponent.viewCoach(), the only
+   * place that routes here) instead of a hardcoded navigate to '/coaching'.
+   * That hardcoded navigate landed on CoachingPage with the panel already
+   * closed (viewCoach() unmounts it via the `navigated` output before
+   * pushing this route), so the member saw the generic "Ready to Level
+   * Up?" landing card instead of going back to the coach they were just
+   * looking at. Mirrors ChatPage.goBack(): just walk back one real
+   * history entry with Location so we land on whatever host page actually
+   * preceded this page.
+   *
+   * Deliberately does NOT call requestReopen() itself -- viewCoach() (the
+   * only entry point into this page) already recorded the correct
+   * (tab, hostPage) pair via CoachingNavService.requestReopen() right
+   * before pushing this route. Re-calling requestReopen('explore') here
+   * with no hostPage would overwrite that correct pair with an incomplete
+   * one, breaking delivery to whichever page (Dashboard/Schedule/Coaching)
+   * the member actually came from -- see coaching-nav.service.ts.
+   */
   goBack() {
-    this.router.navigate(['/coaching']);
+    this.location.back();
   }
 }

@@ -1,78 +1,94 @@
-// admin.page.scss - FordaGO Modern Redesign - Theme Aware
+// admin.page.scss - FordaGO Modern Redesign
+//
+// Single-theme (light) stylesheet. Dark mode is intentionally NOT wired up.
+//
+// IMPORTANT: this block is deliberately `:host`, NOT `:root`. The app's
+// global src/theme/variables.scss ALSO defines a `:root` block with these
+// same custom-property names, defaulting to DARK values, and only flips to
+// light when `body.light-theme`/`body.light` is set (which nothing in this
+// app currently does). Two `:root` blocks have identical specificity, so
+// whichever stylesheet happens to be injected last wins the collision --
+// that's build-order luck, not a real fix, and it was previously losing to
+// the dark global values (hence the black background / invisible white-on-
+// white text bugs). `:host` sits below `:root` in the DOM tree, so its
+// custom-property values deterministically override the global ones for
+// every descendant of this component (including Ionic's shadow-DOM parts,
+// which inherit custom properties across the shadow boundary by design) --
+// no cascade race, regardless of build/injection order. Do not change this
+// back to `:root`.
 
-// ── CSS Custom Properties ──────────────────────────
-:root {
-  --text-primary: #FFFFFF;
-  --text-secondary: rgba(255,255,255,0.75);
-  --text-muted: rgba(255,255,255,0.5);
-  --text-tertiary: rgba(255,255,255,0.35);
-  --accent-lime: #FFD600;
-  --accent-amber: #FF9500;
-  --accent-red: #FF4461;
-  --accent-blue: #4A9EFF;
-  --accent-green: #00D68F;
-  --accent-shadow: rgba(255,214,0,0.3);
-  --accent-border: rgba(255,214,0,0.25);
-  --accent-dim: rgba(255,214,0,0.1);
-  --bg-primary: #06080F;
-  --bg-secondary: #0B0E1A;
-  --bg-tertiary: #111428;
-  --overlay-light: rgba(255,255,255,0.04);
-  --overlay-medium: rgba(255,255,255,0.07);
-  --overlay-heavy: rgba(255,255,255,0.1);
-  --border-primary: rgba(255,255,255,0.1);
-  --border-secondary: rgba(255,255,255,0.08);
-  --glass-bg: rgba(255,255,255,0.03);
-  --glass-border: rgba(255,255,255,0.06);
+// ── CSS Custom Properties (scoped to this page only) ─
+:host {
+  --text-primary: #0F172A;
+  --text-secondary: rgba(15, 23, 42, 0.68);
+  --text-muted: rgba(15, 23, 42, 0.5);
+  --text-tertiary: rgba(15, 23, 42, 0.35);
+  --accent-lime: #F59E0B;
+  --accent-amber: #F59E0B;
+  --accent-red: #EF4444;
+  --accent-blue: #3B82F6;
+  --accent-green: #22C55E;
+  --accent-shadow: rgba(217, 119, 6, 0.18);
+  --accent-border: rgba(217, 119, 6, 0.25);
+  --accent-dim: rgba(217, 119, 6, 0.08);
+  --bg-primary: #F4F5F8;
+  --bg-secondary: #FFFFFF;
+  --bg-tertiary: #FFFFFF;
+  --overlay-light: rgba(15, 23, 42, 0.04);
+  --overlay-medium: rgba(15, 23, 42, 0.07);
+  --overlay-heavy: rgba(15, 23, 42, 0.12);
+  --border-primary: rgba(15, 23, 42, 0.1);
+  --border-secondary: rgba(15, 23, 42, 0.05);
+  --glass-bg: rgba(15, 23, 42, 0.03);
+  --glass-border: rgba(15, 23, 42, 0.06);
   --glass-blur: blur(20px);
   --radius-sm: 10px;
   --radius-md: 16px;
   --radius-lg: 22px;
   --radius-xl: 28px;
-  --shadow-glow: 0 0 20px rgba(255,214,0,0.15);
-  --shadow-card: 0 4px 24px rgba(0,0,0,0.3);
+  --shadow-glow: 0 0 20px rgba(217, 119, 6, 0.12);
+  --shadow-card: 0 4px 20px rgba(15, 23, 42, 0.08);
   --transition-fast: 0.15s ease;
-  --transition-smooth: 0.3s cubic-bezier(0.4,0,0.2,1);
+  --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-  // These six were referenced all over this file (--text, --card,
-  // --border, --border-strong, --warning, --success, --info, and the
-  // four "-soft" badge-background variants) but were NEVER DEFINED
-  // ANYWHERE in the codebase -- not even for dark mode. An undefined
-  // var() invalidates the whole declaration, so every rule using them
-  // silently fell back to `initial` (transparent for backgrounds/borders).
-  // This happened to still look acceptable in dark mode purely by
-  // accident: text without a working color inherits white from Ionic's
-  // dark palette, and transparent card backgrounds still read as "dark"
-  // sitting on the dark page. In light mode that accident breaks --
-  // transparent cards + near-invisible leftover hardcoded white borders
-  // on a light page. Values below match what this file's own explicit
-  // (hardcoded) rgba() colors already use in the exact same contexts
-  // elsewhere, so this changes nothing visually in dark mode and gives
-  // light mode a real, correct value to redefine.
-  --text: #FFFFFF;
-  --card: #141414;
-  --border: rgba(255,255,255,0.1);
-  --border-strong: rgba(250,204,21,0.4);
-  --warning: #f59e0b;
-  --success: #22c55e;
-  --info: #38bdf8;
-  --warning-soft: rgba(245,158,11,0.18);
-  --success-soft: rgba(34,197,94,0.16);
-  --primary-soft: rgba(250,204,21,0.18);
-  --danger-soft: rgba(239,68,68,0.18);
+  // --text/--card/--border/--border-strong/--warning/--success/--info and
+  // the four "-soft" badge-background variants are read throughout this
+  // file. They live here (not duplicated anywhere else) so every rule
+  // that uses them updates from this one place.
+  --text: #0F172A;
+  --card: #FFFFFF;
+  --border: rgba(15, 23, 42, 0.09);
+  --border-strong: rgba(217, 119, 6, 0.4);
+  --warning: #B45309;
+  --success: #059669;
+  --info: #2563EB;
+  --warning-soft: rgba(217, 119, 6, 0.12);
+  --success-soft: rgba(5, 150, 105, 0.12);
+  --primary-soft: rgba(217, 119, 6, 0.14);
+  --danger-soft: rgba(220, 38, 38, 0.1);
 }
 
 // ── Ionic Overrides ──────────────────────────
+// Global `html, body, ion-app, ion-router-outlet` background is dark
+// (see global.scss's --fordago-bg) for the app's main dark-themed shell.
+// This page's <ion-header> has no background of its own -- only its
+// child <ion-toolbar> does (see .admin-toolbar below) -- so the header's
+// native safe-area-top padding was showing that dark global background
+// through as a thick black strip above the toolbar. Scoped to :host so
+// it only affects this page, not the app's dark shell elsewhere.
+:host ion-header {
+  background: #ffffff;
+}
+
 ion-content.admin-content {
   --background: var(--bg-primary);
 }
 
 /* Toolbar */
 .admin-toolbar {
-  --background: rgba(8, 8, 8, 0.92);
+  --background: #FFFFFF;
   --border-color: transparent;
   border-bottom: 1px solid var(--border-secondary);
-  backdrop-filter: blur(12px);
   padding: 0 16px;
 }
 
@@ -83,12 +99,19 @@ ion-content.admin-content {
   padding: 8px 0;
 }
 
-.admin-brand-logo {
-  width: 34px;
-  height: 34px;
+.brand-avatar {
+  width: 36px;
+  height: 36px;
   flex-shrink: 0;
-  border-radius: 8px;
-  box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.28), 0 8px 20px rgba(250, 204, 21, 0.15);
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
 }
 
 .toolbar-text {
@@ -105,35 +128,11 @@ ion-content.admin-content {
 }
 
 .toolbar-role {
-  color: var(--text-muted);
+  color: #b45309;
   font-size: 11px;
-}
-
-.logout-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(239, 68, 68, 0.1);
-  color: #fecaca;
-  border: 1px solid rgba(239, 68, 68, 0.35);
-  border-radius: 10px;
-  padding: 8px 14px;
-  font-size: 12px;
   font-weight: 700;
-  cursor: pointer;
-  transition: 0.16s ease;
-
-  ion-icon {
-    font-size: 14px;
-  }
-
-  &:hover {
-    background: rgba(239, 68, 68, 0.18);
-  }
-
-  &:active {
-    transform: scale(0.98);
-  }
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 
 /* Main */
@@ -144,55 +143,25 @@ ion-content.admin-content {
 }
 
 .admin-hero {
-  position: relative;
-  overflow: hidden;
-  border-radius: 20px;
-  background: linear-gradient(140deg, #0d0d0d 0%, #151515 45%, #1c1c1c 100%);
-  border: 1px solid var(--border);
-  padding: 20px;
-  margin-bottom: 18px;
-  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.4);
-}
-
-.admin-hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(130deg, rgba(250, 204, 21, 0.16), transparent 45%);
-  pointer-events: none;
+  padding: 4px 2px 18px;
 }
 
 .admin-hero-copy {
-  position: relative;
-  z-index: 1;
-}
-
-.admin-kicker {
-  font-size: 11px;
-  font-weight: 800;
-  color: rgba(250, 204, 21, 0.95);
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
-  margin-bottom: 7px;
+  max-width: 680px;
 }
 
 .admin-heading {
-  max-width: 680px;
-  font-size: 19px;
-  font-weight: 700;
-  line-height: 1.45;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.3;
   color: var(--text);
 }
 
-.admin-hero-glow {
-  position: absolute;
-  right: -34px;
-  top: -36px;
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(250, 204, 21, 0.34), transparent 70%);
-  pointer-events: none;
+.admin-subtext {
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-muted);
 }
 
 /* Tabs */
@@ -215,7 +184,7 @@ ion-content.admin-content {
   align-items: center;
   gap: 6px;
   background: var(--card);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  border: 1px solid var(--border);
   color: var(--text-secondary);
   font-size: 12px;
   font-weight: 700;
@@ -231,23 +200,24 @@ ion-content.admin-content {
 
   &:hover {
     border-color: var(--border-strong);
-    color: #fff9db;
+    color: #b45309;
+    background: #fffbeb;
     transform: translateY(-1px);
   }
 
   &.active {
-    background: linear-gradient(135deg, #facc15, #f59e0b);
-    color: #141414;
+    background: #fdecc8;
+    color: #b45309;
     border-color: transparent;
-    box-shadow: 0 10px 22px rgba(245, 158, 11, 0.25);
   }
+
   &.reports-btn {
-    border-color: rgba(255,214,0,0.3);
-    color: #FFD600;
-    background: rgba(255,214,0,0.08);
+    border-color: rgba(217, 119, 6, 0.3);
+    color: #b45309;
+    background: rgba(217, 119, 6, 0.06);
 
     &:hover {
-      background: rgba(255,214,0,0.14);
+      background: rgba(217, 119, 6, 0.12);
       transform: translateY(-1px);
     }
   }
@@ -263,74 +233,62 @@ ion-content.admin-content {
 
 .stat-card {
   position: relative;
-  overflow: hidden;
-  background: linear-gradient(165deg, #111111 0%, #161616 100%);
-  border: 1px solid rgba(250, 204, 21, 0.14);
-  border-radius: 16px;
-  padding: 18px 14px;
-  text-align: center;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 18px 16px;
+  text-align: left;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
   transition: 0.2s ease;
 
   &:hover {
     transform: translateY(-2px);
-    border-color: rgba(250, 204, 21, 0.36);
-    box-shadow: 0 14px 26px rgba(0, 0, 0, 0.36);
-  }
-
-  &::before {
-    content: '';
-    position: absolute;
-    right: -36px;
-    top: -36px;
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(250, 204, 21, 0.16), transparent 70%);
-    pointer-events: none;
+    border-color: rgba(217, 119, 6, 0.3);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
   }
 }
 
-.stat-icon {
-  display: block;
-  font-size: 26px;
-  margin-bottom: 8px;
+.stat-icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
 
-  &.gold {
-    color: #facc15;
+  ion-icon {
+    font-size: 20px;
   }
 
-  &.green {
-    color: var(--success);
+  &.people {
+    background: #fef3e2;
+    color: #f59e0b;
   }
 
-  &.amber {
-    color: var(--warning);
+  &.checkins {
+    background: #dcfce7;
+    color: #16a34a;
   }
 
-  &.blue {
-    color: var(--info);
+  &.stock {
+    background: #fef3e2;
+    color: #f59e0b;
+  }
+
+  &.orders {
+    background: #fee2e2;
+    color: #ef4444;
   }
 }
 
 .stat-value {
   font-size: 30px;
   font-weight: 900;
-  color: #fde047;
+  color: var(--text-primary);
   line-height: 1;
   margin-bottom: 3px;
   letter-spacing: -0.4px;
-
-  &.green {
-    color: var(--success);
-  }
-
-  &.amber {
-    color: var(--warning);
-  }
-
-  &.blue {
-    color: var(--info);
-  }
 }
 
 .stat-label {
@@ -351,11 +309,21 @@ ion-content.admin-content {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  color: #fef08a;
+  color: #b45309;
 
   ion-icon {
     font-size: 15px;
-    color: #facc15;
+    color: #b45309;
+  }
+
+  // "Plain" variant: bold sentence-case heading with no icon and no
+  // uppercase/letter-spacing treatment (e.g. "Expiring Soon (Within 7 days)").
+  &.plain {
+    text-transform: none;
+    letter-spacing: normal;
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--text-primary);
   }
 }
 
@@ -379,9 +347,9 @@ ion-content.admin-content {
   justify-content: center;
   gap: 6px;
   min-width: 98px;
-  background: rgba(255, 255, 255, 0.06);
-  color: #d4d4d8;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(15, 23, 42, 0.05);
+  color: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(15, 23, 42, 0.16);
   border-radius: 10px;
   padding: 10px 12px;
   font-size: 12px;
@@ -394,8 +362,8 @@ ion-content.admin-content {
   }
 
   &:hover {
-    border-color: rgba(250, 204, 21, 0.45);
-    color: #fde68a;
+    border-color: rgba(217, 119, 6, 0.4);
+    color: #b45309;
     transform: translateY(-1px);
   }
 
@@ -429,10 +397,45 @@ ion-content.admin-content {
   text-align: center;
   color: var(--text-muted);
   font-size: 13px;
-  background: linear-gradient(160deg, #0e0e0e 0%, #141414 100%);
+  background: #ffffff;
   border: 1px dashed var(--border);
   border-radius: 12px;
   padding: 26px 18px;
+}
+
+// Rounded card variant of the empty state used on Overview (icon bubble +
+// short message), matching the plain white cards used elsewhere on this tab.
+.empty-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px 18px;
+  text-align: center;
+}
+
+.empty-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  ion-icon {
+    font-size: 22px;
+  }
+}
+
+.empty-card-text {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 /* Inputs and form blocks */
@@ -440,8 +443,8 @@ ion-content.admin-content {
 .notif-input,
 .field-input {
   width: 100%;
-  background: #101010;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.14);
   border-radius: 10px;
   color: var(--text);
   font-size: 14px;
@@ -452,12 +455,12 @@ ion-content.admin-content {
   margin-bottom: 10px;
 
   &::placeholder {
-    color: #8f8f9b;
+    color: rgba(15, 23, 42, 0.35);
   }
 
   &:focus {
-    border-color: rgba(250, 204, 21, 0.7);
-    box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.14);
+    border-color: rgba(217, 119, 6, 0.6);
+    box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.12);
   }
 }
 
@@ -472,8 +475,8 @@ ion-content.admin-content {
   max-height: 180px;
   object-fit: cover;
   border-radius: 12px;
-  border: 1px solid rgba(250, 204, 21, 0.24);
-  background: #0c0c0c;
+  border: 1px solid rgba(217, 119, 6, 0.24);
+  background: #f4f5f8;
 }
 
 .img-placeholder {
@@ -481,10 +484,10 @@ ion-content.admin-content {
   align-items: center;
   justify-content: center;
   min-height: 110px;
-  border: 1px dashed rgba(250, 204, 21, 0.28);
+  border: 1px dashed rgba(217, 119, 6, 0.28);
   border-radius: 12px;
   color: var(--text-muted);
-  background: rgba(250, 204, 21, 0.04);
+  background: rgba(217, 119, 6, 0.05);
   font-size: 12px;
 }
 
@@ -493,9 +496,9 @@ ion-content.admin-content {
   align-items: center;
   justify-content: center;
   width: 100%;
-  background: rgba(250, 204, 21, 0.12);
-  border: 1px solid rgba(250, 204, 21, 0.35);
-  color: #fef08a;
+  background: rgba(217, 119, 6, 0.1);
+  border: 1px solid rgba(217, 119, 6, 0.35);
+  color: #b45309;
   border-radius: 10px;
   padding: 11px 14px;
   font-size: 12px;
@@ -508,14 +511,14 @@ ion-content.admin-content {
   margin-bottom: 6px;
   font-size: 11px;
   font-weight: 700;
-  color: #fde68a;
+  color: #b45309;
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }
 
 .inline-form {
-  background: linear-gradient(165deg, #101010 0%, #151515 100%);
-  border: 1px solid rgba(250, 204, 21, 0.18);
+  background: #ffffff;
+  border: 1px solid rgba(217, 119, 6, 0.22);
   border-radius: 14px;
   padding: 14px;
   margin-bottom: 12px;
@@ -524,7 +527,7 @@ ion-content.admin-content {
 .form-title {
   font-size: 13px;
   font-weight: 800;
-  color: #fde047;
+  color: #b45309;
   text-transform: uppercase;
   letter-spacing: 0.6px;
   margin-bottom: 10px;
@@ -572,8 +575,8 @@ ion-content.admin-content {
 
 .cancel-btn {
   width: 100%;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(15, 23, 42, 0.05);
+  border: 1px solid rgba(15, 23, 42, 0.12);
   color: var(--text-secondary);
   border-radius: 10px;
   padding: 11px 14px;
@@ -590,8 +593,8 @@ ion-content.admin-content {
 .order-row,
 .notif-row,
 .attend-row {
-  background: linear-gradient(165deg, #101010 0%, #141414 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #ffffff;
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 13px 14px;
   margin-bottom: 10px;
@@ -601,13 +604,13 @@ ion-content.admin-content {
   transition: 0.16s ease;
 
   &:hover {
-    border-color: rgba(250, 204, 21, 0.35);
+    border-color: rgba(217, 119, 6, 0.35);
     transform: translateY(-1px);
   }
 
   &.pending-row {
     border-left: 4px solid var(--warning);
-    background: linear-gradient(165deg, #151107 0%, #1a1408 100%);
+    background: #fffbeb;
   }
 
   &.warn {
@@ -631,7 +634,9 @@ ion-content.admin-content {
   gap: 8px;
   width: 100%;
 
-  button { justify-content: center; }
+  button {
+    justify-content: center;
+  }
 }
 
 .member-info,
@@ -665,8 +670,8 @@ ion-content.admin-content {
   width: 44px;
   height: 44px;
   border-radius: 10px;
-  background: rgba(250, 204, 21, 0.16);
-  color: #fde047;
+  background: rgba(217, 119, 6, 0.12);
+  color: #b45309;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -745,21 +750,21 @@ ion-content.admin-content {
 }
 
 .act-btn.edit {
-  background: rgba(56, 189, 248, 0.18);
-  color: #7dd3fc;
-  border: 1px solid rgba(56, 189, 248, 0.32);
+  background: rgba(56, 189, 248, 0.16);
+  color: #0284c7;
+  border: 1px solid rgba(56, 189, 248, 0.35);
 }
 
 .act-btn.del {
-  background: rgba(239, 68, 68, 0.18);
-  color: #fecaca;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.14);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.32);
 }
 
 .act-btn.plan-btn {
-  background: rgba(250, 204, 21, 0.2);
-  color: #fde68a;
-  border: 1px solid rgba(250, 204, 21, 0.36);
+  background: rgba(217, 119, 6, 0.14);
+  color: #b45309;
+  border: 1px solid rgba(217, 119, 6, 0.36);
 }
 
 .act-btn:disabled {
@@ -781,26 +786,26 @@ ion-content.admin-content {
 
 .badge.warn {
   background: var(--warning-soft);
-  color: #fde68a;
-  border-color: rgba(245, 158, 11, 0.3);
+  color: #b45309;
+  border-color: rgba(217, 119, 6, 0.3);
 }
 
 .badge.done {
   background: var(--success-soft);
-  color: #bbf7d0;
-  border-color: rgba(34, 197, 94, 0.3);
+  color: #059669;
+  border-color: rgba(5, 150, 105, 0.3);
 }
 
 .badge.upcoming {
   background: var(--primary-soft);
-  color: #fef08a;
-  border-color: rgba(250, 204, 21, 0.32);
+  color: #b45309;
+  border-color: rgba(217, 119, 6, 0.32);
 }
 
 .badge.missed {
   background: var(--danger-soft);
-  color: #fecaca;
-  border-color: rgba(239, 68, 68, 0.32);
+  color: #dc2626;
+  border-color: rgba(220, 38, 38, 0.32);
 }
 
 .status-badge {
@@ -814,12 +819,12 @@ ion-content.admin-content {
 
   &.paid {
     background: var(--success-soft);
-    color: #bbf7d0;
+    color: #059669;
   }
 
   &.pending {
     background: var(--warning-soft);
-    color: #fde68a;
+    color: #b45309;
   }
 }
 
@@ -839,7 +844,7 @@ ion-content.admin-content {
 }
 
 .role-admin {
-  color: #fde047;
+  color: #b45309;
   font-weight: 700;
 }
 
@@ -852,17 +857,17 @@ ion-content.admin-content {
 }
 
 .unread {
-  color: #fde047;
+  color: #b45309;
   font-weight: 700;
 }
 
 .low-stock {
-  color: #fca5a5;
+  color: #dc2626;
   font-weight: 700;
 }
 
 .ok-stock {
-  color: #86efac;
+  color: #059669;
   font-weight: 700;
 }
 
@@ -872,11 +877,11 @@ ion-content.admin-content {
   margin-left: 4px;
 
   &.daily {
-    color: #7dd3fc;
+    color: #2563eb;
   }
 
   &.premium {
-    color: #fde047;
+    color: #b45309;
   }
 }
 
@@ -893,21 +898,21 @@ ion-content.admin-content {
 }
 
 .membership-status-badge.pending {
-  background: rgba(245, 158, 11, 0.2);
-  border-color: rgba(245, 158, 11, 0.35);
-  color: #fde68a;
+  background: rgba(217, 119, 6, 0.14);
+  border-color: rgba(217, 119, 6, 0.3);
+  color: #b45309;
 }
 
 .membership-status-badge.active {
-  background: rgba(34, 197, 94, 0.16);
-  border-color: rgba(34, 197, 94, 0.3);
-  color: #bbf7d0;
+  background: rgba(5, 150, 105, 0.12);
+  border-color: rgba(5, 150, 105, 0.3);
+  color: #059669;
 }
 
 /* ── Pending Alert Section ───────────────────────────── */
 .pending-alert-section {
-  background: linear-gradient(135deg, #1a1200 0%, #111 100%);
-  border: 1px solid rgba(245, 158, 11, 0.45);
+  background: linear-gradient(135deg, #fef3c7 0%, #fff7ed 100%);
+  border: 1px solid rgba(217, 119, 6, 0.4);
   border-radius: 14px;
   padding: 14px;
   margin-bottom: 16px;
@@ -919,21 +924,28 @@ ion-content.admin-content {
   gap: 8px;
   font-size: 13px;
   font-weight: 700;
-  color: #fde68a;
+  color: #b45309;
   margin-bottom: 12px;
-  ion-icon { font-size: 18px; color: #f59e0b; }
+
+  ion-icon {
+    font-size: 18px;
+    color: #b45309;
+  }
 }
 
 .pending-card {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(245, 158, 11, 0.2);
+  background: #ffffff;
+  border: 1px solid rgba(217, 119, 6, 0.22);
   border-radius: 10px;
   padding: 12px;
   margin-bottom: 8px;
-  &:last-child { margin-bottom: 0; }
+
+  &:last-child {
+    margin-bottom: 0;
+  }
 }
 
 .pending-card-info {
@@ -945,20 +957,20 @@ ion-content.admin-content {
 }
 
 .pending-avatar {
-  background: rgba(245, 158, 11, 0.25) !important;
-  color: #fde68a !important;
+  background: rgba(217, 119, 6, 0.16) !important;
+  color: #b45309 !important;
   flex-shrink: 0;
 }
 
 .pending-name {
   font-size: 13px;
   font-weight: 700;
-  color: #f5f5f5;
+  color: var(--text-primary);
 }
 
 .pending-meta {
   font-size: 11px;
-  color: #777;
+  color: var(--text-muted);
   margin-top: 1px;
 }
 
@@ -978,17 +990,35 @@ ion-content.admin-content {
   border-radius: 999px;
   font-size: 10px;
   font-weight: 700;
-  ion-icon { font-size: 11px; }
+
+  ion-icon {
+    font-size: 11px;
+  }
+
   &.daily {
-    background: rgba(59, 130, 246, 0.2);
+    background: rgba(59, 130, 246, 0.14);
     border: 1px solid rgba(59, 130, 246, 0.35);
-    color: #93c5fd;
+    color: #2563eb;
   }
+
   &.premium {
-    background: rgba(250, 204, 21, 0.15);
-    border: 1px solid rgba(250, 204, 21, 0.3);
-    color: #fde047;
+    background: rgba(217, 119, 6, 0.12);
+    border: 1px solid rgba(217, 119, 6, 0.3);
+    color: #b45309;
   }
+}
+
+// Flex wrapper for a row of pill badges (type + status chips) used on the
+// Attendance rows, mirroring the Members card's Premium/Verified chip row.
+// Kept as an explicit flex container (rather than relying on inline-element
+// whitespace for gaps) so spacing is deterministic regardless of Angular's
+// template whitespace handling.
+.chip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
 }
 
 .status-pill {
@@ -1001,15 +1031,15 @@ ion-content.admin-content {
   letter-spacing: 0.2px;
 
   &.pending {
-    background: rgba(239, 68, 68, 0.18);
-    border: 1px solid rgba(239, 68, 68, 0.45);
-    color: #fca5a5;
+    background: rgba(239, 68, 68, 0.14);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #dc2626;
   }
 
   &.active {
-    background: rgba(34, 197, 94, 0.18);
-    border: 1px solid rgba(34, 197, 94, 0.45);
-    color: #86efac;
+    background: rgba(34, 197, 94, 0.14);
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    color: #059669;
   }
 }
 
@@ -1034,14 +1064,18 @@ ion-content.admin-content {
   border-radius: 8px;
   font-size: 12px;
   font-weight: 700;
-  background: rgba(34, 197, 94, 0.2);
+  background: rgba(34, 197, 94, 0.14);
   border: 1px solid rgba(34, 197, 94, 0.4);
-  color: #86efac;
+  color: #059669;
   cursor: pointer;
   transition: background 0.2s, border-color 0.2s;
-  ion-icon { font-size: 15px; }
+
+  ion-icon {
+    font-size: 15px;
+  }
+
   &:hover {
-    background: rgba(34, 197, 94, 0.32);
+    background: rgba(34, 197, 94, 0.22);
     border-color: rgba(34, 197, 94, 0.6);
   }
 }
@@ -1064,7 +1098,7 @@ ion-content.admin-content {
 .filter-label {
   font-size: 11px;
   font-weight: 600;
-  color: #888;
+  color: var(--text-muted);
   white-space: nowrap;
 }
 
@@ -1073,43 +1107,51 @@ ion-content.admin-content {
   border-radius: 999px;
   font-size: 11px;
   font-weight: 600;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1);
-  color: #aaa;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
   cursor: pointer;
   transition: all 0.18s;
-  &:hover { background: rgba(255,255,255,0.1); }
+
+  &:hover {
+    background: rgba(15, 23, 42, 0.04);
+  }
+
   &.active {
-    background: rgba(250, 204, 21, 0.18);
-    border-color: rgba(250, 204, 21, 0.45);
-    color: #facc15;
+    background: rgba(217, 119, 6, 0.14);
+    border-color: rgba(217, 119, 6, 0.4);
+    color: #b45309;
   }
+
   &.pending.active {
-    background: rgba(245, 158, 11, 0.2);
-    border-color: rgba(245, 158, 11, 0.5);
-    color: #fde68a;
+    background: rgba(217, 119, 6, 0.14);
+    border-color: rgba(217, 119, 6, 0.4);
+    color: #b45309;
   }
+
   &.active-chip.active {
-    background: rgba(34, 197, 94, 0.16);
-    border-color: rgba(34, 197, 94, 0.4);
-    color: #86efac;
+    background: rgba(5, 150, 105, 0.12);
+    border-color: rgba(5, 150, 105, 0.35);
+    color: #059669;
   }
+
   &.premium.active {
-    background: rgba(250, 204, 21, 0.18);
-    border-color: rgba(250, 204, 21, 0.45);
-    color: #fde047;
+    background: rgba(217, 119, 6, 0.14);
+    border-color: rgba(217, 119, 6, 0.4);
+    color: #b45309;
   }
+
   &.daily.active {
-    background: rgba(59, 130, 246, 0.2);
+    background: rgba(59, 130, 246, 0.14);
     border-color: rgba(59, 130, 246, 0.4);
-    color: #93c5fd;
+    color: #2563eb;
   }
 }
 
 /* Attendance report and QR */
 .report-tools {
-  background: linear-gradient(165deg, #0f0f0f 0%, #151515 100%);
-  border: 1px solid rgba(250, 204, 21, 0.18);
+  background: #ffffff;
+  border: 1px solid rgba(217, 119, 6, 0.22);
   border-radius: 14px;
   padding: 14px;
   margin-bottom: 14px;
@@ -1136,8 +1178,8 @@ ion-content.admin-content {
 }
 
 .qr-card {
-  background: linear-gradient(165deg, #101010 0%, #171717 100%);
-  border: 1px solid rgba(250, 204, 21, 0.18);
+  background: #ffffff;
+  border: 1px solid rgba(217, 119, 6, 0.22);
   border-radius: 16px;
   padding: 16px;
 }
@@ -1157,6 +1199,7 @@ ion-content.admin-content {
 .qr-placeholder {
   width: min(100%, 340px);
   background: #ffffff;
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 16px;
   text-align: center;
@@ -1194,7 +1237,7 @@ ion-content.admin-content {
   border-radius: 8px;
   display: block;
   margin: 0 auto;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
 }
 
 .qr-code-val {
@@ -1222,7 +1265,7 @@ ion-content.admin-content {
   margin-bottom: 7px;
   font-size: 11px;
   font-weight: 700;
-  color: #fde68a;
+  color: #b45309;
   text-transform: uppercase;
 }
 
@@ -1231,11 +1274,11 @@ ion-content.admin-content {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: #111111;
-  border: 1px dashed rgba(250, 204, 21, 0.35);
+  background: #fffbeb;
+  border: 1px dashed rgba(217, 119, 6, 0.35);
   border-radius: 10px;
   padding: 12px;
-  color: #fde68a;
+  color: #b45309;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
@@ -1247,7 +1290,38 @@ ion-content.admin-content {
   object-fit: cover;
   border-radius: 10px;
   margin-top: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
+}
+
+/* Bottom logout button */
+.logout-full-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid rgba(220, 38, 38, 0.16);
+  border-radius: 14px;
+  padding: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: 0.16s ease;
+
+  ion-icon {
+    font-size: 18px;
+  }
+
+  &:hover {
+    background: #fecaca;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
 }
 
 /* Modals */
@@ -1255,7 +1329,7 @@ ion-content.admin-content {
 .confirm-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.72);
+  background: rgba(15, 23, 42, 0.5);
   z-index: 999;
   backdrop-filter: blur(6px);
 }
@@ -1266,11 +1340,11 @@ ion-content.admin-content {
   right: 0;
   bottom: 0;
   z-index: 1000;
-  background: #111111;
-  border-top: 1px solid rgba(250, 204, 21, 0.35);
+  background: #ffffff;
+  border-top: 1px solid rgba(217, 119, 6, 0.35);
   border-radius: 18px 18px 0 0;
   padding: 18px 14px 24px;
-  box-shadow: 0 -14px 30px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 -14px 30px rgba(15, 23, 42, 0.16);
   animation: slideUp 0.22s ease;
 }
 
@@ -1278,7 +1352,7 @@ ion-content.admin-content {
 .modal-title {
   font-size: 14px;
   font-weight: 800;
-  color: #fde047;
+  color: #b45309;
   margin-bottom: 12px;
 }
 
@@ -1295,10 +1369,11 @@ ion-content.admin-content {
   width: 100%;
   max-width: 340px;
   border-radius: 16px;
-  background: linear-gradient(170deg, #101010 0%, #161616 100%);
-  border: 1px solid rgba(239, 68, 68, 0.38);
+  background: #ffffff;
+  border: 1px solid rgba(220, 38, 38, 0.25);
   padding: 24px 20px;
   text-align: center;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.18);
   animation: scaleIn 0.18s ease;
 }
 
@@ -1306,27 +1381,27 @@ ion-content.admin-content {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: rgba(239, 68, 68, 0.14);
+  background: rgba(220, 38, 38, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 12px;
 
   ion-icon {
-    color: #fca5a5;
+    color: #dc2626;
     font-size: 28px;
   }
 }
 
 .confirm-title {
-  color: #fef2f2;
+  color: var(--text-primary);
   font-size: 17px;
   font-weight: 800;
   margin-bottom: 6px;
 }
 
 .confirm-msg {
-  color: #d4d4d8;
+  color: var(--text-secondary);
   font-size: 12px;
   margin-bottom: 6px;
 }
@@ -1336,8 +1411,8 @@ ion-content.admin-content {
   margin-bottom: 16px;
   border-radius: 8px;
   padding: 6px 10px;
-  color: #fecaca;
-  background: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.1);
   font-size: 12px;
   font-weight: 700;
 }
@@ -1359,9 +1434,9 @@ ion-content.admin-content {
 }
 
 .confirm-cancel {
-  background: #232323;
-  color: #f4f4f5;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(15, 23, 42, 0.05);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
 }
 
 .confirm-delete {
@@ -1370,14 +1445,14 @@ ion-content.admin-content {
 }
 
 .logout-box {
-  border: 1px solid rgba(250, 204, 21, 0.38);
+  border: 1px solid rgba(217, 119, 6, 0.35);
 }
 
 .logout-icon {
-  background: rgba(250, 204, 21, 0.16);
+  background: rgba(217, 119, 6, 0.14);
 
   ion-icon {
-    color: #fcd34d;
+    color: #b45309;
   }
 }
 
@@ -1391,208 +1466,6 @@ ion-content.admin-content {
   cursor: pointer;
   color: #141414;
   background: linear-gradient(135deg, #facc15, #f59e0b);
-}
-
-// ── Light Mode ──────────────────────────────────────────
-// Like Equipment/Transactions/Reports, this page had no light-theme block
-// at all -- compounded by the undefined-variable issue fixed above.
-// Redefining the CSS variables here auto-fixes every var()-based rule
-// (tab pills, badges, stat icons, list-row text/borders) in one place.
-// Everything below that is NOT var-based (hardcoded dark hex/rgba colors
-// -- card gradients, pastel badge text meant to sit on dark chips, form
-// inputs, modals) still needs its own explicit override.
-:host-context(body.light-theme) {
-  --text: #0f172a;
-  --text-primary: #0f172a;
-  --text-secondary: rgba(15,23,42,0.68);
-  --text-muted: rgba(15,23,42,0.5);
-  --text-tertiary: rgba(15,23,42,0.35);
-  --card: #ffffff;
-  --border: rgba(15,23,42,0.09);
-  --border-strong: rgba(217,119,6,0.4);
-  --warning: #b45309;
-  --success: #059669;
-  --info: #2563eb;
-  --warning-soft: rgba(217,119,6,0.12);
-  --success-soft: rgba(5,150,105,0.12);
-  --primary-soft: rgba(217,119,6,0.14);
-  --danger-soft: rgba(220,38,38,0.1);
-  --bg-primary: #f4f5f8;
-  --overlay-light: rgba(15,23,42,0.04);
-  --overlay-medium: rgba(15,23,42,0.07);
-  --overlay-heavy: rgba(15,23,42,0.12);
-
-  ion-content.admin-content { --background: #f4f5f8 !important; }
-
-  // Toolbar
-  .admin-toolbar {
-    --background: #ffffff;
-    border-bottom-color: rgba(15,23,42,0.08);
-  }
-
-  // Hero banner
-  .admin-hero {
-    background: linear-gradient(140deg, #fef3c7 0%, #fde68a 55%, #eef2ff 100%);
-    border-color: rgba(217,119,6,0.28);
-  }
-
-  // Stat cards
-  .stat-card {
-    background: #ffffff;
-    border-color: rgba(217,119,6,0.22);
-    &:hover { border-color: rgba(217,119,6,0.4); }
-  }
-  .stat-icon.gold  { color: #b45309; }
-  .stat-value      { color: #b45309; }
-
-  // Section labels
-  .section-label {
-    color: #b45309;
-    ion-icon { color: #b45309; }
-  }
-
-  .refresh-btn {
-    background: rgba(15,23,42,0.05);
-    color: rgba(15,23,42,0.6);
-    border-color: rgba(15,23,42,0.16);
-    &:hover { border-color: rgba(217,119,6,0.4); color: #b45309; }
-  }
-
-  .empty-state { background: #ffffff; }
-
-  // Inputs
-  .search-input,
-  .notif-input,
-  .field-input {
-    background: #ffffff;
-    border-color: rgba(15,23,42,0.14);
-    &::placeholder { color: rgba(15,23,42,0.35); }
-    &:focus { border-color: rgba(217,119,6,0.6); box-shadow: 0 0 0 3px rgba(217,119,6,0.12); }
-  }
-
-  .img-preview       { background: #f4f5f8; border-color: rgba(217,119,6,0.24); }
-  .img-placeholder   { background: rgba(217,119,6,0.05); border-color: rgba(217,119,6,0.28); }
-  .img-upload-btn    { background: rgba(217,119,6,0.1); border-color: rgba(217,119,6,0.35); color: #b45309; }
-  .field-lbl         { color: #b45309; }
-
-  .inline-form { background: #ffffff; border-color: rgba(217,119,6,0.22); }
-  .form-title  { color: #b45309; }
-
-  .cancel-btn {
-    background: rgba(15,23,42,0.05);
-    border-color: rgba(15,23,42,0.12);
-  }
-
-  // List rows
-  .member-row,
-  .session-row,
-  .product-row,
-  .equip-row,
-  .order-row,
-  .notif-row,
-  .attend-row {
-    background: #ffffff;
-    &.pending-row { background: #fffbeb; }
-  }
-
-  .product-icon-box,
-  .equip-icon-box {
-    background: rgba(217,119,6,0.12);
-    color: #b45309;
-  }
-
-  // Badges & pastel status text -- these were tuned to sit on dark,
-  // near-black translucent chips; the same pastel hue on a much lighter
-  // chip background (still translucent, now over white) reads as barely-
-  // there, so every one gets a solid darker equivalent for light mode.
-  .badge.warn     { color: #b45309; }
-  .badge.done     { color: #059669; }
-  .badge.upcoming { color: #b45309; }
-  .badge.missed   { color: #dc2626; }
-
-  .status-badge {
-    &.paid    { color: #059669; }
-    &.pending { color: #b45309; }
-  }
-
-  .role-admin  { color: #b45309; }
-  .unread      { color: #b45309; }
-  .low-stock   { color: #dc2626; }
-  .ok-stock    { color: #059669; }
-
-  .plan-type-badge {
-    &.daily   { color: #2563eb; }
-    &.premium { color: #b45309; }
-  }
-
-  .membership-status-badge {
-    &.pending { background: rgba(217,119,6,0.14); color: #b45309; }
-    &.active  { background: rgba(5,150,105,0.12); color: #059669; }
-  }
-
-  // Pending alert section
-  .pending-alert-section {
-    background: linear-gradient(135deg, #fef3c7 0%, #fff7ed 100%);
-    border-color: rgba(217,119,6,0.4);
-  }
-  .pending-alert-header { color: #b45309; ion-icon { color: #b45309; } }
-  .pending-card { background: #ffffff; border-color: rgba(217,119,6,0.22); }
-  .pending-name { color: #0f172a; }
-  .pending-meta { color: rgba(15,23,42,0.45); }
-
-  .type-chip {
-    &.daily   { color: #2563eb; }
-    &.premium { color: #b45309; }
-  }
-
-  .status-pill {
-    &.pending { color: #dc2626; }
-    &.active  { color: #059669; }
-  }
-
-  .approve-btn,
-  .act-btn.approve-btn { color: #059669; }
-
-  // Filter row
-  .filter-label { color: rgba(15,23,42,0.45); }
-  .filter-chip {
-    background: #ffffff;
-    border-color: rgba(15,23,42,0.1);
-    color: rgba(15,23,42,0.5);
-    &:hover { background: rgba(15,23,42,0.05); }
-    &.active           { color: #b45309; }
-    &.pending.active   { color: #b45309; }
-    &.active-chip.active { color: #059669; }
-    &.premium.active   { color: #b45309; }
-    &.daily.active     { color: #2563eb; }
-  }
-
-  // Attendance report / QR
-  .report-tools { background: #ffffff; border-color: rgba(217,119,6,0.22); }
-  .qr-card      { background: #ffffff; border-color: rgba(217,119,6,0.22); }
-
-  .image-upload-label { color: #b45309; }
-  .image-upload-btn   { background: rgba(15,23,42,0.03); border-color: rgba(217,119,6,0.35); color: #b45309; }
-  .image-preview      { border-color: rgba(15,23,42,0.1); }
-
-  // Modals
-  .edit-membership-modal { background: #ffffff; border-top-color: rgba(217,119,6,0.35); }
-  .modal-title-sm,
-  .modal-title { color: #b45309; }
-
-  .confirm-box { background: #ffffff; border-color: rgba(220,38,38,0.28); }
-  .confirm-icon ion-icon { color: #dc2626; }
-  .confirm-title { color: #0f172a; }
-  .confirm-msg   { color: rgba(15,23,42,0.6); }
-  .confirm-name  { color: #dc2626; }
-
-  .confirm-cancel {
-    background: rgba(15,23,42,0.05);
-    color: #0f172a;
-    border-color: rgba(15,23,42,0.12);
-  }
-
-  .logout-icon ion-icon { color: #b45309; }
 }
 
 /* Animations */
@@ -1655,7 +1528,7 @@ ion-content.admin-content {
   }
 
   .admin-hero {
-    padding: 24px;
+    padding: 8px 2px 24px;
   }
 
   .stats-grid {
@@ -1678,7 +1551,6 @@ ion-content.admin-content {
   }
 }
 
-
 /* V4 final: Ionic owns the page height; ion-content owns vertical scrolling. */
 :host {
   display: block;
@@ -1687,12 +1559,12 @@ ion-content.admin-content {
   height: 100%;
 }
 
-:host > ion-content {
+:host>ion-content {
   min-height: 0 !important;
   --overflow: auto !important;
 }
 
-:host > ion-content::part(scroll) {
+:host>ion-content::part(scroll) {
   overflow-y: auto !important;
   overflow-x: hidden !important;
   -webkit-overflow-scrolling: touch !important;

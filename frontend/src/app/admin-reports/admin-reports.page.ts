@@ -14,7 +14,7 @@ import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { API_BASE_URL } from '../config/api.config';
+import { API_URL } from '../config/api.config';
 
 type Tab    = 'transactions' | 'attendance' | 'sales' | 'inventory';
 type Period = 'daily' | 'weekly' | 'monthly' | 'yearly' | 'all';
@@ -37,7 +37,7 @@ type Period = 'daily' | 'weekly' | 'monthly' | 'yearly' | 'all';
   providers: [DecimalPipe, DatePipe],
 })
 export class AdminReportsPage implements OnInit {
-  private api = API_BASE_URL;
+  private api = API_URL;
 
   activeTab: Tab   = 'transactions';
   period:    Period = 'monthly';

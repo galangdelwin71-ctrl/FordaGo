@@ -23,7 +23,11 @@ const authGuard: CanActivateFn = () => {
   if (token) return true;
 
   const router = inject(Router);
-  router.navigate(['/login']);
+  // replaceUrl: true -- same reasoning as login.page.ts/logout()'s fix:
+  // this is an auth-boundary redirect, so it must never leave a stale
+  // /login (or whatever protected route triggered it) sitting in
+  // history for a later Location.back() to resolve into.
+  router.navigate(['/login'], { replaceUrl: true });
   return false;
 };
 
@@ -57,7 +61,10 @@ const guestGuard: CanActivateFn = () => {
     // than block navigation entirely.
   }
 
-  router.navigate([destination]);
+  // replaceUrl: true -- same reasoning as authGuard above: this bounces a
+  // logged-in account straight off /login, so /login itself must never
+  // remain as a reachable history entry underneath the destination.
+  router.navigate([destination], { replaceUrl: true });
   return false;
 };
 

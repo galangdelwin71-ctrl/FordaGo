@@ -10,7 +10,7 @@ import { NoNegativeDirective } from '../directives/no-negative.directive';
 import QRCode from 'qrcode';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { API_BASE_URL } from '../config/api.config';
+import { API_URL } from '../config/api.config';
 import { CoachingService } from '../services/coaching.service';
 
 @Component({
@@ -25,12 +25,20 @@ export class AdminPage implements OnInit {
   private readonly maxProductImageDimension = 1200;
   private readonly productImageQuality = 0.82;
   private readonly maxProductImagePayloadLength = 8_000_000;
+  // Stage 6 (Loading Speed Plan): thumbnail rendition saved to the new
+  // thumbnail_url column, used by the Shop/Equipment grid views instead of
+  // downloading the full 1200px image just to show it at a small size.
+  // 300px/0.7 keeps the payload small while still looking sharp in a grid
+  // card -- independent of maxProductImageDimension/productImageQuality
+  // above, which stay unchanged for the full-size/detail-view image.
+  private readonly thumbnailImageDimension = 300;
+  private readonly thumbnailImageQuality = 0.7;
 
   activeTab: 'overview' | 'members' | 'schedule' | 'inventory' | 'equipment' | 'coaches' | 'notifs' | 'attendance' = 'overview';
   private readonly api = this.resolveApiBase();
 
   private resolveApiBase(): string {
-    return API_BASE_URL;
+    return API_URL;
   }
 
   // ── Role helpers ─────────────────────────────────────
@@ -41,6 +49,12 @@ export class AdminPage implements OnInit {
     if (this.isSuperAdmin) return 'Super Admin Panel';
     if (this.isEmployee) return 'Employee Panel';
     return 'Admin Panel';
+  }
+  /** Short initials shown in the header avatar badge (e.g. 'SA' for Super Admin). */
+  get panelInitials(): string {
+    if (this.isSuperAdmin) return 'SA';
+    if (this.isEmployee) return 'EP';
+    return 'AD';
   }
   /** Coach account management is admin/super_admin only — backend enforces
    *  this via role:admin,super_admin on /admin/coaches (employees excluded),
@@ -333,7 +347,7 @@ export class AdminPage implements OnInit {
     this.http.get<any[]>(`${this.api}/attendance/pending`, { headers }).subscribe({
       next: data => {
         this.attendancePendingLoading = false;
-        this.attendancePending = data;
+        this.attendancePending = data.map(a => ({ ...a, initials: this.getInitials(a.username) }));
       },
       error: () => {
         this.attendancePendingLoading = false;
@@ -385,7 +399,7 @@ export class AdminPage implements OnInit {
     this.http.get<any[]>(`${this.api}/attendance/by-date?date=${encodeURIComponent(date)}`, { headers }).subscribe({
       next: data => {
         this.attendanceTodayLoading = false;
-        this.attendanceToday = data;
+        this.attendanceToday = data.map(a => ({ ...a, initials: this.getInitials(a.username) }));
       },
       error: () => {
         this.attendanceTodayLoading = false;
@@ -399,7 +413,7 @@ export class AdminPage implements OnInit {
     this.http.get<any[]>(`${this.api}/equipment/scan-logs?date=${encodeURIComponent(date)}`, { headers }).subscribe({
       next: data => {
         this.equipmentScanLogsLoading = false;
-        this.equipmentScanLogs = data;
+        this.equipmentScanLogs = data.map(log => ({ ...log, initials: this.getInitials(log.username) }));
       },
       error: () => {
         this.equipmentScanLogsLoading = false;
@@ -436,8 +450,8 @@ export class AdminPage implements OnInit {
     payment_method: 'cash' as 'cash' | 'gcash',
   };
   newSession   = { title: '', date: '', time: '', location: '', coach: '' };
-  newProduct   = { name: '', brand: '', price: 0, stock: 0, image_url: '' };
-  newEquipment = { name: '', category: '', icon: '', status: 'available', image_url: '', description: '', weight_scale: '' };
+  newProduct   = { name: '', brand: '', price: 0, stock: 0, image_url: '', thumbnail_url: '' };
+  newEquipment = { name: '', category: '', icon: '', status: 'available', image_url: '', thumbnail_url: '', description: '', weight_scale: '' };
 
   private normalizeEquipmentStatus(value: string | undefined): string {
     const normalized = String(value || '').trim().toLowerCase();
@@ -461,6 +475,7 @@ export class AdminPage implements OnInit {
       icon: String(payload?.icon || '').trim() || null,
       status: this.normalizeEquipmentStatus(payload?.status),
       image_url: String(payload?.image_url || '').trim() || null,
+      thumbnail_url: String(payload?.thumbnail_url || '').trim() || null,
       description: String(payload?.description || '').trim() || null,
       weight_scale: String(payload?.weight_scale || '').trim() || null,
     };
@@ -569,7 +584,7 @@ export class AdminPage implements OnInit {
     this.http.post<any>(`${this.api}/inventory/products`, this.newProduct, { headers }).subscribe({
       next: (p) => {
         this.products.unshift(p);
-        this.newProduct = { name: '', brand: '', price: 0, stock: 0, image_url: '' };
+        this.newProduct = { name: '', brand: '', price: 0, stock: 0, image_url: '', thumbnail_url: '' };
         this.showAddProduct = false;
       },
       error: () => alert('Failed to add product')
@@ -581,17 +596,22 @@ export class AdminPage implements OnInit {
     if (!file) return;
 
     try {
-      const result = await this.optimizeProductImage(file);
+      // Stage 6: produces both the full-size rendition (unchanged behavior)
+      // and a small thumbnail from the same file read, so the Shop grid can
+      // fetch thumbnail_url instead of the full image_url payload.
+      const { full, thumbnail } = await this.optimizeProductImageWithThumbnail(file);
 
-      if (result.length > this.maxProductImagePayloadLength) {
+      if (full.length > this.maxProductImagePayloadLength) {
         alert('Image is still too large. Please choose a smaller photo.');
         return;
       }
 
       if (target === 'new') {
-        this.newProduct.image_url = result;
+        this.newProduct.image_url = full;
+        this.newProduct.thumbnail_url = thumbnail;
       } else if (this.editingProduct) {
-        this.editingProduct.image_url = result;
+        this.editingProduct.image_url = full;
+        this.editingProduct.thumbnail_url = thumbnail;
       }
     } catch {
       alert('Failed to process image');
@@ -600,29 +620,21 @@ export class AdminPage implements OnInit {
     }
   }
 
-  private optimizeProductImage(file: File): Promise<string> {
+  /**
+   * Reads an image file into a loaded &lt;img&gt; element, ready to be drawn
+   * onto a canvas at whatever size/quality the caller needs. Shared by
+   * optimizeProductImage() (single full-size rendition, used by coach
+   * photos too) and optimizeProductImageWithThumbnail() (full + thumbnail,
+   * Stage 6 for products/equipment only) so the file is only ever read and
+   * decoded once regardless of how many renditions are produced from it.
+   */
+  private readImageElement(file: File): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
 
       reader.onload = () => {
         const image = new Image();
-
-        image.onload = () => {
-          const { width, height } = this.getResizedDimensions(image.width, image.height);
-          const canvas = document.createElement('canvas');
-          const context = canvas.getContext('2d');
-
-          if (!context) {
-            reject(new Error('Canvas is not available'));
-            return;
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-          context.drawImage(image, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', this.productImageQuality));
-        };
-
+        image.onload = () => resolve(image);
         image.onerror = () => reject(new Error('Invalid image file'));
         image.src = reader.result as string;
       };
@@ -632,9 +644,47 @@ export class AdminPage implements OnInit {
     });
   }
 
-  private getResizedDimensions(width: number, height: number) {
-    const maxDimension = this.maxProductImageDimension;
+  private renderImageToDataUrl(image: HTMLImageElement, maxDimension: number, quality: number): string {
+    const { width, height } = this.getResizedDimensions(image.width, image.height, maxDimension);
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
 
+    if (!context) {
+      throw new Error('Canvas is not available');
+    }
+
+    canvas.width = width;
+    canvas.height = height;
+    context.drawImage(image, 0, 0, width, height);
+    return canvas.toDataURL('image/jpeg', quality);
+  }
+
+  // Existing single-rendition path -- signature and behavior UNCHANGED,
+  // still used as-is by coach photos (onCoachImageChange), which are out
+  // of scope for the Stage 6 thumbnail work below.
+  private async optimizeProductImage(file: File): Promise<string> {
+    const image = await this.readImageElement(file);
+    return this.renderImageToDataUrl(image, this.maxProductImageDimension, this.productImageQuality);
+  }
+
+  /**
+   * Stage 6 (image optimization, products/equipment only): produces BOTH
+   * the existing full-size rendition and a much smaller thumbnail
+   * rendition from one file read/decode. The thumbnail is what gets saved
+   * to the new thumbnail_url column (see the backend migration), which is
+   * what lets the Shop and Equipment grids fetch a far smaller payload on
+   * every list load instead of the full image every single item carries
+   * today.
+   */
+  private async optimizeProductImageWithThumbnail(file: File): Promise<{ full: string; thumbnail: string }> {
+    const image = await this.readImageElement(file);
+    return {
+      full: this.renderImageToDataUrl(image, this.maxProductImageDimension, this.productImageQuality),
+      thumbnail: this.renderImageToDataUrl(image, this.thumbnailImageDimension, this.thumbnailImageQuality),
+    };
+  }
+
+  private getResizedDimensions(width: number, height: number, maxDimension: number) {
     if (width <= maxDimension && height <= maxDimension) {
       return { width, height };
     }
@@ -711,15 +761,18 @@ export class AdminPage implements OnInit {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
     try {
-      const result = await this.optimizeProductImage(file);
-      if (result.length > this.maxProductImagePayloadLength) {
+      // Stage 6: same full+thumbnail pair as onProductImageChange() above.
+      const { full, thumbnail } = await this.optimizeProductImageWithThumbnail(file);
+      if (full.length > this.maxProductImagePayloadLength) {
         alert('Image is still too large. Please choose a smaller photo.');
         return;
       }
       if (target === 'new') {
-        this.newEquipment.image_url = result;
+        this.newEquipment.image_url = full;
+        this.newEquipment.thumbnail_url = thumbnail;
       } else if (this.editingEquipment) {
-        this.editingEquipment.image_url = result;
+        this.editingEquipment.image_url = full;
+        this.editingEquipment.thumbnail_url = thumbnail;
       }
     } catch {
       alert('Failed to process image');
@@ -736,7 +789,7 @@ export class AdminPage implements OnInit {
     this.http.post<any>(`${this.api}/equipment`, payload, { headers }).subscribe({
       next: (e) => {
         this.equipment.unshift(e);
-        this.newEquipment = { name: '', category: '', icon: '', status: 'available', image_url: '', description: '', weight_scale: '' };
+        this.newEquipment = { name: '', category: '', icon: '', status: 'available', image_url: '', thumbnail_url: '', description: '', weight_scale: '' };
         this.showAddEquipment = false;
       },
       error: (err) => alert(err?.error?.message || 'Failed to add equipment')
@@ -1150,6 +1203,11 @@ export class AdminPage implements OnInit {
   confirmLogout() {
     this.showLogoutDialog = false;
     this.auth.logout();
-    this.router.navigate(['/login']);
+    // replaceUrl: true -- see the matching note in profile.page.ts's
+    // logout(). Keeps /login from persisting in history once this admin/
+    // staff session ends, so a later back-navigation from any drill-in
+    // page (in whichever account logs in next) can never resolve back to
+    // a stale /login entry.
+    this.router.navigate(['/login'], { replaceUrl: true });
   }
 }

@@ -11,8 +11,8 @@ import { AuthService } from './auth.service';
  *
  * (Was previously a class implementing HttpInterceptor, but that class was
  * never registered via HTTP_INTERCEPTORS and had no effect — converted to
- * a functional interceptor so it can be registered the same way as
- * ngrokInterceptor in main.ts's withInterceptors([...]).)
+ * a functional interceptor so it can be registered via main.ts's
+ * withInterceptors([...]) alongside networkErrorInterceptor.)
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const token = inject(AuthService).token;

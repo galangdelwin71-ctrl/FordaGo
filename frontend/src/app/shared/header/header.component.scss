@@ -131,7 +131,8 @@ ion-toolbar {
   }
 }
 
-.notif-bell-btn.has-unread {
+.notif-bell-btn.has-unread,
+.coach-header-btn.has-unread {
   color: var(--header-yellow);
   border-color: rgba(255, 214, 0, 0.24);
   background: rgba(255, 214, 0, 0.07);

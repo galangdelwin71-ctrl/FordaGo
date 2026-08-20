@@ -1,11 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, tap, catchError, throwError } from 'rxjs';
-import { API_BASE_URL } from '../config/api.config';
+import { API_BASE_URL, API_URL } from '../config/api.config';
+import { clearCachedData } from '../utils/local-cache.util';
+import { CACHE_KEYS } from '../utils/cache-keys';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly apiUrl = `${API_BASE_URL}/auth`;
+  private readonly apiUrl = `${API_URL}/auth`;
   private userSubject = new BehaviorSubject<any>(null);
   user$ = this.userSubject.asObservable();
 
@@ -49,6 +51,13 @@ export class AuthService {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     this.userSubject.next(null);
+    // Stage 3 local-first caches (see utils/local-cache.util.ts) are keyed
+    // per cache-slot, not per-user -- clear them on logout so a different
+    // member logging in on the same device never briefly sees the previous
+    // member's last-cached product/equipment list before the real fetch
+    // completes. Fire-and-forget; see clearCachedData()'s own doc-comment.
+    void clearCachedData(CACHE_KEYS.PRODUCTS);
+    void clearCachedData(CACHE_KEYS.EQUIPMENT);
   }
 
   get token() {
@@ -121,7 +130,10 @@ export class AuthService {
   private handleError(err: HttpErrorResponse) {
     let message: string;
     if (err.status === 0) {
-      message = `Cannot reach the server at ${API_BASE_URL}. Make sure the backend is running and (on a real device) that adb reverse is active.`;
+      // networkErrorInterceptor (see services/network-error.interceptor.ts)
+      // already rewrote err.error.message with an accurate description --
+      // this is just a safety-net fallback in case that ever changes.
+      message = err.error?.message || `Cannot reach the server at ${API_BASE_URL}.`;
     } else if (err.status === 401) {
       message = err.error?.message || 'Invalid email or password.';
     } else if (err.status === 409) {

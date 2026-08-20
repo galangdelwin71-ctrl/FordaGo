@@ -407,35 +407,221 @@ body.light-theme {
     .form-label { color: rgba(15,23,42,0.5) !important; }
 
     /* Coach Dashboard modals (Manage Profile / Set Availability / Create
-       Program — see coach-dashboard.page.html's `.coach-modal` class on
-       each modal's ion-content). These use PLAIN <input>/<select>/
-       <textarea> elements, not ion-input/ion-select like the Personal
-       Record modal above, so the --background/--color Ionic-shadow-part
-       overrides on the shared .form-select/.form-input rule just above
-       do nothing here — plain elements need literal `background`/`color`
-       instead. Scoped under .coach-modal specifically so it can't leak
-       onto the Dashboard's own .form-input/.form-select (real ion-input/
-       ion-select there, styled correctly by the rule above). */
-    .coach-modal {
-      .form-input,
-      .form-select {
-        background: rgba(15,23,42,0.05) !important;
-        border-color: rgba(15,23,42,0.12) !important;
-        color: #0f172a !important;
-        &::placeholder { color: rgba(15,23,42,0.35) !important; }
-      }
-      select.form-select option {
-        background: #ffffff !important;
-        color: #0f172a !important;
-      }
-      select.form-select {
-        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d97706' stroke-width='2.5'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") !important;
-      }
-      .form-error { color: #dc2626 !important; }
-      .availability-day, .program-row .session-name { color: #0f172a !important; }
-      .availability-time, .program-row .session-focus { color: rgba(15,23,42,0.55) !important; }
-      .availability-row, .program-row { border-bottom-color: rgba(15,23,42,0.08) !important; }
+       Program / Roster — see coaching-panel.component.html's `.cd-modal-*`
+       / `.cd-form-*` classes). Same portal problem as everything else in
+       this ion-modal block: ion-modal content is moved by Ionic to
+       document.body, outside app-coaching-panel's own DOM subtree, so
+       that component's `:host-context(body.light-theme)` CSS variables
+       (--bg-secondary, --text-primary, etc. -- see the bottom of
+       coaching-panel.component.scss) never reach these elements; they
+       fall back to the component's literal dark-mode defaults
+       (rgba(255,255,255,*) / #FFFFFF) no matter the theme.
+       NOTE: this replaces a previous block scoped to `.coach-modal`, a
+       class that was never actually present on any element in the app
+       (the real wrapper is `.cd-modal-content`, ported over from the
+       retired standalone coach-dashboard page without updating this
+       selector) -- that block silently never matched anything. These
+       plain (non ion-input/ion-select) elements need literal
+       `background`/`color`, not the --background/--color shadow-part
+       vars the ion-input rule above uses. */
+    .cd-modal-content {
+      background: #ffffff !important;
     }
+    .cd-modal-handle { background: rgba(15,23,42,0.14) !important; }
+    .cd-modal-title { color: #0f172a !important; }
+    // Was rgba(15,23,42,0.5) at the component's base 10px -- too light and
+    // too small to read comfortably against the light modal background
+    // (Create Program / Set Availability field labels). Darker slate plus
+    // a slightly larger size per request, still visually secondary to the
+    // 14px field values below it.
+    .cd-form-label {
+      color: #334155 !important;
+      font-size: 11.5px !important;
+      font-weight: 750 !important;
+    }
+    .cd-form-input,
+    .cd-form-select {
+      background: rgba(15,23,42,0.05) !important;
+      border-color: rgba(15,23,42,0.12) !important;
+      color: #0f172a !important;
+      &::placeholder { color: rgba(15,23,42,0.35) !important; }
+    }
+    select.cd-form-select option {
+      background: #ffffff !important;
+      color: #0f172a !important;
+    }
+    select.cd-form-select {
+      // Full shorthand (image + repeat + position + size) in one
+      // !important declaration -- overriding only background-image here
+      // left background-repeat/position/size to whatever the component's
+      // own rule set, which is normally fine, but this keeps the override
+      // self-contained so it can never end up re-tiling the icon (multiple
+      // stacked chevrons) if that base rule ever changes independently.
+      background: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d97706' stroke-width='2.5'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") no-repeat right 12px center / 14px !important;
+      background-color: rgba(15,23,42,0.05) !important;
+    }
+    .cd-form-error { color: #dc2626 !important; }
+    .cd-checkbox-label { color: rgba(15,23,42,0.7) !important; }
+    .cd-modal-actions {
+      background: linear-gradient(180deg, rgba(244,245,248,0) 0%, rgba(244,245,248,0.95) 26%, #ffffff 100%) !important;
+    }
+
+    /* Saved-programs list (Create Program modal) + Availability list (Set
+       Availability modal) + Roster list (Roster modal) -- all reuse the
+       shared .cd-session-name/.cd-session-focus row classes. */
+    .cd-availability-day, .cd-session-name { color: #0f172a !important; }
+    .cd-availability-time, .cd-session-focus { color: rgba(15,23,42,0.55) !important; }
+    .cd-availability-row, .cd-program-row, .cd-session-item, .cd-client-item, .cd-roster-item {
+      border-bottom-color: rgba(15,23,42,0.08) !important;
+      background: transparent !important;
+    }
+    .cd-session-avatar {
+      background: rgba(217,119,6,0.1) !important;
+      border-color: rgba(217,119,6,0.25) !important;
+      color: #d97706 !important;
+    }
+    .cd-public-badge {
+      color: #d97706 !important;
+      background: rgba(217,119,6,0.1) !important;
+      border-color: rgba(217,119,6,0.25) !important;
+    }
+    .cd-program-item-header span { color: rgba(15,23,42,0.45) !important; }
+    .cd-add-item-btn {
+      background: rgba(217,119,6,0.08) !important;
+      border-color: rgba(217,119,6,0.3) !important;
+      color: #d97706 !important;
+    }
+    .cd-roster-btn {
+      background: rgba(217,119,6,0.1) !important;
+      border-color: rgba(217,119,6,0.25) !important;
+      color: #d97706 !important;
+    }
+    .cd-availability-remove-btn, .cd-program-item-remove-btn {
+      background: rgba(220,38,38,0.08) !important;
+      border-color: rgba(220,38,38,0.22) !important;
+      color: #dc2626 !important;
+    }
+    .cd-empty-state { color: rgba(15,23,42,0.5) !important; }
+    .cd-empty-state-icon { color: rgba(15,23,42,0.3) !important; }
+
+    /* Partner Info modal (Coaching → Chat header avatar/name tap) -- plain
+       elements (not ion-input/ion-select), same portal issue as the
+       .coach-modal block above: this modal's own dark-mode styling lives
+       in chat.page.scss's .partner-info-modal block, but ion-modal content
+       is moved to document.body outside app-chat's DOM subtree, so that
+       component-scoped CSS can never see body.light-theme here. Literal
+       light-mode values, same amber-accent mapping used everywhere else
+       in this file. */
+    .partner-info-wrapper {
+      background: #ffffff !important;
+      border-color: rgba(15,23,42,0.1) !important;
+    }
+    .partner-info-handle { background: rgba(15,23,42,0.14) !important; }
+    .partner-info-avatar { border-color: rgba(245,158,11,0.35) !important; }
+    .partner-info-avatar .avatar-placeholder {
+      background: rgba(15,23,42,0.06) !important;
+      color: #d97706 !important;
+    }
+    .partner-info-name { color: #0f172a !important; }
+    .partner-info-username { color: rgba(15,23,42,0.5) !important; }
+    .partner-info-role-tag {
+      background: rgba(245,158,11,0.1) !important;
+      border-color: rgba(245,158,11,0.28) !important;
+      color: #d97706 !important;
+    }
+    .partner-info-close-btn {
+      background: rgba(15,23,42,0.05) !important;
+      border-color: rgba(15,23,42,0.12) !important;
+      color: #0f172a !important;
+    }
+
+    /* Propose Workout Plan modal (Coaching → Chat, coach accounts only --
+       see chat.page.scss's .proposal-modal). Same portal problem as every
+       other block in this ion-modal section: chat.page.scss has its own
+       dark-mode-only styling for this modal with no light-theme branch at
+       all previously, and even once added, :host-context(body.light-theme)
+       in that file can never reach this content anyway since ion-modal
+       moves it to document.body outside app-chat's DOM subtree. Literal
+       light-mode values, same amber-accent mapping used everywhere else in
+       this file. */
+    // NOTE: '&' below resolves to 'ion-modal' (this whole section is
+    // nested inside the enclosing `ion-modal { ... }` block) -- these are
+    // written as compound selectors (&.proposal-modal, no space) because
+    // .proposal-modal is a class Angular puts directly ON the <ion-modal>
+    // tag itself (see chat.page.html's [class]="proposal-modal"), not a
+    // separate wrapper element nested inside it. A plain descendant
+    // selector (".proposal-modal .modal-wrapper") would require a
+    // *different* element carrying that class somewhere inside <ion-modal>,
+    // which doesn't exist here, so it would silently never match anything.
+    &.proposal-modal .modal-wrapper {
+      background: #ffffff !important;
+      border-color: rgba(15,23,42,0.12) !important;
+    }
+    &.proposal-modal .modal-header .modal-title-group {
+      .modal-badge { color: #d97706 !important; }
+      h3 { color: #0f172a !important; }
+    }
+    &.proposal-modal .modal-header .modal-close-btn {
+      background: rgba(15,23,42,0.06) !important;
+      color: #0f172a !important;
+    }
+    &.proposal-modal .form-alert {
+      background: rgba(220,38,38,0.08) !important;
+      border-color: rgba(220,38,38,0.25) !important;
+      color: #dc2626 !important;
+    }
+    &.proposal-modal .form-group label,
+    &.proposal-modal .quick-ex-section label,
+    &.proposal-modal .exercises-header label {
+      color: rgba(15,23,42,0.55) !important;
+    }
+    &.proposal-modal .field-wrap .field-icon { color: #d97706 !important; }
+    &.proposal-modal .form-input {
+      background: rgba(15,23,42,0.05) !important;
+      border-color: rgba(15,23,42,0.12) !important;
+      color: #0f172a !important;
+      option { background: #ffffff !important; color: #0f172a !important; }
+    }
+    &.proposal-modal .quick-chip-btn {
+      background: rgba(15,23,42,0.04) !important;
+      border-color: rgba(15,23,42,0.1) !important;
+      color: rgba(15,23,42,0.65) !important;
+      &:hover { background: rgba(217,119,6,0.1) !important; border-color: rgba(217,119,6,0.3) !important; color: #d97706 !important; }
+    }
+    &.proposal-modal .program-chip-btn {
+      color: #0f172a !important;
+      ion-icon { color: #d97706 !important; }
+      &:hover { background: rgba(217,119,6,0.06) !important; border-color: rgba(217,119,6,0.22) !important; }
+    }
+    &.proposal-modal .btn-add-item {
+      background: rgba(217,119,6,0.1) !important;
+      border-color: rgba(217,119,6,0.3) !important;
+      color: #d97706 !important;
+    }
+    &.proposal-modal .ex-form-card {
+      background: rgba(15,23,42,0.02) !important;
+      border-color: rgba(15,23,42,0.08) !important;
+    }
+    &.proposal-modal .ex-index { background: rgba(217,119,6,0.12) !important; color: #d97706 !important; }
+    &.proposal-modal .ex-icon { color: rgba(15,23,42,0.35) !important; }
+    &.proposal-modal .btn-remove-ex {
+      background: rgba(220,38,38,0.08) !important;
+      border-color: rgba(220,38,38,0.25) !important;
+      color: #dc2626 !important;
+    }
+    &.proposal-modal .mini-field {
+      background: rgba(15,23,42,0.03) !important;
+      border-color: rgba(15,23,42,0.09) !important;
+      .mini-label { color: rgba(15,23,42,0.45) !important; }
+      .mini-input { color: #0f172a !important; }
+    }
+    &.proposal-modal .sets-divider { color: rgba(15,23,42,0.35) !important; }
+    &.proposal-modal .btn-cancel {
+      background: rgba(15,23,42,0.05) !important;
+      border-color: rgba(15,23,42,0.1) !important;
+      color: #0f172a !important;
+    }
+    &.proposal-modal .btn-submit-proposal { color: #ffffff !important; }
 
     /* Labels */
     .field-label {

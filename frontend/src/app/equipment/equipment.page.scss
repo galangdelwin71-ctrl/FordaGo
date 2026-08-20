@@ -433,6 +433,50 @@ ion-content {
   animation: fadeUp 0.3s ease both;
 }
 
+// ── Skeleton Loading (Stage 4) ──────────────────────────
+// Lightweight shimmer placeholders shown only during the very first,
+// uncached fetch (see isLoading in equipment.page.ts) so the page feels
+// alive instead of a bare spinner. Reuses .equip-card's exact box model
+// (same class applied alongside .skeleton-card) so there's no layout
+// shift when the real cards swap in.
+.skeleton-card {
+  cursor: default;
+  pointer-events: none;
+
+  &:active { border-color: #252525; }
+}
+
+.skeleton-block {
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.05) 25%,
+    rgba(255,255,255,0.12) 50%,
+    rgba(255,255,255,0.05) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+.skeleton-photo {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 0;
+}
+
+.skeleton-line {
+  height: 10px;
+  margin-bottom: 6px;
+
+  &.skeleton-line-name { width: 75%; height: 12px; }
+  &.skeleton-line-cat  { width: 40%; height: 8px; margin-bottom: 0; }
+}
+
+@keyframes skeletonShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 // ── Light Mode ──────────────────────────────────────────
 // This page previously had NO light-theme block at all, so switching to
 // light mode left the entire Equipment page (title, search, category
@@ -482,6 +526,18 @@ ion-content {
     background: #ffffff;
     border-color: rgba(15, 23, 42, 0.09);
     &:active { border-color: rgba(217, 119, 6, 0.3); }
+  }
+
+  // Skeleton loading (Stage 4) -- subtle gray shimmer against the light
+  // background instead of the dark theme's white-on-dark shimmer.
+  .skeleton-block {
+    background: linear-gradient(
+      90deg,
+      rgba(15,23,42,0.05) 25%,
+      rgba(15,23,42,0.12) 50%,
+      rgba(15,23,42,0.05) 75%
+    );
+    background-size: 200% 100%;
   }
   .equip-photo-wrap,
   .equip-photo-placeholder {

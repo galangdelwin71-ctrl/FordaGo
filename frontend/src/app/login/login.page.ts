@@ -453,10 +453,22 @@ export class LoginPage {
           return;
         }
 
+        // replaceUrl: true -- login is an auth BOUNDARY, same as every
+        // root/tab page's goTo*() elsewhere in this app (see e.g.
+        // dashboard.page.ts's goToSchedule()). Without this, a plain push
+        // left /login sitting in browser/router history underneath
+        // /dashboard or /admin. That's invisible for a single continuous
+        // session, but the moment the SAME session logs out and back in
+        // as a different account (e.g. switching from a member account to
+        // a coach account to test both), the stale /login entry becomes
+        // reachable again by walking Location.back() -- which is exactly
+        // what a plain back button / hardware back press does from any
+        // drill-in page (chat, coach profile, transactions). replaceUrl
+        // keeps /login from ever persisting in history once login succeeds.
         if (['admin', 'super_admin', 'employee'].includes(user.role)) {
-          this.router.navigate(['/admin']);
+          this.router.navigate(['/admin'], { replaceUrl: true });
         } else {
-          this.router.navigate(['/dashboard']);
+          this.router.navigate(['/dashboard'], { replaceUrl: true });
         }
       },
       error: (err: any) => {

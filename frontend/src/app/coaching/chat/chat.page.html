@@ -6,7 +6,12 @@
         <ion-icon name="arrow-back-outline"></ion-icon>
       </button>
 
-      <div class="chat-partner-header" *ngIf="partner">
+      <button
+        type="button"
+        class="chat-partner-header"
+        *ngIf="partner"
+        (click)="openPartnerInfo()"
+        [attr.aria-label]="'View ' + partnerDisplayName + ' profile'">
         <div class="chat-partner-avatar">
           <img *ngIf="partner.profile_image" [src]="partner.profile_image" />
           <div *ngIf="!partner.profile_image" class="avatar-placeholder">
@@ -19,7 +24,9 @@
           <h4 class="partner-name">{{ partnerDisplayName }}</h4>
           <span class="partner-role-tag">{{ conversation?.partner_role === 'coach' ? 'Personal Coach' : 'Client' }}</span>
         </div>
-      </div>
+
+        <ion-icon name="chevron-forward-outline" class="partner-header-chevron"></ion-icon>
+      </button>
     </div>
 
     <div slot="end" class="chat-toolbar-end" *ngIf="isCoach">
@@ -95,7 +102,7 @@
           <div class="msg-bubble" *ngIf="msg.type !== 'proposal'">
             <p class="msg-text">{{ msg.body }}</p>
             <div class="msg-meta">
-              <span class="msg-time">{{ msg.created_at | date:'shortTime' }}</span>
+              <span class="msg-time">{{ msg.created_at | date:'M/d/yy, h:mm a' }}</span>
               <ion-icon
                 *ngIf="msg.sender_id === currentUserId"
                 [name]="msg.read_at ? 'checkmark-done-outline' : 'checkmark-outline'"
@@ -180,7 +187,7 @@
             </div>
 
             <div class="msg-meta proposal-meta">
-              <span class="msg-time">{{ msg.created_at | date:'shortTime' }}</span>
+              <span class="msg-time">{{ msg.created_at | date:'M/d/yy, h:mm a' }}</span>
             </div>
           </div>
 
@@ -224,10 +231,61 @@
   </div>
 </ion-footer>
 
+<!-- Partner Info Modal -- tap the header avatar/name to view the full
+     name/username/role, since the toolbar slot truncates a long name
+     with an ellipsis (see .partner-name in the .scss). -->
+<ion-modal
+  [isOpen]="partnerInfoOpen"
+  (didDismiss)="closePartnerInfo()"
+  class="partner-info-modal"
+  [breakpoints]="[0, 0.4]"
+  [initialBreakpoint]="0.4">
+  <ng-template>
+    <div class="partner-info-wrapper" *ngIf="partner">
+      <div class="partner-info-handle"></div>
+
+      <div class="partner-info-avatar">
+        <img *ngIf="partner.profile_image" [src]="partner.profile_image" />
+        <div *ngIf="!partner.profile_image" class="avatar-placeholder">
+          {{ (partner.first_name || partner.username || 'U').charAt(0) }}
+        </div>
+      </div>
+
+      <h3 class="partner-info-name">{{ partnerDisplayName }}</h3>
+
+      <div class="partner-info-username" *ngIf="partner.username">
+        <ion-icon name="at-outline"></ion-icon>
+        <span>{{ partner.username }}</span>
+      </div>
+
+      <span class="partner-info-role-tag">
+        <ion-icon name="person-circle-outline"></ion-icon>
+        {{ conversation?.partner_role === 'coach' ? 'Personal Coach' : 'Client' }}
+      </span>
+
+      <button type="button" class="partner-info-close-btn" (click)="closePartnerInfo()">Close</button>
+    </div>
+  </ng-template>
+</ion-modal>
+
 <!-- ── PROPOSAL BUILDER MODAL (Coach) ────────────────── -->
-<ion-modal [isOpen]="isProposalModalOpen" (didDismiss)="closeProposalModal()" class="proposal-modal">
+<!-- Sheet-style modal (breakpoints, like the Coach Dashboard's own
+     modals) instead of a fixed centered card -- a centered card sized
+     off desktop-friendly grid columns was overflowing the viewport width
+     on narrow phones, clipping the Location field and Send button. The
+     bottom-sheet handles narrow viewports correctly by construction, and
+     the internal grids below now also collapse responsively as a second
+     layer of defense (see the max-width: 480px query in the .scss). -->
+<ion-modal
+  [isOpen]="isProposalModalOpen"
+  (didDismiss)="closeProposalModal()"
+  class="proposal-modal"
+  [breakpoints]="[0, 0.75, 0.96]"
+  [initialBreakpoint]="0.75">
   <ng-template>
     <div class="modal-wrapper">
+      <div class="modal-drag-handle"></div>
+
       <div class="modal-header">
         <div class="modal-title-group">
           <span class="modal-badge"><ion-icon name="sparkles"></ion-icon> Trainer Studio</span>
@@ -251,15 +309,15 @@
              exist -- an empty state here would just be noise for a coach
              who hasn't created any yet, and "Create Program" already lives
              one tap away on the dashboard. -->
-        <div class="quick-ex-section" *ngIf="isLoadingSavedPrograms || savedPrograms.length > 0">
+        <div class="quick-ex-section saved-program-section" *ngIf="isLoadingSavedPrograms || savedPrograms.length > 0">
           <label>Use a Saved Program</label>
           <div class="loading-state" *ngIf="isLoadingSavedPrograms">
             <ion-spinner name="crescent" color="warning"></ion-spinner>
           </div>
-          <div class="quick-chips" *ngIf="!isLoadingSavedPrograms">
+          <div class="quick-chips program-chips" *ngIf="!isLoadingSavedPrograms">
             <button
               type="button"
-              class="quick-chip-btn"
+              class="quick-chip-btn program-chip-btn"
               *ngFor="let program of savedPrograms"
               (click)="applyProgram(program)"
               [title]="program.description || program.name">
@@ -272,12 +330,16 @@
         <div class="form-grid-2">
           <div class="form-group">
             <label>Session Date</label>
-            <input type="date" class="form-input" [(ngModel)]="proposalForm.session_date" />
+            <div class="field-wrap">
+              <ion-icon name="calendar-outline" class="field-icon"></ion-icon>
+              <input type="date" class="form-input" [(ngModel)]="proposalForm.session_date" />
+            </div>
           </div>
 
           <div class="form-group">
             <label>Time</label>
-            <div class="time-input-group">
+            <div class="field-wrap time-input-group">
+              <ion-icon name="time-outline" class="field-icon"></ion-icon>
               <input type="text" class="form-input time-val" [(ngModel)]="proposalForm.time_val" placeholder="09:00" />
               <select class="form-input time-ampm" [(ngModel)]="proposalForm.time_ampm">
                 <option value="AM">AM</option>
@@ -287,26 +349,36 @@
           </div>
         </div>
 
-        <!-- Duration, Price & Location -->
-        <div class="form-grid-3">
+        <!-- Duration & Price -->
+        <div class="form-grid-2">
           <div class="form-group">
             <label>Duration (mins)</label>
-            <select class="form-input" [(ngModel)]="proposalForm.duration_minutes">
-              <option [value]="30">30 mins</option>
-              <option [value]="45">45 mins</option>
-              <option [value]="60">60 mins</option>
-              <option [value]="90">90 mins</option>
-              <option [value]="120">120 mins</option>
-            </select>
+            <div class="field-wrap">
+              <ion-icon name="timer-outline" class="field-icon"></ion-icon>
+              <select class="form-input" [(ngModel)]="proposalForm.duration_minutes">
+                <option [value]="30">30 mins</option>
+                <option [value]="45">45 mins</option>
+                <option [value]="60">60 mins</option>
+                <option [value]="90">90 mins</option>
+                <option [value]="120">120 mins</option>
+              </select>
+            </div>
           </div>
 
           <div class="form-group">
             <label>Price (₱)</label>
-            <input type="number" class="form-input" [(ngModel)]="proposalForm.price" min="0" step="50" placeholder="500" />
+            <div class="field-wrap">
+              <ion-icon name="cash-outline" class="field-icon"></ion-icon>
+              <input type="number" class="form-input" [(ngModel)]="proposalForm.price" min="0" step="50" placeholder="500" />
+            </div>
           </div>
+        </div>
 
-          <div class="form-group">
-            <label>Location</label>
+        <!-- Location: own full-width row, matches Trainer Studio design -->
+        <div class="form-group form-group-full">
+          <label>Location</label>
+          <div class="field-wrap">
+            <ion-icon name="location-outline" class="field-icon"></ion-icon>
             <input type="text" class="form-input" [(ngModel)]="proposalForm.location" placeholder="Main Floor" />
           </div>
         </div>
@@ -337,13 +409,16 @@
           <div class="exercise-form-cards">
             <div class="ex-form-card" *ngFor="let item of proposalForm.items; let idx = index">
               <div class="ex-card-top">
-                <span class="ex-index">#{{ idx + 1 }}</span>
-                <input
-                  type="text"
-                  class="form-input ex-name-input"
-                  placeholder="Exercise name (e.g. Incline Bench Press)"
-                  [(ngModel)]="item.name"
-                />
+                <span class="ex-index">{{ (idx + 1) < 10 ? '0' + (idx + 1) : (idx + 1) }}</span>
+                <ion-icon name="barbell-outline" class="ex-icon"></ion-icon>
+                <div class="field-wrap ex-name-wrap">
+                  <input
+                    type="text"
+                    class="form-input ex-name-input"
+                    placeholder="Exercise name (e.g. Incline Bench Press)"
+                    [(ngModel)]="item.name"
+                  />
+                </div>
                 <button
                   type="button"
                   class="btn-remove-ex"
@@ -367,12 +442,15 @@
                   </div>
                 </div>
 
-                <input
-                  type="text"
-                  class="form-input ex-notes-input"
-                  placeholder="Notes / form cues (optional)"
-                  [(ngModel)]="item.description"
-                />
+                <div class="field-wrap ex-notes-wrap">
+                  <ion-icon name="create-outline" class="field-icon"></ion-icon>
+                  <input
+                    type="text"
+                    class="form-input ex-notes-input"
+                    placeholder="Notes / form cues (optional)"
+                    [(ngModel)]="item.description"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -381,12 +459,15 @@
       </div>
 
       <div class="modal-footer">
-        <button type="button" class="btn-cancel" (click)="closeProposalModal()">Cancel</button>
+        <button type="button" class="btn-cancel" (click)="closeProposalModal()">
+          <ion-icon name="close-circle-outline"></ion-icon>
+          <span>Cancel</span>
+        </button>
         <button type="button" class="btn-submit-proposal" (click)="submitProposal()" [disabled]="isSubmittingProposal">
           <ion-spinner *ngIf="isSubmittingProposal" name="dots"></ion-spinner>
           <ng-container *ngIf="!isSubmittingProposal">
-            <ion-icon name="paper-plane-outline"></ion-icon>
-            <span>Send Proposal</span>
+            <ion-icon name="save-outline"></ion-icon>
+            <span>Save Workout Plan</span>
           </ng-container>
         </button>
       </div>

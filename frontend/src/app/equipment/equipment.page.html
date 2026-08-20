@@ -18,7 +18,10 @@
 <app-coaching-panel
   *ngIf="coachingPanelOpen"
   [isOpen]="coachingPanelOpen"
-  (closed)="closeCoachingPanel()">
+  hostPage="equipment"
+  [initialTab]="coachingPanelInitialTab"
+  (closed)="closeCoachingPanel()"
+  (navigated)="closeCoachingPanel()">
 </app-coaching-panel>
 
 <ion-content *ngIf="!coachingPanelOpen" [fullscreen]="false" class="fordago-page-content" [scrollY]="true">
@@ -51,10 +54,20 @@
       >{{ cat }}</div>
     </div>
 
-    <!-- Loading -->
-    <div class="empty-state" *ngIf="isLoading">
-      <ion-spinner name="crescent" class="empty-spinner"></ion-spinner>
-      <div class="empty-state-text" style="margin-top:10px;">Loading...</div>
+    <!-- Loading: skeleton grid cards instead of a spinner + text, so the
+         page feels "alive" while the very first (uncached) fetch is in
+         flight. Only rendered when there is truly no data yet -- Stage 3's
+         stale-while-revalidate keeps isLoading false whenever
+         cached/previous data is already on screen, so a returning member
+         never sees this. -->
+    <div class="equip-grid" *ngIf="isLoading" aria-hidden="true">
+      <div class="equip-card skeleton-card" *ngFor="let i of skeletonPlaceholders">
+        <div class="skeleton-block skeleton-photo"></div>
+        <div class="equip-card-info">
+          <div class="skeleton-block skeleton-line skeleton-line-name"></div>
+          <div class="skeleton-block skeleton-line skeleton-line-cat"></div>
+        </div>
+      </div>
     </div>
 
     <!-- Error -->
@@ -78,9 +91,13 @@
         (click)="openModal(item)"
       >
         <!-- Photo -->
+        <!-- Stage 6: grid card uses the small thumbnail (falls back to the
+             full image_url in loadEquipment() when no thumbnail_url exists
+             yet) instead of downloading the full image just to render it
+             at card size. Detail overlay below keeps the full image_url. -->
         <div class="equip-photo-wrap">
-          <img *ngIf="item.image_url" [src]="item.image_url" alt="{{ item.name }}" class="equip-photo" />
-          <div *ngIf="!item.image_url" class="equip-photo-placeholder">
+          <img *ngIf="item.thumbnail_url" [src]="item.thumbnail_url" alt="{{ item.name }}" class="equip-photo" />
+          <div *ngIf="!item.thumbnail_url" class="equip-photo-placeholder">
             <ion-icon name="barbell-outline"></ion-icon>
           </div>
           <!-- Status badge on photo -->

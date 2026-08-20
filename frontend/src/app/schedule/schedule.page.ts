@@ -20,9 +20,9 @@ import { NoNegativeDirective } from '../directives/no-negative.directive';
 import { HeaderComponent } from '../shared/header/header.component';
 import { NotificationPanelComponent } from '../shared/notification-panel/notification-panel.component';
 import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.component';
-import { CoachingNavService } from '../services/coaching-nav.service';
+import { CoachingNavService, CoachingPanelTab } from '../services/coaching-nav.service';
 import { ExerciseListEditorComponent } from '../shared/exercise-list-editor/exercise-list-editor.component';
-import { API_BASE_URL } from '../config/api.config';
+import { API_URL } from '../config/api.config';
 import { buildExercisesFromTemplate, workoutTypes as sharedWorkoutTypes, getSuggestedTargets as sharedGetSuggestedTargets, getTargetPlaceholder as sharedGetTargetPlaceholder } from '../data/workout-templates';
 import type { WeekPlanTemplateDay, StoredWorkoutSession } from '../services/workout-tracker.service';
 
@@ -120,7 +120,7 @@ export interface WorkoutHistoryItem {
 })
 export class SchedulePage implements OnInit, OnDestroy {
 
-  private readonly api = API_BASE_URL;
+  private readonly api = API_URL;
   profileImage = '';
   initials = 'U';
 
@@ -317,7 +317,7 @@ export class SchedulePage implements OnInit, OnDestroy {
    * Coaches/Messages.
    */
   private applyPendingCoachingReopen(): void {
-    const pendingCoachTab = this.coachingNav.consumeReopen();
+    const pendingCoachTab = this.coachingNav.consumeReopen('schedule');
     if (pendingCoachTab) {
       this.coachingPanelInitialTab = pendingCoachTab;
       this.coachingPanelOpen = true;
@@ -1020,8 +1020,8 @@ export class SchedulePage implements OnInit, OnDestroy {
   // In-flow replacement for ion-content (see schedule.page.html) rather
   // than an overlay -- header and footer are untouched siblings either way.
   coachingPanelOpen = false;
-  /** Set from CoachingNavService.consumeReopen() in ngOnInit() when this page is reached via ChatPage's back button -- see coaching-nav.service.ts. Cleared whenever the panel closes (closeOverlaysForNavigation()/closeCoachingPanel()) so it never silently re-applies to a later, unrelated open. */
-  coachingPanelInitialTab: 'conversations' | 'clients' | 'explore' | null = null;
+  /** Set from CoachingNavService.consumeReopen() in ngOnInit() when this page is reached via a back-navigation from chat/coach-profile -- see coaching-nav.service.ts. Cleared whenever the panel closes (closeOverlaysForNavigation()/closeCoachingPanel()) so it never silently re-applies to a later, unrelated open. */
+  coachingPanelInitialTab: CoachingPanelTab | null = null;
 
   onCoachingClick(): void {
     this.coachingPanelOpen = !this.coachingPanelOpen;
@@ -1043,12 +1043,17 @@ export class SchedulePage implements OnInit, OnDestroy {
   }
 
   // ── Navigation ───────────────────────────────────────────
-  goToDashboard(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/dashboard']);  }
-  goToSchedule():  void { this.closeOverlaysForNavigation(); this.router.navigate(['/schedule']);   }
-  goToQr():        void { this.closeOverlaysForNavigation(); this.router.navigate(['/qr-scanner']); }
-  goToInventory(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/inventory']);  }
-  goToEquipment(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/equipment']); }
-  goToProfile():   void { this.closeOverlaysForNavigation(); this.router.navigate(['/profile']);    }
+  // NOTE: replaceUrl: true — see the matching note in dashboard.page.ts.
+  // Bottom-nav tab switches must REPLACE the current history entry, not
+  // push a new one, or Location.back() (on-screen arrow / hardware back)
+  // from a later drill-in page (e.g. chat) walks past several stale tab
+  // visits instead of returning to whichever tab was actually active.
+  goToDashboard(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/dashboard'], { replaceUrl: true });  }
+  goToSchedule():  void { this.closeOverlaysForNavigation(); this.router.navigate(['/schedule'], { replaceUrl: true });   }
+  goToQr():        void { this.closeOverlaysForNavigation(); this.router.navigate(['/qr-scanner'], { replaceUrl: true }); }
+  goToInventory(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/inventory'], { replaceUrl: true });  }
+  goToEquipment(): void { this.closeOverlaysForNavigation(); this.router.navigate(['/equipment'], { replaceUrl: true }); }
+  goToProfile():   void { this.closeOverlaysForNavigation(); this.router.navigate(['/profile'], { replaceUrl: true });    }
 
   // ── History ───────────────────────────────────────────────
   openHistoryModal(): void {

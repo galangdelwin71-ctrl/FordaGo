@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
-import { API_BASE_URL } from '../config/api.config';
+import { API_URL } from '../config/api.config';
 
 export interface Product {
   id?: number;
@@ -27,7 +27,7 @@ export interface Order {
 
 @Injectable({ providedIn: 'root' })
 export class InventoryService {
-  private apiUrl = `${API_BASE_URL}/inventory`;
+  private apiUrl = `${API_URL}/inventory`;
   private productsSubject = new BehaviorSubject<Product[]>([]);
   private ordersSubject = new BehaviorSubject<Order[]>([]);
   public products$ = this.productsSubject.asObservable();
@@ -124,7 +124,8 @@ export class InventoryService {
   private handleError(err: HttpErrorResponse) {
     let message: string;
     if (err.status === 0) {
-      message = 'Cannot reach the server.';
+      // See network-error.interceptor.ts for the actual message text.
+      message = err.error?.message || 'Cannot reach the server.';
     } else {
       message = err.error?.message || 'Error with inventory operation';
     }

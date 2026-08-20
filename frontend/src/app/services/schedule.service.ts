@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
-import { API_BASE_URL } from '../config/api.config';
+import { API_URL } from '../config/api.config';
 
 export interface Exercise {
   name: string;
@@ -24,7 +24,7 @@ export interface WorkoutSession {
 
 @Injectable({ providedIn: 'root' })
 export class ScheduleService {
-  private apiUrl = `${API_BASE_URL}/schedule`;
+  private apiUrl = `${API_URL}/schedule`;
   private sessionsSubject = new BehaviorSubject<WorkoutSession[]>([]);
   public sessions$ = this.sessionsSubject.asObservable();
 
@@ -80,7 +80,8 @@ export class ScheduleService {
   private handleError(err: HttpErrorResponse) {
     let message: string;
     if (err.status === 0) {
-      message = 'Cannot reach the server.';
+      // See network-error.interceptor.ts for the actual message text.
+      message = err.error?.message || 'Cannot reach the server.';
     } else {
       message = err.error?.message || 'Error with schedule operation';
     }

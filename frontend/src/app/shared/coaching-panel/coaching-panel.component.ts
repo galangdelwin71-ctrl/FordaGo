@@ -20,7 +20,6 @@ import {
   barbellOutline,
   checkmarkCircleOutline,
   personCircleOutline,
-  settingsOutline,
   peopleOutline,
   calendarOutline,
   mailUnreadOutline,
@@ -35,6 +34,7 @@ import {
 } from 'ionicons/icons';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
+import { CoachingNavService, CoachingPanelTab, CoachingPanelHost } from '../../services/coaching-nav.service';
 import { NoNegativeDirective } from '../../directives/no-negative.directive';
 import {
   CoachingService,
@@ -54,6 +54,8 @@ import {
 /** A single row in the coach dashboard's "Today's Sessions" list. */
 interface TodaySessionView {
   proposalId: number;
+  /** Conversation this proposal lives in -- the chat route needs THIS, not proposalId (see openTodaySession()). */
+  conversationId: number;
   clientName: string;
   clientAvatar?: string;
   timeLabel: string;
@@ -85,19 +87,48 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
   @Input() isOpen = false;
 
   /**
+   * Which host page this panel is mounted on ('dashboard' | 'schedule' |
+   * 'coaching'). Required for navigateAway() to tell CoachingNavService
+   * which page should receive the reopen signal on back-navigation, so
+   * Ionic's cached-page lifecycle can't deliver it to the wrong page.
+   * Defaults to 'dashboard' as a safe fallback (unchanged behaviour for
+   * any caller that doesn't set it), but every host page should supply
+   * this explicitly.
+   */
+  @Input() hostPage: CoachingPanelHost = 'dashboard';
+
+  /**
    * Optional tab to land on when the panel opens, overriding the normal
    * role-based default (see loadMyProfile()). Set by the host page from
    * CoachingNavService.consumeReopen() when the panel is being reopened
-   * right after ChatPage's back button, so the member/coach lands
-   * straight back on Messages instead of re-deciding a default tab they
-   * didn't ask for. 'clients'/'conversations' map onto the coach-only
-   * dashboard's own tabs (see applyRequestedTab()) when the account
-   * resolves as a coach.
+   * after a back-navigation from chat/coach-profile, so the member/coach
+   * lands exactly back on whichever tab they were actually on before
+   * (see navigateAway() below -- that's where this value gets recorded),
+   * instead of a re-decided default they didn't ask for. Any coach-only
+   * tab ('clients'/'requests'/'messages') or member-only tab
+   * ('explore'/'conversations'/'classes') is silently ignored if it
+   * doesn't match the resolved role (see applyRequestedTab()).
    */
-  @Input() initialTab: 'explore' | 'conversations' | 'clients' | 'classes' | null = null;
+  @Input() initialTab: CoachingPanelTab | null = null;
 
   /** Emitted when the panel should close (close button or header icon re-click). The parent page then flips its own state, which unmounts this component via *ngIf. */
   @Output() closed = new EventEmitter<void>();
+
+  /**
+   * Emitted right before this panel navigates away to a full page (chat,
+   * coach profile, schedule, settings) via router.navigate() -- distinct
+   * from `closed` (the header-X / role-aware "close the panel" intent).
+   * The parent must unconditionally unmount the panel on this event
+   * regardless of role. `closed` deliberately does NOT unmount for a
+   * coach account (see CoachingPage.closeCoachingPanel()), and every
+   * navigation method below used to call close() too -- so a coach
+   * opening a client chat left a stale CoachingPanelComponent instance
+   * mounted underneath the destination route. Combined with Ionic's
+   * router-outlet page caching, that stale instance corrupted the page
+   * transition on the way back (Location.back() from ChatPage), freezing
+   * the UI so nothing on screen responded to touch. See navigateAway().
+   */
+  @Output() navigated = new EventEmitter<void>();
 
   /** All HTTP subscriptions started by this panel — unsubscribed together in ngOnDestroy so an in-flight request never writes into a destroyed component. */
   private sub = new Subscription();
@@ -143,6 +174,20 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
   conversations: Conversation[] = [];
   isLoading = true;
   isStartingChat = false;
+
+  /**
+   * Total unread MESSAGES across every conversation (sum of each
+   * Conversation.unread_count from the backend), NOT the number of
+   * conversation threads. Drives the member "Messages" tab badge (see
+   * .tab-badge-count in the template) -- a thread count was misleading
+   * there: a single coach who sent 10 unread messages in one thread
+   * showed "1", not "10". unread_count is already scoped server-side to
+   * messages the other party sent that this account hasn't read yet, so
+   * a plain sum is the correct total with no extra request needed.
+   */
+  get totalUnreadMessages(): number {
+    return this.conversations.reduce((total, convo) => total + (convo.unread_count || 0), 0);
+  }
 
   // ── Coach Dashboard state (isCoach === true only) ─────────────────
   // Everything below mirrors the standalone Coach Dashboard page 1:1 —
@@ -205,6 +250,7 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
     private router: Router,
     private auth: AuthService,
     private coachingService: CoachingService,
+    private coachingNav: CoachingNavService,
   ) {
     addIcons({
       personOutline,
@@ -218,7 +264,6 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
       checkmarkCircleOutline,
       barbellOutline,
       personCircleOutline,
-      settingsOutline,
       peopleOutline,
       calendarOutline,
       mailUnreadOutline,
@@ -256,6 +301,27 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
   }
 
   /**
+   * Closes the panel unconditionally before navigating to a full page --
+   * see `navigated` doc-comment above. Always use this (never close())
+   * from a method that follows with router.navigate().
+   *
+   * Also records the tab this panel was ACTUALLY showing at the moment of
+   * navigating away (see CoachingNavService doc-comment) -- this is what
+   * lets a plain back button later restore the exact screen the member
+   * left, instead of some hardcoded guess. Every caller below already
+   * navigates to a page (chat, coach profile, schedule) that a member can
+   * reasonably back out of, so this is deliberately unconditional rather
+   * than opted into per-call-site.
+   */
+  private navigateAway(): void {
+    this.coachingNav.requestReopen(
+      this.isCoach ? this.coachTab : this.activeTab,
+      this.hostPage,
+    );
+    this.navigated.emit();
+  }
+
+  /**
    * Resolves whether the logged-in account is a coach, then loads the
    * correct default tab's data. This is the single entry point that
    * decides isCoach for the rest of the panel -- nothing else here should
@@ -274,8 +340,7 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
           if (this.isCoach) {
             this.loadCoachDashboard();
           } else {
-            this.loadConversations();
-            if (this.activeTab === 'explore') this.loadCoaches();
+            this.loadMemberTabData();
           }
         },
         error: (err) => {
@@ -294,25 +359,43 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
   }
 
   /**
+   * Loads whatever data the member's CURRENT activeTab needs -- called
+   * both on the normal default ('explore') and after applyRequestedTab()
+   * may have just restored a different tab ('conversations'/'classes')
+   * via a back-navigation. Conversations are always loaded regardless of
+   * which tab is active: the Messages tab button's unread badge
+   * (totalUnreadMessages, see getter above) needs that data even while
+   * sitting on a different tab.
+   */
+  private loadMemberTabData(): void {
+    this.loadConversations();
+    if (this.activeTab === 'explore') this.loadCoaches();
+    else if (this.activeTab === 'classes') this.loadPublicPrograms();
+  }
+
+  /**
    * Applies the tab requested via CoachingNavService.consumeReopen() (see
-   * initialTab doc-comment above), mapping it onto whichever tab set
-   * actually applies now that isCoach has just been resolved by the only
-   * caller (loadMyProfile()). 'conversations' maps to the coach
-   * dashboard's own 'messages' tab for a coach account, or the member
-   * panel's 'conversations' tab otherwise; 'clients' only ever applies to
-   * a coach account and 'explore' only ever to a member -- either one
-   * requested against the wrong role is silently ignored, leaving the
-   * normal role-based default already set above in place.
+   * initialTab doc-comment above), restoring the EXACT tab the panel was
+   * showing before it last navigated away -- now that isCoach has just
+   * been resolved by the only caller (loadMyProfile()). A coach-only
+   * value ('clients'/'requests'/'messages') requested against a member
+   * account (or a member-only value against a coach account) is silently
+   * ignored, leaving the normal role-based default already set above in
+   * place -- that combination should never happen in practice (the panel
+   * only ever records its own current role's tab, see navigateAway()),
+   * but a stale/cross-role value must never corrupt the UI if it ever did.
    */
   private applyRequestedTab(): void {
     const requested = this.initialTab;
     if (!requested) return;
 
-    if (this.isCoach) {
-      if (requested === 'conversations') this.coachTab = 'messages';
-      else if (requested === 'clients') this.coachTab = 'clients';
-    } else if (requested === 'explore' || requested === 'conversations' || requested === 'classes') {
-      this.activeTab = requested;
+    const coachTabs: readonly CoachDashboardTab[] = ['clients', 'requests', 'messages'];
+    const memberTabs: readonly ('explore' | 'conversations' | 'classes')[] = ['explore', 'conversations', 'classes'];
+
+    if (this.isCoach && (coachTabs as readonly string[]).includes(requested)) {
+      this.coachTab = requested as CoachDashboardTab;
+    } else if (!this.isCoach && (memberTabs as readonly string[]).includes(requested)) {
+      this.activeTab = requested as 'explore' | 'conversations' | 'classes';
     }
   }
 
@@ -378,6 +461,7 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
 
     return {
       proposalId: p.id,
+      conversationId: p.conversation_id,
       clientName,
       clientAvatar: client?.profile_image,
       timeLabel: `${p.time_val} ${p.time_ampm}`,
@@ -489,6 +573,51 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
 
   closeProfileModal(): void {
     this.profileModalOpen = false;
+  }
+
+  /**
+   * Photo picker for Manage Profile -- mirrors ProfilePage's
+   * onProfileImageSelected() (member Edit Profile modal) so the coach
+   * dashboard uses the same upload-a-file flow instead of a raw "Photo
+   * URL" text field asking the coach to paste a link. Reads the file
+   * client-side into a data: URL and stores it straight in
+   * profileForm.photo_url -- same field saveProfile() already sends to
+   * PUT /coaches/me, so the backend contract is unchanged.
+   */
+  onCoachPhotoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input?.files?.[0];
+    if (!file) return;
+
+    const isAllowedType = ['image/png', 'image/jpeg', 'image/webp'].includes(file.type);
+    if (!isAllowedType) {
+      this.profileFormError = 'Please select a PNG, JPG, or WEBP image.';
+      input.value = '';
+      return;
+    }
+
+    const maxBytes = 2 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      this.profileFormError = 'Image must be 2MB or smaller.';
+      input.value = '';
+      return;
+    }
+
+    this.profileFormError = '';
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result || '');
+      if (!result.startsWith('data:image/')) {
+        this.profileFormError = 'Invalid image file.';
+        return;
+      }
+      this.profileForm.photo_url = result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  removeCoachPhoto(): void {
+    this.profileForm.photo_url = '';
   }
 
   saveProfile(): void {
@@ -604,9 +733,13 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
       workout_type: '',
       target: '',
       duration_minutes: 60,
-      price: 0,
+      // No default price — an empty field shows the "0" placeholder
+      // instead of a real value the coach has to notice and clear.
+      price: undefined,
       description: '',
-      items: [{ name: '', sets: 3, reps: 10, description: '' }],
+      // No default sets/reps either, same reasoning — blank inputs show
+      // their "Sets" / "Reps" placeholders until the coach types a value.
+      items: [{ name: '', sets: undefined, reps: undefined, description: '' }],
       is_public: false,
       capacity: 10,
       session_date: '',
@@ -644,7 +777,7 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
   }
 
   addProgramItem(): void {
-    this.programForm.items = [...(this.programForm.items || []), { name: '', sets: 3, reps: 10, description: '' }];
+    this.programForm.items = [...(this.programForm.items || []), { name: '', sets: undefined, reps: undefined, description: '' }];
   }
 
   removeProgramItem(index: number): void {
@@ -747,19 +880,22 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
   // a pushed page would leave stale state mounted). ───────────────────
 
   goToSchedule(): void {
-    this.close();
+    this.navigateAway();
     this.router.navigate(['/schedule']);
   }
 
-  /** Settings shortcut on the Coach Dashboard header — closes the panel then hands off to the normal Profile/Settings page. */
-  openSettings(): void {
-    this.close();
-    this.router.navigate(['/profile']);
-  }
-
+  /**
+   * "View" on a Today's Sessions row -- opens the chat thread the proposal
+   * belongs to (where the full proposal card -- date, time, price,
+   * location, exercise list -- is rendered, see chat.page.html's
+   * proposal-card-bubble). Routes on conversationId, NOT proposalId: the
+   * chat route is /chat/:conversationId, and passing the proposal's own id
+   * there took the coach to the wrong conversation (or a 404) whenever the
+   * two ids didn't happen to match.
+   */
   openTodaySession(session: TodaySessionView): void {
-    this.close();
-    this.router.navigate(['/chat', session.proposalId]);
+    this.navigateAway();
+    this.router.navigate(['/chat', session.conversationId]);
   }
 
   // ── Member flow: Explore Coaches ──────────────────────────
@@ -807,7 +943,7 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
   }
 
   viewCoach(coach: Coach) {
-    this.close(); // Close panel before navigating
+    this.navigateAway(); // Close panel before navigating
     this.router.navigate(['/coach', coach.id]);
   }
 
@@ -819,7 +955,7 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
       next: (convo) => {
         this.isStartingChat = false;
         if (convo && convo.id) {
-          this.close(); // Close panel before navigating
+          this.navigateAway(); // Close panel before navigating
           this.router.navigate(['/chat', convo.id]);
         }
       },
@@ -923,13 +1059,13 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
   }
 
   openConversation(convo: Conversation) {
-    this.close(); // Close panel before navigating
+    this.navigateAway(); // Close panel before navigating
     this.router.navigate(['/chat', convo.id]);
   }
 
   /** Opens the chat thread for one of the coach's clients (My Clients tab). */
   openClientChat(item: CoachClientItem): void {
-    this.close(); // Close panel before navigating
+    this.navigateAway(); // Close panel before navigating
     this.router.navigate(['/chat', item.conversation_id]);
   }
 }

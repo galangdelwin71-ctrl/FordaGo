@@ -3,6 +3,7 @@ import { IonApp, IonRouterOutlet, ToastController } from '@ionic/angular/standal
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { App } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 import { addIcons } from 'ionicons';
 import {
   addOutline,
@@ -93,6 +94,7 @@ import {
 
 import { WorkoutTrackerService } from './services/workout-tracker.service';
 import { ThemeService } from './services/theme.service';
+import { NotificationCenterService } from './services/notification-center.service';
 
 // Shape of the handle Capacitor's App.addListener() resolves to — declared
 // locally instead of importing PluginListenerHandle so this file doesn't
@@ -113,7 +115,34 @@ interface BackButtonListenerHandle {
 // entry from before the admin/staff account signed in, which is exactly
 // what let repeated back presses bounce an already-logged-in admin back to
 // the login screen.
-const BACK_BUTTON_ROOT_PATHS = new Set(['/dashboard', '/admin', '/login']);
+//
+// /schedule, /equipment, /inventory, /profile, /qr-scanner, and /coaching
+// are included alongside /dashboard because they're the app's bottom-nav /
+// header-icon TAB pages, not drill-in pages -- every goTo*() method on
+// each of those pages now navigates with { replaceUrl: true } (see e.g.
+// dashboard.page.ts's goToSchedule()), so switching tabs never pushes a
+// new history entry; there is only ever ONE "current tab" entry at a time.
+// That means a tab page has nothing meaningful to Location.back() into --
+// falling through to plain history from here used to walk back through
+// whichever tab happened to be visited earlier (e.g. Home), which read as
+// the back button randomly "jumping" to an unrelated screen instead of
+// exiting the app like a normal Android root screen. Treating every tab
+// page as a root page (double-press-to-exit, see handleRootBackPress())
+// fixes that. A drill-in page reached FROM a tab (chat, coach profile,
+// transactions, admin-reports) is deliberately NOT listed here -- those
+// still fall through to Location.back() below, which correctly returns to
+// whichever tab pushed them.
+const BACK_BUTTON_ROOT_PATHS = new Set([
+  '/dashboard',
+  '/admin',
+  '/login',
+  '/schedule',
+  '/equipment',
+  '/inventory',
+  '/profile',
+  '/qr-scanner',
+  '/coaching',
+]);
 
 // Double-press-to-exit window: a second back press on a root page within
 // this many ms actually exits the app; otherwise we just show a warning
@@ -139,6 +168,7 @@ export class AppComponent implements OnDestroy {
   constructor(
     private workoutTracker: WorkoutTrackerService,
     private themeService: ThemeService,
+    private notificationCenter: NotificationCenterService,
     private router: Router,
     private location: Location,
     private toastController: ToastController,
@@ -233,12 +263,45 @@ export class AppComponent implements OnDestroy {
     this.themeService.initTheme();
     this.workoutTracker.startAutoSync();
     this.registerHardwareBackButton();
+    void this.registerNotificationTapListener();
   }
 
   ngOnDestroy(): void {
     // Prevent a leaked native listener/closure if the root component is
     // ever torn down (e.g. Angular testing harness, hot-reload scenarios).
     void this.backButtonListener?.remove();
+  }
+
+  /**
+   * Registered once at app boot (mirrors registerHardwareBackButton()
+   * just above) so a tap is caught whether the app was already running,
+   * backgrounded, or cold-started BY the tap itself -- Capacitor buffers
+   * the launch notification and delivers it to this listener as soon as
+   * it's registered. Native-only: LocalNotifications.schedule() (see
+   * NotificationCenterService.sendDeviceNotification()) only ever fires
+   * on a native platform, so there is nothing to listen for on web here
+   * -- the equivalent web-Notification tap handling lives inline in that
+   * same method instead, since it has direct access to the Notification
+   * object it just created.
+   */
+  private async registerNotificationTapListener(): Promise<void> {
+    if (!Capacitor.isNativePlatform()) {
+      return;
+    }
+
+    try {
+      const { LocalNotifications } = await import('@capacitor/local-notifications');
+      await LocalNotifications.addListener('localNotificationActionPerformed', (action) => {
+        const notificationId = action.notification?.extra?.['notificationId'];
+        this.notificationCenter.openFromDeviceNotification(
+          notificationId ? String(notificationId) : null
+        );
+      });
+    } catch {
+      // Non-fatal: same reasoning as registerHardwareBackButton()'s catch --
+      // must not block app startup if native registration fails for any
+      // reason (e.g. plugin unavailable on this build).
+    }
   }
 
   /**
@@ -268,6 +331,14 @@ export class AppComponent implements OnDestroy {
         return;
       }
 
+      // Plain history navigation for every other route, including a chat
+      // thread (/chat/:conversationId) or a coach profile (/coach/:id).
+      // Any "reopen the coaching panel on the right tab" instruction was
+      // already recorded via CoachingNavService BEFORE that route was
+      // ever pushed — see CoachingPanelComponent.navigateAway() — so this
+      // handler doesn't need to (and must not) special-case any path or
+      // guess a tab itself; it just mirrors what the on-screen back arrow
+      // already does via ChatPage.goBack() / CoachDetailPage.goBack().
       this.location.back();
     })
       .then((handle) => {

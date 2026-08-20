@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { API_BASE_URL } from '../config/api.config';
+import { API_URL } from '../config/api.config';
 
 export interface Coach {
   id: number;
@@ -233,7 +233,7 @@ export interface WorkoutPlanProposal {
 
 @Injectable({ providedIn: 'root' })
 export class CoachingService {
-  private readonly apiUrl = API_BASE_URL;
+  private readonly apiUrl = API_URL;
 
   constructor(private http: HttpClient) {}
 

@@ -19,7 +19,7 @@ import { AuthService } from '../services/auth.service';
 import { HeaderComponent } from '../shared/header/header.component';
 import { NotificationPanelComponent } from '../shared/notification-panel/notification-panel.component';
 import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.component';
-import { CoachingNavService } from '../services/coaching-nav.service';
+import { CoachingNavService, CoachingPanelTab } from '../services/coaching-nav.service';
 
 @Component({
   selector: 'app-coaching',
@@ -49,8 +49,8 @@ export class CoachingPage implements OnInit {
    * back to when closed.
    */
   coachingPanelOpen = false;
-  /** Set from CoachingNavService.consumeReopen() in ngOnInit() when this page is reached via ChatPage's back button -- see coaching-nav.service.ts. Cleared whenever the panel closes (closeCoachingPanel()) so it never silently re-applies to a later, unrelated open. */
-  coachingPanelInitialTab: 'conversations' | 'clients' | 'explore' | null = null;
+  /** Set from CoachingNavService.consumeReopen() in ngOnInit() when this page is reached via a back-navigation from chat/coach-profile -- see coaching-nav.service.ts. Cleared whenever the panel closes (closeCoachingPanel()) so it never silently re-applies to a later, unrelated open. */
+  coachingPanelInitialTab: CoachingPanelTab | null = null;
 
   constructor(
     private router: Router,
@@ -104,7 +104,7 @@ export class CoachingPage implements OnInit {
 
   /** One-shot: consumeReopen() clears itself, so a normal visit/re-entry to this page is completely unaffected. */
   private applyPendingCoachingReopen(): void {
-    const pendingTab = this.coachingNav.consumeReopen();
+    const pendingTab = this.coachingNav.consumeReopen('coaching');
     if (pendingTab) {
       this.coachingPanelInitialTab = pendingTab;
       this.coachingPanelOpen = true;
@@ -154,13 +154,43 @@ export class CoachingPage implements OnInit {
     this.coachingPanelInitialTab = null;
   }
 
+  /**
+   * Bound to CoachingPanelComponent's (navigated) output -- fired right
+   * before the panel sends the user to a full page (chat, coach profile,
+   * schedule, settings). Unlike closeCoachingPanel(), this always
+   * unmounts the panel, including for a coach account: the destination
+   * route IS the next screen, so there's no "blank page" to strand the
+   * coach on, and leaving the panel mounted here was what corrupted the
+   * page transition on the way back from a chat (see the `navigated`
+   * doc-comment on CoachingPanelComponent for the full freeze writeup).
+   */
+  onCoachingPanelNavigated() {
+    this.coachingPanelOpen = false;
+    this.coachingPanelInitialTab = null;
+  }
+
   // ── Navigation ───────────────────────────────────────
-  goToDashboard() { this.router.navigate(['/dashboard']); }
-  goToSchedule() { this.router.navigate(['/schedule']); }
-  goToQr() { this.router.navigate(['/qr-scanner']); }
-  goToInventory() { this.router.navigate(['/inventory']); }
-  goToProfile() { this.router.navigate(['/profile']); }
-  goToEquipment() { this.router.navigate(['/equipment']); }
+  // Every bottom-nav / header destination unmounts the coaching panel
+  // FIRST via onCoachingPanelNavigated() (same unconditional unmount used
+  // for in-panel links -- see that method's doc-comment). Without this, a
+  // coach tapping Home/Schedule/Shop/Profile while inside the dashboard
+  // left app-coaching-panel mounted underneath the new route: its HTTP
+  // subscriptions, ion-modals, and document:click listener kept running
+  // against a page the coach could no longer see, which intermittently ate
+  // touch input on the destination page and made later taps look like they
+  // "went back" or closed instead of navigating. Mirrors
+  // closeOverlaysForNavigation() in dashboard.page.ts, which never had this gap.
+  // NOTE: replaceUrl: true — see the matching note in dashboard.page.ts.
+  // Bottom-nav tab switches must REPLACE the current history entry, not
+  // push a new one, or Location.back() (on-screen arrow / hardware back)
+  // from a later drill-in page (e.g. chat) walks past several stale tab
+  // visits instead of returning to whichever tab was actually active.
+  goToDashboard() { this.onCoachingPanelNavigated(); this.router.navigate(['/dashboard'], { replaceUrl: true }); }
+  goToSchedule() { this.onCoachingPanelNavigated(); this.router.navigate(['/schedule'], { replaceUrl: true }); }
+  goToQr() { this.onCoachingPanelNavigated(); this.router.navigate(['/qr-scanner'], { replaceUrl: true }); }
+  goToInventory() { this.onCoachingPanelNavigated(); this.router.navigate(['/inventory'], { replaceUrl: true }); }
+  goToProfile() { this.onCoachingPanelNavigated(); this.router.navigate(['/profile'], { replaceUrl: true }); }
+  goToEquipment() { this.onCoachingPanelNavigated(); this.router.navigate(['/equipment'], { replaceUrl: true }); }
 
   // ── Notification Panel ────────────────────────────────
   openNotifPanel() { this.notifPanelOpen = true; }

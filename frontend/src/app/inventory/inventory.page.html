@@ -16,7 +16,10 @@
 <app-coaching-panel
   *ngIf="coachingPanelOpen"
   [isOpen]="coachingPanelOpen"
-  (closed)="closeCoachingPanel()">
+  hostPage="inventory"
+  [initialTab]="coachingPanelInitialTab"
+  (closed)="closeCoachingPanel()"
+  (navigated)="closeCoachingPanel()">
 </app-coaching-panel>
 
 <!-- Cart / Pending Orders shortcuts -- moved off the header per request.
@@ -39,10 +42,27 @@
     <!-- Section Label -->
     <div class="section-label">Available Supplements</div>
 
-    <!-- Loading State -->
-    <div class="empty-shop" *ngIf="productsLoading">
-      <ion-icon name="hourglass-outline" class="empty-emoji"></ion-icon>
-      <div class="empty-text">Loading products…</div>
+    <!-- Loading State: skeleton cards instead of plain text, so the shop
+         feels "alive" while the very first (uncached) fetch is in flight.
+         Only rendered when there is truly no data yet -- Stage 3's
+         stale-while-revalidate keeps productsLoading false whenever
+         cached/previous data is already on screen, so a returning member
+         never sees this. -->
+    <div class="products-list" *ngIf="productsLoading" aria-hidden="true">
+      <div class="product-card skeleton-card" *ngFor="let i of skeletonPlaceholders">
+        <div class="skeleton-block skeleton-banner"></div>
+        <div class="product-body">
+          <div class="skeleton-block skeleton-line skeleton-line-sm"></div>
+          <div class="skeleton-block skeleton-line skeleton-line-lg"></div>
+        </div>
+        <div class="product-footer">
+          <div class="skeleton-block skeleton-line skeleton-line-price"></div>
+          <div class="product-actions">
+            <div class="skeleton-block skeleton-btn"></div>
+            <div class="skeleton-block skeleton-btn"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Error State -->
@@ -67,9 +87,13 @@
         (click)="openOrderModal(product)"
       >
         <!-- Product Image / Icon Banner -->
+        <!-- Stage 6: grid card uses the small thumbnail (falls back to the
+             full image_url in normalizeApiProduct() when no thumbnail_url
+             exists yet) instead of downloading the full 1200px image just
+             to render it at card size. -->
         <div class="product-banner">
-          <img *ngIf="product.image_url" [src]="product.image_url" class="product-img" [alt]="product.name" (error)="handleProductImageError(product)" />
-          <div *ngIf="!product.image_url" class="product-icon-fallback">{{ product.icon }}</div>
+          <img *ngIf="product.thumbnail_url" [src]="product.thumbnail_url" class="product-img" [alt]="product.name" (error)="handleProductImageError(product)" />
+          <div *ngIf="!product.thumbnail_url" class="product-icon-fallback">{{ product.icon }}</div>
           <div class="stock-chip" [class.low]="product.stock < 3" [class.out]="product.stock === 0">
             <span *ngIf="product.stock > 0">{{ product.stock }} left</span>
             <span *ngIf="product.stock === 0">Out of stock</span>

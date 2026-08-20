@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { AuthService } from './auth.service';
-import { API_BASE_URL } from '../config/api.config';
+import { API_URL } from '../config/api.config';
 
 export interface AppNotificationItem {
   id: string;
@@ -42,10 +43,49 @@ export class NotificationCenterService {
   private notificationsSubject = new BehaviorSubject<AppNotificationItem[]>([]);
   readonly notifications$ = this.notificationsSubject.asObservable();
 
-  constructor(private http: HttpClient, private auth: AuthService) {}
+  // Fires when a device notification (native OS tray, or a web Notification)
+  // is tapped, so it re-opens directly inside the app's own Notifications
+  // panel instead of just bringing the app to the foreground on whatever
+  // page happened to be open. `null` payload means "open the panel, no
+  // specific target" (e.g. we couldn't identify which item was tapped);
+  // a string payload is the AppNotificationItem.id to jump straight to its
+  // detail view. BehaviorSubject (not Subject) so a late-mounting panel
+  // instance -- e.g. the app was cold-started by the tap and Dashboard's
+  // NotificationPanelComponent hasn't constructed yet when this first
+  // fires -- still picks up the pending request once it does mount.
+  private pendingOpenSubject = new BehaviorSubject<string | null>(null);
+  readonly pendingOpen$ = this.pendingOpenSubject.asObservable();
+
+  constructor(private http: HttpClient, private auth: AuthService, private router: Router) {}
+
+  /**
+   * Called when the person taps a device notification (native OS tray via
+   * Capacitor LocalNotifications, or a web Notification) — see
+   * app.component.ts's registerNotificationTapListener() for native, and
+   * sendDeviceNotification() below for web. Always routes to /dashboard
+   * first (the one page guaranteed to embed the shared notifications
+   * panel and to exist for every logged-in member) so tapping a
+   * notification behaves the same way regardless of which page the app
+   * happened to resume on, or whether it was cold-started by the tap.
+   */
+  openFromDeviceNotification(notificationId: string | null): void {
+    this.pendingOpenSubject.next(notificationId);
+    void this.router.navigate(['/dashboard']);
+  }
+
+  /**
+   * Consumed by NotificationPanelComponent once it has acted on a pending
+   * open request — resets the BehaviorSubject back to its "nothing
+   * pending" state so it doesn't re-fire and re-open the panel again the
+   * next time an unrelated panel instance subscribes (e.g. navigating to
+   * a different tab that also embeds the panel).
+   */
+  clearPendingOpenNotification(): void {
+    this.pendingOpenSubject.next(null);
+  }
 
   private resolveApiBase(): string {
-    return API_BASE_URL;
+    return API_URL;
   }
 
   /**
@@ -100,7 +140,15 @@ export class NotificationCenterService {
       day: 'numeric',
       year: 'numeric',
     });
-    const title = `⚠️ Missed Workout: ${sessionTitle}`;
+    // Was `⚠️ Missed Workout: ...` -- the warning emoji made this read as
+    // an alarm/error rather than a gentle reminder, and it never matched
+    // the backend's own clean title format anyway (see
+    // NotificationController::missedWorkoutAlert(), which has never used
+    // an emoji). Once the backend confirms this alert, this local stand-in
+    // is deleted and replaced by the server copy -- so keeping them
+    // visually consistent means the title no longer visibly changes/
+    // "downgrades" a few seconds after it first appears.
+    const title = `Missed Workout: ${sessionTitle}`;
     const normalizedExercises = (homeExercises || [])
       .map((item) => String(item || '').trim())
       .filter(Boolean)
@@ -438,14 +486,31 @@ export class NotificationCenterService {
       : notification.message;
 
     if (Notification.permission === 'granted') {
-      new Notification(notification.title, { body: webBody });
+      const webNotification = new Notification(notification.title, { body: webBody });
+      // Same "land in the app's own Notifications panel" behavior as the
+      // native LocalNotifications tap handler in app.component.ts -- see
+      // NotificationCenterService.openFromDeviceNotification(). Without
+      // this, clicking a web push notification only focused/opened the
+      // tab and left the person wherever the page happened to be, with no
+      // way to get back to that specific notification short of manually
+      // opening the bell icon and scrolling to find it again.
+      webNotification.onclick = () => {
+        window.focus();
+        this.openFromDeviceNotification(notification.id);
+        webNotification.close();
+      };
       return;
     }
 
     if (Notification.permission !== 'denied') {
       const permission = await Notification.requestPermission();
       if (permission === 'granted') {
-        new Notification(notification.title, { body: webBody });
+        const webNotification = new Notification(notification.title, { body: webBody });
+        webNotification.onclick = () => {
+          window.focus();
+          this.openFromDeviceNotification(notification.id);
+          webNotification.close();
+        };
       }
     }
   }

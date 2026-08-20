@@ -137,14 +137,19 @@
       box-shadow: 0 4px 16px rgba(255, 214, 0, 0.3);
 
       .tab-badge-count {
-        background: var(--bg-primary, #06080f);
-        color: var(--accent-lime, #ffd600);
+        background: var(--accent-red, #ff4461);
+        color: #ffffff;
       }
     }
 
+    // Red, not the tab's own accent color -- this specifically counts
+    // UNREAD messages (see totalUnreadMessages in the .ts), so it needs
+    // to read as a real notification alert like .convo-unread-pill /
+    // .cd-unread-badge / .cd-tab-badge elsewhere in this component, not
+    // blend in as a neutral tab-count chip.
     .tab-badge-count {
-      background: var(--accent-dim, rgba(255, 214, 0, 0.2));
-      color: var(--accent-lime, #ffd600);
+      background: var(--accent-red, #ff4461);
+      color: #ffffff;
       font-size: 11px;
       font-weight: 700;
       padding: 2px 7px;
@@ -611,32 +616,6 @@
 // ═══════════════════════════════════════════════════════════
 // COACH DASHBOARD content (isCoach === true) — `cd-` namespace
 // ═══════════════════════════════════════════════════════════
-
-.cd-title-row {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 12px;
-}
-
-.cd-settings-btn {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  height: 34px;
-  padding: 0 12px;
-  border-radius: 11px;
-  border: 1px solid var(--border-secondary, rgba(255, 255, 255, 0.08));
-  background: var(--overlay-light, rgba(255, 255, 255, 0.04));
-  color: var(--text-secondary, rgba(255, 255, 255, 0.75));
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: opacity 0.15s;
-
-  ion-icon { font-size: 15px; }
-  &:active { opacity: 0.7; }
-}
 
 .cd-card {
   background: var(--overlay-light, rgba(255, 255, 255, 0.04));
@@ -1177,6 +1156,69 @@
   margin-bottom: 14px;
 }
 
+// ── Manage Profile modal: photo editor (replaces the old raw "Photo URL"
+// text field -- same upload-a-file pattern as ProfilePage's Edit Profile
+// modal, see profile.page.html/scss's .photo-editor/.photo-preview/etc.,
+// ported here under the cd- namespace so it can't collide with that
+// component's own classes if both are ever in the DOM together. ────────
+.cd-photo-editor {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid var(--border-secondary, rgba(255, 255, 255, 0.08));
+  background: var(--overlay-light, rgba(255, 255, 255, 0.03));
+}
+
+.cd-photo-preview {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--accent-lime, #ffd600);
+  color: #000;
+  font-weight: 800;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cd-photo-preview-img {
+  object-fit: cover;
+  border: 1px solid var(--accent-border, rgba(255, 214, 0, 0.45));
+}
+
+.cd-photo-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cd-photo-btn,
+.cd-photo-remove-btn {
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid var(--border-primary, rgba(255, 255, 255, 0.12));
+  background: var(--overlay-medium, rgba(255, 255, 255, 0.05));
+  color: var(--text-primary, #ffffff);
+  cursor: pointer;
+}
+
+.cd-photo-remove-btn {
+  color: #ff9aa9;
+  border-color: rgba(255, 154, 169, 0.35);
+  background: rgba(255, 68, 97, 0.08);
+}
+
+.cd-photo-file-input {
+  display: none;
+}
+
 .cd-form-label {
   display: block;
   font-size: 10px;
@@ -1214,11 +1256,28 @@ textarea.cd-form-input {
 }
 
 select.cd-form-select {
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23FFD600' stroke-width='2.5'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 14px;
+  // -webkit-appearance/appearance above strip the native OS control so
+  // only this single custom chevron shows. Two more browser-specific
+  // resets are needed for that to actually hold on every engine this app
+  // ships to (Capacitor's Android WebView in particular): -moz-appearance
+  // for Gecko-based builds, and the ::-ms-expand rule below for old
+  // Chromium/Edge WebViews that still render their own native arrow ON
+  // TOP of a custom background-image if not explicitly hidden. Without
+  // both, the select could paint its own native indicator(s) alongside
+  // this SVG one -- multiple stacked/repeated chevrons next to the
+  // selected value (e.g. the Day picker in Set Availability, or AM/PM in
+  // Create Program) instead of the single intended arrow.
+  -moz-appearance: none;
+
+  // Single declaration (not split image/repeat/position/size) so every
+  // sub-property is pinned together -- a later rule that only overrides
+  // background-image (see global.scss's light/dark ion-modal blocks for
+  // this same class) can no longer leave a stale/undefined repeat or
+  // position behind and cause the icon to tile across the field.
+  background: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23FFD600' stroke-width='2.5'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") no-repeat right 12px center / 14px;
   padding-right: 34px;
+
+  &::-ms-expand { display: none; }
 
   option { background: var(--bg-secondary, #0b0e1a); color: #FFFFFF; }
 }
@@ -1371,6 +1430,24 @@ select.cd-form-select {
   cursor: pointer;
 }
 
+.cd-program-item-header {
+  display: grid;
+  grid-template-columns: 1fr 58px 58px 30px;
+  gap: 6px;
+  margin-bottom: 6px;
+
+  span {
+    font-size: 9px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    text-align: center;
+
+    &:first-child { text-align: left; }
+  }
+}
+
 .cd-program-item-row {
   display: grid;
   grid-template-columns: 1fr 58px 58px 30px;
@@ -1459,14 +1536,16 @@ select.cd-form-select {
         color: #ffffff;
 
         .tab-badge-count {
-          background: rgba(255, 255, 255, 0.3);
+          background: #ff4461;
           color: #ffffff;
         }
       }
 
+      // Stays red in light theme too -- see the dark-theme .tab-badge-count
+      // comment above; this is an unread-message alert, not a themed chip.
       .tab-badge-count {
-        background: rgba(245, 158, 11, 0.15);
-        color: #f59e0b;
+        background: #ff4461;
+        color: #ffffff;
       }
     }
   }

@@ -34,6 +34,15 @@ export class HeaderComponent {
   /** Number of unread notifications. Badge + highlighted bell state show when > 0. */
   @Input() unreadCount = 0;
 
+  /**
+   * Combined count of unread coaching activity (unread chat messages
+   * across all conversations, plus pending client requests for a coach
+   * account) fed in by the host page -- see DashboardPage.coachUnreadCount.
+   * Badge + highlighted coach-icon state show when > 0, same treatment as
+   * the notification bell above.
+   */
+  @Input() coachUnreadCount = 0;
+
   /** Member's saved profile photo URL (base64 data URL or remote URL). */
   @Input() profileImage = '';
 
