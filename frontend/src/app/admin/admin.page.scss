@@ -1643,6 +1643,26 @@ ion-content.admin-content {
   }
 }
 
+/* ── Equipment Card ── */
+.equipment-card {
+  .status-ok {
+    color: #059669;
+    font-weight: 700;
+  }
+
+  .status-warn {
+    color: #dc2626;
+    font-weight: 700;
+  }
+
+  .equip-desc-line {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 3px;
+    line-height: 1.35;
+  }
+}
+
 .newest-chip {
   display: inline-flex;
   align-items: center;

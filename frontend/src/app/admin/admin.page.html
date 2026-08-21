@@ -859,22 +859,60 @@
         </div>
       </div>
 
-      <div class="empty-state" *ngIf="equipment.length === 0">No equipment listed.</div>
+      <!-- Search Input for Equipment -->
+      <div class="search-input-wrap" style="margin-bottom: 12px;">
+        <ion-icon name="search-outline" class="search-icon"></ion-icon>
+        <input
+          class="search-input-field"
+          type="text"
+          placeholder="Search equipment by name or category…"
+          [(ngModel)]="equipmentSearch"
+        />
+        <button
+          class="clear-search-btn"
+          *ngIf="equipmentSearch"
+          (click)="equipmentSearch=''"
+        >
+          ✕
+        </button>
+      </div>
 
-      <div *ngFor="let e of equipment" class="equip-row">
-        <div class="equip-icon-box">
-          <img *ngIf="e.image_url" [src]="e.image_url" style="width:36px;height:36px;object-fit:cover;border-radius:8px;" alt="{{ e.name }}" />
-          <span *ngIf="!e.image_url">🏋️</span>
+      <div class="empty-state" *ngIf="filteredEquipment.length === 0">
+        {{ equipmentSearch ? 'No equipment matching "' + equipmentSearch + '".' : 'No equipment listed.' }}
+      </div>
+
+      <!-- Equipment Cards (matching reference design) -->
+      <div *ngFor="let e of displayedEquipment" class="member-card product-card equipment-card">
+        <div class="product-card-main">
+          <img *ngIf="e.image_url" [src]="e.thumbnail_url || e.image_url" class="product-card-thumb" alt="{{ e.name }}" />
+          <div *ngIf="!e.image_url" class="product-card-thumb fallback">{{ e.icon || '🏋️' }}</div>
+
+          <div class="product-card-info">
+            <div class="product-card-title">{{ e.name }}</div>
+            <div class="product-card-brand">{{ e.category || 'General' }} · <span [class]="e.status === 'available' ? 'status-ok' : 'status-warn'">{{ e.status }}</span></div>
+            <div class="product-card-price-row" *ngIf="e.weight_scale">
+              <span class="product-card-stock" style="color: var(--text-muted);">Weights: <strong>{{ e.weight_scale }}</strong></span>
+            </div>
+            <div class="equip-desc-line" *ngIf="e.description">{{ e.description }}</div>
+          </div>
         </div>
-        <div class="equip-info">
-          <div class="equip-name">{{ e.name }}</div>
-          <div class="equip-meta">{{ e.category }} · {{ e.status }}</div>
-          <div class="equip-meta" *ngIf="e.weight_scale">Weights: {{ e.weight_scale }}</div>
+
+        <div class="card-actions-row dual">
+          <button class="act-btn edit" (click)="editEquipment(e)">
+            <ion-icon name="create-outline"></ion-icon> Edit
+          </button>
+          <button class="act-btn del" (click)="deleteEquipment(e)">
+            <ion-icon name="trash-outline"></ion-icon> Delete
+          </button>
         </div>
-        <div class="row-actions">
-          <button class="act-btn edit" (click)="editEquipment(e)">Edit</button>
-          <button class="act-btn del"  (click)="deleteEquipment(e)">Delete</button>
-        </div>
+      </div>
+
+      <!-- View More / View Less for Equipment -->
+      <div class="view-more-wrap" *ngIf="filteredEquipment.length > equipmentLimit && !equipmentSearch">
+        <button class="view-more-btn" (click)="showAllEquipment = !showAllEquipment">
+          <ion-icon [name]="showAllEquipment ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+          <span>{{ showAllEquipment ? 'View Less' : 'View More (' + (filteredEquipment.length - equipmentLimit) + ' more)' }}</span>
+        </button>
       </div>
 
     </div>

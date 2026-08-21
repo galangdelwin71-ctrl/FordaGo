@@ -233,6 +233,27 @@ export class AdminPage implements OnInit {
 
   // ── Equipment ────────────────────────────────────────
   equipment: any[] = [];
+  equipmentSearch = '';
+  showAllEquipment = false;
+  equipmentLimit = 3;
+
+  get filteredEquipment(): any[] {
+    const q = this.equipmentSearch.trim().toLowerCase();
+    if (!q) return this.equipment;
+    return this.equipment.filter(e =>
+      (e.name && e.name.toLowerCase().includes(q)) ||
+      (e.category && e.category.toLowerCase().includes(q)) ||
+      (e.status && e.status.toLowerCase().includes(q)) ||
+      (e.weight_scale && e.weight_scale.toLowerCase().includes(q))
+    );
+  }
+
+  get displayedEquipment(): any[] {
+    if (this.showAllEquipment || this.equipmentSearch.trim()) {
+      return this.filteredEquipment;
+    }
+    return this.filteredEquipment.slice(0, this.equipmentLimit);
+  }
 
   // ── Notifications ────────────────────────────────────
   notifications: any[] = [];
