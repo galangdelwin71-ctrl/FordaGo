@@ -1663,6 +1663,239 @@ ion-content.admin-content {
   }
 }
 
+/* ── Notifications Tab Enhanced Styles ── */
+.notif-compose-card {
+  .notif-textarea {
+    min-height: 75px;
+    resize: vertical;
+    line-height: 1.4;
+  }
+}
+
+.notif-view-tabs {
+  .count-badge {
+    background: #0f172a;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 1px 6px;
+    border-radius: 999px;
+    margin-left: 4px;
+  }
+}
+
+.notif-card {
+  .notif-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .notif-badge-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .notif-type-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 6px;
+    letter-spacing: 0.3px;
+
+    &.broadcast {
+      background: #fef08a;
+      color: #0f172a;
+      border: 1px solid rgba(15, 23, 42, 0.12);
+    }
+
+    &.member-tag {
+      background: #e0f2fe;
+      color: #0369a1;
+      border: 1px solid rgba(3, 105, 161, 0.18);
+    }
+  }
+
+  .notif-status-tag {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 4px;
+
+    &.new {
+      background: rgba(34, 197, 94, 0.12);
+      color: #059669;
+      font-weight: 800;
+    }
+  }
+
+  .notif-date {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .notif-card-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 8px 0 3px;
+  }
+
+  .notif-card-body {
+    font-size: 13px;
+    color: #1e293b;
+    line-height: 1.45;
+    margin: 4px 0 8px;
+  }
+
+  .notif-card-footer {
+    display: flex;
+    justify-content: flex-end;
+    border-top: 1px solid rgba(15, 23, 42, 0.05);
+    padding-top: 8px;
+    margin-top: 6px;
+  }
+
+  .notif-del-btn {
+    background: rgba(254, 242, 242, 0.7);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    color: #dc2626;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 4px 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: rgba(254, 242, 242, 1);
+      border-color: rgba(239, 68, 68, 0.45);
+    }
+  }
+}
+
+.member-notif-account-card {
+  cursor: pointer;
+
+  &:hover {
+    border-color: rgba(15, 23, 42, 0.2);
+    transform: translateY(-1px);
+
+    .view-account-notifs-btn {
+      background: #0f172a;
+      color: #ffffff;
+    }
+  }
+
+  .notif-count-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: #f8fafc;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    padding: 3px 8px;
+    border-radius: 6px;
+    margin-top: 6px;
+
+    &.has-notifs {
+      color: #0f172a;
+      background: #f1f5f9;
+      font-weight: 700;
+    }
+
+    .unread-highlight {
+      color: #059669;
+      font-weight: 800;
+    }
+  }
+
+  .view-account-notifs-btn {
+    align-self: center;
+    background: #f1f5f9;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    color: #0f172a;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 6px 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+  }
+}
+
+.selected-member-notif-header {
+  .back-to-accounts-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #ffffff;
+    border: 1.5px solid rgba(15, 23, 42, 0.14);
+    color: #0f172a;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 6px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: #f8fafc;
+      border-color: rgba(15, 23, 42, 0.25);
+    }
+  }
+
+  .selected-member-summary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-radius: 14px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+
+    .mini {
+      width: 42px;
+      height: 42px;
+      font-size: 16px;
+      border-radius: 10px;
+    }
+
+    .summary-info {
+      .name {
+        font-size: 15px;
+        font-weight: 800;
+        color: #0f172a;
+      }
+      .email {
+        font-size: 12px;
+        color: var(--text-muted);
+        font-weight: 500;
+      }
+    }
+  }
+}
+
 .newest-chip {
   display: inline-flex;
   align-items: center;

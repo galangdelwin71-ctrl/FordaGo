@@ -922,15 +922,196 @@
     <!-- ══════════════════════════════════════════════ -->
     <div *ngIf="activeTab==='notifs'">
 
-      <div class="section-label">Send Notification</div>
-      <textarea class="notif-input" [(ngModel)]="notifMessage" placeholder="Type announcement or alert…" rows="3"></textarea>
-      <button class="submit-btn" (click)="sendNotification()">Send to All Members</button>
+      <!-- ── Send Notification Compose Card ───────────── -->
+      <div class="member-card notif-compose-card">
+        <div class="form-title" style="margin-bottom: 12px; font-size: 15px;">
+          <ion-icon name="paper-plane-outline"></ion-icon> Send Notification
+        </div>
 
-      <div class="section-label" style="margin-top:24px">Recent Notifications</div>
-      <div class="empty-state" *ngIf="notifications.length === 0">No notifications sent yet.</div>
-      <div *ngFor="let n of notifications" class="notif-row">
-        <div class="notif-msg">{{ n.message }}</div>
-        <div class="notif-meta">{{ n.created_at }} · <span [class]="n.is_read ? 'read' : 'unread'">{{ n.is_read ? 'Read' : 'New' }}</span></div>
+        <label class="field-lbl">Recipient</label>
+        <select class="field-input" [(ngModel)]="notifTargetUserId">
+          <option [ngValue]="null">📢 All Members (Broadcast Announcement)</option>
+          <option *ngFor="let m of members" [ngValue]="m.id">👤 {{ m.username }} ({{ m.email }})</option>
+        </select>
+
+        <label class="field-lbl">Title / Subject (Optional)</label>
+        <input class="field-input" type="text" placeholder="e.g. Gym Maintenance, Schedule Update" [(ngModel)]="notifTitle" />
+
+        <label class="field-lbl">Message</label>
+        <textarea class="field-input notif-textarea" [(ngModel)]="notifMessage" placeholder="Type announcement or alert message…" rows="3"></textarea>
+
+        <button class="submit-btn" (click)="sendNotification()" style="margin-top: 10px;">
+          <ion-icon name="send-outline"></ion-icon>
+          <span>{{ notifTargetUserId ? 'Send Direct Notice' : 'Send to All Members' }}</span>
+        </button>
+      </div>
+
+      <!-- ── Notification Views Navigation ────────────── -->
+      <div class="view-tabs-row notif-view-tabs" style="margin-top: 20px; margin-bottom: 14px;">
+        <button
+          class="view-tab-btn"
+          [class.active]="notifViewMode === 'broadcasts'"
+          (click)="notifViewMode = 'broadcasts'; clearSelectedNotifMember()"
+        >
+          <ion-icon name="megaphone-outline"></ion-icon>
+          <span>Admin & Broadcasts</span>
+          <span class="count-badge" *ngIf="broadcastNotifications.length > 0">{{ broadcastNotifications.length }}</span>
+        </button>
+        <button
+          class="view-tab-btn"
+          [class.active]="notifViewMode === 'members'"
+          (click)="notifViewMode = 'members'"
+        >
+          <ion-icon name="people-outline"></ion-icon>
+          <span>By Member Account</span>
+        </button>
+      </div>
+
+      <!-- ── VIEW 1: Broadcasts & Admin Notices ───────── -->
+      <div *ngIf="notifViewMode === 'broadcasts'">
+        <!-- Search Input -->
+        <div class="search-input-wrap" style="margin-bottom: 12px;">
+          <ion-icon name="search-outline" class="search-icon"></ion-icon>
+          <input
+            class="search-input-field"
+            type="text"
+            placeholder="Search broadcasts & announcements…"
+            [(ngModel)]="broadcastSearch"
+          />
+          <button class="clear-search-btn" *ngIf="broadcastSearch" (click)="broadcastSearch=''">✕</button>
+        </div>
+
+        <div class="empty-state" *ngIf="filteredBroadcastNotifications.length === 0">
+          {{ broadcastSearch ? 'No broadcasts matching "' + broadcastSearch + '".' : 'No announcements or broadcast notifications sent yet.' }}
+        </div>
+
+        <div *ngFor="let n of displayedBroadcastNotifications" class="member-card notif-card">
+          <div class="notif-card-header">
+            <div class="notif-badge-wrap">
+              <span class="notif-type-tag broadcast"><ion-icon name="megaphone"></ion-icon> BROADCAST</span>
+              <span class="notif-status-tag" [class.new]="!n.is_read">{{ n.is_read ? 'Read' : 'New' }}</span>
+            </div>
+            <span class="notif-date">{{ formatNotifDate(n.created_at) }}</span>
+          </div>
+          <div class="notif-card-title" *ngIf="n.title">{{ n.title }}</div>
+          <div class="notif-card-body">{{ n.message }}</div>
+          <div class="notif-card-footer">
+            <button class="notif-del-btn" (click)="deleteNotification(n)" title="Delete Notification">
+              <ion-icon name="trash-outline"></ion-icon> Delete
+            </button>
+          </div>
+        </div>
+
+        <!-- View More / View Less for Broadcasts -->
+        <div class="view-more-wrap" *ngIf="filteredBroadcastNotifications.length > broadcastLimit && !broadcastSearch">
+          <button class="view-more-btn" (click)="showAllBroadcasts = !showAllBroadcasts">
+            <ion-icon [name]="showAllBroadcasts ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+            <span>{{ showAllBroadcasts ? 'View Less' : 'View More (' + (filteredBroadcastNotifications.length - broadcastLimit) + ' more)' }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── VIEW 2: By Member Account ────────────────── -->
+      <div *ngIf="notifViewMode === 'members'">
+
+        <!-- Sub-view 2A: Member List (No Member Selected) -->
+        <div *ngIf="!selectedNotifMember">
+          <!-- Search Member Accounts -->
+          <div class="search-input-wrap" style="margin-bottom: 12px;">
+            <ion-icon name="search-outline" class="search-icon"></ion-icon>
+            <input
+              class="search-input-field"
+              type="text"
+              placeholder="Search member account by name or email…"
+              [(ngModel)]="notifMemberSearch"
+            />
+            <button class="clear-search-btn" *ngIf="notifMemberSearch" (click)="notifMemberSearch=''">✕</button>
+          </div>
+
+          <div class="empty-state" *ngIf="membersForNotifications.length === 0">
+            No member accounts found.
+          </div>
+
+          <div
+            *ngFor="let m of membersForNotifications"
+            class="member-card member-notif-account-card"
+            (click)="selectNotifMember(m)"
+          >
+            <div class="member-card-main">
+              <div class="member-avatar">
+                <img *ngIf="m.photo_url" [src]="m.photo_url" alt="{{ m.username }}" />
+                <span *ngIf="!m.photo_url">{{ m.username?.charAt(0)?.toUpperCase() || 'M' }}</span>
+              </div>
+              <div class="member-card-details">
+                <div class="member-card-name-row">
+                  <span class="member-name">{{ m.username }}</span>
+                  <span class="role-badge">{{ m.role }}</span>
+                </div>
+                <div class="member-email">{{ m.email }}</div>
+                <div class="notif-count-pill" [class.has-notifs]="m.notifications.length > 0">
+                  <ion-icon name="notifications-outline"></ion-icon>
+                  <span>{{ m.notifications.length }} notification{{ m.notifications.length === 1 ? '' : 's' }}</span>
+                  <span class="unread-highlight" *ngIf="m.unreadCount > 0">({{ m.unreadCount }} new)</span>
+                </div>
+              </div>
+              <button class="view-account-notifs-btn" (click)="$event.stopPropagation(); selectNotifMember(m)">
+                <span>View</span>
+                <ion-icon name="chevron-forward-outline"></ion-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-view 2B: Member Notifications Detail (Member Selected) -->
+        <div *ngIf="selectedNotifMember">
+          <!-- Back Header & Profile -->
+          <div class="selected-member-notif-header">
+            <button class="back-to-accounts-btn" (click)="clearSelectedNotifMember()">
+              <ion-icon name="arrow-back-outline"></ion-icon>
+              <span>All Accounts</span>
+            </button>
+            <div class="selected-member-summary">
+              <div class="member-avatar mini">
+                <img *ngIf="selectedNotifMember.photo_url" [src]="selectedNotifMember.photo_url" alt="{{ selectedNotifMember.username }}" />
+                <span *ngIf="!selectedNotifMember.photo_url">{{ selectedNotifMember.username?.charAt(0)?.toUpperCase() || 'M' }}</span>
+              </div>
+              <div class="summary-info">
+                <div class="name">{{ selectedNotifMember.username }}</div>
+                <div class="email">{{ selectedNotifMember.email }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-label" style="margin-top: 16px; margin-bottom: 10px;">
+            <ion-icon name="notifications-outline"></ion-icon>
+            Notifications for {{ selectedNotifMember.username }} ({{ selectedMemberNotifications.length }})
+          </div>
+
+          <div class="empty-state" *ngIf="selectedMemberNotifications.length === 0">
+            No personal or workout notifications found for {{ selectedNotifMember.username }}.
+          </div>
+
+          <div *ngFor="let n of selectedMemberNotifications" class="member-card notif-card">
+            <div class="notif-card-header">
+              <div class="notif-badge-wrap">
+                <span class="notif-type-tag member-tag">
+                  <ion-icon [name]="n.session_key ? 'barbell-outline' : 'person-outline'"></ion-icon>
+                  {{ n.session_key ? 'WORKOUT ALERT' : (n.title || 'MEMBER NOTICE') }}
+                </span>
+                <span class="notif-status-tag" [class.new]="!n.is_read">{{ n.is_read ? 'Read' : 'New' }}</span>
+              </div>
+              <span class="notif-date">{{ formatNotifDate(n.created_at) }}</span>
+            </div>
+            <div class="notif-card-title" *ngIf="n.title && n.title !== 'Notice'">{{ n.title }}</div>
+            <div class="notif-card-body" style="white-space: pre-line;">{{ n.message }}</div>
+            <div class="notif-card-footer">
+              <button class="notif-del-btn" (click)="deleteNotification(n)" title="Delete Notification">
+                <ion-icon name="trash-outline"></ion-icon> Delete
+              </button>
+            </div>
+          </div>
+        </div>
+
       </div>
 
     </div>

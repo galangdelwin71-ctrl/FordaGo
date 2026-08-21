@@ -258,6 +258,110 @@ export class AdminPage implements OnInit {
   // ── Notifications ────────────────────────────────────
   notifications: any[] = [];
   notifMessage = '';
+  notifTitle = '';
+  notifTargetUserId: number | null = null;
+  notifViewMode: 'broadcasts' | 'members' = 'broadcasts';
+  broadcastSearch = '';
+  showAllBroadcasts = false;
+  broadcastLimit = 4;
+  notifMemberSearch = '';
+  selectedNotifMember: any = null;
+
+  get broadcastNotifications(): any[] {
+    return this.notifications.filter(n => !n.user_id || n.user_id === this.auth.user?.id);
+  }
+
+  get filteredBroadcastNotifications(): any[] {
+    const q = this.broadcastSearch.trim().toLowerCase();
+    if (!q) return this.broadcastNotifications;
+    return this.broadcastNotifications.filter(n =>
+      (n.message && n.message.toLowerCase().includes(q)) ||
+      (n.title && n.title.toLowerCase().includes(q))
+    );
+  }
+
+  get displayedBroadcastNotifications(): any[] {
+    if (this.showAllBroadcasts || this.broadcastSearch.trim()) {
+      return this.filteredBroadcastNotifications;
+    }
+    return this.filteredBroadcastNotifications.slice(0, this.broadcastLimit);
+  }
+
+  get membersForNotifications(): any[] {
+    const map = new Map<number, any>();
+    for (const m of this.members) {
+      map.set(m.id, {
+        id: m.id,
+        username: m.username,
+        email: m.email,
+        role: m.role,
+        membership_type: m.membership_type,
+        photo_url: m.photo_url,
+        notifications: [],
+        unreadCount: 0
+      });
+    }
+
+    for (const n of this.notifications) {
+      if (n.user_id) {
+        let entry = map.get(n.user_id);
+        if (!entry) {
+          entry = {
+            id: n.user_id,
+            username: n.user?.username || 'Member #' + n.user_id,
+            email: n.user?.email || '',
+            role: n.user?.role || 'member',
+            membership_type: 'regular',
+            photo_url: null,
+            notifications: [],
+            unreadCount: 0
+          };
+          map.set(n.user_id, entry);
+        }
+        entry.notifications.push(n);
+        if (!n.is_read) entry.unreadCount++;
+      }
+    }
+
+    const list = Array.from(map.values()).sort((a, b) => b.notifications.length - a.notifications.length);
+    const q = this.notifMemberSearch.trim().toLowerCase();
+    if (!q) return list;
+    return list.filter(m =>
+      (m.username && m.username.toLowerCase().includes(q)) ||
+      (m.email && m.email.toLowerCase().includes(q))
+    );
+  }
+
+  get selectedMemberNotifications(): any[] {
+    if (!this.selectedNotifMember) return [];
+    return this.notifications.filter(n => n.user_id === this.selectedNotifMember.id);
+  }
+
+  selectNotifMember(m: any) {
+    this.selectedNotifMember = m;
+  }
+
+  clearSelectedNotifMember() {
+    this.selectedNotifMember = null;
+  }
+
+  formatNotifDate(dateStr: string): string {
+    if (!dateStr) return '';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch {
+      return dateStr;
+    }
+  }
 
   // ── Attendance ───────────────────────────────────────
   attendanceToday:   any[] = [];
@@ -1248,12 +1352,44 @@ export class AdminPage implements OnInit {
   sendNotification() {
     if (!this.notifMessage.trim()) return;
     const headers = { Authorization: `Bearer ${this.auth.token}` };
-    this.http.post(`${this.api}/notifications`, { message: this.notifMessage }, { headers }).subscribe({
-      next: () => {
-        this.notifications.unshift({ message: this.notifMessage, is_read: false, created_at: 'Just now' });
+    const payload: any = {
+      message: this.notifMessage.trim(),
+      title: this.notifTitle.trim() || (this.notifTargetUserId ? 'Personal Notice' : 'Announcement')
+    };
+    if (this.notifTargetUserId) {
+      payload.user_id = this.notifTargetUserId;
+    }
+    this.http.post<any>(`${this.api}/notifications`, payload, { headers }).subscribe({
+      next: (res) => {
+        const targetMember = this.notifTargetUserId ? this.members.find(m => m.id === this.notifTargetUserId) : null;
+        const newNotif = {
+          id: res?.id || Date.now(),
+          user_id: this.notifTargetUserId,
+          user: targetMember ? { id: targetMember.id, username: targetMember.username, email: targetMember.email, role: targetMember.role } : null,
+          title: payload.title,
+          message: this.notifMessage.trim(),
+          is_read: false,
+          created_at: new Date().toISOString()
+        };
+        this.notifications.unshift(newNotif);
         this.notifMessage = '';
+        this.notifTitle = '';
+        this.notifTargetUserId = null;
+        alert('Notification sent successfully!');
       },
       error: () => alert('Failed to send notification')
+    });
+  }
+
+  deleteNotification(n: any) {
+    this.askConfirm('Notification', (n.title || n.message?.substring(0, 30)) + '...', () => {
+      const headers = { Authorization: `Bearer ${this.auth.token}` };
+      this.http.delete(`${this.api}/notifications/${n.id}`, { headers }).subscribe({
+        next: () => {
+          this.notifications = this.notifications.filter(x => x.id !== n.id);
+        },
+        error: () => alert('Failed to delete notification')
+      });
     });
   }
 

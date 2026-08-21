@@ -49,7 +49,7 @@ class NotificationController extends Controller
         $isStaff = in_array($user->role, ['admin', 'super_admin', 'employee'], true);
 
         if ($isStaff) {
-            return response()->json(Notification::orderByDesc('created_at')->get());
+            return response()->json(Notification::with('user:id,username,email,role')->orderByDesc('created_at')->get());
         }
 
         $rows = Notification::where(fn ($q) => $q
