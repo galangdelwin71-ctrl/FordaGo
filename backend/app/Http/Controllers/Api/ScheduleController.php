@@ -52,7 +52,7 @@ class ScheduleController extends Controller
     /**
      * Automatically sync scheduled session into each mentioned member's personal WorkoutSession tracker.
      */
-    private function syncWorkoutSessionsForMembers(ClassSession $session, string $title, string $date, ?string $time, ?string $location, ?string $coach, ?string $description, ?array $memberIds): void
+    private function syncWorkoutSessionsForMembers(ClassSession $session, string $title, string $date, ?string $time, ?string $duration, ?string $location, ?string $coach, ?string $description, ?array $memberIds): void
     {
         if (! is_array($memberIds) || count($memberIds) === 0) {
             WorkoutSession::where('client_session_id', 'admin_class_' . $session->id)->delete();
@@ -96,6 +96,7 @@ class ScheduleController extends Controller
                     'status'        => 'upcoming',
                     'time_val'      => $timeVal,
                     'time_ampm'     => $timeAmpm,
+                    'duration'      => $duration ?: '60 min',
                     'location'      => $location ?: 'Gym Floor B',
                     'coach'         => $coach ?: null,
                     'custom_target' => $description ?: null,
@@ -128,6 +129,7 @@ class ScheduleController extends Controller
         }
 
         $time        = $request->input('time') ?: null;
+        $duration    = $request->input('duration') ?: '60 min';
         $location    = $request->input('location') ?: null;
         $coach       = $request->input('coach') ?: null;
         $description = $request->input('description') ?: null;
@@ -150,6 +152,7 @@ class ScheduleController extends Controller
             'description'  => $description,
             'date'         => $date,
             'time'         => $time,
+            'duration'     => $duration,
             'location'     => $location,
             'coach'        => $coach,
             'member_ids'   => is_array($memberIds) ? $memberIds : null,
@@ -157,7 +160,7 @@ class ScheduleController extends Controller
         ]);
 
         // 1. Automatically add to mentioned members' schedule
-        $this->syncWorkoutSessionsForMembers($session, $title, $date, $time, $location, $coach, $description, is_array($memberIds) ? $memberIds : []);
+        $this->syncWorkoutSessionsForMembers($session, $title, $date, $time, $duration, $location, $coach, $description, is_array($memberIds) ? $memberIds : []);
 
         // 2. Send notifications to all mentioned members
         if (is_array($memberIds) && count($memberIds) > 0) {
@@ -167,7 +170,7 @@ class ScheduleController extends Controller
                     Notification::create([
                         'user_id' => $user->id,
                         'title'   => 'New Session on Your Schedule: ' . $title,
-                        'message' => "Admin scheduled '{$title}' on {$date}" . ($time ? " at {$time}" : '') . ($location ? " ({$location})" : '') . ". It has been automatically added to your Schedule tab!",
+                        'message' => "Admin scheduled '{$title}' on {$date}" . ($time ? " at {$time}" : '') . ($duration ? " ({$duration})" : '') . ($location ? " ({$location})" : '') . ". It has been automatically added to your Schedule tab!",
                         'is_read' => false,
                     ]);
                 }
@@ -190,6 +193,7 @@ class ScheduleController extends Controller
         $title       = $request->input('title', $session->title);
         $date        = $request->input('date', $session->date);
         $time        = $request->input('time', $session->time);
+        $duration    = $request->input('duration', $session->duration ?: '60 min');
         $location    = $request->input('location', $session->location);
         $coach       = $request->input('coach', $session->coach);
         $description = $request->input('description', $session->description);
@@ -212,6 +216,7 @@ class ScheduleController extends Controller
             'description'  => $description,
             'date'         => $date,
             'time'         => $time ?: null,
+            'duration'     => $duration ?: '60 min',
             'location'     => $location ?: null,
             'coach'        => $coach ?: null,
             'member_ids'   => is_array($memberIds) ? $memberIds : null,
@@ -219,7 +224,7 @@ class ScheduleController extends Controller
         ]);
 
         // Sync updated schedule into mentioned members' personal trackers
-        $this->syncWorkoutSessionsForMembers($session, $title, $date, $time, $location, $coach, $description, is_array($memberIds) ? $memberIds : []);
+        $this->syncWorkoutSessionsForMembers($session, $title, $date, $time, $duration, $location, $coach, $description, is_array($memberIds) ? $memberIds : []);
 
         return response()->json(['message' => 'Session updated', 'session' => $session]);
     }

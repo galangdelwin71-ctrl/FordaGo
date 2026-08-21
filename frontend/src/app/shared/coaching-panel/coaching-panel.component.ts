@@ -36,6 +36,8 @@ import { Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { CoachingNavService, CoachingPanelTab, CoachingPanelHost } from '../../services/coaching-nav.service';
 import { NoNegativeDirective } from '../../directives/no-negative.directive';
+import { getCachedData, setCachedData } from '../../utils/local-cache.util';
+import { CACHE_KEYS } from '../../utils/cache-keys';
 import {
   CoachingService,
   Coach,
@@ -278,17 +280,103 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
     });
   }
 
+  // ── Local-First Cache (Memory & Storage) ─────────────────────
+  private static cachedMyProfile: CoachProfileMe | null = null;
+  private static cachedCoaches: Coach[] = [];
+  private static cachedConversations: Conversation[] = [];
+  private static cachedPublicPrograms: CoachProgram[] = [];
+  private static cachedStats: CoachDashboardStats | null = null;
+  private static cachedClients: CoachClientItem[] = [];
+
   // Loading is driven entirely by ngOnChanges below -- isOpen is a bound
   // @Input, so Angular guarantees ngOnChanges fires on this component's
   // very first check too (the initial binding counts as a change, with
   // firstChange: true), before ngOnInit would even run.
   ngOnChanges(changes: SimpleChanges) {
     if (changes['isOpen'] && this.isOpen) {
-      // Every open re-resolves the role first -- role never changes mid
-      // session in practice, but re-checking here (rather than caching
-      // across opens) keeps this correct if the account type ever does,
-      // and it's a single lightweight request either way.
-      this.loadMyProfile();
+      void this.openWithHydration();
+    }
+  }
+
+  private async openWithHydration(): Promise<void> {
+    await this.hydrateFromCache();
+    this.loadMyProfile();
+  }
+
+  /**
+   * Stage 3 local-first hydration: restores last-known profile, coaches list,
+   * conversations, and classes immediately from memory/storage so the panel
+   * renders with 0ms latency without showing a full-screen loading spinner.
+   */
+  private async hydrateFromCache(): Promise<void> {
+    // 1. In-memory static cache (instant 0ms on re-opening in same session)
+    if (CoachingPanelComponent.cachedMyProfile) {
+      this.myProfile = CoachingPanelComponent.cachedMyProfile;
+      this.isCoach = !!this.myProfile.has_profile;
+      this.isLoadingProfile = false;
+      this.applyRequestedTab();
+    }
+    if (CoachingPanelComponent.cachedCoaches.length > 0) {
+      this.coaches = CoachingPanelComponent.cachedCoaches;
+      this.isLoading = false;
+    }
+    if (CoachingPanelComponent.cachedConversations.length > 0) {
+      this.conversations = CoachingPanelComponent.cachedConversations;
+    }
+    if (CoachingPanelComponent.cachedPublicPrograms.length > 0) {
+      this.publicPrograms = CoachingPanelComponent.cachedPublicPrograms;
+      this.isLoadingClasses = false;
+    }
+    if (CoachingPanelComponent.cachedStats) {
+      this.stats = CoachingPanelComponent.cachedStats;
+      this.isLoadingStats = false;
+    }
+    if (CoachingPanelComponent.cachedClients.length > 0) {
+      this.clients = CoachingPanelComponent.cachedClients;
+      this.isLoadingClients = false;
+    }
+
+    // 2. Persistent storage fallback (for app cold-start)
+    if (!this.myProfile) {
+      const cachedProf = await getCachedData<CoachProfileMe>(CACHE_KEYS.COACH_PROFILE);
+      if (cachedProf) {
+        this.myProfile = cachedProf;
+        CoachingPanelComponent.cachedMyProfile = cachedProf;
+        this.isCoach = !!cachedProf.has_profile;
+        this.isLoadingProfile = false;
+        this.applyRequestedTab();
+      }
+    }
+    if (this.coaches.length === 0) {
+      const cachedCoaches = await getCachedData<Coach[]>(CACHE_KEYS.COACHES);
+      if (Array.isArray(cachedCoaches) && cachedCoaches.length > 0) {
+        this.coaches = cachedCoaches;
+        CoachingPanelComponent.cachedCoaches = cachedCoaches;
+        this.isLoading = false;
+      }
+    }
+    if (this.conversations.length === 0) {
+      const cachedConvos = await getCachedData<Conversation[]>(CACHE_KEYS.COACH_CONVERSATIONS);
+      if (Array.isArray(cachedConvos) && cachedConvos.length > 0) {
+        this.conversations = cachedConvos;
+        CoachingPanelComponent.cachedConversations = cachedConvos;
+      }
+    }
+    if (this.publicPrograms.length === 0) {
+      const cachedProg = await getCachedData<CoachProgram[]>(CACHE_KEYS.COACH_CLASSES);
+      if (Array.isArray(cachedProg) && cachedProg.length > 0) {
+        this.publicPrograms = cachedProg;
+        CoachingPanelComponent.cachedPublicPrograms = cachedProg;
+        this.isLoadingClasses = false;
+      }
+    }
+    if (!CoachingPanelComponent.cachedStats) {
+      const cachedStats = await getCachedData<CoachDashboardStats>(CACHE_KEYS.COACH_STATS);
+      if (cachedStats) {
+        this.stats = cachedStats;
+        CoachingPanelComponent.cachedStats = cachedStats;
+        this.isLoadingStats = false;
+      }
     }
   }
 
@@ -328,12 +416,16 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
    * branch on role before this resolves (see isCoach doc-comment above).
    */
   private loadMyProfile(): void {
-    this.isLoadingProfile = true;
+    if (!this.myProfile) {
+      this.isLoadingProfile = true;
+    }
     this.sub.add(
       this.coachingService.getMyCoachProfile().subscribe({
         next: (res) => {
           this.isLoadingProfile = false;
           this.myProfile = res;
+          CoachingPanelComponent.cachedMyProfile = res;
+          void setCachedData(CACHE_KEYS.COACH_PROFILE, res);
           this.isCoach = !!res?.has_profile;
           this.applyRequestedTab();
 
@@ -348,11 +440,13 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
           // this lookup fails -- never assume coach access on an error.
           console.error('Failed to load coach profile', err);
           this.isLoadingProfile = false;
-          this.myProfile = null;
-          this.isCoach = false;
-          this.activeTab = 'explore';
-          this.loadCoaches();
-          this.loadConversations();
+          if (!this.myProfile) {
+            this.myProfile = null;
+            this.isCoach = false;
+            this.activeTab = 'explore';
+            this.loadCoaches();
+            this.loadConversations();
+          }
         },
       }),
     );
@@ -407,12 +501,18 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
   }
 
   private loadStats(): void {
-    this.isLoadingStats = true;
+    if (!CoachingPanelComponent.cachedStats && (!this.stats || (this.stats.active_clients === 0 && this.stats.sessions_today === 0))) {
+      this.isLoadingStats = true;
+    }
     this.sub.add(
       this.coachingService.getDashboardStats().subscribe({
         next: (res) => {
           this.stats = res;
           this.isLoadingStats = false;
+          if (res) {
+            CoachingPanelComponent.cachedStats = res;
+            void setCachedData(CACHE_KEYS.COACH_STATS, res);
+          }
         },
         error: (err) => {
           console.error('Failed to load dashboard stats', err);
@@ -901,11 +1001,18 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
   // ── Member flow: Explore Coaches ──────────────────────────
 
   loadCoaches() {
-    this.isLoading = true;
+    const isDefaultQuery = !this.searchQuery.trim() && this.activeSpecialty === 'All';
+    if (this.coaches.length === 0 || !isDefaultQuery) {
+      this.isLoading = true;
+    }
     this.coachingService.getCoaches(this.searchQuery, this.activeSpecialty).subscribe({
       next: (res) => {
         this.coaches = res || [];
         this.isLoading = false;
+        if (isDefaultQuery && Array.isArray(res)) {
+          CoachingPanelComponent.cachedCoaches = res;
+          void setCachedData(CACHE_KEYS.COACHES, res);
+        }
       },
       error: (err) => {
         console.error('Failed to load coaches', err);
@@ -969,13 +1076,19 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
   // ── Member flow: Browse Classes ("Avail" a public group class) ─────
 
   loadPublicPrograms(): void {
-    this.isLoadingClasses = true;
+    if (this.publicPrograms.length === 0) {
+      this.isLoadingClasses = true;
+    }
     this.classActionError = '';
     this.sub.add(
       this.coachingService.getPublicPrograms().subscribe({
         next: (res) => {
           this.publicPrograms = res || [];
           this.isLoadingClasses = false;
+          if (Array.isArray(res)) {
+            CoachingPanelComponent.cachedPublicPrograms = res;
+            void setCachedData(CACHE_KEYS.COACH_CLASSES, res);
+          }
         },
         error: (err) => {
           console.error('Failed to load public classes', err);
@@ -1030,12 +1143,17 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
 
   /** Loads the coach's own client roster (GET /coaches/clients). Coach-only -- callers must gate on isCoach. */
   loadClients(): void {
-    this.isLoadingClients = true;
+    if (this.clients.length === 0) {
+      this.isLoadingClients = true;
+    }
     this.sub.add(
       this.coachingService.getCoachClients().subscribe({
         next: (res) => {
           this.clients = res || [];
           this.isLoadingClients = false;
+          if (Array.isArray(res)) {
+            CoachingPanelComponent.cachedClients = res;
+          }
         },
         error: (err) => {
           console.error('Failed to load clients', err);
@@ -1050,6 +1168,10 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
       this.coachingService.getConversations().subscribe({
         next: (res) => {
           this.conversations = res || [];
+          if (Array.isArray(res)) {
+            CoachingPanelComponent.cachedConversations = res;
+            void setCachedData(CACHE_KEYS.COACH_CONVERSATIONS, res);
+          }
         },
         error: (err) => {
           console.error('Failed to load conversations', err);

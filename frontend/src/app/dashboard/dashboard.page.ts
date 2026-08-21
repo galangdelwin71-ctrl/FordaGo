@@ -1081,8 +1081,13 @@ export class DashboardPage implements OnInit, OnDestroy {
   private loadingPersonalRecords = false;
 
   private loadPersonalRecords(): void {
-    if (!this.auth.token) {
+    // Local-first / Stale-While-Revalidate: Populate from cache immediately so
+    // records are visible with 0ms delay without a flashing empty state.
+    if (this.personalRecords.length === 0) {
       this.loadPersonalRecordsFromCache();
+    }
+
+    if (!this.auth.token) {
       return;
     }
     if (this.loadingPersonalRecords) return;
@@ -1095,12 +1100,16 @@ export class DashboardPage implements OnInit, OnDestroy {
       .subscribe({
         next: (rows) => {
           this.loadingPersonalRecords = false;
-          this.personalRecords = (rows || []).map((row) => this.mapServerPr(row));
-          this.savePersonalRecordsToCache();
+          if (Array.isArray(rows)) {
+            this.personalRecords = rows.map((row) => this.mapServerPr(row));
+            this.savePersonalRecordsToCache();
+          }
         },
         error: () => {
           this.loadingPersonalRecords = false;
-          this.loadPersonalRecordsFromCache();
+          if (this.personalRecords.length === 0) {
+            this.loadPersonalRecordsFromCache();
+          }
         },
       });
   }

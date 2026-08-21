@@ -58,6 +58,11 @@ export class AuthService {
     // completes. Fire-and-forget; see clearCachedData()'s own doc-comment.
     void clearCachedData(CACHE_KEYS.PRODUCTS);
     void clearCachedData(CACHE_KEYS.EQUIPMENT);
+    void clearCachedData(CACHE_KEYS.COACHES);
+    void clearCachedData(CACHE_KEYS.COACH_PROFILE);
+    void clearCachedData(CACHE_KEYS.COACH_CONVERSATIONS);
+    void clearCachedData(CACHE_KEYS.COACH_CLASSES);
+    void clearCachedData(CACHE_KEYS.COACH_STATS);
   }
 
   get token() {

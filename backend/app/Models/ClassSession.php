@@ -21,6 +21,7 @@ class ClassSession extends Model
         'description',
         'date',
         'time',
+        'duration',
         'location',
         'coach',
         'member_ids',

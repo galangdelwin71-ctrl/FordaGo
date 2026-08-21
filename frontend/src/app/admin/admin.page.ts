@@ -188,6 +188,49 @@ export class AdminPage implements OnInit {
     this.pendingOrderGroups = this.orderGroups.filter(g => g.status === 'pending');
   }
 
+  // ── Inventory / Shop Search & View More ──────────────
+  productSearch = '';
+  showAllProducts = false;
+  productsLimit = 3;
+
+  get filteredProducts(): any[] {
+    const q = this.productSearch.trim().toLowerCase();
+    if (!q) return this.products;
+    return this.products.filter(p =>
+      (p.name && p.name.toLowerCase().includes(q)) ||
+      (p.brand && p.brand.toLowerCase().includes(q))
+    );
+  }
+
+  get displayedProducts(): any[] {
+    if (this.showAllProducts || this.productSearch.trim()) {
+      return this.filteredProducts;
+    }
+    return this.filteredProducts.slice(0, this.productsLimit);
+  }
+
+  // ── Pending Orders Search & View More ────────────────
+  pendingOrderSearch = '';
+  showAllPendingOrders = false;
+  pendingOrdersLimit = 3;
+
+  get filteredPendingOrderGroups(): any[] {
+    const q = this.pendingOrderSearch.trim().toLowerCase();
+    if (!q) return this.pendingOrderGroups;
+    return this.pendingOrderGroups.filter(g =>
+      (g.username && g.username.toLowerCase().includes(q)) ||
+      (g.email && g.email.toLowerCase().includes(q)) ||
+      (g.items && g.items.some((it: any) => it.name && it.name.toLowerCase().includes(q)))
+    );
+  }
+
+  get displayedPendingOrderGroups(): any[] {
+    if (this.showAllPendingOrders || this.pendingOrderSearch.trim()) {
+      return this.filteredPendingOrderGroups;
+    }
+    return this.filteredPendingOrderGroups.slice(0, this.pendingOrdersLimit);
+  }
+
   // ── Equipment ────────────────────────────────────────
   equipment: any[] = [];
 
@@ -516,11 +559,12 @@ export class AdminPage implements OnInit {
     membership_type: 'premium' as 'daily' | 'premium',
     payment_method: 'cash' as 'cash' | 'gcash',
   };
-  newSession = {
+  newSession   = {
     title: '',
     description: '',
     date: '',
     time: '',
+    duration: '60 min',
     location: '',
     coach: '',
     member_ids: [] as number[],
@@ -645,6 +689,14 @@ export class AdminPage implements OnInit {
     }
   }
 
+  setQuickDuration(durationStr: string, target: 'new' | 'edit') {
+    if (target === 'new') {
+      this.newSession.duration = durationStr;
+    } else if (this.editingSession) {
+      this.editingSession.duration = durationStr;
+    }
+  }
+
   // ── Members actions ──────────────────────────────────
   openAddMember() { this.toggleAddMember(); }
 
@@ -716,6 +768,7 @@ export class AdminPage implements OnInit {
 
     this.editingSession = {
       ...s,
+      duration: s.duration || '60 min',
       description: s.description || '',
       member_ids: memberIds,
       member_names: memberNames,
@@ -745,6 +798,7 @@ export class AdminPage implements OnInit {
           description: '',
           date: '',
           time: '',
+          duration: '60 min',
           location: '',
           coach: '',
           member_ids: [],

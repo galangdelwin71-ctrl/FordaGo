@@ -23,6 +23,7 @@ class WorkoutSession extends Model
         'started_at',
         'time_val',
         'time_ampm',
+        'duration',
         'location',
         'coach',
         'custom_target',

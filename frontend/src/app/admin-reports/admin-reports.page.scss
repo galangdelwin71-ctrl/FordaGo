@@ -462,7 +462,7 @@ ion-content { --background: var(--bg-primary); }
   }
   .tx-status {
     &.st-paid     { background: rgba(5,150,105,0.12);  color: #059669; }
-    &.st-pending  { background: rgba(217,119,6,0.14);  color: #b45309; }
+    &.st-pending  { background: rgba(217,119,6,0.14);  color: #0f172a; }
     &.st-rejected { background: rgba(220,38,38,0.12);  color: #dc2626; }
     &.st-neutral  { background: rgba(15,23,42,0.06);   color: rgba(15,23,42,0.4); }
   }
@@ -476,7 +476,7 @@ ion-content { --background: var(--bg-primary); }
   .att-email { color: rgba(15, 23, 42, 0.42); }
   .att-date  { color: rgba(15, 23, 42, 0.3); }
   .att-type-badge {
-    &.daily   { background: rgba(217,119,6,0.14); color: #b45309; }
+    &.daily   { background: rgba(217,119,6,0.14); color: #0f172a; }
     &.premium { background: rgba(37,99,235,0.12); color: #2563eb; }
   }
 
@@ -494,7 +494,7 @@ ion-content { --background: var(--bg-primary); }
   }
   .col-date, .col-num, .col-rev { color: #0f172a; }
   .col-rev {
-    &.gold  { color: #b45309; }
+    &.gold  { color: #0f172a; }
     &.green { color: #059669; }
   }
 
@@ -509,7 +509,7 @@ ion-content { --background: var(--bg-primary); }
   .inv-stat-val {
     color: #0f172a;
     &.green { color: #059669; }
-    &.gold  { color: #b45309; }
+    &.gold  { color: #0f172a; }
     &.warn  { color: #dc2626; }
   }
   .inv-stat-lbl { color: rgba(15, 23, 42, 0.35); }

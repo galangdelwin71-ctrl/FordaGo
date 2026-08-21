@@ -43,6 +43,7 @@ import {
 import { AuthService } from '../../services/auth.service';
 import { CoachingService, Conversation, Message, WorkoutPlanProposal, CoachProgram } from '../../services/coaching.service';
 import { EchoService } from '../../services/echo.service';
+import { getCachedData, setCachedData } from '../../utils/local-cache.util';
 
 interface ProposalFormExercise {
   name: string;
@@ -176,15 +177,56 @@ export class ChatPage implements OnInit, OnDestroy {
     });
   }
 
+  // ── Local-First Cache (Memory & Storage) ─────────────────────
+  private static conversationCache = new Map<number, Conversation>();
+  private static messagesCache = new Map<number, Message[]>();
+
   ngOnInit() {
     const idParam = this.route.snapshot.paramMap.get('conversationId');
     if (idParam) {
       this.conversationId = parseInt(idParam, 10);
+      void this.hydrateChatFromCache();
       this.loadConversation();
       this.loadMessages();
       this.setupEchoListener();
     } else {
       this.goBack();
+    }
+  }
+
+  /**
+   * Stage 3 local-first hydration: restores conversation and messages
+   * immediately from memory or local storage so the chat opens with 0ms delay.
+   */
+  private async hydrateChatFromCache(): Promise<void> {
+    // 1. In-memory static cache
+    const memConvo = ChatPage.conversationCache.get(this.conversationId);
+    if (memConvo) {
+      this.conversation = memConvo;
+    }
+    const memMsgs = ChatPage.messagesCache.get(this.conversationId);
+    if (memMsgs && memMsgs.length > 0) {
+      this.messages = memMsgs;
+      this.isLoading = false;
+      this.scrollToBottom();
+    }
+
+    // 2. Persistent storage fallback
+    if (!this.conversation) {
+      const cachedConvo = await getCachedData<Conversation>(`fordago.cache.chat_convo_${this.conversationId}`);
+      if (cachedConvo) {
+        this.conversation = cachedConvo;
+        ChatPage.conversationCache.set(this.conversationId, cachedConvo);
+      }
+    }
+    if (this.messages.length === 0) {
+      const cachedMsgs = await getCachedData<Message[]>(`fordago.cache.chat_msgs_${this.conversationId}`);
+      if (Array.isArray(cachedMsgs) && cachedMsgs.length > 0) {
+        this.messages = cachedMsgs;
+        ChatPage.messagesCache.set(this.conversationId, cachedMsgs);
+        this.isLoading = false;
+        this.scrollToBottom();
+      }
     }
   }
 
@@ -240,7 +282,11 @@ export class ChatPage implements OnInit, OnDestroy {
   loadConversation() {
     this.coachingService.getConversation(this.conversationId).subscribe({
       next: (res) => {
-        this.conversation = res;
+        if (res) {
+          this.conversation = res;
+          ChatPage.conversationCache.set(this.conversationId, res);
+          void setCachedData(`fordago.cache.chat_convo_${this.conversationId}`, res);
+        }
       },
       error: (err) => {
         console.error('Failed to load conversation', err);
@@ -249,12 +295,21 @@ export class ChatPage implements OnInit, OnDestroy {
   }
 
   loadMessages() {
-    this.isLoading = true;
+    if (this.messages.length === 0) {
+      this.isLoading = true;
+    }
     this.coachingService.getMessages(this.conversationId).subscribe({
       next: (res) => {
-        this.messages = res || [];
+        const msgs = res || [];
+        const isInitial = this.messages.length === 0;
+        const countChanged = msgs.length !== this.messages.length;
+        this.messages = msgs;
         this.isLoading = false;
-        this.scrollToBottom();
+        ChatPage.messagesCache.set(this.conversationId, msgs);
+        void setCachedData(`fordago.cache.chat_msgs_${this.conversationId}`, msgs);
+        if (isInitial || countChanged) {
+          this.scrollToBottom();
+        }
       },
       error: (err) => {
         console.error('Failed to load messages', err);
@@ -285,6 +340,8 @@ export class ChatPage implements OnInit, OnDestroy {
         if (data && data.message && data.message.sender_id !== this.currentUserId) {
           this.zone.run(() => {
             this.messages.push(data.message);
+            ChatPage.messagesCache.set(this.conversationId, this.messages);
+            void setCachedData(`fordago.cache.chat_msgs_${this.conversationId}`, this.messages);
             this.scrollToBottom();
             this.coachingService.markMessagesRead(this.conversationId).subscribe();
           });
@@ -306,6 +363,8 @@ export class ChatPage implements OnInit, OnDestroy {
             if (found && found.proposal) {
               found.proposal.status = 'accepted';
               found.proposal.accepted_at = data.proposal.accepted_at;
+              ChatPage.messagesCache.set(this.conversationId, this.messages);
+              void setCachedData(`fordago.cache.chat_msgs_${this.conversationId}`, this.messages);
             }
           });
         }
@@ -324,6 +383,8 @@ export class ChatPage implements OnInit, OnDestroy {
       next: (sentMsg) => {
         this.isSending = false;
         this.messages.push(sentMsg);
+        ChatPage.messagesCache.set(this.conversationId, this.messages);
+        void setCachedData(`fordago.cache.chat_msgs_${this.conversationId}`, this.messages);
         this.scrollToBottom();
       },
       error: (err) => {

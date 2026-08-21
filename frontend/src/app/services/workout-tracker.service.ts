@@ -422,16 +422,28 @@ export class WorkoutTrackerService {
           exercises: Array.isArray(row.exercises) ? row.exercises : daySessions[idx]?.exercises,
           actualMinutes: row.actual_minutes ?? daySessions[idx]?.actualMinutes,
           startedAt: row.started_at ?? daySessions[idx]?.startedAt ?? null,
-          duration: daySessions[idx]?.duration ?? '60 min',
+          duration: row.duration ?? daySessions[idx]?.duration ?? '60 min',
           membersCount: daySessions[idx]?.membersCount ?? 0,
         };
 
         if (idx === -1) {
-          daySessions.push(merged);
+          const nonRest = daySessions.filter((s) => !s.isRestDay);
+          nonRest.push(merged);
+          store[key] = nonRest;
         } else {
           daySessions[idx] = merged;
+          store[key] = daySessions;
         }
-        store[key] = daySessions;
+      });
+
+      // Prune any deleted admin class sessions that are no longer on the server
+      const serverAdminSessionIds = new Set(
+        rows.map((r) => r.client_session_id).filter((id) => typeof id === 'string' && id.startsWith('admin_class_'))
+      );
+      Object.keys(store).forEach((k) => {
+        if (Array.isArray(store[k])) {
+          store[k] = store[k].filter((s) => !s.id?.startsWith('admin_class_') || serverAdminSessionIds.has(s.id));
+        }
       });
 
       // Every key that was pending reconciliation is now settled for this

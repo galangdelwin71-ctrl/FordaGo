@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ClassSession;
 use App\Models\WorkoutSession;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -30,7 +31,57 @@ class WorkoutSessionController extends Controller
      */
     public function index(Request $request)
     {
-        $query = WorkoutSession::where('user_id', $request->user()->id);
+        $userId = $request->user()->id;
+
+        // Auto-sync any admin class sessions that mentioned this user
+        try {
+            $classSessions = ClassSession::all();
+            foreach ($classSessions as $cs) {
+                $mIds = $cs->member_ids;
+                if (is_string($mIds)) {
+                    $mIds = json_decode($mIds, true);
+                }
+                if (is_array($mIds) && in_array($userId, $mIds)) {
+                    $timeVal = null;
+                    $timeAmpm = 'AM';
+                    if ($cs->time) {
+                        $timeParts = explode(':', $cs->time);
+                        $hour = (int) ($timeParts[0] ?? 0);
+                        $min = $timeParts[1] ?? '00';
+                        if ($hour >= 12) {
+                            $timeAmpm = 'PM';
+                            $displayHour = $hour > 12 ? $hour - 12 : 12;
+                        } else {
+                            $timeAmpm = 'AM';
+                            $displayHour = $hour === 0 ? 12 : $hour;
+                        }
+                        $timeVal = sprintf('%02d:%s', $displayHour, substr($min, 0, 2));
+                    }
+
+                    WorkoutSession::updateOrCreate(
+                        [
+                            'user_id'           => $userId,
+                            'client_session_id' => 'admin_class_' . $cs->id,
+                            'session_date'      => $cs->date,
+                        ],
+                        [
+                            'title'         => $cs->title,
+                            'is_rest_day'   => false,
+                            'status'        => 'upcoming',
+                            'time_val'      => $timeVal,
+                            'time_ampm'     => $timeAmpm,
+                            'duration'      => $cs->duration ?: '60 min',
+                            'location'      => $cs->location ?: 'Gym Floor B',
+                            'coach'         => $cs->coach ?: null,
+                            'custom_target' => $cs->description ?: null,
+                            'exercises'     => [],
+                        ]
+                    );
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        $query = WorkoutSession::where('user_id', $userId);
 
         $from = $request->query('from');
         $to   = $request->query('to');

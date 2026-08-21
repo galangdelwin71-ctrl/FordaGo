@@ -20,7 +20,7 @@
  * headers the way InstaTunnel did, so Laravel now sets them itself.)
  */
 export const API_BASE_URL =
-  'https://assumption-regulated-brands-landing.trycloudflare.com';
+  'https://thereby-patent-phil-brands.trycloudflare.com';
 
 /**
  * REST API base -- API_BASE_URL + the 'api' prefix Laravel auto-applies to
@@ -60,4 +60,4 @@ export const API_URL = `${API_BASE_URL}/api`;
  * then copy the fresh URL cloudflared prints and paste it below.
  */
 export const REVERB_TUNNEL_URL =
-  'https://mills-nirvana-formal-cases.trycloudflare.com';
+  'https://jar-reporter-airlines-picture.trycloudflare.com';

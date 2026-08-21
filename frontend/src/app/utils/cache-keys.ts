@@ -12,4 +12,14 @@ export const CACHE_KEYS = {
   PRODUCTS: 'fordago.cache.products',
   /** EquipmentPage -- last-known equipment list, see equipment.page.ts loadEquipment(). */
   EQUIPMENT: 'fordago.cache.equipment',
+  /** CoachingPanelComponent -- last-known coaches list */
+  COACHES: 'fordago.cache.coaches',
+  /** CoachingPanelComponent -- last-known coach profile */
+  COACH_PROFILE: 'fordago.cache.coach_profile',
+  /** CoachingPanelComponent -- last-known conversations list */
+  COACH_CONVERSATIONS: 'fordago.cache.conversations',
+  /** CoachingPanelComponent -- last-known public group classes */
+  COACH_CLASSES: 'fordago.cache.classes',
+  /** CoachingPanelComponent -- last-known coach dashboard stats */
+  COACH_STATS: 'fordago.cache.coach_stats',
 } as const;

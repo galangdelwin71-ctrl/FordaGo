@@ -100,7 +100,12 @@
         <div class="session-info">
           <div class="session-header">
             <div class="session-title-wrap">
-              <div class="session-title">{{ s.title }}</div>
+              <div class="session-title-row">
+                <div class="session-title">{{ s.title }}</div>
+                <span class="admin-session-badge" *ngIf="isAdminScheduled(s)" title="Official Gym Session scheduled by Admin">
+                  <ion-icon name="shield-checkmark"></ion-icon> Official Class
+                </span>
+              </div>
               <!-- Custom target tag if user set a specific target -->
               <div class="session-target" *ngIf="s.customTarget">
                 <span class="target-icon"><ion-icon name="locate-outline"></ion-icon></span>
@@ -144,7 +149,8 @@
 
           <!-- Card Action Buttons -->
           <div class="card-actions">
-            <button class="action-btn primary" (click)="toggleEditPanel(sessionIndex(s), $event)">
+            <!-- Members can only edit their personal sessions, not official admin classes -->
+            <button class="action-btn primary" *ngIf="!isAdminScheduled(s)" (click)="toggleEditPanel(sessionIndex(s), $event)">
               <ion-icon name="create-outline"></ion-icon>
               {{ expandedCard === sessionIndex(s) ? 'Close' : 'Edit' }}
             </button>

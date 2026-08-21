@@ -364,7 +364,7 @@
         <label class="field-lbl"><ion-icon name="document-text-outline"></ion-icon> Description / Notes</label>
         <textarea class="field-input field-textarea" rows="2" placeholder="Session details, routine breakdown, gear required..." [(ngModel)]="newSession.description"></textarea>
 
-        <!-- Date & Time Grid -->
+        <!-- Date & Time & Duration Grid -->
         <div class="form-grid-2">
           <div class="form-field-group">
             <label class="field-lbl"><ion-icon name="calendar-outline"></ion-icon> Date *</label>
@@ -379,16 +379,31 @@
           </div>
 
           <div class="form-field-group">
-            <label class="field-lbl"><ion-icon name="time-outline"></ion-icon> Time (e.g. 09:00 AM)</label>
+            <label class="field-lbl"><ion-icon name="time-outline"></ion-icon> Start Time</label>
             <div class="input-with-icon-wrap">
               <input class="field-input input-iconic date-time-field" type="time" [(ngModel)]="newSession.time" #newTimeInput (click)="openPicker(newTimeInput)" />
             </div>
             <div class="quick-pill-row">
               <button type="button" class="quick-pill" (click)="setQuickTime('07:00', 'new')">7 AM</button>
               <button type="button" class="quick-pill" (click)="setQuickTime('09:00', 'new')">9 AM</button>
+              <button type="button" class="quick-pill" (click)="setQuickTime('14:00', 'new')">2 PM</button>
               <button type="button" class="quick-pill" (click)="setQuickTime('16:00', 'new')">4 PM</button>
               <button type="button" class="quick-pill" (click)="setQuickTime('18:00', 'new')">6 PM</button>
             </div>
+          </div>
+        </div>
+
+        <!-- Duration Field -->
+        <div class="form-field-group" style="margin-bottom: 12px;">
+          <label class="field-lbl"><ion-icon name="timer-outline"></ion-icon> Duration / Tagal (e.g. 1 hr, 2 hrs, 60 min)</label>
+          <input class="field-input" type="text" placeholder="e.g. 60 min, 1 hr, 2 hrs" [(ngModel)]="newSession.duration" />
+          <div class="quick-pill-row" style="margin-top: 4px;">
+            <button type="button" class="quick-pill" (click)="setQuickDuration('30 min', 'new')">30 min</button>
+            <button type="button" class="quick-pill" (click)="setQuickDuration('45 min', 'new')">45 min</button>
+            <button type="button" class="quick-pill" (click)="setQuickDuration('1 hr', 'new')">1 hr (60m)</button>
+            <button type="button" class="quick-pill" (click)="setQuickDuration('1.5 hrs', 'new')">1.5 hrs</button>
+            <button type="button" class="quick-pill" (click)="setQuickDuration('2 hrs', 'new')">2 hrs (120m)</button>
+            <button type="button" class="quick-pill" (click)="setQuickDuration('3 hrs', 'new')">3 hrs</button>
           </div>
         </div>
 
@@ -461,7 +476,7 @@
         <label class="field-lbl"><ion-icon name="document-text-outline"></ion-icon> Description / Notes</label>
         <textarea class="field-input field-textarea" rows="2" placeholder="Session details, routine breakdown, gear required..." [(ngModel)]="editingSession.description"></textarea>
 
-        <!-- Date & Time Grid -->
+        <!-- Date & Time & Duration Grid -->
         <div class="form-grid-2">
           <div class="form-field-group">
             <label class="field-lbl"><ion-icon name="calendar-outline"></ion-icon> Date *</label>
@@ -476,16 +491,31 @@
           </div>
 
           <div class="form-field-group">
-            <label class="field-lbl"><ion-icon name="time-outline"></ion-icon> Time</label>
+            <label class="field-lbl"><ion-icon name="time-outline"></ion-icon> Start Time</label>
             <div class="input-with-icon-wrap">
               <input class="field-input input-iconic date-time-field" type="time" [(ngModel)]="editingSession.time" #editTimeInput (click)="openPicker(editTimeInput)" />
             </div>
             <div class="quick-pill-row">
               <button type="button" class="quick-pill" (click)="setQuickTime('07:00', 'edit')">7 AM</button>
               <button type="button" class="quick-pill" (click)="setQuickTime('09:00', 'edit')">9 AM</button>
+              <button type="button" class="quick-pill" (click)="setQuickTime('14:00', 'edit')">2 PM</button>
               <button type="button" class="quick-pill" (click)="setQuickTime('16:00', 'edit')">4 PM</button>
               <button type="button" class="quick-pill" (click)="setQuickTime('18:00', 'edit')">6 PM</button>
             </div>
+          </div>
+        </div>
+
+        <!-- Duration Field in Edit -->
+        <div class="form-field-group" style="margin-bottom: 12px;">
+          <label class="field-lbl"><ion-icon name="timer-outline"></ion-icon> Duration / Tagal (e.g. 1 hr, 2 hrs, 60 min)</label>
+          <input class="field-input" type="text" placeholder="e.g. 60 min, 1 hr, 2 hrs" [(ngModel)]="editingSession.duration" />
+          <div class="quick-pill-row" style="margin-top: 4px;">
+            <button type="button" class="quick-pill" (click)="setQuickDuration('30 min', 'edit')">30 min</button>
+            <button type="button" class="quick-pill" (click)="setQuickDuration('45 min', 'edit')">45 min</button>
+            <button type="button" class="quick-pill" (click)="setQuickDuration('1 hr', 'edit')">1 hr (60m)</button>
+            <button type="button" class="quick-pill" (click)="setQuickDuration('1.5 hrs', 'edit')">1.5 hrs</button>
+            <button type="button" class="quick-pill" (click)="setQuickDuration('2 hrs', 'edit')">2 hrs (120m)</button>
+            <button type="button" class="quick-pill" (click)="setQuickDuration('3 hrs', 'edit')">3 hrs</button>
           </div>
         </div>
 
@@ -567,6 +597,9 @@
             </div>
 
             <div class="card-chips-row">
+              <span class="type-chip" *ngIf="s.duration" style="background:#fefce8; border-color:rgba(15,23,42,0.14); color:#0f172a;">
+                <ion-icon name="timer-outline"></ion-icon> {{ s.duration }}
+              </span>
               <span class="type-chip daily" *ngIf="s.location">
                 <ion-icon name="location-outline"></ion-icon> {{ s.location }}
               </span>
@@ -650,36 +683,113 @@
 
       <div class="empty-state" *ngIf="products.length === 0">No products.</div>
 
-      <div *ngFor="let p of products" class="product-row">
-        <div class="product-icon-box">{{ p.icon }}</div>
-        <div class="product-info">
-          <div class="product-name">{{ p.name }}</div>
-          <div class="product-meta">{{ p.brand }} · ₱{{ p.price }}</div>
-          <div class="product-meta">Stock: <span [class]="p.stock < 3 ? 'low-stock' : 'ok-stock'">{{ p.stock }} units</span></div>
+      <!-- Product Cards (matching reference design) -->
+      <div *ngFor="let p of displayedProducts" class="member-card product-card">
+        <div class="product-card-main">
+          <img *ngIf="p.image_url" [src]="p.thumbnail_url || p.image_url" class="product-card-thumb" alt="{{ p.name }}" />
+          <div *ngIf="!p.image_url" class="product-card-thumb fallback">{{ p.icon || '🛍️' }}</div>
+
+          <div class="product-card-info">
+            <div class="product-card-title">{{ p.name }}</div>
+            <div class="product-card-brand">Brand: {{ p.brand || 'FordaGO' }}</div>
+            <div class="product-card-price-row">
+              <span class="product-card-price">₱{{ p.price | number:'1.2-2' }}</span>
+              <span class="product-card-sep">|</span>
+              <span class="product-card-stock">Stock: {{ p.stock }}</span>
+            </div>
+          </div>
         </div>
-        <div class="row-actions">
-          <button class="act-btn edit" (click)="editProduct(p)">Edit</button>
-          <button class="act-btn del"  (click)="deleteProduct(p)">Delete</button>
+
+        <div class="card-actions-row dual">
+          <button class="act-btn edit" (click)="editProduct(p)">
+            <ion-icon name="create-outline"></ion-icon> Edit
+          </button>
+          <button class="act-btn del" (click)="deleteProduct(p)">
+            <ion-icon name="trash-outline"></ion-icon> Delete
+          </button>
         </div>
       </div>
 
-      <!-- Pending Orders — packed one card per checkout (order_group_id), not
-           one per product line, so a member's multi-item cart shows as a
-           single order the admin approves/rejects as a unit. -->
-      <div class="section-label"><ion-icon name="receipt-outline"></ion-icon> Pending Orders</div>
-      <div class="empty-state" *ngIf="pendingOrderGroups.length === 0">No pending orders.</div>
-      <div *ngFor="let g of pendingOrderGroups" class="order-row">
-        <div>
-          <div class="order-title">{{ g.username }}</div>
-          <div class="order-meta">{{ g.email }} · {{ g.paymentMethod === 'cash' ? 'Cash' : 'GCash' }} · ₱{{ g.total }}</div>
-          <ul class="order-group-items">
-            <li *ngFor="let item of g.items">{{ item.name }} × {{ item.quantity }} — ₱{{ item.total }}</li>
-          </ul>
+      <!-- View More / View Less for Products -->
+      <div class="view-more-wrap" *ngIf="filteredProducts.length > productsLimit && !productSearch">
+        <button class="view-more-btn" (click)="showAllProducts = !showAllProducts">
+          <ion-icon [name]="showAllProducts ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+          <span>{{ showAllProducts ? 'View Less' : 'View More (' + (filteredProducts.length - productsLimit) + ' more)' }}</span>
+        </button>
+      </div>
+
+      <!-- ── Pending Orders Section ───────────────────────────── -->
+      <div class="section-label" style="margin-top: 24px;">
+        <ion-icon name="receipt-outline"></ion-icon> PENDING ORDERS
+      </div>
+
+      <!-- Search Input for Pending Orders -->
+      <div class="search-input-wrap" style="margin-bottom: 12px;">
+        <ion-icon name="search-outline" class="search-icon"></ion-icon>
+        <input
+          class="search-input-field"
+          type="text"
+          placeholder="Search buyer name or email…"
+          [(ngModel)]="pendingOrderSearch"
+        />
+        <button
+          class="clear-search-btn"
+          *ngIf="pendingOrderSearch"
+          (click)="pendingOrderSearch=''"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div class="empty-state" *ngIf="filteredPendingOrderGroups.length === 0">
+        {{ pendingOrderSearch ? 'No pending orders matching "' + pendingOrderSearch + '".' : 'No pending orders.' }}
+      </div>
+
+      <!-- Pending Orders Cards (matching reference design) -->
+      <div *ngFor="let g of displayedPendingOrderGroups" class="member-card order-card">
+        <div class="order-card-header">
+          <div class="order-buyer-info">
+            <div class="order-buyer-name">{{ g.username }}</div>
+            <div class="order-buyer-email">{{ g.email }}</div>
+          </div>
+          <span class="order-status-badge pending">PENDING</span>
         </div>
-        <div class="row-actions">
-          <button class="act-btn edit" [disabled]="g.cancelling" (click)="approveOrderGroup(g)">Approve</button>
-          <button class="act-btn del"  [disabled]="g.cancelling" (click)="rejectOrderGroup(g)">Reject</button>
+
+        <div class="order-card-divider"></div>
+
+        <div class="order-details-block">
+          <div class="order-detail-line">
+            <span class="order-detail-label">Items:</span>
+            <span class="order-detail-val">
+              <span *ngFor="let item of g.items; let last = last"><strong>{{ item.quantity }}x</strong> {{ item.name }}<span *ngIf="!last">, </span></span>
+            </span>
+          </div>
+          <div class="order-detail-line">
+            <span class="order-detail-label">Payment Method:</span>
+            <span class="order-detail-val"><strong>{{ g.paymentMethod === 'cash' ? 'Cash' : 'GCash' }}</strong></span>
+          </div>
+          <div class="order-detail-line">
+            <span class="order-detail-label">Total Amount:</span>
+            <span class="order-detail-val price">₱{{ g.total | number:'1.2-2' }}</span>
+          </div>
         </div>
+
+        <div class="card-actions-row dual" style="margin-top: 14px;">
+          <button class="act-btn del" [disabled]="g.cancelling" (click)="rejectOrderGroup(g)">
+            <ion-icon name="trash-outline"></ion-icon> Reject
+          </button>
+          <button class="act-btn verify-payment-btn" [disabled]="g.cancelling" (click)="approveOrderGroup(g)">
+            <ion-icon name="checkmark-outline"></ion-icon> Verify Payment
+          </button>
+        </div>
+      </div>
+
+      <!-- View More / View Less for Pending Orders -->
+      <div class="view-more-wrap" *ngIf="filteredPendingOrderGroups.length > pendingOrdersLimit && !pendingOrderSearch">
+        <button class="view-more-btn" (click)="showAllPendingOrders = !showAllPendingOrders">
+          <ion-icon [name]="showAllPendingOrders ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+          <span>{{ showAllPendingOrders ? 'View Less' : 'View More (' + (filteredPendingOrderGroups.length - pendingOrdersLimit) + ' more)' }}</span>
+        </button>
       </div>
 
     </div>

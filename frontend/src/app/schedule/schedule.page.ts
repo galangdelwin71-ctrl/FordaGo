@@ -764,6 +764,10 @@ export class SchedulePage implements OnInit, OnDestroy {
     this.renderSessions();
   }
 
+  isAdminScheduled(session?: WorkoutSession): boolean {
+    return typeof session?.id === 'string' && session.id.startsWith('admin_class_');
+  }
+
   deleteSession(index: number, event?: Event): void {
     if (event) event.stopPropagation();
     const session = this.sessions[index];
