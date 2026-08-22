@@ -263,7 +263,8 @@ ion-content {
 }
 
 // ── Light Theme Overrides (host-context for Angular encapsulation) ─────────────
-:host-context(body.light-theme) {
+:host-context(body.light-theme),
+:host-context(html.light-theme) {
   ion-content {
     --background: #f4f5f8 !important;
   }
@@ -350,6 +351,52 @@ ion-content {
     ion-tab-button {
       --color: rgba(15, 23, 42, 0.45);
       --color-selected: #f59e0b;
+    }
+  }
+
+  // Logout / Confirmation dialog light mode
+  .confirm-overlay {
+    background: rgba(15, 23, 42, 0.45);
+  }
+
+  .confirm-box {
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 20px 45px -8px rgba(15, 23, 42, 0.18), 0 0 1px 1px rgba(15, 23, 42, 0.05);
+
+    .confirm-icon {
+      background: rgba(245, 158, 11, 0.14);
+      ion-icon {
+        color: #d97706;
+      }
+    }
+
+    .confirm-title {
+      color: #0f172a;
+    }
+
+    .confirm-msg {
+      color: rgba(15, 23, 42, 0.62);
+    }
+
+    .confirm-cancel {
+      background: #f1f5f9;
+      color: #334155;
+      border: 1px solid rgba(15, 23, 42, 0.1);
+
+      &:hover {
+        background: #e2e8f0;
+      }
+    }
+
+    .confirm-logout {
+      background: #FFD600;
+      color: #000000;
+      border: none;
+
+      &:hover {
+        background: #f59e0b;
+      }
     }
   }
 

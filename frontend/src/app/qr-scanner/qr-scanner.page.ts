@@ -14,6 +14,7 @@ import { Html5Qrcode } from 'html5-qrcode';
 import { HeaderComponent } from '../shared/header/header.component';
 import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.component';
 import { CoachingNavService, CoachingPanelTab } from '../services/coaching-nav.service';
+import { CoachingService } from '../services/coaching.service';
 import { API_URL } from '../config/api.config';
 
 // ── Interfaces ────────────────────────────────────────────
@@ -178,11 +179,13 @@ export class QrScannerPage implements OnInit, OnDestroy {
     private http: HttpClient,
     private auth: AuthService,
     private coachingNav: CoachingNavService,
+    private coachingService: CoachingService,
   ) {}
 
   // ── Header avatar ─────────────────────────────────────
   initials     = '';
   profileImage = '';
+  coachUnreadCount = 0;
 
   // ── Notifications ─────────────────────────────────────
   notifications: Array<{ title: string; message: string; unread: boolean; createdAt?: string }> = [];
@@ -226,6 +229,7 @@ export class QrScannerPage implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.applyPendingCoachingReopen();
+    this.coachingService.unreadCount$.subscribe((count) => { this.coachUnreadCount = count; });
     this.loadMyAttendanceLogs();
     const user = this.auth.user;
     const name = String(user?.username || '').trim();

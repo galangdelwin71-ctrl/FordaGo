@@ -1,27 +1,35 @@
-import { HttpInterceptorFn } from '@angular/common/http';
+import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { catchError, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 
 /**
  * Attaches `Authorization: Bearer <token>` to every outgoing request when a
- * token is present. Every backend route except /auth/* requires
- * auth:sanctum (bearer-token auth, not session cookies — see
- * User::HasApiTokens), so without this every authenticated request would
- * fail with 401 Unauthenticated.
- *
- * (Was previously a class implementing HttpInterceptor, but that class was
- * never registered via HTTP_INTERCEPTORS and had no effect — converted to
- * a functional interceptor so it can be registered via main.ts's
- * withInterceptors([...]) alongside networkErrorInterceptor.)
+ * token is present. Handles 401 responses by clearing expired credentials
+ * and redirecting cleanly to login.
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const token = inject(AuthService).token;
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  const token = auth.token;
 
-  if (!token) {
-    return next(req);
-  }
+  const authReq = token
+    ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
+    : req;
 
-  return next(req.clone({
-    setHeaders: { Authorization: `Bearer ${token}` },
-  }));
+  return next(authReq).pipe(
+    catchError((err: unknown) => {
+      if (
+        err instanceof HttpErrorResponse &&
+        err.status === 401 &&
+        !req.url.includes('/auth/login') &&
+        !req.url.includes('/auth/register')
+      ) {
+        auth.logout();
+        router.navigate(['/login']);
+      }
+      return throwError(() => err);
+    })
+  );
 };

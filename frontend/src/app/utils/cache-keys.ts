@@ -22,4 +22,12 @@ export const CACHE_KEYS = {
   COACH_CLASSES: 'fordago.cache.classes',
   /** CoachingPanelComponent -- last-known coach dashboard stats */
   COACH_STATS: 'fordago.cache.coach_stats',
+  /** CoachingPanelComponent -- last-known coach today's sessions */
+  COACH_TODAY_SESSIONS: 'fordago.cache.coach_today_sessions',
+  /** CoachingPanelComponent -- last-known coach clients */
+  COACH_CLIENTS: 'fordago.cache.coach_clients',
+  /** CoachingPanelComponent -- last-known coach requests */
+  COACH_REQUESTS: 'fordago.cache.coach_requests',
+  /** AdminReportsPage -- last-known reports and analytics cache */
+  ADMIN_REPORTS: 'fordago.cache.admin_reports',
 } as const;

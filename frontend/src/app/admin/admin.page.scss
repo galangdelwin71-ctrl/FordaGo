@@ -134,6 +134,45 @@ ion-content.admin-content {
   letter-spacing: 0.4px;
 }
 
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.header-logout-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 13px;
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.2px;
+  transition: all 0.15s ease;
+
+  ion-icon {
+    font-size: 16px;
+    color: #dc2626;
+  }
+
+  &:hover {
+    background: #fecaca;
+    border-color: rgba(220, 38, 38, 0.35);
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.15);
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
 /* Main */
 .admin-wrap {
   max-width: 1220px;
@@ -379,9 +418,9 @@ ion-content.admin-content {
 }
 
 .add-btn {
-  background: #f59e0b;
-  color: #ffffff;
-  border: 0;
+  background: #eab308;
+  color: #0f172a;
+  border: 1px solid rgba(15, 23, 42, 0.12);
   border-radius: 999px;
   padding: 7px 18px;
   font-size: 12px;
@@ -393,12 +432,18 @@ ion-content.admin-content {
   white-space: nowrap;
   flex-shrink: 0;
   transition: 0.18s ease;
-  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
+  box-shadow: 0 3px 12px rgba(234, 179, 8, 0.35);
+
+  ion-icon {
+    color: #0f172a;
+  }
 
   &:hover {
+    background: #facc15;
+    color: #0f172a;
     transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(245, 158, 11, 0.55);
-    filter: brightness(1.05);
+    box-shadow: 0 6px 16px rgba(234, 179, 8, 0.45);
+    filter: brightness(1.02);
   }
 
   &:active {
@@ -474,6 +519,45 @@ ion-content.admin-content {
   &:focus {
     border-color: rgba(15, 23, 42, 0.28);
     box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.06);
+  }
+}
+
+/* Password field with eye-toggle */
+.pw-shell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+
+  .field-input {
+    margin-bottom: 0;
+    padding-right: 42px;
+    flex: 1;
+  }
+
+  .pw-eye {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(15, 23, 42, 0.45);
+    transition: color 0.18s ease;
+
+    &:hover {
+      color: rgba(15, 23, 42, 0.75);
+    }
+
+    ion-icon {
+      font-size: 18px;
+      pointer-events: none;
+    }
   }
 }
 
@@ -1546,7 +1630,7 @@ ion-content.admin-content {
   }
 
   .product-card-price {
-    color: #d97706;
+    color: #a16207;
     font-weight: 800;
     font-size: 14px;
   }
@@ -1636,7 +1720,7 @@ ion-content.admin-content {
     }
 
     &.price {
-      color: #d97706;
+      color: #a16207;
       font-weight: 800;
       font-size: 14px;
     }
@@ -1669,6 +1753,175 @@ ion-content.admin-content {
     min-height: 75px;
     resize: vertical;
     line-height: 1.4;
+  }
+}
+
+/* ── Modern Recipient Picker ── */
+.recipient-toggle-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.recipient-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  background: #f8fafc;
+  border: 1.5px solid rgba(15, 23, 42, 0.1);
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.18s ease;
+
+  ion-icon {
+    font-size: 16px;
+  }
+
+  &:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+    border-color: rgba(15, 23, 42, 0.2);
+  }
+
+  &.active {
+    background: #0f172a;
+    color: #ffffff;
+    border-color: #0f172a;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.15);
+
+    ion-icon {
+      color: #fde047;
+    }
+  }
+}
+
+.recipient-broadcast-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #0f172a;
+  background: #fefce8;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  padding: 10px 14px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+
+  ion-icon {
+    font-size: 18px;
+    color: #ca8a04;
+    flex-shrink: 0;
+  }
+}
+
+.specific-member-picker-wrap {
+  margin-bottom: 12px;
+}
+
+.selected-member-chip-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f8fafc;
+  border: 1.5px solid rgba(15, 23, 42, 0.12);
+  padding: 8px 12px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+
+  .selected-member-info {
+    flex: 1;
+    min-width: 0;
+
+    .selected-name {
+      font-size: 13px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .selected-email {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+  }
+
+  .change-recipient-btn {
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.14);
+    color: #0f172a;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: #fee2e2;
+      color: #dc2626;
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+  }
+}
+
+.member-picker-dropdown {
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 14px;
+  padding: 10px;
+  margin-bottom: 8px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+
+.member-picker-list {
+  max-height: 180px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.member-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  width: 100%;
+
+  &:hover {
+    background: #f1f5f9;
+  }
+
+  &.selected {
+    background: #fefce8;
+    border-color: rgba(15, 23, 42, 0.14);
+  }
+
+  .member-picker-info {
+    flex: 1;
+    min-width: 0;
+
+    .member-picker-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .member-picker-email {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
   }
 }
 
@@ -1893,6 +2146,157 @@ ion-content.admin-content {
         font-weight: 500;
       }
     }
+  }
+}
+
+/* ── Prominent Gym QR Banner Button ── */
+.gym-qr-banner-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #fefce8 0%, #fffbeb 100%);
+  border: 1.5px solid rgba(234, 179, 8, 0.35);
+  border-radius: 18px;
+  margin-bottom: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(234, 179, 8, 0.08);
+
+  &:hover {
+    background: linear-gradient(135deg, #fef9c3 0%, #fef3c7 100%);
+    border-color: rgba(234, 179, 8, 0.55);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(234, 179, 8, 0.15);
+  }
+
+  .qr-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .qr-banner-icon-box {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    background: #eab308;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(234, 179, 8, 0.3);
+  }
+
+  .qr-banner-text {
+    flex: 1;
+    min-width: 0;
+
+    .qr-banner-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 2px;
+    }
+
+    .qr-banner-subtitle {
+      font-size: 11.5px;
+      color: #64748b;
+      font-weight: 500;
+      line-height: 1.35;
+    }
+  }
+
+  .qr-banner-action {
+    flex-shrink: 0;
+  }
+
+  .qr-toggle-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #0f172a;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 8px 14px;
+    border-radius: 999px;
+    transition: all 0.18s ease;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.18);
+
+    ion-icon {
+      font-size: 14px;
+      color: #fde047;
+    }
+
+    &.active {
+      background: #fee2e2;
+      color: #dc2626;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      box-shadow: none;
+
+      ion-icon {
+        color: #dc2626;
+      }
+    }
+  }
+}
+
+/* ── Modern Coach Card Styles ── */
+.coach-card {
+  .coach-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 800;
+    color: #0f172a;
+    flex-shrink: 0;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  .coach-rate-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-top: 4px;
+
+    .coach-rate-val {
+      font-size: 14px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .per-session {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+  }
+
+  .coach-bio-snippet {
+    font-size: 11.5px;
+    color: #64748b;
+    margin-top: 4px;
+    line-height: 1.35;
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 4px 8px;
   }
 }
 
@@ -2489,37 +2893,6 @@ input[type="time"],
   border-radius: 10px;
   margin-top: 8px;
   border: 1px solid var(--border);
-}
-
-/* Bottom logout button */
-.logout-full-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  background: #fee2e2;
-  color: #dc2626;
-  border: 1px solid rgba(220, 38, 38, 0.16);
-  border-radius: 14px;
-  padding: 14px;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  margin-top: 8px;
-  transition: 0.16s ease;
-
-  ion-icon {
-    font-size: 18px;
-  }
-
-  &:hover {
-    background: #fecaca;
-  }
-
-  &:active {
-    transform: scale(0.98);
-  }
 }
 
 /* Modals */

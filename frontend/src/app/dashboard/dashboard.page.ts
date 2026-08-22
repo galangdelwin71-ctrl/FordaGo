@@ -11,10 +11,14 @@ import { WorkoutTrackerService, StoredWorkoutSession } from '../services/workout
 import { NotificationCenterService } from '../services/notification-center.service';
 import { CoachingNavService, CoachingPanelTab } from '../services/coaching-nav.service';
 import { CoachingService } from '../services/coaching.service';
+import { ChatToastService } from '../services/chat-toast.service';
 import { NoNegativeDirective } from '../directives/no-negative.directive';
 import { HeaderComponent } from '../shared/header/header.component';
 import { NotificationPanelComponent } from '../shared/notification-panel/notification-panel.component';
 import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.component';
+import { FeedbackModalComponent } from '../shared/feedback-modal/feedback-modal.component';
+import { ChatToastComponent } from '../shared/chat-toast/chat-toast.component';
+import { FeedbackService } from '../services/feedback.service';
 import { API_URL } from '../config/api.config';
 
 // ─────────────────────────────────────────────────────
@@ -134,7 +138,7 @@ export interface PrForm {
   styleUrls: ['./dashboard.page.scss'],
   standalone: true,
   host: { class: 'ion-page fordago-page' },
-  imports: [CommonModule, FormsModule, IonContent, IonFooter, IonIcon, IonModal, IonInput, NoNegativeDirective, HeaderComponent, NotificationPanelComponent, CoachingPanelComponent],
+  imports: [CommonModule, FormsModule, IonContent, IonFooter, IonIcon, IonModal, IonInput, NoNegativeDirective, HeaderComponent, NotificationPanelComponent, CoachingPanelComponent, FeedbackModalComponent, ChatToastComponent],
 })
 export class DashboardPage implements OnInit, OnDestroy {
   // ── Coaching Panel ───────────────────────────────────
@@ -215,6 +219,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   todayWorkouts: TodayWorkout[] = [];
   private trackerSubscription?: Subscription;
   private userSubscription?: Subscription;
+  private coachingSubscription?: Subscription;
 
   // Dashboard shows only ONE workout card at a time by default — tapping
   // "View all" below it expands to show every session scheduled today.
@@ -1367,7 +1372,9 @@ export class DashboardPage implements OnInit, OnDestroy {
     private workoutTracker: WorkoutTrackerService,
     private notificationCenter: NotificationCenterService,
     private coachingNav: CoachingNavService,
-    private coachingService: CoachingService
+    private coachingService: CoachingService,
+    private chatToastService: ChatToastService,
+    private feedbackService: FeedbackService
   ) {}
 
   onLogoError(event: Event): void {
@@ -1436,6 +1443,9 @@ export class DashboardPage implements OnInit, OnDestroy {
       }
       this.loadUpcomingSessions();
     });
+    this.coachingSubscription = this.coachingService.unreadCount$.subscribe((count) => {
+      this.coachUnreadCount = count;
+    });
     this.applyUserContext(this.auth.user);
     void this.workoutTracker.pullFromServer();
 
@@ -1444,6 +1454,10 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.loadUpcomingSessions();
     this.refreshDashboardFromSchedule();
     this.loadEquipment();
+    this.loadCoachActivityBadge();
+
+    // Check if member has been using the app for 3+ days to prompt feedback
+    this.feedbackService.checkAndPromptRating();
   }
 
   ionViewWillEnter(): void {
@@ -1462,11 +1476,14 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.loadUpcomingSessions();
     this.refreshDashboardFromSchedule();
     this.loadCoachActivityBadge();
+
+    this.feedbackService.checkAndPromptRating();
   }
 
   ngOnDestroy(): void {
     this.trackerSubscription?.unsubscribe();
     this.userSubscription?.unsubscribe();
+    this.coachingSubscription?.unsubscribe();
     this.stopTimerTickingIfIdle();
     this.stopAlarmLoop();
     this.clearHeatmapLongPressTimer();
@@ -1657,6 +1674,19 @@ export class DashboardPage implements OnInit, OnDestroy {
           0
         );
         applyTotal();
+
+        // Start listening for new messages on all conversations so the
+        // Messenger-style toast popup shows anywhere in the app.
+        const toastConvos = (conversations || []).map((convo) => ({
+          id: convo.id,
+          partnerName: convo.partner
+            ? `${convo.partner.first_name || ''} ${convo.partner.last_name || ''}`.trim() ||
+              convo.partner.username ||
+              'FordaGO User'
+            : 'FordaGO User',
+          partnerAvatar: convo.partner?.profile_image,
+        }));
+        this.chatToastService.listenForAll(toastConvos);
       },
       error: (err) => {
         console.warn('[Dashboard] failed to load conversations for coach badge', err);

@@ -205,10 +205,10 @@
         <div class="cd-client-item" *ngFor="let item of clients" (click)="openClientChat(item)">
           <div class="cd-session-avatar">
             <img *ngIf="item.client.profile_image" [src]="item.client.profile_image" alt="" />
-            <span *ngIf="!item.client.profile_image">{{ (item.client.first_name || item.client.username).charAt(0) }}</span>
+            <span *ngIf="!item.client.profile_image">{{ (item.client.first_name || item.client.username || 'C').charAt(0) }}</span>
           </div>
           <div class="cd-session-info">
-            <div class="cd-session-name">{{ item.client.first_name }} {{ item.client.last_name }}</div>
+            <div class="cd-session-name">{{ item.client.first_name || item.client.username || 'Client' }} {{ item.client.last_name || '' }}</div>
             <div class="cd-session-focus" *ngIf="item.next_session">
               Next: {{ item.next_session.session_date }} · {{ item.next_session.time_val }} {{ item.next_session.time_ampm }}
             </div>
@@ -233,10 +233,10 @@
         <div class="cd-request-item" *ngFor="let item of requests">
           <div class="cd-session-avatar">
             <img *ngIf="item.client.profile_image" [src]="item.client.profile_image" alt="" />
-            <span *ngIf="!item.client.profile_image">{{ (item.client.first_name || item.client.username).charAt(0) }}</span>
+            <span *ngIf="!item.client.profile_image">{{ (item.client.first_name || item.client.username || 'C').charAt(0) }}</span>
           </div>
           <div class="cd-session-info">
-            <div class="cd-session-name">{{ item.client.first_name }} {{ item.client.last_name }}</div>
+            <div class="cd-session-name">{{ item.client.first_name || item.client.username || 'Client' }} {{ item.client.last_name || '' }}</div>
             <div class="cd-session-focus" *ngIf="item.latest_message">{{ item.latest_message.body }}</div>
           </div>
           <div class="cd-request-actions">
@@ -269,10 +269,10 @@
       <div class="cd-client-item" *ngFor="let convo of conversations" (click)="openConversation(convo)">
         <div class="cd-session-avatar">
           <img *ngIf="convo.partner.profile_image" [src]="convo.partner.profile_image" alt="" />
-          <span *ngIf="!convo.partner.profile_image">{{ (convo.partner.first_name || convo.partner.username).charAt(0) }}</span>
+          <span *ngIf="!convo.partner.profile_image">{{ (convo.partner.first_name || convo.partner.username || 'U').charAt(0) }}</span>
         </div>
         <div class="cd-session-info">
-          <div class="cd-session-name">{{ convo.partner.first_name }} {{ convo.partner.last_name }}</div>
+          <div class="cd-session-name">{{ convo.partner.first_name || convo.partner.username || 'Client' }} {{ convo.partner.last_name || '' }}</div>
           <div class="cd-session-focus" *ngIf="convo.latest_message">{{ convo.latest_message.body }}</div>
         </div>
         <span class="cd-unread-badge" *ngIf="convo.unread_count > 0">{{ convo.unread_count }}</span>
@@ -405,7 +405,7 @@
 
         <div class="convo-info">
           <div class="convo-top-row">
-            <h4 class="convo-name">{{ convo.partner.first_name }} {{ convo.partner.last_name }}</h4>
+            <h4 class="convo-name">{{ convo.partner.first_name || convo.partner.username || 'Partner' }} {{ convo.partner.last_name || '' }}</h4>
             <span class="convo-time">{{ convo.updated_at | date:'shortTime' }}</span>
           </div>
           <div class="convo-role-tag">{{ convo.partner_role === 'coach' ? 'Personal Coach' : 'Client' }}</div>

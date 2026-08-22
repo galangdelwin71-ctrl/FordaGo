@@ -1,9 +1,10 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { AuthService } from './auth.service';
+import { EchoService } from './echo.service';
 import { API_URL } from '../config/api.config';
 
 export interface AppNotificationItem {
@@ -56,7 +57,13 @@ export class NotificationCenterService {
   private pendingOpenSubject = new BehaviorSubject<string | null>(null);
   readonly pendingOpen$ = this.pendingOpenSubject.asObservable();
 
-  constructor(private http: HttpClient, private auth: AuthService, private router: Router) {}
+  constructor(
+    private http: HttpClient,
+    private auth: AuthService,
+    private router: Router,
+    private echoService: EchoService,
+    private zone: NgZone,
+  ) {}
 
   /**
    * Called when the person taps a device notification (native OS tray via
@@ -89,20 +96,73 @@ export class NotificationCenterService {
   }
 
   /**
-   * Starts the ONE shared background poll. Safe to call from every page —
-   * only the first call actually does anything; subsequent calls
-   * (e.g. every time a page's NotificationPanelComponent mounts) are
-   * no-ops thanks to the pollTimer guard.
+   * Starts the ONE shared background poll AND the WebSocket listener.
+   * Safe to call from every page — only the first call actually does
+   * anything; subsequent calls (e.g. every time a page's
+   * NotificationPanelComponent mounts) are no-ops thanks to the
+   * pollTimer guard.
+   *
+   * Strategy:
+   *  1. WebSocket (instant): Listen on user.{id} private channel for
+   *     `notification.sent` events. When the backend broadcasts a new
+   *     notification it arrives here in <50ms — no polling needed.
+   *  2. Fallback HTTP poll every 5 minutes: Catches notifications the
+   *     user missed while the socket was disconnected (e.g. app was
+   *     backgrounded) and keeps the list eventually consistent.
    */
   startPolling(): void {
     if (this.pollTimer) {
       return;
     }
 
+    // Immediate first load
     void this.refreshNotifications();
+
+    // WebSocket real-time listener
+    this.listenWebSocket();
+
+    // 5-minute HTTP fallback (was 15s) — only for catch-up after disconnects
     this.pollTimer = setInterval(() => {
       void this.refreshNotifications();
-    }, 15000);
+    }, 5 * 60 * 1000);
+  }
+
+  /**
+   * Subscribe to the current user's private WebSocket channel so new
+   * notifications arrive in real-time instead of waiting for the poll.
+   */
+  private listenWebSocket(): void {
+    const userId = this.auth.user?.id;
+    if (!userId) return;
+
+    const channel = this.echoService.privateChannel(`user.${userId}`);
+    if (!channel) return;
+
+    channel.listen('.notification.sent', (data: any) => {
+      this.zone.run(() => {
+        const incoming = data?.notification;
+        if (!incoming) return;
+
+        // Map backend shape to AppNotificationItem
+        const item = {
+          id: `server-${incoming.id}`,
+          title: incoming.title || 'Notice',
+          message: incoming.message,
+          createdAt: incoming.created_at || new Date().toISOString(),
+          unread: !incoming.is_read,
+          source: 'server' as const,
+          homeExercises: this.extractHomeExercises(incoming.message),
+        };
+
+        // Prepend to current list (deduplicate by id)
+        const current = this.notificationsSubject.value;
+        const deduped = [item, ...current.filter((n) => n.id !== item.id)];
+        this.publishNotifications(this.sortNotifications(deduped));
+
+        // Also send a device notification so the OS shows a banner
+        void this.sendDeviceNotification({ ...item, key: undefined });
+      });
+    });
   }
 
   /** Fetches the latest notification list and publishes it to every subscriber (all open panel instances update together). */

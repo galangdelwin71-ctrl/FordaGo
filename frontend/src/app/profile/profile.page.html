@@ -2,6 +2,7 @@
 <app-header
   subtitle="PROFILE"
   [unreadCount]="unreadCount"
+  [coachUnreadCount]="coachUnreadCount"
   [profileImage]="profile.profileImage"
   [initials]="profile.initials"
   (coachingClick)="onCoachingClick()"
@@ -126,6 +127,15 @@
       <div class="menu-content">
         <div class="menu-label">Progress History</div>
         <div class="menu-sub">View past sessions & records</div>
+      </div>
+      <span class="menu-arrow">›</span>
+    </div>
+
+    <div class="menu-item fade-up" (click)="openFeedbackSupport()">
+      <span class="menu-icon"><ion-icon name="chatbubbles-outline"></ion-icon></span>
+      <div class="menu-content">
+        <div class="menu-label">Feedback &amp; Support</div>
+        <div class="menu-sub">Message our Facebook page or rate us</div>
       </div>
       <span class="menu-arrow">›</span>
     </div>
@@ -429,3 +439,6 @@
   (closed)="closeNotifPanel()"
   (unreadCountChange)="onUnreadCountChange($event)">
 </app-notification-panel>
+
+<!-- Feedback & Rating Modal -->
+<app-feedback-modal></app-feedback-modal>

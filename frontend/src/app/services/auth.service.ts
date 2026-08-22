@@ -63,6 +63,10 @@ export class AuthService {
     void clearCachedData(CACHE_KEYS.COACH_CONVERSATIONS);
     void clearCachedData(CACHE_KEYS.COACH_CLASSES);
     void clearCachedData(CACHE_KEYS.COACH_STATS);
+    void clearCachedData(CACHE_KEYS.COACH_TODAY_SESSIONS);
+    void clearCachedData(CACHE_KEYS.COACH_CLIENTS);
+    void clearCachedData(CACHE_KEYS.COACH_REQUESTS);
+    void clearCachedData(CACHE_KEYS.ADMIN_REPORTS);
   }
 
   get token() {

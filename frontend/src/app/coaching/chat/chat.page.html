@@ -86,7 +86,8 @@
         *ngFor="let msg of messages"
         class="message-row"
         [class.is-mine]="msg.sender_id === currentUserId"
-        [class.is-proposal]="msg.type === 'proposal'">
+        [class.is-proposal]="msg.type === 'proposal'"
+        [class.is-sending]="msg.id < 0">
 
         <!-- Incoming message avatar -->
         <div class="msg-avatar-col" *ngIf="msg.sender_id !== currentUserId">
@@ -102,15 +103,17 @@
           <div class="msg-bubble" *ngIf="msg.type !== 'proposal'">
             <p class="msg-text">{{ msg.body }}</p>
             <div class="msg-meta">
-              <span class="msg-time">{{ msg.created_at | date:'M/d/yy, h:mm a' }}</span>
+              <span class="msg-time" *ngIf="msg.id >= 0">{{ msg.created_at | date:'M/d/yy, h:mm a' }}</span>
+              <span class="msg-time msg-sending-label" *ngIf="msg.id < 0">Sending…</span>
               <ion-icon
-                *ngIf="msg.sender_id === currentUserId"
+                *ngIf="msg.sender_id === currentUserId && msg.id >= 0"
                 [name]="msg.read_at ? 'checkmark-done-outline' : 'checkmark-outline'"
                 class="msg-status-icon"
                 [class.is-read]="msg.read_at">
               </ion-icon>
             </div>
           </div>
+
 
           <!-- ── WORKOUT PLAN PROPOSAL CARD ── -->
           <div class="proposal-card-bubble" *ngIf="msg.type === 'proposal' && msg.proposal">
@@ -194,6 +197,20 @@
         </div>
 
       </div>
+
+      <!-- Typing Indicator Bubble -->
+      <div class="typing-indicator-row" *ngIf="isPartnerTyping">
+        <div class="msg-avatar-col">
+          <div class="msg-avatar-ph">
+            {{ (partner?.first_name || partner?.username || 'U').charAt(0) }}
+          </div>
+        </div>
+        <div class="typing-bubble">
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -217,6 +234,7 @@
       class="chat-text-input"
       placeholder="Type a message..."
       [(ngModel)]="newMessage"
+      (input)="onTyping()"
       (keyup.enter)="sendMessage()"
     />
 

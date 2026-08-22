@@ -1,91 +1,310 @@
 <!-- admin-reports.page.html -->
-<ion-header [translucent]="false">
-  <ion-toolbar>
-    <div slot="start" class="toolbar-brand">
-      <ion-back-button defaultHref="/admin" class="back-btn"></ion-back-button>
-    </div>
-    <div class="toolbar-title">Reports &amp; Analytics</div>
-    <div slot="end" class="header-end">
-      <button class="print-btn" (click)="printCurrent()" title="Print">
-        <span class="btn-label">PRN</span>
+<ion-header [translucent]="false" class="ion-no-border">
+  <ion-toolbar class="reports-toolbar">
+    <div slot="start" class="toolbar-brand-wrapper">
+      <button class="header-back-btn" (click)="router.navigate(['/admin'])" title="Back to Admin Dashboard" aria-label="Back">
+        <ion-icon name="arrow-back-outline"></ion-icon>
       </button>
-      <button class="dl-btn" (click)="downloadPDF()" title="Download PDF">
-        <span class="btn-label">PDF</span>
+      <div class="toolbar-brand-text">
+        <div class="toolbar-main-title">Reports &amp; Analytics</div>
+        <div class="toolbar-sub-badge">FordaGO Control Center</div>
+      </div>
+    </div>
+    
+    <div slot="end" class="header-actions-group">
+      <button class="header-action-btn icon-only" (click)="load()" title="Refresh All Data">
+        <ion-icon name="refresh-outline"></ion-icon>
+      </button>
+      <button class="header-action-btn print-pill" (click)="printCurrent()" title="Print Summary Report">
+        <ion-icon name="print-outline"></ion-icon>
+        <span class="btn-text">Print</span>
+      </button>
+      <button class="header-action-btn pdf-pill" (click)="downloadPDF()" title="Export PDF Report">
+        <ion-icon name="download-outline"></ion-icon>
+        <span class="btn-text">PDF</span>
       </button>
     </div>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="false">
+<ion-content [fullscreen]="false" class="reports-content">
   <div class="content-inner">
 
-    <!-- Tab Switcher -->
-    <div class="tab-row">
-      <div class="tab-pill" [class.active]="activeTab === 'transactions'" (click)="setTab('transactions')">Transactions</div>
-      <div class="tab-pill" [class.active]="activeTab === 'attendance'"   (click)="setTab('attendance')">Attendance</div>
-      <div class="tab-pill" [class.active]="activeTab === 'sales'"        (click)="setTab('sales')">Sales</div>
-      <div class="tab-pill" [class.active]="activeTab === 'inventory'"    (click)="setTab('inventory')">Inventory</div>
+    <!-- ── Top Tab Switcher ────────────────────────── -->
+    <div class="tab-scroller">
+      <div class="tab-row">
+        <button class="tab-pill" [class.active]="activeTab === 'overview'" (click)="setTab('overview')">
+          <ion-icon name="pie-chart-outline"></ion-icon>
+          <span>Overview</span>
+        </button>
+        <button class="tab-pill" [class.active]="activeTab === 'memberships'" (click)="setTab('memberships')">
+          <ion-icon name="sparkles-outline"></ion-icon>
+          <span>Memberships</span>
+        </button>
+        <button class="tab-pill" [class.active]="activeTab === 'transactions'" (click)="setTab('transactions')">
+          <ion-icon name="receipt-outline"></ion-icon>
+          <span>Transactions</span>
+        </button>
+        <button class="tab-pill" [class.active]="activeTab === 'attendance'" (click)="setTab('attendance')">
+          <ion-icon name="people-outline"></ion-icon>
+          <span>Attendance</span>
+        </button>
+        <button class="tab-pill" [class.active]="activeTab === 'sales'" (click)="setTab('sales')">
+          <ion-icon name="trending-up-outline"></ion-icon>
+          <span>Sales</span>
+        </button>
+        <button class="tab-pill" [class.active]="activeTab === 'inventory'" (click)="setTab('inventory')">
+          <ion-icon name="cube-outline"></ion-icon>
+          <span>Inventory</span>
+        </button>
+      </div>
     </div>
 
-    <!-- Period Filter (hidden for inventory) -->
-    <div class="pill-row" *ngIf="activeTab !== 'inventory'">
-      <div class="pill" [class.active]="period === 'daily'"   (click)="setPeriod('daily')">Daily</div>
-      <div class="pill" [class.active]="period === 'weekly'"  (click)="setPeriod('weekly')">Weekly</div>
-      <div class="pill" [class.active]="period === 'monthly'" (click)="setPeriod('monthly')">Monthly</div>
-      <div class="pill" [class.active]="period === 'yearly'"  (click)="setPeriod('yearly')" *ngIf="activeTab === 'sales'">Yearly</div>
-      <div class="pill" [class.active]="period === 'all'"     (click)="setPeriod('all')"   *ngIf="activeTab === 'transactions'">All Time</div>
+    <!-- ── Period Selector (Hidden for Inventory & Memberships) ─── -->
+    <div class="period-container" *ngIf="activeTab !== 'inventory' && activeTab !== 'memberships'">
+      <div class="period-label">Time Range:</div>
+      <div class="pill-row">
+        <button class="pill" [class.active]="period === 'daily'" (click)="setPeriod('daily')">Daily</button>
+        <button class="pill" [class.active]="period === 'weekly'" (click)="setPeriod('weekly')">Weekly</button>
+        <button class="pill" [class.active]="period === 'monthly'" (click)="setPeriod('monthly')">Monthly</button>
+        <button class="pill" [class.active]="period === 'yearly'" (click)="setPeriod('yearly')">Yearly</button>
+        <button class="pill" [class.active]="period === 'all'" (click)="setPeriod('all')" *ngIf="activeTab === 'transactions' || activeTab === 'overview'">All Time</button>
+      </div>
     </div>
 
-    <!-- Loading -->
-    <div class="empty-state" *ngIf="isLoading">
+    <!-- ── Loading State ───────────────────────────── -->
+    <div class="loading-state" *ngIf="isLoading">
       <ion-spinner name="crescent"></ion-spinner>
-      <div class="empty-lbl">Loading…</div>
+      <div class="loading-text">Analyzing report data…</div>
     </div>
 
-    <!-- ════════════ TRANSACTIONS TAB ════════════ -->
-    <ng-container *ngIf="!isLoading && activeTab === 'transactions'">
-      <!-- Summary -->
-      <div class="summary-grid fade-up">
-        <div class="sum-card">
-          <div class="sum-val">{{ txRows.length }}</div>
-          <div class="sum-lbl">Records</div>
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- TAB: OVERVIEW / EXECUTIVE DASHBOARD            -->
+    <!-- ══════════════════════════════════════════════ -->
+    <ng-container *ngIf="!isLoading && activeTab === 'overview'">
+      <!-- Active Period Tag -->
+      <div class="period-banner fade-up">
+        <div class="banner-left">
+          <ion-icon name="calendar-outline"></ion-icon>
+          <span>Report Scope: <strong>{{ getPeriodDisplayLabel() }}</strong></span>
         </div>
-        <div class="sum-card gold">
-          <div class="sum-val">₱{{ txTotal | number:'1.2-2' }}</div>
-          <div class="sum-lbl">Revenue</div>
+        <div class="banner-badge">Live Analytics</div>
+      </div>
+
+      <!-- Executive KPIs Grid -->
+      <div class="kpi-grid fade-up">
+        <div class="kpi-card emerald">
+          <div class="kpi-header">
+            <span class="kpi-title">Total Collected</span>
+            <div class="kpi-icon-box emerald"><ion-icon name="cash-outline"></ion-icon></div>
+          </div>
+          <div class="kpi-value">₱{{ grandTotalCollected | number:'1.2-2' }}</div>
+          <div class="kpi-subtext">Premium + Gym + Shop income</div>
         </div>
-        <div class="sum-card">
-          <div class="sum-val">{{ txGymCount }}</div>
-          <div class="sum-lbl">Gym</div>
+
+        <div class="kpi-card gold">
+          <div class="kpi-header">
+            <span class="kpi-title">Premium Subscriptions</span>
+            <div class="kpi-icon-box gold"><ion-icon name="sparkles-outline"></ion-icon></div>
+          </div>
+          <div class="kpi-value">₱{{ (salesSummary?.membershipRevenue || 0) | number:'1.2-2' }}</div>
+          <div class="kpi-subtext">₱500 / active member</div>
         </div>
-        <div class="sum-card">
-          <div class="sum-val">{{ txShopCount }}</div>
-          <div class="sum-lbl">Shop</div>
+
+        <div class="kpi-card amber">
+          <div class="kpi-header">
+            <span class="kpi-title">Gym Daily Passes</span>
+            <div class="kpi-icon-box amber"><ion-icon name="barbell-outline"></ion-icon></div>
+          </div>
+          <div class="kpi-value">₱{{ (salesSummary?.gymRevenue || 0) | number:'1.2-2' }}</div>
+          <div class="kpi-subtext">₱40 / walk-in session</div>
+        </div>
+
+        <div class="kpi-card blue">
+          <div class="kpi-header">
+            <span class="kpi-title">Shop Sales</span>
+            <div class="kpi-icon-box blue"><ion-icon name="cart-outline"></ion-icon></div>
+          </div>
+          <div class="kpi-value">₱{{ (salesSummary?.shopRevenue || 0) | number:'1.2-2' }}</div>
+          <div class="kpi-subtext">{{ salesSummary?.totalOrders || 0 }} approved orders</div>
         </div>
       </div>
 
-      <div class="empty-state" *ngIf="txRows.length === 0">
-        <ion-icon name="receipt-outline"></ion-icon>
-        <div class="empty-lbl">No transactions found</div>
+      <!-- Analytics Breakdown Cards -->
+      <div class="analytics-deck fade-up">
+
+        <!-- Revenue Stream Share (3-way) -->
+        <div class="analytics-card">
+          <div class="card-header-flex">
+            <div class="card-title">
+              <ion-icon name="pie-chart-outline"></ion-icon>
+              <span>Revenue Streams</span>
+            </div>
+            <span class="card-badge">Breakdown</span>
+          </div>
+
+          <div class="split-meter-bar">
+            <div class="bar-fill gold" [style.width.%]="revenueMembershipPercent" [title]="'Premium: ' + revenueMembershipPercent + '%'"></div>
+            <div class="bar-fill amber" [style.width.%]="revenueGymPercent" [title]="'Gym: ' + revenueGymPercent + '%'"></div>
+            <div class="bar-fill blue" [style.width.%]="revenueShopPercent" [title]="'Shop: ' + revenueShopPercent + '%'"></div>
+          </div>
+
+          <div class="split-legend-grid three-col">
+            <div class="legend-item">
+              <div class="dot gold"></div>
+              <div class="legend-text">
+                <span class="legend-lbl">Premium (₱500)</span>
+                <span class="legend-val">₱{{ (salesSummary?.membershipRevenue || 0) | number:'1.0-0' }} ({{ revenueMembershipPercent }}%)</span>
+              </div>
+            </div>
+            <div class="legend-item">
+              <div class="dot amber"></div>
+              <div class="legend-text">
+                <span class="legend-lbl">Daily Passes</span>
+                <span class="legend-val">₱{{ (salesSummary?.gymRevenue || 0) | number:'1.0-0' }} ({{ revenueGymPercent }}%)</span>
+              </div>
+            </div>
+            <div class="legend-item">
+              <div class="dot blue"></div>
+              <div class="legend-text">
+                <span class="legend-lbl">Shop Sales</span>
+                <span class="legend-val">₱{{ (salesSummary?.shopRevenue || 0) | number:'1.0-0' }} ({{ revenueShopPercent }}%)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Method Distribution -->
+        <div class="analytics-card">
+          <div class="card-header-flex">
+            <div class="card-title">
+              <ion-icon name="wallet-outline"></ion-icon>
+              <span>Payment Methods</span>
+            </div>
+            <span class="card-badge">Channels</span>
+          </div>
+
+          <div class="split-meter-bar">
+            <div class="bar-fill green" [style.width.%]="paymentCashPercent" [title]="'Cash: ' + paymentCashPercent + '%'"></div>
+            <div class="bar-fill cyan" [style.width.%]="paymentGcashPercent" [title]="'GCash: ' + paymentGcashPercent + '%'"></div>
+          </div>
+
+          <div class="split-legend-grid">
+            <div class="legend-item">
+              <div class="dot green"></div>
+              <div class="legend-text">
+                <span class="legend-lbl">Cash Payments</span>
+                <span class="legend-val">₱{{ (salesSummary?.cashRevenue || 0) | number:'1.2-2' }} ({{ paymentCashPercent }}%)</span>
+              </div>
+            </div>
+            <div class="legend-item">
+              <div class="dot cyan"></div>
+              <div class="legend-text">
+                <span class="legend-lbl">GCash E-Wallet</span>
+                <span class="legend-val">₱{{ (salesSummary?.gcashRevenue || 0) | number:'1.2-2' }} ({{ paymentGcashPercent }}%)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Peak Gym Traffic Hours -->
+        <div class="analytics-card">
+          <div class="card-header-flex">
+            <div class="card-title">
+              <ion-icon name="time-outline"></ion-icon>
+              <span>Peak Gym Traffic Hours</span>
+            </div>
+            <span class="card-badge">Traffic</span>
+          </div>
+
+          <div class="traffic-bars-row">
+            <div class="traffic-time-slot">
+              <div class="slot-header">
+                <span class="slot-name">Morning (5am–11am)</span>
+                <span class="slot-count">{{ attSummary?.morningCount || 0 }} visits</span>
+              </div>
+              <div class="slot-progress">
+                <div class="slot-fill yellow" [style.width.%]="attendanceMorningPercent"></div>
+              </div>
+            </div>
+
+            <div class="traffic-time-slot">
+              <div class="slot-header">
+                <span class="slot-name">Afternoon (12pm–4pm)</span>
+                <span class="slot-count">{{ attSummary?.afternoonCount || 0 }} visits</span>
+              </div>
+              <div class="slot-progress">
+                <div class="slot-fill orange" [style.width.%]="attendanceAfternoonPercent"></div>
+              </div>
+            </div>
+
+            <div class="traffic-time-slot">
+              <div class="slot-header">
+                <span class="slot-name">Evening Peak (5pm–11pm)</span>
+                <span class="slot-count">{{ attSummary?.eveningCount || 0 }} visits</span>
+              </div>
+              <div class="slot-progress">
+                <div class="slot-fill indigo" [style.width.%]="attendanceEveningPercent"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Status Alerts -->
+        <div class="analytics-card">
+          <div class="card-header-flex">
+            <div class="card-title">
+              <ion-icon name="shield-checkmark-outline"></ion-icon>
+              <span>Operational Health</span>
+            </div>
+            <span class="card-badge">Status</span>
+          </div>
+
+          <div class="health-indicators-grid">
+            <div class="health-pill" [class.alert]="(salesSummary?.pendingRevenue || 0) > 0">
+              <ion-icon name="hourglass-outline"></ion-icon>
+              <div class="health-info">
+                <span class="health-val">₱{{ (salesSummary?.pendingRevenue || 0) | number:'1.2-2' }}</span>
+                <span class="health-lbl">Pending Receivables</span>
+              </div>
+            </div>
+
+            <div class="health-pill" [class.alert]="(membershipSummary?.expiringSoon || 0) > 0">
+              <ion-icon name="time-outline"></ion-icon>
+              <div class="health-info">
+                <span class="health-val">{{ membershipSummary?.expiringSoon || 0 }} plans</span>
+                <span class="health-lbl">Expiring in 7 Days</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
-      <div class="tx-list">
-        <div
-          *ngFor="let tx of txRows; let i = index"
-          class="tx-card fade-up"
-          [style.animation-delay]="(i * 0.03) + 's'"
-        >
+      <!-- Recent Transactions Mini Preview -->
+      <div class="section-title-bar fade-up">
+        <span class="section-heading">Recent Transactions Ledger</span>
+        <button class="view-all-link" (click)="setTab('transactions')">View Full Ledger →</button>
+      </div>
+
+      <div class="tx-list fade-up">
+        <div *ngFor="let tx of txRows.slice(0, 5)" class="tx-card">
           <div class="tx-icon" [class]="getTxIconClass(tx)">
             <ion-icon [name]="getTxIcon(tx)"></ion-icon>
           </div>
           <div class="tx-info">
             <div class="tx-name">{{ tx.username }}</div>
-            <div class="tx-sub">{{ tx.type_label }}<span *ngIf="tx.product_name"> · {{ tx.product_name }}</span></div>
-            <div class="tx-date">{{ tx.transaction_date | date:'MMM d, yyyy · h:mm a' }}</div>
+            <div class="tx-sub">
+              {{ tx.type_label }}<span *ngIf="tx.product_name"> · {{ tx.product_name }}</span>
+            </div>
+            <div class="tx-meta-row">
+              <span class="tx-date">{{ tx.transaction_date | date:'MMM d, yyyy · h:mm a' }}</span>
+              <span class="tx-paymethod" *ngIf="tx.payment_method">{{ tx.payment_method | uppercase }}</span>
+            </div>
           </div>
           <div class="tx-right">
             <div class="tx-amount" [class.free]="tx.amount == 0">
-              {{ tx.amount > 0 ? ('₱' + (tx.amount | number:'1.2-2')) : 'Premium' }}
+              {{ tx.amount > 0 ? ('₱' + (tx.amount | number:'1.2-2')) : 'Included' }}
             </div>
             <div class="tx-status" [class]="'st-' + getStatusKey(tx)">{{ getStatusLabel(tx) }}</div>
           </div>
@@ -93,165 +312,555 @@
       </div>
     </ng-container>
 
-    <!-- ════════════ ATTENDANCE TAB ════════════ -->
-    <ng-container *ngIf="!isLoading && activeTab === 'attendance'">
-      <!-- Summary -->
-      <div class="summary-grid fade-up" *ngIf="attSummary">
-        <div class="sum-card">
-          <div class="sum-val">{{ attSummary.total }}</div>
-          <div class="sum-lbl">Total</div>
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- TAB: MEMBERSHIPS & ACTIVE PLANS                -->
+    <!-- ══════════════════════════════════════════════ -->
+    <ng-container *ngIf="!isLoading && activeTab === 'memberships'">
+      <!-- Summary Strip -->
+      <div class="kpi-grid compact fade-up" *ngIf="membershipSummary">
+        <div class="kpi-card gold">
+          <div class="kpi-title">Active Premium</div>
+          <div class="kpi-value">{{ membershipSummary.activePremium }} members</div>
+          <div class="kpi-subtext">₱500 / month plan</div>
         </div>
-        <div class="sum-card amber">
-          <div class="sum-val">{{ attSummary.daily }}</div>
-          <div class="sum-lbl">Daily</div>
+        <div class="kpi-card emerald">
+          <div class="kpi-title">Premium Revenue</div>
+          <div class="kpi-value">₱{{ membershipSummary.premiumRevenue | number:'1.2-2' }}</div>
+          <div class="kpi-subtext">From accepted members</div>
         </div>
-        <div class="sum-card blue">
-          <div class="sum-val">{{ attSummary.premium }}</div>
-          <div class="sum-lbl">Premium</div>
+        <div class="kpi-card amber">
+          <div class="kpi-title">Expiring Soon</div>
+          <div class="kpi-value">{{ membershipSummary.expiringSoon }} members</div>
+          <div class="kpi-subtext">Within next 7 days</div>
         </div>
-        <div class="sum-card gold">
-          <div class="sum-val">₱{{ attSummary.totalRevenue | number:'1.0-0' }}</div>
-          <div class="sum-lbl">Revenue</div>
+        <div class="kpi-card">
+          <div class="kpi-title">Daily Pass Users</div>
+          <div class="kpi-value">{{ membershipSummary.dailyMembers }} members</div>
+          <div class="kpi-subtext">₱40 per visit</div>
         </div>
       </div>
 
-      <div class="empty-state" *ngIf="attRows.length === 0">
-        <ion-icon name="people-outline"></ion-icon>
-        <div class="empty-lbl">No attendance records found</div>
-      </div>
+      <!-- Search & Filters -->
+      <div class="filter-toolbar fade-up">
+        <div class="search-box">
+          <ion-icon name="search-outline"></ion-icon>
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            placeholder="Search member or coach by name, email, specialty…"
+            class="search-input"
+          />
+          <button *ngIf="searchQuery" class="clear-search" (click)="searchQuery = ''">✕</button>
+        </div>
 
-      <div class="att-list">
-        <div
-          *ngFor="let att of attRows; let i = index"
-          class="att-card fade-up"
-          [style.animation-delay]="(i * 0.03) + 's'"
-        >
-          <div class="att-left">
-            <div class="att-avatar">{{ getInitials(att.username) }}</div>
+        <div class="subfilter-row">
+          <div class="filter-group">
+            <span class="fg-lbl">Filter:</span>
+            <button class="fg-btn" [class.active]="membershipFilter === 'all'" (click)="membershipFilter = 'all'">All ({{ membershipRows.length }})</button>
+            <button class="fg-btn" [class.active]="membershipFilter === 'premium'" (click)="membershipFilter = 'premium'">Premium ({{ membershipSummary?.activePremium || 0 }})</button>
+            <button class="fg-btn" [class.active]="membershipFilter === 'coach'" (click)="membershipFilter = 'coach'">Coaches ({{ membershipSummary?.totalCoaches || 0 }})</button>
+            <button class="fg-btn" [class.active]="membershipFilter === 'expiring'" (click)="membershipFilter = 'expiring'">Expiring ({{ membershipSummary?.expiringSoon || 0 }})</button>
+            <button class="fg-btn" [class.active]="membershipFilter === 'daily'" (click)="membershipFilter = 'daily'">Daily Pass</button>
+            <button class="fg-btn" [class.active]="membershipFilter === 'pending'" (click)="membershipFilter = 'pending'">Pending ({{ membershipSummary?.pendingPremium || 0 }})</button>
           </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" *ngIf="filteredMembershipRows.length === 0">
+        <div class="empty-icon"><ion-icon name="sparkles-outline"></ion-icon></div>
+        <div class="empty-title">No membership plans or coach contracts found</div>
+        <div class="empty-sub">Try searching with a different name or filter.</div>
+      </div>
+
+      <!-- Memberships & Coach Plans List with Progress Bar -->
+      <div class="membership-list fade-up">
+        <div
+          *ngFor="let m of filteredMembershipRows; let i = index"
+          class="membership-card-item"
+          [style.animation-delay]="(i * 0.02) + 's'"
+        >
+          <!-- Top Row -->
+          <div class="m-card-top">
+            <div class="m-avatar" [class.coach-av]="m.account_type === 'coach'">
+              {{ getInitials(m.username) }}
+            </div>
+            <div class="m-info">
+              <div class="m-name">
+                {{ m.username }}
+                <span class="m-type-tag" *ngIf="m.account_type === 'coach'">COACH</span>
+              </div>
+              <div class="m-email">
+                {{ m.email }}
+                <span *ngIf="m.phone"> · {{ m.phone }}</span>
+                <span *ngIf="m.coach_specialty"> · <em>{{ m.coach_specialty }}</em></span>
+              </div>
+            </div>
+            <div class="m-badges">
+              <div class="m-plan-badge" [class]="m.membership_type">
+                {{ m.account_type === 'coach' ? 'Coach Contract' : (m.membership_type === 'premium' ? 'Premium (₱500/mo)' : 'Daily Pass (₱40/visit)') }}
+              </div>
+              <div
+                class="m-status-badge"
+                [class.active]="m.membership_status === 'active' && !m.is_expired"
+                [class.warn]="m.is_expiring_soon"
+                [class.expired]="m.is_expired"
+                [class.pending]="m.membership_status === 'pending'"
+              >
+                {{ m.membership_status === 'pending' ? 'Pending Activation' : (m.is_expired ? 'Expired' : (m.is_expiring_soon ? 'Expiring Soon' : 'Active')) }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Progress Bar Section (For Premium Members & Coaches with Expiration) -->
+          <div class="plan-timeline-box" *ngIf="m.membership_type === 'premium' || m.account_type === 'coach'">
+            <div class="timeline-meta">
+              <span class="timeline-dates">
+                {{ m.account_type === 'coach' ? 'Contract Expiry:' : 'Membership Expiry:' }}
+                <strong>{{ m.membership_expiry ? (m.membership_expiry | date:'MMMM d, yyyy') : 'No expiry date set' }}</strong>
+              </span>
+              <span class="timeline-days" [class.warn]="m.is_expiring_soon" [class.expired]="m.is_expired">
+                {{ m.days_left }} days left
+              </span>
+            </div>
+
+            <!-- Visual Progress Bar matching the second photo -->
+            <div class="progress-track">
+              <div
+                class="progress-fill"
+                [style.width.%]="m.progress_percent"
+                [class.warn]="m.is_expiring_soon"
+                [class.expired]="m.is_expired"
+              ></div>
+            </div>
+
+            <div class="progress-labels">
+              <span>Start</span>
+              <span>{{ m.days_left }} days left</span>
+            </div>
+          </div>
+
+          <!-- Bottom Meta Row -->
+          <div class="m-card-footer">
+            <div class="m-foot-item" *ngIf="m.account_type !== 'coach'">
+              <span class="m-foot-lbl">Payment Method:</span>
+              <span class="m-foot-val">{{ (m.payment_method || 'cash') | uppercase }}</span>
+            </div>
+            <div class="m-foot-item">
+              <span class="m-foot-lbl">{{ m.account_type === 'coach' ? 'Coach Rate:' : 'Plan Fee:' }}</span>
+              <span class="m-foot-val gold">₱{{ m.plan_price | number:'1.2-2' }}</span>
+            </div>
+            <div class="m-foot-item" *ngIf="m.created_at">
+              <span class="m-foot-lbl">Registered:</span>
+              <span class="m-foot-val">{{ m.created_at | date:'MMM d, yyyy' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- TAB: TRANSACTIONS AUDIT LEDGER                 -->
+    <!-- ══════════════════════════════════════════════ -->
+    <ng-container *ngIf="!isLoading && activeTab === 'transactions'">
+      <!-- Ledger Stats Strip -->
+      <div class="kpi-grid compact fade-up">
+        <div class="kpi-card">
+          <div class="kpi-title">Total Records</div>
+          <div class="kpi-value">{{ filteredTxRows.length }}</div>
+          <div class="kpi-subtext">{{ txMembershipCount }} Plans · {{ txGymCount }} Gym · {{ txShopCount }} Shop</div>
+        </div>
+        <div class="kpi-card emerald">
+          <div class="kpi-title">Collected Revenue</div>
+          <div class="kpi-value">₱{{ txCollectedRevenue | number:'1.2-2' }}</div>
+          <div class="kpi-subtext">Paid &amp; Approved</div>
+        </div>
+        <div class="kpi-card amber">
+          <div class="kpi-title">Pending Amount</div>
+          <div class="kpi-value">₱{{ txPendingRevenue | number:'1.2-2' }}</div>
+          <div class="kpi-subtext">Awaiting Approval</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">Gross Volume</div>
+          <div class="kpi-value">₱{{ txTotalVolume | number:'1.2-2' }}</div>
+          <div class="kpi-subtext">Total Processed</div>
+        </div>
+      </div>
+
+      <!-- Search & Filters -->
+      <div class="filter-toolbar fade-up">
+        <div class="search-box">
+          <ion-icon name="search-outline"></ion-icon>
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            placeholder="Search member, product, plan…"
+            class="search-input"
+          />
+          <button *ngIf="searchQuery" class="clear-search" (click)="searchQuery = ''">✕</button>
+        </div>
+
+        <div class="subfilter-row">
+          <div class="filter-group">
+            <span class="fg-lbl">Source:</span>
+            <button class="fg-btn" [class.active]="sourceFilter === 'all'" (click)="sourceFilter = 'all'">All</button>
+            <button class="fg-btn" [class.active]="sourceFilter === 'membership'" (click)="sourceFilter = 'membership'">Premium Plan (₱500)</button>
+            <button class="fg-btn" [class.active]="sourceFilter === 'attendance'" (click)="sourceFilter = 'attendance'">Gym Pass</button>
+            <button class="fg-btn" [class.active]="sourceFilter === 'order'" (click)="sourceFilter = 'order'">Shop Orders</button>
+          </div>
+
+          <div class="filter-group">
+            <span class="fg-lbl">Status:</span>
+            <button class="fg-btn" [class.active]="statusFilter === 'all'" (click)="statusFilter = 'all'">All</button>
+            <button class="fg-btn" [class.active]="statusFilter === 'paid'" (click)="statusFilter = 'paid'">Paid / Active</button>
+            <button class="fg-btn" [class.active]="statusFilter === 'pending'" (click)="statusFilter = 'pending'">Pending</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" *ngIf="filteredTxRows.length === 0">
+        <div class="empty-icon"><ion-icon name="receipt-outline"></ion-icon></div>
+        <div class="empty-title">No transactions found</div>
+        <div class="empty-sub">Try changing the period filter or search query.</div>
+      </div>
+
+      <!-- Transactions List -->
+      <div class="tx-list fade-up">
+        <div
+          *ngFor="let tx of filteredTxRows; let i = index"
+          class="tx-card"
+          [style.animation-delay]="(i * 0.02) + 's'"
+        >
+          <div class="tx-icon" [class]="getTxIconClass(tx)">
+            <ion-icon [name]="getTxIcon(tx)"></ion-icon>
+          </div>
+          <div class="tx-info">
+            <div class="tx-name">{{ tx.username }}</div>
+            <div class="tx-sub">
+              {{ tx.type_label }}<span *ngIf="tx.product_name"> · {{ tx.product_name }}</span>
+              <span *ngIf="tx.quantity" class="tx-qty"> (x{{ tx.quantity }})</span>
+            </div>
+            <div class="tx-meta-row">
+              <span class="tx-date">{{ tx.transaction_date | date:'MMM d, yyyy · h:mm a' }}</span>
+              <span class="tx-paymethod" *ngIf="tx.payment_method">{{ tx.payment_method | uppercase }}</span>
+              <span class="tx-email">{{ tx.email }}</span>
+            </div>
+          </div>
+          <div class="tx-right">
+            <div class="tx-amount" [class.free]="tx.amount == 0">
+              {{ tx.amount > 0 ? ('₱' + (tx.amount | number:'1.2-2')) : 'Included' }}
+            </div>
+            <div class="tx-status" [class]="'st-' + getStatusKey(tx)">{{ getStatusLabel(tx) }}</div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- TAB: ATTENDANCE TRAFFIC & LOGS                 -->
+    <!-- ══════════════════════════════════════════════ -->
+    <ng-container *ngIf="!isLoading && activeTab === 'attendance'">
+      <!-- Attendance Summary KPIs -->
+      <div class="kpi-grid compact fade-up" *ngIf="attSummary">
+        <div class="kpi-card">
+          <div class="kpi-title">Total Visits</div>
+          <div class="kpi-value">{{ attSummary.total }}</div>
+          <div class="kpi-subtext">Gym check-ins</div>
+        </div>
+        <div class="kpi-card amber">
+          <div class="kpi-title">Daily Walk-ins</div>
+          <div class="kpi-value">{{ attSummary.daily }}</div>
+          <div class="kpi-subtext">₱40 per session</div>
+        </div>
+        <div class="kpi-card blue">
+          <div class="kpi-title">Premium Members</div>
+          <div class="kpi-value">{{ attSummary.premium }}</div>
+          <div class="kpi-subtext">Unlimited access</div>
+        </div>
+        <div class="kpi-card emerald">
+          <div class="kpi-title">Pass Revenue</div>
+          <div class="kpi-value">₱{{ attSummary.totalRevenue | number:'1.2-2' }}</div>
+          <div class="kpi-subtext">Paid check-ins</div>
+        </div>
+      </div>
+
+      <!-- Peak Hours Insight Card -->
+      <div class="analytics-card fade-up">
+        <div class="card-header-flex">
+          <div class="card-title">
+            <ion-icon name="time-outline"></ion-icon>
+            <span>Time Distribution</span>
+          </div>
+          <span class="card-badge">Check-in Traffic</span>
+        </div>
+        <div class="traffic-bars-row">
+          <div class="traffic-time-slot">
+            <div class="slot-header">
+              <span class="slot-name">Morning (5am–11am)</span>
+              <span class="slot-count">{{ attSummary?.morningCount || 0 }} check-ins</span>
+            </div>
+            <div class="slot-progress">
+              <div class="slot-fill yellow" [style.width.%]="attendanceMorningPercent"></div>
+            </div>
+          </div>
+          <div class="traffic-time-slot">
+            <div class="slot-header">
+              <span class="slot-name">Afternoon (12pm–4pm)</span>
+              <span class="slot-count">{{ attSummary?.afternoonCount || 0 }} check-ins</span>
+            </div>
+            <div class="slot-progress">
+              <div class="slot-fill orange" [style.width.%]="attendanceAfternoonPercent"></div>
+            </div>
+          </div>
+          <div class="traffic-time-slot">
+            <div class="slot-header">
+              <span class="slot-name">Evening Peak (5pm–11pm)</span>
+              <span class="slot-count">{{ attSummary?.eveningCount || 0 }} check-ins</span>
+            </div>
+            <div class="slot-progress">
+              <div class="slot-fill indigo" [style.width.%]="attendanceEveningPercent"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search Box -->
+      <div class="filter-toolbar fade-up">
+        <div class="search-box">
+          <ion-icon name="search-outline"></ion-icon>
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            placeholder="Search member by name or email…"
+            class="search-input"
+          />
+          <button *ngIf="searchQuery" class="clear-search" (click)="searchQuery = ''">✕</button>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" *ngIf="filteredAttRows.length === 0">
+        <div class="empty-icon"><ion-icon name="people-outline"></ion-icon></div>
+        <div class="empty-title">No attendance records found</div>
+        <div class="empty-sub">Check back later or change the time period filter.</div>
+      </div>
+
+      <!-- Attendance List -->
+      <div class="att-list fade-up">
+        <div
+          *ngFor="let att of filteredAttRows; let i = index"
+          class="att-card"
+          [style.animation-delay]="(i * 0.02) + 's'"
+        >
+          <div class="att-avatar">{{ getInitials(att.username) }}</div>
           <div class="att-info">
             <div class="att-name">{{ att.username }}</div>
             <div class="att-email">{{ att.email }}</div>
-            <div class="att-date">{{ att.check_in_time | date:'MMM d, yyyy · h:mm a' }}</div>
+            <div class="att-date">{{ att.check_in_time | date:'EEEE, MMM d, yyyy · h:mm a' }}</div>
           </div>
           <div class="att-right">
             <div class="att-type-badge" [class]="att.membership_type">
-              {{ att.membership_type === 'daily' ? 'Daily ₱40' : 'Premium' }}
+              {{ att.membership_type === 'daily' ? 'Daily Pass ₱40' : 'Premium Member' }}
             </div>
-            <div class="tx-status" [class]="'st-' + att.payment_status">{{ att.payment_status }}</div>
+            <div class="tx-status" [class]="'st-' + (att.payment_status || 'paid')">
+              {{ (att.payment_status || 'paid') | uppercase }}
+            </div>
           </div>
         </div>
       </div>
     </ng-container>
 
-    <!-- ════════════ SALES TAB ════════════ -->
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- TAB: SALES BREAKDOWN                           -->
+    <!-- ══════════════════════════════════════════════ -->
     <ng-container *ngIf="!isLoading && activeTab === 'sales'">
-      <!-- Grand summary cards -->
-      <div class="summary-grid fade-up" *ngIf="salesSummary">
-        <div class="sum-card gold">
-          <div class="sum-val">₱{{ salesSummary.totalRevenue | number:'1.0-0' }}</div>
-          <div class="sum-lbl">Total Revenue</div>
+      <div class="kpi-grid fade-up" *ngIf="salesSummary">
+        <div class="kpi-card emerald">
+          <div class="kpi-title">Total Revenue</div>
+          <div class="kpi-value">₱{{ salesSummary.totalRevenue | number:'1.2-2' }}</div>
+          <div class="kpi-subtext">Premium + Gym + Shop sales</div>
         </div>
-        <div class="sum-card">
-          <div class="sum-val">₱{{ salesSummary.gymRevenue | number:'1.0-0' }}</div>
-          <div class="sum-lbl">Gym Revenue</div>
+        <div class="kpi-card gold">
+          <div class="kpi-title">Premium Subscriptions</div>
+          <div class="kpi-value">₱{{ salesSummary.membershipRevenue | number:'1.2-2' }}</div>
+          <div class="kpi-subtext">₱500 / active member</div>
         </div>
-        <div class="sum-card green">
-          <div class="sum-val">₱{{ salesSummary.shopRevenue | number:'1.0-0' }}</div>
-          <div class="sum-lbl">Shop Revenue</div>
+        <div class="kpi-card amber">
+          <div class="kpi-title">Gym Pass Revenue</div>
+          <div class="kpi-value">₱{{ salesSummary.gymRevenue | number:'1.2-2' }}</div>
+          <div class="kpi-subtext">{{ salesSummary.totalCheckins }} total check-ins</div>
         </div>
-        <div class="sum-card">
-          <div class="sum-val">{{ salesSummary.totalCheckins }}</div>
-          <div class="sum-lbl">Check-ins</div>
+        <div class="kpi-card blue">
+          <div class="kpi-title">Shop Revenue</div>
+          <div class="kpi-value">₱{{ salesSummary.shopRevenue | number:'1.2-2' }}</div>
+          <div class="kpi-subtext">{{ salesSummary.totalOrders }} orders ({{ salesSummary.itemsSold }} items)</div>
         </div>
       </div>
 
-      <!-- Gym Sales breakdown -->
-      <div class="section-label">Gym Attendance Revenue</div>
+      <!-- Premium Membership Sales Table -->
+      <div class="section-title-bar fade-up">
+        <span class="section-heading">Premium Membership Plans (By Date)</span>
+      </div>
+
+      <div class="empty-state mini" *ngIf="membershipSalesRows.length === 0">
+        <div class="empty-sub">No new premium subscriptions for this period.</div>
+      </div>
+
+      <div class="table-card fade-up" *ngIf="membershipSalesRows.length > 0">
+        <div class="table-header-row">
+          <div class="col-date">Date</div>
+          <div class="col-num">Active Subscriptions</div>
+          <div class="col-rev">Collected</div>
+        </div>
+        <div *ngFor="let row of membershipSalesRows" class="table-data-row">
+          <div class="col-date">
+            <span class="date-main">{{ row.sale_date | date:'MMM d, yyyy' }}</span>
+            <span class="date-sub">{{ row.sale_date | date:'EEEE' }}</span>
+          </div>
+          <div class="col-num">
+            <span class="num-chip">{{ row.count }} members</span>
+          </div>
+          <div class="col-rev font-gold">₱{{ row.revenue | number:'1.2-2' }}</div>
+        </div>
+      </div>
+
+      <!-- Gym Attendance Sales Table -->
+      <div class="section-title-bar fade-up" style="margin-top: 24px;">
+        <span class="section-heading">Gym Daily Pass Revenue (By Date)</span>
+      </div>
+
       <div class="empty-state mini" *ngIf="attSalesRows.length === 0">
-        <div class="empty-lbl">No gym revenue data</div>
+        <div class="empty-sub">No gym walk-in revenue for this period.</div>
       </div>
-      <div class="sales-table" *ngIf="attSalesRows.length > 0">
-        <div class="sales-row header-row">
+
+      <div class="table-card fade-up" *ngIf="attSalesRows.length > 0">
+        <div class="table-header-row">
           <div class="col-date">Date</div>
-          <div class="col-num">Check-ins</div>
-          <div class="col-rev">Revenue</div>
+          <div class="col-num">Paid Walk-ins</div>
+          <div class="col-rev">Collected</div>
         </div>
-        <div *ngFor="let row of attSalesRows; let i = index" class="sales-row fade-up" [style.animation-delay]="(i * 0.03) + 's'">
-          <div class="col-date">{{ row.sale_date | date:'MMM d, yyyy' }}</div>
-          <div class="col-num">{{ row.count }}</div>
-          <div class="col-rev gold">₱{{ row.revenue | number:'1.2-2' }}</div>
+        <div *ngFor="let row of attSalesRows" class="table-data-row">
+          <div class="col-date">
+            <span class="date-main">{{ row.sale_date | date:'MMM d, yyyy' }}</span>
+            <span class="date-sub">{{ row.sale_date | date:'EEEE' }}</span>
+          </div>
+          <div class="col-num">
+            <span class="num-chip">{{ row.count }} visits</span>
+          </div>
+          <div class="col-rev font-amber">₱{{ row.revenue | number:'1.2-2' }}</div>
         </div>
       </div>
 
-      <!-- Shop Sales breakdown -->
-      <div class="section-label">Shop / Inventory Sales</div>
-      <div class="empty-state mini" *ngIf="shopSalesRows.length === 0">
-        <div class="empty-lbl">No shop sales data</div>
+      <!-- Shop Merchandise Sales Table -->
+      <div class="section-title-bar fade-up" style="margin-top: 24px;">
+        <span class="section-heading">Shop Merchandise Sales (By Date)</span>
       </div>
-      <div class="sales-table" *ngIf="shopSalesRows.length > 0">
-        <div class="sales-row header-row">
+
+      <div class="empty-state mini" *ngIf="shopSalesRows.length === 0">
+        <div class="empty-sub">No merchandise sales for this period.</div>
+      </div>
+
+      <div class="table-card fade-up" *ngIf="shopSalesRows.length > 0">
+        <div class="table-header-row">
           <div class="col-date">Date</div>
-          <div class="col-num">Orders</div>
-          <div class="col-rev">Revenue</div>
+          <div class="col-num">Orders Handled</div>
+          <div class="col-rev">Collected</div>
         </div>
-        <div *ngFor="let row of shopSalesRows; let i = index" class="sales-row fade-up" [style.animation-delay]="(i * 0.03) + 's'">
-          <div class="col-date">{{ row.sale_date | date:'MMM d, yyyy' }}</div>
-          <div class="col-num">{{ row.count }}</div>
-          <div class="col-rev green">₱{{ row.revenue | number:'1.2-2' }}</div>
+        <div *ngFor="let row of shopSalesRows" class="table-data-row">
+          <div class="col-date">
+            <span class="date-main">{{ row.sale_date | date:'MMM d, yyyy' }}</span>
+            <span class="date-sub">{{ row.sale_date | date:'EEEE' }}</span>
+          </div>
+          <div class="col-num">
+            <span class="num-chip">{{ row.count }} orders</span>
+          </div>
+          <div class="col-rev font-blue">₱{{ row.revenue | number:'1.2-2' }}</div>
         </div>
       </div>
     </ng-container>
 
-    <!-- ════════════ INVENTORY TAB ════════════ -->
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- TAB: INVENTORY & STOCK VALUATION               -->
+    <!-- ══════════════════════════════════════════════ -->
     <ng-container *ngIf="!isLoading && activeTab === 'inventory'">
-      <div class="summary-grid fade-up" *ngIf="invSummary">
-        <div class="sum-card">
-          <div class="sum-val">{{ invSummary.totalStock }}</div>
-          <div class="sum-lbl">Total Stock</div>
+      <div class="kpi-grid fade-up" *ngIf="invSummary">
+        <div class="kpi-card">
+          <div class="kpi-title">Stock on Hand</div>
+          <div class="kpi-value">{{ invSummary.totalStock }} units</div>
+          <div class="kpi-subtext">{{ invRows.length }} product lines</div>
         </div>
-        <div class="sum-card amber">
-          <div class="sum-val">{{ invSummary.totalSold }}</div>
-          <div class="sum-lbl">Total Sold</div>
+        <div class="kpi-card amber">
+          <div class="kpi-title">Total Units Sold</div>
+          <div class="kpi-value">{{ invSummary.totalSold }} units</div>
+          <div class="kpi-subtext">Lifetime shop orders</div>
         </div>
-        <div class="sum-card gold">
-          <div class="sum-val">₱{{ invSummary.totalRevenue | number:'1.0-0' }}</div>
-          <div class="sum-lbl">Revenue</div>
+        <div class="kpi-card emerald">
+          <div class="kpi-title">Gross Shop Revenue</div>
+          <div class="kpi-value">₱{{ invSummary.totalRevenue | number:'1.2-2' }}</div>
+          <div class="kpi-subtext">Total sales generated</div>
         </div>
-        <div class="sum-card">
-          <div class="sum-val">{{ invRows.length }}</div>
-          <div class="sum-lbl">Products</div>
+        <div class="kpi-card purple">
+          <div class="kpi-title">Inventory Asset Value</div>
+          <div class="kpi-value">₱{{ invSummary.inventoryValue | number:'1.2-2' }}</div>
+          <div class="kpi-subtext">Retail value of stock</div>
         </div>
       </div>
 
-      <div class="empty-state" *ngIf="invRows.length === 0">
-        <ion-icon name="cube-outline"></ion-icon>
-        <div class="empty-lbl">No inventory data</div>
+      <!-- Search Box -->
+      <div class="filter-toolbar fade-up">
+        <div class="search-box">
+          <ion-icon name="search-outline"></ion-icon>
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            placeholder="Search product name or brand…"
+            class="search-input"
+          />
+          <button *ngIf="searchQuery" class="clear-search" (click)="searchQuery = ''">✕</button>
+        </div>
       </div>
 
-      <div class="inv-list">
+      <!-- Empty State -->
+      <div class="empty-state" *ngIf="filteredInvRows.length === 0">
+        <div class="empty-icon"><ion-icon name="cube-outline"></ion-icon></div>
+        <div class="empty-title">No products found</div>
+        <div class="empty-sub">Add products in the Shop management tab.</div>
+      </div>
+
+      <!-- Inventory Product Performance Cards -->
+      <div class="inv-grid fade-up">
         <div
-          *ngFor="let item of invRows; let i = index"
-          class="inv-card fade-up"
-          [style.animation-delay]="(i * 0.03) + 's'"
+          *ngFor="let item of filteredInvRows; let i = index"
+          class="inv-card"
+          [style.animation-delay]="(i * 0.02) + 's'"
         >
-          <div class="inv-info">
-            <div class="inv-name">{{ item.name }}</div>
-            <div class="inv-brand" *ngIf="item.brand">{{ item.brand }}</div>
-            <div class="inv-price">₱{{ item.price | number:'1.2-2' }} / unit</div>
+          <div class="inv-card-top">
+            <div class="inv-info">
+              <div class="inv-name">{{ item.name }}</div>
+              <div class="inv-brand" *ngIf="item.brand">{{ item.brand }}</div>
+            </div>
+            <div class="inv-status-chip" [class]="item.stock_status">
+              {{ item.stock_status === 'out_of_stock' ? 'Out of Stock' : (item.stock_status === 'low_stock' ? 'Low Stock' : 'In Stock') }}
+            </div>
           </div>
-          <div class="inv-stats">
-            <div class="inv-stat">
-              <div class="inv-stat-val green">{{ item.total_sold }}</div>
-              <div class="inv-stat-lbl">Sold</div>
+
+          <div class="inv-stats-row">
+            <div class="inv-stat-cell">
+              <span class="stat-lbl">Unit Price</span>
+              <span class="stat-val">₱{{ item.price | number:'1.2-2' }}</span>
             </div>
-            <div class="inv-stat">
-              <div class="inv-stat-val" [class.warn]="item.current_stock <= 5">{{ item.current_stock }}</div>
-              <div class="inv-stat-lbl">Stock</div>
+            <div class="inv-stat-cell">
+              <span class="stat-lbl">In Stock</span>
+              <span class="stat-val" [class.warn]="item.current_stock <= 5">{{ item.current_stock }} units</span>
             </div>
-            <div class="inv-stat">
-              <div class="inv-stat-val gold">₱{{ item.total_revenue | number:'1.0-0' }}</div>
-              <div class="inv-stat-lbl">Revenue</div>
+            <div class="inv-stat-cell">
+              <span class="stat-lbl">Units Sold</span>
+              <span class="stat-val green">{{ item.total_sold }}</span>
+            </div>
+            <div class="inv-stat-cell">
+              <span class="stat-lbl">Total Sales</span>
+              <span class="stat-val gold">₱{{ item.total_revenue | number:'1.2-2' }}</span>
             </div>
           </div>
         </div>

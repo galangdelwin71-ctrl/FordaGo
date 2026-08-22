@@ -64,9 +64,10 @@ class AttendanceController extends Controller
         $paymentStatus = $user->membership_type === 'premium' ? 'paid' : 'pending';
 
         $attendance = Attendance::create([
-            'user_id'        => $user->id,
+            'user_id'         => $user->id,
             'membership_type' => $user->membership_type,
-            'payment_status' => $paymentStatus,
+            'payment_status'  => $paymentStatus,
+            'check_in_time'   => now(),
         ]);
 
         // Notify admin for daily pass check-ins

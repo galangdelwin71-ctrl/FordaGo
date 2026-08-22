@@ -43,6 +43,7 @@ import {
 import { AuthService } from '../../services/auth.service';
 import { CoachingService, Conversation, Message, WorkoutPlanProposal, CoachProgram } from '../../services/coaching.service';
 import { EchoService } from '../../services/echo.service';
+import { ChatToastService } from '../../services/chat-toast.service';
 import { getCachedData, setCachedData } from '../../utils/local-cache.util';
 
 interface ProposalFormExercise {
@@ -82,6 +83,17 @@ export class ChatPage implements OnInit, OnDestroy {
   isLoading = true;
   isSending = false;
   isAcceptingProposalId: number | null = null;
+
+  // ── Typing Indicator ──────────────────────────────────
+  isPartnerTyping = false;
+  private typingTimer: any = null;
+  private lastTypingSent = 0;
+
+  /** Cached reference to the active Echo private channel. Populated by
+   * setupEchoListener() and cleared in ionViewWillLeave(). Using a cached
+   * reference avoids calling echoService.privateChannel() on every keystroke
+   * (typing indicator) and prevents accidental Echo re-initialization. */
+  private activeChannel: any = null;
 
   /**
    * Small info modal shown when the header avatar/name is tapped -- the
@@ -145,6 +157,7 @@ export class ChatPage implements OnInit, OnDestroy {
     private auth: AuthService,
     private coachingService: CoachingService,
     private echoService: EchoService,
+    private chatToastService: ChatToastService,
     private zone: NgZone,
   ) {
     addIcons({
@@ -185,13 +198,63 @@ export class ChatPage implements OnInit, OnDestroy {
     const idParam = this.route.snapshot.paramMap.get('conversationId');
     if (idParam) {
       this.conversationId = parseInt(idParam, 10);
+      // Immediately show cached data (0ms perceived load time)
       void this.hydrateChatFromCache();
+      // Load conversation metadata (name, partner info)
       this.loadConversation();
-      this.loadMessages();
-      this.setupEchoListener();
+      // NOTE: loadMessages(), markConversationAsRead(), setActiveChat(), and
+      // setupEchoListener() are intentionally moved to ionViewWillEnter() so
+      // they run on EVERY page activation (first load AND back-navigation
+      // return), not just the first component creation.
     } else {
       this.goBack();
     }
+  }
+
+  /**
+   * Called by Ionic every time this page becomes the active view.
+   * This fires on first entry AND whenever the user navigates back to this
+   * page from a child route — making it the correct place to (re)establish
+   * the WebSocket listener and refresh messages.
+   */
+  ionViewWillEnter() {
+    if (!this.conversationId) return;
+
+    // Suppress incoming toasts while the user is actively reading this chat
+    this.chatToastService.setActiveChat(this.conversationId);
+
+    // Optimistically clear unread badge in memory & local cache (0ms delay)
+    // No need for separate HTTP PATCH /read here because loadMessages() immediately
+    // queries GET /messages which marks read on the backend automatically.
+    this.coachingService.markConversationAsRead(this.conversationId, false);
+
+    // Refresh messages in case any arrived while we were away
+    this.loadMessages();
+
+    // (Re)connect the WebSocket listener for this conversation
+    this.setupEchoListener();
+  }
+
+  /**
+   * Called by Ionic every time this page is about to leave the active view
+   * (back button, navigating to a child route, tab switch, etc.).
+   * We leave the private channel here so we stop accumulating events while
+   * off-screen. ionViewWillEnter() rejoins on the next activation.
+   */
+  ionViewWillLeave() {
+    // Send a final "stopped typing" whisper so the partner's indicator clears
+    clearTimeout(this.typingTimer);
+    if (this.activeChannel) {
+      try {
+        this.activeChannel.whisper('typing', { userId: this.currentUserId, isTyping: false });
+      } catch { /* ignore if WS is already closed */ }
+    }
+    // Leave the channel – this removes all listeners and unsubscribes from Reverb
+    if (this.channelName) {
+      this.echoService.leaveChannel(this.channelName);
+    }
+    this.activeChannel = null;
+    this.isPartnerTyping = false;
   }
 
   /**
@@ -231,9 +294,15 @@ export class ChatPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    if (this.channelName) {
+    // Safety-net: leave the channel if ionViewWillLeave() wasn't called
+    // (e.g. app killed, hard-navigation, or modal dismiss).
+    if (this.channelName && this.activeChannel) {
       this.echoService.leaveChannel(this.channelName);
+      this.activeChannel = null;
     }
+    clearTimeout(this.typingTimer);
+    // Re-enable toasts for this conversation now that the page is gone.
+    this.chatToastService.setActiveChat(null);
   }
 
   get currentUserId(): number {
@@ -332,43 +401,137 @@ export class ChatPage implements OnInit, OnDestroy {
    */
   private setupEchoListener() {
     this.channelName = `conversation.${this.conversationId}`;
+
+    // Get (or create) the private channel subscription for this conversation.
+    // Echo caches channel objects internally, so this is idempotent.
     const channel = this.echoService.privateChannel(this.channelName);
+    if (!channel) {
+      console.warn('[Chat] Echo channel unavailable — real-time events disabled for this session.');
+      return;
+    }
 
-    if (channel) {
-      // Listen for incoming messages
-      channel.listen('.message.sent', (data: { message: Message; conversation_id: number }) => {
-        if (data && data.message && data.message.sender_id !== this.currentUserId) {
-          this.zone.run(() => {
-            this.messages.push(data.message);
-            ChatPage.messagesCache.set(this.conversationId, this.messages);
-            void setCachedData(`fordago.cache.chat_msgs_${this.conversationId}`, this.messages);
-            this.scrollToBottom();
-            this.coachingService.markMessagesRead(this.conversationId).subscribe();
-          });
-        }
-      });
+    // Cache the channel so typing/send can use it directly without going
+    // through echoService.privateChannel() on every keystroke.
+    this.activeChannel = channel;
 
-      // Listen for new workout proposals
-      channel.listen('.proposal.sent', (data: { proposal: WorkoutPlanProposal }) => {
-        if (data && data.proposal) {
-          this.zone.run(() => this.loadMessages());
-        }
-      });
+    // ── Message handler ────────────────────────────────────────────────────
+    // broadcastAs() returns 'message.sent', so the Pusher event name on the
+    // wire is exactly 'message.sent'. Echo's .listen('.message.sent') strips
+    // the leading dot and binds to 'message.sent' — the ONLY correct binding.
+    // The previous code had 3 extra dead listeners (message.sent without dot,
+    // .MessageSent, MessageSent) that never fired; removed to prevent noise.
+    const handleIncomingMessage = (data: { message?: Message; conversation_id?: number } | any) => {
+      const msg = data?.message || data;
+      if (!msg || !msg.id) return;
 
-      // Listen for accepted proposals
-      channel.listen('.proposal.accepted', (data: { proposal: WorkoutPlanProposal }) => {
-        if (data && data.proposal) {
-          this.zone.run(() => {
-            const found = this.messages.find((m) => m.proposal && m.proposal.id === data.proposal.id);
-            if (found && found.proposal) {
-              found.proposal.status = 'accepted';
-              found.proposal.accepted_at = data.proposal.accepted_at;
-              ChatPage.messagesCache.set(this.conversationId, this.messages);
-              void setCachedData(`fordago.cache.chat_msgs_${this.conversationId}`, this.messages);
+      console.log('[Chat Echo] ✅ Incoming message received:', msg.id, msg.body?.slice(0, 30));
+
+      const isOwnMessage = Number(msg.sender_id) === Number(this.currentUserId);
+
+      this.zone.run(() => {
+        this.isPartnerTyping = false;
+
+        if (isOwnMessage) {
+          // Replace the optimistic placeholder (negative ID) with the confirmed
+          // server message. Also handles the WS event arriving before the HTTP
+          // response (race condition) by matching on message body.
+          const optIdx = this.messages.findIndex(
+            (m) => m.id === msg.id || (m.id < 0 && m.body === msg.body)
+          );
+          if (optIdx !== -1) {
+            this.messages[optIdx] = msg;
+          } else {
+            if (!this.messages.some((m) => m.id === msg.id)) {
+              this.messages.push(msg);
             }
-          });
+          }
+          this.scrollToBottom();
+        } else {
+          // Partner's message: add only if not already present
+          if (!this.messages.some((m) => m.id === msg.id)) {
+            this.messages.push(msg);
+            ChatPage.messagesCache.set(this.conversationId, this.messages);
+            void setCachedData(`fordago.cache.chat_msgs_${this.conversationId}`, this.messages.slice(-50));
+            this.scrollToBottom();
+            // Instantly clear unread badge in memory/cache without extra HTTP call
+            this.coachingService.markConversationAsRead(this.conversationId, false);
+          }
         }
       });
+    };
+
+    // Single correct listener — do NOT add duplicates for the same event.
+    channel.listen('.message.sent', handleIncomingMessage);
+
+    // ── Typing whisper ─────────────────────────────────────────────────────
+    channel.listenForWhisper('typing', (e: { userId: number; isTyping: boolean }) => {
+      if (Number(e?.userId) === Number(this.currentUserId)) return; // ignore own whispers
+      this.zone.run(() => {
+        this.isPartnerTyping = !!e?.isTyping;
+        clearTimeout(this.typingTimer);
+        if (this.isPartnerTyping) {
+          this.scrollToBottom();
+          // Auto-clear after 3s in case the partner stops typing without sending
+          this.typingTimer = setTimeout(() => {
+            this.zone.run(() => { this.isPartnerTyping = false; });
+          }, 3000);
+        }
+      });
+    });
+
+    // ── Read receipt (double checkmark) ────────────────────────────────────
+    channel.listen('.messages.read', (data: { conversation_id: number; reader_id: number; read_at: string }) => {
+      if (Number(data.reader_id) === Number(this.currentUserId)) return;
+      this.zone.run(() => {
+        let updated = false;
+        for (const m of this.messages) {
+          if (Number(m.sender_id) === Number(this.currentUserId) && !m.read_at) {
+            m.read_at = data.read_at;
+            updated = true;
+          }
+        }
+        if (updated) {
+          ChatPage.messagesCache.set(this.conversationId, this.messages);
+          void setCachedData(`fordago.cache.chat_msgs_${this.conversationId}`, this.messages.slice(-50));
+        }
+      });
+    });
+
+    // ── Workout proposals ──────────────────────────────────────────────────
+    channel.listen('.proposal.sent', (data: { proposal: WorkoutPlanProposal }) => {
+      if (data?.proposal) {
+        this.zone.run(() => this.loadMessages());
+      }
+    });
+
+    channel.listen('.proposal.accepted', (data: { proposal: WorkoutPlanProposal }) => {
+      if (data?.proposal) {
+        this.zone.run(() => {
+          const found = this.messages.find((m) => m.proposal && m.proposal.id === data.proposal.id);
+          if (found?.proposal) {
+            found.proposal.status = 'accepted';
+            found.proposal.accepted_at = data.proposal.accepted_at;
+            ChatPage.messagesCache.set(this.conversationId, this.messages);
+            void setCachedData(`fordago.cache.chat_msgs_${this.conversationId}`, this.messages.slice(-50));
+          }
+        });
+      }
+    });
+
+    console.log('[Chat Echo] 🔌 Subscribed to channel:', this.channelName);
+  }
+
+  /**
+   * Broadcast typing status to partner via WebSocket whisper.
+   * Uses the cached activeChannel reference — no round-trip through EchoService.
+   */
+  onTyping(): void {
+    const now = Date.now();
+    if (now - this.lastTypingSent > 800 && this.activeChannel) {
+      this.lastTypingSent = now;
+      try {
+        this.activeChannel.whisper('typing', { userId: this.currentUserId, isTyping: true });
+      } catch { /* WS might be momentarily closed during reconnection */ }
     }
   }
 
@@ -376,19 +539,61 @@ export class ChatPage implements OnInit, OnDestroy {
     const text = this.newMessage.trim();
     if (!text || this.isSending) return;
 
+    // Clear typing indicator on send (use cached channel — no EchoService lookup)
+    if (this.activeChannel) {
+      try {
+        this.activeChannel.whisper('typing', { userId: this.currentUserId, isTyping: false });
+      } catch { /* ignore if WS is reconnecting */ }
+    }
+
     this.isSending = true;
     this.newMessage = '';
+
+    // ── Optimistic update: show message immediately before server confirms ──
+    // Generate a temporary ID so we can replace this placeholder with the
+    // real server-side message once the HTTP response arrives.
+    const optimisticId = -(Date.now());
+    const optimisticMsg: Message = {
+      id: optimisticId,
+      conversation_id: this.conversationId,
+      sender_id: this.currentUserId,
+      body: text,
+      type: 'text',
+      created_at: new Date().toISOString(),
+    };
+    this.messages.push(optimisticMsg);
+    this.scrollToBottom();
 
     this.coachingService.sendMessage(this.conversationId, text).subscribe({
       next: (sentMsg) => {
         this.isSending = false;
-        this.messages.push(sentMsg);
+        // Replace the optimistic placeholder with the confirmed server message
+        const idx = this.messages.findIndex(
+          (m) => m.id === optimisticId || m.id === sentMsg.id || (m.id < 0 && m.body === sentMsg.body)
+        );
+        if (idx !== -1) {
+          this.messages[idx] = sentMsg;
+        } else {
+          const alreadyExists = this.messages.some((m) => m.id === sentMsg.id);
+          if (!alreadyExists) {
+            this.messages.push(sentMsg);
+          }
+        }
+        // Deduplicate messages array to prevent any double bubbles
+        const seen = new Set<number>();
+        this.messages = this.messages.filter((m) => {
+          if (seen.has(m.id)) return false;
+          seen.add(m.id);
+          return true;
+        });
         ChatPage.messagesCache.set(this.conversationId, this.messages);
-        void setCachedData(`fordago.cache.chat_msgs_${this.conversationId}`, this.messages);
-        this.scrollToBottom();
+        void setCachedData(`fordago.cache.chat_msgs_${this.conversationId}`, this.messages.slice(-50));
       },
       error: (err) => {
         this.isSending = false;
+        // Remove the failed optimistic message from the list
+        const idx = this.messages.findIndex((m) => m.id === optimisticId);
+        if (idx !== -1) this.messages.splice(idx, 1);
         console.error('Failed to send message', err);
       },
     });

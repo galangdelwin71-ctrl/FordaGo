@@ -15,6 +15,7 @@ import { HeaderComponent } from '../shared/header/header.component';
 import { NotificationPanelComponent } from '../shared/notification-panel/notification-panel.component';
 import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.component';
 import { CoachingNavService, CoachingPanelTab } from '../services/coaching-nav.service';
+import { CoachingService } from '../services/coaching.service';
 import { API_URL } from '../config/api.config';
 import { getCachedData, setCachedData } from '../utils/local-cache.util';
 import { CACHE_KEYS } from '../utils/cache-keys';
@@ -82,11 +83,14 @@ export class EquipmentPage implements OnInit {
     private http: HttpClient,
     private auth: AuthService,
     private coachingNav: CoachingNavService,
+    private coachingService: CoachingService,
   ) {}
 
-  // ── Header avatar ─────────────────────────────────────
+  // ── Header avatar ───────────────────────────────────
   initials     = '';
   profileImage = '';
+  /** Coach icon badge — kept in sync via CoachingService.unreadCount$. */
+  coachUnreadCount = 0;
 
   // ── Notifications ─────────────────────────────────────
   notifPanelOpen = false;
@@ -124,6 +128,7 @@ export class EquipmentPage implements OnInit {
 
   ngOnInit(): void {
     this.applyPendingCoachingReopen();
+    this.coachingService.unreadCount$.subscribe((count) => { this.coachUnreadCount = count; });
     void this.loadEquipmentWithHydration();
   }
 

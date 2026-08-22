@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { API_URL } from '../config/api.config';
 
 export interface Coach {
@@ -235,7 +235,68 @@ export interface WorkoutPlanProposal {
 export class CoachingService {
   private readonly apiUrl = API_URL;
 
+  private unreadCountSubject = new BehaviorSubject<number>(0);
+  /** Observable of total unread messages across all conversations. */
+  readonly unreadCount$ = this.unreadCountSubject.asObservable();
+
+  /** In-memory cache of conversations for immediate sync. */
+  private cachedConversations: Conversation[] = [];
+
   constructor(private http: HttpClient) {}
+
+  public get currentUnreadCount(): number {
+    return this.unreadCountSubject.value;
+  }
+
+  public setUnreadCount(count: number): void {
+    this.unreadCountSubject.next(Math.max(0, count));
+  }
+
+  public incrementUnreadCount(amount = 1): void {
+    this.unreadCountSubject.next(this.unreadCountSubject.value + amount);
+  }
+
+  public decrementUnreadCount(amount = 1): void {
+    this.unreadCountSubject.next(Math.max(0, this.unreadCountSubject.value - amount));
+  }
+
+  /**
+   * Optimistically marks all messages in a conversation as read (0ms UI update),
+   * updates the local cache, emits the new total count, and optionally calls the backend API.
+   */
+  public markConversationAsRead(conversationId: number, fireApi = true): void {
+    // 1. Update in-memory cached conversations
+    const convo = this.cachedConversations.find((c) => c.id === conversationId);
+    if (convo && convo.unread_count > 0) {
+      const clearedCount = convo.unread_count;
+      convo.unread_count = 0;
+      this.decrementUnreadCount(clearedCount);
+    }
+
+    // 2. Clear from persistent storage cache
+    void (async () => {
+      try {
+        const { getCachedData, setCachedData } = await import('../utils/local-cache.util');
+        const stored = await getCachedData<Conversation[]>('fordago.cache.coach_conversations');
+        if (Array.isArray(stored)) {
+          const target = stored.find((c) => c.id === conversationId);
+          if (target && target.unread_count > 0) {
+            target.unread_count = 0;
+            await setCachedData('fordago.cache.coach_conversations', stored);
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to update conversation cache:', err);
+      }
+    })();
+
+    // 3. Fire background HTTP request only if requested
+    if (fireApi) {
+      this.markMessagesRead(conversationId).subscribe({
+        error: (err) => console.warn('Background markMessagesRead error:', err),
+      });
+    }
+  }
 
   // ── Coaches ──────────────────────────────────────────
 
@@ -267,6 +328,24 @@ export class CoachingService {
   getDashboardStats(): Observable<CoachDashboardStats> {
     return this.http.get<CoachDashboardStats>(`${this.apiUrl}/coaches/dashboard-stats`);
   }
+
+  /**
+   * GET /coaches/dashboard-full — returns ALL coach dashboard data in a single
+   * HTTP request (profile, stats, today's sessions, conversations, clients,
+   * requests). Use this instead of the 6 individual calls to cut tunnel
+   * round-trip latency from ~2-4 s down to ~400 ms.
+   */
+  getDashboardFull(): Observable<{
+    profile: CoachProfileMe;
+    stats: CoachDashboardStats | null;
+    today_proposals: WorkoutPlanProposal[];
+    conversations: Conversation[];
+    clients: CoachClientItem[];
+    requests: CoachRequestItem[];
+  }> {
+    return this.http.get<any>(`${this.apiUrl}/coaches/dashboard-full`);
+  }
+
 
   /** PUT /coaches/profile/me — self-service edit, limited to bio/specialty/photo_url/rate. */
   updateMyCoachProfile(payload: { bio?: string; specialty?: string; photo_url?: string; rate?: number }): Observable<any> {
@@ -352,7 +431,15 @@ export class CoachingService {
   // ── Conversations ────────────────────────────────────
 
   getConversations(): Observable<Conversation[]> {
-    return this.http.get<Conversation[]>(`${this.apiUrl}/conversations`);
+    return this.http.get<Conversation[]>(`${this.apiUrl}/conversations`).pipe(
+      tap((convos) => {
+        if (Array.isArray(convos)) {
+          this.cachedConversations = convos;
+          const totalUnread = convos.reduce((acc, c) => acc + (Number(c.unread_count) || 0), 0);
+          this.unreadCountSubject.next(totalUnread);
+        }
+      })
+    );
   }
 
   startConversation(payload: { coach_id?: number; client_id?: number; target_user_id?: number }): Observable<any> {

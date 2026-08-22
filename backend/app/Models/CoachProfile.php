@@ -15,6 +15,7 @@ class CoachProfile extends Model
         'photo_url',
         'rate',
         'is_active',
+        'contract_expiry',
         'created_by',
     ];
 

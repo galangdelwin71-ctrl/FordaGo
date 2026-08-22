@@ -1001,6 +1001,49 @@ body.light-theme {
 
   /* ion-page inside modal */
   ion-modal .ion-page { background: #ffffff; }
+
+  /* Logout & confirmation dialogs */
+  .confirm-overlay {
+    background: rgba(15, 23, 42, 0.45) !important;
+  }
+  .confirm-box {
+    background: #ffffff !important;
+    border: 1px solid rgba(15, 23, 42, 0.08) !important;
+    box-shadow: 0 20px 45px -8px rgba(15, 23, 42, 0.18), 0 0 1px 1px rgba(15, 23, 42, 0.05) !important;
+
+    .confirm-icon {
+      background: rgba(245, 158, 11, 0.14) !important;
+      ion-icon {
+        color: #d97706 !important;
+      }
+    }
+
+    .confirm-title {
+      color: #0f172a !important;
+    }
+
+    .confirm-msg {
+      color: rgba(15, 23, 42, 0.62) !important;
+    }
+
+    .confirm-cancel {
+      background: #f1f5f9 !important;
+      color: #334155 !important;
+      border: 1px solid rgba(15, 23, 42, 0.1) !important;
+      &:hover {
+        background: #e2e8f0 !important;
+      }
+    }
+
+    .confirm-logout {
+      background: #FFD600 !important;
+      color: #000000 !important;
+      border: none !important;
+      &:hover {
+        background: #f59e0b !important;
+      }
+    }
+  }
 }
 
 

@@ -5,9 +5,11 @@ use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CoachAvailabilityController;
 use App\Http\Controllers\Api\CoachController;
+use App\Http\Controllers\Api\CoachDashboardController;
 use App\Http\Controllers\Api\CoachProgramController;
 use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\EquipmentController;
+use App\Http\Controllers\Api\FeedbackController;
 use App\Http\Controllers\Api\InventoryController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\NotificationController;
@@ -138,6 +140,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{id}',               [NotificationController::class, 'destroy'])->whereNumber('id')->middleware('role:admin,super_admin,employee');
     });
 
+    // ── Feedback & Ratings ────────────────────────────────────────────────
+    Route::prefix('feedback')->group(function () {
+        Route::get('/status', [FeedbackController::class, 'status']);
+        Route::post('/',      [FeedbackController::class, 'store']);
+        Route::get('/',       [FeedbackController::class, 'index'])->middleware('role:admin,super_admin,employee');
+    });
+
     // ── Reports (server/routes/reports.js) ────────────────────────────────
     Route::prefix('reports')->group(function () {
         Route::get('/my-transactions',    [ReportsController::class, 'myTransactions']);
@@ -145,6 +154,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/admin/attendance',   [ReportsController::class, 'adminAttendance'])->middleware('role:admin,super_admin,employee');
         Route::get('/admin/sales',        [ReportsController::class, 'adminSales'])->middleware('role:admin,super_admin,employee');
         Route::get('/admin/inventory',    [ReportsController::class, 'adminInventory'])->middleware('role:admin,super_admin,employee');
+        Route::get('/admin/memberships',  [ReportsController::class, 'adminMemberships'])->middleware('role:admin,super_admin,employee');
     });
 
     // ── Coaching & Chat (Coaching feature) ─────────────────────────────────
@@ -175,6 +185,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Roster for a public group class the coach owns (see programs/public below).
         Route::get('/programs/{id}/bookings', [ProgramBookingController::class, 'roster'])->whereNumber('id');
+
+        // Single-call dashboard endpoint — returns profile, stats, today\'s
+        // sessions, conversations, clients, and requests all at once to cut
+        // the 6 separate HTTP round-trips down to 1 (big win over tunnels).
+        Route::get('/dashboard-full',   [CoachDashboardController::class, 'full']);
 
         // Keep this LAST in the group — {id} would otherwise shadow the
         // static segments above for any all-numeric path.

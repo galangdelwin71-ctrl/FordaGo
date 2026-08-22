@@ -14,6 +14,7 @@ import {
 import { HttpClient } from '@angular/common/http';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../services/auth.service';
+import { CoachingService } from '../services/coaching.service';
 import { NotificationCenterService } from '../services/notification-center.service';
 import { WorkoutTrackerService } from '../services/workout-tracker.service';
 import { NoNegativeDirective } from '../directives/no-negative.directive';
@@ -123,6 +124,9 @@ export class SchedulePage implements OnInit, OnDestroy {
   private readonly api = API_URL;
   profileImage = '';
   initials = 'U';
+  /** Coach icon badge — mirrors Dashboard's coachUnreadCount via the shared
+   *  CoachingService.unreadCount$ BehaviorSubject so it stays in sync across pages. */
+  coachUnreadCount = 0;
 
   // ── Constants ────────────────────────────────────────────
   private readonly DAY_NAMES   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -298,7 +302,8 @@ export class SchedulePage implements OnInit, OnDestroy {
     private auth: AuthService,
     private notificationCenter: NotificationCenterService,
     private workoutTracker: WorkoutTrackerService,
-    private coachingNav: CoachingNavService
+    private coachingNav: CoachingNavService,
+    private coachingService: CoachingService,
   ) {}
 
   /**
@@ -326,6 +331,9 @@ export class SchedulePage implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.applyPendingCoachingReopen();
+
+    // Keep coach badge in sync on this page
+    this.coachingService.unreadCount$.subscribe((count) => { this.coachUnreadCount = count; });
 
     this.applyUserContext();
     this.workoutTracker.startAutoSync();

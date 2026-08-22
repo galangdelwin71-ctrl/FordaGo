@@ -1,0 +1,136 @@
+<!-- Rating & Experience Modal (Matches exact UI from screenshot) -->
+<div class="fordago-feedback-overlay" *ngIf="isRatingOpen">
+  <div class="feedback-backdrop" (click)="closeRating()"></div>
+  <div class="feedback-card rating-card">
+    <button type="button" class="feedback-close-btn" (click)="closeRating()" aria-label="Close">
+      <ion-icon name="close-outline"></ion-icon>
+    </button>
+
+    <div class="feedback-header">
+      <h2 class="feedback-title">Rate your experience</h2>
+    </div>
+
+    <div class="feedback-body">
+      <p class="question-text">
+        How likely are you to recommend our service to a friend or colleague?
+      </p>
+
+      <!-- Rating circular buttons 0-10 -->
+      <div class="nps-rating-container">
+        <div class="nps-row">
+          <button
+            type="button"
+            *ngFor="let score of scoresRow1"
+            class="nps-btn"
+            [class.selected]="selectedScore === score"
+            (click)="selectScore(score)">
+            {{ score }}
+          </button>
+        </div>
+        <div class="nps-row">
+          <button
+            type="button"
+            *ngFor="let score of scoresRow2"
+            class="nps-btn"
+            [class.selected]="selectedScore === score"
+            (click)="selectScore(score)">
+            {{ score }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Scale labels -->
+      <div class="scale-labels">
+        <span class="scale-left">0 - Extremely Unlikely</span>
+        <span class="scale-right">10 - Extremely Likely</span>
+      </div>
+
+      <!-- Reason text area -->
+      <div class="reason-section">
+        <label class="reason-label" for="feedbackReasonInput">What is the main reason for the score?</label>
+        <textarea
+          id="feedbackReasonInput"
+          class="reason-textarea"
+          rows="3"
+          [(ngModel)]="reasonText"
+          placeholder="Your feedback is valuable to us"></textarea>
+      </div>
+
+      <div class="feedback-error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <!-- Submit button -->
+      <button
+        type="button"
+        class="feedback-submit-btn"
+        [disabled]="isSubmitting"
+        (click)="submitRating()">
+        <span *ngIf="!isSubmitting">Submit</span>
+        <span *ngIf="isSubmitting" class="submitting-spinner">Submitting...</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Post-Submission Success Modal -->
+<div class="fordago-feedback-overlay" *ngIf="isSuccessOpen">
+  <div class="feedback-backdrop" (click)="closeSuccess()"></div>
+  <div class="feedback-card success-card">
+    <button type="button" class="feedback-close-btn" (click)="closeSuccess()" aria-label="Close">
+      <ion-icon name="close-outline"></ion-icon>
+    </button>
+
+    <div class="success-icon-wrapper">
+      <ion-icon name="checkmark-circle"></ion-icon>
+    </div>
+
+    <h2 class="success-title">Your feedback is sent!</h2>
+    <p class="success-desc">
+      Thank you for your valuable feedback. For more details, inquiries, or direct support, you can message our Facebook page.
+    </p>
+
+    <div class="modal-actions">
+      <button type="button" class="facebook-action-btn" (click)="openFacebook()">
+        <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+        <span>Message to our Facebook Page</span>
+      </button>
+      <button type="button" class="secondary-dismiss-btn" (click)="closeSuccess()">
+        Done
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Profile / Support Info Modal -->
+<div class="fordago-feedback-overlay" *ngIf="isSupportOpen">
+  <div class="feedback-backdrop" (click)="closeSupport()"></div>
+  <div class="feedback-card support-card">
+    <button type="button" class="feedback-close-btn" (click)="closeSupport()" aria-label="Close">
+      <ion-icon name="close-outline"></ion-icon>
+    </button>
+
+    <div class="support-icon-wrapper">
+      <ion-icon name="chatbubbles-outline"></ion-icon>
+    </div>
+
+    <h2 class="support-title">Feedback &amp; Support</h2>
+    <p class="support-desc">
+      Have suggestions, questions, or need assistance? Please message our official Facebook page for direct support.
+    </p>
+
+    <div class="modal-actions">
+      <button type="button" class="facebook-action-btn" (click)="openFacebook()">
+        <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+        <span>Message to our Facebook Page</span>
+      </button>
+      <button type="button" class="rate-prompt-btn" (click)="openRatingFromSupport()">
+        <ion-icon name="star-outline"></ion-icon>
+        <span>Rate Your Experience (0 - 10)</span>
+      </button>
+      <button type="button" class="secondary-dismiss-btn" (click)="closeSupport()">
+        Close
+      </button>
+    </div>
+  </div>
+</div>

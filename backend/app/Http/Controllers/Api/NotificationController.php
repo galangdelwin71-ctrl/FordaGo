@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\NotificationSent;
 use App\Http\Controllers\Controller;
 use App\Models\Notification;
 use App\Models\User;
@@ -49,10 +50,16 @@ class NotificationController extends Controller
         $isStaff = in_array($user->role, ['admin', 'super_admin', 'employee'], true);
 
         if ($isStaff) {
-            return response()->json(Notification::with('user:id,username,email,role')->orderByDesc('created_at')->get());
+            return response()->json(
+                Notification::with('user:id,username,email,role')
+                    ->select('id', 'user_id', 'title', 'message', 'is_read', 'session_key', 'created_at')
+                    ->orderByDesc('created_at')
+                    ->get()
+            );
         }
 
-        $rows = Notification::where(fn ($q) => $q
+        $rows = Notification::select('id', 'user_id', 'title', 'message', 'is_read', 'session_key', 'created_at')
+            ->where(fn ($q) => $q
                 ->where('user_id', $user->id)
                 ->orWhere(fn ($broadcast) => $broadcast
                     ->whereNull('user_id')
@@ -60,6 +67,7 @@ class NotificationController extends Controller
                 )
             )
             ->orderByDesc('created_at')
+            ->limit(100)   // cap at 100 to prevent large payloads
             ->get();
 
         return response()->json($rows);
@@ -85,6 +93,16 @@ class NotificationController extends Controller
             'title'   => $request->input('title') ?: 'Notice',
             'message' => $message,
         ]);
+
+        // Push to recipient's private channel so the Ionic app updates
+        // instantly without waiting for the next 15-second poll tick.
+        if ($targetUserId) {
+            try {
+                broadcast(new NotificationSent($notification, (int) $targetUserId))->toOthers();
+            } catch (\Throwable $e) {
+                \Log::warning('Broadcasting NotificationSent failed: ' . $e->getMessage());
+            }
+        }
 
         return response()->json(['id' => $notification->id, 'message' => 'Notification sent'], 201);
     }
@@ -113,17 +131,26 @@ class NotificationController extends Controller
         // reinstalled/cleared client re-reporting the same missed session
         // updates the existing row instead of creating a duplicate. Falls
         // back to a plain create() for older clients that don't send one yet.
+        $recipientId = $request->user()->id;
+
         if ($sessionKey !== '') {
-            Notification::updateOrCreate(
-                ['user_id' => $request->user()->id, 'session_key' => $sessionKey],
+            $notification = Notification::updateOrCreate(
+                ['user_id' => $recipientId, 'session_key' => $sessionKey],
                 ['title' => $title, 'message' => $body]
             );
         } else {
-            Notification::create([
-                'user_id' => $request->user()->id,
+            $notification = Notification::create([
+                'user_id' => $recipientId,
                 'title'   => $title,
                 'message' => $body,
             ]);
+        }
+
+        // Push real-time notification over WebSocket
+        try {
+            broadcast(new NotificationSent($notification, $recipientId))->toOthers();
+        } catch (\Throwable $e) {
+            \Log::warning('Broadcasting NotificationSent failed: ' . $e->getMessage());
         }
 
         // SMS (best-effort)

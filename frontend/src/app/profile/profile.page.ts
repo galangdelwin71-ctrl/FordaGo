@@ -16,10 +16,13 @@ import { AuthService } from '../services/auth.service';
 import { ProfileService, UserProfile } from '../services/profile.service';
 import { ThemeService } from '../services/theme.service';
 import { CoachingNavService, CoachingPanelTab } from '../services/coaching-nav.service';
+import { CoachingService } from '../services/coaching.service';
 import { NoNegativeDirective } from '../directives/no-negative.directive';
 import { HeaderComponent } from '../shared/header/header.component';
 import { NotificationPanelComponent } from '../shared/notification-panel/notification-panel.component';
 import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.component';
+import { FeedbackModalComponent } from '../shared/feedback-modal/feedback-modal.component';
+import { FeedbackService } from '../services/feedback.service';
 import { API_URL } from '../config/api.config';
 
 // ── Interfaces ────────────────────────────────────────
@@ -70,6 +73,7 @@ export interface ProgressHistoryItem {
     HeaderComponent,
     NotificationPanelComponent,
     CoachingPanelComponent,
+    FeedbackModalComponent,
   ],
 })
 export class ProfilePage implements OnInit {
@@ -140,6 +144,9 @@ export class ProfilePage implements OnInit {
   logoutModalOpen            = false;
   isDarkMode                 = true;
 
+  /** Coach icon badge — kept in sync via CoachingService.unreadCount$ across all pages. */
+  coachUnreadCount = 0;
+
   private api = API_URL;
 
   constructor(
@@ -148,6 +155,8 @@ export class ProfilePage implements OnInit {
     private http: HttpClient,
     private themeService: ThemeService,
     private coachingNav: CoachingNavService,
+    private feedbackService: FeedbackService,
+    private coachingService: CoachingService,
   ) {}
 
   ngOnInit(): void {
@@ -158,6 +167,8 @@ export class ProfilePage implements OnInit {
     this.applyPendingCoachingReopen();
     this.loadProfile();
     this.isDarkMode = this.themeService.isDarkMode();
+    // Keep coach badge in sync on this page
+    this.coachingService.unreadCount$.subscribe((count) => { this.coachUnreadCount = count; });
   }
 
   ionViewWillEnter(): void {
@@ -422,6 +433,11 @@ export class ProfilePage implements OnInit {
     alert('Redirecting to payment gateway...');
     // this.router.navigate(['/payment']);
     this.closeRenewal();
+  }
+
+  // ── Feedback & Support ────────────────────────────────
+  openFeedbackSupport(): void {
+    this.feedbackService.openSupportModal();
   }
 
   // ── Logout Management ─────────────────────────────────

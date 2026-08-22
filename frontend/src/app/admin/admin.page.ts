@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { IonHeader, IonToolbar, IonButtons, IonContent, IonIcon, IonSpinner } from '@ionic/angular/standalone';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { IonHeader, IonToolbar, IonContent, IonIcon, IonSpinner } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -19,9 +19,9 @@ import { CoachingService } from '../services/coaching.service';
   styleUrls: ['./admin.page.scss'],
   standalone: true,
   host: { class: 'ion-page fordago-page' },
-  imports: [IonHeader, IonToolbar, IonButtons, IonContent, IonIcon, IonSpinner, CommonModule, FormsModule, NoNegativeDirective],
+  imports: [IonHeader, IonToolbar, IonContent, IonIcon, IonSpinner, CommonModule, FormsModule, NoNegativeDirective],
 })
-export class AdminPage implements OnInit {
+export class AdminPage implements OnInit, OnDestroy {
   private readonly maxProductImageDimension = 1200;
   private readonly productImageQuality = 0.82;
   private readonly maxProductImagePayloadLength = 8_000_000;
@@ -260,12 +260,52 @@ export class AdminPage implements OnInit {
   notifMessage = '';
   notifTitle = '';
   notifTargetUserId: number | null = null;
+  notifRecipientType: 'all' | 'specific' = 'all';
+  notifRecipientSearch = '';
+  showRecipientDropdown = false;
   notifViewMode: 'broadcasts' | 'members' = 'broadcasts';
   broadcastSearch = '';
   showAllBroadcasts = false;
   broadcastLimit = 4;
   notifMemberSearch = '';
   selectedNotifMember: any = null;
+
+  get selectedNotifTargetMember(): any {
+    return this.members.find(m => m.id === this.notifTargetUserId);
+  }
+
+  get filteredRecipientMembers(): any[] {
+    const q = this.notifRecipientSearch.trim().toLowerCase();
+    if (!q) return this.members;
+    return this.members.filter(m =>
+      (m.username && m.username.toLowerCase().includes(q)) ||
+      (m.email && m.email.toLowerCase().includes(q))
+    );
+  }
+
+  setNotifRecipientType(type: 'all' | 'specific') {
+    this.notifRecipientType = type;
+    if (type === 'all') {
+      this.notifTargetUserId = null;
+      this.showRecipientDropdown = false;
+    } else {
+      if (!this.notifTargetUserId) {
+        this.showRecipientDropdown = true;
+      }
+    }
+  }
+
+  selectNotifTargetMember(m: any) {
+    this.notifTargetUserId = m.id;
+    this.notifRecipientType = 'specific';
+    this.showRecipientDropdown = false;
+    this.notifRecipientSearch = '';
+  }
+
+  clearNotifTargetMember() {
+    this.notifTargetUserId = null;
+    this.showRecipientDropdown = true;
+  }
 
   get broadcastNotifications(): any[] {
     return this.notifications.filter(n => !n.user_id || n.user_id === this.auth.user?.id);
@@ -427,12 +467,33 @@ export class AdminPage implements OnInit {
     });
   }
 
+  showAllAttendance = false;
+  attendanceLimit = 4;
+  showAllEquipmentLogs = false;
+  equipmentLogsLimit = 4;
+
+  get displayedAttendance() {
+    if (this.showAllAttendance || this.attendanceSearch.trim()) {
+      return this.filteredAttendance;
+    }
+    return this.filteredAttendance.slice(0, this.attendanceLimit);
+  }
+
+  get displayedEquipmentScanLogs() {
+    if (this.showAllEquipmentLogs || this.attendanceSearch.trim()) {
+      return this.filteredEquipmentScanLogs;
+    }
+    return this.filteredEquipmentScanLogs.slice(0, this.equipmentLogsLimit);
+  }
+
   // ── Coaches ──────────────────────────────────────────
   coaches: any[] = [];
   coachesLoading = false;
   coachesError = false;
   coachSearch = '';
   coachStatusFilter: 'all' | 'active' | 'inactive' = 'all';
+  showAllCoaches = false;
+  coachesLimit = 3;
 
   showAddCoach = false;
   editingCoach: any = null;
@@ -470,6 +531,13 @@ export class AdminPage implements OnInit {
     });
   }
 
+  get displayedCoaches() {
+    if (this.showAllCoaches || this.coachSearch.trim()) {
+      return this.filteredCoaches;
+    }
+    return this.filteredCoaches.slice(0, this.coachesLimit);
+  }
+
   /** Members who don't already have a coach profile — the only valid pool
    *  for the "promote existing user" flow. */
   get promotableMembers() {
@@ -496,8 +564,37 @@ export class AdminPage implements OnInit {
     this.selectedReportDate = this.toIsoDate(new Date());
   }
 
+  /** Interval ID for attendance auto-poll (every 15 s while tab is open). */
+  private attendancePollInterval: ReturnType<typeof setInterval> | null = null;
+
   ionViewWillEnter() {
     this.loadAll();
+    // Start auto-refresh for attendance every 15 seconds
+    this.attendancePollInterval = setInterval(() => {
+      this.loadDailyReports();
+      const headers = { Authorization: `Bearer ${this.auth.token}` };
+      this.http.get<any[]>(`${this.api}/attendance/pending`, { headers }).subscribe({
+        next: data => {
+          this.attendancePending = data.map(a => ({ ...a, initials: this.getInitials(a.username) }));
+        },
+        error: () => {}
+      });
+    }, 15000);
+  }
+
+  ionViewWillLeave() {
+    this.stopAttendancePoll();
+  }
+
+  ngOnDestroy() {
+    this.stopAttendancePoll();
+  }
+
+  private stopAttendancePoll() {
+    if (this.attendancePollInterval !== null) {
+      clearInterval(this.attendancePollInterval);
+      this.attendancePollInterval = null;
+    }
   }
 
   loadAll() {
@@ -674,6 +771,9 @@ export class AdminPage implements OnInit {
   editingProduct:  any = null;
   editingEquipment: any = null;
 
+  showNewMemberPw   = false;
+  showEditMemberPw  = false;
+
   newMember = {
     username: '',
     email: '',
@@ -826,8 +926,9 @@ export class AdminPage implements OnInit {
   openAddMember() { this.toggleAddMember(); }
 
   editMember(m: any) {
-    this.editingMember = { ...m };
+    this.editingMember = { ...m, password: '' };
     this.showAddMember = false;
+    this.showEditMemberPw = false;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -847,9 +948,9 @@ export class AdminPage implements OnInit {
   updateMember() {
     if (!this.editingMember) return;
     const headers = { Authorization: `Bearer ${this.auth.token}` };
-    this.http.put(`${this.api}/users/${this.editingMember.id}`, this.editingMember, { headers }).subscribe({
+    this.http.put<any>(`${this.api}/users/${this.editingMember.id}`, this.editingMember, { headers }).subscribe({
       next: () => { this.editingMember = null; this.loadAll(); },
-      error: () => alert('Failed to update member')
+      error: (e) => alert(e.error?.message || 'Failed to update member')
     });
   }
 

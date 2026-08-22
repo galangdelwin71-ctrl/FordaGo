@@ -2,6 +2,7 @@
 <app-header
   subtitle="COACHING"
   [unreadCount]="unreadNotifCount"
+  [coachUnreadCount]="coachUnreadCount"
   [profileImage]="profileImage"
   [initials]="initials"
   (coachingClick)="onCoachingClick()"
@@ -88,3 +89,6 @@
   (closed)="closeNotifPanel()"
   (unreadCountChange)="onUnreadCountChange($event)">
 </app-notification-panel>
+
+<!-- Messenger-style floating chat toast -->
+<app-chat-toast></app-chat-toast>

@@ -40,20 +40,42 @@ class AdminCoachController extends Controller
         ])->orderByDesc('created_at')->get();
 
         $coaches = $profiles->map(function (CoachProfile $profile) {
+            $today = new \DateTime('today');
+            $daysLeft = null;
+            $isExpired = false;
+            $isExpiringSoon = false;
+            $progressPercent = 0;
+
+            if ($profile->contract_expiry) {
+                $expiry = new \DateTime($profile->contract_expiry);
+                $diff = (int) $today->diff($expiry)->format('%r%a');
+                $daysLeft = max(0, $diff);
+                $isExpired = $diff <= 0;
+                $isExpiringSoon = $diff > 0 && $diff <= 7;
+                $totalDays = 30;
+                $consumed = min(max($totalDays - $daysLeft, 0), $totalDays);
+                $progressPercent = (int) round(($consumed / $totalDays) * 100);
+            }
+
             return [
-                'user_id'       => $profile->user_id,
-                'username'      => $profile->user?->username,
-                'first_name'    => $profile->user?->first_name,
-                'last_name'     => $profile->user?->last_name,
-                'email'         => $profile->user?->email,
-                'phone'         => $profile->user?->phone,
-                'profile_image' => $profile->photo_url ?: $profile->user?->profile_image,
-                'bio'           => $profile->bio,
-                'specialty'     => $profile->specialty,
-                'rate'          => (float) $profile->rate,
-                'is_active'     => (bool) $profile->is_active,
-                'created_by'    => $profile->creator?->username,
-                'created_at'    => $profile->created_at,
+                'user_id'         => $profile->user_id,
+                'username'        => $profile->user?->username,
+                'first_name'      => $profile->user?->first_name,
+                'last_name'       => $profile->user?->last_name,
+                'email'           => $profile->user?->email,
+                'phone'           => $profile->user?->phone,
+                'profile_image'   => $profile->photo_url ?: $profile->user?->profile_image,
+                'bio'             => $profile->bio,
+                'specialty'       => $profile->specialty,
+                'rate'            => (float) $profile->rate,
+                'is_active'       => (bool) $profile->is_active && ! $isExpired,
+                'contract_expiry' => $profile->contract_expiry,
+                'days_left'       => $daysLeft,
+                'is_expired'      => $isExpired,
+                'is_expiring_soon'=> $isExpiringSoon,
+                'progress_percent'=> $progressPercent,
+                'created_by'      => $profile->creator?->username,
+                'created_at'      => $profile->created_at,
             ];
         });
 
@@ -68,10 +90,11 @@ class AdminCoachController extends Controller
      */
     public function store(Request $request)
     {
-        $bio        = trim((string) $request->input('bio', ''));
-        $specialty  = trim((string) $request->input('specialty', ''));
-        $photoUrl   = trim((string) $request->input('photo_url', ''));
-        $rateInput  = $request->input('rate', 0);
+        $bio            = trim((string) $request->input('bio', ''));
+        $specialty      = trim((string) $request->input('specialty', ''));
+        $photoUrl       = trim((string) $request->input('photo_url', ''));
+        $rateInput      = $request->input('rate', 0);
+        $contractExpiry = $request->input('contract_expiry') ?: now()->addDays(30)->toDateString();
 
         if (! is_numeric($rateInput) || (float) $rateInput < 0) {
             return response()->json(['message' => 'Rate must be a non-negative number.'], 400);
@@ -81,7 +104,7 @@ class AdminCoachController extends Controller
         $userId = $request->input('user_id');
 
         try {
-            $coachProfile = DB::transaction(function () use ($request, $userId, $bio, $specialty, $photoUrl, $rate) {
+            $coachProfile = DB::transaction(function () use ($request, $userId, $bio, $specialty, $photoUrl, $rate, $contractExpiry) {
                 if ($userId) {
                     // ── Promote an existing user ──────────────────────────
                     $user = User::find((int) $userId);
@@ -138,13 +161,14 @@ class AdminCoachController extends Controller
                 }
 
                 return CoachProfile::create([
-                    'user_id'    => $user->id,
-                    'bio'        => $bio ?: null,
-                    'specialty'  => $specialty ?: null,
-                    'photo_url'  => $photoUrl ?: null,
-                    'rate'       => $rate,
-                    'is_active'  => true,
-                    'created_by' => request()->user()->id,
+                    'user_id'         => $user->id,
+                    'bio'             => $bio ?: null,
+                    'specialty'       => $specialty ?: null,
+                    'photo_url'       => $photoUrl ?: null,
+                    'rate'            => $rate,
+                    'is_active'       => true,
+                    'contract_expiry' => $contractExpiry,
+                    'created_by'      => request()->user()->id,
                 ]);
             });
         } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
@@ -189,6 +213,9 @@ class AdminCoachController extends Controller
         }
         if ($request->has('is_active')) {
             $profile->is_active = $request->boolean('is_active');
+        }
+        if ($request->has('contract_expiry')) {
+            $profile->contract_expiry = $request->input('contract_expiry') ?: null;
         }
 
         $profile->save();

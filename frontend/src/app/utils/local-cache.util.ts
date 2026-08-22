@@ -40,8 +40,25 @@ export async function getCachedData<T>(key: string): Promise<T | null> {
 export async function setCachedData<T>(key: string, value: T): Promise<void> {
   try {
     await Preferences.set({ key, value: JSON.stringify(value) });
-  } catch (error) {
-    console.warn(`[local-cache] Failed to write cache for "${key}":`, error);
+  } catch (error: any) {
+    // If quota exceeded, clean up stale fordago cache keys and retry
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith('CapacitorStorage.fordago.cache') && !k.includes(key)) {
+            keysToRemove.push(k);
+          }
+        }
+        for (const k of keysToRemove) {
+          localStorage.removeItem(k);
+        }
+        await Preferences.set({ key, value: JSON.stringify(value) });
+      }
+    } catch {
+      // Swallowed safely - caching is optional
+    }
   }
 }
 

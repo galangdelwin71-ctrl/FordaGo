@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Events\MessageSent;
+use App\Events\MessagesRead;
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
 use App\Models\Message;
@@ -39,10 +40,19 @@ class MessageController extends Controller
         ->get();
 
         // Mark unread messages sent by the partner as read
-        Message::where('conversation_id', $conversationId)
+        $readNow = now();
+        $affected = Message::where('conversation_id', $conversationId)
             ->where('sender_id', '!=', $userId)
             ->whereNull('read_at')
-            ->update(['read_at' => now()]);
+            ->update(['read_at' => $readNow]);
+
+        if ($affected > 0) {
+            try {
+                broadcast(new MessagesRead($conversationId, $userId, $readNow->toISOString()));
+            } catch (\Throwable $e) {
+                \Log::warning('Broadcasting MessagesRead failed: ' . $e->getMessage());
+            }
+        }
 
         return response()->json($messages);
     }
@@ -98,7 +108,7 @@ class MessageController extends Controller
 
         // Broadcast real-time message event via Laravel Reverb
         try {
-            broadcast(new MessageSent($message))->toOthers();
+            broadcast(new MessageSent($message));
         } catch (\Throwable $e) {
             // Log broadcast error but don't fail message delivery
             \Log::warning('Broadcasting MessageSent failed: ' . $e->getMessage());
@@ -124,10 +134,19 @@ class MessageController extends Controller
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
+        $readNow = now();
         $affected = Message::where('conversation_id', $conversationId)
             ->where('sender_id', '!=', $userId)
             ->whereNull('read_at')
-            ->update(['read_at' => now()]);
+            ->update(['read_at' => $readNow]);
+
+        if ($affected > 0) {
+            try {
+                broadcast(new MessagesRead($conversationId, $userId, $readNow->toISOString()))->toOthers();
+            } catch (\Throwable $e) {
+                \Log::warning('Broadcasting MessagesRead failed: ' . $e->getMessage());
+            }
+        }
 
         return response()->json([
             'message' => 'Marked as read.',

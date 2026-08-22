@@ -39,6 +39,13 @@
         <span class="toolbar-role">{{ panelLabel }}</span>
       </div>
     </div>
+
+    <div class="toolbar-right" slot="end">
+      <button class="header-logout-btn" (click)="logout()" title="Logout of Admin Panel" aria-label="Logout">
+        <ion-icon name="log-out-outline"></ion-icon>
+        <span class="logout-text">Logout</span>
+      </button>
+    </div>
   </ion-toolbar>
 </ion-header>
 
@@ -208,7 +215,12 @@
         <div class="form-title">New Account</div>
         <input class="field-input" type="text"     placeholder="Full name / Username *"  [(ngModel)]="newMember.username" />
         <input class="field-input" type="email"    placeholder="Email *"                 [(ngModel)]="newMember.email" />
-        <input class="field-input" type="password" placeholder="Password *"              [(ngModel)]="newMember.password" />
+        <div class="pw-shell">
+          <input class="field-input" [type]="showNewMemberPw ? 'text' : 'password'" placeholder="Password *" [(ngModel)]="newMember.password" />
+          <button type="button" class="pw-eye" (click)="showNewMemberPw = !showNewMemberPw" [attr.aria-label]="showNewMemberPw ? 'Hide password' : 'Show password'">
+            <ion-icon [name]="showNewMemberPw ? 'eye-off-outline' : 'eye-outline'" aria-hidden="true"></ion-icon>
+          </button>
+        </div>
         <input class="field-input" type="tel"      placeholder="Phone number (optional)" [(ngModel)]="newMember.phone" />
         <select class="field-input" [(ngModel)]="newMember.gender">
           <option value="">Gender (optional)</option>
@@ -237,6 +249,12 @@
         <div class="form-title">Edit Member</div>
         <input class="field-input" type="text"  placeholder="Username" [(ngModel)]="editingMember.username" />
         <input class="field-input" type="email" placeholder="Email"    [(ngModel)]="editingMember.email" />
+        <div class="pw-shell">
+          <input class="field-input" [type]="showEditMemberPw ? 'text' : 'password'" placeholder="New Password (leave blank to keep)" [(ngModel)]="editingMember.password" />
+          <button type="button" class="pw-eye" (click)="showEditMemberPw = !showEditMemberPw" [attr.aria-label]="showEditMemberPw ? 'Hide password' : 'Show password'">
+            <ion-icon [name]="showEditMemberPw ? 'eye-off-outline' : 'eye-outline'" aria-hidden="true"></ion-icon>
+          </button>
+        </div>
         <input class="field-input" type="tel"   placeholder="Phone"    [(ngModel)]="editingMember.phone" />
         <select class="field-input" [(ngModel)]="editingMember.gender">
           <option value="">Gender</option>
@@ -928,11 +946,91 @@
           <ion-icon name="paper-plane-outline"></ion-icon> Send Notification
         </div>
 
-        <label class="field-lbl">Recipient</label>
-        <select class="field-input" [(ngModel)]="notifTargetUserId">
-          <option [ngValue]="null">📢 All Members (Broadcast Announcement)</option>
-          <option *ngFor="let m of members" [ngValue]="m.id">👤 {{ m.username }} ({{ m.email }})</option>
-        </select>
+        <!-- Modern Recipient Selector -->
+        <label class="field-lbl"><ion-icon name="people-outline"></ion-icon> Recipient</label>
+
+        <!-- Mode Toggle Segment -->
+        <div class="recipient-toggle-grid">
+          <button
+            type="button"
+            class="recipient-toggle-btn"
+            [class.active]="notifRecipientType === 'all'"
+            (click)="setNotifRecipientType('all')"
+          >
+            <ion-icon name="megaphone-outline"></ion-icon>
+            <span>All Members</span>
+          </button>
+          <button
+            type="button"
+            class="recipient-toggle-btn"
+            [class.active]="notifRecipientType === 'specific'"
+            (click)="setNotifRecipientType('specific')"
+          >
+            <ion-icon name="person-outline"></ion-icon>
+            <span>Specific Member</span>
+          </button>
+        </div>
+
+        <!-- If "All Members" selected -->
+        <div class="recipient-broadcast-banner" *ngIf="notifRecipientType === 'all'">
+          <ion-icon name="information-circle-outline"></ion-icon>
+          <span>This announcement will be delivered to <strong>all registered gym members</strong>.</span>
+        </div>
+
+        <!-- If "Specific Member" selected -->
+        <div class="specific-member-picker-wrap" *ngIf="notifRecipientType === 'specific'">
+
+          <!-- If a member is chosen -->
+          <div class="selected-member-chip-card" *ngIf="selectedNotifTargetMember">
+            <div class="member-mini-avatar">
+              <img *ngIf="selectedNotifTargetMember.photo_url" [src]="selectedNotifTargetMember.photo_url" alt="{{ selectedNotifTargetMember.username }}" />
+              <span *ngIf="!selectedNotifTargetMember.photo_url">{{ selectedNotifTargetMember.username?.charAt(0)?.toUpperCase() || 'M' }}</span>
+            </div>
+            <div class="selected-member-info">
+              <div class="selected-name">{{ selectedNotifTargetMember.username }}</div>
+              <div class="selected-email">{{ selectedNotifTargetMember.email }}</div>
+            </div>
+            <button type="button" class="change-recipient-btn" (click)="clearNotifTargetMember()">
+              Change ✕
+            </button>
+          </div>
+
+          <!-- Member search & list dropdown (when choosing or changing) -->
+          <div class="member-picker-dropdown" *ngIf="!selectedNotifTargetMember || showRecipientDropdown">
+            <div class="mention-search-box" style="margin-bottom: 8px;">
+              <ion-icon name="search-outline"></ion-icon>
+              <input
+                type="text"
+                placeholder="Search member name or email…"
+                [(ngModel)]="notifRecipientSearch"
+              />
+            </div>
+
+            <div class="member-picker-list">
+              <div class="empty-state mini" *ngIf="filteredRecipientMembers.length === 0" style="padding: 12px; font-size: 12px;">
+                No members matching search.
+              </div>
+              <button
+                type="button"
+                *ngFor="let m of filteredRecipientMembers"
+                class="member-picker-item"
+                [class.selected]="notifTargetUserId === m.id"
+                (click)="selectNotifTargetMember(m)"
+              >
+                <div class="member-mini-avatar">
+                  <img *ngIf="m.photo_url" [src]="m.photo_url" alt="{{ m.username }}" />
+                  <span *ngIf="!m.photo_url">{{ m.username?.charAt(0)?.toUpperCase() || 'M' }}</span>
+                </div>
+                <div class="member-picker-info">
+                  <div class="member-picker-name">{{ m.username }}</div>
+                  <div class="member-picker-email">{{ m.email }}</div>
+                </div>
+                <span class="role-badge">{{ m.role }}</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
 
         <label class="field-lbl">Title / Subject (Optional)</label>
         <input class="field-input" type="text" placeholder="e.g. Gym Maintenance, Schedule Update" [(ngModel)]="notifTitle" />
@@ -1127,16 +1225,33 @@
         <div class="header-actions">
           <button class="refresh-btn" (click)="loadDailyReports()" title="Refresh attendance list">
             <ion-icon name="refresh-outline"></ion-icon>
-            Refresh
-          </button>
-          <button class="add-btn" (click)="toggleGymQrCode()" title="Toggle Gym Attendance QR">
-            <ion-icon [name]="showQrCode ? 'eye-off-outline' : 'qr-code-outline'"></ion-icon>
-            {{ showQrCode ? '✕ Hide QR' : '+ Gym QR' }}
+            <span>Refresh</span>
           </button>
           <button class="export-btn" (click)="exportAttendancePdf()" title="Export Attendance PDF">
             <ion-icon name="download-outline"></ion-icon>
-            PDF
+            <span>Export PDF</span>
           </button>
+        </div>
+      </div>
+
+      <!-- ── Big Prominent Gym QR Button Card ────────── -->
+      <div class="gym-qr-banner-card" (click)="toggleGymQrCode()">
+        <div class="qr-banner-content">
+          <div class="qr-banner-icon-box">
+            <ion-icon [name]="showQrCode ? 'qr-code' : 'qr-code-outline'"></ion-icon>
+          </div>
+          <div class="qr-banner-text">
+            <div class="qr-banner-title">Gym Front-Desk Check-in QR</div>
+            <div class="qr-banner-subtitle">
+              {{ showQrCode ? 'Click to close QR code display' : 'Tap to generate & display official front-desk QR code' }}
+            </div>
+          </div>
+        </div>
+        <div class="qr-banner-action">
+          <span class="qr-toggle-badge" [class.active]="showQrCode">
+            <ion-icon [name]="showQrCode ? 'eye-off-outline' : 'qr-code-outline'"></ion-icon>
+            <span>{{ showQrCode ? 'Hide QR' : 'Show QR' }}</span>
+          </span>
         </div>
       </div>
 
@@ -1266,7 +1381,7 @@
         </div>
 
         <!-- Attendance Cards Matching Reference Design -->
-        <div *ngFor="let a of filteredAttendance" class="member-card" [class.pending-card]="a.payment_status!=='paid'">
+        <div *ngFor="let a of displayedAttendance" class="member-card" [class.pending-card]="a.payment_status!=='paid'">
           <div class="member-card-main">
             <div class="member-avatar">{{ a.initials }}</div>
             <div class="member-card-details">
@@ -1303,6 +1418,13 @@
             </button>
           </div>
         </div>
+        <!-- View More / View Less for Attendance -->
+        <div class="view-more-wrap" *ngIf="filteredAttendance.length > attendanceLimit && !attendanceSearch">
+          <button class="view-more-btn" (click)="showAllAttendance = !showAllAttendance">
+            <ion-icon [name]="showAllAttendance ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+            <span>{{ showAllAttendance ? 'View Less' : 'View More (' + (filteredAttendance.length - attendanceLimit) + ' more)' }}</span>
+          </button>
+        </div>
       </div>
 
       <!-- ── EQUIPMENT SCANS TAB VIEW ────────────────── -->
@@ -1319,7 +1441,7 @@
           No equipment scans found for {{ selectedReportDate || 'selected date' }}.
         </div>
 
-        <div *ngFor="let log of filteredEquipmentScanLogs" class="member-card">
+        <div *ngFor="let log of displayedEquipmentScanLogs" class="member-card">
           <div class="member-card-main">
             <div class="member-avatar equip-avatar">
               <ion-icon name="barbell-outline"></ion-icon>
@@ -1347,6 +1469,13 @@
             </button>
           </div>
         </div>
+        <!-- View More / View Less for Equipment Scans -->
+        <div class="view-more-wrap" *ngIf="filteredEquipmentScanLogs.length > equipmentLogsLimit && !attendanceSearch">
+          <button class="view-more-btn" (click)="showAllEquipmentLogs = !showAllEquipmentLogs">
+            <ion-icon [name]="showAllEquipmentLogs ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+            <span>{{ showAllEquipmentLogs ? 'View Less' : 'View More (' + (filteredEquipmentScanLogs.length - equipmentLogsLimit) + ' more)' }}</span>
+          </button>
+        </div>
       </div>
 
     </div>
@@ -1357,19 +1486,24 @@
     <div *ngIf="activeTab==='coaches' && canManageCoaches">
 
       <div class="section-header-row">
-        <span class="section-label" style="margin:0">Coach Accounts</span>
+        <span class="section-tag-chip">COACH ACCOUNTS</span>
         <div class="header-actions">
           <button class="refresh-btn" (click)="loadCoaches()" title="Refresh list">
             <ion-icon name="refresh-outline"></ion-icon>
-            Refresh
+            <span>Refresh</span>
           </button>
-          <button class="add-btn" (click)="toggleAddCoach()">{{ showAddCoach ? '✕ Cancel' : '+ Add Coach' }}</button>
+          <button class="add-btn" (click)="toggleAddCoach()">
+            <ion-icon [name]="showAddCoach ? 'close-outline' : 'add-outline'"></ion-icon>
+            <span>{{ showAddCoach ? 'Cancel' : '+ Add Coach' }}</span>
+          </button>
         </div>
       </div>
 
       <!-- Add Coach Form -->
       <div class="inline-form" *ngIf="showAddCoach">
-        <div class="form-title">New Coach</div>
+        <div class="form-title">
+          <ion-icon name="person-add-outline"></ion-icon> New Coach
+        </div>
 
         <div class="filter-row">
           <div class="filter-group">
@@ -1380,23 +1514,27 @@
 
         <!-- New account fields -->
         <ng-container *ngIf="coachFormMode==='new'">
-          <input class="field-input" type="text"     placeholder="First name *"           [(ngModel)]="newCoach.first_name" />
-          <input class="field-input" type="text"     placeholder="Last name *"            [(ngModel)]="newCoach.last_name" />
-          <input class="field-input" type="text"     placeholder="Username *"              [(ngModel)]="newCoach.username" />
-          <input class="field-input" type="email"    placeholder="Email *"                 [(ngModel)]="newCoach.email" />
-          <input class="field-input" type="password" placeholder="Password *"              [(ngModel)]="newCoach.password" />
-          <input class="field-input" type="tel"      placeholder="Phone number (optional)" [(ngModel)]="newCoach.phone" />
-          <select class="field-input" [(ngModel)]="newCoach.gender">
-            <option value="">Gender (optional)</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="other">Other</option>
-          </select>
+          <input class="field-input" type="text"     placeholder="Username *" [(ngModel)]="newCoach.username" />
+          <input class="field-input" type="email"    placeholder="Email *"    [(ngModel)]="newCoach.email" />
+          <input class="field-input" type="password" placeholder="Temporary Password *" [(ngModel)]="newCoach.password" />
+          <div class="form-grid-2">
+            <input class="field-input" type="text" placeholder="First Name" [(ngModel)]="newCoach.first_name" />
+            <input class="field-input" type="text" placeholder="Last Name"  [(ngModel)]="newCoach.last_name" />
+          </div>
+          <div class="form-grid-2">
+            <input class="field-input" type="tel" placeholder="Phone" [(ngModel)]="newCoach.phone" />
+            <select class="field-input" [(ngModel)]="newCoach.gender">
+              <option value="">Select Gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
         </ng-container>
 
-        <!-- Promote existing member -->
+        <!-- Promote member dropdown -->
         <select class="field-input" *ngIf="coachFormMode==='promote'" [(ngModel)]="newCoach.user_id">
-          <option [ngValue]="null">Select a member to promote *</option>
+          <option [ngValue]="null">Select Member to Promote *</option>
           <option *ngFor="let m of promotableMembers" [ngValue]="m.id">{{ m.username }} ({{ m.email }})</option>
         </select>
         <div class="empty-state" *ngIf="coachFormMode==='promote' && promotableMembers.length === 0">
@@ -1423,7 +1561,9 @@
 
       <!-- Edit Coach Form -->
       <div class="inline-form" *ngIf="editingCoach">
-        <div class="form-title">Edit Coach — {{ editingCoach.username }}</div>
+        <div class="form-title">
+          <ion-icon name="create-outline"></ion-icon> Edit Coach — {{ editingCoach.username }}
+        </div>
         <textarea class="field-input" placeholder="Bio (optional)" [(ngModel)]="editingCoach.bio" rows="2" style="resize:vertical;"></textarea>
         <input class="field-input" type="text"   placeholder="Specialty" [(ngModel)]="editingCoach.specialty" />
         <input class="field-input" type="number" placeholder="Session rate (₱)" [(ngModel)]="editingCoach.rate" appNoNegative pattern="[0-9]*(\.[0-9]{1,2})?" />
@@ -1449,13 +1589,22 @@
         <div class="filter-group">
           <span class="filter-label">Status:</span>
           <button class="filter-chip" [class.active]="coachStatusFilter==='all'"      (click)="coachStatusFilter='all'">All</button>
-          <button class="filter-chip active" [class.active]="coachStatusFilter==='active'"   (click)="coachStatusFilter='active'">Active</button>
+          <button class="filter-chip active-chip" [class.active]="coachStatusFilter==='active'"   (click)="coachStatusFilter='active'">Active</button>
           <button class="filter-chip pending" [class.active]="coachStatusFilter==='inactive'" (click)="coachStatusFilter='inactive'">Inactive</button>
         </div>
       </div>
 
-      <input class="search-input" type="text" placeholder="Search by name, email, or specialty…"
-        [(ngModel)]="coachSearch" />
+      <!-- Search input -->
+      <div class="search-input-wrap" style="margin-bottom: 14px;">
+        <ion-icon name="search-outline" class="search-icon"></ion-icon>
+        <input
+          class="search-input-field"
+          type="text"
+          placeholder="Search by name, email, or specialty…"
+          [(ngModel)]="coachSearch"
+        />
+        <button class="clear-search-btn" *ngIf="coachSearch" (click)="coachSearch=''">✕</button>
+      </div>
 
       <div class="empty-state" *ngIf="coachesLoading">
         <ion-spinner name="crescent"></ion-spinner> Loading coaches...
@@ -1467,38 +1616,49 @@
       </div>
       <div class="empty-state" *ngIf="!coachesLoading && !coachesError && filteredCoaches.length === 0">No coaches found.</div>
 
-      <div *ngFor="let c of filteredCoaches" class="member-row" [class.pending-row]="!c.is_active">
-        <div class="member-info">
-          <img *ngIf="c.profile_image" [src]="c.profile_image" class="member-avatar" style="object-fit:cover;" alt="{{ c.username }}" />
-          <ion-icon *ngIf="!c.profile_image" name="person-circle-outline" class="member-avatar" style="font-size:40px;"></ion-icon>
-          <div style="min-width:0;flex:1">
-            <div class="member-name">{{ c.username }}</div>
-            <div class="member-meta">{{ c.email }} <span *ngIf="c.specialty">· {{ c.specialty }}</span></div>
-            <div class="member-plan">
-              ₱{{ c.rate || 0 }} / session
-              <span class="membership-status-badge" [class.pending]="!c.is_active" [class.active]="c.is_active">
+      <!-- Modern Coach Cards -->
+      <div *ngFor="let c of displayedCoaches" class="member-card coach-card" [class.pending-card]="!c.is_active">
+        <div class="member-card-main">
+          <div class="member-avatar coach-avatar">
+            <img *ngIf="c.profile_image" [src]="c.profile_image" alt="{{ c.username }}" />
+            <span *ngIf="!c.profile_image">{{ c.username?.charAt(0)?.toUpperCase() || 'C' }}</span>
+          </div>
+          <div class="member-card-details">
+            <div class="member-card-name-row">
+              <span class="member-name">{{ c.username }}</span>
+              <span class="status-pill" [class.active]="c.is_active" [class.pending]="!c.is_active">
                 {{ c.is_active ? 'Active' : 'Inactive' }}
               </span>
             </div>
+            <div class="member-meta">{{ c.email }} <span *ngIf="c.specialty">· {{ c.specialty }}</span></div>
+            <div class="coach-rate-row">
+              <span class="coach-rate-val">₱{{ c.rate || 0 }} <span class="per-session">/ session</span></span>
+            </div>
+            <div class="coach-bio-snippet" *ngIf="c.bio">{{ c.bio }}</div>
           </div>
         </div>
-        <div class="row-actions">
-          <button class="act-btn edit" (click)="editCoach(c)"><ion-icon name="create-outline"></ion-icon> Edit</button>
-          <button class="act-btn approve-btn" *ngIf="!c.is_active" (click)="reactivateCoach(c)">
-            <ion-icon name="checkmark-circle-outline"></ion-icon> Reactivate
+        <div class="card-actions-row dual">
+          <button class="act-btn edit" (click)="editCoach(c)">
+            <ion-icon name="create-outline"></ion-icon> Edit
           </button>
           <button class="act-btn del" *ngIf="c.is_active" (click)="deactivateCoach(c)">
-            <ion-icon name="close-circle-outline"></ion-icon> Deactivate
+            <ion-icon name="power-outline"></ion-icon> Deactivate
+          </button>
+          <button class="act-btn approve-btn" *ngIf="!c.is_active" (click)="reactivateCoach(c)">
+            <ion-icon name="checkmark-circle-outline"></ion-icon> Reactivate
           </button>
         </div>
       </div>
 
-    </div>
+      <!-- View More / View Less for Coaches -->
+      <div class="view-more-wrap" *ngIf="filteredCoaches.length > coachesLimit && !coachSearch">
+        <button class="view-more-btn" (click)="showAllCoaches = !showAllCoaches">
+          <ion-icon [name]="showAllCoaches ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+          <span>{{ showAllCoaches ? 'View Less' : 'View More (' + (filteredCoaches.length - coachesLimit) + ' more)' }}</span>
+        </button>
+      </div>
 
-    <!-- ── Bottom Logout ─────────────────────────────── -->
-    <button class="logout-full-btn" (click)="logout()">
-      <ion-icon name="log-out-outline"></ion-icon> Logout
-    </button>
+    </div>
 
     <!-- Membership edit modal -->
     <div class="overlay" *ngIf="editingMembershipFor" (click)="editingMembershipFor=null"></div>

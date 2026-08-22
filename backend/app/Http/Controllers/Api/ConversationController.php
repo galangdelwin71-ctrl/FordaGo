@@ -9,6 +9,7 @@ use App\Models\Message;
 use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ConversationController extends Controller
 {
@@ -32,15 +33,20 @@ class ConversationController extends Controller
         })
         ->get();
 
-        $result = $conversations->map(function ($convo) use ($userId) {
+        // Single aggregated query for all unread counts — replaces the old
+        // N+1 loop (one Message::count() per conversation row).
+        $conversationIds = $conversations->pluck('id');
+        $unreadCounts = \DB::table('messages')
+            ->select('conversation_id', \DB::raw('COUNT(*) as unread_count'))
+            ->whereIn('conversation_id', $conversationIds)
+            ->where('sender_id', '!=', $userId)
+            ->whereNull('read_at')
+            ->groupBy('conversation_id')
+            ->pluck('unread_count', 'conversation_id');
+
+        $result = $conversations->map(function ($convo) use ($userId, $unreadCounts) {
             $isCoach = ((int) $convo->coach_id === (int) $userId);
             $partner = $isCoach ? $convo->client : $convo->coach;
-
-            // Count unread messages sent by the other party
-            $unreadCount = Message::where('conversation_id', $convo->id)
-                ->where('sender_id', '!=', $userId)
-                ->whereNull('read_at')
-                ->count();
 
             return [
                 'id'              => $convo->id,
@@ -51,7 +57,7 @@ class ConversationController extends Controller
                 'partner'         => $partner,
                 'partner_role'    => $isCoach ? 'client' : 'coach',
                 'latest_message'  => $convo->latestMessage,
-                'unread_count'    => $unreadCount,
+                'unread_count'    => (int) ($unreadCounts[$convo->id] ?? 0),
                 'updated_at'      => $convo->latestMessage?->created_at ?: $convo->updated_at,
             ];
         })

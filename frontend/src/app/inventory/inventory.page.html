@@ -2,6 +2,7 @@
 <app-header
   subtitle="SUPPLEMENTS SHOP"
   [unreadCount]="unreadCount"
+  [coachUnreadCount]="coachUnreadCount"
   [profileImage]="profileImage"
   [initials]="initials"
   (coachingClick)="onCoachingClick()"
@@ -22,15 +23,13 @@
   (navigated)="closeCoachingPanel()">
 </app-coaching-panel>
 
-<!-- Cart / Pending Orders shortcuts -- moved off the header per request.
-     Floating stack pinned to the bottom-right, sitting just above the
-     bottom nav bar so it never overlaps page content or the footer. -->
+<!-- Cart / Orders floating shortcuts — permanently visible for easy access -->
 <div class="shop-fab-stack" *ngIf="!coachingPanelOpen" [class.fabs-hidden]="anyModalOpen">
   <button type="button" class="shop-fab-btn" (click)="openCart()" aria-label="Open cart">
     <ion-icon name="cart-outline" aria-hidden="true"></ion-icon>
     <span class="shop-fab-badge" *ngIf="cartItemCount > 0">{{ cartItemCount }}</span>
   </button>
-  <button type="button" class="shop-fab-btn" (click)="openOrders()" *ngIf="pendingOrderGroups.length > 0" aria-label="Open orders">
+  <button type="button" class="shop-fab-btn" (click)="openOrders()" aria-label="Open orders">
     <ion-icon name="receipt-outline" aria-hidden="true"></ion-icon>
     <span class="shop-fab-badge" *ngIf="awaitingPaymentCount > 0">{{ awaitingPaymentCount }}</span>
   </button>

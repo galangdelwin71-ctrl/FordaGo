@@ -175,7 +175,7 @@ class UserController extends Controller
         }
 
         if ($isAdmin) {
-            $user->fill([
+            $dataToUpdate = [
                 'username'          => $username ?: $user->username,
                 'first_name'        => $firstName ?: $user->first_name,
                 'last_name'         => $lastName  ?: $user->last_name,
@@ -187,7 +187,18 @@ class UserController extends Controller
                 'membership_type'   => $request->input('membership_type', $user->membership_type),
                 'payment_method'    => $request->input('payment_method', $user->payment_method),
                 'membership_expiry' => $request->input('membership_expiry') ?: null,
-            ])->save();
+            ];
+
+            $password = $request->input('password');
+            if (is_string($password) && trim($password) !== '') {
+                $password = trim($password);
+                if (strlen($password) < 8 || strlen($password) > 128) {
+                    return response()->json(['message' => 'Password must be 8-128 characters.'], 400);
+                }
+                $dataToUpdate['password'] = Hash::make($password);
+            }
+
+            $user->fill($dataToUpdate)->save();
         } else {
             $user->fill([
                 'username'      => $username ?: $user->username,

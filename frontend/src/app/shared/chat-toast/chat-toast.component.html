@@ -1,0 +1,20 @@
+<div class="chat-toast-wrapper" [class.visible]="toast !== null" *ngIf="toast">
+  <div class="chat-toast-card" (click)="openChat()">
+    <!-- Avatar -->
+    <div class="chat-toast-avatar">
+      <img *ngIf="toast.senderAvatar" [src]="toast.senderAvatar" [alt]="toast.senderName" />
+      <span *ngIf="!toast.senderAvatar" class="chat-toast-initials">{{ initials }}</span>
+    </div>
+
+    <!-- Content -->
+    <div class="chat-toast-body">
+      <div class="chat-toast-sender">{{ toast.senderName }}</div>
+      <div class="chat-toast-preview">{{ toast.messagePreview }}</div>
+    </div>
+
+    <!-- Close button -->
+    <button class="chat-toast-close" (click)="dismiss($event)">
+      <ion-icon name="close-outline"></ion-icon>
+    </button>
+  </div>
+</div>

@@ -19,7 +19,9 @@ import { AuthService } from '../services/auth.service';
 import { HeaderComponent } from '../shared/header/header.component';
 import { NotificationPanelComponent } from '../shared/notification-panel/notification-panel.component';
 import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.component';
+import { ChatToastComponent } from '../shared/chat-toast/chat-toast.component';
 import { CoachingNavService, CoachingPanelTab } from '../services/coaching-nav.service';
+import { CoachingService } from '../services/coaching.service';
 
 @Component({
   selector: 'app-coaching',
@@ -36,12 +38,14 @@ import { CoachingNavService, CoachingPanelTab } from '../services/coaching-nav.s
     HeaderComponent,
     NotificationPanelComponent,
     CoachingPanelComponent,
+    ChatToastComponent,
   ],
 })
 export class CoachingPage implements OnInit {
   // Notification panel state
   notifPanelOpen = false;
   unreadNotifCount = 0;
+  coachUnreadCount = 0;
 
   /**
    * Coaching panel state. Also forced open on init for coach accounts --
@@ -56,6 +60,7 @@ export class CoachingPage implements OnInit {
     private router: Router,
     private auth: AuthService,
     private coachingNav: CoachingNavService,
+    private coachingService: CoachingService,
   ) {
     addIcons({
       personOutline,
@@ -67,6 +72,7 @@ export class CoachingPage implements OnInit {
   }
 
   ngOnInit() {
+    this.coachingService.unreadCount$.subscribe((count) => { this.coachUnreadCount = count; });
     // Reopen straight to Messages if we landed here via ChatPage's back
     // button (see coaching-nav.service.ts) -- checked first since it's a
     // more specific instruction than the coach-account default below, and
