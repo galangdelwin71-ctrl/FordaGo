@@ -1436,16 +1436,16 @@ ion-modal.overlay-hidden {
 .cart-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   background: var(--surface2);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 10px;
+  border-radius: 14px;
+  padding: 12px 14px;
 
   .cart-item-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 10px;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
     background: rgba(255,214,0,0.12);
     border: 1px solid rgba(255,214,0,0.3);
     flex-shrink: 0;
@@ -1453,7 +1453,7 @@ ion-modal.overlay-hidden {
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    font-size: 10px;
+    font-size: 14px;
     font-weight: 800;
     color: var(--lime);
 
@@ -1465,21 +1465,19 @@ ion-modal.overlay-hidden {
     min-width: 0;
 
     .cart-item-name {
-      font-size: 12px;
-      font-weight: 700;
+      font-size: 13px;
+      font-weight: 750;
       color: var(--text);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
-    // Was var(--muted2) (dim gray) -- changed to red per request (was
-    // reading as plain white/washed-out against this card's dark
-    // background).
     .cart-item-price {
-      font-size: 10px;
-      color: var(--red);
-      margin-top: 2px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      margin-top: 3px;
     }
   }
 
@@ -1488,32 +1486,57 @@ ion-modal.overlay-hidden {
     align-items: center;
     gap: 6px;
     flex-shrink: 0;
+
+    .qty-dec-btn.small,
+    .qty-inc-btn.small {
+      width: 32px;
+      height: 32px;
+      font-size: 16px;
+      font-weight: 750;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #0f172a;
+      border: 1px solid rgba(15, 23, 42, 0.15);
+      box-shadow: 0 2px 5px rgba(15, 23, 42, 0.04);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+
+      &:hover { background: #f1f5f9; }
+      &:disabled { opacity: 0.35; cursor: not-allowed; }
+    }
+
+    .qty-display.small {
+      font-size: 15px;
+      font-weight: 800;
+      color: #0f172a;
+      min-width: 24px;
+      text-align: center;
+    }
   }
 
   .cart-item-remove {
     flex-shrink: 0;
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    background: rgba(255,68,97,0.1);
-    border: 1px solid rgba(255,68,97,0.25);
-    color: var(--red);
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: #ffffff;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #ef4444;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
 
-    ion-icon { font-size: 15px; }
+    ion-icon { font-size: 17px; }
+    &:hover { background: rgba(239, 68, 68, 0.08); }
     &:active { transform: scale(0.92); }
   }
 }
 
-// Cart Total figure -- scoped to the cart via this extra class (rather
-// than the shared `.total-box .total-price` rule) so this stays red
-// without also recoloring the product-detail modal's "Order Total" box,
-// which reuses the same base .total-box markup.
 .cart-total-box .total-price {
-  color: var(--red);
+  color: #0f172a;
 }
 
 // ── Skeleton Loading (Stage 4) ──────────────────────────

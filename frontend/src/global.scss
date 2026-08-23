@@ -916,84 +916,164 @@ body.light-theme {
        end up with *higher* specificity than a normal-weight override
        here. !important is the only way this global stylesheet can
        reliably win against that. */
-    .detail-name   { color: #0f172a !important; }
-    .detail-brand  { color: #d97706 !important; }
-    .box-label     { color: rgba(15,23,42,0.45) !important; }
-    .box-value     { color: #d97706 !important; }
-    .section-text  { color: rgba(15,23,42,0.6) !important; }
-    .spec-label    { color: rgba(15,23,42,0.45) !important; }
+    /* Product detail / order / cart / my orders modals (inventory) */
+    .detail-name   { color: #0f172a !important; font-weight: 800 !important; font-size: 16px !important; }
+    .detail-brand  { color: #64748b !important; font-weight: 600 !important; font-size: 12px !important; }
+    .box-label     { color: rgba(15,23,42,0.55) !important; font-weight: 750 !important; }
+    .box-value     { color: #0f172a !important; font-weight: 850 !important; }
+    .section-text  { color: #334155 !important; }
+    .spec-label    { color: rgba(15,23,42,0.55) !important; }
     .spec-value    { color: #0f172a !important; }
-    .feature-item  { color: rgba(15,23,42,0.6) !important; }
-    .total-label   { color: rgba(15,23,42,0.5) !important; }
-    .total-price   { color: #d97706 !important; }
-    .qty-display   { color: #d97706 !important; }
-    .qty-dec-btn, .qty-inc-btn {
-      background: rgba(15,23,42,0.07) !important;
-      border-color: rgba(15,23,42,0.12) !important;
+    .feature-item  { color: #334155 !important; }
+    .total-label   { color: rgba(15,23,42,0.6) !important; font-weight: 750 !important; font-size: 12px !important; }
+    .total-price   { color: #0f172a !important; font-weight: 850 !important; font-size: 24px !important; }
+    .qty-display   {
       color: #0f172a !important;
+      font-size: 16px !important;
+      font-weight: 800 !important;
+      min-width: 30px !important;
+      text-align: center !important;
     }
-    .order-name    { color: #0f172a !important; }
-    .order-date    { color: rgba(15,23,42,0.4) !important; }
+    .qty-dec-btn, .qty-inc-btn {
+      background: #ffffff !important;
+      border: 1px solid rgba(15,23,42,0.15) !important;
+      color: #0f172a !important;
+      width: 34px !important;
+      height: 34px !important;
+      font-size: 17px !important;
+      font-weight: 750 !important;
+      border-radius: 9px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      box-shadow: 0 2px 5px rgba(15,23,42,0.04) !important;
+
+      &:hover { background: #f1f5f9 !important; }
+      &:disabled { opacity: 0.4 !important; }
+    }
+    .order-name    { color: #0f172a !important; font-weight: 800 !important; }
+    .order-date    { color: rgba(15,23,42,0.45) !important; }
     .detail-value  { color: #0f172a !important; }
-    .detail-label  { color: rgba(15,23,42,0.4) !important; }
-    .summary-label { color: rgba(15,23,42,0.5) !important; }
-    .summary-value { color: #0f172a !important; }
-    .section-title { color: #0f172a !important; }
-    .empty-text    { color: rgba(15,23,42,0.45) !important; }
+    .detail-label  { color: rgba(15,23,42,0.5) !important; }
+    .summary-label { color: rgba(15,23,42,0.55) !important; }
+    .summary-value { color: #0f172a !important; font-weight: 800 !important; }
+    .section-title { color: #0f172a !important; font-weight: 800 !important; font-size: 12px !important; }
+    .empty-text    { color: rgba(15,23,42,0.5) !important; }
+
+    /* Total box in detail and cart modals */
+    .total-box {
+      background: #f1f5f9 !important;
+      border: 1px solid rgba(15,23,42,0.08) !important;
+      border-radius: 14px !important;
+      box-shadow: 0 2px 8px rgba(15,23,42,0.04) !important;
+      padding: 14px 16px !important;
+    }
 
     /* Payment method cards (product detail + cart modals) */
     .payment-option {
-      background: rgba(15,23,42,0.04) !important;
-      border-color: rgba(15,23,42,0.1) !important;
-      &.selected { background: rgba(245,158,11,0.1) !important; border-color: rgba(245,158,11,0.25) !important; }
+      background: #f1f5f9 !important;
+      border: 1px solid rgba(15,23,42,0.08) !important;
+      border-radius: 14px !important;
+      box-shadow: 0 2px 8px rgba(15,23,42,0.03) !important;
+      padding: 14px 12px !important;
+
+      &.selected {
+        background: #ffffff !important;
+        border: 2px solid #0f172a !important;
+        box-shadow: 0 4px 14px rgba(15,23,42,0.08) !important;
+
+        .payment-label { color: #0f172a !important; }
+        .payment-icon  { color: #0f172a !important; }
+      }
     }
-    .payment-label { color: #0f172a !important; }
-    .payment-option.selected .payment-label { color: #d97706 !important; }
-    .payment-desc  { color: rgba(15,23,42,0.45) !important; }
-    .payment-icon  { color: #0f172a !important; }
+    .payment-label { color: #0f172a !important; font-weight: 750 !important; font-size: 14px !important; }
+    .payment-desc  { color: rgba(15,23,42,0.5) !important; font-size: 11px !important; }
+    .payment-icon  { color: #0f172a !important; font-size: 24px !important; }
 
     /* Cart modal line items */
-    .cart-item { background: rgba(15,23,42,0.03) !important; border-color: rgba(15,23,42,0.09) !important; }
-    .cart-item-name  { color: #0f172a !important; }
-    .cart-item-price { color: #d97706 !important; }
+    .cart-item {
+      background: #f1f5f9 !important;
+      border: 1px solid rgba(15,23,42,0.08) !important;
+      border-radius: 14px !important;
+      box-shadow: 0 2px 8px rgba(15,23,42,0.04) !important;
+      padding: 12px 14px !important;
+      gap: 12px !important;
+    }
+    .cart-item-name  { color: #0f172a !important; font-size: 13px !important; font-weight: 750 !important; }
+    .cart-item-price { color: #475569 !important; font-size: 12px !important; font-weight: 600 !important; }
+    .cart-item-icon {
+      width: 48px !important;
+      height: 48px !important;
+      border-radius: 12px !important;
+      background: #ffffff !important;
+      border: 1px solid rgba(15,23,42,0.08) !important;
+    }
+    .cart-item-remove {
+      width: 36px !important;
+      height: 36px !important;
+      border-radius: 10px !important;
+      background: #ffffff !important;
+      border: 1px solid rgba(239,68,68,0.2) !important;
+      color: #ef4444 !important;
+      font-size: 17px !important;
+    }
 
     /* My Orders modal per-item rows */
-    .item-name  { color: #0f172a !important; }
-    .item-total { color: #d97706 !important; }
+    .item-name  { color: #0f172a !important; font-weight: 750 !important; font-size: 13px !important; }
+    .item-total { color: #0f172a !important; font-weight: 800 !important; font-size: 13px !important; }
 
     /* Close / Add to Cart / Cancel action buttons */
     .action-btn.cancel {
-      background: rgba(220,38,38,0.08) !important;
-      color: #dc2626 !important;
-      border-color: rgba(220,38,38,0.28) !important;
+      background: #f1f5f9 !important;
+      color: #475569 !important;
+      border: 1px solid #cbd5e1 !important;
+      font-size: 13px !important;
+      font-weight: 750 !important;
+      height: 42px !important;
+      border-radius: 12px !important;
     }
     .action-btn.secondary {
-      background: rgba(245,158,11,0.1) !important;
-      color: #d97706 !important;
-      border-color: rgba(245,158,11,0.35) !important;
+      background: #f1f5f9 !important;
+      color: #0f172a !important;
+      border: 1px solid #cbd5e1 !important;
+      font-size: 13px !important;
+      font-weight: 750 !important;
+      height: 42px !important;
+      border-radius: 12px !important;
     }
     .cancel-order-btn {
-      background: rgba(220,38,38,0.08) !important;
+      background: #f1f5f9 !important;
       color: #dc2626 !important;
-      border-color: rgba(220,38,38,0.28) !important;
+      border: 1px solid rgba(220,38,38,0.2) !important;
+      height: 38px !important;
+      border-radius: 10px !important;
+      font-weight: 750 !important;
     }
 
     /* Quick order confirm dialog */
-    .quick-confirm-title { color: #0f172a !important; }
-    .quick-confirm-sub   { color: rgba(15,23,42,0.5) !important; }
+    .quick-confirm-title { color: #0f172a !important; font-size: 16px !important; font-weight: 800 !important; }
+    .quick-confirm-sub   { color: rgba(15,23,42,0.55) !important; font-size: 13px !important; }
 
     .info-box {
-      background: rgba(245,158,11,0.06) !important;
-      border-color: rgba(245,158,11,0.2) !important;
-      color: rgba(15,23,42,0.6) !important;
+      background: #f1f5f9 !important;
+      border: 1px solid rgba(15,23,42,0.08) !important;
+      border-radius: 14px !important;
+      box-shadow: 0 2px 8px rgba(15,23,42,0.04) !important;
+      padding: 12px 14px !important;
     }
     .order-item {
-      background: #f8f9fa !important;
-      border-color: rgba(15,23,42,0.08) !important;
-      .detail-item { background: rgba(15,23,42,0.05) !important; }
+      background: #ffffff !important;
+      border: 1px solid rgba(15,23,42,0.08) !important;
+      box-shadow: 0 2px 10px rgba(15,23,42,0.04) !important;
+      border-radius: 16px !important;
+      .detail-item {
+        background: #f1f5f9 !important;
+        border: 1px solid rgba(15,23,42,0.08) !important;
+        border-radius: 10px !important;
+      }
     }
-    .orders-header .section-title { color: #0f172a !important; }
-    .empty-orders .empty-text { color: rgba(15,23,42,0.45) !important; }
+    .orders-header .section-title { color: #0f172a !important; font-size: 16px !important; font-weight: 800 !important; }
+    .empty-orders .empty-text { color: rgba(15,23,42,0.5) !important; font-size: 14px !important; }
 
     /* Scan page success modal */
     .modal-sub    { color: rgba(15,23,42,0.5) !important; }
