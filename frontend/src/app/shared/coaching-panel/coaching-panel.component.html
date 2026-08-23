@@ -211,23 +211,16 @@
               <strong>No Clients Yet</strong>
               <span>Members who message you will appear here.</span>
             </div>
-            <div class="cd-client-item" *ngFor="let item of clients; trackBy: trackByClient" (click)="openClientChat(item)">
+            <div class="cd-client-item cd-client-item--clean" *ngFor="let item of clients; trackBy: trackByClient">
               <div class="cd-session-avatar">
                 <img *ngIf="item.client.profile_image" [src]="item.client.profile_image" alt="" />
                 <span *ngIf="!item.client.profile_image">{{ (item.client.first_name || item.client.username || 'C').charAt(0) }}</span>
               </div>
               <div class="cd-session-info">
                 <div class="cd-session-name">{{ item.client.first_name || item.client.username || 'Client' }} {{ item.client.last_name || '' }}</div>
-                <div class="cd-session-focus" *ngIf="item.next_session">
-                  Next: {{ formatSessionDate(item.next_session.session_date) }} · {{ item.next_session.time_val }} {{ item.next_session.time_ampm }}
-                </div>
-                <div class="cd-session-focus" *ngIf="!item.next_session && item.latest_message">{{ item.latest_message.body }}</div>
-                <div class="cd-session-focus cd-session-empty-msg" *ngIf="!item.next_session && !item.latest_message">Tap to start chatting</div>
+                <div class="cd-client-tag" *ngIf="item.client.username">@{{ item.client.username }}</div>
               </div>
               <div class="cd-client-actions">
-                <button type="button" class="cd-chat-client-btn" (click)="$event.stopPropagation(); openClientChat(item)" title="Chat with client">
-                  <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
-                </button>
                 <button type="button" class="cd-delete-client-btn" (click)="promptDeleteClient(item, $event)" title="Remove client">
                   <ion-icon name="trash-outline"></ion-icon>
                 </button>

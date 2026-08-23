@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, Input, OnChanges, OnDestroy, SimpleChanges, ViewChild } from '@angular/core';
+import { Component, EventEmitter, Output, Input, OnChanges, OnDestroy, SimpleChanges, ViewChild, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -35,6 +35,7 @@ import {
 } from 'ionicons/icons';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
+import { EchoService } from '../../services/echo.service';
 import { CoachingNavService, CoachingPanelTab, CoachingPanelHost } from '../../services/coaching-nav.service';
 import { NoNegativeDirective } from '../../directives/no-negative.directive';
 import { getCachedData, setCachedData } from '../../utils/local-cache.util';
@@ -294,12 +295,16 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
     return index;
   }
 
+  private activeEchoChannels: string[] = [];
+
   constructor(
     private router: Router,
     private auth: AuthService,
     private coachingService: CoachingService,
     private coachingNav: CoachingNavService,
     private modalCtrl: ModalController,
+    private echoService: EchoService,
+    private zone: NgZone,
   ) {
     // Immediately resolve coach status synchronously from stored auth state
     // so the panel never flashes member "Personal Coaches" UI to a coach.
@@ -485,7 +490,44 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
     try { void this.modalCtrl.dismiss().catch(() => {}); } catch {}
   }
 
+  private setupEchoListeners(): void {
+    if (!this.conversations || this.conversations.length === 0) return;
+    this.cleanupEchoListeners();
+
+    for (const convo of this.conversations) {
+      const channelName = `conversation.${convo.id}`;
+      const channel = this.echoService.privateChannel(channelName);
+      if (!channel) continue;
+
+      this.activeEchoChannels.push(channelName);
+      channel.listen('.message.sent', (data: any) => {
+        if (!data?.message) return;
+        if (Number(data.message.sender_id) === Number(this.auth.user?.id)) return;
+
+        this.zone.run(() => {
+          const found = this.conversations.find((c) => c.id === convo.id);
+          if (found) {
+            found.unread_count = (found.unread_count || 0) + 1;
+            found.latest_message = data.message;
+          } else {
+            this.loadConversations();
+          }
+          this.coachingService.incrementUnreadCount(1);
+          CoachingPanelComponent.cachedConversations = this.conversations;
+        });
+      });
+    }
+  }
+
+  private cleanupEchoListeners(): void {
+    for (const name of this.activeEchoChannels) {
+      this.echoService.leaveChannel(name);
+    }
+    this.activeEchoChannels = [];
+  }
+
   ngOnDestroy(): void {
+    this.cleanupEchoListeners();
     this.closeAllModals();
     this.sub.unsubscribe();
   }
@@ -564,6 +606,7 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
             if (Array.isArray(res.conversations)) {
               this.conversations = res.conversations;
               this.isLoading = false;
+              this.setupEchoListeners();
               CoachingPanelComponent.cachedConversations = res.conversations;
               void setCachedData(CACHE_KEYS.COACH_CONVERSATIONS, res.conversations);
             }
@@ -1434,6 +1477,7 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
       this.coachingService.getConversations().subscribe({
         next: (res) => {
           this.conversations = res || [];
+          this.setupEchoListeners();
           if (Array.isArray(res)) {
             CoachingPanelComponent.cachedConversations = res;
             void setCachedData(CACHE_KEYS.COACH_CONVERSATIONS, res);
