@@ -879,11 +879,21 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
     );
   }
 
-  // ── Earnings helper ────────────────────────────────────────────────
+  // ── Date formatters ────────────────────────────────────────────────
   formatMonthLabel(ym: string): string {
+    if (!ym) return '';
     const [year, month] = ym.split('-');
     const date = new Date(Number(year), Number(month) - 1, 1);
     return date.toLocaleDateString('en-PH', { month: 'long', year: 'numeric' });
+  }
+
+  formatSessionDate(dateStr: string): string {
+    if (!dateStr) return '';
+    const cleaned = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+    const parts = cleaned.split('-').map((v) => parseInt(v, 10));
+    if (parts.length < 3 || isNaN(parts[0]) || isNaN(parts[1]) || isNaN(parts[2])) return dateStr;
+    const date = new Date(parts[0], parts[1] - 1, parts[2]);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
   // ── Manage Profile modal ──────────────────────────────────
