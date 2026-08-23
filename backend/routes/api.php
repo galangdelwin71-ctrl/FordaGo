@@ -53,6 +53,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/',                [UserController::class, 'index'])->middleware('role:admin,super_admin,employee');
         Route::get('/count',           [UserController::class, 'count'])->middleware('role:admin,super_admin,employee');
         Route::get('/me',              [UserController::class, 'me']);
+        Route::post('/membership/renew', [UserController::class, 'renewOrUpgradeMembership']);
         Route::post('/create',         [UserController::class, 'store'])->middleware('role:admin,super_admin,employee');
         Route::put('/{id}',            [UserController::class, 'update'])->whereNumber('id');
         Route::put('/{id}/membership', [UserController::class, 'updateMembership'])->whereNumber('id')->middleware('role:admin,super_admin,employee');

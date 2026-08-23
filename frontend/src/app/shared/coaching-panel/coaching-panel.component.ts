@@ -67,6 +67,8 @@ interface TodaySessionView {
   location?: string;
 }
 
+import { PullToRefreshComponent } from '../pull-to-refresh/pull-to-refresh.component';
+
 /** Internal tab set for the coach-only dashboard content (see coachTab below). */
 type CoachDashboardTab = 'clients' | 'requests' | 'messages';
 
@@ -82,11 +84,25 @@ const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frid
     IonSpinner,
     IonModal,
     NoNegativeDirective,
+    PullToRefreshComponent,
   ],
   templateUrl: './coaching-panel.component.html',
   styleUrls: ['./coaching-panel.component.scss'],
 })
 export class CoachingPanelComponent implements OnChanges, OnDestroy {
+  handleRefresh(event: any): void {
+    try {
+      this.loadMyProfile();
+      if (!this.isCoach) {
+        this.loadMemberTabData();
+      }
+    } finally {
+      setTimeout(() => {
+        event?.target?.complete?.();
+      }, 700);
+    }
+  }
+
   /** Whether the panel is visible. Parent owns this — set true from the header coaching button. */
   @Input() isOpen = false;
 

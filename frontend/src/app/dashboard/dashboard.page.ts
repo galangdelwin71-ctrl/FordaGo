@@ -4,7 +4,13 @@ import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonContent, IonFooter, IonIcon, IonModal, IonInput } from '@ionic/angular/standalone';
+import {
+  IonContent,
+  IonFooter,
+  IonIcon,
+  IonModal,
+  IonInput,
+} from '@ionic/angular/standalone';
 import { HttpClient } from '@angular/common/http';
 import { Subscription } from 'rxjs';
 import { WorkoutTrackerService, StoredWorkoutSession } from '../services/workout-tracker.service';
@@ -18,6 +24,7 @@ import { NotificationPanelComponent } from '../shared/notification-panel/notific
 import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.component';
 import { FeedbackModalComponent } from '../shared/feedback-modal/feedback-modal.component';
 import { ChatToastComponent } from '../shared/chat-toast/chat-toast.component';
+import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refresh.component';
 import { FeedbackService } from '../services/feedback.service';
 import { API_URL } from '../config/api.config';
 
@@ -138,9 +145,44 @@ export interface PrForm {
   styleUrls: ['./dashboard.page.scss'],
   standalone: true,
   host: { class: 'ion-page fordago-page' },
-  imports: [CommonModule, FormsModule, IonContent, IonFooter, IonIcon, IonModal, IonInput, NoNegativeDirective, HeaderComponent, NotificationPanelComponent, CoachingPanelComponent, FeedbackModalComponent, ChatToastComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    IonContent,
+    IonFooter,
+    IonIcon,
+    IonModal,
+    IonInput,
+    NoNegativeDirective,
+    HeaderComponent,
+    NotificationPanelComponent,
+    CoachingPanelComponent,
+    FeedbackModalComponent,
+    ChatToastComponent,
+    PullToRefreshComponent,
+  ],
 })
 export class DashboardPage implements OnInit, OnDestroy {
+
+  handleRefresh(event: any): void {
+    try {
+      if (this.auth.user) {
+        this.applyUserContext(this.auth.user);
+        this.workoutTracker.syncStoreStatuses();
+        void this.workoutTracker.pullFromServer();
+        this.loadPersonalRecords();
+        this.loadAttendanceDates();
+        this.loadUpcomingSessions();
+        this.refreshDashboardFromSchedule();
+        this.loadCoachActivityBadge();
+        void this.notificationCenter.refreshNotifications();
+      }
+    } finally {
+      setTimeout(() => {
+        event?.target?.complete();
+      }, 700);
+    }
+  }
   // ── Coaching Panel ───────────────────────────────────
   coachingPanelOpen = false;
   /** Set from CoachingNavService.consumeReopen() in ngOnInit() when this page is reached via a back-navigation from chat/coach-profile -- see coaching-nav.service.ts. Cleared whenever the panel closes (closeOverlaysForNavigation()/closeCoachingPanel()) so it never silently re-applies to a later, unrelated open. */

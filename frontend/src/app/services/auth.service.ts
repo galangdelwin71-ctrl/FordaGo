@@ -112,6 +112,17 @@ export class AuthService {
     this.userSubject.next(nextUser);
   }
 
+  fetchCurrentUser() {
+    return this.http.get<any>(`${API_URL}/users/me`).pipe(
+      tap((user) => {
+        if (user && user.id) {
+          this.updateCurrentUser(user);
+        }
+      }),
+      catchError((err: HttpErrorResponse) => this.handleError(err))
+    );
+  }
+
   forgotPasswordLookup(identifier: string) {
     return this.http.post<any>(`${this.apiUrl}/forgot-password/lookup`, { identifier }).pipe(
       catchError((err: HttpErrorResponse) => this.handleError(err))

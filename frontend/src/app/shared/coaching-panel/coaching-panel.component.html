@@ -67,6 +67,7 @@
 
 <!-- Scrollable Content -->
 <div class="panel-content">
+  <app-pull-to-refresh (refresh)="handleRefresh($event)"></app-pull-to-refresh>
 
   <!-- Resolving whether this account is a coach or a member (see
        loadMyProfile()) -- shown instead of the tabs/lists below so a coach

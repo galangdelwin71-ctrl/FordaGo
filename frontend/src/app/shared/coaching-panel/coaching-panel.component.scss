@@ -1561,106 +1561,138 @@ select.cd-form-select {
 // ── Light Theme ────────────────────────────────────────────
 :host-context(body.light-theme),
 :host-context(html.light-theme) {
-  background: #ffffff;
+  background: #f8fafc;
 
   .panel-header {
-    border-bottom-color: rgba(15, 23, 42, 0.1);
+    border-bottom-color: rgba(15, 23, 42, 0.08);
   }
 
   .panel-header-icon-wrap {
-    background: rgba(245, 158, 11, 0.1);
-    border-color: rgba(245, 158, 11, 0.2);
-    color: #f59e0b;
+    background: #f1f5f9;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    color: #0f172a;
   }
 
-  .panel-header-title { color: #0f172a; }
-  .panel-header-sub { color: rgba(15, 23, 42, 0.5); }
+  .panel-header-title { color: #0f172a; font-weight: 850; }
+  .panel-header-sub { color: #64748b; }
 
   .panel-close-btn {
-    background: rgba(15, 23, 42, 0.05);
-    border-color: rgba(15, 23, 42, 0.1);
-    color: rgba(15, 23, 42, 0.7);
+    background: #f1f5f9;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    color: #0f172a;
   }
 
   .panel-tabs {
-    background: rgba(15, 23, 42, 0.04);
-    border-color: rgba(15, 23, 42, 0.08);
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.09);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
 
     .panel-tab-btn {
-      color: rgba(15, 23, 42, 0.55);
+      color: #64748b;
+      font-weight: 750;
 
       &.is-active {
-        background: #f59e0b;
-        color: #ffffff;
+        background: #ffd600;
+        color: #000000;
+        font-weight: 850;
+        box-shadow: 0 4px 14px rgba(255, 214, 0, 0.25);
 
         .tab-badge-count {
-          background: #ff4461;
+          background: #0f172a;
           color: #ffffff;
         }
       }
 
-      // Stays red in light theme too -- see the dark-theme .tab-badge-count
-      // comment above; this is an unread-message alert, not a themed chip.
       .tab-badge-count {
-        background: #ff4461;
+        background: #0f172a;
         color: #ffffff;
       }
     }
   }
 
   .search-wrap .search-input {
-    background: rgba(15, 23, 42, 0.04);
-    border-color: rgba(15, 23, 42, 0.1);
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.1);
     color: #0f172a;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
 
-    &::placeholder { color: rgba(15, 23, 42, 0.4); }
+    &::placeholder { color: #94a3b8; }
+    &:focus { border-color: #0f172a; }
   }
 
   .specialty-row .specialty-chip {
-    background: rgba(15, 23, 42, 0.04);
-    border-color: rgba(15, 23, 42, 0.1);
-    color: rgba(15, 23, 42, 0.65);
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    color: #475569;
+    font-weight: 750;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
 
     &.active {
-      background: rgba(245, 158, 11, 0.12);
-      border-color: rgba(245, 158, 11, 0.25);
-      color: #f59e0b;
+      background: #0f172a;
+      border-color: #0f172a;
+      color: #ffffff;
+      font-weight: 850;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
     }
   }
 
   .coach-card {
-    background: rgba(15, 23, 42, 0.03);
-    border-color: rgba(15, 23, 42, 0.08);
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    border-radius: 14px;
   }
 
-  .coach-name, .convo-name { color: #0f172a; }
-  .coach-bio, .convo-last-msg { color: rgba(15, 23, 42, 0.6); }
+  .coach-name, .convo-name { color: #0f172a; font-weight: 800; }
+  .coach-username { color: #64748b; }
+  .coach-bio, .convo-last-msg { color: #64748b; }
+
+  .coach-specialty {
+    background: #f1f5f9;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    color: #475569;
+    font-weight: 750;
+  }
+
+  .coach-rate-amount { color: #0f172a; font-weight: 850; }
+  .coach-rate-label { color: #64748b; }
 
   .coach-btn-view {
-    background: rgba(15, 23, 42, 0.05);
-    border-color: rgba(15, 23, 42, 0.1);
+    background: #f1f5f9;
+    border: 1px solid rgba(15, 23, 42, 0.1);
     color: #0f172a;
+    font-weight: 750;
+    &:hover { background: #e2e8f0; }
+  }
+
+  .coach-btn-message {
+    background: linear-gradient(135deg, #ffd600 0%, #eab308 100%);
+    border: none;
+    color: #000000;
+    font-weight: 850;
+    box-shadow: 0 4px 14px rgba(255, 214, 0, 0.25);
   }
 
   .convo-card {
-    background: rgba(15, 23, 42, 0.03);
-    border-color: rgba(15, 23, 42, 0.08);
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
   }
 
   .empty-state h3 { color: #0f172a; }
 
   // Coach dashboard light-theme overrides
   --text-primary: #0f172a;
-  --text-secondary: rgba(15,23,42,0.7);
-  --text-muted: rgba(15,23,42,0.5);
-  --text-tertiary: rgba(15,23,42,0.35);
-  --accent-lime: #d97706;
-  --accent-border: rgba(217,119,6,0.25);
-  --accent-dim: rgba(217,119,6,0.1);
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-tertiary: #94a3b8;
+  --accent-lime: #ffd600;
+  --accent-border: rgba(255, 214, 0, 0.35);
+  --accent-dim: rgba(255, 214, 0, 0.12);
   --overlay-light: #ffffff;
-  --overlay-medium: #f8f9fa;
-  --border-secondary: rgba(15,23,42,0.09);
-  --border-primary: rgba(15,23,42,0.14);
+  --overlay-medium: #f8fafc;
+  --border-secondary: rgba(15, 23, 42, 0.08);
+  --border-primary: rgba(15, 23, 42, 0.12);
   --bg-secondary: #ffffff;
 
   .cd-card,
@@ -1671,12 +1703,17 @@ select.cd-form-select {
   .cd-session-item,
   .cd-client-item,
   .cd-request-item {
-    box-shadow: 0 2px 10px rgba(15,23,42,0.05);
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.08);
   }
 
-  .cd-tab.is-active { color: #fff; }
+  .cd-tab.is-active {
+    background: #0f172a;
+    color: #ffffff;
+  }
   .cd-session-avatar-dot { border-color: #ffffff; }
-  .cd-empty-state.cd-dashed { border-color: rgba(15,23,42,0.16); }
+  .cd-empty-state.cd-dashed { border-color: rgba(15, 23, 42, 0.16); }
 }
 
 // ── Bottom-sheet modal & backdrop blur ─────────────────────

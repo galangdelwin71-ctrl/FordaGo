@@ -15,6 +15,7 @@ import { HeaderComponent } from '../shared/header/header.component';
 import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.component';
 import { CoachingNavService, CoachingPanelTab } from '../services/coaching-nav.service';
 import { CoachingService } from '../services/coaching.service';
+import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refresh.component';
 import { API_URL } from '../config/api.config';
 
 // ── Interfaces ────────────────────────────────────────────
@@ -55,9 +56,20 @@ export interface EquipmentTutorial {
     IonModal,
     HeaderComponent,
     CoachingPanelComponent,
+    PullToRefreshComponent,
   ],
 })
 export class QrScannerPage implements OnInit, OnDestroy {
+
+  handleRefresh(event: any): void {
+    try {
+      this.loadMyAttendanceLogs();
+    } finally {
+      setTimeout(() => {
+        event?.target?.complete();
+      }, 700);
+    }
+  }
 
   private readonly api = API_URL;
   private readonly scannerRegionId = 'fordago-qr-reader';

@@ -72,24 +72,21 @@
 }
 
 .chat-partner-header {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   min-width: 0;
-  flex: 1;
-  // Button reset -- this is now a <button> (was a <div>) so it's tap-
-  // gable to open the Partner Info modal, since the name next to it
-  // gets clipped with an ellipsis and this is the only way to read a
-  // long name in full without permanently widening the toolbar.
+  flex: 0 1 auto;
+  max-width: calc(100% - 50px);
   background: transparent;
   border: none;
-  padding: 4px 2px;
+  padding: 4px 6px;
   margin: 0;
   font: inherit;
   color: inherit;
   text-align: left;
   cursor: pointer;
-  border-radius: 10px;
+  border-radius: 12px;
   transition: background 0.15s ease;
 
   &:active {
@@ -98,15 +95,15 @@
 
   .partner-header-chevron {
     flex-shrink: 0;
-    font-size: 15px;
-    color: rgba(255, 214, 0, 0.55);
-    margin-left: -2px;
+    font-size: 16px;
+    color: #ffd600;
+    margin-left: 2px;
   }
 
   .chat-partner-avatar {
     position: relative;
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
     border-radius: 12px;
     flex-shrink: 0;
 
@@ -125,7 +122,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
+      font-size: 17px;
     }
 
     .online-indicator {
@@ -141,12 +138,12 @@
   }
 
   .chat-partner-meta {
-    flex: 1;
+    flex: 0 1 auto;
     min-width: 0;
 
     .partner-name {
-      font-size: 14.5px;
-      font-weight: 700;
+      font-size: 15px;
+      font-weight: 800;
       color: #ffffff;
       margin: 0;
       line-height: 1.2;
@@ -158,11 +155,10 @@
     .partner-role-tag {
       display: block;
       font-size: 11px;
+      font-weight: 700;
       color: #ffd600;
-      font-weight: 600;
+      margin-top: 1px;
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
   }
 }
@@ -1392,127 +1388,150 @@
 // ion-modal in this app -- see the comments there).
 :host-context(body.light-theme) {
   .chat-content {
-    --background: #f4f5f8;
+    --background: #f8fafc;
   }
 
   .back-circle-btn {
-    background: rgba(15, 23, 42, 0.05);
-    border-color: rgba(15, 23, 42, 0.12);
+    background: #f1f5f9;
+    border-color: rgba(15, 23, 42, 0.1);
     color: #0f172a;
 
-    &:active { background: rgba(15, 23, 42, 0.1); }
+    &:active { background: #e2e8f0; }
   }
 
   .chat-partner-header {
     &:active { background: rgba(15, 23, 42, 0.05); }
 
-    .partner-header-chevron { color: rgba(217, 119, 6, 0.6); }
+    .partner-header-chevron { color: #eab308; }
 
     .chat-partner-avatar {
-      .avatar-placeholder { background: rgba(15, 23, 42, 0.06); color: #d97706; }
-      .online-indicator { border-color: #f4f5f8; }
+      .avatar-placeholder {
+        background: #f1f5f9;
+        color: #0f172a;
+        border: 1px solid rgba(15, 23, 42, 0.1);
+      }
+      .online-indicator { border-color: #ffffff; }
     }
 
     .chat-partner-meta {
-      .partner-name { color: #0f172a; }
-      .partner-role-tag { color: #d97706; }
+      .partner-name { color: #0f172a; font-weight: 850; font-size: 15px; }
+      .partner-role-tag { color: #64748b; font-weight: 750; font-size: 11px; }
     }
   }
 
   .btn-propose-header {
-    background: rgba(217, 119, 6, 0.1);
-    border-color: rgba(217, 119, 6, 0.3);
-    color: #d97706;
+    background: linear-gradient(135deg, #ffd600 0%, #eab308 100%);
+    border: none;
+    color: #000000;
+    font-weight: 850;
 
-    &:active { background: rgba(217, 119, 6, 0.18); }
+    &:active { opacity: 0.85; }
   }
 
   .loading-state,
-  .empty-chat-state { color: rgba(15, 23, 42, 0.5); }
+  .empty-chat-state { color: #64748b; }
 
   .empty-chat-icon {
-    background: rgba(217, 119, 6, 0.1);
-    color: #d97706;
+    background: #f1f5f9;
+    color: #0f172a;
   }
 
-  .empty-propose-btn { box-shadow: 0 4px 14px rgba(217, 119, 6, 0.25); }
+  .empty-propose-btn {
+    background: linear-gradient(135deg, #ffd600 0%, #eab308 100%);
+    color: #000000;
+    font-weight: 850;
+    box-shadow: 0 4px 14px rgba(255, 214, 0, 0.25);
+  }
 
   .message-row {
-    .msg-avatar-col .msg-avatar-ph { background: rgba(15, 23, 42, 0.06); color: #d97706; }
+    .msg-avatar-col .msg-avatar-ph {
+      background: #f1f5f9;
+      color: #0f172a;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+    }
 
     &:not(.is-mine) .msg-bubble {
       background: #ffffff;
       color: #0f172a;
       border-color: rgba(15, 23, 42, 0.08);
-      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
 
-      .msg-time { color: rgba(15, 23, 42, 0.45); }
+      .msg-time { color: #94a3b8; }
     }
   }
 
   // ── Proposal card bubble (read-only, inside the message list) ──
   .proposal-card-bubble {
-    background: linear-gradient(150deg, #ffffff 0%, #f8f9fa 100%);
+    background: #ffffff;
     border-color: rgba(15, 23, 42, 0.08);
-    border-top-color: rgba(217, 119, 6, 0.5);
-    box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+    border-top-color: #0f172a;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
 
-    .proposal-card-header .proposal-badge { color: #d97706; }
+    .proposal-card-header .proposal-badge { color: #0f172a; font-weight: 850; }
 
     .proposal-meta-strip {
-      background: rgba(15, 23, 42, 0.03);
+      background: #f8fafc;
 
       .meta-item {
-        color: rgba(15, 23, 42, 0.75);
-        ion-icon { color: rgba(15, 23, 42, 0.4); }
+        color: #475569;
+        ion-icon { color: #64748b; }
       }
     }
 
     .proposal-exercises {
-      .ex-list-title { color: rgba(15, 23, 42, 0.5); }
+      .ex-list-title { color: #64748b; font-weight: 750; }
 
       .ex-item-row {
         border-bottom-color: rgba(15, 23, 42, 0.06);
 
-        .ex-number { background: rgba(217, 119, 6, 0.1); color: #d97706; border-color: rgba(217, 119, 6, 0.25); }
-        .ex-info {
-          .ex-name { color: #0f172a; }
-          .ex-desc { color: rgba(15, 23, 42, 0.45); }
+        .ex-number {
+          background: #f1f5f9;
+          color: #0f172a;
+          border-color: rgba(15, 23, 42, 0.12);
+          font-weight: 800;
         }
-        .ex-reps { color: rgba(15, 23, 42, 0.7); background: rgba(15, 23, 42, 0.05); border-color: rgba(15, 23, 42, 0.08); }
+        .ex-info {
+          .ex-name { color: #0f172a; font-weight: 800; }
+          .ex-desc { color: #64748b; }
+        }
+        .ex-reps {
+          color: #475569;
+          background: #f1f5f9;
+          border-color: rgba(15, 23, 42, 0.08);
+          font-weight: 750;
+        }
       }
     }
 
     .proposal-card-actions {
-      .waiting-banner { background: rgba(15, 23, 42, 0.04); color: rgba(15, 23, 42, 0.5); }
+      .waiting-banner { background: #f8fafc; color: #64748b; }
     }
 
-    .proposal-meta .msg-time { color: rgba(15, 23, 42, 0.35); }
+    .proposal-meta .msg-time { color: #94a3b8; }
   }
 
   // ── Chat input footer ──
   .chat-footer {
-    // See the default-rule comment above -- literal `background`, not
-    // `--background`, is what actually paints this element.
     background: rgba(255, 255, 255, 0.97);
     border-top-color: rgba(15, 23, 42, 0.08);
   }
 
   .chat-input-bar {
     .chat-action-btn {
-      background: rgba(217, 119, 6, 0.1);
-      border-color: rgba(217, 119, 6, 0.3);
-      color: #d97706;
-      &:active { background: rgba(217, 119, 6, 0.18); }
+      background: #ffd600;
+      border: none;
+      color: #000000;
+      font-weight: 850;
+      &:active { opacity: 0.85; }
     }
 
     .chat-text-input {
-      background: rgba(15, 23, 42, 0.05);
-      border-color: rgba(15, 23, 42, 0.12);
+      background: #f8fafc;
+      border-color: rgba(15, 23, 42, 0.1);
       color: #0f172a;
 
-      &::placeholder { color: rgba(15, 23, 42, 0.35); }
-      &:focus { border-color: rgba(217, 119, 6, 0.45); background: rgba(15, 23, 42, 0.07); }
+      &::placeholder { color: #94a3b8; }
+      &:focus { border-color: #0f172a; background: #ffffff; }
     }
   }
 }

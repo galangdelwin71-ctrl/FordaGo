@@ -85,6 +85,8 @@ export interface AdminReportsCache {
   };
 }
 
+import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refresh.component';
+
 @Component({
   selector: 'app-admin-reports',
   templateUrl: './admin-reports.page.html',
@@ -99,10 +101,21 @@ export interface AdminReportsCache {
     IonContent,
     IonSpinner,
     IonIcon,
+    PullToRefreshComponent,
   ],
   providers: [DecimalPipe, DatePipe],
 })
 export class AdminReportsPage implements OnInit {
+  handleRefresh(event: any): void {
+    try {
+      this.load();
+    } finally {
+      setTimeout(() => {
+        event?.target?.complete?.();
+      }, 700);
+    }
+  }
+
   private api = API_URL;
 
   // ── Local-First Stale-While-Revalidate In-Memory & Storage Cache ──

@@ -35,6 +35,16 @@
             <div class="notif-header-actions">
               <button
                 type="button"
+                class="notif-icon-btn notif-refresh-btn"
+                [class.spinning]="isRefreshing"
+                [disabled]="isRefreshing"
+                (click)="refresh()"
+                title="Refresh notifications"
+                aria-label="Refresh notifications">
+                <ion-icon name="refresh-outline"></ion-icon>
+              </button>
+              <button
+                type="button"
                 class="notif-icon-btn notif-markread-btn"
                 *ngIf="unreadCount > 0"
                 (click)="markAllRead()"

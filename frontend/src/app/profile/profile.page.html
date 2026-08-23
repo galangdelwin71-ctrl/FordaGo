@@ -24,6 +24,7 @@
 </app-coaching-panel>
 
 <ion-content *ngIf="!coachingPanelOpen" [fullscreen]="false" class="fordago-page-content" [scrollY]="true">
+  <app-pull-to-refresh (refresh)="handleRefresh($event)"></app-pull-to-refresh>
   <div class="content-inner">
 
     <!-- Profile Hero Section -->
@@ -381,37 +382,98 @@
   </ng-template>
 </ion-modal>
 
-<!-- Renewal Modal -->
+<!-- Renewal & Upgrade Modal -->
 <ion-modal
   [isOpen]="renewalModalOpen"
   (didDismiss)="closeRenewal()"
-  [breakpoints]="[0, 0.55, 0.75]"
-  [initialBreakpoint]="0.55">
+  [breakpoints]="[0, 0.75, 0.92]"
+  [initialBreakpoint]="0.75">
   <ng-template>
-    <ion-content class="ion-padding modal-content">
+    <ion-content class="ion-padding modal-content membership-modal-content">
       <div class="modal-handle"></div>
-      <div class="modal-title">Renew Membership</div>
+      <div class="modal-title">
+        <ion-icon name="sparkles-outline"></ion-icon>
+        {{ profile.membershipPlan === 'Premium' ? 'Renew Premium Pass' : 'Upgrade to Premium Pass' }}
+      </div>
+      <p class="modal-subtitle">
+        {{ profile.membershipPlan === 'Premium' ? 'Extend your unlimited access and full training benefits for another 30 days.' : 'Upgrade your Daily Pass to get full 30-day unlimited gym access and coach messaging.' }}
+      </p>
 
-      <div class="renewal-info">
-        <div class="renewal-item">
-          <span class="renewal-label">Current Plan</span>
-          <span class="renewal-value">{{ profile.membershipPlan }}</span>
+      <!-- Current Plan Status Card -->
+      <div class="current-plan-card">
+        <div class="current-plan-header">
+          <span class="current-plan-tag">Current Account</span>
+          <span class="current-plan-name">{{ profile.membershipPlan }}</span>
         </div>
-        <div class="renewal-item">
-          <span class="renewal-label">Current Expiry</span>
-          <span class="renewal-value">{{ profile.expiryDate }}</span>
-        </div>
-        <div class="renewal-item">
-          <span class="renewal-label">Renewal Price</span>
-          <span class="renewal-value price">₱2,999</span>
+        <div class="current-plan-validity">
+          <ion-icon name="time-outline"></ion-icon>
+          <span>{{ profile.membershipPlan === 'Premium' ? 'Valid until ' + profile.expiryDate : 'Pay per visit (₱40 / session)' }}</span>
         </div>
       </div>
 
+      <!-- Premium Plan Card -->
+      <div class="plan-single-card">
+        <div class="plan-single-badge">Premium Pass</div>
+        <div class="plan-single-header">
+          <div>
+            <h4 class="plan-single-title">Unlimited 30-Day Access</h4>
+            <span class="plan-single-sub">Full access to gym equipment &amp; coach tools</span>
+          </div>
+          <div class="plan-single-price">
+            <span class="price-val">₱500</span>
+            <span class="price-unit">/ 30 days</span>
+          </div>
+        </div>
+
+        <div class="plan-single-perks">
+          <div class="perk-row">
+            <ion-icon name="checkmark-circle"></ion-icon>
+            <span>Unlimited daily gym workouts for 30 days</span>
+          </div>
+          <div class="perk-row">
+            <ion-icon name="checkmark-circle"></ion-icon>
+            <span>Direct coach messaging &amp; training feedback</span>
+          </div>
+          <div class="perk-row">
+            <ion-icon name="checkmark-circle"></ion-icon>
+            <span>Custom workout schedule &amp; routine synchronization</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Method Selection -->
+      <div class="payment-method-wrap">
+        <div class="payment-method-title">Select Payment Method</div>
+        <div class="payment-method-grid">
+          <div
+            class="pay-method-card"
+            [class.is-selected]="selectedPaymentMethod === 'gcash'"
+            (click)="selectedPaymentMethod = 'gcash'">
+            <ion-icon name="phone-portrait-outline"></ion-icon>
+            <span>GCash</span>
+          </div>
+          <div
+            class="pay-method-card"
+            [class.is-selected]="selectedPaymentMethod === 'cash'"
+            (click)="selectedPaymentMethod = 'cash'">
+            <ion-icon name="cash-outline"></ion-icon>
+            <span>Cash at Counter</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
       <div class="modal-actions">
-        <button class="modal-save-btn" (click)="processRenewal()">
-          Proceed to Payment
+        <button
+          class="modal-save-btn btn-confirm-membership"
+          [disabled]="isProcessingRenewal"
+          (click)="processRenewal()">
+          <ion-spinner *ngIf="isProcessingRenewal" name="dots"></ion-spinner>
+          <span *ngIf="!isProcessingRenewal">
+            {{ profile.membershipPlan === 'Premium' ? 'Confirm Renewal (₱500)' : 'Confirm Upgrade (₱500)' }}
+          </span>
         </button>
-        <button class="modal-cancel-btn" (click)="closeRenewal()">
+        <button class="modal-cancel-btn" (click)="closeRenewal()" [disabled]="isProcessingRenewal">
           Cancel
         </button>
       </div>

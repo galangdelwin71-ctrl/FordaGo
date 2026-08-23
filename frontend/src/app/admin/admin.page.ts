@@ -12,6 +12,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { API_URL } from '../config/api.config';
 import { CoachingService } from '../services/coaching.service';
+import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refresh.component';
 
 @Component({
   selector: 'app-admin',
@@ -19,9 +20,18 @@ import { CoachingService } from '../services/coaching.service';
   styleUrls: ['./admin.page.scss'],
   standalone: true,
   host: { class: 'ion-page fordago-page' },
-  imports: [IonHeader, IonToolbar, IonContent, IonIcon, IonSpinner, CommonModule, FormsModule, NoNegativeDirective],
+  imports: [IonHeader, IonToolbar, IonContent, IonIcon, IonSpinner, CommonModule, FormsModule, NoNegativeDirective, PullToRefreshComponent],
 })
 export class AdminPage implements OnInit, OnDestroy {
+  handleRefresh(event: any): void {
+    try {
+      this.loadAll();
+    } finally {
+      setTimeout(() => {
+        event?.target?.complete?.();
+      }, 700);
+    }
+  }
   private readonly maxProductImageDimension = 1200;
   private readonly productImageQuality = 0.82;
   private readonly maxProductImagePayloadLength = 8_000_000;

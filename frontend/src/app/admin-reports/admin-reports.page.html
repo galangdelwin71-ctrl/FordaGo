@@ -28,6 +28,7 @@
 </ion-header>
 
 <ion-content [fullscreen]="false" class="reports-content">
+  <app-pull-to-refresh (refresh)="handleRefresh($event)"></app-pull-to-refresh>
   <div class="content-inner">
 
     <!-- ── Top Tab Switcher ────────────────────────── -->

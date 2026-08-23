@@ -51,6 +51,7 @@ export class NotificationPanelComponent implements OnInit, OnDestroy, OnChanges 
   notifications: AppNotificationItem[] = [];
   view: 'list' | 'detail' = 'list';
   selectedNotification: AppNotificationItem | null = null;
+  isRefreshing = false;
 
   // Subscribes to NotificationCenterService's single shared poll/publish
   // stream instead of running its own setInterval + loadNotifications()
@@ -147,6 +148,18 @@ export class NotificationPanelComponent implements OnInit, OnDestroy, OnChanges 
 
   close(): void {
     this.closed.emit();
+  }
+
+  async refresh(): Promise<void> {
+    if (this.isRefreshing) return;
+    this.isRefreshing = true;
+    try {
+      await this.notificationCenter.refreshNotifications();
+    } finally {
+      setTimeout(() => {
+        this.isRefreshing = false;
+      }, 500);
+    }
   }
 
   // NotificationCenterService.markAllRead()/markRead() now publish the

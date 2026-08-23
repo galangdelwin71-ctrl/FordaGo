@@ -26,6 +26,7 @@
 </app-coaching-panel>
 
 <ion-content *ngIf="!coachingPanelOpen" [fullscreen]="false" class="fordago-page-content" [scrollY]="true">
+  <app-pull-to-refresh (refresh)="handleRefresh($event)"></app-pull-to-refresh>
   <div class="content-inner">
 
     <!-- Greeting -->

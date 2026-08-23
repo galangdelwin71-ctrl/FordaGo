@@ -251,6 +251,10 @@ class AuthController extends Controller
 
         RateLimiter::clear($attemptKey);
 
+        // Check if premium membership expired and revert to daily if needed
+        $user->checkAndExpireMembership();
+        $user->refresh();
+
         $token = $user->createToken('api')->plainTextToken;
 
         return response()->json([

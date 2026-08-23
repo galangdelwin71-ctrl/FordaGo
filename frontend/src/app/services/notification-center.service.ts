@@ -124,10 +124,10 @@ export class NotificationCenterService {
     // WebSocket real-time listener
     this.listenWebSocket();
 
-    // 5-minute HTTP fallback (was 15s) — only for catch-up after disconnects
+    // Fast 8-second HTTP poll fallback to ensure fast notification delivery
     this.pollTimer = setInterval(() => {
       void this.refreshNotifications();
-    }, 5 * 60 * 1000);
+    }, 8 * 1000);
   }
 
   /**

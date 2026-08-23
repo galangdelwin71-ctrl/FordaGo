@@ -68,15 +68,72 @@ class UserController extends Controller
             return response()->json(['message' => 'User not found'], 404);
         }
 
-        // Same flag AuthController::login() returns, exposed here too so an
-        // existing session (token already issued before this field existed,
-        // or the app's own periodic /users/me refresh) picks up coach status
-        // without forcing a re-login. See AuthController::login() for why
-        // this can't just be $user->role — coach accounts keep role='user'.
+        // Check if premium membership has expired and revert to daily if needed
+        $user->checkAndExpireMembership();
+
+        // Reload fresh user state
+        $user = User::select([
+            'id', 'username', 'first_name', 'last_name', 'email', 'role',
+            'phone', 'gender', 'profile_image', 'membership_type',
+            'membership_status', 'payment_method', 'membership_expiry',
+        ])->find($request->user()->id);
+
         $payload = $user->toArray();
         $payload['has_coach_profile'] = $user->isCoach();
 
         return response()->json($payload);
+    }
+
+    /**
+     * POST /api/users/membership/renew
+     * Submit renewal or upgrade request for Premium Pass (₱500) requiring admin/employee verification.
+     */
+    public function renewOrUpgradeMembership(Request $request)
+    {
+        $user = User::find($request->user()->id);
+        if (! $user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        $paymentMethod = $request->input('payment_method') === 'cash' ? 'cash' : 'gcash';
+
+        // Set request to pending verification for admin/employee to confirm at counter
+        $user->membership_type   = 'premium';
+        $user->membership_status = 'pending';
+        $user->payment_method    = $paymentMethod;
+        $user->save();
+
+        // 1. Notify all staff/admin members
+        try {
+            $staffList = User::whereIn('role', ['admin', 'super_admin', 'employee'])->get();
+            foreach ($staffList as $staff) {
+                Notification::create([
+                    'user_id' => $staff->id,
+                    'title'   => 'Membership Payment Verification Needed',
+                    'message' => "Si {$user->first_name} {$user->last_name} (@{$user->username}) ay nag-submit ng Premium Pass request via " . strtoupper($paymentMethod) . " (₱500). Paki-verify ang payment sa counter.",
+                    'is_read' => false,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('Failed to notify staff: ' . $e->getMessage());
+        }
+
+        // 2. Notify the requesting user
+        try {
+            Notification::create([
+                'user_id' => $user->id,
+                'title'   => 'Renewal Request Pending',
+                'message' => "Na-submit na ang iyong Premium Pass request (₱500 via " . strtoupper($paymentMethod) . "). Paki-punta sa gym counter o ipakita ang iyong GCash reference sa staff para ma-verify at ma-activate ang iyong account.",
+                'is_read' => false,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::warning('Failed to notify user: ' . $e->getMessage());
+        }
+
+        return response()->json([
+            'message' => 'Renewal request submitted! Please proceed to the gym counter for staff payment verification.',
+            'user'    => $user,
+        ]);
     }
 
     /**

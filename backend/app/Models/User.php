@@ -109,4 +109,34 @@ class User extends Authenticatable
     {
         return $this->hasMany(CoachProgram::class, 'coach_id');
     }
+
+    /**
+     * Check if user's premium membership has expired.
+     * If expired, revert to daily pass and send notification.
+     */
+    public function checkAndExpireMembership(): bool
+    {
+        if ($this->membership_type === 'premium' && $this->membership_expiry) {
+            $expiry = \Carbon\Carbon::parse($this->membership_expiry)->endOfDay();
+            if (now()->gt($expiry)) {
+                $this->membership_type = 'daily';
+                $this->membership_expiry = null;
+                $this->save();
+
+                try {
+                    Notification::create([
+                        'user_id' => $this->id,
+                        'title'   => 'Premium Membership Expired',
+                        'message' => 'Nawala na ang iyong Premium Pass dahil natapos na ang validity period nito. Ang iyong account ay naka-set na ngayon bilang Daily Pass (₱40/session). Maaari kang mag-upgrade ulit anumang oras.',
+                        'is_read' => false,
+                    ]);
+                } catch (\Throwable $e) {
+                    \Log::warning('Failed to send expiry notification: ' . $e->getMessage());
+                }
+
+                return true;
+            }
+        }
+        return false;
+    }
 }

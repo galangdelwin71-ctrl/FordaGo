@@ -16,6 +16,7 @@ import { NotificationPanelComponent } from '../shared/notification-panel/notific
 import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.component';
 import { CoachingNavService, CoachingPanelTab } from '../services/coaching-nav.service';
 import { CoachingService } from '../services/coaching.service';
+import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refresh.component';
 import { API_URL } from '../config/api.config';
 import { getCachedData, setCachedData } from '../utils/local-cache.util';
 import { CACHE_KEYS } from '../utils/cache-keys';
@@ -52,9 +53,20 @@ export interface EquipmentItem {
     HeaderComponent,
     NotificationPanelComponent,
     CoachingPanelComponent,
+    PullToRefreshComponent,
   ],
 })
 export class EquipmentPage implements OnInit {
+
+  handleRefresh(event: any): void {
+    try {
+      this.loadEquipment();
+    } finally {
+      setTimeout(() => {
+        event?.target?.complete();
+      }, 700);
+    }
+  }
 
   // ── Search & Filter ──────────────────────────────────
   searchQuery    = '';

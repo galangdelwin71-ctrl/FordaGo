@@ -36,6 +36,7 @@
 </div>
 
 <ion-content *ngIf="!coachingPanelOpen" [fullscreen]="false" class="shop-content fordago-page-content" [scrollY]="true">
+  <app-pull-to-refresh (refresh)="handleRefresh($event)"></app-pull-to-refresh>
   <div class="scroll-wrap">
 
     <!-- Search Bar -->

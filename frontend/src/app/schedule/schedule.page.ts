@@ -23,6 +23,7 @@ import { NotificationPanelComponent } from '../shared/notification-panel/notific
 import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.component';
 import { CoachingNavService, CoachingPanelTab } from '../services/coaching-nav.service';
 import { ExerciseListEditorComponent } from '../shared/exercise-list-editor/exercise-list-editor.component';
+import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refresh.component';
 import { API_URL } from '../config/api.config';
 import { buildExercisesFromTemplate, workoutTypes as sharedWorkoutTypes, getSuggestedTargets as sharedGetSuggestedTargets, getTargetPlaceholder as sharedGetTargetPlaceholder } from '../data/workout-templates';
 import type { WeekPlanTemplateDay, StoredWorkoutSession } from '../services/workout-tracker.service';
@@ -117,9 +118,26 @@ export interface WorkoutHistoryItem {
     NotificationPanelComponent,
     CoachingPanelComponent,
     ExerciseListEditorComponent,
+    PullToRefreshComponent,
   ],
 })
 export class SchedulePage implements OnInit, OnDestroy {
+
+  handleRefresh(event: any): void {
+    try {
+      this.applyUserContext();
+      this.seedWeekSessions();
+      this.seedMonthSessions();
+      this.buildWeekStrip();
+      this.renderSessions();
+      void this.workoutTracker.pullFromServer();
+      void this.notificationCenter.refreshNotifications();
+    } finally {
+      setTimeout(() => {
+        event?.target?.complete();
+      }, 700);
+    }
+  }
 
   private readonly api = API_URL;
   profileImage = '';

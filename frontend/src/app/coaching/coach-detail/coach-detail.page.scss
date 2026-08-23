@@ -253,10 +253,128 @@
 
     &:active {
       transform: scale(0.98);
+      box-shadow: 0 2px 10px rgba(255, 214, 0, 0.2);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
     }
 
     ion-icon {
       font-size: 20px;
     }
+  }
+}
+
+// ── Light Theme Overrides ──────────────────────────────────────
+:host-context(body.light-theme),
+:host-context(html.light-theme) {
+  ion-content {
+    --background: #f8fafc !important;
+  }
+
+  .back-circle-btn {
+    background: #f1f5f9;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    color: #0f172a;
+
+    &:active {
+      background: #e2e8f0;
+    }
+  }
+
+  .loading-state {
+    color: #64748b;
+  }
+
+  .coach-hero-card {
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 6px 24px rgba(15, 23, 42, 0.05);
+
+    &::before {
+      display: none;
+    }
+
+    .hero-avatar-wrap {
+      .hero-avatar-img,
+      .hero-avatar-placeholder {
+        border-color: #0f172a;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
+      }
+
+      .hero-avatar-placeholder {
+        background: #f1f5f9;
+        color: #0f172a;
+      }
+    }
+
+    .hero-name {
+      color: #0f172a;
+      font-weight: 850;
+    }
+
+    .hero-handle {
+      color: #64748b;
+    }
+
+    .hero-pills {
+      .hero-pill.specialty {
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid rgba(15, 23, 42, 0.1);
+      }
+
+      .hero-pill.rate {
+        background: rgba(5, 150, 105, 0.1);
+        color: #059669;
+        border: 1px solid rgba(5, 150, 105, 0.25);
+      }
+    }
+  }
+
+  .section-box {
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+
+    .section-title {
+      color: #0f172a;
+      font-weight: 850;
+
+      ion-icon {
+        color: #0f172a;
+      }
+    }
+
+    .section-text {
+      color: #475569;
+    }
+  }
+
+  .feature-list {
+    .feature-item {
+      .check-icon {
+        background: rgba(5, 150, 105, 0.12);
+        color: #059669;
+      }
+
+      strong {
+        color: #0f172a;
+        font-weight: 800;
+      }
+
+      p {
+        color: #64748b;
+      }
+    }
+  }
+
+  .cta-bottom-wrap .btn-chat-now {
+    background: linear-gradient(135deg, #ffd600 0%, #eab308 100%);
+    color: #000000;
+    font-weight: 850;
+    box-shadow: 0 6px 20px rgba(255, 214, 0, 0.3);
   }
 }

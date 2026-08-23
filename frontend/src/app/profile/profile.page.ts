@@ -10,6 +10,8 @@ import {
   IonModal,
   IonInput,
   IonToggle,
+  IonSpinner,
+  ToastController,
 } from '@ionic/angular/standalone';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
@@ -22,6 +24,7 @@ import { HeaderComponent } from '../shared/header/header.component';
 import { NotificationPanelComponent } from '../shared/notification-panel/notification-panel.component';
 import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.component';
 import { FeedbackModalComponent } from '../shared/feedback-modal/feedback-modal.component';
+import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refresh.component';
 import { FeedbackService } from '../services/feedback.service';
 import { API_URL } from '../config/api.config';
 
@@ -69,14 +72,26 @@ export interface ProgressHistoryItem {
     IonModal,
     IonInput,
     IonToggle,
+    IonSpinner,
     NoNegativeDirective,
     HeaderComponent,
     NotificationPanelComponent,
     CoachingPanelComponent,
     FeedbackModalComponent,
+    PullToRefreshComponent,
   ],
 })
 export class ProfilePage implements OnInit {
+
+  handleRefresh(event: any): void {
+    try {
+      this.loadProfile();
+    } finally {
+      setTimeout(() => {
+        event?.target?.complete();
+      }, 700);
+    }
+  }
 
   // ── Member Profile ────────────────────────────────────
   profile: MemberProfile = {
@@ -157,7 +172,20 @@ export class ProfilePage implements OnInit {
     private coachingNav: CoachingNavService,
     private feedbackService: FeedbackService,
     private coachingService: CoachingService,
+    private toastCtrl: ToastController,
   ) {}
+
+  private async showMobileToast(message: string, isError = false): Promise<void> {
+    const toast = await this.toastCtrl.create({
+      message,
+      duration: 3500,
+      position: 'top',
+      swipeGesture: 'vertical',
+      icon: isError ? 'alert-circle' : 'checkmark-circle',
+      cssClass: isError ? 'fordago-mobile-toast toast-error' : 'fordago-mobile-toast toast-success',
+    });
+    await toast.present();
+  }
 
   ngOnInit(): void {
     if (!this.auth.user) {
@@ -180,11 +208,12 @@ export class ProfilePage implements OnInit {
   // ── Profile Management ────────────────────────────────
   private loadProfile(): void {
     const user = this.auth.user;
+    if (!user) return;
     const parts = (user.username || '').split(' ');
     const first = String((user as any).first_name || '').trim() || parts[0] || '';
     const last  = String((user as any).last_name || '').trim() || parts.slice(1).join(' ') || '';
 
-    const membershipType = (user as any).membership_type || 'premium';
+    const membershipType = (user as any).membership_type || 'daily';
     const expiryRaw      = (user as any).membership_expiry || null;
 
     let expiryDate = membershipType === 'daily' ? 'Pay per visit' : 'N/A';
@@ -206,6 +235,35 @@ export class ProfilePage implements OnInit {
       expiryDate,
       initials:       this.buildInitials(first, last || first),
     };
+
+    // Also fetch fresh state from server in background
+    this.auth.fetchCurrentUser().subscribe({
+      next: (freshUser) => {
+        if (!freshUser) return;
+        const fParts = (freshUser.username || '').split(' ');
+        const fFirst = String(freshUser.first_name || '').trim() || fParts[0] || '';
+        const fLast  = String(freshUser.last_name || '').trim() || fParts.slice(1).join(' ') || '';
+        const fMemType = freshUser.membership_type || 'daily';
+        let fExpDate = fMemType === 'daily' ? 'Pay per visit' : 'N/A';
+        if (freshUser.membership_expiry) {
+          const fExp = new Date(freshUser.membership_expiry);
+          fExpDate = fExp.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        }
+        this.profile = {
+          ...this.profile,
+          firstName:      fFirst,
+          lastName:       fLast,
+          email:          freshUser.email || '',
+          phone:          this.normalizePhone(freshUser.phone || ''),
+          gender:         freshUser.gender || '',
+          profileImage:   freshUser.profile_image || '',
+          membershipPlan: fMemType === 'premium' ? 'Premium' : 'Daily Pass',
+          expiryDate:     fExpDate,
+          initials:       this.buildInitials(fFirst, fLast || fFirst),
+        };
+      },
+      error: () => {}
+    });
   }
 
   openEdit(): void {
@@ -230,18 +288,18 @@ export class ProfilePage implements OnInit {
     const safePhone = this.normalizePhone(this.editForm.phone || '');
     if (!this.editForm.firstName || !this.editForm.lastName ||
         !this.editForm.email || !safePhone) {
-      alert('Please fill in all fields');
+      void this.showMobileToast('Please fill in all fields', true);
       return;
     }
 
     if (this.phoneInvalid || !this.isValidPhone(safePhone)) {
-      alert('Invalid input: Phone number must contain digits only and be exactly 11 digits long.');
+      void this.showMobileToast('Invalid input: Phone number must contain digits only and be exactly 11 digits long.', true);
       return;
     }
 
     const userId = this.auth.user?.id;
     if (!userId) {
-      alert('Your session has expired. Please log in again.');
+      void this.showMobileToast('Your session has expired. Please log in again.', true);
       return;
     }
 
@@ -263,10 +321,6 @@ export class ProfilePage implements OnInit {
     const headers = { Authorization: `Bearer ${this.auth.token}` };
     this.savingProfile = true;
 
-    // IMPORTANT: local/cached state (this.profile, auth localStorage) is only
-    // updated AFTER the server confirms the save. Updating it optimistically
-    // (old behavior) masked failed saves -- e.g. DB unreachable -- until the
-    // next login silently reverted the change with no explanation.
     this.http.put(`${this.api}/users/${userId}`, payload, { headers }).subscribe({
       next: () => {
         this.savingProfile = false;
@@ -281,6 +335,7 @@ export class ProfilePage implements OnInit {
         };
         this.auth.updateCurrentUser(payload);
         this.closeEdit();
+        void this.showMobileToast('Profile updated successfully!');
       },
       error: (err: any) => {
         this.savingProfile = false;
@@ -288,9 +343,7 @@ export class ProfilePage implements OnInit {
           || (err?.status === 0
             ? 'Cannot reach the server. Please check your connection and try again.'
             : 'Failed to save profile. Please try again.');
-        alert(message);
-        // Modal stays open on failure so the user keeps their edits and can
-        // retry once the connection/server issue is resolved.
+        void this.showMobileToast(message, true);
       },
     });
   }
@@ -317,14 +370,14 @@ export class ProfilePage implements OnInit {
 
     const isAllowedType = ['image/png', 'image/jpeg', 'image/webp'].includes(file.type);
     if (!isAllowedType) {
-      alert('Please select a PNG, JPG, or WEBP image.');
+      void this.showMobileToast('Please select a PNG, JPG, or WEBP image.', true);
       input.value = '';
       return;
     }
 
     const maxBytes = 2 * 1024 * 1024;
     if (file.size > maxBytes) {
-      alert('Image must be 2MB or smaller.');
+      void this.showMobileToast('Image must be 2MB or smaller.', true);
       input.value = '';
       return;
     }
@@ -333,7 +386,7 @@ export class ProfilePage implements OnInit {
     reader.onload = () => {
       const result = String(reader.result || '');
       if (!result.startsWith('data:image/')) {
-        alert('Invalid image file.');
+        void this.showMobileToast('Invalid image file.', true);
         return;
       }
       this.editForm.profileImage = result;
@@ -367,15 +420,15 @@ export class ProfilePage implements OnInit {
 
   savePassword(): void {
     if (!this.passwordForm.current || !this.passwordForm.new || !this.passwordForm.confirm) {
-      alert('Please fill in all password fields');
+      void this.showMobileToast('Please fill in all password fields', true);
       return;
     }
     if (this.passwordForm.new !== this.passwordForm.confirm) {
-      alert('New passwords do not match');
+      void this.showMobileToast('New passwords do not match', true);
       return;
     }
     if (this.passwordForm.new.length < 8) {
-      alert('Password must be at least 8 characters long');
+      void this.showMobileToast('Password must be at least 8 characters long', true);
       return;
     }
     const headers = { Authorization: `Bearer ${this.auth.token}` };
@@ -383,8 +436,11 @@ export class ProfilePage implements OnInit {
       currentPassword: this.passwordForm.current,
       newPassword:     this.passwordForm.new,
     }, { headers }).subscribe({
-      next: () => { alert('Password updated successfully!'); this.closeChangePassword(); },
-      error: (e: any) => alert(e.error?.message || 'Failed to update password'),
+      next: () => {
+        void this.showMobileToast('Password updated successfully!');
+        this.closeChangePassword();
+      },
+      error: (e: any) => void this.showMobileToast(e.error?.message || 'Failed to update password', true),
     });
   }
 
@@ -398,9 +454,8 @@ export class ProfilePage implements OnInit {
   }
 
   saveNotificationSettings(): void {
-    // In a real app, send to API
     console.log('Notification settings saved:', this.notificationSettings);
-    alert('Notification settings saved!');
+    void this.showMobileToast('Notification settings saved!');
     this.closeNotifications();
   }
 
@@ -418,21 +473,46 @@ export class ProfilePage implements OnInit {
     this.progressHistoryModalOpen = false;
   }
 
-  // ── Membership Renewal ────────────────────────────────
+  // ── Membership Renewal & Upgrade ──────────────────────
+  selectedPlan: 'daily' | 'premium' = 'premium';
+  selectedPaymentMethod: 'gcash' | 'cash' = 'gcash';
+  isProcessingRenewal = false;
+
   openRenewal(): void {
+    const isPrem = (this.auth.user as any)?.membership_type === 'premium';
+    this.selectedPlan = isPrem ? 'premium' : 'premium';
+    this.selectedPaymentMethod = 'gcash';
     this.renewalModalOpen = true;
   }
 
   closeRenewal(): void {
+    if (this.isProcessingRenewal) return;
     this.renewalModalOpen = false;
   }
 
   processRenewal(): void {
-    // In a real app, redirect to payment gateway
-    console.log('Renewal process initiated');
-    alert('Redirecting to payment gateway...');
-    // this.router.navigate(['/payment']);
-    this.closeRenewal();
+    if (this.isProcessingRenewal) return;
+    this.isProcessingRenewal = true;
+
+    this.http.post<any>(`${this.api}/users/membership/renew`, {
+      plan: this.selectedPlan,
+      payment_method: this.selectedPaymentMethod,
+    }).subscribe({
+      next: (res) => {
+        this.isProcessingRenewal = false;
+        this.closeRenewal();
+        void this.showMobileToast(res?.message || 'Renewal request submitted! Please verify at the counter.');
+        if (res?.user) {
+          this.auth.updateCurrentUser(res.user);
+        }
+        this.loadProfile();
+      },
+      error: (err) => {
+        this.isProcessingRenewal = false;
+        const msg = err?.error?.message || 'Failed to update membership. Please try again.';
+        void this.showMobileToast(msg, true);
+      }
+    });
   }
 
   // ── Feedback & Support ────────────────────────────────

@@ -16,6 +16,7 @@ import { NotificationPanelComponent } from '../shared/notification-panel/notific
 import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.component';
 import { CoachingNavService, CoachingPanelTab } from '../services/coaching-nav.service';
 import { CoachingService } from '../services/coaching.service';
+import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refresh.component';
 import { addIcons } from 'ionicons';
 import {
   searchOutline,
@@ -42,17 +43,14 @@ export interface Product {
   brand:                 string;
   icon:                  string;
   image_url?:            string;
-  // Stage 6 (Loading Speed Plan): small (~300px) rendition for the grid --
-  // falls back to image_url in normalizeApiProduct() below when a product
-  // has no thumbnail yet (older row not re-saved since the migration).
   thumbnail_url?:        string;
   price:                 number;
   stock:                 number;
   description:           string;
-  serving_size:          number;
-  servings_per_container: number;
-  flavor:                string;
-  benefits:              string[];
+  serving_size?:         number;
+  servings_per_container?: number;
+  flavor?:               string;
+  benefits?:             string[];
 }
 
 export interface Order {
@@ -102,9 +100,21 @@ export interface OrderGroup {
     HeaderComponent,
     NotificationPanelComponent,
     CoachingPanelComponent,
+    PullToRefreshComponent,
   ],
 })
 export class InventoryPage implements OnInit {
+
+  handleRefresh(event: any): void {
+    try {
+      this.loadProducts();
+      this.loadMyOrders();
+    } finally {
+      setTimeout(() => {
+        event?.target?.complete();
+      }, 700);
+    }
+  }
   private readonly fallbackProducts: Product[] = [
     {
       id: 'whey-protein-vanilla',

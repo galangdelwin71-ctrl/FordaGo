@@ -966,3 +966,48 @@ ion-content::part(scroll) {
 
   &:active { background: var(--overlay-medium); }
 }
+
+// ── Light Theme Overrides ──────────────────────────────────────
+:host-context(body.light-theme),
+:host-context(html.light-theme) {
+  ion-content { --background: #f8fafc !important; }
+  .section-label { color: #64748b; font-weight: 750; }
+
+  .mode-card {
+    background: #ffffff;
+    border: 1.5px solid rgba(15, 23, 42, 0.1);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+
+    .mode-icon-wrap {
+      background: #f1f5f9;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      color: #64748b;
+    }
+    .mode-name {
+      color: #64748b;
+      font-weight: 750;
+    }
+
+    &.active {
+      background: #f1f5f9;
+      border: 2.5px solid #0f172a;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.09);
+
+      .mode-icon-wrap {
+        background: #0f172a;
+        border-color: #0f172a;
+        color: #ffffff;
+      }
+      .mode-name {
+        color: #0f172a;
+        font-weight: 850;
+      }
+    }
+  }
+
+  .scanner-wrap {
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.09);
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+  }
+}
