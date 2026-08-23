@@ -107,29 +107,33 @@
 
     <!-- Stats row — each card is now a clickable button -->
     <div class="cd-stats-grid">
-      <button type="button" class="cd-stat-card cd-stat-card--clickable" (click)="openClientsModal()">
-        <ion-icon name="people-outline" class="cd-stat-icon accent-icon"></ion-icon>
+      <button type="button" class="cd-stat-card" (click)="openClientsModal()">
+        <div class="cd-stat-icon-wrap">
+          <ion-icon name="people-outline" class="cd-stat-icon accent-icon"></ion-icon>
+        </div>
         <div class="cd-stat-value">{{ isLoadingStats ? '–' : stats.active_clients }}</div>
         <div class="cd-stat-label">Clients</div>
       </button>
-      <button type="button" class="cd-stat-card cd-stat-card--clickable blue" (click)="openMessagesModal()">
-        <ion-icon name="chatbubble-ellipses-outline" class="cd-stat-icon blue-icon"></ion-icon>
-        <div class="cd-stat-value blue">{{ totalUnreadMessages > 0 ? totalUnreadMessages : conversations.length }}</div>
-        <div class="cd-stat-label">
-          Messages
+      <button type="button" class="cd-stat-card" (click)="openMessagesModal()">
+        <div class="cd-stat-icon-wrap">
+          <ion-icon name="chatbubble-ellipses-outline" class="cd-stat-icon blue-icon"></ion-icon>
           <span class="cd-stat-badge" *ngIf="totalUnreadMessages > 0">{{ totalUnreadMessages }}</span>
         </div>
+        <div class="cd-stat-value blue">{{ totalUnreadMessages > 0 ? totalUnreadMessages : conversations.length }}</div>
+        <div class="cd-stat-label">Messages</div>
       </button>
-      <button type="button" class="cd-stat-card cd-stat-card--clickable amber" (click)="openRequestsModal()">
-        <ion-icon name="mail-unread-outline" class="cd-stat-icon amber-icon"></ion-icon>
-        <div class="cd-stat-value amber">{{ isLoadingStats ? '–' : stats.pending_requests }}</div>
-        <div class="cd-stat-label">
-          Requests
+      <button type="button" class="cd-stat-card" (click)="openRequestsModal()">
+        <div class="cd-stat-icon-wrap">
+          <ion-icon name="mail-unread-outline" class="cd-stat-icon amber-icon"></ion-icon>
           <span class="cd-stat-badge cd-stat-badge--amber" *ngIf="stats.pending_requests > 0">{{ stats.pending_requests }}</span>
         </div>
+        <div class="cd-stat-value amber">{{ isLoadingStats ? '–' : stats.pending_requests }}</div>
+        <div class="cd-stat-label">Requests</div>
       </button>
-      <button type="button" class="cd-stat-card cd-stat-card--clickable green" (click)="openEarningsModal()">
-        <ion-icon name="cash-outline" class="cd-stat-icon green-icon"></ion-icon>
+      <button type="button" class="cd-stat-card" (click)="openEarningsModal()">
+        <div class="cd-stat-icon-wrap">
+          <ion-icon name="cash-outline" class="cd-stat-icon green-icon"></ion-icon>
+        </div>
         <div class="cd-stat-value green">{{ isLoadingStats ? '–' : ('₱' + stats.earnings_this_month) }}</div>
         <div class="cd-stat-label">Earnings</div>
       </button>
