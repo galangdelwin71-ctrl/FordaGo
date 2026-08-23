@@ -91,7 +91,6 @@ export interface OrderGroup {
   templateUrl: './inventory.page.html',
   styleUrls: ['./inventory.page.scss'],
   standalone: true,
-  encapsulation: ViewEncapsulation.None,
   host: { class: 'ion-page fordago-page' },
   imports: [
     CommonModule,
