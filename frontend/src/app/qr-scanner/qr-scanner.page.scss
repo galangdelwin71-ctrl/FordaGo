@@ -620,32 +620,32 @@ ion-content::part(scroll) {
   }
 
   .mode-card {
-    background: #ffffff;
+    background: #f8fafc;
     border: 1.5px solid rgba(15,23,42,0.08);
     box-shadow: 0 2px 8px rgba(15,23,42,0.03);
 
     .mode-icon-wrap {
-      background: #f1f5f9;
-      border-color: rgba(15,23,42,0.08);
-      color: #0f172a;
+      background: #ffffff;
+      border: 1px solid rgba(15,23,42,0.08);
+      color: #64748b;
     }
 
-    .mode-name { color: #64748b; }
+    .mode-name { color: #64748b; font-weight: 700; }
 
     &.active {
-      border-color: #0f172a;
-      background: #0f172a;
-      box-shadow: 0 4px 14px rgba(15,23,42,0.12);
+      background: #ffffff;
+      border: 2px solid #0f172a;
+      box-shadow: 0 4px 14px rgba(15,23,42,0.08);
 
       .mode-icon-wrap {
-        background: rgba(255,255,255,0.15);
-        border-color: transparent;
-        color: #ffd600;
+        background: #f1f5f9;
+        border-color: rgba(15,23,42,0.12);
+        color: #0f172a;
       }
 
       .mode-name {
-        color: #ffffff;
-        font-weight: 800;
+        color: #0f172a;
+        font-weight: 850;
       }
     }
   }
@@ -688,10 +688,10 @@ ion-content::part(scroll) {
     box-shadow: 0 6px 20px rgba(234,179,8,0.28);
 
     &.scanning {
-      background: #0f172a;
-      color: #ffd600;
-      border: 1px solid #0f172a;
-      box-shadow: 0 4px 14px rgba(15,23,42,0.15);
+      background: #f1f5f9;
+      color: #dc2626;
+      border: 1.5px solid rgba(220,38,38,0.3);
+      box-shadow: 0 2px 8px rgba(15,23,42,0.06);
     }
   }
 
@@ -713,10 +713,11 @@ ion-content::part(scroll) {
     color: #64748b;
 
     &.active {
-      background: #0f172a;
-      color: #ffffff;
-      border-color: #0f172a;
-      box-shadow: 0 2px 8px rgba(15,23,42,0.12);
+      background: #ffffff;
+      color: #0f172a;
+      border: 1.5px solid #0f172a;
+      box-shadow: 0 2px 8px rgba(15,23,42,0.06);
+      font-weight: 800;
     }
   }
 
