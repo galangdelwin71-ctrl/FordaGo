@@ -1719,35 +1719,35 @@ ion-modal.overlay-hidden {
   .quick-confirm-title { color: #0f172a; }
   .quick-confirm-sub   { color: rgba(15,23,42,0.55); }
   .quick-confirm-img-wrap {
-    background: #f8fafc;
+    background: #f1f5f9;
     border: 1px solid rgba(15,23,42,0.08);
-    box-shadow: 0 4px 14px rgba(15,23,42,0.05);
+    box-shadow: 0 2px 8px rgba(15,23,42,0.04);
   }
-  .quick-confirm-fallback { color: #a16207; }
+  .quick-confirm-fallback { color: #0f172a; }
 
   // Product detail modal
   .detail-header {
     .detail-name  { color: #0f172a; }
-    .detail-brand { color: #a16207; }
+    .detail-brand { color: #64748b; }
     .detail-img-wrap {
-      background: #f8fafc;
+      background: #f1f5f9;
       border: 1px solid rgba(15,23,42,0.08);
-      box-shadow: 0 4px 14px rgba(15,23,42,0.05);
+      box-shadow: 0 2px 8px rgba(15,23,42,0.04);
     }
-    .detail-emoji { color: #a16207; }
+    .detail-emoji { color: #0f172a; }
   }
 
-  // Info boxes (Price per unit, Stock available - like My Orders grey cards!)
+  // Info boxes (Price per unit, Stock available - grey card + black text)
   .info-box {
-    background: #f8fafc;
+    background: #f1f5f9;
     border-radius: 14px;
     border: 1px solid rgba(15,23,42,0.08);
-    box-shadow: 0 4px 14px rgba(15,23,42,0.04);
+    box-shadow: 0 2px 8px rgba(15,23,42,0.04);
     padding: 12px 14px;
     margin-bottom: 10px;
 
     .box-label {
-      color: rgba(15,23,42,0.5);
+      color: rgba(15,23,42,0.55);
       font-weight: 750;
       letter-spacing: 0.5px;
     }
@@ -1757,41 +1757,41 @@ ion-modal.overlay-hidden {
       font-size: 18px;
 
       &.price {
-        color: #a16207;
+        color: #0f172a;
         font-size: 22px;
       }
     }
   }
 
   .detail-section {
-    .section-title { color: rgba(15,23,42,0.6); }
-    .section-text  { color: rgba(15,23,42,0.7); }
+    .section-title { color: #0f172a; }
+    .section-text  { color: #334155; }
   }
-  .features-list .feature-item { color: rgba(15,23,42,0.7); .feature-icon { color: #a16207; } }
+  .features-list .feature-item { color: #334155; .feature-icon { color: #0f172a; } }
   .specs-grid .spec-row {
-    background: #f8fafc;
+    background: #f1f5f9;
     border-color: rgba(15,23,42,0.08);
-    box-shadow: 0 2px 8px rgba(15,23,42,0.03);
-    .spec-label { color: rgba(15,23,42,0.5); }
+    box-shadow: 0 2px 6px rgba(15,23,42,0.03);
+    .spec-label { color: rgba(15,23,42,0.55); }
     .spec-value { color: #0f172a; }
   }
 
-  // Qty selector (Grey card with shadow)
-  .qty-section .section-title { color: rgba(15,23,42,0.6); }
+  // Qty selector (Grey card + black text)
+  .qty-section .section-title { color: #0f172a; }
   .qty-selector {
-    background: #f8fafc;
+    background: #f1f5f9;
     border-radius: 14px;
     border: 1px solid rgba(15,23,42,0.08);
-    box-shadow: 0 4px 14px rgba(15,23,42,0.04);
+    box-shadow: 0 2px 8px rgba(15,23,42,0.04);
     padding: 10px 14px;
 
     .qty-dec-btn, .qty-inc-btn {
       background: #ffffff;
       color: #0f172a;
       border: 1px solid rgba(15,23,42,0.12);
-      box-shadow: 0 2px 6px rgba(15,23,42,0.05);
+      box-shadow: 0 2px 4px rgba(15,23,42,0.04);
 
-      &:hover { background: #f1f5f9; }
+      &:hover { background: #e2e8f0; }
     }
     .qty-display {
       color: #0f172a;
@@ -1799,12 +1799,12 @@ ion-modal.overlay-hidden {
     }
   }
 
-  // Total & payment (Grey card with shadow like My Orders!)
+  // Total & payment (Grey card + black text)
   .total-box {
-    background: #f8fafc;
+    background: #f1f5f9;
     border-radius: 14px;
     border: 1px solid rgba(15,23,42,0.08);
-    box-shadow: 0 4px 14px rgba(15,23,42,0.04);
+    box-shadow: 0 2px 8px rgba(15,23,42,0.04);
     padding: 12px 14px;
 
     .total-label {
@@ -1812,41 +1812,45 @@ ion-modal.overlay-hidden {
       font-weight: 750;
     }
     .total-price {
-      color: #a16207;
+      color: #0f172a;
       font-weight: 850;
     }
   }
 
-  .payment-section .section-title { color: rgba(15,23,42,0.6); }
+  .cart-total-box .total-price {
+    color: #0f172a;
+  }
+
+  .payment-section .section-title { color: #0f172a; }
   .payment-option {
-    background: #f8fafc;
+    background: #f1f5f9;
     border-radius: 14px;
     border: 1px solid rgba(15,23,42,0.08);
-    box-shadow: 0 4px 14px rgba(15,23,42,0.03);
+    box-shadow: 0 2px 8px rgba(15,23,42,0.03);
 
     .payment-icon { color: #0f172a; }
     .payment-label { color: #0f172a; font-weight: 750; }
     .payment-desc  { color: rgba(15,23,42,0.5); }
-    &:hover { background: #f1f5f9; border-color: rgba(15,23,42,0.12); }
+    &:hover { background: #e2e8f0; border-color: rgba(15,23,42,0.12); }
     &.selected {
       background: #ffffff;
-      border: 2px solid #ca8a04;
-      box-shadow: 0 4px 14px rgba(202,138,4,0.15);
+      border: 2px solid #0f172a;
+      box-shadow: 0 4px 12px rgba(15,23,42,0.1);
 
-      .payment-label { color: #a16207; }
-      .payment-icon { color: #ca8a04; }
+      .payment-label { color: #0f172a; }
+      .payment-icon { color: #0f172a; }
     }
   }
 
   // Cart items
   .cart-item {
-    background: #f8fafc;
+    background: #f1f5f9;
     border: 1px solid rgba(15,23,42,0.08);
     border-radius: 14px;
-    box-shadow: 0 4px 14px rgba(15,23,42,0.04);
+    box-shadow: 0 2px 8px rgba(15,23,42,0.04);
 
     .cart-item-name { color: #0f172a; font-weight: 750; }
-    .cart-item-price { color: #a16207; font-weight: 750; }
+    .cart-item-price { color: #475569; font-weight: 700; }
     .qty-display { color: #0f172a; font-weight: 800; }
     .qty-dec-btn, .qty-inc-btn {
       background: #ffffff;
@@ -1863,25 +1867,28 @@ ion-modal.overlay-hidden {
 
   // Modal action buttons
   .modal-actions { background: #ffffff; border-top-color: rgba(15,23,42,0.08); }
-  .action-btn.cancel { background: rgba(220,38,38,0.08); color: #dc2626; border-color: rgba(220,38,38,0.28); &:hover { background: rgba(220,38,38,0.14); } }
+  .action-btn.cancel { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; &:hover { background: #e2e8f0; } }
+  .action-btn.secondary { background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; &:hover { background: #e2e8f0; } }
 
   // Success modal
   .success-wrap {
     .success-title   { color: #0f172a; }
-    .success-message { color: rgba(15,23,42,0.5); }
+    .success-message { color: rgba(15,23,42,0.55); }
   }
   .order-summary-box {
-    background: rgba(15,23,42,0.04);
-    border-color: rgba(15,23,42,0.09);
-    .summary-label { color: rgba(15,23,42,0.45); }
-    .summary-value { color: #0f172a; &.price { color: #a16207; } }
+    background: #f1f5f9;
+    border-color: rgba(15,23,42,0.08);
+    box-shadow: 0 2px 8px rgba(15,23,42,0.04);
+    .summary-label { color: rgba(15,23,42,0.55); }
+    .summary-value { color: #0f172a; &.price { color: #0f172a; } }
     .summary-divider { background: rgba(15,23,42,0.08); }
   }
   .instruction-box {
-    background: rgba(202,138,4,0.07);
-    border-color: rgba(202,138,4,0.2);
-    .instruction-title { color: #a16207; }
-    .step { color: rgba(15,23,42,0.6); .step-num { background: rgba(15,23,42,0.08); color: #a16207; } }
+    background: #f1f5f9;
+    border-color: rgba(15,23,42,0.08);
+    box-shadow: 0 2px 8px rgba(15,23,42,0.04);
+    .instruction-title { color: #0f172a; }
+    .step { color: #334155; .step-num { background: rgba(15,23,42,0.08); color: #0f172a; } }
   }
 
   // Orders modal

@@ -1,5 +1,5 @@
 // inventory.page.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -91,6 +91,7 @@ export interface OrderGroup {
   templateUrl: './inventory.page.html',
   styleUrls: ['./inventory.page.scss'],
   standalone: true,
+  encapsulation: ViewEncapsulation.None,
   host: { class: 'ion-page fordago-page' },
   imports: [
     CommonModule,
