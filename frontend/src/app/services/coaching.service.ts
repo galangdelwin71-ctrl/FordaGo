@@ -342,6 +342,7 @@ export class CoachingService {
     conversations: Conversation[];
     clients: CoachClientItem[];
     requests: CoachRequestItem[];
+    coaches?: any[]; // returned for member users (not coaches)
   }> {
     return this.http.get<any>(`${this.apiUrl}/coaches/dashboard-full`);
   }

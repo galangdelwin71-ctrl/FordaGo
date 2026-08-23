@@ -83,11 +83,10 @@
          underlying array. -->
     <div class="sessions-list">
       <div
-        *ngFor="let s of displayedSessions; let i = index"
+        *ngFor="let s of displayedSessions; let i = index; trackBy: trackBySession"
         class="session-card"
         [class.missed]="s.status === 'missed'"
-        [class.done]="s.status === 'done'"
-        [style.animation-delay]="(i * 0.07) + 's'">
+        [class.done]="s.status === 'done'">
 
         <!-- Time Column -->
         <div class="time-col">

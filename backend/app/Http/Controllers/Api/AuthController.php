@@ -108,7 +108,14 @@ class AuthController extends Controller
             $email = $this->normalizeEmail($raw);
             return ['type' => 'email', 'email' => $email, 'phone' => '', 'value' => $email];
         }
-        $phone = $this->normalizePhone($raw);
+        $digits = preg_replace('/\D/', '', $raw);
+        if (str_starts_with($digits, '63') && strlen($digits) === 12) {
+            $phone = '0'.substr($digits, 2);
+        } elseif (strlen($digits) === 10 && str_starts_with($digits, '9')) {
+            $phone = '0'.$digits;
+        } else {
+            $phone = $digits;
+        }
         return ['type' => 'phone', 'email' => '', 'phone' => $phone, 'value' => $phone];
     }
 
@@ -121,8 +128,19 @@ class AuthController extends Controller
             return User::where('email', $identifier['email'])->first();
         }
         if ($identifier['type'] === 'phone') {
-            if (! $this->isValidPhone($identifier['phone'])) return null;
-            return User::where('phone', $identifier['phone'])->first();
+            $digits = preg_replace('/\D/', '', $identifier['phone']);
+            $last10 = substr($digits, -10);
+            if (strlen($last10) !== 10) return null;
+            $local = '0'.$last10;
+            $intl  = '+63'.$last10;
+            $rawIntl = '63'.$last10;
+
+            return User::where('phone', $local)
+                ->orWhere('phone', $intl)
+                ->orWhere('phone', $rawIntl)
+                ->orWhere('phone', $digits)
+                ->orWhere('phone', 'like', '%'.$last10)
+                ->first();
         }
         return null;
     }
@@ -437,21 +455,21 @@ class AuthController extends Controller
         RateLimiter::hit($limitKey.':hourly', 3600);
         RateLimiter::hit($limitKey.':cooldown', self::RESET_CODE_RESEND_SECONDS);
 
+        $displayName    = trim(($user->first_name ?? '').' '.($user->last_name ?? '')) ?: ($user->username ?? 'Member');
         $message        = "FordaGO: Your password reset code is {$code}. It expires in 10 minutes. If you didn't request this, ignore this message.";
         $deliveryResult = $channel === 'email'
-            ? MailService::send($destination, 'FordaGO Password Reset Code', $message)
+            ? MailService::sendPasswordResetOtp($destination, $code, $displayName)
             : SmsService::send($destination, $message);
 
         $skippedReason = strtolower((string) ($deliveryResult['skippedReason'] ?? ''));
-        $isConfigIssue = ! ($deliveryResult['sent'] ?? false)
-            && (str_contains($skippedReason, 'not configured') || str_contains($skippedReason, 'missing'));
+        $isSent = (bool) ($deliveryResult['sent'] ?? false);
 
         return response()->json([
-            'sent'              => (bool) ($deliveryResult['sent'] ?? false),
+            'sent'              => $isSent,
             'channel'           => $channel,
             'destinationMasked' => $channel === 'email' ? $this->maskEmail($destination) : $this->maskPhone($destination),
-            'reason'            => ($deliveryResult['sent'] ?? false) ? null : ($deliveryResult['skippedReason'] ?? $deliveryResult['error'] ?? 'Could not send code'),
-            'devCode'           => $isConfigIssue ? $code : null,
+            'reason'            => $isSent ? null : ($deliveryResult['skippedReason'] ?? $deliveryResult['error'] ?? 'Could not send code'),
+            'devCode'           => ! $isSent ? $code : null,
         ]);
     }
 

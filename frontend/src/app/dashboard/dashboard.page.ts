@@ -258,6 +258,22 @@ export class DashboardPage implements OnInit, OnDestroy {
     return this.showAllWorkouts ? sorted : sorted.slice(0, 1);
   }
 
+  trackByWorkout(index: number, item: TodayWorkout): string {
+    return item.sessionId || item.name || String(index);
+  }
+
+  trackByExercise(index: number, item: any): string {
+    return item.name || String(index);
+  }
+
+  trackByIndex(index: number): number {
+    return index;
+  }
+
+  trackByPr(index: number, pr: any): string {
+    return pr.id || pr.exercise || String(index);
+  }
+
   // Tap an exercise item to mark it done/undone and persist immediately.
   // Takes the workout object itself (not an index into todayWorkouts) —
   // the template iterates displayedTodayWorkouts, a sorted/sliced VIEW of

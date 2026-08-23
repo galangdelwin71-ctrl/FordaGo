@@ -253,6 +253,18 @@ export class SchedulePage implements OnInit, OnDestroy {
     return this.sessions.indexOf(session);
   }
 
+  trackBySession(index: number, item: WorkoutSession): string {
+    return item.id || `${item.title}_${item.timeVal}_${item.timeAmpm}_${index}`;
+  }
+
+  trackByExercise(index: number, ex: any): string {
+    return ex.name || String(index);
+  }
+
+  trackByIndex(index: number): number {
+    return index;
+  }
+
   // ── Add modal ─────────────────────────────────────────────
   addModalOpen             = false;
   newWorkoutType           = 'Upper Body';

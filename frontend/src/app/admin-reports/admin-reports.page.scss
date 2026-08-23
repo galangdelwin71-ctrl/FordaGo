@@ -40,6 +40,10 @@
 
 :host ion-header {
   background: #FFFFFF;
+  padding-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  padding-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
+  padding-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
+  border-bottom: 1px solid var(--border-color);
 }
 
 ion-content.reports-content {
@@ -50,7 +54,10 @@ ion-content.reports-content {
 .reports-toolbar {
   --background: #FFFFFF;
   --border-color: transparent;
-  border-bottom: 1px solid var(--border-color);
+  --border-width: 0;
+  --min-height: 56px;
+  min-height: 56px;
+  border-bottom: none;
   padding: 6px 12px;
 }
 

@@ -281,61 +281,59 @@
           </div>
         </div>
 
-        <div class="two-col responsive-columns">
-          <div class="field">
-            <label class="field-lbl" for="reg-password">Password</label>
-            <div class="input-shell password-shell">
-              <ion-icon name="lock-closed-outline" aria-hidden="true"></ion-icon>
-              <input
-                id="reg-password"
-                class="field-input"
-                [type]="showRegisterPassword ? 'text' : 'password'"
-                [(ngModel)]="reg.password"
-                placeholder="Create password"
-                autocomplete="new-password"
-                autocapitalize="off"
-                spellcheck="false"
-              />
-              <button
-                type="button"
-                class="icon-btn password-toggle"
-                (click)="toggleRegisterPassword()"
-                [attr.aria-label]="showRegisterPassword ? 'Hide password' : 'Show password'"
-              >
-                <ion-icon
-                  [name]="showRegisterPassword ? 'eye-off-outline' : 'eye-outline'"
-                  aria-hidden="true"
-                ></ion-icon>
-              </button>
-            </div>
+        <div class="field">
+          <label class="field-lbl" for="reg-password">Password</label>
+          <div class="input-shell password-shell">
+            <ion-icon name="lock-closed-outline" aria-hidden="true"></ion-icon>
+            <input
+              id="reg-password"
+              class="field-input"
+              [type]="showRegisterPassword ? 'text' : 'password'"
+              [(ngModel)]="reg.password"
+              placeholder="Create password"
+              autocomplete="new-password"
+              autocapitalize="off"
+              spellcheck="false"
+            />
+            <button
+              type="button"
+              class="icon-btn password-toggle"
+              (click)="toggleRegisterPassword()"
+              [attr.aria-label]="showRegisterPassword ? 'Hide password' : 'Show password'"
+            >
+              <ion-icon
+                [name]="showRegisterPassword ? 'eye-off-outline' : 'eye-outline'"
+                aria-hidden="true"
+              ></ion-icon>
+            </button>
           </div>
+        </div>
 
-          <div class="field">
-            <label class="field-lbl" for="reg-confirm">Confirm Password</label>
-            <div class="input-shell password-shell">
-              <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
-              <input
-                id="reg-confirm"
-                class="field-input"
-                [type]="showRegisterConfirm ? 'text' : 'password'"
-                [(ngModel)]="reg.confirm"
-                placeholder="Repeat password"
-                autocomplete="new-password"
-                autocapitalize="off"
-                spellcheck="false"
-              />
-              <button
-                type="button"
-                class="icon-btn password-toggle"
-                (click)="toggleRegisterConfirm()"
-                [attr.aria-label]="showRegisterConfirm ? 'Hide password confirmation' : 'Show password confirmation'"
-              >
-                <ion-icon
-                  [name]="showRegisterConfirm ? 'eye-off-outline' : 'eye-outline'"
-                  aria-hidden="true"
-                ></ion-icon>
-              </button>
-            </div>
+        <div class="field">
+          <label class="field-lbl" for="reg-confirm">Confirm Password</label>
+          <div class="input-shell password-shell">
+            <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
+            <input
+              id="reg-confirm"
+              class="field-input"
+              [type]="showRegisterConfirm ? 'text' : 'password'"
+              [(ngModel)]="reg.confirm"
+              placeholder="Repeat password"
+              autocomplete="new-password"
+              autocapitalize="off"
+              spellcheck="false"
+            />
+            <button
+              type="button"
+              class="icon-btn password-toggle"
+              (click)="toggleRegisterConfirm()"
+              [attr.aria-label]="showRegisterConfirm ? 'Hide password confirmation' : 'Show password confirmation'"
+            >
+              <ion-icon
+                [name]="showRegisterConfirm ? 'eye-off-outline' : 'eye-outline'"
+                aria-hidden="true"
+              ></ion-icon>
+            </button>
           </div>
         </div>
 
@@ -614,24 +612,39 @@
 
       <!-- FORGOT PASSWORD -->
       <section *ngIf="segment === 'forgot'" class="view-panel forgot-panel">
-        <button
-          type="button"
-          class="auth-back-btn"
-          (click)="goToLogin()"
-          aria-label="Back to sign in"
-        >
-          <ion-icon name="chevron-back-outline" aria-hidden="true"></ion-icon>
-        </button>
 
-        <!-- Forgot step 1 -->
+        <!-- Top navigation bar with Back and Step indicator -->
+        <div class="forgot-top-bar" *ngIf="fpStep < 5">
+          <button
+            type="button"
+            class="auth-back-btn"
+            (click)="fpStep === 1 ? goToLogin() : fpStep = (fpStep === 3 ? 2 : (fpStep === 4 ? 3 : 1))"
+            [attr.aria-label]="fpStep === 1 ? 'Back to sign in' : 'Previous step'"
+          >
+            <ion-icon name="chevron-back-outline" aria-hidden="true"></ion-icon>
+          </button>
+
+          <div class="forgot-step-indicator">
+            <span class="step-badge">Step {{ fpStep }} of 4</span>
+            <div class="step-progress-track">
+              <div class="step-progress-fill" [style.width.%]="(fpStep / 4) * 100"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═════════════════════════════════════════════════════════════ -->
+        <!-- STEP 1: Account Identifier Lookup                           -->
+        <!-- ═════════════════════════════════════════════════════════════ -->
         <div *ngIf="fpStep === 1" class="subview-panel">
-          <span class="feature-icon">
-            <ion-icon name="key-outline" aria-hidden="true"></ion-icon>
-          </span>
+          <div class="feature-icon-wrapper">
+            <span class="feature-icon">
+              <ion-icon name="key-outline" aria-hidden="true"></ion-icon>
+            </span>
+          </div>
 
           <header class="panel-heading centered-heading">
-            <h2>Reset Password</h2>
-            <p>Enter the email or phone number linked to your account.</p>
+            <h2>Find Your Account</h2>
+            <p>Enter the email address or phone number associated with your FordaGO account to receive an OTP.</p>
           </header>
 
           <div class="field">
@@ -643,7 +656,8 @@
                 class="field-input"
                 type="text"
                 [(ngModel)]="fpIdentifier"
-                placeholder="Email or 11-digit phone number"
+                placeholder="e.g. name@gmail.com or 09171234567"
+                autocomplete="username"
                 (keydown.enter)="fpLookupEmail()"
               />
             </div>
@@ -657,49 +671,87 @@
           <button
             class="submit-btn"
             type="button"
-            [disabled]="fpLoading"
+            [disabled]="fpLoading || !fpIdentifier.trim()"
             [class.is-loading]="fpLoading"
             (click)="fpLookupEmail()"
           >
             <ion-spinner *ngIf="fpLoading" name="crescent"></ion-spinner>
-            <span>{{ fpLoading ? 'Searching' : 'Continue' }}</span>
+            <span>{{ fpLoading ? 'Searching Account...' : 'Continue' }}</span>
             <ion-icon *ngIf="!fpLoading" name="arrow-forward-outline" aria-hidden="true"></ion-icon>
+          </button>
+
+          <button type="button" class="bottom-text-link" (click)="goToLogin()">
+            Remember your password? <strong>Sign In</strong>
           </button>
         </div>
 
-        <!-- Forgot step 2 -->
+        <!-- ═════════════════════════════════════════════════════════════ -->
+        <!-- STEP 2: Choose Delivery Method (Email vs SMS)               -->
+        <!-- ═════════════════════════════════════════════════════════════ -->
         <div *ngIf="fpStep === 2" class="subview-panel">
+          <div class="feature-icon-wrapper">
+            <span class="feature-icon">
+              <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
+            </span>
+          </div>
+
           <header class="panel-heading centered-heading">
-            <h2>Choose Delivery</h2>
-            <p>Select where you want to receive your verification code.</p>
+            <h2>Select OTP Destination</h2>
+            <p>Where would you like us to send your 6-digit one-time password?</p>
           </header>
 
-          <div class="payment-options channel-options">
+          <div class="delivery-channel-list">
+            <!-- Email Channel Card -->
             <button
               type="button"
-              class="pay-opt"
-              [class.active]="fpChannel === 'email'"
+              class="channel-card"
+              [class.selected]="fpChannel === 'email'"
               (click)="fpChooseChannel('email')"
             >
-              <ion-icon name="mail-outline" aria-hidden="true"></ion-icon>
-              <span>{{ fpEmailMasked }}</span>
+              <span class="channel-icon">
+                <ion-icon name="mail-outline" aria-hidden="true"></ion-icon>
+              </span>
+              <div class="channel-info">
+                <div class="channel-title-row">
+                  <strong class="channel-title">Email OTP</strong>
+                  <span class="channel-badge" *ngIf="fpChannel === 'email'">Selected</span>
+                </div>
+                <span class="channel-dest">{{ fpEmailMasked || 'Registered Email' }}</span>
+                <span class="channel-desc">Receive code in your email inbox</span>
+              </div>
+              <div class="channel-radio">
+                <div class="radio-dot"></div>
+              </div>
             </button>
 
+            <!-- SMS Channel Card -->
             <button
               type="button"
-              class="pay-opt"
+              class="channel-card"
               *ngIf="fpHasPhone"
-              [class.active]="fpChannel === 'sms'"
+              [class.selected]="fpChannel === 'sms'"
               (click)="fpChooseChannel('sms')"
             >
-              <ion-icon name="chatbubble-ellipses-outline" aria-hidden="true"></ion-icon>
-              <span>{{ fpPhoneMasked }}</span>
+              <span class="channel-icon">
+                <ion-icon name="chatbubble-ellipses-outline" aria-hidden="true"></ion-icon>
+              </span>
+              <div class="channel-info">
+                <div class="channel-title-row">
+                  <strong class="channel-title">SMS / Mobile OTP</strong>
+                  <span class="channel-badge" *ngIf="fpChannel === 'sms'">Selected</span>
+                </div>
+                <span class="channel-dest">{{ fpPhoneMasked || 'Registered Phone' }}</span>
+                <span class="channel-desc">Receive code via text message</span>
+              </div>
+              <div class="channel-radio">
+                <div class="radio-dot"></div>
+              </div>
             </button>
           </div>
 
           <div class="hint-msg" *ngIf="!fpHasPhone">
             <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
-            <span>No phone number is saved. The verification code will be sent by email.</span>
+            <span>No mobile number is linked to this account. The OTP will be delivered to your registered email.</span>
           </div>
 
           <div class="err-msg" *ngIf="fpError" role="alert">
@@ -716,45 +768,62 @@
             <button
               type="button"
               class="submit-btn flex-1"
-              [disabled]="fpLoading"
+              [disabled]="fpLoading || !fpChannel"
               [class.is-loading]="fpLoading"
               (click)="fpSendCode()"
             >
               <ion-spinner *ngIf="fpLoading" name="crescent"></ion-spinner>
-              <span>{{ fpLoading ? 'Sending' : 'Send Code' }}</span>
+              <span>{{ fpLoading ? 'Sending OTP...' : 'Send OTP Code' }}</span>
               <ion-icon *ngIf="!fpLoading" name="send-outline" aria-hidden="true"></ion-icon>
             </button>
           </div>
         </div>
 
-        <!-- Forgot step 3 -->
+        <!-- ═════════════════════════════════════════════════════════════ -->
+        <!-- STEP 3: Enter 6-Digit OTP Code                              -->
+        <!-- ═════════════════════════════════════════════════════════════ -->
         <div *ngIf="fpStep === 3" class="subview-panel">
-          <header class="panel-heading centered-heading">
-            <h2>Enter Verification Code</h2>
-            <p>Use the 6-digit code sent to your selected contact method.</p>
-          </header>
-
-          <div class="status-note" *ngIf="fpSentMessage">
-            <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
-            <span>{{ fpSentMessage }}</span>
+          <div class="feature-icon-wrapper">
+            <span class="feature-icon">
+              <ion-icon name="keypad-outline" aria-hidden="true"></ion-icon>
+            </span>
           </div>
 
-          <div class="field">
-            <label class="field-lbl" for="fp-code">Verification Code</label>
-            <div class="input-shell code-shell">
-              <ion-icon name="keypad-outline" aria-hidden="true"></ion-icon>
-              <input
-                id="fp-code"
-                class="field-input code-input"
-                type="text"
-                inputmode="numeric"
-                pattern="[0-9]*"
-                maxlength="6"
-                [(ngModel)]="fpCode"
-                placeholder="000000"
-                (keydown.enter)="fpVerifyCode()"
-              />
+          <header class="panel-heading centered-heading">
+            <h2>Enter 6-Digit OTP</h2>
+            <p>We sent a verification code to</p>
+            <div class="destination-pill">
+              <ion-icon [name]="fpChannel === 'sms' ? 'chatbubble-ellipses-outline' : 'mail-outline'"></ion-icon>
+              <span>{{ fpChannel === 'sms' ? fpPhoneMasked : fpEmailMasked }}</span>
+              <button type="button" class="pill-change-btn" (click)="fpStep = 2">Change</button>
             </div>
+          </header>
+
+          <!-- Demo Mode Helper Card -->
+          <div class="demo-code-banner" *ngIf="fpDevCode">
+            <div class="demo-code-header">
+              <ion-icon name="information-circle-outline"></ion-icon>
+              <span>Demo Mode (Local Testing)</span>
+            </div>
+            <p>Your OTP Code is: <strong class="demo-code-text">{{ fpDevCode }}</strong></p>
+          </div>
+
+          <!-- 6-Box OTP Input Grid -->
+          <div class="otp-boxes-container" (paste)="onOtpPaste($event)">
+            <input
+              *ngFor="let digit of fpOtpDigits; let i = index"
+              [id]="'fp-otp-' + i"
+              class="otp-digit-box"
+              [class.filled]="digit !== ''"
+              type="tel"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              maxlength="1"
+              [value]="digit"
+              (input)="onOtpInput($event, i)"
+              (keydown)="onOtpKeyDown($event, i)"
+              autocomplete="one-time-code"
+            />
           </div>
 
           <div class="err-msg" *ngIf="fpError" role="alert">
@@ -765,25 +834,48 @@
           <button
             class="submit-btn"
             type="button"
-            [disabled]="fpLoading"
+            [disabled]="fpLoading || fpCode.length < 6"
             [class.is-loading]="fpLoading"
             (click)="fpVerifyCode()"
           >
             <ion-spinner *ngIf="fpLoading" name="crescent"></ion-spinner>
-            <span>{{ fpLoading ? 'Verifying' : 'Verify Code' }}</span>
+            <span>{{ fpLoading ? 'Verifying OTP...' : 'Verify Code' }}</span>
             <ion-icon *ngIf="!fpLoading" name="checkmark-outline" aria-hidden="true"></ion-icon>
           </button>
 
-          <button type="button" class="bottom-text-link" (click)="fpStep = 2">
-            Didn’t receive a code? <strong>Send Again</strong>
-          </button>
+          <!-- Resend Timer / Action -->
+          <div class="otp-resend-row">
+            <span class="resend-countdown" *ngIf="fpResendCountdown > 0">
+              <ion-icon name="time-outline"></ion-icon>
+              Resend code in <strong>{{ fpResendCountdown }}s</strong>
+            </span>
+
+            <button
+              type="button"
+              class="resend-btn"
+              *ngIf="fpResendCountdown === 0"
+              [disabled]="fpLoading"
+              (click)="fpResendCode()"
+            >
+              <ion-icon name="refresh-outline"></ion-icon>
+              <span>Didn't receive code? <strong>Resend OTP</strong></span>
+            </button>
+          </div>
         </div>
 
-        <!-- Forgot step 4 -->
+        <!-- ═════════════════════════════════════════════════════════════ -->
+        <!-- STEP 4: Create New Password                                 -->
+        <!-- ═════════════════════════════════════════════════════════════ -->
         <div *ngIf="fpStep === 4" class="subview-panel">
+          <div class="feature-icon-wrapper">
+            <span class="feature-icon">
+              <ion-icon name="lock-closed-outline" aria-hidden="true"></ion-icon>
+            </span>
+          </div>
+
           <header class="panel-heading centered-heading">
             <h2>Create New Password</h2>
-            <p>Choose a secure password for your FordaGO account.</p>
+            <p>Set a new, strong password to secure your FordaGO account.</p>
           </header>
 
           <div class="field">
@@ -798,14 +890,19 @@
                 placeholder="Enter new password"
                 autocomplete="new-password"
               />
-              <button type="button" class="icon-btn password-toggle" (click)="fpToggleNewPassword()">
+              <button
+                type="button"
+                class="icon-btn password-toggle"
+                (click)="fpToggleNewPassword()"
+                [attr.aria-label]="fpShowPassword ? 'Hide password' : 'Show password'"
+              >
                 <ion-icon [name]="fpShowPassword ? 'eye-off-outline' : 'eye-outline'" aria-hidden="true"></ion-icon>
               </button>
             </div>
           </div>
 
           <div class="field">
-            <label class="field-lbl" for="fp-confirm-password">Confirm Password</label>
+            <label class="field-lbl" for="fp-confirm-password">Confirm New Password</label>
             <div class="input-shell password-shell">
               <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
               <input
@@ -816,15 +913,54 @@
                 placeholder="Repeat new password"
                 autocomplete="new-password"
               />
-              <button type="button" class="icon-btn password-toggle" (click)="fpToggleConfirmPassword()">
+              <button
+                type="button"
+                class="icon-btn password-toggle"
+                (click)="fpToggleConfirmPassword()"
+                [attr.aria-label]="fpShowConfirm ? 'Hide password' : 'Show password'"
+              >
                 <ion-icon [name]="fpShowConfirm ? 'eye-off-outline' : 'eye-outline'" aria-hidden="true"></ion-icon>
               </button>
             </div>
           </div>
 
-          <div class="hint-msg">
-            <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
-            <span>Use at least 8 characters with uppercase, lowercase, number, and special character.</span>
+          <!-- Password Match Validation Status -->
+          <div class="match-status" *ngIf="fpConfirmPassword">
+            <span class="match-badge match-success" *ngIf="fpPasswordsMatch">
+              <ion-icon name="checkmark-circle"></ion-icon>
+              Passwords match
+            </span>
+            <span class="match-badge match-error" *ngIf="!fpPasswordsMatch">
+              <ion-icon name="close-circle-outline"></ion-icon>
+              Passwords do not match
+            </span>
+          </div>
+
+          <!-- Live Password Requirements Checklist -->
+          <div class="pwd-rules-card">
+            <span class="pwd-rules-title">Password Requirements</span>
+            <ul class="pwd-rules-list">
+              <li [class.valid]="fpHasMinLength">
+                <ion-icon [name]="fpHasMinLength ? 'checkmark-circle' : 'alert-circle-outline'"></ion-icon>
+                <span>At least 8 characters long</span>
+              </li>
+              <li [class.valid]="fpHasUpper">
+                <ion-icon [name]="fpHasUpper ? 'checkmark-circle' : 'alert-circle-outline'"></ion-icon>
+                <span>At least 1 uppercase letter (A–Z)</span>
+              </li>
+              <li [class.valid]="fpHasLower">
+                <ion-icon [name]="fpHasLower ? 'checkmark-circle' : 'alert-circle-outline'"></ion-icon>
+                <span>At least 1 lowercase letter (a–z)</span>
+              </li>
+              <li [class.valid]="fpHasNumber">
+                <ion-icon [name]="fpHasNumber ? 'checkmark-circle' : 'alert-circle-outline'"></ion-icon>
+                <span>At least 1 number (0–9)</span>
+              </li>
+              <li [class.valid]="fpHasSpecial">
+                <ion-icon [name]="fpHasSpecial ? 'checkmark-circle' : 'alert-circle-outline'"></ion-icon>
+                <span>At least 1 special character (!@#$%^&*)</span>
+              </li>
+            </ul>
           </div>
 
           <div class="err-msg" *ngIf="fpError" role="alert">
@@ -835,30 +971,35 @@
           <button
             class="submit-btn"
             type="button"
-            [disabled]="fpLoading"
+            [disabled]="fpLoading || !fpIsPasswordStrong || !fpPasswordsMatch"
             [class.is-loading]="fpLoading"
             (click)="fpSubmitNewPassword()"
           >
             <ion-spinner *ngIf="fpLoading" name="crescent"></ion-spinner>
-            <span>{{ fpLoading ? 'Saving Password' : 'Save New Password' }}</span>
+            <span>{{ fpLoading ? 'Saving Password...' : 'Save & Update Password' }}</span>
             <ion-icon *ngIf="!fpLoading" name="checkmark-outline" aria-hidden="true"></ion-icon>
           </button>
         </div>
 
-        <!-- Forgot step 5 -->
+        <!-- ═════════════════════════════════════════════════════════════ -->
+        <!-- STEP 5: Reset Success                                       -->
+        <!-- ═════════════════════════════════════════════════════════════ -->
         <div *ngIf="fpStep === 5" class="subview-panel success-box">
-          <span class="success-icon">
-            <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
-          </span>
+          <div class="success-icon-animated">
+            <span class="success-icon">
+              <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
+            </span>
+          </div>
 
-          <h2>Password Updated</h2>
-          <p>Your password has been changed successfully. You can now sign in using your new password.</p>
+          <h2>Password Reset Complete!</h2>
+          <p>Your FordaGO password has been successfully updated. You can now sign in with your new credentials.</p>
 
           <button class="submit-btn" type="button" (click)="goToLogin()">
-            <span>Go to Sign In</span>
+            <span>Sign In to Your Account</span>
             <ion-icon name="arrow-forward-outline" aria-hidden="true"></ion-icon>
           </button>
         </div>
+
       </section>
 
     </section>

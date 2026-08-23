@@ -53,14 +53,67 @@ class CoachDashboardController extends Controller
             'has_profile'   => (bool) $profile,
         ];
 
-        // If this user has no coach profile, return early with just their info
-        // so the panel still renders correctly as a member (isCoach = false).
+        // If this user has no coach profile, return their profile, active coaches, and conversations
+        // all in ONE single round-trip so the member panel opens instantly with 0 delay.
         if (! $profile) {
+            $memberConversations = Conversation::with([
+                'coach:id,username,first_name,last_name,profile_image',
+                'coach.coachProfile',
+                'client:id,username,first_name,last_name,profile_image',
+                'latestMessage.sender:id,username,first_name,last_name',
+            ])
+            ->where('client_id', $user->id)
+            ->get();
+
+            $conversationIds = $memberConversations->pluck('id');
+            $unreadCounts = DB::table('messages')
+                ->select('conversation_id', DB::raw('COUNT(*) as unread_count'))
+                ->whereIn('conversation_id', $conversationIds)
+                ->where('sender_id', '!=', $user->id)
+                ->whereNull('read_at')
+                ->groupBy('conversation_id')
+                ->pluck('unread_count', 'conversation_id');
+
+            $formattedConversations = $memberConversations->map(function ($convo) use ($unreadCounts) {
+                return [
+                    'id'              => $convo->id,
+                    'coach_id'        => $convo->coach_id,
+                    'client_id'       => $convo->client_id,
+                    'is_coach'        => false,
+                    'status'          => $convo->status,
+                    'partner'         => $convo->coach,
+                    'partner_role'    => 'coach',
+                    'latest_message'  => $convo->latestMessage,
+                    'unread_count'    => (int) ($unreadCounts[$convo->id] ?? 0),
+                    'created_at'      => $convo->created_at,
+                    'updated_at'      => $convo->updated_at,
+                ];
+            });
+
+            $activeCoaches = CoachProfile::with(['user:id,username,first_name,last_name,profile_image'])
+                ->where('is_active', true)
+                ->get()
+                ->map(function ($cp) {
+                    return [
+                        'id'            => $cp->user_id,
+                        'user_id'       => $cp->user_id,
+                        'username'      => $cp->user?->username ?? '',
+                        'first_name'    => $cp->user?->first_name ?? '',
+                        'last_name'     => $cp->user?->last_name ?? '',
+                        'profile_image' => $cp->photo_url ?: $cp->user?->profile_image,
+                        'bio'           => $cp->bio ?: '',
+                        'specialty'     => $cp->specialty ?: 'Personal Training',
+                        'rate'          => (float) ($cp->rate ?? 0),
+                        'is_active'     => true,
+                    ];
+                });
+
             return response()->json([
-                'profile'      => $myProfile,
-                'stats'        => null,
+                'profile'        => $myProfile,
+                'stats'          => null,
                 'today_sessions' => [],
-                'conversations'  => [],
+                'conversations'  => $formattedConversations,
+                'coaches'        => $activeCoaches,
                 'clients'        => [],
                 'requests'       => [],
             ]);

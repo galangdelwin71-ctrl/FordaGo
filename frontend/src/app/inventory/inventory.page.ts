@@ -430,6 +430,14 @@ export class InventoryPage implements OnInit {
    * never reopened -- see coaching-nav.service.ts's CoachingPanelHost
    * doc-comment for the full history of this gap.
    */
+  trackByProduct(index: number, product: Product): number | string {
+    return product.id || product.name || index;
+  }
+
+  trackByIndex(index: number): number {
+    return index;
+  }
+
   private applyPendingCoachingReopen(): void {
     const pendingTab = this.coachingNav.consumeReopen('inventory');
     if (pendingTab) {

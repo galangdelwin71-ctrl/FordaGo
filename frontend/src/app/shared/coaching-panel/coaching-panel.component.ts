@@ -248,6 +248,30 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
   classActionInFlightId: number | null = null;
   classActionError = '';
 
+  trackByCoach(index: number, coach: Coach): number | string {
+    return coach.id || coach.user_id || index;
+  }
+
+  trackByConversation(index: number, convo: Conversation): number | string {
+    return convo.id || convo.partner?.id || index;
+  }
+
+  trackByProgram(index: number, prog: CoachProgram): number | string {
+    return prog.id || index;
+  }
+
+  trackByClient(index: number, item: CoachClientItem): number | string {
+    return item.conversation_id || item.client?.id || index;
+  }
+
+  trackByRequest(index: number, item: CoachRequestItem): number | string {
+    return item.conversation_id || item.client?.id || index;
+  }
+
+  trackByIndex(index: number): number {
+    return index;
+  }
+
   constructor(
     private router: Router,
     private auth: AuthService,
@@ -513,8 +537,20 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
               void setCachedData(CACHE_KEYS.COACH_REQUESTS, res.requests);
             }
           } else {
-            // Regular member — load their conversations and explore data
-            this.loadMemberTabData();
+            // Regular member — populate conversations and active coaches directly from the single payload!
+            if (Array.isArray(res.conversations)) {
+              this.conversations = res.conversations;
+              CoachingPanelComponent.cachedConversations = res.conversations;
+              void setCachedData(CACHE_KEYS.COACH_CONVERSATIONS, res.conversations);
+            }
+            if (Array.isArray(res.coaches) && res.coaches.length > 0) {
+              this.coaches = res.coaches;
+              this.isLoading = false;
+              CoachingPanelComponent.cachedCoaches = res.coaches;
+              void setCachedData(CACHE_KEYS.COACHES, res.coaches);
+            } else {
+              this.loadMemberTabData();
+            }
           }
         },
         error: (err) => {

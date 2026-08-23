@@ -202,7 +202,7 @@
         <ion-spinner name="crescent" color="warning"></ion-spinner>
       </div>
       <ng-container *ngIf="!isLoadingClients">
-        <div class="cd-client-item" *ngFor="let item of clients" (click)="openClientChat(item)">
+        <div class="cd-client-item" *ngFor="let item of clients; trackBy: trackByClient" (click)="openClientChat(item)">
           <div class="cd-session-avatar">
             <img *ngIf="item.client.profile_image" [src]="item.client.profile_image" alt="" />
             <span *ngIf="!item.client.profile_image">{{ (item.client.first_name || item.client.username || 'C').charAt(0) }}</span>
@@ -230,7 +230,7 @@
         <ion-spinner name="crescent" color="warning"></ion-spinner>
       </div>
       <ng-container *ngIf="!isLoadingRequests">
-        <div class="cd-request-item" *ngFor="let item of requests">
+        <div class="cd-request-item" *ngFor="let item of requests; trackBy: trackByRequest">
           <div class="cd-session-avatar">
             <img *ngIf="item.client.profile_image" [src]="item.client.profile_image" alt="" />
             <span *ngIf="!item.client.profile_image">{{ (item.client.first_name || item.client.username || 'C').charAt(0) }}</span>
@@ -333,7 +333,7 @@
 
     <!-- Coach List -->
     <div class="coach-list" *ngIf="!isLoading && coaches.length > 0">
-      <div class="coach-card" *ngFor="let coach of coaches">
+      <div class="coach-card" *ngFor="let coach of coaches; trackBy: trackByCoach">
         <div class="coach-card-header">
           <div class="coach-avatar-wrap">
             <img *ngIf="coach.profile_image" [src]="coach.profile_image" [alt]="coach.first_name" class="coach-avatar-img" />
@@ -393,7 +393,7 @@
     <div class="convo-list" *ngIf="conversations.length > 0">
       <div
         class="convo-card"
-        *ngFor="let convo of conversations"
+        *ngFor="let convo of conversations; trackBy: trackByConversation"
         (click)="openConversation(convo)">
         <div class="convo-avatar-wrap">
           <img *ngIf="convo.partner.profile_image" [src]="convo.partner.profile_image" class="convo-avatar-img" />
@@ -443,7 +443,7 @@
 
     <!-- Class List -->
     <div class="coach-list" *ngIf="!isLoadingClasses && publicPrograms.length > 0">
-      <div class="coach-card" *ngFor="let program of publicPrograms">
+      <div class="coach-card" *ngFor="let program of publicPrograms; trackBy: trackByProgram">
         <div class="coach-card-header">
           <div class="coach-avatar-wrap">
             <img *ngIf="program.coach?.profile_image" [src]="program.coach?.profile_image" [alt]="program.coach?.first_name" class="coach-avatar-img" />

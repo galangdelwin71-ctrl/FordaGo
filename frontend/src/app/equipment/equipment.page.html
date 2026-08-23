@@ -86,9 +86,8 @@
     <!-- Equipment Grid -->
     <div class="equip-grid" *ngIf="!isLoading && !errorMsg && filteredEquipment.length > 0">
       <div
-        *ngFor="let item of filteredEquipment; let i = index"
-        class="equip-card fade-up"
-        [style.animation-delay]="(i * 0.05) + 's'"
+        *ngFor="let item of filteredEquipment; let i = index; trackBy: trackByEquipment"
+        class="equip-card"
         (click)="openModal(item)"
       >
         <!-- Photo -->

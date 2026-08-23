@@ -248,7 +248,6 @@ ion-content {
   align-items: flex-start;
   gap: 12px;
   transition: border-color 0.18s, background 0.18s;
-  animation: fadeUp 0.25s ease both;
 
   &:hover { border-color: var(--accent-border); background: var(--overlay-medium); }
 

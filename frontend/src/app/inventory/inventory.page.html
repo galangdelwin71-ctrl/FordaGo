@@ -80,9 +80,8 @@
     <!-- Product Cards List -->
     <div class="products-list">
       <div
-        *ngFor="let product of products; let i = index"
+        *ngFor="let product of products; let i = index; trackBy: trackByProduct"
         class="product-card"
-        [style.animation-delay]="(i * 0.05) + 's'"
         (click)="openOrderModal(product)"
       >
         <!-- Product Image / Icon Banner -->

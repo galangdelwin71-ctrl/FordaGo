@@ -294,9 +294,16 @@ export class AppComponent implements OnDestroy {
     try {
       const { LocalNotifications } = await import('@capacitor/local-notifications');
       await LocalNotifications.addListener('localNotificationActionPerformed', (action) => {
-        const notificationId = action.notification?.extra?.['notificationId'];
+        const extra = action.notification?.extra ?? {};
+        const notificationId = extra['notificationId'];
+        // `targetRoute` is set by notification types that want to land on a
+        // specific page — upcoming-workout reminders set '/schedule' so the
+        // member is taken directly to the Schedule page for that session
+        // instead of the generic /dashboard notification panel.
+        const targetRoute: string | null = typeof extra['targetRoute'] === 'string' ? extra['targetRoute'] : null;
         this.notificationCenter.openFromDeviceNotification(
-          notificationId ? String(notificationId) : null
+          notificationId ? String(notificationId) : null,
+          targetRoute
         );
       });
     } catch {

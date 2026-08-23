@@ -26,6 +26,11 @@ class Notification extends Model
         ];
     }
 
+    protected function serializeDate(\DateTimeInterface $date)
+    {
+        return $date->format('Y-m-d\TH:i:sP');
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);

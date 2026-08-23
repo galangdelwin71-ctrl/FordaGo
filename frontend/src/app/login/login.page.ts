@@ -1,4 +1,4 @@
-import { Component, HostListener } from '@angular/core';
+import { Component, HostListener, OnDestroy } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -16,11 +16,13 @@ import {
   cardOutline,
   cashOutline,
   chatbubbleEllipsesOutline,
+  checkmarkCircle,
   checkmarkCircleOutline,
   checkmarkOutline,
   chevronBackOutline,
   chevronDownOutline,
   chevronForwardOutline,
+  closeCircleOutline,
   diamondOutline,
   eyeOffOutline,
   eyeOutline,
@@ -33,6 +35,7 @@ import {
   personAddOutline,
   personOutline,
   phonePortraitOutline,
+  refreshOutline,
   searchOutline,
   sendOutline,
   shieldCheckmarkOutline,
@@ -47,7 +50,7 @@ import {
   host: { class: 'ion-page fordago-page' },
   imports: [CommonModule, FormsModule, IonContent, IonIcon, IonSpinner, NoNegativeDirective],
 })
-export class LoginPage {
+export class LoginPage implements OnDestroy {
   segment: 'login' | 'register' | 'forgot' = 'login';
   regStep = 1;
 
@@ -100,6 +103,7 @@ export class LoginPage {
   fpPhoneMasked = '';
   fpChannel: 'email' | 'sms' | '' = '';
   fpCode = '';
+  fpOtpDigits: string[] = ['', '', '', '', '', ''];
   fpResetToken = '';
   fpNewPassword = '';
   fpConfirmPassword = '';
@@ -108,6 +112,9 @@ export class LoginPage {
   fpError = '';
   fpLoading = false;
   fpSentMessage = '';
+  fpDevCode = '';
+  fpResendCountdown = 0;
+  private fpResendTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(private auth: AuthService, private router: Router) {
     // Register every icon used by this standalone page.
@@ -122,11 +129,13 @@ export class LoginPage {
       'card-outline': cardOutline,
       'cash-outline': cashOutline,
       'chatbubble-ellipses-outline': chatbubbleEllipsesOutline,
+      'checkmark-circle': checkmarkCircle,
       'checkmark-circle-outline': checkmarkCircleOutline,
       'checkmark-outline': checkmarkOutline,
       'chevron-back-outline': chevronBackOutline,
       'chevron-down-outline': chevronDownOutline,
       'chevron-forward-outline': chevronForwardOutline,
+      'close-circle-outline': closeCircleOutline,
       'diamond-outline': diamondOutline,
       'eye-off-outline': eyeOffOutline,
       'eye-outline': eyeOutline,
@@ -139,11 +148,16 @@ export class LoginPage {
       'person-add-outline': personAddOutline,
       'person-outline': personOutline,
       'phone-portrait-outline': phonePortraitOutline,
+      'refresh-outline': refreshOutline,
       'search-outline': searchOutline,
       'send-outline': sendOutline,
       'shield-checkmark-outline': shieldCheckmarkOutline,
       'time-outline': timeOutline,
     });
+  }
+
+  ngOnDestroy(): void {
+    this.clearResendTimer();
   }
 
   @HostListener('document:click')
@@ -213,9 +227,13 @@ export class LoginPage {
   }
 
   goToLogin(): void {
+    const previousIdentifier = this.fpIdentifier.includes('@') ? this.fpIdentifier : '';
     this.segment = 'login';
     this.genderOpen = false;
     this.resetLoginInputs();
+    if (previousIdentifier && this.fpStep === 5) {
+      this.email = previousIdentifier;
+    }
     this.regStep = 1;
     this.regError = '';
     this.regSuccess = false;
@@ -229,11 +247,16 @@ export class LoginPage {
 
   goToForgotPassword(): void {
     this.resetForgotPasswordInputs();
+    // If user already typed their email in the login box, pre-populate it
+    if (this.email.trim()) {
+      this.fpIdentifier = this.email.trim();
+    }
     this.genderOpen = false;
     this.segment = 'forgot';
   }
 
   private resetForgotPasswordInputs(): void {
+    this.clearResendTimer();
     this.fpStep = 1;
     this.fpIdentifier = '';
     this.fpEmailMasked = '';
@@ -241,6 +264,7 @@ export class LoginPage {
     this.fpPhoneMasked = '';
     this.fpChannel = '';
     this.fpCode = '';
+    this.fpOtpDigits = ['', '', '', '', '', ''];
     this.fpResetToken = '';
     this.fpNewPassword = '';
     this.fpConfirmPassword = '';
@@ -249,20 +273,158 @@ export class LoginPage {
     this.fpError = '';
     this.fpLoading = false;
     this.fpSentMessage = '';
+    this.fpDevCode = '';
+    this.fpResendCountdown = 0;
   }
+
+  private startResendCountdown(seconds = 60): void {
+    this.clearResendTimer();
+    this.fpResendCountdown = seconds;
+    this.fpResendTimer = setInterval(() => {
+      if (this.fpResendCountdown > 1) {
+        this.fpResendCountdown--;
+      } else {
+        this.fpResendCountdown = 0;
+        this.clearResendTimer();
+      }
+    }, 1000);
+  }
+
+  private clearResendTimer(): void {
+    if (this.fpResendTimer) {
+      clearInterval(this.fpResendTimer);
+      this.fpResendTimer = null;
+    }
+  }
+
+  // ── OTP Inputs Handling ─────────────────────────────────────
+
+  onOtpInput(event: any, index: number): void {
+    const input = event.target as HTMLInputElement;
+    const val = input.value.replace(/\D/g, '');
+
+    if (val.length > 1) {
+      const chars = val.slice(0, 6).split('');
+      for (let i = 0; i < 6; i++) {
+        this.fpOtpDigits[i] = chars[i] || '';
+      }
+      this.syncOtpCode();
+      const lastIndex = Math.min(chars.length - 1, 5);
+      this.focusOtpInput(lastIndex);
+      if (this.fpCode.length === 6) {
+        this.fpVerifyCode();
+      }
+      return;
+    }
+
+    this.fpOtpDigits[index] = val ? val.slice(-1) : '';
+    this.syncOtpCode();
+
+    if (val && index < 5) {
+      this.focusOtpInput(index + 1);
+    }
+
+    if (this.fpCode.length === 6) {
+      this.fpVerifyCode();
+    }
+  }
+
+  onOtpKeyDown(event: KeyboardEvent, index: number): void {
+    if (event.key === 'Backspace') {
+      if (!this.fpOtpDigits[index] && index > 0) {
+        this.fpOtpDigits[index - 1] = '';
+        this.syncOtpCode();
+        this.focusOtpInput(index - 1);
+      }
+    }
+  }
+
+  onOtpPaste(event: ClipboardEvent): void {
+    event.preventDefault();
+    const pasted = event.clipboardData?.getData('text') || '';
+    const digits = pasted.replace(/\D/g, '').slice(0, 6).split('');
+    if (digits.length > 0) {
+      for (let i = 0; i < 6; i++) {
+        this.fpOtpDigits[i] = digits[i] || '';
+      }
+      this.syncOtpCode();
+      const nextIndex = Math.min(digits.length, 5);
+      this.focusOtpInput(nextIndex);
+      if (this.fpCode.length === 6) {
+        this.fpVerifyCode();
+      }
+    }
+  }
+
+  private syncOtpCode(): void {
+    this.fpCode = this.fpOtpDigits.join('');
+  }
+
+  private focusOtpInput(index: number): void {
+    setTimeout(() => {
+      const el = document.getElementById(`fp-otp-${index}`) as HTMLInputElement | null;
+      if (el) {
+        el.focus();
+        el.select();
+      }
+    }, 50);
+  }
+
+  // ── Password Requirement Helpers ────────────────────────────
+
+  get fpHasMinLength(): boolean {
+    return this.fpNewPassword.length >= 8;
+  }
+  get fpHasUpper(): boolean {
+    return /[A-Z]/.test(this.fpNewPassword);
+  }
+  get fpHasLower(): boolean {
+    return /[a-z]/.test(this.fpNewPassword);
+  }
+  get fpHasNumber(): boolean {
+    return /\d/.test(this.fpNewPassword);
+  }
+  get fpHasSpecial(): boolean {
+    return /[^A-Za-z0-9]/.test(this.fpNewPassword);
+  }
+  get fpIsPasswordStrong(): boolean {
+    return (
+      this.fpHasMinLength &&
+      this.fpHasUpper &&
+      this.fpHasLower &&
+      this.fpHasNumber &&
+      this.fpHasSpecial
+    );
+  }
+  get fpPasswordsMatch(): boolean {
+    return !!(
+      this.fpNewPassword &&
+      this.fpConfirmPassword &&
+      this.fpNewPassword === this.fpConfirmPassword
+    );
+  }
+
+  // ── Forgot Password Steps ───────────────────────────────────
 
   fpLookupEmail(): void {
     this.fpError = '';
     const raw = this.fpIdentifier.trim();
-    const normalized = raw.includes('@') ? raw.toLowerCase() : raw.replace(/\D/g, '');
-    const validEmail = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(normalized);
-    const validPhone = /^\d{11}$/.test(normalized);
-
-    if (!validEmail && !validPhone) {
-      this.fpError = 'Please enter a valid email or 11-digit phone number.';
+    if (!raw) {
+      this.fpError = 'Please enter your registered email or phone number.';
       return;
     }
 
+    const isEmail = raw.includes('@');
+    const digits = raw.replace(/\D/g, '');
+    const validEmail = isEmail && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(raw.toLowerCase());
+    const validPhone = !isEmail && digits.length >= 10;
+
+    if (!validEmail && !validPhone) {
+      this.fpError = 'Please enter a valid email address or phone number (e.g. 09171234567).';
+      return;
+    }
+
+    const normalized = isEmail ? raw.toLowerCase() : digits;
     this.fpIdentifier = normalized;
     this.fpLoading = true;
 
@@ -272,12 +434,14 @@ export class LoginPage {
         this.fpEmailMasked = res?.emailMasked || '';
         this.fpHasPhone = Boolean(res?.hasPhone);
         this.fpPhoneMasked = res?.phoneMasked || '';
-        this.fpChannel = 'email';
+
+        // If lookup was by phone and account has phone, default to SMS, otherwise email
+        this.fpChannel = !isEmail && this.fpHasPhone ? 'sms' : 'email';
         this.fpStep = 2;
       },
       error: (err: any) => {
         this.fpLoading = false;
-        this.fpError = err?.error?.message || 'Could not find that account.';
+        this.fpError = err?.error?.message || 'Could not find an account with that email or phone.';
       },
     });
   }
@@ -290,7 +454,7 @@ export class LoginPage {
     this.fpError = '';
 
     if (!this.fpChannel) {
-      this.fpError = 'Please choose where to receive your code.';
+      this.fpError = 'Please choose where to receive your OTP verification code.';
       return;
     }
 
@@ -299,17 +463,24 @@ export class LoginPage {
     this.auth.forgotPasswordSend(this.fpIdentifier, this.fpChannel).subscribe({
       next: (res: any) => {
         this.fpLoading = false;
+        this.fpDevCode = res?.devCode || '';
+        this.fpOtpDigits = ['', '', '', '', '', ''];
+        this.fpCode = '';
 
         if (res?.sent) {
-          this.fpSentMessage = `Code sent to ${
+          const dest =
             res.destinationMasked ||
-            (this.fpChannel === 'email' ? this.fpEmailMasked : this.fpPhoneMasked)
-          }.`;
+            (this.fpChannel === 'email' ? this.fpEmailMasked : this.fpPhoneMasked);
+          this.fpSentMessage = `We have sent a 6-digit OTP code to ${dest}.`;
           this.fpStep = 3;
+          this.startResendCountdown(60);
+          this.focusOtpInput(0);
         } else if (res?.devCode) {
-          this.fpSentMessage = `Demo mode. Your reset code is ${res.devCode}.`;
+          this.fpSentMessage = `Demo Mode: Your OTP verification code is ${res.devCode}.`;
           this.fpCode = res.devCode;
+          this.fpOtpDigits = res.devCode.split('').slice(0, 6);
           this.fpStep = 3;
+          this.startResendCountdown(60);
         } else {
           this.fpError = res?.reason || 'Could not send the code. Please try again.';
         }
@@ -321,12 +492,20 @@ export class LoginPage {
     });
   }
 
+  fpResendCode(): void {
+    if (this.fpResendCountdown > 0 || this.fpLoading) {
+      return;
+    }
+    this.fpSendCode();
+  }
+
   fpVerifyCode(): void {
     this.fpError = '';
+    this.syncOtpCode();
     const code = this.fpCode.trim();
 
     if (!/^\d{6}$/.test(code)) {
-      this.fpError = 'Please enter the 6-digit code.';
+      this.fpError = 'Please enter the complete 6-digit OTP code.';
       return;
     }
 
@@ -335,12 +514,13 @@ export class LoginPage {
     this.auth.forgotPasswordVerify(this.fpIdentifier, code).subscribe({
       next: (res: any) => {
         this.fpLoading = false;
+        this.clearResendTimer();
         this.fpResetToken = res?.resetToken || '';
         this.fpStep = 4;
       },
       error: (err: any) => {
         this.fpLoading = false;
-        this.fpError = err?.error?.message || 'Invalid or expired code.';
+        this.fpError = err?.error?.message || 'Invalid or expired OTP code. Please try again.';
       },
     });
   }
@@ -356,8 +536,8 @@ export class LoginPage {
   fpSubmitNewPassword(): void {
     this.fpError = '';
 
-    if (!this.isStrongPassword(this.fpNewPassword)) {
-      this.fpError = 'Password must be 8+ chars with uppercase, lowercase, number, and special character.';
+    if (!this.fpIsPasswordStrong) {
+      this.fpError = 'Password must meet all security requirements listed below.';
       return;
     }
 

@@ -197,6 +197,14 @@ export class EquipmentPage implements OnInit {
    * coaching-nav.service.ts). One-shot -- consumeReopen() clears itself,
    * so a normal visit to Equipment is completely unaffected.
    */
+  trackByEquipment(index: number, item: EquipmentItem): number | string {
+    return item.id || item.name || index;
+  }
+
+  trackByIndex(index: number): number {
+    return index;
+  }
+
   private applyPendingCoachingReopen(): void {
     const pendingTab = this.coachingNav.consumeReopen('equipment');
     if (pendingTab) {

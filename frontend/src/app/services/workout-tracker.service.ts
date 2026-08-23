@@ -68,7 +68,15 @@ export class WorkoutTrackerService {
   // time passes, instead of waiting for the next periodic syncStoreStatuses()
   // poll below.
   private missedCheckTimers: ReturnType<typeof setTimeout>[] = [];
+  // Guard: if a pullFromServer() is already in flight, subsequent callers
+  // wait on the same promise instead of firing a second HTTP request.
+  private _pullInFlight: Promise<void> | null = null;
+  // Precise per-session timers that fire BEFORE the session (30 min ahead)
+  // to send the upcoming-workout reminder notification — mirrors the exact
+  // same design as missedCheckTimers above.
+  private upcomingReminderTimers: ReturnType<typeof setTimeout>[] = [];
   private updatesSubject = new BehaviorSubject<number>(Date.now());
+
 
   /**
    * Day keys that seedCurrentMonthIfNeeded() just filled with a BLIND
@@ -112,6 +120,7 @@ export class WorkoutTrackerService {
     // `changed`), so nothing would otherwise schedule today's precise
     // missed-check timers on a fresh app launch.
     this.scheduleMissedChecks();
+    this.scheduleUpcomingReminders();
     if (this.syncTimer) {
       return;
     }
@@ -333,11 +342,12 @@ export class WorkoutTrackerService {
   writeStore(store: Record<string, StoredWorkoutSession[]>): void {
     localStorage.setItem(this.getScopedStorageKey(), JSON.stringify(this.normalizeStore(store)));
     this.updatesSubject.next(Date.now());
-    // Re-derive today's precise missed-check timers from whatever just
-    // changed (new session added, time edited, session started/stopped/
-    // marked done, a session just flipped to 'missed', etc.) so they never
-    // drift out of sync with the actual store contents.
+    // Re-derive today's precise missed-check AND upcoming-reminder timers from
+    // whatever just changed (new session added, time edited, session
+    // started/stopped/marked done, a session just flipped to 'missed', etc.)
+    // so they never drift out of sync with the actual store contents.
     this.scheduleMissedChecks();
+    this.scheduleUpcomingReminders();
   }
 
   // ── Backend sync (Stage 2) ───────────────────────────────────────────
@@ -356,6 +366,22 @@ export class WorkoutTrackerService {
    * effort enrichment, never a hard dependency for the UI to render.
    */
   async pullFromServer(): Promise<void> {
+    if (!this.auth.token) return;
+
+    // If a pull is already in flight, piggy-back on it instead of firing
+    // a second HTTP request (fixes Dashboard ngOnInit + ionViewWillEnter
+    // both calling this simultaneously on first open).
+    if (this._pullInFlight) {
+      return this._pullInFlight;
+    }
+
+    this._pullInFlight = this._doPullFromServer().finally(() => {
+      this._pullInFlight = null;
+    });
+    return this._pullInFlight;
+  }
+
+  private async _doPullFromServer(): Promise<void> {
     if (!this.auth.token) return;
 
     try {
@@ -692,24 +718,35 @@ export class WorkoutTrackerService {
 
         if (computedStatus === 'missed' && normalizedSession.status !== 'done' && normalizedSession.status !== 'missed') {
           changed = true;
-          const homeAlternatives = normalizedSession.exercises?.length
-            ? normalizedSession.exercises.slice(0, 6).map((exercise) => `${exercise.sets} x ${exercise.reps} ${exercise.name}`)
-            : (this.homeWorkoutMap[normalizedSession.title] || this.homeWorkoutMap['Full Body']);
-          void this.notificationCenter.notifyMissedWorkout(
-            normalizedSession.title,
-            sessionDate,
-            `${key}-${normalizedSession.id || normalizedSession.title}`,
-            homeAlternatives
-          );
           const updated = { ...normalizedSession, status: 'missed' as SessionStatus };
-          this.pushSession(sessionDate, updated);
+
+          // Only alert and push to server if this session was scheduled for TODAY or RECENT (within 2 days),
+          // preventing a cascade of 20+ historical missed requests on initial app launch.
+          const now = new Date();
+          const diffDays = Math.abs((now.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24));
+          if (diffDays <= 2) {
+            const homeAlternatives = normalizedSession.exercises?.length
+              ? normalizedSession.exercises.slice(0, 6).map((exercise) => `${exercise.sets} x ${exercise.reps} ${exercise.name}`)
+              : (this.homeWorkoutMap[normalizedSession.title] || this.homeWorkoutMap['Full Body']);
+            void this.notificationCenter.notifyMissedWorkout(
+              normalizedSession.title,
+              sessionDate,
+              `${key}-${normalizedSession.id || normalizedSession.title}`,
+              homeAlternatives
+            );
+            this.pushSession(sessionDate, updated);
+          }
           return updated;
         }
 
         if (normalizedSession.status !== 'done' && normalizedSession.status !== computedStatus) {
           changed = true;
           const updated = { ...normalizedSession, status: computedStatus };
-          this.pushSession(sessionDate, updated);
+          const now = new Date();
+          const diffDays = Math.abs((now.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24));
+          if (diffDays <= 2) {
+            this.pushSession(sessionDate, updated);
+          }
           return updated;
         }
 
@@ -728,6 +765,12 @@ export class WorkoutTrackerService {
   private clearMissedCheckTimers(): void {
     this.missedCheckTimers.forEach((timer) => clearTimeout(timer));
     this.missedCheckTimers = [];
+  }
+
+  /** Cancels every pending upcoming-reminder timer (see scheduleUpcomingReminders()) without scheduling new ones. */
+  private clearUpcomingReminderTimers(): void {
+    this.upcomingReminderTimers.forEach((timer) => clearTimeout(timer));
+    this.upcomingReminderTimers = [];
   }
 
   /**
@@ -789,6 +832,67 @@ export class WorkoutTrackerService {
         this.syncStoreStatuses();
       }, msUntilDue);
       this.missedCheckTimers.push(timer);
+    });
+  }
+
+  /**
+   * Schedules one precise setTimeout per still-upcoming session TODAY,
+   * firing exactly 30 minutes before that session's scheduled time to send
+   * a reminder notification — "Your <title> session starts in 30 minutes".
+   * Mirrors scheduleMissedChecks() in design: clears and rebuilds its own
+   * timer set on every call so edits to a session's time (or a session
+   * flipping to 'done') are always reflected immediately without stale
+   * timers from old data ever firing.
+   *
+   * Exemptions (same rules as scheduleMissedChecks()):
+   *  - Session is already 'done' or 'missed' → no reminder needed.
+   *  - Rest day → skip (no workout to prepare for).
+   *  - Session timer already running (startedAt set) → member already working out.
+   *  - Reminder time is in the past (session is < 30 min away or already started) → skip.
+   */
+  private scheduleUpcomingReminders(): void {
+    this.clearUpcomingReminderTimers();
+
+    const store = this.readStore();
+    const now = new Date();
+    const todayKey = this.getDateKey(now);
+    const todaySessions = store[todayKey] ?? [];
+
+    todaySessions.forEach((session) => {
+      // Same exemptions as scheduleMissedChecks()
+      if (session.status === 'done' || session.status === 'missed' || session.isRestDay || session.startedAt) {
+        return;
+      }
+
+      const [hours, minutes] = this.to24(session.timeVal, session.timeAmpm).split(':').map(Number);
+      if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+        return;
+      }
+
+      const scheduledAt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0, 0);
+      const THIRTY_MIN_MS = 30 * 60 * 1000;
+      const msUntilReminder = scheduledAt.getTime() - THIRTY_MIN_MS - now.getTime();
+
+      // Reminder window already passed (session is less than 30 min away,
+      // or already started) — skip. The periodic syncStoreStatuses() poll
+      // still covers edge cases where this was missed.
+      if (msUntilReminder <= 0) {
+        return;
+      }
+
+      // Build a dedupe key that encodes both session id AND scheduled time,
+      // so editing the session time cancels the old dedupe record and the
+      // rescheduled timer can fire a fresh notification.
+      const uniqueKey = `${todayKey}-${session.id ?? session.title}-${session.timeVal}-${session.timeAmpm}`;
+
+      // Human-readable session time for the notification body.
+      const sessionTime = `${session.timeVal} ${session.timeAmpm}`;
+
+      const timer = setTimeout(() => {
+        void this.notificationCenter.notifyUpcomingWorkout(session.title, sessionTime, uniqueKey);
+      }, msUntilReminder);
+
+      this.upcomingReminderTimers.push(timer);
     });
   }
 

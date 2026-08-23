@@ -27,6 +27,7 @@ export class NotificationCenterService {
   private readonly localNotificationsKey = 'fordago_local_notifications_v1';
   private readonly notifiedMissedKey = 'fordago_notified_missed_v1';
   private readonly notifiedDurationKey = 'fordago_notified_duration_v1';
+  private readonly notifiedUpcomingKey = 'fordago_notified_upcoming_v1';
   private readonly readServerNotificationsKey = 'fordago_read_server_notifications_v1';
 
   // Shared poll state (providedIn: 'root' — one instance for the whole
@@ -69,15 +70,17 @@ export class NotificationCenterService {
    * Called when the person taps a device notification (native OS tray via
    * Capacitor LocalNotifications, or a web Notification) — see
    * app.component.ts's registerNotificationTapListener() for native, and
-   * sendDeviceNotification() below for web. Always routes to /dashboard
-   * first (the one page guaranteed to embed the shared notifications
-   * panel and to exist for every logged-in member) so tapping a
-   * notification behaves the same way regardless of which page the app
-   * happened to resume on, or whether it was cold-started by the tap.
+   * sendDeviceNotification() below for web.
+   *
+   * `targetRoute` lets individual notification types choose where they land:
+   * - Workout reminders pass '/schedule' so the member lands directly on
+   *   the Schedule page for that session.
+   * - All other notifications omit it and fall back to '/dashboard' (the
+   *   one page guaranteed to embed the shared notifications panel).
    */
-  openFromDeviceNotification(notificationId: string | null): void {
+  openFromDeviceNotification(notificationId: string | null, targetRoute?: string | null): void {
     this.pendingOpenSubject.next(notificationId);
-    void this.router.navigate(['/dashboard']);
+    void this.router.navigate([targetRoute ?? '/dashboard']);
   }
 
   /**
@@ -281,6 +284,56 @@ export class NotificationCenterService {
   }
 
   /**
+   * Fires a "starting soon" reminder notification 30 minutes before a
+   * scheduled workout session. Called by WorkoutTrackerService's
+   * scheduleUpcomingReminders() timers — one precise setTimeout per
+   * upcoming today-session — so the notification fires exactly 30 minutes
+   * before the session's scheduled time.
+   *
+   * Dedupes via localStorage so re-runs of scheduleUpcomingReminders()
+   * (e.g. app reopened near the reminder window, store written while the
+   * member is on schedule page) never fire a second banner for the same
+   * session. `uniqueKey` must encode both the session id and its scheduled
+   * time so that editing a session's time clears the old dedupe record and
+   * the rescheduled timer can notify again at the new time.
+   *
+   * Tapping this notification navigates to /schedule (not /dashboard)
+   * because the reminder is session-specific and the Schedule page is
+   * where the member can see, start, or edit that session directly.
+   */
+  async notifyUpcomingWorkout(sessionTitle: string, sessionTime: string, uniqueKey: string): Promise<void> {
+    const notified = this.readNotifiedUpcoming();
+    if (notified.includes(uniqueKey)) {
+      return;
+    }
+
+    const createdAt = new Date().toISOString();
+    const title = `⏰ Upcoming Workout: ${sessionTitle}`;
+    const message = `Your ${sessionTitle} session starts in 30 minutes (${sessionTime}). Get ready!`;
+    const localNotification: StoredNotificationItem = {
+      id: `upcoming-${uniqueKey}`,
+      key: uniqueKey,
+      title,
+      message,
+      createdAt,
+      unread: true,
+      source: 'local',
+    };
+
+    notified.push(uniqueKey);
+    this.writeNotifiedUpcoming(notified);
+    this.writeLocalNotifications([localNotification, ...this.readLocalNotifications()]);
+
+    // Send device notification with targetRoute so tapping it opens /schedule
+    await this.sendDeviceNotification(localNotification, '/schedule');
+
+    // Publish immediately so the badge and panel reflect it in real-time
+    this.publishNotifications(
+      this.sortNotifications([localNotification, ...this.notificationsSubject.value])
+    );
+  }
+
+  /**
    * Fires the "session duration reached" ring/notification once a running
    * Start/Stop session timer (see DashboardPage.checkDurationAlerts()) has
    * run at least as long as the session's scheduled duration. This is
@@ -400,7 +453,7 @@ export class NotificationCenterService {
     );
 
     const token = this.auth.token;
-    if (!token || serverIds.length === 0) {
+    if (!token) {
       return;
     }
 
@@ -408,7 +461,7 @@ export class NotificationCenterService {
       await firstValueFrom(
         this.http.patch(
           `${this.api}/notifications/read`,
-          { ids: serverIds },
+          { all: true, ids: serverIds },
           { headers: { Authorization: `Bearer ${token}` } }
         )
       );
@@ -464,6 +517,19 @@ export class NotificationCenterService {
     localStorage.setItem(this.getScopedStorageKey(this.notifiedDurationKey), JSON.stringify(Array.from(new Set(keys))));
   }
 
+  private readNotifiedUpcoming(): string[] {
+    try {
+      const raw = localStorage.getItem(this.getScopedStorageKey(this.notifiedUpcomingKey));
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private writeNotifiedUpcoming(keys: string[]): void {
+    localStorage.setItem(this.getScopedStorageKey(this.notifiedUpcomingKey), JSON.stringify(Array.from(new Set(keys))));
+  }
+
   private readReadServerNotifications(): number[] {
     try {
       const raw = localStorage.getItem(this.getScopedStorageKey(this.readServerNotificationsKey));
@@ -504,7 +570,14 @@ export class NotificationCenterService {
       .slice(0, 6);
   }
 
-  private async sendDeviceNotification(notification: StoredNotificationItem): Promise<void> {
+  /**
+   * @param targetRoute Optional route to navigate to when the notification is
+   *   tapped (e.g. '/schedule' for upcoming-workout reminders). Stored in the
+   *   native notification's `extra` object and read by app.component.ts's
+   *   localNotificationActionPerformed handler. For web notifications it is
+   *   passed directly to openFromDeviceNotification().
+   */
+  private async sendDeviceNotification(notification: StoredNotificationItem, targetRoute?: string): Promise<void> {
     if (Capacitor.isNativePlatform()) {
       const { LocalNotifications } = await import('@capacitor/local-notifications');
       const permissions = await LocalNotifications.checkPermissions();
@@ -528,7 +601,12 @@ export class NotificationCenterService {
           title: notification.title,
           body: expandedBody,
           schedule: { at: new Date(Date.now() + 1000) },
-          extra: { notificationId: notification.id },
+          extra: {
+            notificationId: notification.id,
+            // Consumed by app.component.ts's localNotificationActionPerformed
+            // handler to choose which route to navigate to on tap.
+            targetRoute: targetRoute ?? null,
+          },
           largeBody: expandedBody,
           summaryText: exercises.length ? `${exercises.length} exercises to do at home` : undefined,
         }],
@@ -554,9 +632,11 @@ export class NotificationCenterService {
       // tab and left the person wherever the page happened to be, with no
       // way to get back to that specific notification short of manually
       // opening the bell icon and scrolling to find it again.
+      // `targetRoute` lets upcoming-workout reminders navigate to /schedule
+      // on click instead of the default /dashboard panel.
       webNotification.onclick = () => {
         window.focus();
-        this.openFromDeviceNotification(notification.id);
+        this.openFromDeviceNotification(notification.id, targetRoute);
         webNotification.close();
       };
       return;
@@ -568,7 +648,7 @@ export class NotificationCenterService {
         const webNotification = new Notification(notification.title, { body: webBody });
         webNotification.onclick = () => {
           window.focus();
-          this.openFromDeviceNotification(notification.id);
+          this.openFromDeviceNotification(notification.id, targetRoute);
           webNotification.close();
         };
       }

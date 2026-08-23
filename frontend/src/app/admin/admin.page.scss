@@ -77,6 +77,10 @@
 // it only affects this page, not the app's dark shell elsewhere.
 :host ion-header {
   background: #ffffff;
+  padding-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  padding-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
+  padding-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
+  border-bottom: 1px solid var(--border-secondary);
 }
 
 ion-content.admin-content {
@@ -87,7 +91,10 @@ ion-content.admin-content {
 .admin-toolbar {
   --background: #FFFFFF;
   --border-color: transparent;
-  border-bottom: 1px solid var(--border-secondary);
+  --border-width: 0;
+  --min-height: 56px;
+  min-height: 56px;
+  border-bottom: none;
   padding: 0 16px;
 }
 

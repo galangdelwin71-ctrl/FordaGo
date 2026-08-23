@@ -100,7 +100,7 @@
     <div class="workout-count" *ngIf="todayWorkouts.length > 0">
       {{ todayWorkouts.length }} workout{{ todayWorkouts.length === 1 ? '' : 's' }} scheduled today
     </div>
-    <div class="card fade-up workout-card" *ngFor="let workout of displayedTodayWorkouts">
+    <div class="card fade-up workout-card" *ngFor="let workout of displayedTodayWorkouts; trackBy: trackByWorkout">
       <div class="workout-header">
         <div class="workout-title-wrap">
           <div>
@@ -153,7 +153,7 @@
       </div>
       <div
         class="exercise-item"
-        *ngFor="let ex of workout.exercises; let i = index"
+        *ngFor="let ex of workout.exercises; let i = index; trackBy: trackByExercise"
         [class.completed]="ex.done"
         [class.disabled]="workout.status === 'missed' || !isWorkoutStillActive(workout.time)"
         (click)="toggleExercise(workout, i)">
@@ -195,12 +195,12 @@
     <div class="section-label">Activity — Last 4 Weeks</div>
     <div class="card fade-up">
       <div class="heat-day-labels">
-        <div class="heat-lbl" *ngFor="let d of dayLabels">{{ d }}</div>
+        <div class="heat-lbl" *ngFor="let d of dayLabels; trackBy: trackByIndex">{{ d }}</div>
       </div>
       <div class="heat-grid">
         <div
           class="heat-cell"
-          *ngFor="let cell of heatmapData; let i = index"
+          *ngFor="let cell of heatmapData; let i = index; trackBy: trackByIndex"
           [class]="cell.isPadding ? 'heat-pad' : ('heat-' + cell.intensity)"
           [attr.title]="cell.isPadding ? null : (cell.date + ': ' + cell.label)"
           [attr.aria-hidden]="cell.isPadding ? 'true' : null"
@@ -254,7 +254,7 @@
       <button
         type="button"
         class="pr-item"
-        *ngFor="let pr of personalRecords"
+        *ngFor="let pr of personalRecords; trackBy: trackByPr"
         (click)="editPr(pr)">
         <div class="pr-icon"><ion-icon [name]="pr.icon"></ion-icon></div>
         <div class="pr-info">

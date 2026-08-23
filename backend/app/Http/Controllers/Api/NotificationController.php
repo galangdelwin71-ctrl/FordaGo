@@ -186,14 +186,21 @@ class NotificationController extends Controller
      */
     public function markRead(Request $request)
     {
+        $userId = $request->user()->id;
         $ids = $request->input('ids');
-        if (! is_array($ids) || empty($ids)) {
-            return response()->json(['message' => 'ids array is required'], 400);
+        $all = $request->boolean('all', false);
+
+        if ($all || ! is_array($ids) || empty($ids)) {
+            Notification::where('user_id', $userId)
+                ->orWhereNull('user_id')
+                ->update(['is_read' => true]);
+
+            return response()->json(['message' => 'All notifications marked as read']);
         }
 
         Notification::whereIn('id', $ids)
             ->where(fn ($q) => $q
-                ->where('user_id', $request->user()->id)
+                ->where('user_id', $userId)
                 ->orWhereNull('user_id')
             )
             ->update(['is_read' => true]);

@@ -67,6 +67,8 @@ typings/
 # System files
 .DS_Store
 Thumbs.db
+desktop.ini
+*.apk
 
 # Old backup/archive
 _archive/
