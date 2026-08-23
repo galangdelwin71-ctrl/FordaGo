@@ -461,11 +461,24 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
     }
   }
 
+  closeAllModals(): void {
+    this.isClientsModalOpen = false;
+    this.isRequestsModalOpen = false;
+    this.isMessagesModalOpen = false;
+    this.isEarningsModalOpen = false;
+    this.profileModalOpen = false;
+    this.availabilityModalOpen = false;
+    this.programModalOpen = false;
+    this.isDeleteConfirmOpen = false;
+  }
+
   ngOnDestroy(): void {
+    this.closeAllModals();
     this.sub.unsubscribe();
   }
 
   close(): void {
+    this.closeAllModals();
     this.closed.emit();
   }
 
@@ -483,6 +496,7 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
    * than opted into per-call-site.
    */
   private navigateAway(): void {
+    this.closeAllModals();
     this.coachingNav.requestReopen(
       this.isCoach ? this.coachTab : this.activeTab,
       this.hostPage,
@@ -1420,6 +1434,7 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
   }
 
   openConversation(convo: Conversation) {
+    this.closeAllModals();
     if (convo.unread_count > 0) {
       convo.unread_count = 0;
       this.coachingService.markConversationAsRead(convo.id);
@@ -1432,6 +1447,7 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
 
   /** Opens the chat thread for one of the coach's clients (My Clients tab). */
   openClientChat(item: CoachClientItem): void {
+    this.closeAllModals();
     const convo = this.conversations.find((c) => c.id === item.conversation_id);
     if (convo && convo.unread_count > 0) {
       convo.unread_count = 0;
