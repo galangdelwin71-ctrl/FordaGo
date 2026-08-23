@@ -247,8 +247,8 @@
 }
 
 .support-icon-wrapper {
-  background: rgba(59, 130, 246, 0.15);
-  color: #2563eb;
+  background: rgba(255, 214, 0, 0.15);
+  color: #ffd600;
 }
 
 .success-title,
@@ -276,26 +276,27 @@
 .facebook-action-btn {
   width: 100%;
   height: 46px;
-  background: #1877f2;
-  color: #ffffff;
+  background: linear-gradient(135deg, #ffd600 0%, #ffb703 100%);
+  color: #0b0c10;
   border: none;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
+  border-radius: 12px;
+  font-size: 14.5px;
+  font-weight: 750;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(24, 119, 242, 0.3);
+  box-shadow: 0 4px 16px rgba(255, 214, 0, 0.35);
   transition: all 0.2s ease;
 
   ion-icon {
-    font-size: 18px;
+    font-size: 19px;
+    color: #0b0c10;
   }
 
   &:hover {
-    background: #166fe5;
+    filter: brightness(1.05);
     transform: translateY(-1px);
   }
 
