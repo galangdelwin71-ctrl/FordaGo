@@ -223,10 +223,8 @@ export class ChatPage implements OnInit, OnDestroy {
     // Suppress incoming toasts while the user is actively reading this chat
     this.chatToastService.setActiveChat(this.conversationId);
 
-    // Optimistically clear unread badge in memory & local cache (0ms delay)
-    // No need for separate HTTP PATCH /read here because loadMessages() immediately
-    // queries GET /messages which marks read on the backend automatically.
-    this.coachingService.markConversationAsRead(this.conversationId, false);
+    // Optimistically clear unread badge in memory & local cache, and notify backend (0ms perceived delay)
+    this.coachingService.markConversationAsRead(this.conversationId, true);
 
     // Refresh messages in case any arrived while we were away
     this.loadMessages();
@@ -453,8 +451,22 @@ export class ChatPage implements OnInit, OnDestroy {
             ChatPage.messagesCache.set(this.conversationId, this.messages);
             void setCachedData(`fordago.cache.chat_msgs_${this.conversationId}`, this.messages.slice(-50));
             this.scrollToBottom();
-            // Instantly clear unread badge in memory/cache without extra HTTP call
-            this.coachingService.markConversationAsRead(this.conversationId, false);
+
+            // Instantly whisper to the partner that their message was seen (0ms delay)
+            if (this.activeChannel) {
+              try {
+                this.activeChannel.whisper('read', {
+                  conversation_id: this.conversationId,
+                  reader_id: this.currentUserId,
+                  read_at: new Date().toISOString(),
+                });
+              } catch (e) {
+                console.warn('Whisper read error:', e);
+              }
+            }
+
+            // Immediately notify backend to persist read_at and clear badges
+            this.coachingService.markConversationAsRead(this.conversationId, true);
           }
         }
       });
@@ -462,6 +474,36 @@ export class ChatPage implements OnInit, OnDestroy {
 
     // Single correct listener — do NOT add duplicates for the same event.
     channel.listen('.message.sent', handleIncomingMessage);
+
+    // Initial whisper to notify partner that we are active in chat and have seen messages
+    try {
+      channel.whisper('read', {
+        conversation_id: this.conversationId,
+        reader_id: this.currentUserId,
+        read_at: new Date().toISOString(),
+      });
+    } catch (e) {
+      // ignore
+    }
+
+    // ── Instant whisper read receipt (0ms client-to-client) ────────────────
+    channel.listenForWhisper('read', (data: { conversation_id?: number; reader_id?: number; read_at?: string }) => {
+      if (Number(data?.reader_id) === Number(this.currentUserId)) return;
+      const readAt = data?.read_at || new Date().toISOString();
+      this.zone.run(() => {
+        let updated = false;
+        for (const m of this.messages) {
+          if (Number(m.sender_id) === Number(this.currentUserId) && !m.read_at) {
+            m.read_at = readAt;
+            updated = true;
+          }
+        }
+        if (updated) {
+          ChatPage.messagesCache.set(this.conversationId, this.messages);
+          void setCachedData(`fordago.cache.chat_msgs_${this.conversationId}`, this.messages.slice(-50));
+        }
+      });
+    });
 
     // ── Typing whisper ─────────────────────────────────────────────────────
     channel.listenForWhisper('typing', (e: { userId: number; isTyping: boolean }) => {
@@ -479,7 +521,7 @@ export class ChatPage implements OnInit, OnDestroy {
       });
     });
 
-    // ── Read receipt (double checkmark) ────────────────────────────────────
+    // ── Read receipt broadcast fallback (double checkmark) ─────────────────
     channel.listen('.messages.read', (data: { conversation_id: number; reader_id: number; read_at: string }) => {
       if (Number(data.reader_id) === Number(this.currentUserId)) return;
       this.zone.run(() => {
