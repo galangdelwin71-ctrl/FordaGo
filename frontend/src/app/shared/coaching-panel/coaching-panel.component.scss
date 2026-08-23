@@ -1675,27 +1675,27 @@ select.cd-form-select {
 
 // ── Bottom-sheet modal & backdrop blur ─────────────────────
 ion-modal {
-  --backdrop-opacity: 0.65;
-  --background: #0f1523;
+  --backdrop-opacity: 0.72;
+  --background: #0d111d;
   --border-radius: 24px 24px 0 0;
 }
 
 ion-modal::part(backdrop) {
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
 }
 
 .cd-overlay {
   position: fixed;
   inset: 0;
   z-index: 1000;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
   animation: cdOverlayIn 0.2s ease;
 
-  &--dark { background: rgba(0, 0, 0, 0.8); }
+  &--dark { background: rgba(0, 0, 0, 0.85); }
 }
 
 @keyframes cdOverlayIn {

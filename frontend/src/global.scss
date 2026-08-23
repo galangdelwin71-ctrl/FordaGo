@@ -233,18 +233,18 @@ textarea {
    ────────────────────────────────────────────────────────────────── */
 /* ── Blurred backdrop for sheet modals and dialogs ── */
 ion-modal {
-  --backdrop-opacity: 0.65;
+  --backdrop-opacity: 0.72;
 }
 
 ion-modal::part(backdrop) {
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(10px) !important;
-  -webkit-backdrop-filter: blur(10px) !important;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(28px) !important;
+  -webkit-backdrop-filter: blur(28px) !important;
 }
 
 ion-backdrop {
-  backdrop-filter: blur(10px) !important;
-  -webkit-backdrop-filter: blur(10px) !important;
+  backdrop-filter: blur(28px) !important;
+  -webkit-backdrop-filter: blur(28px) !important;
 }
 
 body.ion-palette-dark ion-modal {
