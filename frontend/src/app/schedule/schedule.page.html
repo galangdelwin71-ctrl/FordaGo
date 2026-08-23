@@ -176,10 +176,6 @@
               </select>
             </div>
             <div class="edit-row">
-              <select class="edit-select" [(ngModel)]="editBuffer.coach">
-                <option value="">No coach</option>
-                <option *ngFor="let c of coaches" [value]="c">{{ c }}</option>
-              </select>
               <select class="edit-select" [(ngModel)]="editBuffer.location">
                 <option *ngFor="let l of locations" [value]="l">{{ l }}</option>
               </select>
@@ -408,17 +404,6 @@
         </div>
 
         <div class="field-group">
-          <label class="field-label">Coach (Optional)</label>
-          <div class="field-wrap">
-            <span class="field-icon">👤</span>
-            <select [(ngModel)]="newWorkoutCoach">
-              <option value="">No coach</option>
-              <option *ngFor="let c of coaches" [value]="c">{{ c }}</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="field-group">
           <label class="field-label">Location</label>
           <div class="field-wrap">
             <span class="field-icon">📍</span>
@@ -609,17 +594,6 @@
                     <option *ngFor="let d of durationOptions" [value]="d">{{ d }}</option>
                   </select>
                 </div>
-              </div>
-            </div>
-
-            <div class="field-group">
-              <label class="field-label">Coach (Optional)</label>
-              <div class="field-wrap">
-                <span class="field-icon">👤</span>
-                <select [(ngModel)]="day.coach">
-                  <option value="">No coach</option>
-                  <option *ngFor="let c of coaches" [value]="c">{{ c }}</option>
-                </select>
               </div>
             </div>
 
