@@ -185,184 +185,209 @@
     </div>
 
     <!-- ═══════════════════════════════════════════════════════
-         CLIENTS MODAL
+         CLIENTS MODAL (Draggable / Swipeable)
          ═══════════════════════════════════════════════════════ -->
-    <!-- ═══════════════════════════════════════════════════════
-         CLIENTS MODAL
-         ═══════════════════════════════════════════════════════ -->
-    <div class="cd-overlay" *ngIf="isClientsModalOpen" (click)="closeClientsModal()"></div>
-    <div class="cd-sheet" [class.is-open]="isClientsModalOpen" role="dialog" aria-modal="true">
-      <div class="cd-sheet-handle"></div>
-      <div class="cd-sheet-header">
-        <h2 class="cd-sheet-title">
-          <ion-icon name="people-outline"></ion-icon> Clients
-          <span class="cd-badge-pill" *ngIf="clients.length > 0">{{ clients.length }}</span>
-        </h2>
-        <button type="button" class="cd-sheet-close" (click)="closeClientsModal()">
-          <ion-icon name="close-outline"></ion-icon>
-        </button>
-      </div>
-      <div class="cd-sheet-body">
-        <div *ngIf="clients.length === 0" class="cd-empty-state">
-          <div class="cd-empty-state-icon-ring"><ion-icon name="people-outline"></ion-icon></div>
-          <strong>No Clients Yet</strong>
-          <span>Members who message you will appear here.</span>
-        </div>
-        <div class="cd-client-item" *ngFor="let item of clients; trackBy: trackByClient" (click)="openClientChat(item)">
-          <div class="cd-session-avatar">
-            <img *ngIf="item.client.profile_image" [src]="item.client.profile_image" alt="" />
-            <span *ngIf="!item.client.profile_image">{{ (item.client.first_name || item.client.username || 'C').charAt(0) }}</span>
+    <ion-modal
+      [isOpen]="isClientsModalOpen"
+      (didDismiss)="closeClientsModal()"
+      [breakpoints]="[0, 0.75, 0.95]"
+      [initialBreakpoint]="0.75"
+      [handle]="true">
+      <ng-template>
+        <div class="cd-modal-content">
+          <div class="cd-sheet-header">
+            <h2 class="cd-sheet-title">
+              <ion-icon name="people-outline"></ion-icon> Clients
+              <span class="cd-badge-pill" *ngIf="clients.length > 0">{{ clients.length }}</span>
+            </h2>
+            <button type="button" class="cd-sheet-close" (click)="closeClientsModal()">
+              <ion-icon name="close-outline"></ion-icon>
+            </button>
           </div>
-          <div class="cd-session-info">
-            <div class="cd-session-name">{{ item.client.first_name || item.client.username || 'Client' }} {{ item.client.last_name || '' }}</div>
-            <div class="cd-session-focus" *ngIf="item.next_session">
-              Next: {{ formatSessionDate(item.next_session.session_date) }} · {{ item.next_session.time_val }} {{ item.next_session.time_ampm }}
+          <div class="cd-sheet-body">
+            <div *ngIf="clients.length === 0" class="cd-empty-state">
+              <div class="cd-empty-state-icon-ring"><ion-icon name="people-outline"></ion-icon></div>
+              <strong>No Clients Yet</strong>
+              <span>Members who message you will appear here.</span>
             </div>
-            <div class="cd-session-focus" *ngIf="!item.next_session && item.latest_message">{{ item.latest_message.body }}</div>
-            <div class="cd-session-focus cd-session-empty-msg" *ngIf="!item.next_session && !item.latest_message">Tap to start chatting</div>
-          </div>
-          <div class="cd-client-actions">
-            <button type="button" class="cd-chat-client-btn" title="Chat with client">
-              <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
-            </button>
-            <button type="button" class="cd-delete-client-btn" (click)="promptDeleteClient(item, $event)" title="Remove client">
-              <ion-icon name="trash-outline"></ion-icon>
-            </button>
+            <div class="cd-client-item" *ngFor="let item of clients; trackBy: trackByClient" (click)="openClientChat(item)">
+              <div class="cd-session-avatar">
+                <img *ngIf="item.client.profile_image" [src]="item.client.profile_image" alt="" />
+                <span *ngIf="!item.client.profile_image">{{ (item.client.first_name || item.client.username || 'C').charAt(0) }}</span>
+              </div>
+              <div class="cd-session-info">
+                <div class="cd-session-name">{{ item.client.first_name || item.client.username || 'Client' }} {{ item.client.last_name || '' }}</div>
+                <div class="cd-session-focus" *ngIf="item.next_session">
+                  Next: {{ formatSessionDate(item.next_session.session_date) }} · {{ item.next_session.time_val }} {{ item.next_session.time_ampm }}
+                </div>
+                <div class="cd-session-focus" *ngIf="!item.next_session && item.latest_message">{{ item.latest_message.body }}</div>
+                <div class="cd-session-focus cd-session-empty-msg" *ngIf="!item.next_session && !item.latest_message">Tap to start chatting</div>
+              </div>
+              <div class="cd-client-actions">
+                <button type="button" class="cd-chat-client-btn" title="Chat with client">
+                  <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+                </button>
+                <button type="button" class="cd-delete-client-btn" (click)="promptDeleteClient(item, $event)" title="Remove client">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </ng-template>
+    </ion-modal>
 
     <!-- ═══════════════════════════════════════════════════════
-         REQUESTS MODAL
+         REQUESTS MODAL (Draggable / Swipeable)
          ═══════════════════════════════════════════════════════ -->
-    <div class="cd-overlay" *ngIf="isRequestsModalOpen" (click)="closeRequestsModal()"></div>
-    <div class="cd-sheet" [class.is-open]="isRequestsModalOpen" role="dialog" aria-modal="true">
-      <div class="cd-sheet-handle"></div>
-      <div class="cd-sheet-header">
-        <h2 class="cd-sheet-title">
-          <ion-icon name="mail-unread-outline"></ion-icon> Pending Requests
-          <span class="cd-badge-pill cd-badge-pill--amber" *ngIf="requests.length > 0">{{ requests.length }}</span>
-        </h2>
-        <button type="button" class="cd-sheet-close" (click)="closeRequestsModal()">
-          <ion-icon name="close-outline"></ion-icon>
-        </button>
-      </div>
-      <div class="cd-sheet-body">
-        <div *ngIf="requests.length === 0" class="cd-empty-state">
-          <div class="cd-empty-state-icon-ring"><ion-icon name="mail-unread-outline"></ion-icon></div>
-          <strong>No Pending Requests</strong>
-          <span>New client requests will appear here for you to accept or decline.</span>
-        </div>
-        <div class="cd-request-item" *ngFor="let item of requests; trackBy: trackByRequest">
-          <div class="cd-session-avatar">
-            <img *ngIf="item.client.profile_image" [src]="item.client.profile_image" alt="" />
-            <span *ngIf="!item.client.profile_image">{{ (item.client.first_name || item.client.username || 'C').charAt(0) }}</span>
-          </div>
-          <div class="cd-session-info">
-            <div class="cd-session-name">{{ item.client.first_name || item.client.username || 'Client' }} {{ item.client.last_name || '' }}</div>
-            <div class="cd-session-focus" *ngIf="item.latest_message">{{ item.latest_message.body }}</div>
-            <div class="cd-session-focus cd-session-empty-msg" *ngIf="!item.latest_message">Wants to start training with you</div>
-          </div>
-          <div class="cd-request-actions">
-            <button type="button" class="cd-request-accept-btn"
-              [disabled]="requestActionInFlightId === item.conversation_id"
-              (click)="acceptRequest(item)"
-              title="Accept client">
-              <ion-icon name="checkmark-circle-outline"></ion-icon>
-            </button>
-            <button type="button" class="cd-request-decline-btn"
-              [disabled]="requestActionInFlightId === item.conversation_id"
-              (click)="declineRequest(item)"
-              title="Decline request">
-              <ion-icon name="close-circle-outline"></ion-icon>
+    <ion-modal
+      [isOpen]="isRequestsModalOpen"
+      (didDismiss)="closeRequestsModal()"
+      [breakpoints]="[0, 0.7, 0.95]"
+      [initialBreakpoint]="0.7"
+      [handle]="true">
+      <ng-template>
+        <div class="cd-modal-content">
+          <div class="cd-sheet-header">
+            <h2 class="cd-sheet-title">
+              <ion-icon name="mail-unread-outline"></ion-icon> Pending Requests
+              <span class="cd-badge-pill cd-badge-pill--amber" *ngIf="requests.length > 0">{{ requests.length }}</span>
+            </h2>
+            <button type="button" class="cd-sheet-close" (click)="closeRequestsModal()">
+              <ion-icon name="close-outline"></ion-icon>
             </button>
           </div>
+          <div class="cd-sheet-body">
+            <div *ngIf="requests.length === 0" class="cd-empty-state">
+              <div class="cd-empty-state-icon-ring"><ion-icon name="mail-unread-outline"></ion-icon></div>
+              <strong>No Pending Requests</strong>
+              <span>New client requests will appear here for you to accept or decline.</span>
+            </div>
+            <div class="cd-request-item" *ngFor="let item of requests; trackBy: trackByRequest">
+              <div class="cd-session-avatar">
+                <img *ngIf="item.client.profile_image" [src]="item.client.profile_image" alt="" />
+                <span *ngIf="!item.client.profile_image">{{ (item.client.first_name || item.client.username || 'C').charAt(0) }}</span>
+              </div>
+              <div class="cd-session-info">
+                <div class="cd-session-name">{{ item.client.first_name || item.client.username || 'Client' }} {{ item.client.last_name || '' }}</div>
+                <div class="cd-session-focus" *ngIf="item.latest_message">{{ item.latest_message.body }}</div>
+                <div class="cd-session-focus cd-session-empty-msg" *ngIf="!item.latest_message">Wants to start training with you</div>
+              </div>
+              <div class="cd-request-actions">
+                <button type="button" class="cd-request-accept-btn"
+                  [disabled]="requestActionInFlightId === item.conversation_id"
+                  (click)="acceptRequest(item)"
+                  title="Accept client">
+                  <ion-icon name="checkmark-circle-outline"></ion-icon>
+                </button>
+                <button type="button" class="cd-request-decline-btn"
+                  [disabled]="requestActionInFlightId === item.conversation_id"
+                  (click)="declineRequest(item)"
+                  title="Decline request">
+                  <ion-icon name="close-circle-outline"></ion-icon>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      </ng-template>
+    </ion-modal>
 
     <!-- ═══════════════════════════════════════════════════════
-         MESSAGES MODAL
+         MESSAGES MODAL (Draggable / Swipeable)
          ═══════════════════════════════════════════════════════ -->
-    <div class="cd-overlay" *ngIf="isMessagesModalOpen" (click)="closeMessagesModal()"></div>
-    <div class="cd-sheet" [class.is-open]="isMessagesModalOpen" role="dialog" aria-modal="true">
-      <div class="cd-sheet-handle"></div>
-      <div class="cd-sheet-header">
-        <h2 class="cd-sheet-title">
-          <ion-icon name="chatbubble-ellipses-outline"></ion-icon> Messages
-          <span class="cd-badge-pill" *ngIf="totalUnreadMessages > 0">{{ totalUnreadMessages }} new</span>
-        </h2>
-        <button type="button" class="cd-sheet-close" (click)="closeMessagesModal()">
-          <ion-icon name="close-outline"></ion-icon>
-        </button>
-      </div>
-      <div class="cd-sheet-body">
-        <div *ngIf="conversations.length === 0" class="cd-empty-state">
-          <div class="cd-empty-state-icon-ring"><ion-icon name="chatbubble-ellipses-outline"></ion-icon></div>
-          <strong>No Messages Yet</strong>
-          <span>Conversations with your clients will appear here.</span>
-        </div>
-        <div class="cd-client-item" *ngFor="let convo of conversations" (click)="openConversation(convo)">
-          <div class="cd-session-avatar">
-            <img *ngIf="convo.partner.profile_image" [src]="convo.partner.profile_image" alt="" />
-            <span *ngIf="!convo.partner.profile_image">{{ (convo.partner.first_name || convo.partner.username || 'U').charAt(0) }}</span>
+    <ion-modal
+      [isOpen]="isMessagesModalOpen"
+      (didDismiss)="closeMessagesModal()"
+      [breakpoints]="[0, 0.75, 0.95]"
+      [initialBreakpoint]="0.75"
+      [handle]="true">
+      <ng-template>
+        <div class="cd-modal-content">
+          <div class="cd-sheet-header">
+            <h2 class="cd-sheet-title">
+              <ion-icon name="chatbubble-ellipses-outline"></ion-icon> Messages
+              <span class="cd-badge-pill" *ngIf="totalUnreadMessages > 0">{{ totalUnreadMessages }} new</span>
+            </h2>
+            <button type="button" class="cd-sheet-close" (click)="closeMessagesModal()">
+              <ion-icon name="close-outline"></ion-icon>
+            </button>
           </div>
-          <div class="cd-session-info">
-            <div class="cd-session-name">{{ convo.partner.first_name || convo.partner.username || 'Client' }} {{ convo.partner.last_name || '' }}</div>
-            <div class="cd-session-focus" *ngIf="convo.latest_message">{{ convo.latest_message.body }}</div>
-            <div class="cd-session-focus cd-session-empty-msg" *ngIf="!convo.latest_message">No messages yet</div>
+          <div class="cd-sheet-body">
+            <div *ngIf="conversations.length === 0" class="cd-empty-state">
+              <div class="cd-empty-state-icon-ring"><ion-icon name="chatbubble-ellipses-outline"></ion-icon></div>
+              <strong>No Messages Yet</strong>
+              <span>Conversations with your clients will appear here.</span>
+            </div>
+            <div class="cd-client-item" *ngFor="let convo of conversations" (click)="openConversation(convo)">
+              <div class="cd-session-avatar">
+                <img *ngIf="convo.partner.profile_image" [src]="convo.partner.profile_image" alt="" />
+                <span *ngIf="!convo.partner.profile_image">{{ (convo.partner.first_name || convo.partner.username || 'U').charAt(0) }}</span>
+              </div>
+              <div class="cd-session-info">
+                <div class="cd-session-name">{{ convo.partner.first_name || convo.partner.username || 'Client' }} {{ convo.partner.last_name || '' }}</div>
+                <div class="cd-session-focus" *ngIf="convo.latest_message">{{ convo.latest_message.body }}</div>
+                <div class="cd-session-focus cd-session-empty-msg" *ngIf="!convo.latest_message">No messages yet</div>
+              </div>
+              <span class="cd-unread-badge" *ngIf="convo.unread_count > 0">{{ convo.unread_count }}</span>
+              <ion-icon name="chevron-forward-outline" class="cd-client-chevron" *ngIf="!convo.unread_count"></ion-icon>
+            </div>
           </div>
-          <span class="cd-unread-badge" *ngIf="convo.unread_count > 0">{{ convo.unread_count }}</span>
-          <ion-icon name="chevron-forward-outline" class="cd-client-chevron" *ngIf="!convo.unread_count"></ion-icon>
         </div>
-      </div>
-    </div>
+      </ng-template>
+    </ion-modal>
 
     <!-- ═══════════════════════════════════════════════════════
-         EARNINGS MODAL
+         EARNINGS MODAL (Draggable / Swipeable)
          ═══════════════════════════════════════════════════════ -->
-    <div class="cd-overlay" *ngIf="isEarningsModalOpen" (click)="closeEarningsModal()"></div>
-    <div class="cd-sheet cd-sheet--tall" [class.is-open]="isEarningsModalOpen" role="dialog" aria-modal="true">
-      <div class="cd-sheet-handle"></div>
-      <div class="cd-sheet-header">
-        <h2 class="cd-sheet-title"><ion-icon name="cash-outline"></ion-icon> Earnings</h2>
-        <button type="button" class="cd-sheet-close" (click)="closeEarningsModal()">
-          <ion-icon name="close-outline"></ion-icon>
-        </button>
-      </div>
-      <div class="cd-sheet-body">
-        <!-- Monthly summary -->
-        <div class="cd-section-label" *ngIf="monthlyEarnings.length > 0">Monthly Breakdown</div>
-        <div class="cd-earnings-month" *ngFor="let row of monthlyEarnings; trackBy: trackByIndex">
-          <div class="cd-earnings-month-label">{{ formatMonthLabel(row.month) }}</div>
-          <div class="cd-earnings-month-right">
-            <span class="cd-earnings-amount">₱{{ row.total | number:'1.2-2' }}</span>
-            <span class="cd-earnings-count">{{ row.session_count }} session{{ row.session_count !== 1 ? 's' : '' }}</span>
+    <ion-modal
+      [isOpen]="isEarningsModalOpen"
+      (didDismiss)="closeEarningsModal()"
+      [breakpoints]="[0, 0.8, 0.98]"
+      [initialBreakpoint]="0.8"
+      [handle]="true">
+      <ng-template>
+        <div class="cd-modal-content">
+          <div class="cd-sheet-header">
+            <h2 class="cd-sheet-title"><ion-icon name="cash-outline"></ion-icon> Earnings</h2>
+            <button type="button" class="cd-sheet-close" (click)="closeEarningsModal()">
+              <ion-icon name="close-outline"></ion-icon>
+            </button>
           </div>
-        </div>
+          <div class="cd-sheet-body">
+            <!-- Monthly summary -->
+            <div class="cd-section-label" *ngIf="monthlyEarnings.length > 0">Monthly Breakdown</div>
+            <div class="cd-earnings-month" *ngFor="let row of monthlyEarnings; trackBy: trackByIndex">
+              <div class="cd-earnings-month-label">{{ formatMonthLabel(row.month) }}</div>
+              <div class="cd-earnings-month-right">
+                <span class="cd-earnings-amount">₱{{ row.total | number:'1.2-2' }}</span>
+                <span class="cd-earnings-count">{{ row.session_count }} session{{ row.session_count !== 1 ? 's' : '' }}</span>
+              </div>
+            </div>
 
-        <!-- Session history -->
-        <div class="cd-section-label" style="margin-top: 18px;" *ngIf="earningsHistory.length > 0">Session History</div>
-        <div *ngIf="earningsHistory.length === 0" class="cd-empty-state">
-          <div class="cd-empty-state-icon-ring"><ion-icon name="cash-outline"></ion-icon></div>
-          <strong>No Earnings Yet</strong>
-          <span>Accepted paid sessions will appear here.</span>
-        </div>
-        <div class="cd-earnings-item" *ngFor="let item of earningsHistory; trackBy: trackByIndex">
-          <div class="cd-session-avatar">
-            <img *ngIf="item.client?.profile_image" [src]="item.client.profile_image" alt="" />
-            <span *ngIf="!item.client?.profile_image">{{ (item.client?.first_name || item.client?.username || 'C').charAt(0) }}</span>
+            <!-- Session history -->
+            <div class="cd-section-label" style="margin-top: 18px;" *ngIf="earningsHistory.length > 0">Session History</div>
+            <div *ngIf="earningsHistory.length === 0" class="cd-empty-state">
+              <div class="cd-empty-state-icon-ring"><ion-icon name="cash-outline"></ion-icon></div>
+              <strong>No Earnings Yet</strong>
+              <span>Accepted paid sessions will appear here.</span>
+            </div>
+            <div class="cd-earnings-item" *ngFor="let item of earningsHistory; trackBy: trackByIndex">
+              <div class="cd-session-avatar">
+                <img *ngIf="item.client?.profile_image" [src]="item.client.profile_image" alt="" />
+                <span *ngIf="!item.client?.profile_image">{{ (item.client?.first_name || item.client?.username || 'C').charAt(0) }}</span>
+              </div>
+              <div class="cd-session-info">
+                <div class="cd-session-name">{{ item.client?.first_name || item.client?.username || 'Client' }} {{ item.client?.last_name || '' }}</div>
+                <div class="cd-session-focus">{{ formatSessionDate(item.session_date) }} · {{ item.time_val }} {{ item.time_ampm }}</div>
+                <div class="cd-session-focus" *ngIf="item.location"><ion-icon name="location-outline"></ion-icon> {{ item.location }}</div>
+              </div>
+              <div class="cd-earnings-price">₱{{ item.price | number:'1.2-2' }}</div>
+            </div>
           </div>
-          <div class="cd-session-info">
-            <div class="cd-session-name">{{ item.client?.first_name || item.client?.username || 'Client' }} {{ item.client?.last_name || '' }}</div>
-            <div class="cd-session-focus">{{ formatSessionDate(item.session_date) }} · {{ item.time_val }} {{ item.time_ampm }}</div>
-            <div class="cd-session-focus" *ngIf="item.location"><ion-icon name="location-outline"></ion-icon> {{ item.location }}</div>
-          </div>
-          <div class="cd-earnings-price">₱{{ item.price | number:'1.2-2' }}</div>
         </div>
-      </div>
-    </div>
+      </ng-template>
+    </ion-modal>
 
     <!-- ═══════════════════════════════════════════════════════
          DELETE CLIENT CONFIRM DIALOG

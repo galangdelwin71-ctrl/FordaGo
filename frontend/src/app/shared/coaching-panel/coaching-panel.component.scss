@@ -1797,7 +1797,8 @@ select.cd-form-select {
 // ── Client & Request item cards inside modal ────────────────
 .cd-client-item,
 .cd-request-item {
-  margin: 0 16px 8px;
+  margin: 0 0 10px;
+  width: 100%;
   padding: 12px 14px;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.04);
@@ -2071,7 +2072,8 @@ select.cd-form-select {
 
 // ── Earnings items & monthly breakdown ─────────────────────
 .cd-earnings-month {
-  margin: 0 16px 8px;
+  margin: 0 0 10px;
+  width: 100%;
   padding: 12px 14px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.07);
@@ -2108,7 +2110,8 @@ select.cd-form-select {
 }
 
 .cd-earnings-item {
-  margin: 0 16px 8px;
+  margin: 0 0 10px;
+  width: 100%;
   padding: 12px 14px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.07);
@@ -2129,4 +2132,5 @@ select.cd-form-select {
   border-radius: 8px;
   margin-left: auto;
 }
+
 
