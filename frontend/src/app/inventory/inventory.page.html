@@ -184,8 +184,9 @@
 <ion-modal
   [isOpen]="orderModalOpen"
   (didDismiss)="closeOrderModal()"
-  [breakpoints]="[0, 1]"
-  [initialBreakpoint]="1"
+  [breakpoints]="[0, 0.75, 0.95]"
+  [initialBreakpoint]="0.75"
+  [handle]="true"
   class="bottom-sheet-modal"
 >
   <ng-template>
@@ -302,8 +303,9 @@
 <ion-modal
   [isOpen]="quickOrderConfirmOpen"
   (didDismiss)="closeQuickOrderConfirm()"
-  [breakpoints]="[0, 1]"
-  [initialBreakpoint]="1"
+  [breakpoints]="[0, 0.4]"
+  [initialBreakpoint]="0.4"
+  [handle]="true"
   class="bottom-sheet-modal"
 >
   <ng-template>
@@ -338,8 +340,9 @@
 <ion-modal
   [isOpen]="cartModalOpen"
   (didDismiss)="closeCart()"
-  [breakpoints]="[0, 1]"
-  [initialBreakpoint]="1"
+  [breakpoints]="[0, 0.68, 0.92]"
+  [initialBreakpoint]="0.68"
+  [handle]="true"
   class="bottom-sheet-modal"
 >
   <ng-template>
@@ -430,8 +433,9 @@
 <ion-modal
   [isOpen]="orderSuccessOpen"
   (didDismiss)="closeOrderSuccess()"
-  [breakpoints]="[0, 1]"
-  [initialBreakpoint]="1"
+  [breakpoints]="[0, 0.65]"
+  [initialBreakpoint]="0.65"
+  [handle]="true"
   class="bottom-sheet-modal"
 >
   <ng-template>
@@ -496,8 +500,9 @@
 <ion-modal
   [isOpen]="ordersModalOpen"
   (didDismiss)="closeOrders()"
-  [breakpoints]="[0, 1]"
-  [initialBreakpoint]="1"
+  [breakpoints]="[0, 0.78, 0.95]"
+  [initialBreakpoint]="0.78"
+  [handle]="true"
   class="bottom-sheet-modal"
 >
   <ng-template>
