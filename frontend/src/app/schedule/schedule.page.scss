@@ -1168,160 +1168,213 @@ ion-content {
 :host-context(body.light-theme) {
   // ── CSS Variable overrides ──────────────────────────
   --surface:      #ffffff;
-  --surface2:     rgba(15,23,42,0.05);
+  --surface2:     #f8fafc;
   --border:       rgba(15,23,42,0.09);
   --text:         #0f172a;
-  --muted:        rgba(15,23,42,0.5);
-  --muted2:       rgba(15,23,42,0.4);
-  --lime:         #d97706;
-  --lime-dim:     rgba(245,158,11,0.1);
-  --lime-border:  rgba(245,158,11,0.25);
+  --muted:        #64748b;
+  --muted2:       #94a3b8;
+  --lime:         #ffd600;
+  --lime-dim:     rgba(15,23,42,0.05);
+  --lime-border:  rgba(15,23,42,0.12);
 
   // ── Page background ─────────────────────────────────
-  ion-content { --background: #f4f5f8 !important; }
+  ion-content { --background: #f8fafc !important; }
   .scroll-wrap { background: transparent; }
 
   // ── Month / Navigation ───────────────────────────────
-  .month-label { color: rgba(15,23,42,0.5); }
+  .month-label { color: #0f172a; font-weight: 800; }
   .nav-btn {
-    background: rgba(15,23,42,0.05);
-    border-color: rgba(15,23,42,0.1);
-    color: rgba(15,23,42,0.6);
+    background: #f1f5f9;
+    border: 1px solid rgba(15,23,42,0.1);
+    color: #0f172a;
+    box-shadow: 0 2px 6px rgba(15,23,42,0.04);
+
+    &:hover { background: #e2e8f0; }
   }
 
   // ── Day Strip ────────────────────────────────────────
   .day-pill {
-    background: rgba(15,23,42,0.04);
-    border-color: rgba(15,23,42,0.09);
-    &:hover { background: rgba(15,23,42,0.07); border-color: rgba(15,23,42,0.14); }
-    .day-name { color: rgba(15,23,42,0.4); }
-    .day-num  { color: #0f172a; }
-    .dot-indicator { background: #d97706; }
+    background: #ffffff;
+    border: 1px solid rgba(15,23,42,0.09);
+    box-shadow: 0 2px 6px rgba(15,23,42,0.03);
+
+    &:hover { background: #f8fafc; border-color: rgba(15,23,42,0.15); }
+    .day-name { color: #64748b; font-weight: 700; }
+    .day-num  { color: #0f172a; font-weight: 800; }
+    .dot-indicator { background: #10b981; }
+
+    &.active {
+      background: #ffd600;
+      border-color: #ffd600;
+      box-shadow: 0 4px 14px rgba(234,179,8,0.3);
+
+      .day-name { color: #000000; font-weight: 800; }
+      .day-num  { color: #000000; font-weight: 900; }
+      .dot-indicator { background: #000000; }
+    }
   }
 
   // ── Section header ───────────────────────────────────
-  .section-title { color: rgba(15,23,42,0.45); }
+  .section-title { color: #0f172a; font-weight: 800; }
   .session-count {
-    color: rgba(15,23,42,0.45);
-    background: rgba(15,23,42,0.04);
-    border-color: rgba(15,23,42,0.09);
+    color: #475569;
+    background: #f1f5f9;
+    border: 1px solid rgba(15,23,42,0.09);
+    font-weight: 700;
   }
   .session-view-all-btn {
-    background: rgba(15,23,42,0.04);
-    border-color: rgba(15,23,42,0.1);
-    color: rgba(15,23,42,0.55);
-    &:hover { color: #0f172a; border-color: rgba(15,23,42,0.18); }
+    background: #f1f5f9;
+    border: 1px solid rgba(15,23,42,0.1);
+    color: #0f172a;
+    &:hover { background: #e2e8f0; }
   }
   .icon-action-btn {
-    background: rgba(15,23,42,0.05);
-    border-color: rgba(15,23,42,0.1);
-    color: rgba(15,23,42,0.5);
-    &:hover { background: rgba(15,23,42,0.09); color: #d97706; border-color: rgba(245,158,11,0.3); }
+    background: #f1f5f9;
+    border: 1px solid rgba(15,23,42,0.1);
+    color: #0f172a;
+    &:hover { background: #e2e8f0; }
   }
 
   // ── Session Card ─────────────────────────────────────
   .session-card {
     background: #ffffff;
-    border-color: rgba(15,23,42,0.09);
-    box-shadow: 0 2px 8px rgba(15,23,42,0.06);
-    &:hover { border-color: rgba(245,158,11,0.25); background: #ffffff; }
+    border: 1px solid rgba(15,23,42,0.09);
+    box-shadow: 0 2px 10px rgba(15,23,42,0.05);
+    &:hover { border-color: rgba(15,23,42,0.18); background: #ffffff; }
   }
-  .session-title { color: #0f172a; }
-  .session-meta  { color: rgba(15,23,42,0.5); }
-  .session-coach { color: rgba(15,23,42,0.45); }
-  .session-coach .coach-icon ion-icon { color: rgba(15,23,42,0.4); }
+  .session-title { color: #0f172a; font-weight: 800; }
+  .session-meta  { color: #64748b; }
+  .session-coach { color: #64748b; }
+  .session-coach .coach-icon ion-icon { color: #64748b; }
   .session-coach .coach-dot { background: rgba(15,23,42,0.15); }
   .session-target .target-text {
-    color: #d97706;
-    background: rgba(245,158,11,0.1);
-    border-color: rgba(245,158,11,0.25);
+    color: #0f172a;
+    background: #f1f5f9;
+    border: 1px solid rgba(15,23,42,0.12);
+    font-weight: 750;
   }
-  .session-target .target-icon ion-icon { color: #d97706; }
+  .session-target .target-icon ion-icon { color: #0f172a; }
 
   // Time column
   .time-col {
-    .time-val  { color: #d97706; }
-    .time-ampm { color: rgba(15,23,42,0.4); }
+    .time-val  { color: #0f172a; font-weight: 850; }
+    .time-ampm { color: #64748b; }
     .time-line { background: rgba(15,23,42,0.1); }
-    .time-dot  { border-color: #d97706; }
+    .time-dot  { border-color: #0f172a; }
   }
 
   // Badges
-  .badge.badge-green  { background: rgba(245,158,11,0.1); color: #d97706; border-color: rgba(245,158,11,0.25); }
-  .badge.badge-amber  { background: rgba(249,115,22,0.1); color: #ea580c; border-color: rgba(249,115,22,0.2); }
-  .badge.badge-muted  { background: rgba(15,23,42,0.05); color: rgba(15,23,42,0.45); border-color: rgba(15,23,42,0.1); }
-  .badge.badge-done   { background: rgba(16,185,129,0.1); color: #059669; border-color: rgba(16,185,129,0.2); }
+  .badge.badge-green  { background: #f1f5f9; color: #475569; border: 1px solid rgba(15,23,42,0.12); font-weight: 750; }
+  .badge.badge-amber  { background: #f1f5f9; color: #475569; border: 1px solid rgba(15,23,42,0.12); font-weight: 750; }
+  .badge.badge-muted  { background: #f1f5f9; color: #64748b; border: 1px solid rgba(15,23,42,0.1); }
+  .badge.badge-done   { background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.25); font-weight: 750; }
 
   // Exercise list on session card
   .exercise-list {
-    background: rgba(15,23,42,0.03);
-    border-color: rgba(15,23,42,0.08);
+    background: #f8fafc;
+    border: 1px solid rgba(15,23,42,0.08);
+    border-radius: 12px;
   }
   .exercise-list-header {
     border-bottom-color: rgba(15,23,42,0.08);
-    .ex-list-title { color: rgba(15,23,42,0.45); }
-    .ex-list-count { color: rgba(15,23,42,0.35); }
+    .ex-list-title { color: #475569; font-weight: 750; }
+    .ex-list-count { color: #64748b; }
   }
   .ex-columns-header { border-bottom-color: rgba(15,23,42,0.08); }
   .ex-columns-name,
-  .ex-columns-detail { color: rgba(15,23,42,0.45); }
+  .ex-columns-detail { color: #64748b; font-weight: 700; }
   .exercise-item {
     &:not(:last-child) { border-bottom-color: rgba(15,23,42,0.06); }
-    .ex-num    { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.22); color: #d97706; }
-    .ex-name   { color: #0f172a; }
-    .ex-detail { color: rgba(15,23,42,0.5); background: rgba(15,23,42,0.05); border-color: rgba(15,23,42,0.09); }
+    .ex-num    {
+      background: #f1f5f9;
+      border: 1px solid rgba(15,23,42,0.12);
+      color: #0f172a;
+      font-weight: 800;
+      border-radius: 8px;
+    }
+    .ex-name   { color: #0f172a; font-weight: 700; }
+    .ex-detail {
+      color: #0f172a;
+      background: #f1f5f9;
+      border: 1px solid rgba(15,23,42,0.1);
+      font-weight: 750;
+      border-radius: 8px;
+    }
   }
 
   // Card action buttons
   .card-actions .action-btn {
-    background: rgba(15,23,42,0.05);
-    border-color: rgba(15,23,42,0.1);
-    color: rgba(15,23,42,0.6);
-    &:hover { background: rgba(15,23,42,0.09); color: #0f172a; border-color: rgba(15,23,42,0.15); }
-    &.primary { background: rgba(245,158,11,0.1); color: #d97706; border-color: rgba(245,158,11,0.25); &:hover { background: rgba(245,158,11,0.18); } }
-    &.danger  { background: rgba(239,68,68,0.07); color: #dc2626; border-color: rgba(239,68,68,0.18); }
+    background: #f1f5f9;
+    border: 1px solid rgba(15,23,42,0.1);
+    color: #0f172a;
+    font-weight: 750;
+    &:hover { background: #e2e8f0; }
+    &.primary {
+      background: #f1f5f9;
+      color: #0f172a;
+      border: 1px solid #cbd5e1;
+      &:hover { background: #e2e8f0; }
+    }
+    &.danger {
+      background: #fef2f2;
+      color: #dc2626;
+      border: 1px solid rgba(220,38,38,0.25);
+      &:hover { background: rgba(220,38,38,0.12); }
+    }
   }
 
   // Inline edit panel
   .edit-panel {
     border-top-color: rgba(15,23,42,0.09);
     .edit-input, .edit-select {
-      background: rgba(15,23,42,0.05);
-      border-color: rgba(15,23,42,0.12);
+      background: #f8fafc;
+      border: 1px solid rgba(15,23,42,0.12);
       color: #0f172a;
       option { background: #ffffff; color: #0f172a; }
-      &:focus { border-color: rgba(245,158,11,0.4); }
+      &:focus { border-color: #0f172a; }
     }
-    .edit-save { background: rgba(245,158,11,0.1); color: #d97706; border-color: rgba(245,158,11,0.25); }
+    .edit-save {
+      background: linear-gradient(135deg, #ffd600 0%, #eab308 100%);
+      color: #000000;
+      border: none;
+      font-weight: 800;
+    }
   }
 
   // Edit exercise rows (inside edit panel and modals)
-  .edit-exercises-title { color: rgba(15,23,42,0.5); }
-  .add-ex-btn { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.25); color: #d97706; }
-  .ex-edit-name, .ex-edit-sets, .ex-edit-reps {
-    background: rgba(15,23,42,0.05);
-    border-color: rgba(15,23,42,0.12);
+  .edit-exercises-title { color: #0f172a; font-weight: 800; }
+  .add-ex-btn {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
     color: #0f172a;
-    &:focus { border-color: rgba(245,158,11,0.4); }
+    font-weight: 800;
+    &:hover { background: #e2e8f0; }
+  }
+  .ex-edit-name, .ex-edit-sets, .ex-edit-reps {
+    background: #f8fafc;
+    border: 1px solid rgba(15,23,42,0.12);
+    color: #0f172a;
+    &:focus { border-color: #0f172a; }
   }
 
   // Home workout card
   .hw-card {
-    background: rgba(245,158,11,0.05);
-    border-color: rgba(245,158,11,0.2);
-    .hw-title { color: #d97706; }
-    .hw-sub   { color: rgba(15,23,42,0.5); }
-    .hw-ex { background: rgba(15,23,42,0.04); border-color: rgba(15,23,42,0.08); }
+    background: #ffffff;
+    border: 1px solid rgba(15,23,42,0.09);
+    box-shadow: 0 2px 8px rgba(15,23,42,0.05);
+    .hw-title { color: #0f172a; font-weight: 800; }
+    .hw-sub   { color: #64748b; }
+    .hw-ex { background: #f8fafc; border-color: rgba(15,23,42,0.08); }
     .ex-text { color: #0f172a; }
-    .ex-num  { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.22); color: #d97706; }
-    .hw-view-btn { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.25); color: #d97706; }
+    .ex-num  { background: #f1f5f9; border-color: rgba(15,23,42,0.12); color: #0f172a; font-weight: 800; }
+    .hw-view-btn { background: #f1f5f9; border: 1px solid #cbd5e1; color: #0f172a; font-weight: 750; }
   }
 
   // Empty state
   .empty-state {
-    .empty-icon  { color: rgba(15,23,42,0.2); }
-    .empty-title { color: #0f172a; }
-    .empty-sub   { color: rgba(15,23,42,0.45); }
+    .empty-icon  { color: rgba(15,23,42,0.25); }
+    .empty-title { color: #0f172a; font-weight: 800; }
+    .empty-sub   { color: #64748b; }
   }
 
   // ── All Modals (shared) ──────────────────────────────
@@ -1331,133 +1384,230 @@ ion-content {
     border-top-color: rgba(15,23,42,0.09);
   }
   .modal-handle { background: rgba(15,23,42,0.12); }
-  .modal-sheet .modal-title { color: #0f172a; }
-  .modal-title { color: #0f172a; }
-  .modal-sub   { color: rgba(15,23,42,0.5); }
+  .modal-sheet .modal-title { color: #0f172a; font-weight: 850; }
+  .modal-title { color: #0f172a; font-weight: 850; }
+  .modal-sub   { color: #64748b; }
 
   // Modal gradient footer
   .modal-actions {
-    background: linear-gradient(180deg, rgba(244,245,248,0) 0%, rgba(244,245,248,0.95) 26%, #f4f5f8 100%);
+    background: #ffffff;
+    border-top: 1px solid rgba(15,23,42,0.08);
   }
   .btn.btn-secondary {
-    background: rgba(15,23,42,0.06);
-    color: rgba(15,23,42,0.6);
-    border-color: rgba(15,23,42,0.1);
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+    font-weight: 750;
+    &:hover { background: #e2e8f0; }
+  }
+  .btn.btn-yellow {
+    background: linear-gradient(135deg, #ffd600 0%, #eab308 100%);
+    color: #000000;
+    font-weight: 850;
+    border: none;
+    box-shadow: 0 4px 14px rgba(234,179,8,0.28);
   }
 
   // Form fields (shared across Add Workout & Week Plan modals)
-  .field-label { color: rgba(15,23,42,0.5); }
+  .field-label { color: #0f172a; font-weight: 750; font-size: 12px; }
   .field-wrap {
     input, select {
-      background: rgba(15,23,42,0.05);
-      border-color: rgba(15,23,42,0.09);
+      background: #f8fafc;
+      border: 1px solid rgba(15,23,42,0.12);
       color: #0f172a;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 12px;
       option { background: #ffffff; color: #0f172a; }
-      &:focus { border-color: #d97706; }
+      &:focus { border-color: #0f172a; }
     }
-    .field-icon { color: rgba(15,23,42,0.4); }
+    .field-icon { color: #64748b; }
   }
   .target-chip {
-    background: rgba(15,23,42,0.05);
-    border-color: rgba(15,23,42,0.22);
-    color: rgba(15,23,42,0.65);
-    &:hover, &.selected { background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.45); color: #b45309; font-weight: 700; }
+    background: #f1f5f9;
+    border: 1px solid rgba(15,23,42,0.1);
+    color: #475569;
+    font-weight: 600;
+    border-radius: 20px;
+    padding: 6px 12px;
+
+    &:hover { background: #e2e8f0; }
+    &.selected {
+      background: #ffffff;
+      border: 2px solid #0f172a;
+      color: #0f172a;
+      font-weight: 850;
+      box-shadow: 0 2px 8px rgba(15,23,42,0.08);
+    }
   }
-  .wplan-exercises-empty { color: rgba(15,23,42,0.4); }
+  .wplan-exercises-empty { color: #64748b; }
 
   // Exercise preview list (inside Add Workout modal)
   .modal-exercise-preview {
-    background: rgba(15,23,42,0.03);
-    border-color: rgba(15,23,42,0.08);
+    background: #f8fafc;
+    border: 1px solid rgba(15,23,42,0.08);
+    border-radius: 14px;
+
     .preview-header {
-      background: rgba(15,23,42,0.04);
-      border-bottom-color: rgba(15,23,42,0.08);
-      .preview-title { color: rgba(15,23,42,0.45); }
-      .preview-sub   { color: rgba(15,23,42,0.35); }
+      background: #f1f5f9;
+      border-bottom: 1px solid rgba(15,23,42,0.08);
+      .preview-title { color: #0f172a; font-weight: 800; font-size: 12px; }
+      .preview-sub   { color: #64748b; }
     }
     .preview-ex {
-      &:not(:last-child) { border-bottom-color: rgba(15,23,42,0.06); }
-      .ex-num    { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.22); color: #d97706; }
-      .ex-name   { color: #0f172a; }
-      .ex-detail { color: rgba(15,23,42,0.5); background: rgba(15,23,42,0.05); border-color: rgba(15,23,42,0.09); }
+      &:not(:last-child) { border-bottom: 1px solid rgba(15,23,42,0.06); }
+      .ex-num    {
+        background: #f1f5f9;
+        border: 1px solid rgba(15,23,42,0.12);
+        color: #0f172a;
+        font-weight: 800;
+        border-radius: 8px;
+      }
+      .ex-name   { color: #0f172a; font-weight: 750; }
+      .ex-detail {
+        color: #0f172a;
+        background: #f1f5f9;
+        border: 1px solid rgba(15,23,42,0.1);
+        font-weight: 750;
+        border-radius: 8px;
+      }
     }
   }
 
   // ── History Modal ─────────────────────────────────────
   .history-empty {
-    .empty-icon  { color: rgba(15,23,42,0.2); }
-    .empty-title { color: #0f172a; }
-    .empty-sub   { color: rgba(15,23,42,0.45); }
+    .empty-icon  { color: rgba(15,23,42,0.25); }
+    .empty-title { color: #0f172a; font-weight: 800; }
+    .empty-sub   { color: #64748b; }
   }
-  .history-date-label { color: rgba(15,23,42,0.45); }
+  .history-date-label { color: #64748b; font-weight: 750; }
   .history-session-card {
     background: #ffffff;
-    border-color: rgba(15,23,42,0.09);
+    border: 1px solid rgba(15,23,42,0.09);
     box-shadow: 0 2px 8px rgba(15,23,42,0.05);
   }
-  .history-session-title { color: #0f172a; }
-  .history-session-meta  { color: rgba(15,23,42,0.5); ion-icon { color: rgba(15,23,42,0.4); } }
-  .history-ex-name   { color: rgba(15,23,42,0.5); }
-  .history-ex-detail { color: rgba(15,23,42,0.4); }
+  .history-session-title { color: #0f172a; font-weight: 800; }
+  .history-session-meta  { color: #64748b; ion-icon { color: #64748b; } }
+  .history-ex-name   { color: #0f172a; font-weight: 600; }
+  .history-ex-detail { color: #475569; font-weight: 700; }
   .history-ex-check {
     &.checked     { color: #059669; }
-    &:not(.checked) { color: rgba(15,23,42,0.4); }
+    &:not(.checked) { color: #94a3b8; }
   }
 
   // ── Week Plan Modal ───────────────────────────────────
+  .week-plan-day-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
   .wplan-day-tab {
-    background: rgba(15,23,42,0.05);
-    border-color: rgba(15,23,42,0.09);
-    color: rgba(15,23,42,0.5);
-    &.active { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.25); color: #d97706; }
-    &.rest   { color: rgba(15,23,42,0.4); }
+    flex: 1;
+    padding: 8px 4px;
+    border-radius: 12px;
+    background: #f1f5f9;
+    border: 1px solid rgba(15,23,42,0.09);
+    color: #64748b;
+    font-weight: 700;
+    font-size: 12px;
+
+    &.active {
+      background: #ffffff;
+      border: 2px solid #0f172a;
+      color: #0f172a;
+      font-weight: 850;
+      box-shadow: 0 2px 8px rgba(15,23,42,0.08);
+    }
+    &.rest { color: #94a3b8; }
   }
   .week-plan-day-editor {
-    background: rgba(15,23,42,0.03);
-    border-color: rgba(15,23,42,0.08);
+    background: #f8fafc;
+    border: 1px solid rgba(15,23,42,0.08);
+    border-radius: 16px;
+    padding: 16px;
   }
-  .wplan-day-name    { color: #0f172a; }
-  .wplan-rest-label  { color: rgba(15,23,42,0.5); }
+  .wplan-day-name    { color: #0f172a; font-weight: 850; font-size: 16px; margin-bottom: 12px; }
+  .wplan-rest-label  { color: #0f172a; font-weight: 750; }
   .toggle-slider {
-    background: rgba(15,23,42,0.1);
-    border-color: rgba(15,23,42,0.15);
-    &::before { background: rgba(15,23,42,0.35); }
+    background: rgba(15,23,42,0.12);
+    border-color: rgba(15,23,42,0.18);
+    &::before { background: #ffffff; }
   }
   .toggle-switch input:checked + .toggle-slider {
-    background: rgba(245,158,11,0.15);
-    border-color: rgba(245,158,11,0.35);
-    &::before { background: #d97706; }
+    background: #0f172a;
+    border-color: #0f172a;
+    &::before { background: #ffffff; }
+  }
+
+  // Week plan summary cards at bottom (Clean Grey Cards + Black Text)
+  .week-plan-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    gap: 8px;
+    margin: 16px 0;
   }
   .wplan-summary-chip {
-    background: rgba(15,23,42,0.04);
-    border-color: rgba(15,23,42,0.09);
-    &:hover { border-color: rgba(245,158,11,0.3); }
+    background: #f8fafc;
+    border: 1px solid rgba(15,23,42,0.1);
+    border-radius: 12px;
+    padding: 8px 10px;
+    box-shadow: 0 2px 6px rgba(15,23,42,0.03);
+    cursor: pointer;
+    transition: all 0.15s;
+
+    &:hover {
+      background: #f1f5f9;
+      border-color: #0f172a;
+    }
   }
-  .wplan-chip-day   { color: rgba(15,23,42,0.4); }
-  .wplan-chip-title { color: #d97706; &.rest-chip { color: rgba(15,23,42,0.35); } }
+  .wplan-chip-day   {
+    color: #64748b;
+    font-weight: 750;
+    font-size: 10px;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .wplan-chip-title {
+    color: #0f172a;
+    font-weight: 800;
+    font-size: 12px;
+    line-height: 1.3;
+
+    &.rest-chip {
+      color: #059669;
+      font-weight: 750;
+    }
+  }
 
   // ── Notification modals ───────────────────────────────
   .notif-modal-item {
-    background: rgba(15,23,42,0.05);
-    border-color: rgba(15,23,42,0.09);
-    &.unread-item { border-color: #d97706; }
+    background: #ffffff;
+    border: 1px solid rgba(15,23,42,0.08);
+    box-shadow: 0 2px 6px rgba(15,23,42,0.04);
+    &.unread-item { border-color: #0f172a; }
     .notif-dot {
-      &.unread { background: #d97706; }
-      &.read   { background: rgba(15,23,42,0.4); }
+      &.unread { background: #0f172a; }
+      &.read   { background: rgba(15,23,42,0.25); }
     }
-    .notif-title { color: #0f172a; }
-    .notif-msg   { color: rgba(15,23,42,0.5); }
+    .notif-title { color: #0f172a; font-weight: 750; }
+    .notif-msg   { color: #64748b; }
   }
-  .mark-read-btn { color: #d97706; }
-  .notif-detail-date { color: rgba(15,23,42,0.45); }
+  .mark-read-btn { color: #0f172a; font-weight: 750; }
+  .notif-detail-date { color: #64748b; }
   .info-box {
-    background: rgba(245,158,11,0.07);
-    border: 1px solid rgba(245,158,11,0.2);
-    color: rgba(15,23,42,0.6);
+    background: #f8fafc;
+    border: 1px solid rgba(15,23,42,0.08);
+    color: #0f172a;
+    box-shadow: 0 2px 6px rgba(15,23,42,0.04);
   }
-  .home-guide-item .home-guide-num { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.2); color: #d97706; }
+  .home-guide-item .home-guide-num {
+    background: #f1f5f9;
+    border: 1px solid rgba(15,23,42,0.12);
+    color: #0f172a;
+    font-weight: 800;
+  }
   .home-guide-text { color: #0f172a; }
-  .home-guide-tip  { color: rgba(15,23,42,0.45); }
+  .home-guide-tip  { color: #64748b; }
 
   // ── Tab bar ───────────────────────────────────────────
   .custom-tab-bar {
@@ -1466,7 +1616,7 @@ ion-content {
     .tab-label { color: rgba(15,23,42,0.45); }
     ion-tab-button {
       --color: rgba(15,23,42,0.45);
-      --color-selected: #f59e0b;
+      --color-selected: #ffd600;
     }
   }
 }
@@ -2346,65 +2496,70 @@ ion-content.fordago-page-content {
    scoped to light mode, so it can actually win the cascade.
    ───────────────────────────────────────────────────────────── */
 :host-context(body.light-theme) {
-  --schedule-bg: #f4f5f8;
-  --schedule-panel: rgba(15, 23, 42, 0.04);
-  --schedule-panel-2: rgba(15, 23, 42, 0.06);
+  --schedule-bg: #f8fafc;
+  --schedule-panel: #f8fafc;
+  --schedule-panel-2: #f1f5f9;
   --schedule-border: rgba(15, 23, 42, 0.09);
-  --schedule-yellow: #d97706;
-  --schedule-orange: #ea580c;
+  --schedule-yellow: #ffd600;
+  --schedule-orange: #0f172a;
   --schedule-red: #dc2626;
   --schedule-green: #059669;
   --schedule-blue: #2563eb;
   --schedule-text: #0f172a;
-  --schedule-muted: rgba(15, 23, 42, 0.5);
+  --schedule-muted: #64748b;
 
   .month-row {
-    background: var(--schedule-panel) !important;
-    border-color: var(--schedule-border) !important;
+    background: #ffffff !important;
+    border: 1px solid var(--schedule-border) !important;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03) !important;
   }
 
   .nav-btn {
-    background: rgba(217, 119, 6, 0.07) !important;
-    border-color: rgba(217, 119, 6, 0.18) !important;
+    background: #f1f5f9 !important;
+    border: 1px solid rgba(15, 23, 42, 0.1) !important;
+    color: #0f172a !important;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04) !important;
   }
 
   .day-pill {
-    background: var(--schedule-panel) !important;
-    border-color: var(--schedule-border) !important;
+    background: #ffffff !important;
+    border: 1px solid var(--schedule-border) !important;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03) !important;
   }
 
   .day-pill.active {
     background: #ffd600 !important;
-    box-shadow: 0 7px 18px rgba(217, 119, 6, 0.18) !important;
+    border-color: #ffd600 !important;
+    box-shadow: 0 4px 14px rgba(234, 179, 8, 0.3) !important;
   }
 
   .day-pill.active .day-name,
   .day-pill.active .day-num {
-    color: #111317 !important;
-  }
-
-  .section-title {
     color: #000000 !important;
   }
 
+  .section-title {
+    color: #0f172a !important;
+  }
+
   .empty-state {
-    background: var(--schedule-panel) !important;
-    border-color: var(--schedule-border) !important;
+    background: #ffffff !important;
+    border: 1px solid var(--schedule-border) !important;
   }
 
   .empty-state .empty-icon {
-    color: rgba(217, 119, 6, 0.5) !important;
+    color: rgba(15, 23, 42, 0.25) !important;
   }
 
   .session-card {
-    background: linear-gradient(145deg, #ffffff, #f9fafb) !important;
-    border-color: var(--schedule-border) !important;
-    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06) !important;
+    background: #ffffff !important;
+    border: 1px solid var(--schedule-border) !important;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05) !important;
   }
 
   .session-card.missed {
     border-color: rgba(220, 38, 38, 0.16) !important;
-    background: linear-gradient(145deg, rgba(220, 38, 38, 0.04), #f9fafb) !important;
+    background: #ffffff !important;
   }
 
   .session-card.done {
@@ -2420,14 +2575,16 @@ ion-content.fordago-page-content {
   }
 
   .session-target .target-text {
-    border-color: rgba(217, 119, 6, 0.22) !important;
-    background: rgba(217, 119, 6, 0.08) !important;
-    color: #d97706 !important;
+    border: 1px solid rgba(15, 23, 42, 0.12) !important;
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+    font-weight: 750 !important;
   }
 
   .exercise-list {
-    background: rgba(15, 23, 42, 0.03) !important;
-    border-color: var(--schedule-border) !important;
+    background: #f8fafc !important;
+    border: 1px solid var(--schedule-border) !important;
+    border-radius: 12px !important;
   }
 
   .exercise-list-header {
@@ -2435,165 +2592,201 @@ ion-content.fordago-page-content {
   }
 
   .exercise-list-header .ex-list-title {
-    color: rgba(15, 23, 42, 0.5) !important;
+    color: #475569 !important;
+    font-weight: 750 !important;
   }
 
   .exercise-list-header .ex-list-count {
-    color: rgba(15, 23, 42, 0.35) !important;
+    color: #64748b !important;
   }
 
   .exercise-item .ex-name {
-    color: #000000 !important;
-    font-weight: 450 !important;
-  }
-
-  .exercise-item .ex-detail {
-    color: rgba(15, 23, 42, 0.7) !important;
+    color: #0f172a !important;
     font-weight: 700 !important;
   }
 
+  .exercise-item .ex-detail {
+    color: #0f172a !important;
+    background: #f1f5f9 !important;
+    border: 1px solid rgba(15, 23, 42, 0.1) !important;
+    font-weight: 750 !important;
+    border-radius: 8px !important;
+  }
+
   .action-btn {
-    background: rgba(15, 23, 42, 0.035) !important;
-    color: rgba(15, 23, 42, 0.62) !important;
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+    border: 1px solid rgba(15, 23, 42, 0.1) !important;
+    font-weight: 750 !important;
   }
 
   .action-btn.primary {
-    color: #d97706 !important;
-    border-color: rgba(217, 119, 6, 0.2) !important;
-    background: rgba(217, 119, 6, 0.08) !important;
+    color: #0f172a !important;
+    border: 1px solid #cbd5e1 !important;
+    background: #f1f5f9 !important;
   }
 
   .action-btn.danger {
     color: #dc2626 !important;
-    border-color: rgba(220, 38, 38, 0.18) !important;
-    background: rgba(220, 38, 38, 0.06) !important;
+    border: 1px solid rgba(220, 38, 38, 0.25) !important;
+    background: #fef2f2 !important;
   }
 
   .hw-card {
-    background: rgba(217, 119, 6, 0.05) !important;
-    border-color: rgba(217, 119, 6, 0.2) !important;
+    background: #ffffff !important;
+    border: 1px solid rgba(15, 23, 42, 0.1) !important;
   }
 
-  /* "RECOMMENDED EXERCISES" preview inside the Add Workout modal was still
-     showing its dark-mode colors (pale gray-on-white, unreadable) because
-     it never got a matching entry in this !important block — same root
-     cause documented in the block comment above for every other element
-     here. Re-asserted at the same !important weight so it actually wins. */
   .modal-exercise-preview {
-    background: rgba(15, 23, 42, 0.035) !important;
-    border-color: rgba(15, 23, 42, 0.09) !important;
+    background: #f8fafc !important;
+    border: 1px solid rgba(15, 23, 42, 0.09) !important;
+    border-radius: 14px !important;
   }
 
   .modal-exercise-preview .preview-header {
-    background: rgba(15, 23, 42, 0.05) !important;
-    border-bottom-color: rgba(15, 23, 42, 0.08) !important;
+    background: #f1f5f9 !important;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08) !important;
   }
 
   .modal-exercise-preview .preview-title {
-    color: rgba(15, 23, 42, 0.65) !important;
-  }
-
-  .modal-exercise-preview .preview-sub {
-    color: rgba(15, 23, 42, 0.45) !important;
-  }
-
-  .preview-ex {
-    border-bottom-color: rgba(15, 23, 42, 0.07) !important;
-  }
-
-  .preview-ex .ex-num {
-    background: rgba(217, 119, 6, 0.16) !important;
-    border-color: rgba(217, 119, 6, 0.45) !important;
-    color: #b45309 !important;
+    color: #0f172a !important;
     font-weight: 800 !important;
   }
 
+  .modal-exercise-preview .preview-sub {
+    color: #64748b !important;
+  }
+
+  .preview-ex {
+    border-bottom: 1px solid rgba(15, 23, 42, 0.06) !important;
+  }
+
+  .preview-ex .ex-num {
+    background: #f1f5f9 !important;
+    border: 1px solid rgba(15, 23, 42, 0.12) !important;
+    color: #0f172a !important;
+    font-weight: 800 !important;
+    border-radius: 8px !important;
+  }
+
   .preview-ex .ex-name {
-    color: #000000 !important;
-    font-weight: 600 !important;
+    color: #0f172a !important;
+    font-weight: 750 !important;
     font-size: 14px !important;
   }
 
   .preview-ex .ex-detail {
-    color: rgba(15, 23, 42, 0.75) !important;
-    background: rgba(15, 23, 42, 0.07) !important;
-    border-color: rgba(15, 23, 42, 0.22) !important;
+    color: #0f172a !important;
+    background: #f1f5f9 !important;
+    border: 1px solid rgba(15, 23, 42, 0.1) !important;
+    font-weight: 750 !important;
     font-size: 12px !important;
+    border-radius: 8px !important;
   }
 
-  /* Larger, solid-black labels + visible icons across the Add Workout /
-     Week Plan form fields, per request — the shared (non-scoped) light-
-     theme rules earlier in this file, and the !important rules in
-     global.scss's body.light-theme ion-modal block, were both keeping
-     these at small pale-gray text, which read as "faded"/low-contrast
-     even though nothing was technically broken. Same !important weight as
-     the rest of this block so it actually wins here too. */
   .modal-title {
-    color: #000000 !important;
+    color: #0f172a !important;
     font-size: 22px !important;
+    font-weight: 850 !important;
   }
 
   .field-label {
-    color: #000000 !important;
-    font-size: 14px !important;
+    color: #0f172a !important;
+    font-size: 13px !important;
     font-weight: 800 !important;
     letter-spacing: 0.4px !important;
   }
 
   .field-label .label-optional {
-    color: rgba(15, 23, 42, 0.5) !important;
+    color: #64748b !important;
     font-weight: 500 !important;
   }
 
   .field-wrap .field-icon,
   .field-wrap .field-icon ion-icon {
-    color: #d97706 !important;
+    color: #64748b !important;
     font-size: 19px !important;
     opacity: 1 !important;
   }
 
   .field-wrap input,
   .field-wrap select {
-    color: #000000 !important;
+    color: #0f172a !important;
     font-size: 15px !important;
     font-weight: 600 !important;
-  }
-
-  .modal-exercise-preview .preview-title {
-    color: #000000 !important;
-    font-size: 13px !important;
-    font-weight: 800 !important;
-  }
-
-  .modal-exercise-preview .preview-sub {
-    color: rgba(15, 23, 42, 0.7) !important;
-    font-size: 12px !important;
-    font-weight: 600 !important;
+    background: #f8fafc !important;
+    border: 1px solid rgba(15, 23, 42, 0.12) !important;
   }
 
   .target-chip {
     font-size: 12px !important;
     font-weight: 700 !important;
+    background: #f1f5f9 !important;
+    border: 1px solid rgba(15, 23, 42, 0.1) !important;
+    color: #475569 !important;
+    border-radius: 20px !important;
+
+    &.selected {
+      background: #ffffff !important;
+      border: 2px solid #0f172a !important;
+      color: #0f172a !important;
+      font-weight: 850 !important;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08) !important;
+    }
+  }
+
+  .wplan-day-tab {
+    background: #f1f5f9 !important;
+    border: 1px solid rgba(15, 23, 42, 0.09) !important;
+    color: #64748b !important;
+    font-weight: 700 !important;
+
+    &.active {
+      background: #ffffff !important;
+      border: 2px solid #0f172a !important;
+      color: #0f172a !important;
+      font-weight: 850 !important;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08) !important;
+    }
+  }
+
+  .wplan-summary-chip {
+    background: #f8fafc !important;
+    border: 1px solid rgba(15, 23, 42, 0.1) !important;
+    border-radius: 12px !important;
+    padding: 8px 10px !important;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03) !important;
+
+    .wplan-chip-day {
+      color: #64748b !important;
+      font-weight: 750 !important;
+      font-size: 10px !important;
+      text-transform: uppercase !important;
+    }
+
+    .wplan-chip-title {
+      color: #0f172a !important;
+      font-weight: 800 !important;
+      font-size: 12px !important;
+
+      &.rest-chip {
+        color: #059669 !important;
+        font-weight: 750 !important;
+      }
+    }
   }
 
   .edit-exercises-title {
-    color: #000000 !important;
+    color: #0f172a !important;
     font-size: 12px !important;
     font-weight: 800 !important;
   }
 
-  /* "Leave empty to use recommended exercises..." hint under My Exercises
-     (Optional). Same root cause as every other rule in this block: the
-     base (dark-mode) .wplan-exercises-empty rule near the top of this file
-     sets near-white text with no !important, and this class was missing
-     from this override block, so light mode showed white-on-white — i.e.
-     invisible, not just faint. Solid black per request so it's actually
-     readable. */
   .wplan-exercises-empty {
-    color: #000000 !important;
+    color: #64748b !important;
     font-size: 12px !important;
     font-weight: 500 !important;
-    opacity: 0.75 !important;
+    opacity: 0.85 !important;
   }
 }
 

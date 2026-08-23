@@ -112,31 +112,34 @@
 // ── Light Mode ────────────────────────────────────────────
 :host-context(body.light-theme) {
   .edit-exercises-title {
-    color: #000000;
+    color: #0f172a;
     font-size: 12px;
     font-weight: 800;
   }
 
   .add-ex-btn {
-    background: rgba(245, 158, 11, 0.1);
-    border-color: rgba(245, 158, 11, 0.25);
-    color: #d97706;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    color: #0f172a;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+
+    ion-icon { color: #0f172a; }
+    &:hover { background: #e2e8f0; }
   }
 
   .ex-edit-name,
   .ex-edit-sets,
   .ex-edit-reps {
-    background: rgba(15, 23, 42, 0.05);
+    background: #f8fafc;
     border-color: rgba(15, 23, 42, 0.12);
     color: #0f172a;
 
-    &:focus { border-color: rgba(245, 158, 11, 0.4); }
+    &:focus { border-color: #0f172a; }
   }
 
   .wplan-exercises-empty {
-    color: #000000;
+    color: #64748b;
     font-size: 12px;
     font-weight: 500;
-    opacity: 0.75;
   }
 }
