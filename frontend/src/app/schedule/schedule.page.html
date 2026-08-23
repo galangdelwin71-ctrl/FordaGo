@@ -617,14 +617,6 @@
           </ng-container>
         </div>
 
-        <!-- Week summary chips -->
-        <div class="week-plan-summary">
-          <div class="wplan-summary-chip" *ngFor="let day of weekPlanDays; let di = index" (click)="weekPlanActiveDay = di">
-            <span class="wplan-chip-day">{{ weekDayLabels[di].slice(0,3) }}</span>
-            <span class="wplan-chip-title" [class.rest-chip]="day.isRest">{{ day.isRest ? 'Rest' : day.title }}</span>
-          </div>
-        </div>
-
         <div class="modal-actions">
           <button class="btn btn-secondary" (click)="closeWeekPlanModal()">Cancel</button>
           <button class="btn btn-yellow" [class.saved-btn]="weekPlanSaved" (click)="saveWeekPlan()">
