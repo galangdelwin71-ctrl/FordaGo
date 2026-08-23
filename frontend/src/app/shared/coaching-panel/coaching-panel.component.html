@@ -188,6 +188,7 @@
          CLIENTS MODAL (Draggable / Swipeable)
          ═══════════════════════════════════════════════════════ -->
     <ion-modal
+      #clientsModal
       [isOpen]="isClientsModalOpen"
       (didDismiss)="closeClientsModal()"
       [breakpoints]="[0, 0.75, 0.95]"
@@ -224,7 +225,7 @@
                 <div class="cd-session-focus cd-session-empty-msg" *ngIf="!item.next_session && !item.latest_message">Tap to start chatting</div>
               </div>
               <div class="cd-client-actions">
-                <button type="button" class="cd-chat-client-btn" title="Chat with client">
+                <button type="button" class="cd-chat-client-btn" (click)="$event.stopPropagation(); openClientChat(item)" title="Chat with client">
                   <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
                 </button>
                 <button type="button" class="cd-delete-client-btn" (click)="promptDeleteClient(item, $event)" title="Remove client">
@@ -241,6 +242,7 @@
          REQUESTS MODAL (Draggable / Swipeable)
          ═══════════════════════════════════════════════════════ -->
     <ion-modal
+      #requestsModal
       [isOpen]="isRequestsModalOpen"
       (didDismiss)="closeRequestsModal()"
       [breakpoints]="[0, 0.7, 0.95]"
@@ -297,6 +299,7 @@
          MESSAGES MODAL (Draggable / Swipeable)
          ═══════════════════════════════════════════════════════ -->
     <ion-modal
+      #messagesModal
       [isOpen]="isMessagesModalOpen"
       (didDismiss)="closeMessagesModal()"
       [breakpoints]="[0, 0.75, 0.95]"
@@ -341,6 +344,7 @@
          EARNINGS MODAL (Draggable / Swipeable)
          ═══════════════════════════════════════════════════════ -->
     <ion-modal
+      #earningsModal
       [isOpen]="isEarningsModalOpen"
       (didDismiss)="closeEarningsModal()"
       [breakpoints]="[0, 0.8, 0.98]"

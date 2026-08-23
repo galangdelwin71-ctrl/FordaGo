@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Output, Input, OnChanges, OnDestroy, SimpleChanges, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -6,6 +6,7 @@ import {
   IonIcon,
   IonSpinner,
   IonModal,
+  ModalController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -216,6 +217,11 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
   requestActionInFlightId: number | null = null;
 
   // ── Stat card modal state ──────────────────────────────────────────
+  @ViewChild('clientsModal') clientsModal?: IonModal;
+  @ViewChild('requestsModal') requestsModal?: IonModal;
+  @ViewChild('messagesModal') messagesModal?: IonModal;
+  @ViewChild('earningsModal') earningsModal?: IonModal;
+
   isClientsModalOpen = false;
   isRequestsModalOpen = false;
   isMessagesModalOpen = false;
@@ -293,6 +299,7 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
     private auth: AuthService,
     private coachingService: CoachingService,
     private coachingNav: CoachingNavService,
+    private modalCtrl: ModalController,
   ) {
     // Immediately resolve coach status synchronously from stored auth state
     // so the panel never flashes member "Personal Coaches" UI to a coach.
@@ -470,6 +477,12 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
     this.availabilityModalOpen = false;
     this.programModalOpen = false;
     this.isDeleteConfirmOpen = false;
+
+    try { void this.messagesModal?.dismiss(); } catch {}
+    try { void this.clientsModal?.dismiss(); } catch {}
+    try { void this.requestsModal?.dismiss(); } catch {}
+    try { void this.earningsModal?.dismiss(); } catch {}
+    try { void this.modalCtrl.dismiss().catch(() => {}); } catch {}
   }
 
   ngOnDestroy(): void {

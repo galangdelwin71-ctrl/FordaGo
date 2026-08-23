@@ -10,6 +10,7 @@ import {
   IonIcon,
   IonSpinner,
   IonModal,
+  ModalController,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -159,6 +160,7 @@ export class ChatPage implements OnInit, OnDestroy {
     private echoService: EchoService,
     private chatToastService: ChatToastService,
     private zone: NgZone,
+    private modalCtrl: ModalController,
   ) {
     addIcons({
       arrowBackOutline,
@@ -195,6 +197,7 @@ export class ChatPage implements OnInit, OnDestroy {
   private static messagesCache = new Map<number, Message[]>();
 
   ngOnInit() {
+    void this.modalCtrl.dismiss().catch(() => {});
     const idParam = this.route.snapshot.paramMap.get('conversationId');
     if (idParam) {
       this.conversationId = parseInt(idParam, 10);
@@ -218,6 +221,9 @@ export class ChatPage implements OnInit, OnDestroy {
    * the WebSocket listener and refresh messages.
    */
   ionViewWillEnter() {
+    // Dismiss any leftover modals immediately
+    void this.modalCtrl.dismiss().catch(() => {});
+
     if (!this.conversationId) return;
 
     // Suppress incoming toasts while the user is actively reading this chat
