@@ -1673,14 +1673,26 @@ select.cd-form-select {
   .cd-empty-state.cd-dashed { border-color: rgba(15,23,42,0.16); }
 }
 
-// ── Bottom-sheet modal ─────────────────────────────────────
+// ── Bottom-sheet modal & backdrop blur ─────────────────────
+ion-modal {
+  --backdrop-opacity: 0.65;
+  --background: #0f1523;
+  --border-radius: 24px 24px 0 0;
+}
+
+ion-modal::part(backdrop) {
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
 .cd-overlay {
   position: fixed;
   inset: 0;
   z-index: 1000;
   background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   animation: cdOverlayIn 0.2s ease;
 
   &--dark { background: rgba(0, 0, 0, 0.8); }
