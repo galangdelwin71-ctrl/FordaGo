@@ -16,6 +16,22 @@ import { NotificationPanelComponent } from '../shared/notification-panel/notific
 import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.component';
 import { CoachingNavService, CoachingPanelTab } from '../services/coaching-nav.service';
 import { CoachingService } from '../services/coaching.service';
+import { addIcons } from 'ionicons';
+import {
+  searchOutline,
+  closeCircle,
+  cartOutline,
+  receiptOutline,
+  flashOutline,
+  closeOutline,
+  homeOutline,
+  calendarOutline,
+  scanOutline,
+  bagHandleOutline,
+  personOutline,
+  cloudOfflineOutline,
+  cubeOutline,
+} from 'ionicons/icons';
 import { API_URL } from '../config/api.config';
 import { getCachedData, setCachedData } from '../utils/local-cache.util';
 import { CACHE_KEYS } from '../utils/cache-keys';
@@ -272,10 +288,31 @@ export class InventoryPage implements OnInit {
     },
   ];
 
-  // ── Products Data ─────────────────────────────────────
+  // ── Products Data & Search ────────────────────────────
   products: Product[] = [];
   productsLoading = false;
   productsLoadError = false;
+  searchQuery = '';
+
+  get filteredProducts(): Product[] {
+    if (!this.searchQuery || !this.searchQuery.trim()) {
+      return this.products;
+    }
+    const q = this.searchQuery.toLowerCase().trim();
+    return this.products.filter(
+      (p) =>
+        p.name?.toLowerCase().includes(q) ||
+        p.brand?.toLowerCase().includes(q) ||
+        p.description?.toLowerCase().includes(q) ||
+        p.flavor?.toLowerCase().includes(q) ||
+        p.icon?.toLowerCase().includes(q)
+    );
+  }
+
+  clearSearch(): void {
+    this.searchQuery = '';
+  }
+
   // Stage 4: fixed-length dummy array purely to repeat the skeleton card
   // markup N times in the template (*ngFor needs something to iterate --
   // the values themselves are never read). 6 matches roughly one
@@ -339,7 +376,23 @@ export class InventoryPage implements OnInit {
     private auth: AuthService,
     private coachingNav: CoachingNavService,
     private coachingService: CoachingService,
-  ) {}
+  ) {
+    addIcons({
+      searchOutline,
+      closeCircle,
+      cartOutline,
+      receiptOutline,
+      flashOutline,
+      closeOutline,
+      homeOutline,
+      calendarOutline,
+      scanOutline,
+      bagHandleOutline,
+      personOutline,
+      cloudOfflineOutline,
+      cubeOutline,
+    });
+  }
 
   ngOnInit(): void {
     this.applyPendingCoachingReopen();

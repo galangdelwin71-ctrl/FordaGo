@@ -38,15 +38,29 @@
 <ion-content *ngIf="!coachingPanelOpen" [fullscreen]="false" class="shop-content fordago-page-content" [scrollY]="true">
   <div class="scroll-wrap">
 
-    <!-- Section Label -->
-    <div class="section-label">Available Supplements</div>
+    <!-- Search Bar -->
+    <div class="shop-search-wrapper">
+      <div class="shop-search-bar">
+        <ion-icon name="search-outline" class="search-icon"></ion-icon>
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Search supplements, brand..."
+          [(ngModel)]="searchQuery"
+        />
+        <button type="button" class="search-clear-btn" *ngIf="searchQuery" (click)="clearSearch()" aria-label="Clear search">
+          <ion-icon name="close-circle"></ion-icon>
+        </button>
+      </div>
+    </div>
 
-    <!-- Loading State: skeleton cards instead of plain text, so the shop
-         feels "alive" while the very first (uncached) fetch is in flight.
-         Only rendered when there is truly no data yet -- Stage 3's
-         stale-while-revalidate keeps productsLoading false whenever
-         cached/previous data is already on screen, so a returning member
-         never sees this. -->
+    <!-- Section Header -->
+    <div class="shop-section-header">
+      <div class="section-label">Available Supplements</div>
+      <span class="shop-count-pill" *ngIf="!productsLoading">{{ filteredProducts.length }} items</span>
+    </div>
+
+    <!-- Loading State: skeleton cards -->
     <div class="products-list" *ngIf="productsLoading" aria-hidden="true">
       <div class="product-card skeleton-card" *ngFor="let i of skeletonPlaceholders">
         <div class="skeleton-block skeleton-banner"></div>
@@ -77,22 +91,25 @@
       <div class="empty-text">No products available</div>
     </div>
 
+    <!-- Empty Search State -->
+    <div class="empty-shop" *ngIf="!productsLoading && !productsLoadError && products.length > 0 && filteredProducts.length === 0">
+      <ion-icon name="search-outline" class="empty-emoji"></ion-icon>
+      <div class="empty-text">No supplements matching "<strong>{{ searchQuery }}</strong>"</div>
+      <button type="button" class="clear-search-btn" (click)="clearSearch()">View All Supplements</button>
+    </div>
+
     <!-- Product Cards List -->
-    <div class="products-list">
+    <div class="products-list" *ngIf="!productsLoading && filteredProducts.length > 0">
       <div
-        *ngFor="let product of products; let i = index; trackBy: trackByProduct"
+        *ngFor="let product of filteredProducts; let i = index; trackBy: trackByProduct"
         class="product-card"
         (click)="openOrderModal(product)"
       >
         <!-- Product Image / Icon Banner -->
-        <!-- Stage 6: grid card uses the small thumbnail (falls back to the
-             full image_url in normalizeApiProduct() when no thumbnail_url
-             exists yet) instead of downloading the full 1200px image just
-             to render it at card size. -->
         <div class="product-banner">
           <img *ngIf="product.thumbnail_url" [src]="product.thumbnail_url" class="product-img" [alt]="product.name" (error)="handleProductImageError(product)" />
           <div *ngIf="!product.thumbnail_url" class="product-icon-fallback">{{ product.icon }}</div>
-          <div class="stock-chip" [class.low]="product.stock < 3" [class.out]="product.stock === 0">
+          <div class="stock-chip" [class.low]="product.stock < 5 && product.stock > 0" [class.out]="product.stock === 0">
             <span *ngIf="product.stock > 0">{{ product.stock }} left</span>
             <span *ngIf="product.stock === 0">Out of stock</span>
           </div>
@@ -102,7 +119,6 @@
         <div class="product-body">
           <div class="product-brand">{{ product.brand }}</div>
           <div class="product-name">{{ product.name }}</div>
-
         </div>
 
         <!-- Price + Add to Cart + Place Order -->
