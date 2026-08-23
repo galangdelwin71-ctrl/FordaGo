@@ -343,6 +343,8 @@ export class CoachingService {
     clients: CoachClientItem[];
     requests: CoachRequestItem[];
     coaches?: any[]; // returned for member users (not coaches)
+    earnings_history?: any[];
+    monthly_earnings?: any[];
   }> {
     return this.http.get<any>(`${this.apiUrl}/coaches/dashboard-full`);
   }
@@ -361,6 +363,10 @@ export class CoachingService {
 
   declineConversation(id: number): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/conversations/${id}/decline`, {});
+  }
+
+  deleteConversation(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/conversations/${id}`);
   }
 
   // ── Availability ("Set Availability") ────────────────────

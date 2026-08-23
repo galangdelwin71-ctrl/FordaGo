@@ -210,6 +210,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{id}',                              [ConversationController::class, 'show'])->whereNumber('id');
         Route::post('/{id}/accept',                      [ConversationController::class, 'accept'])->whereNumber('id');
         Route::post('/{id}/decline',                     [ConversationController::class, 'decline'])->whereNumber('id');
+        Route::delete('/{id}',                           [ConversationController::class, 'destroy'])->whereNumber('id');
         Route::get('/{conversationId}/messages',         [MessageController::class, 'index'])->whereNumber('conversationId');
         Route::post('/{conversationId}/messages',        [MessageController::class, 'store'])->whereNumber('conversationId');
         Route::patch('/{conversationId}/read',           [MessageController::class, 'markRead'])->whereNumber('conversationId');

@@ -252,13 +252,50 @@ class CoachDashboardController extends Controller
             ];
         });
 
+        // ── 7. Earnings History (last 50 paid sessions) ────────────────────
+        $earningsHistory = WorkoutPlanProposal::with([
+            'client:id,username,first_name,last_name,profile_image',
+        ])
+        ->where('coach_id', $coachId)
+        ->where('status', 'accepted')
+        ->whereNotNull('price')
+        ->where('price', '>', 0)
+        ->orderByDesc('accepted_at')
+        ->limit(50)
+        ->get(['id', 'client_id', 'session_date', 'time_val', 'time_ampm', 'price', 'accepted_at', 'location'])
+        ->map(function ($p) {
+            return [
+                'id'           => $p->id,
+                'client'       => $p->client,
+                'session_date' => $p->session_date,
+                'time_val'     => $p->time_val,
+                'time_ampm'    => $p->time_ampm,
+                'location'     => $p->location,
+                'price'        => (float) $p->price,
+                'accepted_at'  => $p->accepted_at,
+            ];
+        });
+
+        // Monthly breakdown (last 6 months)
+        $monthlyEarnings = WorkoutPlanProposal::where('coach_id', $coachId)
+            ->where('status', 'accepted')
+            ->whereNotNull('price')
+            ->where('price', '>', 0)
+            ->where('accepted_at', '>=', now()->subMonths(6)->startOfMonth())
+            ->selectRaw("DATE_FORMAT(accepted_at, '%Y-%m') as month, SUM(price) as total, COUNT(*) as session_count")
+            ->groupBy('month')
+            ->orderBy('month', 'desc')
+            ->get();
+
         return response()->json([
-            'profile'        => $myProfile,
-            'stats'          => $stats,
-            'today_proposals' => $todayProposals,
-            'conversations'  => $conversations,
-            'clients'        => $clients,
-            'requests'       => $requests,
+            'profile'          => $myProfile,
+            'stats'            => $stats,
+            'today_proposals'  => $todayProposals,
+            'conversations'    => $conversations,
+            'clients'          => $clients,
+            'requests'         => $requests,
+            'earnings_history' => $earningsHistory,
+            'monthly_earnings' => $monthlyEarnings,
         ]);
     }
 }

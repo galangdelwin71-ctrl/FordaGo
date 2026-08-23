@@ -215,6 +215,22 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
   isLoadingRequests = false;
   requestActionInFlightId: number | null = null;
 
+  // ── Stat card modal state ──────────────────────────────────────────
+  isClientsModalOpen = false;
+  isRequestsModalOpen = false;
+  isMessagesModalOpen = false;
+  isEarningsModalOpen = false;
+
+  // Delete client confirmation dialog
+  isDeleteConfirmOpen = false;
+  clientToDelete: CoachClientItem | null = null;
+  isDeletingClient = false;
+  deleteClientError = '';
+
+  // Earnings data
+  earningsHistory: any[] = [];
+  monthlyEarnings: any[] = [];
+
   // Manage Profile modal
   profileModalOpen = false;
   profileForm = { bio: '', specialty: '', photo_url: '', rate: 0 };
@@ -536,6 +552,12 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
               CoachingPanelComponent.cachedRequests = res.requests;
               void setCachedData(CACHE_KEYS.COACH_REQUESTS, res.requests);
             }
+            if (Array.isArray(res.earnings_history)) {
+              this.earningsHistory = res.earnings_history;
+            }
+            if (Array.isArray(res.monthly_earnings)) {
+              this.monthlyEarnings = res.monthly_earnings;
+            }
           } else {
             // Regular member — populate conversations and active coaches directly from the single payload!
             if (Array.isArray(res.conversations)) {
@@ -769,6 +791,54 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
     );
   }
 
+  // ── Stat card modal openers ────────────────────────────────────────
+  openClientsModal(): void  { this.isClientsModalOpen  = true; }
+  closeClientsModal(): void { this.isClientsModalOpen  = false; }
+  openRequestsModal(): void  { this.isRequestsModalOpen  = true; }
+  closeRequestsModal(): void { this.isRequestsModalOpen  = false; }
+  openMessagesModal(): void  { this.isMessagesModalOpen  = true; }
+  closeMessagesModal(): void { this.isMessagesModalOpen  = false; }
+  openEarningsModal(): void  { this.isEarningsModalOpen  = true; }
+  closeEarningsModal(): void { this.isEarningsModalOpen  = false; }
+
+  // ── Delete client ──────────────────────────────────────────────────
+  promptDeleteClient(item: CoachClientItem, event: Event): void {
+    event.stopPropagation();
+    this.clientToDelete = item;
+    this.deleteClientError = '';
+    this.isDeleteConfirmOpen = true;
+  }
+
+  cancelDeleteClient(): void {
+    this.isDeleteConfirmOpen = false;
+    this.clientToDelete = null;
+  }
+
+  confirmDeleteClient(): void {
+    if (!this.clientToDelete || this.isDeletingClient) return;
+    this.isDeletingClient = true;
+    this.deleteClientError = '';
+    const id = this.clientToDelete.conversation_id;
+    this.sub.add(
+      this.coachingService.deleteConversation(id).subscribe({
+        next: () => {
+          this.clients = this.clients.filter((c) => c.conversation_id !== id);
+          CoachingPanelComponent.cachedClients = this.clients;
+          void setCachedData(CACHE_KEYS.COACH_CLIENTS, this.clients);
+          this.stats = { ...this.stats, active_clients: Math.max(0, this.stats.active_clients - 1) };
+          this.isDeletingClient = false;
+          this.isDeleteConfirmOpen = false;
+          this.clientToDelete = null;
+        },
+        error: (err) => {
+          console.error('Failed to delete client', err);
+          this.deleteClientError = 'Failed to remove client. Please try again.';
+          this.isDeletingClient = false;
+        },
+      }),
+    );
+  }
+
   acceptRequest(item: CoachRequestItem): void {
     if (this.requestActionInFlightId) return;
     this.requestActionInFlightId = item.conversation_id;
@@ -807,6 +877,13 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
         },
       }),
     );
+  }
+
+  // ── Earnings helper ────────────────────────────────────────────────
+  formatMonthLabel(ym: string): string {
+    const [year, month] = ym.split('-');
+    const date = new Date(Number(year), Number(month) - 1, 1);
+    return date.toLocaleDateString('en-PH', { month: 'long', year: 'numeric' });
   }
 
   // ── Manage Profile modal ──────────────────────────────────

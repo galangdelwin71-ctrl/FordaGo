@@ -265,4 +265,27 @@ class ConversationController extends Controller
             'conversation' => $conversation,
         ]);
     }
+
+    /**
+     * DELETE /api/conversations/{id}
+     * Coach or client deletes/removes the conversation/client relationship.
+     */
+    public function destroy(int $id, Request $request)
+    {
+        $userId = $request->user()->id;
+
+        $conversation = Conversation::find($id);
+        if (! $conversation) {
+            return response()->json(['message' => 'Conversation not found.'], 404);
+        }
+
+        if ((int) $conversation->coach_id !== (int) $userId && (int) $conversation->client_id !== (int) $userId) {
+            return response()->json(['message' => 'Unauthorized to remove this client conversation.'], 403);
+        }
+
+        Message::where('conversation_id', $id)->delete();
+        $conversation->delete();
+
+        return response()->json(['message' => 'Client conversation removed successfully.']);
+    }
 }
