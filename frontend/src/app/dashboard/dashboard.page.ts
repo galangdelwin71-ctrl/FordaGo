@@ -26,6 +26,8 @@ import { FeedbackModalComponent } from '../shared/feedback-modal/feedback-modal.
 import { ChatToastComponent } from '../shared/chat-toast/chat-toast.component';
 import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refresh.component';
 import { FeedbackService } from '../services/feedback.service';
+import { OnboardingService, TourStep } from '../services/onboarding.service';
+import { OnboardingGuideComponent } from '../shared/onboarding-guide/onboarding-guide.component';
 import { API_URL } from '../config/api.config';
 
 // ─────────────────────────────────────────────────────
@@ -160,6 +162,7 @@ export interface PrForm {
     FeedbackModalComponent,
     ChatToastComponent,
     PullToRefreshComponent,
+    OnboardingGuideComponent,
   ],
 })
 export class DashboardPage implements OnInit, OnDestroy {
@@ -1432,7 +1435,8 @@ export class DashboardPage implements OnInit, OnDestroy {
     private coachingNav: CoachingNavService,
     private coachingService: CoachingService,
     private chatToastService: ChatToastService,
-    private feedbackService: FeedbackService
+    private feedbackService: FeedbackService,
+    public onboardingService: OnboardingService
   ) {}
 
   onLogoError(event: Event): void {
@@ -1481,6 +1485,8 @@ export class DashboardPage implements OnInit, OnDestroy {
     }
   }
 
+  private isInitialMount = true;
+
   ngOnInit(): void {
     // Redirect to login if not authenticated
     if (!this.auth.user) {
@@ -1516,6 +1522,9 @@ export class DashboardPage implements OnInit, OnDestroy {
 
     // Check if member has been using the app for 3+ days to prompt feedback
     this.feedbackService.checkAndPromptRating();
+
+    // Check and automatically start onboarding feature tour for new accounts
+    this.checkAndStartOnboardingTour();
   }
 
   ionViewWillEnter(): void {
@@ -1524,6 +1533,12 @@ export class DashboardPage implements OnInit, OnDestroy {
     }
 
     this.applyPendingCoachingReopen();
+
+    // Skip duplicate loading on the very first mount since ngOnInit already ran it
+    if (this.isInitialMount) {
+      this.isInitialMount = false;
+      return;
+    }
 
     this.applyUserContext(this.auth.user);
     this.workoutTracker.syncStoreStatuses();
@@ -1536,6 +1551,99 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.loadCoachActivityBadge();
 
     this.feedbackService.checkAndPromptRating();
+
+    // Check onboarding on re-entry (e.g. if navigating back after register)
+    this.checkAndStartOnboardingTour();
+  }
+
+  /**
+   * Initializes and starts the interactive onboarding walkthrough in English if the member
+   * has not seen it yet.
+   */
+  private checkAndStartOnboardingTour(): void {
+    const user = this.auth.user;
+    if (!user) return;
+
+    // Delay slightly to let the DOM elements render and mount cleanly
+    setTimeout(() => {
+      if (this.onboardingService.isRunning || this.coachingPanelOpen) return;
+
+      const allSteps: TourStep[] = [
+        {
+          targetId: '#tour-header-actions',
+          title: 'Coaching, Equipment & Alerts',
+          description: 'Chat with certified coaches, check gym equipment availability, view alerts, and manage your account.',
+          icon: 'person-circle-outline',
+          position: 'bottom',
+        },
+        {
+          targetId: '#tour-membership-card',
+          title: 'Membership Plan & Validity',
+          description: 'Monitor your current plan status, renewal date, and remaining active gym days at a glance.',
+          icon: 'card-outline',
+          position: 'bottom',
+        },
+        {
+          targetId: '#tour-stats-grid',
+          title: "This Month's Summary",
+          description: 'Track your total workout sessions, active streak, average duration, and upcoming gym schedules.',
+          icon: 'barbell-outline',
+          position: 'bottom',
+        },
+        {
+          targetId: '#tour-scan-btn',
+          title: 'Scan QR to Check In',
+          description: 'Tap here when you arrive at the gym to scan the QR code and instantly log your attendance.',
+          icon: 'scan-outline',
+          position: 'bottom',
+        },
+        {
+          targetId: '#tour-today-workout',
+          title: "Today's Workout & Live Timer",
+          description: 'View your daily routine, start the live session timer, and track your completed exercises, sets, and reps.',
+          icon: 'play-outline',
+          position: 'top',
+        },
+        {
+          targetId: '#tour-activity-heatmap',
+          title: 'Activity — Last 4 Weeks',
+          description: 'A visual heatmap showing your gym visit consistency and workout frequency over the past month.',
+          icon: 'calendar-outline',
+          position: 'top',
+        },
+        {
+          targetId: '#tour-personal-records',
+          title: 'Personal Records (+ Add PR)',
+          description: 'Record and celebrate your personal best lifts and workout achievements using the + Add PR button.',
+          icon: 'trophy-outline',
+          position: 'top',
+        },
+        {
+          targetId: '#tour-bottom-nav',
+          title: 'Main Navigation Menu',
+          description: 'Easily navigate between Home, Schedule (calendar), Scan QR, Shop (supplements), and your Profile.',
+          icon: 'home-outline',
+          position: 'top',
+        },
+      ];
+
+      // Only include steps for elements currently present in the DOM
+      const availableSteps = allSteps.filter((step) => !!document.querySelector(step.targetId));
+
+      if (availableSteps.length > 0) {
+        this.onboardingService.startTour('dashboard_main', availableSteps, false, user.id);
+      }
+    }, 700);
+  }
+
+  /**
+   * Manually replay the app tour tutorial anytime.
+   */
+  startTutorialGuide(): void {
+    const user = this.auth.user;
+    if (!user) return;
+    this.onboardingService.resetTour('dashboard_main', user.id);
+    this.checkAndStartOnboardingTour();
   }
 
   ngOnDestroy(): void {

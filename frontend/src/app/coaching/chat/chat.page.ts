@@ -546,8 +546,20 @@ export class ChatPage implements OnInit, OnDestroy {
     });
 
     // ── Workout proposals ──────────────────────────────────────────────────
-    channel.listen('.proposal.sent', (data: { proposal: WorkoutPlanProposal }) => {
-      if (data?.proposal) {
+    channel.listen('.proposal.sent', (data: { proposal: WorkoutPlanProposal; message?: Message }) => {
+      if (data?.message) {
+        // Push the proposal message directly — no HTTP round-trip needed
+        this.zone.run(() => {
+          const msg = data.message!;
+          if (!this.messages.some((m) => m.id === msg.id)) {
+            this.messages.push(msg);
+            ChatPage.messagesCache.set(this.conversationId, this.messages);
+            void setCachedData(`fordago.cache.chat_msgs_${this.conversationId}`, this.messages.slice(-50));
+            this.scrollToBottom();
+          }
+        });
+      } else if (data?.proposal) {
+        // Fallback: reload only if no message payload provided
         this.zone.run(() => this.loadMessages());
       }
     });

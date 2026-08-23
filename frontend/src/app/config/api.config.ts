@@ -9,13 +9,13 @@
  * - Reverb WebSocket: http://192.168.1.21:8080
  */
 function getDetectedHost(): string {
-  // If running inside native Android / Capacitor APK, always use PC's Wi-Fi IP
+  // If running inside native Android / Capacitor APK, use PC's LAN IP
   if (typeof window !== 'undefined' && ((window as any).Capacitor?.isNativePlatform?.() || window.location?.protocol === 'capacitor:')) {
     return '192.168.1.16';
   }
   if (typeof window !== 'undefined' && window.location && window.location.hostname) {
     const host = window.location.hostname;
-    if (host && host !== '' && host !== 'localhost' && host !== '127.0.0.1' && host !== 'capacitor') {
+    if (host && host !== '' && host !== 'capacitor') {
       return host;
     }
   }

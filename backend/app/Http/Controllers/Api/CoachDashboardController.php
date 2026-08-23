@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\CoachProfile;
 use App\Models\Conversation;
 use App\Models\WorkoutPlanProposal;
 use Illuminate\Http\Request;

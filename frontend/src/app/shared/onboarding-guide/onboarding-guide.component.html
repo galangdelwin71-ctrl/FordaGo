@@ -1,0 +1,78 @@
+<!-- onboarding-guide.component.html -->
+<div class="onboarding-overlay" *ngIf="isVisible" (click)="$event.stopPropagation()">
+  <!-- Dark Dimmed Backdrop (No blur) -->
+  <div class="backdrop-dim"></div>
+
+  <!-- Focused Spotlight Ring / Cutout -->
+  <div
+    class="spotlight-ring"
+    *ngIf="spotlight.visible"
+    [style.top.px]="spotlight.top"
+    [style.left.px]="spotlight.left"
+    [style.width.px]="spotlight.width"
+    [style.height.px]="spotlight.height"
+    [style.border-radius.px]="spotlight.radius">
+    <div class="spotlight-pulse"></div>
+  </div>
+
+  <!-- Tooltip Card with Arrow Pointer -->
+  <div
+    #tooltipCard
+    class="tooltip-card animate-pop"
+    *ngIf="currentStep"
+    [style.top.px]="tooltipPos.top"
+    [style.left.px]="tooltipPos.left">
+    
+    <!-- Top Arrow (points up to element) -->
+    <div
+      class="tooltip-arrow arrow-top"
+      *ngIf="tooltipPos.arrowPosition === 'top'"
+      [style.left.px]="tooltipPos.arrowOffset">
+    </div>
+
+    <!-- Card Header with Plain "Skip" Text -->
+    <div class="tooltip-header">
+      <div class="header-icon-wrap" *ngIf="currentStep.icon">
+        <ion-icon [name]="currentStep.icon" class="header-icon"></ion-icon>
+      </div>
+      <button type="button" class="skip-btn" (click)="onSkip()" title="Skip guide" aria-label="Skip guide">
+        Skip
+      </button>
+    </div>
+
+    <!-- Card Body -->
+    <div class="tooltip-body">
+      <h3 class="tooltip-title">{{ currentStep.title }}</h3>
+      <p class="tooltip-desc">{{ currentStep.description }}</p>
+    </div>
+
+    <!-- Card Footer / Actions -->
+    <div class="tooltip-footer">
+      <button
+        type="button"
+        class="btn-nav btn-back"
+        *ngIf="stepIndex > 0"
+        (click)="onPrev()"
+        aria-label="Previous step">
+        Back
+      </button>
+
+      <button
+        type="button"
+        class="btn-nav btn-next"
+        (click)="onNext()"
+        [class.btn-finish]="isLastStep()">
+        <span *ngIf="!isLastStep()">Next</span>
+        <span *ngIf="isLastStep()">Got It!</span>
+        <ion-icon [name]="isLastStep() ? 'checkmark-outline' : 'arrow-forward-outline'"></ion-icon>
+      </button>
+    </div>
+
+    <!-- Bottom Arrow (points down to element) -->
+    <div
+      class="tooltip-arrow arrow-bottom"
+      *ngIf="tooltipPos.arrowPosition === 'bottom'"
+      [style.left.px]="tooltipPos.arrowOffset">
+    </div>
+  </div>
+</div>

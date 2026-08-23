@@ -28,7 +28,9 @@ class MessageController extends Controller
             return response()->json(['message' => 'Unauthorized to view messages in this conversation.'], 403);
         }
 
-        // Fetch messages with sender & proposal details
+        // Fetch latest 100 messages with sender & proposal details.
+        // Ordered ASC for chat display; subquery fetches the LAST 100 rows
+        // so long conversations don't scan the entire history on every open.
         $messages = Message::with([
             'sender:id,username,first_name,last_name,profile_image,role',
             'proposal.items',
@@ -36,8 +38,11 @@ class MessageController extends Controller
             'proposal.client:id,username,first_name,last_name,profile_image',
         ])
         ->where('conversation_id', $conversationId)
-        ->orderBy('created_at', 'asc')
-        ->get();
+        ->orderBy('created_at', 'desc')
+        ->limit(100)
+        ->get()
+        ->reverse()
+        ->values();
 
         // Mark unread messages sent by the partner as read
         $readNow = now();

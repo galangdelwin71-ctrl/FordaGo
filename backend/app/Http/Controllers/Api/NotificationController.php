@@ -53,10 +53,13 @@ class NotificationController extends Controller
             return response()->json(
                 Notification::with('user:id,username,email,role')
                     ->select('id', 'user_id', 'title', 'message', 'is_read', 'session_key', 'created_at')
+                    ->where('created_at', '>=', now()->subDays(30))   // cap to last 30 days
                     ->orderByDesc('created_at')
+                    ->limit(100)   // cap rows to prevent large payloads
                     ->get()
             );
         }
+
 
         $rows = Notification::select('id', 'user_id', 'title', 'message', 'is_read', 'session_key', 'created_at')
             ->where(fn ($q) => $q

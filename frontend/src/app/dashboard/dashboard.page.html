@@ -36,7 +36,7 @@
     </div>
 
     <!-- Membership Card -->
-    <div class="membership-card fade-up">
+    <div class="membership-card fade-up" id="tour-membership-card">
       <div class="membership-card-top">
         <div class="badge-active">
           <span class="badge-dot"></span> Active Member
@@ -59,7 +59,7 @@
 
     <!-- Stats -->
     <div class="section-label this-month-label">This Month</div>
-    <div class="stats-grid">
+    <div class="stats-grid" id="tour-stats-grid">
       <div class="stat-card sessions-card fade-up" role="button" tabindex="0"
            (click)="openStatDetail('sessions')" (keyup.enter)="openStatDetail('sessions')">
         <ion-icon name="barbell-outline" class="stat-icon accent-icon"></ion-icon>
@@ -91,13 +91,13 @@
     </div>
 
     <!-- Scan QR only -->
-    <button class="scan-btn fade-up" (click)="goToQr()">
+    <button class="scan-btn fade-up" id="tour-scan-btn" (click)="goToQr()">
       <ion-icon name="scan-outline" class="action-icon"></ion-icon>
       <span>Scan QR to Check In</span>
     </button>
 
     <!-- Today's Workout -->
-    <div class="section-label today-workout-label">Today's Workout</div>
+    <div class="section-label today-workout-label" id="tour-today-workout">Today's Workout</div>
     <div class="workout-count" *ngIf="todayWorkouts.length > 0">
       {{ todayWorkouts.length }} workout{{ todayWorkouts.length === 1 ? '' : 's' }} scheduled today
     </div>
@@ -188,13 +188,8 @@
     </ng-template>
 
     <!-- Activity Heatmap -->
-    <!-- HOW IT WORKS:
-         Each cell = 1 day. Value 0 = no session, 1 = light, 2 = moderate, 3 = intense.
-         This data comes from completedSessions — when a member checks in via QR scan,
-         that session is marked as completed and the heatmap automatically updates.
-         If a scheduled workout is marked done, intensity = 1. If check-in + workout done = 3. -->
     <div class="section-label">Activity — Last 4 Weeks</div>
-    <div class="card fade-up">
+    <div class="card fade-up" id="tour-activity-heatmap">
       <div class="heat-day-labels">
         <div class="heat-lbl" *ngFor="let d of dayLabels; trackBy: trackByIndex">{{ d }}</div>
       </div>
@@ -235,11 +230,7 @@
     </div>
 
     <!-- Personal Records -->
-    <!-- HOW IT WORKS:
-         Manual entry lang ito. Pindutin mo yung + button or yung luma mong record
-         para ma-edit/update. Di ito auto-detect kasi walang sensor — ikaw mismo
-         mag-iinput after mo ma-achieve yung PR. -->
-    <div class="pr-header">
+    <div class="pr-header" id="tour-personal-records">
       <div class="section-label" style="margin: 0;">Personal Records</div>
       <button class="add-pr-btn" (click)="openPrModal()">+ Add PR</button>
     </div>
@@ -279,7 +270,7 @@
 </ion-content>
 
 <ion-footer class="fordago-app-footer ion-no-border">
-  <nav class="fordago-bottom-nav" aria-label="Main navigation">
+  <nav class="fordago-bottom-nav" id="tour-bottom-nav" aria-label="Main navigation">
     <button type="button" class="fordago-nav-item is-active" (click)="goToDashboard()" aria-label="Home">
       <span class="fordago-nav-icon"><ion-icon name="home-outline"></ion-icon></span>
       <span class="fordago-nav-label">Home</span>
@@ -561,3 +552,6 @@
 <!-- Messenger-style floating chat toast: shows when a new message arrives
      while the user is NOT inside that conversation's chat page. -->
 <app-chat-toast></app-chat-toast>
+
+<!-- First-time Feature Tour / Coachmark Walkthrough -->
+<app-onboarding-guide></app-onboarding-guide>

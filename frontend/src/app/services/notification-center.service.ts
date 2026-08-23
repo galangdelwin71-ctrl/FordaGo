@@ -42,6 +42,8 @@ export class NotificationCenterService {
   // (guarded by pollTimer below) no matter how many panel instances call
   // startPolling().
   private pollTimer: ReturnType<typeof setInterval> | null = null;
+  private focusListenerRegistered = false;
+  private focusDebounceTimer: ReturnType<typeof setTimeout> | null = null;
   private notificationsSubject = new BehaviorSubject<AppNotificationItem[]>([]);
   readonly notifications$ = this.notificationsSubject.asObservable();
 
@@ -124,10 +126,23 @@ export class NotificationCenterService {
     // WebSocket real-time listener
     this.listenWebSocket();
 
-    // Fast 8-second HTTP poll fallback to ensure fast notification delivery
+    // Gentle 5-minute fallback HTTP sync for background consistency (real-time events come through WebSocket instantly)
     this.pollTimer = setInterval(() => {
       void this.refreshNotifications();
-    }, 8 * 1000);
+    }, 5 * 60 * 1000);
+
+    // Sync when app/tab regains focus — debounced 2s to prevent
+    // double-firing when the focus event and the interval coincide,
+    // or when the user briefly switches windows.
+    if (typeof window !== 'undefined' && !this.focusListenerRegistered) {
+      this.focusListenerRegistered = true;
+      window.addEventListener('focus', () => {
+        if (this.focusDebounceTimer) clearTimeout(this.focusDebounceTimer);
+        this.focusDebounceTimer = setTimeout(() => {
+          void this.refreshNotifications();
+        }, 2000);
+      });
+    }
   }
 
   /**
