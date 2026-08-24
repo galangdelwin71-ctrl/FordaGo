@@ -76,15 +76,23 @@ class SmsService
         }
 
         $response = Http::asForm()->post('https://api.semaphore.co/api/v4/messages', [
-            'apikey' => $apiKey,
-            'number' => $to,
-            'message' => $message,
+            'apikey'     => $apiKey,
+            'number'     => $to,
+            'message'    => $message,
             'sendername' => $senderName,
         ]);
 
         if (! $response->successful()) {
-            throw new \RuntimeException("Semaphore request failed: {$response->status()} {$response->body()}");
+            $body = $response->body();
+            Log::warning('Semaphore SMS failed', [
+                'status' => $response->status(),
+                'body'   => $body,
+                'to'     => $to,
+            ]);
+            throw new \RuntimeException("Semaphore request failed: {$response->status()} {$body}");
         }
+
+        Log::info('Semaphore SMS sent', ['to' => $to, 'provider' => 'semaphore']);
 
         return ['sent' => true, 'provider' => 'semaphore'];
     }

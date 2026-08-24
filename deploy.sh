@@ -36,20 +36,26 @@ if [ ! -f "backend/.env" ]; then
     echo "❗ IMPORTANT: Please edit 'backend/.env' with your real production database password, APP_URL, and mail keys!"
 fi
 
-# 3. Pull / Build images
+# 3. Choose compose file
+COMPOSE_FILE=""
+if [ -f "docker-compose.prod.yml" ]; then
+    COMPOSE_FILE="-f docker-compose.prod.yml"
+fi
+
+# 4. Pull / Build images
 echo ""
 echo "📦 Building FordaGO containers..."
-$COMPOSE_CMD build
+$COMPOSE_CMD $COMPOSE_FILE build
 
-# 4. Start all services in detached mode
+# 5. Start all services in detached mode
 echo ""
 echo "🚀 Starting FordaGO services (db, backend, reverb, queue, frontend, gateway)..."
-$COMPOSE_CMD up -d
+$COMPOSE_CMD $COMPOSE_FILE up -d
 
-# 5. Show container status
+# 6. Show container status
 echo ""
 echo "🔍 Container Status:"
-$COMPOSE_CMD ps
+$COMPOSE_CMD $COMPOSE_FILE ps
 
 echo ""
 echo "========================================================"

@@ -69,7 +69,7 @@ export class EchoService {
           wssPort: wsPort,
           forceTLS: forceTLS,
           disableStats: true,
-          enabledTransports: forceTLS ? ['wss'] : ['ws'],
+          enabledTransports: ['ws', 'wss'],
           authorizer: (channel: any, _options: any) => {
             return {
               authorize: (socketId: string, callback: Function) => {

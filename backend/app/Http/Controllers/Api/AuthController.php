@@ -472,12 +472,16 @@ class AuthController extends Controller
         $skippedReason = strtolower((string) ($deliveryResult['skippedReason'] ?? ''));
         $isSent = (bool) ($deliveryResult['sent'] ?? false);
 
+        // devCode is only exposed in local/debug mode so the OTP is never
+        // visible in production responses when SMS or email delivery fails.
+        $isDebug = config('app.debug') && in_array(config('app.env'), ['local', 'development'], true);
+
         return response()->json([
             'sent'              => $isSent,
             'channel'           => $channel,
             'destinationMasked' => $channel === 'email' ? $this->maskEmail($destination) : $this->maskPhone($destination),
             'reason'            => $isSent ? null : ($deliveryResult['skippedReason'] ?? $deliveryResult['error'] ?? 'Could not send code'),
-            'devCode'           => ! $isSent ? $code : null,
+            'devCode'           => (! $isSent && $isDebug) ? $code : null,
         ]);
     }
 
