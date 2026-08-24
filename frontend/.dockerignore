@@ -1,0 +1,11 @@
+.git
+.angular
+node_modules
+www
+android
+ios
+.vscode
+.idea
+karma.conf.js
+src/**/*.spec.ts
+tsconfig.spec.json

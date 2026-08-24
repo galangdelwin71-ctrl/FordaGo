@@ -148,12 +148,14 @@ const BACK_BUTTON_ROOT_PATHS = new Set([
 // Double-press-to-exit window: a second back press on a root page within
 // this many ms actually exits the app; otherwise we just show a warning
 // toast and arm the timer. 2s matches the platform-typical Android pattern.
+import { OnboardingGuideComponent } from './shared/onboarding-guide/onboarding-guide.component';
+
 const EXIT_CONFIRM_WINDOW_MS = 2000;
 
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
-  imports: [IonApp, IonRouterOutlet],
+  imports: [IonApp, IonRouterOutlet, OnboardingGuideComponent],
 })
 export class AppComponent implements OnDestroy {
   // Populated once Capacitor resolves the listener registration (see

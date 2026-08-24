@@ -1,9 +1,6 @@
 <!-- onboarding-guide.component.html -->
 <div class="onboarding-overlay" *ngIf="isVisible" (click)="$event.stopPropagation()">
-  <!-- Dark Dimmed Backdrop (No blur) -->
-  <div class="backdrop-dim"></div>
-
-  <!-- Focused Spotlight Ring / Cutout -->
+  <!-- Spotlight Cutout: The giant box-shadow darkens the background outside, leaving the element 100% clear and unblurred -->
   <div
     class="spotlight-ring"
     *ngIf="spotlight.visible"
@@ -12,13 +9,15 @@
     [style.width.px]="spotlight.width"
     [style.height.px]="spotlight.height"
     [style.border-radius.px]="spotlight.radius">
-    <div class="spotlight-pulse"></div>
   </div>
+
+  <!-- Fallback dark overlay only if no target is active -->
+  <div class="fallback-dim" *ngIf="!spotlight.visible"></div>
 
   <!-- Tooltip Card with Arrow Pointer -->
   <div
     #tooltipCard
-    class="tooltip-card animate-pop"
+    class="tooltip-card"
     *ngIf="currentStep"
     [style.top.px]="tooltipPos.top"
     [style.left.px]="tooltipPos.left">

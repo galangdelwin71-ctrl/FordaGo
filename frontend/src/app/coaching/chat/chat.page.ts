@@ -45,6 +45,7 @@ import { AuthService } from '../../services/auth.service';
 import { CoachingService, Conversation, Message, WorkoutPlanProposal, CoachProgram } from '../../services/coaching.service';
 import { EchoService } from '../../services/echo.service';
 import { ChatToastService } from '../../services/chat-toast.service';
+import { OnboardingService, TourStep } from '../../services/onboarding.service';
 import { getCachedData, setCachedData } from '../../utils/local-cache.util';
 
 interface ProposalFormExercise {
@@ -161,6 +162,7 @@ export class ChatPage implements OnInit, OnDestroy {
     private chatToastService: ChatToastService,
     private zone: NgZone,
     private modalCtrl: ModalController,
+    public onboardingService: OnboardingService,
   ) {
     addIcons({
       arrowBackOutline,
@@ -237,6 +239,39 @@ export class ChatPage implements OnInit, OnDestroy {
 
     // (Re)connect the WebSocket listener for this conversation
     this.setupEchoListener();
+
+    this.checkAndStartChatTour();
+  }
+
+  private checkAndStartChatTour(): void {
+    const user = this.auth.user;
+    if (!user || user.role === 'admin') return;
+
+    setTimeout(() => {
+      if (this.onboardingService.isRunning) return;
+
+      const steps: TourStep[] = [
+        {
+          targetId: '#tour-chat-header',
+          title: 'Direct Chat Partner',
+          description: 'Tap the top header anytime to view your trainer or client details and bio.',
+          icon: 'person-circle-outline',
+          position: 'bottom',
+        },
+        {
+          targetId: '#tour-chat-input-bar',
+          title: 'Instant Messaging & Plans',
+          description: 'Type messages, view live typing indicators, and receive workout plan proposals.',
+          icon: 'paper-plane-outline',
+          position: 'top',
+        },
+      ];
+
+      const available = steps.filter((s) => !!document.querySelector(s.targetId));
+      if (available.length > 0) {
+        this.onboardingService.startTour('chat_main', available, false, user.id);
+      }
+    }, 700);
   }
 
   /**
@@ -624,6 +659,9 @@ export class ChatPage implements OnInit, OnDestroy {
     this.messages.push(optimisticMsg);
     this.scrollToBottom();
 
+    // Instantly bring this conversation to the top in the Messages list
+    this.coachingService.updateConversationLatest(this.conversationId, optimisticMsg);
+
     this.coachingService.sendMessage(this.conversationId, text).subscribe({
       next: (sentMsg) => {
         this.isSending = false;
@@ -648,6 +686,7 @@ export class ChatPage implements OnInit, OnDestroy {
         });
         ChatPage.messagesCache.set(this.conversationId, this.messages);
         void setCachedData(`fordago.cache.chat_msgs_${this.conversationId}`, this.messages.slice(-50));
+        this.coachingService.updateConversationLatest(this.conversationId, sentMsg);
       },
       error: (err) => {
         this.isSending = false;

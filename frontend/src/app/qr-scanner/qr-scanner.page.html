@@ -29,7 +29,7 @@
 
     <!-- Scan Mode -->
     <div class="section-label">Scan Mode</div>
-    <div class="mode-row">
+    <div class="mode-row" id="tour-scanner-modes">
       <div
         class="mode-card"
         [class.active]="scanMode === 'attendance'"
@@ -53,7 +53,7 @@
     </div>
 
     <!-- Scanner Frame -->
-    <div class="scanner-wrap">
+    <div class="scanner-wrap" id="tour-scanner-frame">
       <div class="qr-frame">
         <div class="qr-corner tl"></div>
         <div class="qr-corner tr"></div>
@@ -84,7 +84,7 @@
       </div>
     </div>
 
-    <div class="scan-actions">
+    <div class="scan-actions" id="tour-scanner-action">
       <button
         class="scan-btn"
         [class.scanning]="isScanning"
@@ -97,7 +97,7 @@
     </div>
 
     <!-- My Scan Log -->
-    <div class="log-header">
+    <div class="log-header" id="tour-scanner-history">
       <div class="log-title-wrap">
         <span class="section-label" style="margin-bottom: 0;">My Scan Log</span>
         <span class="my-badge">You only</span>
@@ -269,25 +269,64 @@
   (didDismiss)="closeAttendanceModal()"
   [breakpoints]="[0, 1]"
   [initialBreakpoint]="1"
-  class="bottom-sheet-modal"
+  class="bottom-sheet-modal attendance-sheet-modal"
 >
   <ng-template>
-    <div class="modal-sheet">
+    <div class="modal-sheet attendance-success-sheet">
       <div class="modal-handle"></div>
-      <div class="success-wrap">
+
+      <div class="success-hero">
+        <div class="glow-orb"></div>
         <div class="success-icon-ring">
-          <ion-icon class="success-emoji" name="checkmark-circle-outline"></ion-icon>
+          <div class="icon-inner-pulse"></div>
+          <ion-icon class="success-emoji" name="checkmark-circle"></ion-icon>
         </div>
         <div class="modal-title">Attendance Recorded!</div>
-        <div class="modal-sub">Today, {{ scannedTime }}</div>
-        <div style="display: flex; justify-content: center; margin-bottom: 20px;">
-          <span class="confirmed-badge">
-            <ion-icon name="checkmark-done-outline"></ion-icon>
-            Check-in Confirmed
-          </span>
-        </div>
-        <button class="done-btn" (click)="closeAttendanceModal()">Done</button>
+        <div class="modal-sub">Check-in confirmed · Have a great workout!</div>
       </div>
+
+      <!-- FordaGO Digital Pass Card -->
+      <div class="digital-pass-card">
+        <div class="pass-header">
+          <div class="pass-brand">
+            <span class="brand-logo">FordaGO</span>
+            <span class="pass-type-badge">{{ userMembershipType | uppercase }} PASS</span>
+          </div>
+          <div class="pass-status-pill success">
+            <span class="status-dot"></span>
+            <span>VERIFIED</span>
+          </div>
+        </div>
+
+        <div class="pass-divider"></div>
+
+        <div class="pass-grid">
+          <div class="pass-item">
+            <span class="pass-lbl">MEMBER</span>
+            <span class="pass-val member-highlight">
+              <span class="pass-avatar" *ngIf="initials">{{ initials }}</span>
+              {{ currentUserName }}
+            </span>
+          </div>
+          <div class="pass-item right">
+            <span class="pass-lbl">TIME IN</span>
+            <span class="pass-val time-val">{{ scannedTime || 'Just Now' }}</span>
+          </div>
+          <div class="pass-item">
+            <span class="pass-lbl">DATE</span>
+            <span class="pass-val">Today</span>
+          </div>
+          <div class="pass-item right">
+            <span class="pass-lbl">ACCESS</span>
+            <span class="pass-val access-val">Gym Floor Granted</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="gold-cta-btn" (click)="closeAttendanceModal()">
+        <span>Done</span>
+        <ion-icon name="arrow-forward-outline"></ion-icon>
+      </button>
     </div>
   </ng-template>
 </ion-modal>
@@ -298,28 +337,61 @@
   (didDismiss)="closePendingModal()"
   [breakpoints]="[0, 1]"
   [initialBreakpoint]="1"
-  class="bottom-sheet-modal"
+  class="bottom-sheet-modal attendance-sheet-modal"
 >
   <ng-template>
-    <div class="modal-sheet">
+    <div class="modal-sheet attendance-pending-sheet">
       <div class="modal-handle"></div>
-      <div class="success-wrap">
-        <div class="success-icon-ring" style="background: rgba(255,180,0,0.1); border-color: rgba(255,180,0,0.3);">
-          <ion-icon class="success-emoji" name="hourglass-outline"></ion-icon>
+
+      <div class="success-hero pending">
+        <div class="glow-orb amber"></div>
+        <div class="success-icon-ring amber">
+          <div class="icon-inner-pulse amber"></div>
+          <ion-icon class="success-emoji" name="time"></ion-icon>
         </div>
         <div class="modal-title">Payment Pending</div>
-        <div class="modal-sub">Today, {{ scannedTime }}</div>
-        <p style="text-align:center; color:#aaa; font-size:13px; line-height:1.6; margin-bottom:20px;">
-          {{ checkInMessage }}
-        </p>
-        <div style="display: flex; justify-content: center; margin-bottom: 20px;">
-          <span class="confirmed-badge" style="background: rgba(255,180,0,0.1); border-color: rgba(255,180,0,0.3); color: #ffb400;">
-            <ion-icon name="hourglass-outline"></ion-icon>
-            Awaiting Admin Confirmation
-          </span>
-        </div>
-        <button class="done-btn" (click)="closePendingModal()">OK, Got it</button>
+        <div class="modal-sub">Daily pass recorded · Awaiting counter confirmation</div>
       </div>
+
+      <!-- FordaGO Digital Pass Card (Pending) -->
+      <div class="digital-pass-card pending">
+        <div class="pass-header">
+          <div class="pass-brand">
+            <span class="brand-logo">FordaGO</span>
+            <span class="pass-type-badge pending">DAILY PASS</span>
+          </div>
+          <div class="pass-status-pill pending">
+            <span class="status-dot amber"></span>
+            <span>AWAITING PAYMENT</span>
+          </div>
+        </div>
+
+        <div class="pass-divider"></div>
+
+        <div class="pass-grid">
+          <div class="pass-item">
+            <span class="pass-lbl">MEMBER</span>
+            <span class="pass-val member-highlight">
+              <span class="pass-avatar" *ngIf="initials">{{ initials }}</span>
+              {{ currentUserName }}
+            </span>
+          </div>
+          <div class="pass-item right">
+            <span class="pass-lbl">TIME IN</span>
+            <span class="pass-val time-val">{{ scannedTime || 'Just Now' }}</span>
+          </div>
+        </div>
+
+        <div class="pending-notice-box">
+          <ion-icon name="information-circle"></ion-icon>
+          <span>{{ checkInMessage || 'Please proceed to the admin or front desk to pay and activate your day pass.' }}</span>
+        </div>
+      </div>
+
+      <button class="gold-cta-btn" (click)="closePendingModal()">
+        <span>OK, Got It</span>
+        <ion-icon name="checkmark-outline"></ion-icon>
+      </button>
     </div>
   </ng-template>
 </ion-modal>

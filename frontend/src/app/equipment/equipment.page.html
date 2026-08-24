@@ -36,7 +36,7 @@
     </div>
 
     <!-- Search -->
-    <div class="search-wrap">
+    <div class="search-wrap" id="tour-equip-search">
       <ion-icon name="search-outline" class="search-icon-ion"></ion-icon>
       <input
         class="search-input"
@@ -47,7 +47,7 @@
     </div>
 
     <!-- Category Filter Pills -->
-    <div class="cat-row">
+    <div class="cat-row" id="tour-equip-categories">
       <div
         *ngFor="let cat of categories"
         class="cat-pill"
@@ -85,7 +85,7 @@
     </div>
 
     <!-- Equipment Grid -->
-    <div class="equip-grid" *ngIf="!isLoading && !errorMsg && filteredEquipment.length > 0">
+    <div class="equip-grid" id="tour-equip-grid" *ngIf="!isLoading && !errorMsg && filteredEquipment.length > 0">
       <div
         *ngFor="let item of filteredEquipment; let i = index; trackBy: trackByEquipment"
         class="equip-card"

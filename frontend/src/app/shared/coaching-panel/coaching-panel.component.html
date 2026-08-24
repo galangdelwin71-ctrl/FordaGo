@@ -35,7 +35,7 @@
 
 <!-- Member tabs: coach accounts skip this entirely -- their tabs live
      inside the dashboard content below (cd-tabs). -->
-<div class="panel-tabs" *ngIf="!isLoadingProfile && !isCoach">
+<div class="panel-tabs" id="tour-coach-member-tabs" *ngIf="!isLoadingProfile && !isCoach">
   <button
     type="button"
     class="panel-tab-btn"
@@ -84,7 +84,7 @@
   <ng-container *ngIf="!isLoadingProfile && isCoach">
 
     <!-- Profile card -->
-    <div class="cd-profile-card" *ngIf="myProfile">
+    <div class="cd-profile-card" *ngIf="myProfile" id="tour-coach-profile-card">
       <div class="cd-profile-avatar">
         <img *ngIf="myProfile.profile_image" [src]="myProfile.profile_image" alt="" />
         <span *ngIf="!myProfile.profile_image">{{ (myProfile.first_name || myProfile.username || 'C').charAt(0) }}</span>
@@ -107,7 +107,7 @@
     </div>
 
     <!-- Stats row — each card is now a clickable button -->
-    <div class="cd-stats-grid">
+    <div class="cd-stats-grid" id="tour-coach-studio-stats">
       <button type="button" class="cd-stat-card" (click)="openClientsModal()">
         <div class="cd-stat-icon-wrap">
           <ion-icon name="people-outline" class="cd-stat-icon accent-icon"></ion-icon>
@@ -141,45 +141,47 @@
     </div>
 
     <!-- Today's Sessions -->
-    <div class="cd-section-label">Today's Sessions</div>
-    <div class="cd-card" *ngIf="isLoadingTodaySessions">
-      <ion-spinner name="crescent" color="warning"></ion-spinner>
+    <div id="tour-coach-today-sessions">
+      <div class="cd-section-label">Today's Sessions</div>
+      <div class="cd-card" *ngIf="isLoadingTodaySessions">
+        <ion-spinner name="crescent" color="warning"></ion-spinner>
+      </div>
+      <ng-container *ngIf="!isLoadingTodaySessions">
+        <div class="cd-session-item" *ngFor="let session of todaySessions" (click)="openTodaySession(session)">
+          <div class="cd-session-avatar">
+            <img *ngIf="session.clientAvatar" [src]="session.clientAvatar" alt="" />
+            <span *ngIf="!session.clientAvatar">{{ session.clientName.charAt(0) }}</span>
+            <span class="cd-session-avatar-dot"></span>
+          </div>
+          <div class="cd-session-info">
+            <div class="cd-session-name">{{ session.clientName }}</div>
+            <div class="cd-session-time"><ion-icon name="time-outline"></ion-icon> {{ session.timeLabel }}</div>
+            <div class="cd-session-focus">{{ session.focus }}</div>
+          </div>
+          <button type="button" class="cd-session-view-btn">
+            <span>View</span>
+            <ion-icon name="chevron-forward-outline"></ion-icon>
+          </button>
+        </div>
+        <div class="cd-empty-state cd-card" *ngIf="todaySessions.length === 0">
+          <ion-icon name="calendar-outline" class="cd-empty-state-icon"></ion-icon>
+          <div>No sessions scheduled for today.</div>
+        </div>
+      </ng-container>
     </div>
-    <ng-container *ngIf="!isLoadingTodaySessions">
-      <div class="cd-session-item" *ngFor="let session of todaySessions" (click)="openTodaySession(session)">
-        <div class="cd-session-avatar">
-          <img *ngIf="session.clientAvatar" [src]="session.clientAvatar" alt="" />
-          <span *ngIf="!session.clientAvatar">{{ session.clientName.charAt(0) }}</span>
-          <span class="cd-session-avatar-dot"></span>
-        </div>
-        <div class="cd-session-info">
-          <div class="cd-session-name">{{ session.clientName }}</div>
-          <div class="cd-session-time"><ion-icon name="time-outline"></ion-icon> {{ session.timeLabel }}</div>
-          <div class="cd-session-focus">{{ session.focus }}</div>
-        </div>
-        <button type="button" class="cd-session-view-btn">
-          <span>View</span>
-          <ion-icon name="chevron-forward-outline"></ion-icon>
-        </button>
-      </div>
-      <div class="cd-empty-state cd-card" *ngIf="todaySessions.length === 0">
-        <ion-icon name="calendar-outline" class="cd-empty-state-icon"></ion-icon>
-        <div>No sessions scheduled for today.</div>
-      </div>
-    </ng-container>
 
     <!-- Quick Actions -->
     <div class="cd-section-label">Quick Actions</div>
-    <div class="cd-quick-actions-grid">
-      <button type="button" class="cd-quick-action-btn" (click)="openAvailabilityModal()">
+    <div class="cd-quick-actions-grid" id="tour-coach-quick-actions">
+      <button type="button" class="cd-quick-action-btn" id="tour-coach-action-availability" (click)="openAvailabilityModal()">
         <ion-icon name="time-outline"></ion-icon>
         <span>Set Availability</span>
       </button>
-      <button type="button" class="cd-quick-action-btn" (click)="openProgramModal()">
+      <button type="button" class="cd-quick-action-btn" id="tour-coach-action-program" (click)="openProgramModal()">
         <ion-icon name="clipboard-outline"></ion-icon>
         <span>Create Program</span>
       </button>
-      <button type="button" class="cd-quick-action-btn" (click)="openProfileModal()">
+      <button type="button" class="cd-quick-action-btn" id="tour-coach-action-profile" (click)="openProfileModal()">
         <ion-icon name="person-outline"></ion-icon>
         <span>Manage Profile</span>
       </button>
@@ -417,7 +419,7 @@
   <ng-container *ngIf="!isLoadingProfile && !isCoach && activeTab === 'explore'">
 
     <!-- Search Input -->
-    <div class="search-wrap">
+    <div class="search-wrap" id="tour-coach-search">
       <ion-icon name="search-outline" class="search-icon"></ion-icon>
       <input
         class="search-input"
@@ -429,7 +431,7 @@
     </div>
 
     <!-- Specialty Pills -->
-    <div class="specialty-row">
+    <div class="specialty-row" id="tour-coach-specialties">
       <div
         *ngFor="let spec of specialties"
         class="specialty-chip"
@@ -456,7 +458,7 @@
 
     <!-- Coach List -->
     <div class="coach-list" *ngIf="!isLoading && coaches.length > 0">
-      <div class="coach-card" *ngFor="let coach of coaches; trackBy: trackByCoach">
+      <div class="coach-card" *ngFor="let coach of coaches; let ci = index; trackBy: trackByCoach" [id]="ci === 0 ? 'tour-coach-first-card' : null">
         <div class="coach-card-header">
           <div class="coach-avatar-wrap">
             <img *ngIf="coach.profile_image" [src]="coach.profile_image" [alt]="coach.first_name" class="coach-avatar-img" />
@@ -484,7 +486,7 @@
           {{ coach.bio || 'Dedicated trainer focused on helping you reach peak performance safely and effectively.' }}
         </p>
 
-        <div class="coach-actions">
+        <div class="coach-actions" [id]="ci === 0 ? 'tour-coach-actions' : null">
           <button type="button" class="coach-btn coach-btn-view" (click)="viewCoach(coach)">
             View Profile
           </button>

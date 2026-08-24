@@ -54,6 +54,9 @@ class NotificationController extends Controller
                 Notification::with('user:id,username,email,role')
                     ->select('id', 'user_id', 'title', 'message', 'is_read', 'session_key', 'created_at')
                     ->where('created_at', '>=', now()->subDays(30))   // cap to last 30 days
+                    ->where('title', 'NOT LIKE', 'Missed Workout%')   // Never show workout reminders in Admin feed
+                    ->where('title', 'NOT LIKE', '%Workout Session%')
+                    ->whereNull('session_key')
                     ->orderByDesc('created_at')
                     ->limit(100)   // cap rows to prevent large payloads
                     ->get()

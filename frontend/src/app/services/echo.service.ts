@@ -4,7 +4,7 @@ import Pusher from 'pusher-js';
 import { API_BASE_URL, REVERB_TUNNEL_URL } from '../config/api.config';
 
 (window as any).Pusher = Pusher;
-(Pusher as any).logToConsole = true;
+(Pusher as any).logToConsole = false;
 
 @Injectable({ providedIn: 'root' })
 export class EchoService {
@@ -13,7 +13,11 @@ export class EchoService {
   private echoToken: string | null = null;
 
   constructor(private zone: NgZone) {
-    this.initEcho();
+    // Only connect if user is already logged in
+    const token = localStorage.getItem('token');
+    if (token) {
+      this.initEcho();
+    }
   }
 
   /**
@@ -22,6 +26,14 @@ export class EchoService {
   public initEcho(): Echo<any> | null {
     const token = localStorage.getItem('token');
     this.echoToken = token;
+
+    if (!token) {
+      if (this.echo) {
+        try { this.echo.disconnect(); } catch { /* ignore */ }
+        this.echo = null;
+      }
+      return null;
+    }
 
     let wsHost = 'localhost';
     let wsPort = 8080;
@@ -56,17 +68,22 @@ export class EchoService {
           wsPort: wsPort,
           wssPort: wsPort,
           forceTLS: forceTLS,
-          enabledTransports: ['ws', 'wss'],
+          disableStats: true,
+          enabledTransports: forceTLS ? ['wss'] : ['ws'],
           authorizer: (channel: any, _options: any) => {
             return {
               authorize: (socketId: string, callback: Function) => {
                 const currentToken = localStorage.getItem('token');
+                if (!currentToken) {
+                  callback(new Error('No auth token'), null);
+                  return;
+                }
                 fetch(`${API_BASE_URL}/broadcasting/auth`, {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
-                    'Authorization': currentToken ? `Bearer ${currentToken}` : '',
+                    'Authorization': `Bearer ${currentToken}`,
                   },
                   body: JSON.stringify({
                     socket_id: socketId,
@@ -79,18 +96,23 @@ export class EchoService {
                   })
                   .then((data) => callback(null, data))
                   .catch((err) => {
-                    console.error('[Echo] Channel Auth Error:', err);
                     callback(err, null);
                   });
               },
             };
           },
         });
+
+        // Graceful error trap
+        try {
+          (this.echo as any)?.connector?.pusher?.connection?.bind('error', () => {
+            // Silently handle websocket reconnects
+          });
+        } catch { /* ignore */ }
       });
 
       return this.echo;
     } catch (err) {
-      console.warn('Echo initialization error:', err);
       return null;
     }
   }
@@ -134,7 +156,14 @@ export class EchoService {
    */
   public leaveChannel(channelName: string) {
     if (this.echo) {
-      this.echo.leave(channelName);
+      try {
+        const state = (this.echo as any)?.connector?.pusher?.connection?.state;
+        if (state === 'connected') {
+          this.echo.leave(channelName);
+        }
+      } catch {
+        // Silently ignore if connection is closing/closed
+      }
     }
   }
 
@@ -143,7 +172,14 @@ export class EchoService {
    */
   public disconnect() {
     if (this.echo) {
-      this.echo.disconnect();
+      try {
+        const state = (this.echo as any)?.connector?.pusher?.connection?.state;
+        if (state === 'connected' || state === 'connecting') {
+          this.echo.disconnect();
+        }
+      } catch {
+        // Silently ignore
+      }
       this.echo = null;
       this.echoToken = null;
     }

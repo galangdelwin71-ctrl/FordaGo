@@ -60,7 +60,8 @@ export class OnboardingGuideComponent implements OnInit, OnDestroy {
   };
 
   private subs: Subscription[] = [];
-  private updateTimeout: any = null;
+  private updateTimeouts: any[] = [];
+  private scrollUnlisten?: () => void;
 
   constructor(
     public onboardingService: OnboardingService,
@@ -89,11 +90,30 @@ export class OnboardingGuideComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       })
     );
+
+    // Global passive scroll listener (captures scrolls inside panel-content, ion-content, modals, etc.)
+    const onGlobalScroll = () => {
+      if (this.isVisible) {
+        requestAnimationFrame(() => this.calculatePositions());
+      }
+    };
+    window.addEventListener('scroll', onGlobalScroll, { capture: true, passive: true });
+    this.scrollUnlisten = () => {
+      window.removeEventListener('scroll', onGlobalScroll, { capture: true });
+    };
   }
 
   ngOnDestroy(): void {
     this.subs.forEach((s) => s.unsubscribe());
-    if (this.updateTimeout) clearTimeout(this.updateTimeout);
+    this.clearAllTimeouts();
+    if (this.scrollUnlisten) {
+      this.scrollUnlisten();
+    }
+  }
+
+  private clearAllTimeouts(): void {
+    this.updateTimeouts.forEach((t) => clearTimeout(t));
+    this.updateTimeouts = [];
   }
 
   @HostListener('window:resize')
@@ -103,39 +123,91 @@ export class OnboardingGuideComponent implements OnInit, OnDestroy {
     }
   }
 
-  @HostListener('window:scroll', ['$event'])
-  onScroll(): void {
-    if (this.isVisible) {
-      this.calculatePositions();
-    }
-  }
+  private animationFrameId: number | null = null;
 
   private syncCurrentStep(): void {
     this.currentStep = this.onboardingService.currentStep;
     this.totalSteps = this.onboardingService.totalSteps;
     if (!this.currentStep) return;
 
-    if (this.updateTimeout) clearTimeout(this.updateTimeout);
+    this.clearAllTimeouts();
 
-    // Initial position calculation, then re-calculate after scrolling
+    // 1. Auto-scroll target into the comfortable center of the viewport/container
     this.scrollToTarget();
-    this.updateTimeout = setTimeout(() => {
-      this.calculatePositions();
-      this.cdr.detectChanges();
-    }, 250);
+
+    // 2. Continuous RAF tracking for 800ms so spotlight and tooltip track smoothly during scroll animation
+    this.trackScrollAnimation(850);
   }
 
   private scrollToTarget(): void {
     if (!this.currentStep?.targetId) return;
 
     const el = document.querySelector(this.currentStep.targetId) as HTMLElement;
-    if (el) {
+    if (!el) return;
+
+    // Standard DOM scrollIntoView with center alignment
+    try {
       el.scrollIntoView({
         behavior: 'smooth',
         block: 'center',
-        inline: 'center',
+        inline: 'nearest',
       });
+    } catch {
+      // Fallback if smooth scroll is not supported
+      el.scrollIntoView(true);
     }
+
+    // Support Ionic ion-content and custom scrollable modals
+    const ionContent = el.closest('ion-content');
+    if (ionContent && typeof (ionContent as any).getScrollElement === 'function') {
+      (ionContent as any).getScrollElement().then((scrollEl: HTMLElement) => {
+        if (scrollEl) {
+          const elRect = el.getBoundingClientRect();
+          const scrollRect = scrollEl.getBoundingClientRect();
+          const currentScroll = scrollEl.scrollTop;
+          const targetY = currentScroll + (elRect.top - scrollRect.top) - (scrollRect.height / 2) + (elRect.height / 2);
+          scrollEl.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+        }
+      }).catch(() => {});
+    }
+
+    // Support custom scrollable parent containers (e.g. modal-sheet, dialogs, overflow divs)
+    let parent = el.parentElement;
+    while (parent && parent !== document.body) {
+      const style = window.getComputedStyle(parent);
+      const isScrollable = (style.overflowY === 'auto' || style.overflowY === 'scroll') && parent.scrollHeight > parent.clientHeight;
+      if (isScrollable) {
+        const elRect = el.getBoundingClientRect();
+        const parentRect = parent.getBoundingClientRect();
+        const currentScroll = parent.scrollTop;
+        const targetY = currentScroll + (elRect.top - parentRect.top) - (parentRect.height / 2) + (elRect.height / 2);
+        parent.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+        break;
+      }
+      parent = parent.parentElement;
+    }
+  }
+
+  private trackScrollAnimation(durationMs = 850): void {
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
+    }
+
+    const startTime = performance.now();
+    const step = (currentTime: number) => {
+      this.calculatePositions();
+      this.cdr.detectChanges();
+      if (currentTime - startTime < durationMs && this.isVisible) {
+        this.animationFrameId = requestAnimationFrame(step);
+      } else {
+        this.animationFrameId = null;
+        // Final settle check
+        this.calculatePositions();
+        this.cdr.detectChanges();
+      }
+    };
+    this.animationFrameId = requestAnimationFrame(step);
   }
 
   calculatePositions(): void {
@@ -156,7 +228,7 @@ export class OnboardingGuideComponent implements OnInit, OnDestroy {
         visible: false,
       };
       this.tooltipPos = {
-        top: Math.max(20, (viewportHeight - 220) / 2),
+        top: Math.max(20, (viewportHeight - 200) / 2),
         left: 16,
         arrowPosition: 'none',
         arrowOffset: 50,
@@ -165,6 +237,13 @@ export class OnboardingGuideComponent implements OnInit, OnDestroy {
     }
 
     const rect = targetEl.getBoundingClientRect();
+
+    // If target has zero dimensions (e.g. hidden/display:none), hide spotlight
+    if (rect.width <= 0 || rect.height <= 0) {
+      this.spotlight.visible = false;
+      return;
+    }
+
     const padding = 8;
     const spotTop = Math.max(0, rect.top - padding);
     const spotLeft = Math.max(0, rect.left - padding);
@@ -186,10 +265,10 @@ export class OnboardingGuideComponent implements OnInit, OnDestroy {
       visible: true,
     };
 
-    // Calculate Tooltip position (above or below)
+    // Calculate Tooltip position with guaranteed collision avoidance & viewport safety
     const margin = 14;
     const tooltipWidth = Math.min(viewportWidth - 32, 380);
-    const estimatedTooltipHeight = 210;
+    const estimatedTooltipHeight = this.tooltipCardRef?.nativeElement?.offsetHeight || 195;
 
     const spaceBelow = viewportHeight - (spotTop + spotHeight);
     const spaceAbove = spotTop;
@@ -197,11 +276,19 @@ export class OnboardingGuideComponent implements OnInit, OnDestroy {
     let placeBelow = true;
     if (this.currentStep.position === 'top') {
       placeBelow = false;
+      // If not enough room on top (< tooltip height + margin), but more room below, flip to bottom
+      if (spaceAbove < estimatedTooltipHeight + margin && spaceBelow > spaceAbove) {
+        placeBelow = true;
+      }
     } else if (this.currentStep.position === 'bottom') {
       placeBelow = true;
+      // If not enough room on bottom, but more room on top, flip to top
+      if (spaceBelow < estimatedTooltipHeight + margin && spaceAbove > spaceBelow) {
+        placeBelow = false;
+      }
     } else {
-      // Auto placement
-      placeBelow = spaceBelow >= estimatedTooltipHeight || spaceBelow >= spaceAbove;
+      // Auto: place where there is more available screen space
+      placeBelow = spaceBelow >= spaceAbove;
     }
 
     let tooltipTop = 0;
@@ -210,16 +297,38 @@ export class OnboardingGuideComponent implements OnInit, OnDestroy {
     if (placeBelow) {
       tooltipTop = spotTop + spotHeight + margin;
       arrowPos = 'top';
-      // If overflows bottom of viewport, clamp it
-      if (tooltipTop + estimatedTooltipHeight > viewportHeight - 16) {
-        tooltipTop = Math.max(16, viewportHeight - estimatedTooltipHeight - 16);
+
+      // Keep tooltip within visible viewport bounds without obscuring the spotlight
+      if (tooltipTop + estimatedTooltipHeight > viewportHeight - 12) {
+        const adjustedTop = viewportHeight - estimatedTooltipHeight - 12;
+        if (adjustedTop > spotTop + spotHeight) {
+          tooltipTop = adjustedTop;
+        } else if (spaceAbove >= estimatedTooltipHeight + margin) {
+          // Flip to top if bottom overflows
+          placeBelow = false;
+          tooltipTop = spotTop - estimatedTooltipHeight - margin;
+          arrowPos = 'bottom';
+        } else {
+          tooltipTop = Math.max(12, adjustedTop);
+        }
       }
     } else {
       tooltipTop = spotTop - estimatedTooltipHeight - margin;
       arrowPos = 'bottom';
-      // If overflows top of viewport, clamp it
-      if (tooltipTop < 16) {
-        tooltipTop = 16;
+
+      // Keep tooltip within visible viewport bounds without obscuring the spotlight
+      if (tooltipTop < 12) {
+        const adjustedTop = 12;
+        if (adjustedTop + estimatedTooltipHeight < spotTop) {
+          tooltipTop = adjustedTop;
+        } else if (spaceBelow >= estimatedTooltipHeight + margin) {
+          // Flip to bottom if top overflows
+          placeBelow = true;
+          tooltipTop = spotTop + spotHeight + margin;
+          arrowPos = 'top';
+        } else {
+          tooltipTop = Math.max(12, adjustedTop);
+        }
       }
     }
 
@@ -230,7 +339,7 @@ export class OnboardingGuideComponent implements OnInit, OnDestroy {
     // Arrow offset pointing to target center
     const targetCenterX = rect.left + rect.width / 2;
     const relativeArrowX = targetCenterX - tooltipLeft;
-    const arrowOffset = Math.max(20, Math.min(relativeArrowX, tooltipWidth - 20));
+    const arrowOffset = Math.max(24, Math.min(relativeArrowX, tooltipWidth - 24));
 
     this.tooltipPos = {
       top: tooltipTop,

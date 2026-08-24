@@ -35,9 +35,7 @@ export const networkErrorInterceptor: HttpInterceptorFn = (req, next) => {
         return throwError(() => new HttpErrorResponse({
           error: {
             message:
-              `Cannot reach the server at ${API_BASE_URL}. Check that this ` +
-              `device has internet access and that the API is reachable ` +
-              `(the backend + tunnel must both be running).`,
+              `Cannot connect to server. Please check your connection and ensure the backend server is running.`,
           },
           status: 0,
           statusText: err.statusText,

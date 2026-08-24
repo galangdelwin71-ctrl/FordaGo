@@ -298,6 +298,48 @@ export class CoachingService {
     }
   }
 
+  public setCachedConversations(convos: Conversation[]): void {
+    this.cachedConversations = convos;
+  }
+
+  /**
+   * Instantly moves the conversation to the top and updates its latest message in memory and storage (0ms UI sync).
+   */
+  public updateConversationLatest(conversationId: number, latestMessage: Message): void {
+    const convo = this.cachedConversations.find((c) => c.id === conversationId);
+    if (convo) {
+      convo.latest_message = latestMessage;
+      convo.updated_at = latestMessage.created_at || new Date().toISOString();
+      this.cachedConversations.sort((a, b) => {
+        const timeA = new Date(a.latest_message?.created_at || a.updated_at || 0).getTime();
+        const timeB = new Date(b.latest_message?.created_at || b.updated_at || 0).getTime();
+        return timeB - timeA;
+      });
+    }
+
+    void (async () => {
+      try {
+        const { getCachedData, setCachedData } = await import('../utils/local-cache.util');
+        const stored = await getCachedData<Conversation[]>('fordago.cache.coach_conversations');
+        if (Array.isArray(stored)) {
+          const target = stored.find((c) => c.id === conversationId);
+          if (target) {
+            target.latest_message = latestMessage;
+            target.updated_at = latestMessage.created_at || new Date().toISOString();
+            stored.sort((a, b) => {
+              const timeA = new Date(a.latest_message?.created_at || a.updated_at || 0).getTime();
+              const timeB = new Date(b.latest_message?.created_at || b.updated_at || 0).getTime();
+              return timeB - timeA;
+            });
+            await setCachedData('fordago.cache.coach_conversations', stored);
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to update conversation cache:', err);
+      }
+    })();
+  }
+
   // ── Coaches ──────────────────────────────────────────
 
   getCoaches(search = '', specialty = ''): Observable<Coach[]> {

@@ -12,6 +12,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { API_URL } from '../config/api.config';
 import { CoachingService } from '../services/coaching.service';
+import { ToastService } from '../services/toast.service';
 import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refresh.component';
 
 @Component({
@@ -89,13 +90,43 @@ export class AdminPage implements OnInit, OnDestroy {
   }
 
   // ── Confirm Dialog ───────────────────────────────────
-  confirmDialog: { show: boolean; label: string; name: string; onConfirm: () => void } = {
-    show: false, label: '', name: '', onConfirm: () => {}
+  confirmDialog: {
+    show: boolean;
+    label?: string;
+    name?: string;
+    title?: string;
+    message?: string;
+    actionLabel?: string;
+    icon?: string;
+    onConfirm: () => void;
+  } = {
+    show: false,
+    label: '',
+    name: '',
+    title: '',
+    message: 'This action cannot be undone.',
+    actionLabel: 'Delete',
+    icon: 'trash-outline',
+    onConfirm: () => {},
   };
   showLogoutDialog = false;
 
-  private askConfirm(label: string, name: string, onConfirm: () => void) {
-    this.confirmDialog = { show: true, label, name, onConfirm };
+  private askConfirm(
+    label: string,
+    name: string,
+    onConfirm: () => void,
+    options?: { title?: string; message?: string; actionLabel?: string; icon?: string }
+  ) {
+    this.confirmDialog = {
+      show: true,
+      label,
+      name,
+      title: options?.title || `Delete ${label}?`,
+      message: options?.message || 'This action cannot be undone.',
+      actionLabel: options?.actionLabel || 'Delete',
+      icon: options?.icon || 'trash-outline',
+      onConfirm,
+    };
   }
 
   // ── Overview ────────────────────────────────────────
@@ -104,6 +135,42 @@ export class AdminPage implements OnInit, OnDestroy {
   lowStockCount = 0;
   pendingOrders = 0;
   expiringMembers: any[] = [];
+
+  navigateToMembers(filterStatus: 'all' | 'pending' | 'active' = 'all'): void {
+    this.activeTab = 'members';
+    this.memberSearch = '';
+    this.memberStatusFilter = filterStatus;
+    this.memberTypeFilter = 'all';
+    this.showAllMembers = true;
+  }
+
+  navigateToAttendance(): void {
+    this.activeTab = 'attendance';
+  }
+
+  navigateToLowStock(): void {
+    this.activeTab = 'inventory';
+    this.showAllProducts = true;
+    this.productSearch = '';
+  }
+
+  navigateToPendingOrders(): void {
+    this.activeTab = 'inventory';
+    this.showAllPendingOrders = true;
+    this.pendingOrderSearch = '';
+    setTimeout(() => {
+      const el = document.getElementById('pending-orders-section');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  }
+
+  viewExpiringMember(member: any): void {
+    this.activeTab = 'members';
+    this.memberSearch = member?.username || '';
+    this.showAllMembers = true;
+  }
 
   // ── Members ─────────────────────────────────────────
   members: any[] = [];
@@ -280,6 +347,9 @@ export class AdminPage implements OnInit, OnDestroy {
   notifMemberSearch = '';
   selectedNotifMember: any = null;
 
+  showNotifDetailModal = false;
+  selectedNotifDetail: any = null;
+
   get selectedNotifTargetMember(): any {
     return this.members.find(m => m.id === this.notifTargetUserId);
   }
@@ -317,8 +387,24 @@ export class AdminPage implements OnInit, OnDestroy {
     this.showRecipientDropdown = true;
   }
 
+  openNotifsTab() {
+    this.activeTab = 'notifs';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   get broadcastNotifications(): any[] {
-    return this.notifications.filter(n => !n.user_id || n.user_id === this.auth.user?.id);
+    return this.notifications.filter(n => {
+      const title = (n.title || '').toLowerCase();
+      // Exclude personal workout session alerts from admin broadcast/notif view
+      if (title.includes('missed workout') || title.includes('workout session') || n.session_key) {
+        return false;
+      }
+      return !n.user_id || n.user_id === this.auth.user?.id;
+    });
+  }
+
+  get unreadAdminNotifsCount(): number {
+    return this.broadcastNotifications.filter(n => !n.is_read).length;
   }
 
   get filteredBroadcastNotifications(): any[] {
@@ -353,6 +439,10 @@ export class AdminPage implements OnInit, OnDestroy {
     }
 
     for (const n of this.notifications) {
+      const title = (n.title || '').toLowerCase();
+      if (title.includes('missed workout') || title.includes('workout session') || n.session_key) {
+        continue;
+      }
       if (n.user_id) {
         let entry = map.get(n.user_id);
         if (!entry) {
@@ -384,7 +474,13 @@ export class AdminPage implements OnInit, OnDestroy {
 
   get selectedMemberNotifications(): any[] {
     if (!this.selectedNotifMember) return [];
-    return this.notifications.filter(n => n.user_id === this.selectedNotifMember.id);
+    return this.notifications.filter(n => {
+      const title = (n.title || '').toLowerCase();
+      if (title.includes('missed workout') || title.includes('workout session') || n.session_key) {
+        return false;
+      }
+      return n.user_id === this.selectedNotifMember.id;
+    });
   }
 
   selectNotifMember(m: any) {
@@ -393,6 +489,75 @@ export class AdminPage implements OnInit, OnDestroy {
 
   clearSelectedNotifMember() {
     this.selectedNotifMember = null;
+  }
+
+  getNotifTypeCategory(n: any): { label: string; icon: string; cssClass: string } {
+    const title = (n?.title || '').toLowerCase();
+    const msg = (n?.message || '').toLowerCase();
+    if (title.includes('registration') || title.includes('registered') || msg.includes('nag-register')) {
+      return { label: 'REGISTRATION', icon: 'person-add-outline', cssClass: 'type-reg' };
+    }
+    if (title.includes('verification') || title.includes('renewal') || title.includes('membership') || msg.includes('premium pass') || msg.includes('renew')) {
+      return { label: 'MEMBERSHIP', icon: 'card-outline', cssClass: 'type-membership' };
+    }
+    if (title.includes('order') || msg.includes('order') || msg.includes('item')) {
+      return { label: 'SHOP ORDER', icon: 'cart-outline', cssClass: 'type-order' };
+    }
+    if (!n?.user_id) {
+      return { label: 'BROADCAST', icon: 'megaphone-outline', cssClass: 'type-broadcast' };
+    }
+    return { label: 'NOTICE', icon: 'information-circle-outline', cssClass: 'type-notice' };
+  }
+
+  viewNotification(n: any) {
+    this.selectedNotifDetail = n;
+    this.showNotifDetailModal = true;
+    if (!n.is_read) {
+      n.is_read = true;
+      const headers = { Authorization: `Bearer ${this.auth.token}` };
+      this.http.patch(`${this.api}/notifications/read`, { ids: [n.id] }, { headers }).subscribe({
+        error: () => {}
+      });
+    }
+  }
+
+  navigateToMemberFromNotif(n: any) {
+    this.showNotifDetailModal = false;
+    this.activeTab = 'members';
+    this.showAllMembers = true;
+    this.memberStatusFilter = 'all';
+    this.memberTypeFilter = 'all';
+    const match = n?.message?.match(/@([a-zA-Z0-9_.-]+)/);
+    if (match && match[1]) {
+      this.memberSearch = match[1];
+    } else if (n?.title) {
+      const nameMatch = n.title.match(/:\s*(.+)$/);
+      if (nameMatch && nameMatch[1]) {
+        this.memberSearch = nameMatch[1].trim();
+      }
+    }
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 50);
+  }
+
+  navigateToOrdersFromNotif() {
+    this.showNotifDetailModal = false;
+    this.navigateToPendingOrders();
+  }
+
+  markAllNotifsAsRead() {
+    const unread = this.broadcastNotifications.filter(n => !n.is_read);
+    if (unread.length === 0) {
+      this.toast.info('All notifications are already marked as read');
+      return;
+    }
+    unread.forEach(n => n.is_read = true);
+    const headers = { Authorization: `Bearer ${this.auth.token}` };
+    this.http.patch(`${this.api}/notifications/read`, { all: true }, { headers }).subscribe({
+      next: () => this.toast.success('All notifications marked as read'),
+      error: () => {}
+    });
   }
 
   formatNotifDate(dateStr: string): string {
@@ -563,7 +728,8 @@ export class AdminPage implements OnInit, OnDestroy {
     private auth: AuthService,
     public router: Router,
     private http: HttpClient,
-    private coaching: CoachingService
+    private coaching: CoachingService,
+    private toast: ToastService
   ) {}
 
   // ── Members load state ──────────────────────────────────
@@ -949,9 +1115,10 @@ export class AdminPage implements OnInit, OnDestroy {
       next: () => {
         this.newMember = { username: '', email: '', password: '', phone: '', gender: '', role: 'user', membership_type: 'premium', payment_method: 'cash' };
         this.showAddMember = false;
+        this.toast.success('Member created successfully');
         this.loadAll();
       },
-      error: (e) => alert(e.error?.message || 'Failed to add member')
+      error: (e) => this.toast.error(e.error?.message || 'Failed to add member')
     });
   }
 
@@ -959,8 +1126,12 @@ export class AdminPage implements OnInit, OnDestroy {
     if (!this.editingMember) return;
     const headers = { Authorization: `Bearer ${this.auth.token}` };
     this.http.put<any>(`${this.api}/users/${this.editingMember.id}`, this.editingMember, { headers }).subscribe({
-      next: () => { this.editingMember = null; this.loadAll(); },
-      error: (e) => alert(e.error?.message || 'Failed to update member')
+      next: () => {
+        this.editingMember = null;
+        this.toast.success('Member updated successfully');
+        this.loadAll();
+      },
+      error: (e) => this.toast.error(e.error?.message || 'Failed to update member')
     });
   }
 
@@ -974,8 +1145,9 @@ export class AdminPage implements OnInit, OnDestroy {
           if (this.latestMemberId === m.id) {
             this.latestMemberId = this.members.length > 0 ? this.members[0].id : null;
           }
+          this.toast.success('Member deleted successfully');
         },
-        error: () => alert('Failed to delete member')
+        error: () => this.toast.error('Failed to delete member')
       });
     });
   }
@@ -1015,11 +1187,11 @@ export class AdminPage implements OnInit, OnDestroy {
 
   saveSession() {
     if (!this.newSession.title.trim()) {
-      alert('Please enter a session title');
+      this.toast.warning('Please enter a session title');
       return;
     }
     if (!this.newSession.date) {
-      alert('Please select a date for the session');
+      this.toast.warning('Please select a date for the session');
       return;
     }
 
@@ -1042,11 +1214,13 @@ export class AdminPage implements OnInit, OnDestroy {
         };
         this.showAddSession = false;
         if (mentionedCount > 0) {
-          alert(`Session saved! In-app notification sent to ${mentionedCount} tagged member(s).`);
+          this.toast.success(`Session saved! Notification sent to ${mentionedCount} tagged member(s).`);
+        } else {
+          this.toast.success('Session added successfully');
         }
       },
       error: (e) => {
-        alert(e.error?.message || 'Failed to add session. Please check your connection.');
+        this.toast.error(e.error?.message || 'Failed to add session. Please check your connection.');
       }
     });
   }
@@ -1057,9 +1231,10 @@ export class AdminPage implements OnInit, OnDestroy {
     this.http.put(`${this.api}/schedule/${this.editingSession.id}`, this.editingSession, { headers }).subscribe({
       next: () => {
         this.editingSession = null;
+        this.toast.success('Session updated successfully');
         this.loadAll();
       },
-      error: (e) => alert(e.error?.message || 'Failed to update session')
+      error: (e) => this.toast.error(e.error?.message || 'Failed to update session')
     });
   }
 
@@ -1067,8 +1242,11 @@ export class AdminPage implements OnInit, OnDestroy {
     this.askConfirm('Session', s.title, () => {
       const headers = { Authorization: `Bearer ${this.auth.token}` };
       this.http.delete(`${this.api}/schedule/${s.id}`, { headers }).subscribe({
-        next: () => this.sessions = this.sessions.filter(x => x.id !== s.id),
-        error: () => alert('Failed to delete session')
+        next: () => {
+          this.sessions = this.sessions.filter(x => x.id !== s.id);
+          this.toast.success('Session deleted successfully');
+        },
+        error: () => this.toast.error('Failed to delete session')
       });
     });
   }
@@ -1090,8 +1268,9 @@ export class AdminPage implements OnInit, OnDestroy {
         this.products.unshift(p);
         this.newProduct = { name: '', brand: '', price: 0, stock: 0, image_url: '', thumbnail_url: '' };
         this.showAddProduct = false;
+        this.toast.success('Product added successfully');
       },
-      error: () => alert('Failed to add product')
+      error: () => this.toast.error('Failed to add product')
     });
   }
 
@@ -1106,7 +1285,7 @@ export class AdminPage implements OnInit, OnDestroy {
       const { full, thumbnail } = await this.optimizeProductImageWithThumbnail(file);
 
       if (full.length > this.maxProductImagePayloadLength) {
-        alert('Image is still too large. Please choose a smaller photo.');
+        this.toast.warning('Image is still too large. Please choose a smaller photo.');
         return;
       }
 
@@ -1118,7 +1297,7 @@ export class AdminPage implements OnInit, OnDestroy {
         this.editingProduct.thumbnail_url = thumbnail;
       }
     } catch {
-      alert('Failed to process image');
+      this.toast.error('Failed to process image');
     } finally {
       (event.target as HTMLInputElement).value = '';
     }
@@ -1204,8 +1383,12 @@ export class AdminPage implements OnInit, OnDestroy {
     if (!this.editingProduct) return;
     const headers = { Authorization: `Bearer ${this.auth.token}` };
     this.http.put(`${this.api}/inventory/products/${this.editingProduct.id}`, this.editingProduct, { headers }).subscribe({
-      next: () => { this.editingProduct = null; this.loadAll(); },
-      error: () => alert('Failed to update product')
+      next: () => {
+        this.editingProduct = null;
+        this.toast.success('Product updated successfully');
+        this.loadAll();
+      },
+      error: () => this.toast.error('Failed to update product')
     });
   }
 
@@ -1213,8 +1396,11 @@ export class AdminPage implements OnInit, OnDestroy {
     this.askConfirm('Product', p.name, () => {
       const headers = { Authorization: `Bearer ${this.auth.token}` };
       this.http.delete(`${this.api}/inventory/products/${p.id}`, { headers }).subscribe({
-        next: () => this.products = this.products.filter(x => x.id !== p.id),
-        error: () => alert('Failed to delete product')
+        next: () => {
+          this.products = this.products.filter(x => x.id !== p.id);
+          this.toast.success('Product deleted successfully');
+        },
+        error: () => this.toast.error('Failed to delete product')
       });
     });
   }
@@ -1233,8 +1419,12 @@ export class AdminPage implements OnInit, OnDestroy {
         this.orders = this.orders.filter(x => (x.order_group_id ?? x.id) !== group.id);
         this.rebuildOrderGroups();
         this.pendingOrders = this.pendingOrderGroups.length;
+        this.toast.success('Order approved successfully');
       },
-      error: (err) => { group.cancelling = false; alert(err?.error?.message || 'Failed to approve order'); }
+      error: (err) => {
+        group.cancelling = false;
+        this.toast.error(err?.error?.message || 'Failed to approve order');
+      }
     });
   }
 
@@ -1247,8 +1437,12 @@ export class AdminPage implements OnInit, OnDestroy {
         this.orders = this.orders.filter(x => (x.order_group_id ?? x.id) !== group.id);
         this.rebuildOrderGroups();
         this.pendingOrders = this.pendingOrderGroups.length;
+        this.toast.success('Order rejected successfully');
       },
-      error: (err) => { group.cancelling = false; alert(err?.error?.message || 'Failed to reject order'); }
+      error: (err) => {
+        group.cancelling = false;
+        this.toast.error(err?.error?.message || 'Failed to reject order');
+      }
     });
   }
 
@@ -1268,7 +1462,7 @@ export class AdminPage implements OnInit, OnDestroy {
       // Stage 6: same full+thumbnail pair as onProductImageChange() above.
       const { full, thumbnail } = await this.optimizeProductImageWithThumbnail(file);
       if (full.length > this.maxProductImagePayloadLength) {
-        alert('Image is still too large. Please choose a smaller photo.');
+        this.toast.warning('Image is still too large. Please choose a smaller photo.');
         return;
       }
       if (target === 'new') {
@@ -1279,7 +1473,7 @@ export class AdminPage implements OnInit, OnDestroy {
         this.editingEquipment.thumbnail_url = thumbnail;
       }
     } catch {
-      alert('Failed to process image');
+      this.toast.error('Failed to process image');
     } finally {
       (event.target as HTMLInputElement).value = '';
     }
@@ -1295,8 +1489,9 @@ export class AdminPage implements OnInit, OnDestroy {
         this.equipment.unshift(e);
         this.newEquipment = { name: '', category: '', icon: '', status: 'available', image_url: '', thumbnail_url: '', description: '', weight_scale: '' };
         this.showAddEquipment = false;
+        this.toast.success('Equipment added successfully');
       },
-      error: (err) => alert(err?.error?.message || 'Failed to add equipment')
+      error: (err) => this.toast.error(err?.error?.message || 'Failed to add equipment')
     });
   }
 
@@ -1306,8 +1501,12 @@ export class AdminPage implements OnInit, OnDestroy {
     const payload = this.normalizeEquipmentPayload(this.editingEquipment);
 
     this.http.put(`${this.api}/equipment/${this.editingEquipment.id}`, payload, { headers }).subscribe({
-      next: () => { this.editingEquipment = null; this.loadAll(); },
-      error: (err) => alert(err?.error?.message || 'Failed to update equipment')
+      next: () => {
+        this.editingEquipment = null;
+        this.toast.success('Equipment updated successfully');
+        this.loadAll();
+      },
+      error: (err) => this.toast.error(err?.error?.message || 'Failed to update equipment')
     });
   }
 
@@ -1315,8 +1514,11 @@ export class AdminPage implements OnInit, OnDestroy {
     this.askConfirm('Equipment', e.name, () => {
       const headers = { Authorization: `Bearer ${this.auth.token}` };
       this.http.delete(`${this.api}/equipment/${e.id}`, { headers }).subscribe({
-        next: () => this.equipment = this.equipment.filter(x => x.id !== e.id),
-        error: () => alert('Failed to delete equipment')
+        next: () => {
+          this.equipment = this.equipment.filter(x => x.id !== e.id);
+          this.toast.success('Equipment deleted successfully');
+        },
+        error: () => this.toast.error('Failed to delete equipment')
       });
     });
   }
@@ -1342,7 +1544,7 @@ export class AdminPage implements OnInit, OnDestroy {
       const result = await this.optimizeProductImage(file);
 
       if (result.length > this.maxProductImagePayloadLength) {
-        alert('Image is still too large. Please choose a smaller photo.');
+        this.toast.warning('Image is still too large. Please choose a smaller photo.');
         return;
       }
 
@@ -1352,7 +1554,7 @@ export class AdminPage implements OnInit, OnDestroy {
         this.editingCoach.photo_url = result;
       }
     } catch {
-      alert('Failed to process image');
+      this.toast.error('Failed to process image');
     } finally {
       (event.target as HTMLInputElement).value = '';
     }
@@ -1362,21 +1564,21 @@ export class AdminPage implements OnInit, OnDestroy {
     const isPromote = this.coachFormMode === 'promote';
 
     if (isPromote && !this.newCoach.user_id) {
-      alert('Please select a member to promote.');
+      this.toast.warning('Please select a member to promote.');
       return;
     }
     if (!isPromote && (!this.newCoach.username || !this.newCoach.email || !this.newCoach.password)) {
-      alert('Username, email and password are required for a new coach account.');
+      this.toast.warning('Username, email and password are required for a new coach account.');
       return;
     }
     if (!isPromote && (!this.newCoach.first_name.trim() || !this.newCoach.last_name.trim())) {
-      alert('First name and last name are required for a new coach account.');
+      this.toast.warning('First name and last name are required for a new coach account.');
       return;
     }
 
     const rate = Number(this.newCoach.rate) || 0;
     if (rate < 0) {
-      alert('Rate cannot be negative.');
+      this.toast.warning('Rate cannot be negative.');
       return;
     }
 
@@ -1404,9 +1606,10 @@ export class AdminPage implements OnInit, OnDestroy {
         this.newCoach = { user_id: null, username: '', email: '', password: '', phone: '', gender: '', first_name: '', last_name: '', bio: '', specialty: '', photo_url: '', rate: 0 };
         this.coachFormMode = 'new';
         this.showAddCoach = false;
+        this.toast.success('Coach account created successfully');
         this.loadCoaches();
       },
-      error: (e) => alert(e?.error?.message || 'Failed to create coach')
+      error: (e) => this.toast.error(e?.error?.message || 'Failed to create coach')
     });
   }
 
@@ -1415,7 +1618,7 @@ export class AdminPage implements OnInit, OnDestroy {
 
     const rate = Number(this.editingCoach.rate) || 0;
     if (rate < 0) {
-      alert('Rate cannot be negative.');
+      this.toast.warning('Rate cannot be negative.');
       return;
     }
 
@@ -1427,25 +1630,33 @@ export class AdminPage implements OnInit, OnDestroy {
     };
 
     this.coaching.updateAdminCoach(this.editingCoach.user_id, payload).subscribe({
-      next: () => { this.editingCoach = null; this.loadCoaches(); },
-      error: (e) => alert(e?.error?.message || 'Failed to update coach')
+      next: () => {
+        this.editingCoach = null;
+        this.toast.success('Coach updated successfully');
+        this.loadCoaches();
+      },
+      error: (e) => this.toast.error(e?.error?.message || 'Failed to update coach')
     });
   }
 
   // Soft-deactivate (backend never hard-deletes coach_profiles — see
   // AdminCoachController::destroy). Reversible via reactivateCoach(), so
-  // this uses a plain confirm() rather than the destructive confirmDialog
-  // component, whose copy ("This action cannot be undone") would be wrong here.
+  // this uses an in-app confirmation modal rather than a browser confirm()
   deactivateCoach(c: any) {
-    const ok = confirm(`Deactivate ${c.username} as a coach? Their profile is kept and can be reactivated later.`);
-    if (!ok) return;
-
-    this.coaching.deleteAdminCoach(c.user_id).subscribe({
-      next: () => {
-        const idx = this.coaches.findIndex(x => x.user_id === c.user_id);
-        if (idx !== -1) this.coaches[idx].is_active = false;
-      },
-      error: (e) => alert(e?.error?.message || 'Failed to deactivate coach')
+    this.askConfirm('Coach', c.username, () => {
+      this.coaching.deleteAdminCoach(c.user_id).subscribe({
+        next: () => {
+          const idx = this.coaches.findIndex(x => x.user_id === c.user_id);
+          if (idx !== -1) this.coaches[idx].is_active = false;
+          this.toast.success('Coach deactivated successfully');
+        },
+        error: (e) => this.toast.error(e?.error?.message || 'Failed to deactivate coach')
+      });
+    }, {
+      title: `Deactivate ${c.username}?`,
+      message: 'Their profile is kept and can be reactivated later.',
+      actionLabel: 'Deactivate',
+      icon: 'pause-circle-outline'
     });
   }
 
@@ -1454,8 +1665,9 @@ export class AdminPage implements OnInit, OnDestroy {
       next: () => {
         const idx = this.coaches.findIndex(x => x.user_id === c.user_id);
         if (idx !== -1) this.coaches[idx].is_active = true;
+        this.toast.success('Coach reactivated successfully');
       },
-      error: (e) => alert(e?.error?.message || 'Failed to reactivate coach')
+      error: (e) => this.toast.error(e?.error?.message || 'Failed to reactivate coach')
     });
   }
 
@@ -1486,20 +1698,28 @@ export class AdminPage implements OnInit, OnDestroy {
         this.notifMessage = '';
         this.notifTitle = '';
         this.notifTargetUserId = null;
-        alert('Notification sent successfully!');
+        this.toast.success('Notification sent successfully!');
       },
-      error: () => alert('Failed to send notification')
+      error: () => this.toast.error('Failed to send notification')
     });
   }
 
-  deleteNotification(n: any) {
+  deleteNotification(n: any, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
     this.askConfirm('Notification', (n.title || n.message?.substring(0, 30)) + '...', () => {
       const headers = { Authorization: `Bearer ${this.auth.token}` };
       this.http.delete(`${this.api}/notifications/${n.id}`, { headers }).subscribe({
         next: () => {
           this.notifications = this.notifications.filter(x => x.id !== n.id);
+          if (this.selectedNotifDetail?.id === n.id) {
+            this.showNotifDetailModal = false;
+            this.selectedNotifDetail = null;
+          }
+          this.toast.success('Notification deleted successfully');
         },
-        error: () => alert('Failed to delete notification')
+        error: () => this.toast.error('Failed to delete notification')
       });
     });
   }
@@ -1656,8 +1876,9 @@ export class AdminPage implements OnInit, OnDestroy {
         this.attendancePending = this.attendancePending.filter(x => x.id !== a.id);
         const rec = this.attendanceToday.find(x => x.id === a.id);
         if (rec) rec.payment_status = 'paid';
+        this.toast.success('Check-in confirmed successfully');
       },
-      error: () => alert('Failed to confirm check-in')
+      error: () => this.toast.error('Failed to confirm check-in')
     });
   }
 
@@ -1667,8 +1888,9 @@ export class AdminPage implements OnInit, OnDestroy {
       next: () => {
         this.attendancePending = this.attendancePending.filter(x => x.id !== a.id);
         this.attendanceToday   = this.attendanceToday.filter(x => x.id !== a.id);
+        this.toast.success('Check-in rejected');
       },
-      error: () => alert('Failed to reject check-in')
+      error: () => this.toast.error('Failed to reject check-in')
     });
   }
 
@@ -1684,8 +1906,9 @@ export class AdminPage implements OnInit, OnDestroy {
         next: () => {
           this.attendancePending = this.attendancePending.filter(x => x.id !== a.id);
           this.attendanceToday   = this.attendanceToday.filter(x => x.id !== a.id);
+          this.toast.success('Attendance record deleted');
         },
-        error: () => alert('Failed to delete attendance record')
+        error: () => this.toast.error('Failed to delete attendance record')
       });
     });
   }
@@ -1714,8 +1937,9 @@ export class AdminPage implements OnInit, OnDestroy {
         const idx = this.members.findIndex(m => m.id === this.editingMembershipFor.id);
         if (idx !== -1) Object.assign(this.members[idx], { ...this.membershipForm, membership_status: 'active' });
         this.editingMembershipFor = null;
+        this.toast.success('Membership updated successfully');
       },
-      error: () => alert('Failed to update membership')
+      error: () => this.toast.error('Failed to update membership')
     });
   }
 
@@ -1731,8 +1955,9 @@ export class AdminPage implements OnInit, OnDestroy {
       next: () => {
         const idx = this.members.findIndex(x => x.id === m.id);
         if (idx !== -1) Object.assign(this.members[idx], { ...payload, membership_status: 'active' });
+        this.toast.success('Member approved successfully');
       },
-      error: () => alert('Failed to approve member')
+      error: () => this.toast.error('Failed to approve member')
     });
   }
 
@@ -1740,8 +1965,12 @@ export class AdminPage implements OnInit, OnDestroy {
     this.askConfirm('Decline & Remove', m.username, () => {
       const headers = { Authorization: `Bearer ${this.auth.token}` };
       this.http.delete(`${this.api}/users/${m.id}`, { headers }).subscribe({
-        next: () => { this.members = this.members.filter(x => x.id !== m.id); this.totalMembers--; },
-        error: () => alert('Failed to decline member')
+        next: () => {
+          this.members = this.members.filter(x => x.id !== m.id);
+          this.totalMembers--;
+          this.toast.success('Member declined and removed');
+        },
+        error: () => this.toast.error('Failed to decline member')
       });
     });
   }

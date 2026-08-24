@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Product;
+use App\Models\Notification;
 use App\Models\Order;
+use App\Models\Product;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -305,6 +307,22 @@ class InventoryController extends Controller
             // regardless of how many products were involved.
             $this->invalidateProductsCache();
 
+            // Notify staff of new pending order
+            try {
+                $orderUser = $request->user();
+                $staffMembers = User::whereIn('role', ['admin', 'super_admin', 'employee'])->get();
+                $itemCount = count($orders);
+                foreach ($staffMembers as $staff) {
+                    Notification::create([
+                        'user_id' => $staff->id,
+                        'title'   => 'New Shop Order Placed',
+                        'message' => "{$orderUser->first_name} {$orderUser->last_name} (@{$orderUser->username}) placed an order for {$itemCount} item(s) (₱" . number_format($total, 2) . " via " . strtoupper($paymentMethod) . "). Please verify in Shop orders.",
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('Failed to notify staff about new order: ' . $e->getMessage());
+            }
+
             return response()->json([
                 'order_group_id' => $groupId,
                 'total'           => (float) $total,
@@ -331,14 +349,6 @@ class InventoryController extends Controller
                 ->lockForUpdate()
                 ->get();
 
-            // Legacy/ungrouped orders (placed before order_group_id existed,
-            // or created with a null group) have order_group_id = NULL, so
-            // the query above never matches them. The frontend's own
-            // fallback for these rows uses the order's plain numeric id as
-            // its "group id" (see rebuildOrderGroups() in inventory.page.ts),
-            // so mirror that here -- guarded to ungrouped rows only, and to
-            // a purely numeric $groupId, so this can never be tricked into
-            // satisfying a real (UUID) group id via a raw id collision.
             if ($orders->isEmpty() && ctype_digit($groupId)) {
                 $orders = Order::where('id', (int) $groupId)
                     ->whereNull('order_group_id')
@@ -365,10 +375,96 @@ class InventoryController extends Controller
                 $order->update(['status' => 'cancelled']);
             }
 
-            // One invalidation for the whole group, not per line item.
             $this->invalidateProductsCache();
 
             return response()->json(['message' => 'Order cancelled']);
+        });
+    }
+
+    /**
+     * PUT /api/inventory/order-groups/{groupId}/approve
+     */
+    public function approveOrderGroup(Request $request, string $groupId)
+    {
+        return DB::transaction(function () use ($groupId) {
+            $orders = Order::where('order_group_id', $groupId)
+                ->lockForUpdate()
+                ->get();
+
+            if ($orders->isEmpty() && ctype_digit($groupId)) {
+                $orders = Order::where('id', (int) $groupId)
+                    ->whereNull('order_group_id')
+                    ->lockForUpdate()
+                    ->get();
+            }
+
+            if ($orders->isEmpty()) {
+                return response()->json(['message' => 'Order not found'], 404);
+            }
+
+            foreach ($orders as $order) {
+                $order->update(['status' => 'approved']);
+            }
+
+            // Notify customer that order was approved
+            try {
+                $firstOrder = $orders->first();
+                if ($firstOrder && $firstOrder->user_id) {
+                    Notification::create([
+                        'user_id' => $firstOrder->user_id,
+                        'title'   => 'Shop Order Verified & Approved',
+                        'message' => 'Your payment has been verified by the gym staff! Your order is now ready for pickup at the counter.',
+                    ]);
+                }
+            } catch (\Throwable $e) {}
+
+            return response()->json(['message' => 'Order approved']);
+        });
+    }
+
+    /**
+     * PUT /api/inventory/order-groups/{groupId}/reject
+     */
+    public function rejectOrderGroup(Request $request, string $groupId)
+    {
+        return DB::transaction(function () use ($groupId) {
+            $orders = Order::where('order_group_id', $groupId)
+                ->lockForUpdate()
+                ->get();
+
+            if ($orders->isEmpty() && ctype_digit($groupId)) {
+                $orders = Order::where('id', (int) $groupId)
+                    ->whereNull('order_group_id')
+                    ->lockForUpdate()
+                    ->get();
+            }
+
+            if ($orders->isEmpty()) {
+                return response()->json(['message' => 'Order not found'], 404);
+            }
+
+            foreach ($orders as $order) {
+                if ($order->status !== 'rejected' && $order->product_id) {
+                    Product::where('id', $order->product_id)->increment('stock', $order->quantity);
+                }
+                $order->update(['status' => 'rejected']);
+            }
+
+            $this->invalidateProductsCache();
+
+            // Notify customer that order was rejected
+            try {
+                $firstOrder = $orders->first();
+                if ($firstOrder && $firstOrder->user_id) {
+                    Notification::create([
+                        'user_id' => $firstOrder->user_id,
+                        'title'   => 'Shop Order Declined',
+                        'message' => 'Your shop order was declined by staff. If you have questions regarding your order, please approach the gym counter.',
+                    ]);
+                }
+            } catch (\Throwable $e) {}
+
+            return response()->json(['message' => 'Order rejected']);
         });
     }
 

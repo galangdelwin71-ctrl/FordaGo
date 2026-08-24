@@ -8,90 +8,50 @@
 .onboarding-overlay {
   position: fixed;
   inset: 0;
-  z-index: 99999;
+  z-index: 999999;
   pointer-events: auto;
   overflow: hidden;
   user-select: none;
 }
 
-/* Dimmed backdrop - Sharp without blur */
-.backdrop-dim {
+/* Fallback Dimmed backdrop - Only when no target element is found */
+.fallback-dim {
   position: absolute;
   inset: 0;
-  background: rgba(8, 12, 16, 0.76);
-  /* No blur as requested by user */
-  transition: opacity 0.3s ease;
+  background: rgba(0, 0, 0, 0.78);
 }
 
-/* Spotlight Ring / Target Highlight - Crisp & Unblurred */
+/* Spotlight Ring / Target Highlight - Completely Clear & Unblurred inside */
 .spotlight-ring {
   position: absolute;
   pointer-events: none;
-  box-shadow: 0 0 0 9999px rgba(8, 12, 16, 0.76),
-              0 0 20px rgba(255, 203, 5, 0.45);
-  border: 2px solid #ffcb05;
+  /* Giant box-shadow darkens everything OUTSIDE the box, leaving the inside 100% crystal clear */
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.78),
+              0 0 0 2px rgba(255, 214, 0, 0.4);
+  border: 2.5px solid #ffd600;
   box-sizing: border-box;
-  transition: top 0.28s cubic-bezier(0.4, 0, 0.2, 1),
-              left 0.28s cubic-bezier(0.4, 0, 0.2, 1),
-              width 0.28s cubic-bezier(0.4, 0, 0.2, 1),
-              height 0.28s cubic-bezier(0.4, 0, 0.2, 1),
-              border-radius 0.28s ease;
-  z-index: 100000;
+  transition: top 0.22s ease,
+              left 0.22s ease,
+              width 0.22s ease,
+              height 0.22s ease,
+              border-radius 0.22s ease;
+  z-index: 1000000;
 }
 
-.spotlight-pulse {
-  position: absolute;
-  inset: -6px;
-  border-radius: inherit;
-  border: 2px solid #ffcb05;
-  animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
-}
-
-@keyframes pulse-ring {
-  0% {
-    transform: scale(0.97);
-    opacity: 0.8;
-  }
-  50% {
-    transform: scale(1.04);
-    opacity: 0.2;
-  }
-  100% {
-    transform: scale(0.97);
-    opacity: 0.8;
-  }
-}
-
-/* Tooltip Card */
+/* Simple, clean Tooltip Card */
 .tooltip-card {
   position: absolute;
   width: min(calc(100vw - 32px), 380px);
-  background: #141a22;
-  background: linear-gradient(150deg, #18212b 0%, #11171f 100%);
-  border: 1px solid rgba(255, 203, 5, 0.35);
-  border-radius: 20px;
+  background: #11141a;
+  border: 1.5px solid rgba(255, 214, 0, 0.35);
+  border-radius: 18px;
   padding: 18px 20px;
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7),
-              0 0 0 1px rgba(255, 255, 255, 0.06) inset;
-  z-index: 100001;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.8),
+              0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  z-index: 1000001;
   color: #ffffff;
   box-sizing: border-box;
-  transform-origin: center center;
-}
-
-.animate-pop {
-  animation: pop-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-@keyframes pop-in {
-  0% {
-    opacity: 0;
-    transform: scale(0.92) translateY(6px);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
+  transition: top 0.22s ease, left 0.22s ease;
 }
 
 /* Tooltip Arrow */
@@ -99,8 +59,8 @@
   position: absolute;
   width: 14px;
   height: 14px;
-  background: #18212b;
-  border: 1px solid rgba(255, 203, 5, 0.4);
+  background: #11141a;
+  border: 1.5px solid rgba(255, 214, 0, 0.35);
   transform: translateX(-50%) rotate(45deg);
   z-index: 100002;
 }
@@ -129,16 +89,16 @@
   width: 32px;
   height: 32px;
   border-radius: 10px;
-  background: rgba(255, 203, 5, 0.12);
-  border: 1px solid rgba(255, 203, 5, 0.25);
+  background: rgba(255, 214, 0, 0.12);
+  border: 1px solid rgba(255, 214, 0, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .header-icon {
-  font-size: 17px;
-  color: #ffcb05;
+  font-size: 18px;
+  color: #ffd600;
 }
 
 .skip-btn {
@@ -150,12 +110,11 @@
   cursor: pointer;
   padding: 4px 10px;
   border-radius: 8px;
-  transition: all 0.2s ease;
+  transition: color 0.15s ease;
   margin-left: auto;
 
   &:hover {
     color: #ffffff;
-    background: rgba(255, 255, 255, 0.08);
   }
 }
 
@@ -166,7 +125,7 @@
 
 .tooltip-title {
   margin: 0 0 6px;
-  font-size: 16.5px;
+  font-size: 16px;
   font-weight: 800;
   color: #ffffff;
   line-height: 1.35;
@@ -177,7 +136,7 @@
   margin: 0;
   font-size: 13.5px;
   line-height: 1.5;
-  color: #9ca3af;
+  color: #cbd5e1;
   font-weight: 400;
 }
 
@@ -196,12 +155,12 @@
   font-size: 13.5px;
   font-weight: 700;
   border-radius: 12px;
-  padding: 8px 18px;
+  padding: 9px 20px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.1s ease, opacity 0.15s ease;
 
   &:active {
     transform: scale(0.96);
@@ -210,7 +169,7 @@
 
 .btn-back {
   background: rgba(255, 255, 255, 0.08);
-  color: #cbd5e1;
+  color: #e2e8f0;
 
   &:hover {
     background: rgba(255, 255, 255, 0.14);
@@ -219,23 +178,21 @@
 }
 
 .btn-next {
-  background: linear-gradient(135deg, #ffcb05 0%, #eab308 100%);
-  color: #0b0f14;
+  background: #ffd600;
+  color: #000000;
   font-weight: 800;
-  box-shadow: 0 4px 14px rgba(255, 203, 5, 0.35);
 
   ion-icon {
-    font-size: 15px;
+    font-size: 16px;
   }
 
   &:hover {
-    box-shadow: 0 6px 18px rgba(255, 203, 5, 0.5);
-    filter: brightness(1.06);
+    background: #ffdb1a;
   }
 }
 
 .btn-next.btn-finish {
-  background: linear-gradient(135deg, #ffcb05 0%, #f59e0b 100%);
-  color: #0b0f14;
+  background: #ffd600;
+  color: #000000;
   font-weight: 800;
 }

@@ -17,6 +17,7 @@ import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.
 import { CoachingNavService, CoachingPanelTab } from '../services/coaching-nav.service';
 import { CoachingService } from '../services/coaching.service';
 import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refresh.component';
+import { OnboardingService, TourStep } from '../services/onboarding.service';
 import { API_URL } from '../config/api.config';
 import { getCachedData, setCachedData } from '../utils/local-cache.util';
 import { CACHE_KEYS } from '../utils/cache-keys';
@@ -96,6 +97,7 @@ export class EquipmentPage implements OnInit {
     private auth: AuthService,
     private coachingNav: CoachingNavService,
     private coachingService: CoachingService,
+    public onboardingService: OnboardingService,
   ) {}
 
   // ── Header avatar ───────────────────────────────────
@@ -201,6 +203,45 @@ export class EquipmentPage implements OnInit {
       : 'U';
     this.profileImage = String(user?.profile_image || '').trim();
     this.notifPanelOpen = false;
+    this.checkAndStartEquipmentTour();
+  }
+
+  private checkAndStartEquipmentTour(): void {
+    const user = this.auth.user;
+    if (!user || user.role === 'admin' || user.role === 'coach') return;
+
+    setTimeout(() => {
+      if (this.onboardingService.isRunning || this.coachingPanelOpen) return;
+
+      const steps: TourStep[] = [
+        {
+          targetId: '#tour-equip-search',
+          title: 'Search Machines & Tools',
+          description: 'Type any equipment name (e.g. Treadmill, Bench Press, Dumbbells) to find it immediately.',
+          icon: 'search-outline',
+          position: 'bottom',
+        },
+        {
+          targetId: '#tour-equip-categories',
+          title: 'Category Filters',
+          description: 'Filter gym gear by Strength, Cardio, Machines, or Free Weights.',
+          icon: 'barbell-outline',
+          position: 'bottom',
+        },
+        {
+          targetId: '#tour-equip-grid',
+          title: 'Machine Guide & Tutorials',
+          description: 'Tap any equipment card to open step-by-step usage instructions, target muscle groups, and form tips.',
+          icon: 'information-circle-outline',
+          position: 'top',
+        },
+      ];
+
+      const available = steps.filter((s) => !!document.querySelector(s.targetId));
+      if (available.length > 0) {
+        this.onboardingService.startTour('equipment_main', available, false, user.id);
+      }
+    }, 700);
   }
 
   /**

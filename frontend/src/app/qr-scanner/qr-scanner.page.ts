@@ -16,7 +16,9 @@ import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.
 import { CoachingNavService, CoachingPanelTab } from '../services/coaching-nav.service';
 import { CoachingService } from '../services/coaching.service';
 import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refresh.component';
+import { OnboardingService, TourStep } from '../services/onboarding.service';
 import { API_URL } from '../config/api.config';
+import { ToastService } from '../services/toast.service';
 
 // ── Interfaces ────────────────────────────────────────────
 
@@ -185,13 +187,19 @@ export class QrScannerPage implements OnInit, OnDestroy {
     return (this.auth.user as any)?.membership_type || 'premium';
   }
 
+  get currentUserName(): string {
+    return this.auth.user?.username || 'Member';
+  }
+
   // ── Lifecycle ─────────────────────────────────────────
   constructor(
     private router: Router,
     private http: HttpClient,
-    private auth: AuthService,
+    public auth: AuthService,
     private coachingNav: CoachingNavService,
     private coachingService: CoachingService,
+    private toast: ToastService,
+    public onboardingService: OnboardingService,
   ) {}
 
   // ── Header avatar ─────────────────────────────────────
@@ -272,6 +280,52 @@ export class QrScannerPage implements OnInit, OnDestroy {
 
   ionViewWillEnter(): void {
     this.applyPendingCoachingReopen();
+    this.checkAndStartQrTour();
+  }
+
+  private checkAndStartQrTour(): void {
+    const user = this.auth.user;
+    if (!user || user.role === 'admin' || user.role === 'coach') return;
+
+    setTimeout(() => {
+      if (this.onboardingService.isRunning || this.coachingPanelOpen) return;
+
+      const steps: TourStep[] = [
+        {
+          targetId: '#tour-scanner-modes',
+          title: 'Scan Mode Selection',
+          description: 'Toggle between Attendance (checking into the gym) and Equipment (scanning machine QR codes for tutorials).',
+          icon: 'scan-outline',
+          position: 'bottom',
+        },
+        {
+          targetId: '#tour-scanner-frame',
+          title: 'Camera Viewfinder',
+          description: 'Point your camera directly at the gym entrance QR code or machine label to automatically scan.',
+          icon: 'camera-outline',
+          position: 'bottom',
+        },
+        {
+          targetId: '#tour-scanner-action',
+          title: 'Start Scanner',
+          description: 'Tap to activate the live camera scanner whenever you are ready.',
+          icon: 'play-outline',
+          position: 'top',
+        },
+        {
+          targetId: '#tour-scanner-history',
+          title: 'My Scan Attendance Log',
+          description: 'Review all your verified Time In and Time Out timestamps and attendance logs.',
+          icon: 'time-outline',
+          position: 'top',
+        },
+      ];
+
+      const available = steps.filter((s) => !!document.querySelector(s.targetId));
+      if (available.length > 0) {
+        this.onboardingService.startTour('scanner_main', available, false, user.id);
+      }
+    }, 700);
   }
 
   // ── Camera permission ──────────────────────────────────
@@ -482,7 +536,7 @@ export class QrScannerPage implements OnInit, OnDestroy {
       this.isProcessingScan = false;
       this.isScanning = false;
       this.scanStatusMessage = 'QR detected. Usage was recorded, but no tutorial is mapped yet for this equipment.';
-      alert('Equipment usage recorded, but no tutorial is linked to this QR yet.');
+      this.toast.info('Equipment usage recorded, but no tutorial is linked to this QR yet.');
       return;
     }
 
@@ -574,7 +628,7 @@ export class QrScannerPage implements OnInit, OnDestroy {
         this.isProcessingScan = false;
         this.scanStatusMessage = 'Scan failed. Check the QR code and try again.';
         const msg = err.error?.message || 'Check-in failed. Please try again.';
-        alert(msg);
+        this.toast.error(msg);
       }
     });
   }

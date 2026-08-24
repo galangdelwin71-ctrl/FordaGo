@@ -15,7 +15,7 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('user_id')->nullable();
-            $table->integer('product_id')->nullable();
+            $table->unsignedInteger('product_id')->nullable();
             $table->integer('quantity')->default(1);
             $table->decimal('total', 10, 2)->nullable();
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');

@@ -333,16 +333,20 @@ class AuthController extends Controller
             'membership_expiry' => null,
         ]);
 
-        // Notify admin (best-effort)
-        $admin = User::where('role', 'admin')->first();
-        if ($admin) {
-            Notification::create([
-                'user_id' => $admin->id,
-                'title'   => "New Member: {$firstName} {$lastName}",
-                'message' => $normalizedMembershipType === 'premium'
-                    ? "{$firstName} {$lastName} registered as Premium ({$normalizedPaymentMethod}). Verify payment, then activate the account."
-                    : "{$firstName} {$lastName} registered as Daily Pass. Verify the account first before first login.",
-            ]);
+        // Notify all staff (admin, super_admin, employee)
+        try {
+            $staffMembers = User::whereIn('role', ['admin', 'super_admin', 'employee'])->get();
+            foreach ($staffMembers as $staff) {
+                Notification::create([
+                    'user_id' => $staff->id,
+                    'title'   => "New Member Registration: {$firstName} {$lastName}",
+                    'message' => $normalizedMembershipType === 'premium'
+                        ? "{$firstName} {$lastName} (@{$username}) registered as Premium ({$normalizedPaymentMethod}). Please verify payment and activate account."
+                        : "{$firstName} {$lastName} (@{$username}) registered as Daily Pass. Please verify and activate account before login.",
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('Failed to notify staff on registration: ' . $e->getMessage());
         }
 
         $normalizedPhone = SmsService::normalizePhoneNumber($phone);

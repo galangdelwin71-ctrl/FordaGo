@@ -780,6 +780,7 @@ ion-content::part(scroll) {
 .bottom-sheet-modal {
   --background: transparent;
   align-items: flex-end;
+  z-index: 1000 !important;
 
   &::part(content) {
     background: transparent;
@@ -789,71 +790,329 @@ ion-content::part(scroll) {
 }
 
 .modal-sheet {
-  background: var(--bg-secondary);
-  border-radius: 24px 24px 0 0;
-  padding: 0 24px 36px;
-  border-top: 1px solid var(--border-secondary);
-  animation: slideUp 0.25s ease;
+  background: radial-gradient(circle at 50% 0%, rgba(234, 179, 8, 0.12) 0%, #0e121b 45%, #090c12 100%);
+  border-radius: 28px 28px 0 0;
+  padding: 0 20px 32px;
+  border-top: 1px solid rgba(234, 179, 8, 0.35);
+  box-shadow: 0 -14px 45px rgba(0, 0, 0, 0.7);
+  animation: slideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
 
   .modal-handle {
-    width: 36px;
-    height: 3px;
-    border-radius: 2px;
-    background: var(--overlay-heavy);
-    margin: 14px auto 20px;
+    width: 42px;
+    height: 4px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.22);
+    margin: 12px auto 18px;
   }
 }
 
-// ── Attendance Success ────────────────────────────────────
-.success-wrap {
+// ── Attendance Success & Pending Hero ─────────────────────
+.success-hero {
+  position: relative;
   text-align: center;
+  margin-bottom: 18px;
+
+  .glow-orb {
+    position: absolute;
+    top: 36px;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 140px;
+    height: 140px;
+    background: radial-gradient(circle, rgba(34, 197, 94, 0.3) 0%, rgba(34, 197, 94, 0) 70%);
+    pointer-events: none;
+    z-index: 0;
+
+    &.amber {
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.3) 0%, rgba(245, 158, 11, 0) 70%);
+    }
+  }
 
   .success-icon-ring {
-    width: 68px;
-    height: 68px;
+    position: relative;
+    z-index: 1;
+    width: 72px;
+    height: 72px;
     border-radius: 50%;
-    background: rgba(0,214,143,0.1);
-    border: 1px solid rgba(0,214,143,0.25);
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.25), rgba(16, 185, 129, 0.1));
+    border: 2px solid rgba(74, 222, 128, 0.6);
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 14px;
-    box-shadow: 0 0 20px rgba(0,214,143,0.15);
+    margin: 0 auto 12px;
+    box-shadow: 0 0 32px rgba(34, 197, 94, 0.4), inset 0 0 16px rgba(34, 197, 94, 0.2);
 
-    .success-emoji { font-size: 28px; line-height: 1; color: var(--accent-green); }
+    .success-emoji {
+      font-size: 42px;
+      color: #22c55e;
+      filter: drop-shadow(0 2px 8px rgba(34, 197, 94, 0.5));
+    }
+
+    &.amber {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.1));
+      border: 2px solid rgba(251, 191, 36, 0.6);
+      box-shadow: 0 0 32px rgba(245, 158, 11, 0.4), inset 0 0 16px rgba(245, 158, 11, 0.2);
+
+      .success-emoji {
+        color: #f59e0b;
+        font-size: 38px;
+        filter: drop-shadow(0 2px 8px rgba(245, 158, 11, 0.5));
+      }
+    }
   }
 
-  .modal-title { font-size: 18px; font-weight: 800; color: var(--text-primary); margin-bottom: 4px; }
-  .modal-sub   { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+  .modal-title {
+    position: relative;
+    z-index: 1;
+    font-size: 22px;
+    font-weight: 900;
+    color: #ffffff !important;
+    letter-spacing: -0.4px;
+    margin-bottom: 4px;
+  }
 
-  .confirmed-badge {
-    display: inline-flex;
+  .modal-sub {
+    position: relative;
+    z-index: 1;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.65) !important;
+    font-weight: 500;
+  }
+}
+
+// ── FordaGO Digital Pass Card ─────────────────────────────
+.digital-pass-card {
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 16px 18px;
+  margin-bottom: 22px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+  }
+
+  .pass-header {
+    display: flex;
     align-items: center;
-    gap: 6px;
-    background: rgba(0,214,143,0.1);
-    color: var(--accent-green);
-    border: 1px solid rgba(0,214,143,0.2);
-    font-size: 11px;
-    font-weight: 700;
-    padding: 5px 14px;
-    border-radius: 20px;
+    justify-content: space-between;
+
+    .pass-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .brand-logo {
+        font-size: 15px;
+        font-weight: 900;
+        letter-spacing: 0.5px;
+        background: linear-gradient(135deg, #fef08a, #eab308);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .pass-type-badge {
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        background: rgba(234, 179, 8, 0.16);
+        color: #facc15;
+        border: 1px solid rgba(234, 179, 8, 0.35);
+        padding: 2px 7px;
+        border-radius: 6px;
+
+        &.pending {
+          background: rgba(245, 158, 11, 0.16);
+          color: #fbbf24;
+          border-color: rgba(245, 158, 11, 0.35);
+        }
+      }
+    }
+
+    .pass-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      padding: 4px 10px;
+      border-radius: 20px;
+
+      .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #22c55e;
+        box-shadow: 0 0 8px #22c55e;
+
+        &.amber {
+          background: #f59e0b;
+          box-shadow: 0 0 8px #f59e0b;
+        }
+      }
+
+      &.success {
+        background: rgba(34, 197, 94, 0.15);
+        color: #4ade80;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+      }
+
+      &.pending {
+        background: rgba(245, 158, 11, 0.15);
+        color: #fbbf24;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+      }
+    }
   }
 
-  .done-btn {
-    width: 100%;
-    height: 50px;
-    border-radius: 14px;
-    background: var(--accent-lime);
-    border: none;
-    color: #000;
-    font-size: 14px;
-    font-weight: 800;
-    cursor: pointer;
-    margin-top: 20px;
-    box-shadow: 0 4px 16px var(--accent-shadow);
-    transition: opacity var(--transition-fast);
+  .pass-divider {
+    height: 1px;
+    background: linear-gradient(90deg, rgba(34, 197, 94, 0.5), rgba(234, 179, 8, 0.5), rgba(59, 130, 246, 0.3));
+    margin: 12px 0 14px;
+    border-radius: 1px;
+    opacity: 0.8;
+  }
 
-    &:active { opacity: 0.9; }
+  &.pending .pass-divider {
+    background: linear-gradient(90deg, rgba(245, 158, 11, 0.6), rgba(234, 179, 8, 0.4), transparent);
+  }
+
+  .pass-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 10px;
+
+    .pass-item {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+
+      &.right {
+        text-align: right;
+        align-items: flex-end;
+      }
+
+      .pass-lbl {
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.7px;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.45);
+      }
+
+      .pass-val {
+        font-size: 13px;
+        font-weight: 700;
+        color: #ffffff;
+
+        &.member-highlight {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+
+          .pass-avatar {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fde047, #ca8a04);
+            color: #0f172a;
+            font-size: 9px;
+            font-weight: 900;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+          }
+        }
+
+        &.time-val {
+          color: #facc15;
+          font-weight: 800;
+        }
+
+        &.access-val {
+          color: #4ade80;
+          font-weight: 700;
+        }
+      }
+    }
+  }
+
+  .pending-notice-box {
+    margin-top: 12px;
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.22);
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #fbbf24;
+    line-height: 1.4;
+
+    ion-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+      color: #f59e0b;
+    }
+  }
+}
+
+// ── Golden Primary CTA Button ─────────────────────────────
+.gold-cta-btn {
+  width: 100%;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #fde047 0%, #eab308 100%) !important;
+  border: none !important;
+  color: #0f172a !important;
+  font-size: 15px;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 8px 24px rgba(234, 179, 8, 0.35);
+  transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+
+  span {
+    color: #0f172a !important;
+    font-weight: 900;
+  }
+
+  ion-icon {
+    font-size: 18px;
+    color: #0f172a !important;
+    transition: transform 0.16s ease;
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(234, 179, 8, 0.45);
+    filter: brightness(1.04);
+
+    ion-icon {
+      transform: translateX(3px);
+    }
+  }
+
+  &:active {
+    transform: scale(0.98);
+    box-shadow: 0 4px 14px rgba(234, 179, 8, 0.25);
   }
 }
 
@@ -1009,5 +1268,43 @@ ion-content::part(scroll) {
     background: #ffffff;
     border: 1px solid rgba(15, 23, 42, 0.09);
     box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+  }
+
+  .modal-sheet {
+    background: #ffffff !important;
+    border-top: 1px solid rgba(15, 23, 42, 0.1) !important;
+    box-shadow: 0 -14px 45px rgba(15, 23, 42, 0.15) !important;
+
+    .modal-handle {
+      background: rgba(15, 23, 42, 0.2);
+    }
+  }
+
+  .success-hero {
+    .modal-title {
+      color: #0f172a !important;
+    }
+    .modal-sub {
+      color: #64748b !important;
+    }
+  }
+
+  .digital-pass-card {
+    background: #f8fafc;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+
+    &::before {
+      background: linear-gradient(90deg, transparent, rgba(15, 23, 42, 0.1), transparent);
+    }
+
+    .pass-grid .pass-item {
+      .pass-lbl {
+        color: #64748b;
+      }
+      .pass-val {
+        color: #0f172a;
+      }
+    }
   }
 }

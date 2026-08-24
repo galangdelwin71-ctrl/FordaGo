@@ -24,6 +24,8 @@ import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.
 import { CoachingNavService, CoachingPanelTab } from '../services/coaching-nav.service';
 import { ExerciseListEditorComponent } from '../shared/exercise-list-editor/exercise-list-editor.component';
 import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refresh.component';
+import { OnboardingService, TourStep } from '../services/onboarding.service';
+import { ToastService } from '../services/toast.service';
 import { API_URL } from '../config/api.config';
 import { buildExercisesFromTemplate, workoutTypes as sharedWorkoutTypes, getSuggestedTargets as sharedGetSuggestedTargets, getTargetPlaceholder as sharedGetTargetPlaceholder } from '../data/workout-templates';
 import type { WeekPlanTemplateDay, StoredWorkoutSession } from '../services/workout-tracker.service';
@@ -334,6 +336,8 @@ export class SchedulePage implements OnInit, OnDestroy {
     private workoutTracker: WorkoutTrackerService,
     private coachingNav: CoachingNavService,
     private coachingService: CoachingService,
+    public onboardingService: OnboardingService,
+    private toast: ToastService,
   ) {}
 
   /**
@@ -413,6 +417,192 @@ export class SchedulePage implements OnInit, OnDestroy {
     // followed by Schedule via the bottom nav, shows up without the member
     // needing to detour through the Dashboard first.
     void this.workoutTracker.pullFromServer();
+
+    this.checkAndStartScheduleTour();
+  }
+
+  private checkAndStartScheduleTour(): void {
+    const user = this.auth.user;
+    if (!user || user.role === 'admin' || user.role === 'coach') return;
+
+    setTimeout(() => {
+      if (this.onboardingService.isRunning || this.coachingPanelOpen) return;
+
+      const steps: TourStep[] = [
+        {
+          targetId: '#tour-schedule-calendar',
+          title: '7-Day Workout Calendar',
+          description: 'Tap any day of the week to view scheduled workout sessions or plan your training days.',
+          icon: 'calendar-outline',
+          position: 'bottom',
+        },
+        {
+          targetId: '#tour-schedule-history-btn',
+          title: 'Workout History & Logs',
+          description: 'Review your past workout logs, completion history, and training attendance records.',
+          icon: 'time-outline',
+          position: 'bottom',
+        },
+        {
+          targetId: '#tour-schedule-plan-btn',
+          title: '7-Day Week Plan Builder',
+          description: 'Create and customize a recurring weekly workout split that automatically fills your schedule.',
+          icon: 'calendar-number-outline',
+          position: 'bottom',
+        },
+        {
+          targetId: '#tour-schedule-exercises',
+          title: 'Exercise Routine (Sets × Reps)',
+          description: 'See the full breakdown of movements for this session with designated set and rep targets (e.g. Cable Crunch 4×15-20).',
+          icon: 'clipboard-outline',
+          position: 'top',
+        },
+        {
+          targetId: '#tour-schedule-card-actions',
+          title: 'Workout Actions (Edit, Done, Delete)',
+          description: 'Tap "Mark Done" once you finish training to log attendance and increase your streak. Use "Edit" to adjust exercises/time, or "Delete" to cancel.',
+          icon: 'checkmark-circle-outline',
+          position: 'top',
+        },
+        {
+          targetId: '#tour-schedule-add-btn',
+          title: 'Add New Workout (+)',
+          description: 'Tap this button anytime to schedule a custom workout session with specific muscle targets and exercises.',
+          icon: 'add-outline',
+          position: 'top',
+        },
+      ];
+
+      const available = steps.filter((s) => !!document.querySelector(s.targetId));
+      if (available.length > 0) {
+        this.onboardingService.startTour('schedule_main', available, false, user.id);
+      }
+    }, 700);
+  }
+
+  public checkAndStartAddWorkoutTour(): void {
+    const user = this.auth.user;
+    if (!user || user.role === 'admin' || user.role === 'coach') return;
+
+    setTimeout(() => {
+      if (this.onboardingService.isRunning) return;
+
+      const steps: TourStep[] = [
+        {
+          targetId: '#tour-add-workout-type',
+          title: 'Select Workout Type',
+          description: 'Choose your workout focus (Upper Body, Lower Body, Core, Cardio) or enter a custom target.',
+          icon: 'barbell-outline',
+          position: 'bottom',
+        },
+        {
+          targetId: '#tour-add-workout-date',
+          title: 'Schedule Date & Time',
+          description: 'Set the date and starting time for your workout session.',
+          icon: 'calendar-outline',
+          position: 'bottom',
+        },
+        {
+          targetId: '#tour-add-workout-duration',
+          title: 'Workout Duration',
+          description: 'Set the expected session duration using quick chips or typing custom minutes.',
+          icon: 'time-outline',
+          position: 'top',
+        },
+        {
+          targetId: '#tour-add-workout-location',
+          title: 'Gym Location',
+          description: 'Choose which gym floor or area you will be training in — e.g. Gym Floor A or Gym Floor B.',
+          icon: 'location-outline',
+          position: 'top',
+        },
+        {
+          targetId: '#tour-add-workout-exercises',
+          title: 'My Exercises (Optional)',
+          description: 'Tap "+ Add" to build your own custom exercise list. Leave it empty and we\'ll suggest a recommended routine based on your workout type.',
+          icon: 'barbell-outline',
+          position: 'top',
+        },
+        {
+          targetId: '#tour-add-workout-save-btn',
+          title: 'Save to Schedule',
+          description: 'Tap Save Workout to add this session to your calendar and track your routine.',
+          icon: 'checkmark-circle-outline',
+          position: 'top',
+        },
+      ];
+
+      const available = steps.filter((s) => !!document.querySelector(s.targetId));
+      if (available.length > 0) {
+        this.onboardingService.startTour('schedule_add_modal', available, false, user.id);
+      }
+    }, 450);
+  }
+
+  public checkAndStartWeekPlanTour(): void {
+    const user = this.auth.user;
+    if (!user || user.role === 'admin' || user.role === 'coach') return;
+
+    setTimeout(() => {
+      if (this.onboardingService.isRunning) return;
+
+      const steps: TourStep[] = [
+        {
+          targetId: '#tour-week-plan-tabs',
+          title: 'Day-by-Day Selector',
+          description: 'Select each day (Monday to Sunday) to customize your daily split.',
+          icon: 'calendar-number-outline',
+          position: 'bottom',
+        },
+        {
+          targetId: '#tour-week-plan-rest',
+          title: 'Rest Day Toggle',
+          description: 'Toggle on Rest Day to mark recovery days, or turn off to configure workout routines.',
+          icon: 'moon-outline',
+          position: 'bottom',
+        },
+        {
+          targetId: '#tour-week-plan-type',
+          title: 'Workout Category',
+          description: 'Select your target category such as Upper Body, Lower Body, Core & Abs, or Cardio.',
+          icon: 'barbell-outline',
+          position: 'bottom',
+        },
+        {
+          targetId: '#tour-week-plan-target',
+          title: 'Muscle Target Suggestions',
+          description: 'Tap suggested focus chips (e.g. Back & Bicep, Chest & Tricep) or type a custom target.',
+          icon: 'locate-outline',
+          position: 'bottom',
+        },
+        {
+          targetId: '#tour-week-plan-time',
+          title: 'Time & Session Duration',
+          description: 'Set your preferred gym start time and workout session duration.',
+          icon: 'time-outline',
+          position: 'top',
+        },
+        {
+          targetId: '#tour-week-plan-exercises',
+          title: 'Build Exercise List',
+          description: 'Tap "+ Add Exercise" to specify custom movements, set counts, and target repetitions.',
+          icon: 'clipboard-outline',
+          position: 'top',
+        },
+        {
+          targetId: '#tour-week-plan-save-btn',
+          title: 'Apply Weekly Plan',
+          description: 'Save this weekly template to automatically auto-fill your workouts every week.',
+          icon: 'checkmark-circle-outline',
+          position: 'top',
+        },
+      ];
+
+      const available = steps.filter((s) => !!document.querySelector(s.targetId));
+      if (available.length > 0) {
+        this.onboardingService.startTour('schedule_week_plan_modal', available, false, user.id);
+      }
+    }, 450);
   }
 
   private applyUserContext(): void {
@@ -800,6 +990,7 @@ export class SchedulePage implements OnInit, OnDestroy {
     // back into the local store (e.g. on the next Dashboard visit).
     this.workoutTracker.pushSession(editedDayDate, s as unknown as StoredWorkoutSession);
     this.renderSessions();
+    this.toast.success('Workout updated!');
   }
 
   isAdminScheduled(session?: WorkoutSession): boolean {
@@ -822,6 +1013,7 @@ export class SchedulePage implements OnInit, OnDestroy {
     this.expandedCard = null;
     this.buildWeekStrip();
     this.renderSessions();
+    this.toast.success('Workout removed from schedule');
   }
 
   cycleStatus(index: number, event: Event): void {
@@ -847,6 +1039,9 @@ export class SchedulePage implements OnInit, OnDestroy {
     this.saveSessionsForDate(dayDate, this.sessions);
     this.workoutTracker.pushSession(dayDate, s as unknown as StoredWorkoutSession);
     this.renderSessions();
+    if (s.status === 'done') {
+      this.toast.success('Workout completed! Keep up the streak 🔥');
+    }
   }
 
   // ── Add Modal ─────────────────────────────────────────────
@@ -867,6 +1062,7 @@ export class SchedulePage implements OnInit, OnDestroy {
     this.newWorkoutType          = 'Upper Body';
     this.newWorkoutExercises     = [];
     this.addModalOpen            = true;
+    this.checkAndStartAddWorkoutTour();
   }
 
   closeAddModal(): void {
@@ -926,6 +1122,7 @@ export class SchedulePage implements OnInit, OnDestroy {
 
     this.buildWeekStrip();
     this.closeAddModal();
+    this.toast.success('Workout added to schedule!');
   }
 
   private to12String(hour: number, min: number): string {
@@ -1153,6 +1350,7 @@ export class SchedulePage implements OnInit, OnDestroy {
     this.weekPlanActiveDay = 0;
     this.weekPlanSaved = false;
     this.weekPlanModalOpen = true;
+    this.checkAndStartWeekPlanTour();
   }
 
   closeWeekPlanModal(): void {
@@ -1176,6 +1374,7 @@ export class SchedulePage implements OnInit, OnDestroy {
       this.buildWeekStrip();
       this.renderSessions();
     }, 900);
+    this.toast.success('Weekly plan saved and applied!');
   }
 
   clearWeekPlan(): void {

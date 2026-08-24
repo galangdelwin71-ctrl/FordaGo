@@ -615,19 +615,32 @@ ion-content.login-bg::part(background) {
 }
 
 .err-msg {
-  padding: 11px 13px;
-  margin-bottom: 15px;
-  border: 1px solid rgba(255, 92, 113, 0.25);
-  background: var(--danger-bg);
-  color: var(--danger);
-  font-size: 12px;
-  animation: error-enter 260ms ease both, error-shake 340ms 40ms ease both;
-}
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  border-radius: 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  animation: fadeIn 0.2s ease-out;
 
-.err-msg ion-icon {
-  flex: 0 0 auto;
-  margin-top: 1px;
-  font-size: 18px;
+  ion-icon {
+    flex: 0 0 auto;
+    font-size: 18px;
+    color: #dc2626;
+  }
+
+  span {
+    flex: 1;
+    color: #991b1b;
+    font-weight: 600;
+    letter-spacing: 0.1px;
+  }
 }
 
 .plan-cards {

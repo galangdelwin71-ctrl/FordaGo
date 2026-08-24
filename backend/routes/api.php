@@ -81,10 +81,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/my-orders',           [InventoryController::class, 'myOrders']);
         Route::get('/orders',              [InventoryController::class, 'orders'])->middleware('role:admin,super_admin,employee');
         Route::post('/orders',             [InventoryController::class, 'placeOrder']);
-        Route::post('/cart/checkout',      [InventoryController::class, 'checkout']);
-        Route::put('/order-groups/{groupId}/cancel', [InventoryController::class, 'cancelOrderGroup']);
-        Route::put('/orders/{id}/approve', [InventoryController::class, 'approveOrder'])->whereNumber('id')->middleware('role:admin,super_admin,employee');
-        Route::put('/orders/{id}/reject',  [InventoryController::class, 'rejectOrder'])->whereNumber('id')->middleware('role:admin,super_admin,employee');
+        Route::match(['put', 'post'], '/order-groups/{groupId}/cancel',  [InventoryController::class, 'cancelOrderGroup']);
+        Route::match(['put', 'post'], '/order-groups/{groupId}/approve', [InventoryController::class, 'approveOrderGroup'])->middleware('role:admin,super_admin,employee');
+        Route::match(['put', 'post'], '/order-groups/{groupId}/reject',  [InventoryController::class, 'rejectOrderGroup'])->middleware('role:admin,super_admin,employee');
+        Route::match(['put', 'post'], '/orders/{id}/approve', [InventoryController::class, 'approveOrder'])->whereNumber('id')->middleware('role:admin,super_admin,employee');
+        Route::match(['put', 'post'], '/orders/{id}/reject',  [InventoryController::class, 'rejectOrder'])->whereNumber('id')->middleware('role:admin,super_admin,employee');
     });
 
     // ── Schedule (server/routes/schedule.js) ──────────────────────────────

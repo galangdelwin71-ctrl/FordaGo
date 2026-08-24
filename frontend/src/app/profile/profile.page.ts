@@ -11,8 +11,8 @@ import {
   IonInput,
   IonToggle,
   IonSpinner,
-  ToastController,
 } from '@ionic/angular/standalone';
+import { ToastService } from '../services/toast.service';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
 import { ProfileService, UserProfile } from '../services/profile.service';
@@ -25,6 +25,7 @@ import { NotificationPanelComponent } from '../shared/notification-panel/notific
 import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.component';
 import { FeedbackModalComponent } from '../shared/feedback-modal/feedback-modal.component';
 import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refresh.component';
+import { OnboardingService, TourStep } from '../services/onboarding.service';
 import { FeedbackService } from '../services/feedback.service';
 import { API_URL } from '../config/api.config';
 
@@ -172,19 +173,12 @@ export class ProfilePage implements OnInit {
     private coachingNav: CoachingNavService,
     private feedbackService: FeedbackService,
     private coachingService: CoachingService,
-    private toastCtrl: ToastController,
+    private toast: ToastService,
+    public onboardingService: OnboardingService,
   ) {}
 
-  private async showMobileToast(message: string, isError = false): Promise<void> {
-    const toast = await this.toastCtrl.create({
-      message,
-      duration: 3500,
-      position: 'top',
-      swipeGesture: 'vertical',
-      icon: isError ? 'alert-circle' : 'checkmark-circle',
-      cssClass: isError ? 'fordago-mobile-toast toast-error' : 'fordago-mobile-toast toast-success',
-    });
-    await toast.present();
+  private showMobileToast(message: string, isError = false): Promise<void> {
+    return isError ? this.toast.error(message) : this.toast.success(message);
   }
 
   ngOnInit(): void {
@@ -203,6 +197,80 @@ export class ProfilePage implements OnInit {
     if (!this.auth.user) return;
     this.applyPendingCoachingReopen();
     this.loadProfile();
+    this.checkAndStartProfileTour();
+  }
+
+  private checkAndStartProfileTour(): void {
+    const user = this.auth.user;
+    if (!user || user.role === 'admin' || user.role === 'coach') return;
+
+    setTimeout(() => {
+      if (this.onboardingService.isRunning || this.coachingPanelOpen) return;
+
+      const steps: TourStep[] = [
+        {
+          targetId: '#tour-profile-hero',
+          title: 'Member Profile',
+          description: 'View your display name, registered email address, and active membership status.',
+          icon: 'person-outline',
+          position: 'bottom',
+        },
+        {
+          targetId: '#tour-profile-membership',
+          title: 'Membership & Renewal',
+          description: 'Check your pass expiry date or tap Renew to extend your 30-day gym membership.',
+          icon: 'card-outline',
+          position: 'bottom',
+        },
+        {
+          targetId: '#tour-profile-transactions',
+          title: 'Transaction History',
+          description: 'Access complete digital receipts for gym check-ins, pass renewals, and supplement shop orders.',
+          icon: 'receipt-outline',
+          position: 'bottom',
+        },
+        {
+          targetId: '#tour-profile-edit',
+          title: 'Edit Personal Info',
+          description: 'Update your contact number, birthday, gender, and upload a profile photo.',
+          icon: 'create-outline',
+          position: 'bottom',
+        },
+        {
+          targetId: '#tour-profile-security',
+          title: 'Account Security',
+          description: 'Change your password anytime to keep your account safe.',
+          icon: 'lock-closed-outline',
+          position: 'bottom',
+        },
+        {
+          targetId: '#tour-profile-theme',
+          title: 'Dark / Light Theme',
+          description: 'Toggle between FordaGO sleek dark aesthetic and daylight light mode.',
+          icon: 'moon-outline',
+          position: 'top',
+        },
+        {
+          targetId: '#tour-profile-history',
+          title: 'Progress History',
+          description: 'Track your bodyweight progression, completed session logs, and personal best records.',
+          icon: 'stats-chart-outline',
+          position: 'top',
+        },
+        {
+          targetId: '#tour-profile-feedback',
+          title: 'Feedback & Support',
+          description: 'Directly reach out to our team with feedback, inquiries, or gym assistance.',
+          icon: 'chatbubbles-outline',
+          position: 'top',
+        },
+      ];
+
+      const available = steps.filter((s) => !!document.querySelector(s.targetId));
+      if (available.length > 0) {
+        this.onboardingService.startTour('profile_main', available, false, user.id);
+      }
+    }, 700);
   }
 
   // ── Profile Management ────────────────────────────────

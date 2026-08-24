@@ -87,9 +87,11 @@ class CoachDashboardController extends Controller
                     'latest_message'  => $convo->latestMessage,
                     'unread_count'    => (int) ($unreadCounts[$convo->id] ?? 0),
                     'created_at'      => $convo->created_at,
-                    'updated_at'      => $convo->updated_at,
+                    'updated_at'      => $convo->latestMessage?->created_at ?: $convo->updated_at,
                 ];
-            });
+            })
+            ->sortByDesc('updated_at')
+            ->values();
 
             $activeCoaches = CoachProfile::with(['user:id,username,first_name,last_name,profile_image'])
                 ->where('is_active', true)
@@ -199,7 +201,9 @@ class CoachDashboardController extends Controller
                 'unread_count'    => (int) ($unreadMap[$convo->id] ?? 0),
                 'updated_at'      => $convo->latestMessage?->created_at ?: $convo->updated_at,
             ];
-        });
+        })
+        ->sortByDesc('updated_at')
+        ->values();
 
         // ── 5. Clients (active conversations + next session) ───────────────
         // Fix N+1: load all upcoming sessions in a single query, then group

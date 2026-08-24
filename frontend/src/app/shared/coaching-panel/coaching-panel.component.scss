@@ -1683,37 +1683,106 @@ select.cd-form-select {
 
   // Coach dashboard light-theme overrides
   --text-primary: #0f172a;
-  --text-secondary: #475569;
+  --text-secondary: #334155;
   --text-muted: #64748b;
   --text-tertiary: #94a3b8;
   --accent-lime: #ffd600;
   --accent-border: rgba(255, 214, 0, 0.35);
   --accent-dim: rgba(255, 214, 0, 0.12);
-  --overlay-light: #ffffff;
-  --overlay-medium: #f8fafc;
-  --border-secondary: rgba(15, 23, 42, 0.08);
-  --border-primary: rgba(15, 23, 42, 0.12);
+  --overlay-light: #f8fafc;
+  --overlay-medium: #f1f5f9;
+  --border-secondary: #e2e8f0;
+  --border-primary: #cbd5e1;
   --bg-secondary: #ffffff;
 
   .cd-card,
   .cd-profile-card,
   .cd-stat-card,
   .cd-quick-action-btn,
-  .cd-tabs,
   .cd-session-item,
   .cd-client-item,
   .cd-request-item {
     box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
-    background: #ffffff;
-    border-color: rgba(15, 23, 42, 0.08);
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
   }
 
-  .cd-tab.is-active {
-    background: #0f172a;
-    color: #ffffff;
+  .cd-profile-name { color: #0f172a; font-weight: 800; }
+  .cd-profile-bio { color: #475569; }
+  .cd-profile-specialty {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    color: #334155;
+    font-weight: 750;
+  }
+  .cd-profile-price .cd-price-amount { color: #0f172a; font-weight: 850; }
+  .cd-profile-price .cd-price-unit { color: #64748b; }
+  .cd-profile-status {
+    color: #059669;
+    font-weight: 700;
+    &.is-inactive { color: #64748b; }
+  }
+
+  .cd-stat-value {
+    color: #0f172a;
+    &.blue { color: #2563eb; }
+    &.amber { color: #d97706; }
+    &.green { color: #059669; }
+  }
+  .cd-stat-label { color: #64748b; font-weight: 750; }
+  .cd-stat-icon-wrap {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+  }
+
+  .cd-quick-action-btn {
+    color: #0f172a;
+    font-weight: 750;
+    ion-icon { color: #d97706; }
+    &:hover { background: #f1f5f9; border-color: #cbd5e1; }
+  }
+
+  .cd-section-label {
+    color: #475569;
+    font-weight: 800;
+  }
+
+  .cd-session-name { color: #0f172a; font-weight: 750; }
+  .cd-session-time { color: #b45309; font-weight: 700; }
+  .cd-session-focus { color: #475569; }
+
+  .cd-tab {
+    color: #64748b;
+    &.is-active {
+      background: #0f172a;
+      color: #ffffff;
+      font-weight: 800;
+    }
+  }
+
+  .cd-session-avatar {
+    background: #e2e8f0;
+    border: 1.5px solid #cbd5e1;
+    color: #0f172a;
   }
   .cd-session-avatar-dot { border-color: #ffffff; }
-  .cd-empty-state.cd-dashed { border-color: rgba(15, 23, 42, 0.16); }
+  .cd-empty-state.cd-dashed { border-color: #cbd5e1; background: #f8fafc; }
+
+  /* Confirm dialog light mode */
+  .cd-confirm-dialog {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.15);
+
+    .cd-confirm-title { color: #0f172a; font-weight: 800; }
+    .cd-confirm-msg { color: #64748b; strong { color: #0f172a; } }
+    .cd-confirm-cancel {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      color: #334155;
+      font-weight: 700;
+    }
+  }
 }
 
 // ── Bottom-sheet modal & backdrop blur ─────────────────────

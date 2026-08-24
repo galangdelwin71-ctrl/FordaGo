@@ -37,7 +37,7 @@
     </div>
 
     <!-- Week Strip -->
-    <div class="week-strip">
+    <div class="week-strip" id="tour-schedule-calendar">
       <div
         *ngFor="let day of weekDays; let i = index"
         class="day-pill"
@@ -54,10 +54,10 @@
     <div class="section-header">
       <span class="section-title">{{ selectedDayLabel }}</span>
       <div class="section-header-actions">
-        <button class="icon-action-btn" (click)="openHistoryModal()" title="Workout History">
+        <button class="icon-action-btn" id="tour-schedule-history-btn" (click)="openHistoryModal()" title="Workout History">
           <ion-icon name="time-outline"></ion-icon>
         </button>
-        <button class="icon-action-btn" (click)="openWeekPlanModal()" title="Create Week Plan">
+        <button class="icon-action-btn" id="tour-schedule-plan-btn" (click)="openWeekPlanModal()" title="Create Week Plan">
           <ion-icon name="calendar-number-outline"></ion-icon>
         </button>
         <span class="session-count">
@@ -127,7 +127,7 @@
           </div>
 
           <!-- Exercise List (shown when customTarget or default exercises exist) -->
-          <div class="exercise-list" *ngIf="getExercises(s).length > 0">
+          <div class="exercise-list" [id]="i === 0 ? 'tour-schedule-exercises' : null" *ngIf="getExercises(s).length > 0">
             <div class="exercise-list-header">
               <span class="ex-list-title">Exercises</span>
               <span class="ex-list-count">{{ getExercises(s).length }} exercises</span>
@@ -149,7 +149,7 @@
           </div>
 
           <!-- Card Action Buttons -->
-          <div class="card-actions">
+          <div class="card-actions" [id]="i === 0 ? 'tour-schedule-card-actions' : null">
             <!-- Members can only edit their personal sessions, not official admin classes -->
             <button class="action-btn primary" *ngIf="!isAdminScheduled(s)" (click)="toggleEditPanel(sessionIndex(s), $event)">
               <ion-icon name="create-outline"></ion-icon>
@@ -243,7 +243,7 @@
 
 <!-- FAB Add Button -->
 <ion-fab vertical="bottom" horizontal="end" slot="fixed" >
-  <ion-fab-button class="fab-btn fordago-schedule-fab" (click)="openAddModal()">
+  <ion-fab-button id="tour-schedule-add-btn" class="fab-btn fordago-schedule-fab" (click)="openAddModal()">
     <span class="fab-plus">+</span>
   </ion-fab-button>
 </ion-fab>
@@ -293,7 +293,7 @@
         <div class="modal-handle"></div>
         <div class="modal-title">Add Workout</div>
 
-        <div class="field-group">
+        <div class="field-group" id="tour-add-workout-type">
           <label class="field-label">Workout Type</label>
           <div class="field-wrap">
             <span class="field-icon"><ion-icon name="barbell-outline"></ion-icon></span>
@@ -340,7 +340,7 @@
           </div>
         </div>
 
-        <div class="two-col">
+        <div class="two-col" id="tour-add-workout-date">
           <div class="field-group">
             <label class="field-label">Date</label>
             <div class="field-wrap">
@@ -358,7 +358,7 @@
           </div>
         </div>
 
-        <div class="field-group">
+        <div class="field-group" id="tour-add-workout-duration">
           <label class="field-label">Duration</label>
           <div class="duration-input-row">
             <div class="field-wrap duration-field-wrap">
@@ -404,7 +404,7 @@
           </div>
         </div>
 
-        <div class="field-group">
+        <div class="field-group" id="tour-add-workout-location">
           <label class="field-label">Location</label>
           <div class="field-wrap">
             <span class="field-icon">📍</span>
@@ -415,15 +415,18 @@
         </div>
 
         <!-- Exercise Editor -->
-        <app-exercise-list-editor
-          [(exercises)]="newWorkoutExercises"
-          title="My Exercises (Optional)"
-          emptyHint="Leave empty to use recommended exercises, or add your own below">
-        </app-exercise-list-editor>
+        <div id="tour-add-workout-exercises">
+          <app-exercise-list-editor
+            [(exercises)]="newWorkoutExercises"
+            title="My Exercises (Optional)"
+            emptyHint="Leave empty to use recommended exercises, or add your own below">
+          </app-exercise-list-editor>
+        </div>
 
         <div class="modal-actions">
           <button class="btn btn-secondary" (click)="closeAddModal()">Cancel</button>
           <button 
+            id="tour-add-workout-save-btn"
             class="btn btn-primary btn-yellow" 
             (click)="saveWorkout()"
             [disabled]="!!newWorkoutTimeWarning">
@@ -527,7 +530,7 @@
         <div class="modal-sub">Set your workout for each day. This will auto-fill your schedule every week.</div>
 
         <!-- Day Tab Selector -->
-        <div class="week-plan-day-tabs">
+        <div class="week-plan-day-tabs" id="tour-week-plan-tabs">
           <button
             *ngFor="let label of weekDayLabels; let di = index"
             class="wplan-day-tab"
@@ -543,7 +546,7 @@
           <div class="wplan-day-name">{{ weekDayLabels[weekPlanActiveDay] }}</div>
 
           <!-- Rest Day toggle -->
-          <div class="wplan-rest-row">
+          <div class="wplan-rest-row" id="tour-week-plan-rest">
             <span class="wplan-rest-label">Rest Day</span>
             <label class="toggle-switch">
               <input type="checkbox" [(ngModel)]="day.isRest" (ngModelChange)="day.title = day.isRest ? 'Rest Day' : 'Upper Body'" />
@@ -552,7 +555,7 @@
           </div>
 
           <ng-container *ngIf="!day.isRest">
-            <div class="field-group">
+            <div class="field-group" id="tour-week-plan-type">
               <label class="field-label">Workout Type</label>
               <div class="field-wrap">
                 <span class="field-icon"><ion-icon name="barbell-outline"></ion-icon></span>
@@ -562,7 +565,7 @@
               </div>
             </div>
 
-            <div class="field-group">
+            <div class="field-group" id="tour-week-plan-target">
               <label class="field-label">Focus Target <span class="label-optional">(Optional)</span></label>
               <div class="field-wrap">
                 <span class="field-icon"><ion-icon name="locate-outline"></ion-icon></span>
@@ -579,7 +582,7 @@
               </div>
             </div>
 
-            <div class="two-col">
+            <div class="two-col" id="tour-week-plan-time">
               <div class="field-group">
                 <label class="field-label">Time</label>
                 <div class="field-wrap">
@@ -610,6 +613,7 @@
 
             <!-- Exercise Editor -->
             <app-exercise-list-editor
+              id="tour-week-plan-exercises"
               [(exercises)]="weekPlanDays[weekPlanActiveDay].exercises"
               title="My Exercises"
               addButtonLabel="Add Exercise"
@@ -620,7 +624,7 @@
 
         <div class="modal-actions">
           <button class="btn btn-secondary" (click)="closeWeekPlanModal()">Cancel</button>
-          <button class="btn btn-yellow" [class.saved-btn]="weekPlanSaved" (click)="saveWeekPlan()">
+          <button id="tour-week-plan-save-btn" class="btn btn-yellow" [class.saved-btn]="weekPlanSaved" (click)="saveWeekPlan()">
             {{ weekPlanSaved ? '✓ Applied!' : 'Apply This Week Plan' }}
           </button>
         </div>

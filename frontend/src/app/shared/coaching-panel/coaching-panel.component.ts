@@ -38,6 +38,7 @@ import { AuthService } from '../../services/auth.service';
 import { EchoService } from '../../services/echo.service';
 import { CoachingNavService, CoachingPanelTab, CoachingPanelHost } from '../../services/coaching-nav.service';
 import { NoNegativeDirective } from '../../directives/no-negative.directive';
+import { OnboardingService, TourStep } from '../../services/onboarding.service';
 import { getCachedData, setCachedData } from '../../utils/local-cache.util';
 import { CACHE_KEYS } from '../../utils/cache-keys';
 import {
@@ -54,6 +55,7 @@ import {
   ProgramBooking,
   WorkoutPlanProposal,
 } from '../../services/coaching.service';
+import { ToastService } from '../../services/toast.service';
 
 /** A single row in the coach dashboard's "Today's Sessions" list. */
 interface TodaySessionView {
@@ -321,6 +323,8 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
     private modalCtrl: ModalController,
     private echoService: EchoService,
     private zone: NgZone,
+    public onboardingService: OnboardingService,
+    private toast: ToastService,
   ) {
     // Immediately resolve coach status synchronously from stored auth state
     // so the panel never flashes member "Personal Coaches" UI to a coach.
@@ -378,6 +382,92 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
   private async openWithHydration(): Promise<void> {
     await this.hydrateFromCache();
     this.loadMyProfile();
+    this.checkAndStartCoachingTour();
+  }
+
+  private checkAndStartCoachingTour(): void {
+    const user = this.auth.user;
+    if (!user || user.role === 'admin') return;
+
+    setTimeout(() => {
+      if (this.onboardingService.isRunning) return;
+
+      const isCoachAccount = this.isCoach || this.auth.isCoachAccount() || user.role === 'coach';
+
+      if (isCoachAccount) {
+        // Tour for Coaches (Coach Studio / Dashboard)
+        const coachSteps: TourStep[] = [
+          {
+            targetId: '#tour-coach-profile-card',
+            title: 'Coach Profile & Status',
+            description: 'Displays your public handle, per-session coaching rate, specialty focus, and client availability status.',
+            icon: 'person-circle-outline',
+            position: 'bottom',
+          },
+          {
+            targetId: '#tour-coach-studio-stats',
+            title: 'Trainer Overview Metrics',
+            description: 'Tap each card to inspect your active trainees, unread chat messages, coaching requests, and monthly earnings.',
+            icon: 'barbell-outline',
+            position: 'bottom',
+          },
+          {
+            targetId: '#tour-coach-today-sessions',
+            title: "Today's Schedule & Sessions",
+            description: 'Review your confirmed 1-on-1 personal training sessions and group workout appointments scheduled for today.',
+            icon: 'calendar-outline',
+            position: 'top',
+          },
+          {
+            targetId: '#tour-coach-quick-actions',
+            title: 'Quick Actions & Management',
+            description: 'Easily configure your working availability, create custom training programs & classes, or update your profile bio.',
+            icon: 'flash-outline',
+            position: 'top',
+          },
+        ];
+        const available = coachSteps.filter((s) => !!document.querySelector(s.targetId));
+        if (available.length > 0) {
+          this.onboardingService.startTour('coach_studio_main', available, false, user.id);
+        }
+      } else {
+        // Tour for Gym Members (Personal Coaches browsing)
+        const memberSteps: TourStep[] = [
+          {
+            targetId: '#tour-coach-member-tabs',
+            title: 'Coaches & Fitness Classes',
+            description: 'Explore certified personal trainers, view active messages, or avail public group fitness classes.',
+            icon: 'people-outline',
+            position: 'bottom',
+          },
+          {
+            targetId: '#tour-coach-search',
+            title: 'Search Coaches',
+            description: 'Search trainers by name or specialty (e.g. Strength, Weight Loss, Bodybuilding).',
+            icon: 'search-outline',
+            position: 'bottom',
+          },
+          {
+            targetId: '#tour-coach-specialties',
+            title: 'Specialty Filters',
+            description: 'Filter coaches by training category such as Strength, Bodybuilding, Weight Loss, or HIIT.',
+            icon: 'barbell-outline',
+            position: 'bottom',
+          },
+          {
+            targetId: '#tour-coach-first-card',
+            title: 'Coach Profile Card',
+            description: 'View trainer credentials, session rates, specialty focus, and bio summary.',
+            icon: 'star',
+            position: 'top',
+          },
+        ];
+        const available = memberSteps.filter((s) => !!document.querySelector(s.targetId));
+        if (available.length > 0) {
+          this.onboardingService.startTour('coaching_member_main', available, false, user.id);
+        }
+      }
+    }, 700);
   }
 
   /**
@@ -399,6 +489,8 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
     }
     if (CoachingPanelComponent.cachedConversations.length > 0) {
       this.conversations = CoachingPanelComponent.cachedConversations;
+      this.sortConversations();
+      this.coachingService.setCachedConversations(this.conversations);
     }
     if (CoachingPanelComponent.cachedPublicPrograms.length > 0) {
       this.publicPrograms = CoachingPanelComponent.cachedPublicPrograms;
@@ -444,7 +536,9 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
       const cachedConvos = await getCachedData<Conversation[]>(CACHE_KEYS.COACH_CONVERSATIONS);
       if (Array.isArray(cachedConvos) && cachedConvos.length > 0) {
         this.conversations = cachedConvos;
-        CoachingPanelComponent.cachedConversations = cachedConvos;
+        this.sortConversations();
+        CoachingPanelComponent.cachedConversations = this.conversations;
+        this.coachingService.setCachedConversations(this.conversations);
       }
     }
     if (this.publicPrograms.length === 0) {
@@ -528,11 +622,21 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
           } else {
             this.loadConversations();
           }
+          this.sortConversations();
           this.coachingService.incrementUnreadCount(1);
           CoachingPanelComponent.cachedConversations = this.conversations;
         });
       });
     }
+  }
+
+  private sortConversations(): void {
+    if (!this.conversations || this.conversations.length <= 1) return;
+    this.conversations.sort((a, b) => {
+      const timeA = new Date(a.latest_message?.created_at || a.updated_at || 0).getTime();
+      const timeB = new Date(b.latest_message?.created_at || b.updated_at || 0).getTime();
+      return timeB - timeA;
+    });
   }
 
   private cleanupEchoListeners(): void {
@@ -621,9 +725,11 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
 
             if (Array.isArray(res.conversations)) {
               this.conversations = res.conversations;
+              this.sortConversations();
+              this.coachingService.setCachedConversations(this.conversations);
               this.isLoading = false;
               this.setupEchoListeners();
-              CoachingPanelComponent.cachedConversations = res.conversations;
+              CoachingPanelComponent.cachedConversations = this.conversations;
               void setCachedData(CACHE_KEYS.COACH_CONVERSATIONS, res.conversations);
             }
             if (Array.isArray(res.clients)) {
@@ -648,7 +754,9 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
             // Regular member — populate conversations and active coaches directly from the single payload!
             if (Array.isArray(res.conversations)) {
               this.conversations = res.conversations;
-              CoachingPanelComponent.cachedConversations = res.conversations;
+              this.sortConversations();
+              this.coachingService.setCachedConversations(this.conversations);
+              CoachingPanelComponent.cachedConversations = this.conversations;
               void setCachedData(CACHE_KEYS.COACH_CONVERSATIONS, res.conversations);
             }
             if (Array.isArray(res.coaches) && res.coaches.length > 0) {
@@ -915,11 +1023,13 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
           this.isDeletingClient = false;
           this.isDeleteConfirmOpen = false;
           this.clientToDelete = null;
+          void this.toast.success('Client removed successfully.');
         },
         error: (err) => {
           console.error('Failed to delete client', err);
           this.deleteClientError = 'Failed to remove client. Please try again.';
           this.isDeletingClient = false;
+          void this.toast.error('Failed to remove client. Please try again.');
         },
       }),
     );
@@ -936,10 +1046,12 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
           CoachingPanelComponent.cachedRequests = this.requests;
           void setCachedData(CACHE_KEYS.COACH_REQUESTS, this.requests);
           this.loadStats();
+          void this.toast.success('Coaching request accepted!');
         },
         error: (err) => {
           console.error('Failed to accept request', err);
           this.requestActionInFlightId = null;
+          void this.toast.error('Failed to accept request. Please try again.');
         },
       }),
     );
@@ -956,10 +1068,12 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
           CoachingPanelComponent.cachedRequests = this.requests;
           void setCachedData(CACHE_KEYS.COACH_REQUESTS, this.requests);
           this.loadStats();
+          void this.toast.info('Request declined.');
         },
         error: (err) => {
           console.error('Failed to decline request', err);
           this.requestActionInFlightId = null;
+          void this.toast.error('Failed to decline request. Please try again.');
         },
       }),
     );
@@ -1062,11 +1176,13 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
           this.isSavingProfile = false;
           this.profileModalOpen = false;
           this.reloadProfileOnly();
+          void this.toast.success('Coach profile updated successfully!');
         },
         error: (err) => {
           this.isSavingProfile = false;
           this.profileFormError = err?.error?.message || 'Failed to update profile. Please try again.';
           console.error('Failed to update coach profile', err);
+          void this.toast.error(this.profileFormError);
         },
       }),
     );
@@ -1126,10 +1242,12 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
           this.availabilitySlots = [...this.availabilitySlots, slot].sort(
             (a, b) => a.day_of_week - b.day_of_week || a.start_time.localeCompare(b.start_time),
           );
+          void this.toast.success('Availability slot added!');
         },
         error: (err) => {
           this.availabilityError = err?.error?.message || 'Failed to add slot. Please try again.';
           console.error('Failed to create availability slot', err);
+          void this.toast.error(this.availabilityError);
         },
       }),
     );
@@ -1141,9 +1259,11 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
       this.coachingService.deleteAvailabilitySlot(slot.id).subscribe({
         next: () => {
           this.availabilitySlots = this.availabilitySlots.filter((s) => s.id !== slot.id);
+          void this.toast.info('Availability slot removed.');
         },
         error: (err) => {
           console.error('Failed to delete availability slot', err);
+          void this.toast.error('Failed to remove slot. Please try again.');
         },
       }),
     );
@@ -1248,11 +1368,14 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
           this.isSavingProgram = false;
           this.programs = [created, ...this.programs];
           this.programForm = this.buildEmptyProgramForm();
+          const label = this.programForm.is_public ? 'Class' : 'Program';
+          void this.toast.success(`${label} "${name}" created successfully!`);
         },
         error: (err) => {
           this.isSavingProgram = false;
           this.programFormError = err?.error?.message || 'Failed to save program. Please try again.';
           console.error('Failed to create program', err);
+          void this.toast.error(this.programFormError);
         },
       }),
     );
@@ -1260,13 +1383,16 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
 
   deleteProgram(program: CoachProgram): void {
     if (!program.id) return;
+    const name = program.name || 'Program';
     this.sub.add(
       this.coachingService.deleteProgram(program.id).subscribe({
         next: () => {
           this.programs = this.programs.filter((p) => p.id !== program.id);
+          void this.toast.info(`"${name}" deleted.`);
         },
         error: (err) => {
           console.error('Failed to delete program', err);
+          void this.toast.error('Failed to delete program. Please try again.');
         },
       }),
     );
@@ -1434,11 +1560,13 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
           // Refresh from the server so booked_count/spots_left/already_booked
           // reflect the real, authoritative state rather than a guessed patch.
           this.loadPublicPrograms();
+          void this.toast.success(`Booked "${program.name}"! Pay at the gym.`);
         },
         error: (err) => {
           this.classActionInFlightId = null;
           this.classActionError = err?.error?.message || 'Failed to book this class. Please try again.';
           console.error('Failed to book class', err);
+          void this.toast.error(this.classActionError);
         },
       }),
     );
@@ -1453,11 +1581,13 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
         next: () => {
           this.classActionInFlightId = null;
           this.loadPublicPrograms();
+          void this.toast.info(`Booking for "${program.name}" cancelled.`);
         },
         error: (err) => {
           this.classActionInFlightId = null;
           this.classActionError = err?.error?.message || 'Failed to cancel your booking. Please try again.';
           console.error('Failed to cancel class booking', err);
+          void this.toast.error(this.classActionError);
         },
       }),
     );

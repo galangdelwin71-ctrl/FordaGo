@@ -7,27 +7,43 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * NOTE: `users` already exists in the live fordago database (created by
-     * the old Node backend), so this migration does NOT create it — it's
-     * intentionally skipped here. See database/migrations_unused/ for the
-     * original Laravel default users migration we removed.
+     * Creates the `users` table on fresh databases (container / CI).
      *
-     * Real columns (from fordago_export_2026-08-07.sql):
-     * id int(11) PK, username varchar(50) unique, email varchar(100) unique,
-     * password varchar(255), role enum('admin','user','super_admin','employee'),
-     * phone varchar(20), gender enum('male','female','other'),
-     * membership_type enum('daily','premium'), payment_method enum('cash','gcash'),
-     * membership_expiry date, profile_image longtext,
-     * membership_status enum('pending','active'), first_name varchar(80), last_name varchar(80)
+     * On existing databases (XAMPP / production) where the table was already
+     * created by the old Node backend, this is a safe no-op thanks to the
+     * Schema::hasTable() guard.
+     *
+     * Schema matches fordago_export_2026-08-07.sql exactly.
+     * NOTE: `created_at` is intentionally omitted here — it is added by the
+     * next migration (2026_08_11_095900_add_created_at_to_users_table.php).
      */
     public function up(): void
     {
-        // Intentionally no-op: users table already exists in production.
+        if (Schema::hasTable('users')) {
+            return; // already exists on XAMPP / production — skip
+        }
+
+        Schema::create('users', function (Blueprint $table) {
+            $table->integer('id')->autoIncrement()->primary();
+            $table->string('username', 50)->unique()->nullable();
+            $table->string('email', 100)->unique();
+            $table->string('password', 255);
+            $table->enum('role', ['admin', 'user', 'super_admin', 'employee'])->default('user');
+            $table->string('phone', 20)->nullable();
+            $table->enum('gender', ['male', 'female', 'other'])->nullable();
+            $table->enum('membership_type', ['daily', 'premium'])->nullable();
+            $table->enum('payment_method', ['cash', 'gcash'])->nullable();
+            $table->date('membership_expiry')->nullable();
+            $table->longText('profile_image')->nullable();
+            $table->enum('membership_status', ['pending', 'active'])->nullable();
+            $table->string('first_name', 80)->nullable();
+            $table->string('last_name', 80)->nullable();
+        });
     }
 
     public function down(): void
     {
-        // Intentionally no-op — we never want `php artisan migrate:rollback`
-        // to drop the real users table.
+        // Never drop the users table on rollback — it may hold production data.
+        // If you genuinely need to rollback a fresh container, use `migrate:fresh` instead.
     }
 };

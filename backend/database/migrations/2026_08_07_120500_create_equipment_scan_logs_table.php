@@ -15,7 +15,7 @@ return new class extends Migration
         Schema::create('equipment_scan_logs', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('user_id');
-            $table->integer('equipment_id')->nullable();
+            $table->unsignedInteger('equipment_id')->nullable();
             $table->string('equipment_code', 120)->nullable();
             $table->string('equipment_name');
             $table->text('raw_qr')->nullable();

@@ -17,6 +17,8 @@ import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.
 import { CoachingNavService, CoachingPanelTab } from '../services/coaching-nav.service';
 import { CoachingService } from '../services/coaching.service';
 import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refresh.component';
+import { OnboardingService, TourStep } from '../services/onboarding.service';
+import { ToastService } from '../services/toast.service';
 import { addIcons } from 'ionicons';
 import {
   searchOutline,
@@ -386,6 +388,8 @@ export class InventoryPage implements OnInit {
     private auth: AuthService,
     private coachingNav: CoachingNavService,
     private coachingService: CoachingService,
+    public onboardingService: OnboardingService,
+    private toast: ToastService,
   ) {
     addIcons({
       searchOutline,
@@ -482,6 +486,52 @@ export class InventoryPage implements OnInit {
       : 'U';
     this.profileImage = String(user?.profile_image || '').trim();
     this.notifPanelOpen = false;
+    this.checkAndStartShopTour();
+  }
+
+  private checkAndStartShopTour(): void {
+    const user = this.auth.user;
+    if (!user || user.role === 'admin' || user.role === 'coach') return;
+
+    setTimeout(() => {
+      if (this.onboardingService.isRunning || this.coachingPanelOpen) return;
+
+      const steps: TourStep[] = [
+        {
+          targetId: '#tour-shop-search',
+          title: 'Search Supplements',
+          description: 'Search for protein powders, creatine, energy drinks, and gym merchandise.',
+          icon: 'search-outline',
+          position: 'bottom',
+        },
+        {
+          targetId: '#tour-shop-product-list',
+          title: 'Authentic Supplements',
+          description: 'Browse genuine products with live stock counters and 1-tap quick ordering.',
+          icon: 'bag-handle-outline',
+          position: 'bottom',
+        },
+        {
+          targetId: '#tour-shop-cart-btn',
+          title: 'Shopping Cart',
+          description: 'Review your cart items, adjust quantities, and checkout with Cash or GCash.',
+          icon: 'cart-outline',
+          position: 'top',
+        },
+        {
+          targetId: '#tour-shop-orders-btn',
+          title: 'Order Status Tracking',
+          description: 'Track the status of your orders from processing to ready for gym counter pickup.',
+          icon: 'receipt-outline',
+          position: 'top',
+        },
+      ];
+
+      const available = steps.filter((s) => !!document.querySelector(s.targetId));
+      if (available.length > 0) {
+        this.onboardingService.startTour('shop_main', available, false, user.id);
+      }
+    }, 700);
   }
 
   /**
@@ -749,6 +799,7 @@ export class InventoryPage implements OnInit {
     } else {
       this.cart.push({ product: { ...product }, quantity: qtyToAdd });
     }
+    this.toast.success(`Added ${product.name} to cart!`);
   }
 
   addSelectedToCart(): void {
@@ -903,6 +954,7 @@ export class InventoryPage implements OnInit {
 
   removeCartItem(item: CartItem): void {
     this.cart = this.cart.filter(i => i.product.id !== item.product.id);
+    this.toast.info('Item removed from cart');
   }
 
   selectCartPaymentMethod(method: 'cash' | 'gcash'): void {
@@ -987,10 +1039,11 @@ export class InventoryPage implements OnInit {
       next: () => {
         this.loadProducts(); // stock was restored server-side
         this.loadMyOrders();
+        this.toast.success('Order cancelled successfully');
       },
       error: (err) => {
         group.cancelling = false;
-        this.orderError = err?.error?.message || 'Could not cancel this order. Please try again.';
+        this.toast.error(err?.error?.message || 'Failed to cancel order');
       },
     });
   }

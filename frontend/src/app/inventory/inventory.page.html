@@ -25,11 +25,11 @@
 
 <!-- Cart / Orders floating shortcuts — permanently visible for easy access -->
 <div class="shop-fab-stack" *ngIf="!coachingPanelOpen" [class.fabs-hidden]="anyModalOpen">
-  <button type="button" class="shop-fab-btn" (click)="openCart()" aria-label="Open cart">
+  <button type="button" id="tour-shop-cart-btn" class="shop-fab-btn" (click)="openCart()" aria-label="Open cart">
     <ion-icon name="cart-outline" aria-hidden="true"></ion-icon>
     <span class="shop-fab-badge" *ngIf="cartItemCount > 0">{{ cartItemCount }}</span>
   </button>
-  <button type="button" class="shop-fab-btn" (click)="openOrders()" aria-label="Open orders">
+  <button type="button" id="tour-shop-orders-btn" class="shop-fab-btn" (click)="openOrders()" aria-label="Open orders">
     <ion-icon name="receipt-outline" aria-hidden="true"></ion-icon>
     <span class="shop-fab-badge" *ngIf="awaitingPaymentCount > 0">{{ awaitingPaymentCount }}</span>
   </button>
@@ -40,7 +40,7 @@
   <div class="scroll-wrap">
 
     <!-- Search Bar -->
-    <div class="shop-search-wrapper">
+    <div class="shop-search-wrapper" id="tour-shop-search">
       <div class="shop-search-bar">
         <ion-icon name="search-outline" class="search-icon"></ion-icon>
         <input
@@ -100,7 +100,7 @@
     </div>
 
     <!-- Product Cards List -->
-    <div class="products-list" *ngIf="!productsLoading && filteredProducts.length > 0">
+    <div class="products-list" id="tour-shop-product-list" *ngIf="!productsLoading && filteredProducts.length > 0">
       <div
         *ngFor="let product of filteredProducts; let i = index; trackBy: trackByProduct"
         class="product-card"

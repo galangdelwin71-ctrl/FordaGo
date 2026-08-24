@@ -27,7 +27,7 @@ import { ChatToastComponent } from '../shared/chat-toast/chat-toast.component';
 import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refresh.component';
 import { FeedbackService } from '../services/feedback.service';
 import { OnboardingService, TourStep } from '../services/onboarding.service';
-import { OnboardingGuideComponent } from '../shared/onboarding-guide/onboarding-guide.component';
+import { ToastService } from '../services/toast.service';
 import { API_URL } from '../config/api.config';
 
 // ─────────────────────────────────────────────────────
@@ -162,7 +162,6 @@ export interface PrForm {
     FeedbackModalComponent,
     ChatToastComponent,
     PullToRefreshComponent,
-    OnboardingGuideComponent,
   ],
 })
 export class DashboardPage implements OnInit, OnDestroy {
@@ -1242,8 +1241,12 @@ export class DashboardPage implements OnInit, OnDestroy {
     const normalizedExercise = String(this.prForm.exercise || '').trim();
     const normalizedValue = String(this.prForm.value || '').trim();
     const normalizedUnit = this.normalizePrUnit(this.prForm.unit);
-    if (!normalizedExercise || !normalizedValue) return;
+    if (!normalizedExercise || !normalizedValue) {
+      this.toast.warning('Please enter an exercise name and record value.');
+      return;
+    }
 
+    const isEditing = !!this.editingPr;
     const icon = this.resolveExerciseIcon(normalizedExercise);
     const authHeaders = this.auth.token ? { Authorization: `Bearer ${this.auth.token}` } : undefined;
 
@@ -1308,6 +1311,7 @@ export class DashboardPage implements OnInit, OnDestroy {
 
     this.savePersonalRecordsToCache();
     this.closePrModal();
+    this.toast.success(isEditing ? 'Personal record updated!' : 'Personal record added!');
   }
   private normalizePrUnit(unitValue: string | number): string {
     const unit = String(unitValue || '').trim().toLowerCase();
@@ -1378,6 +1382,7 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.personalRecords = this.personalRecords.filter(p => p.id !== deletedId);
     this.savePersonalRecordsToCache();
     this.closePrModal();
+    this.toast.success('Personal record deleted');
 
     if (this.auth.token) {
       this.http
@@ -1436,7 +1441,8 @@ export class DashboardPage implements OnInit, OnDestroy {
     private coachingService: CoachingService,
     private chatToastService: ChatToastService,
     private feedbackService: FeedbackService,
-    public onboardingService: OnboardingService
+    public onboardingService: OnboardingService,
+    private toast: ToastService
   ) {}
 
   onLogoError(event: Event): void {

@@ -8,6 +8,7 @@
 
       <button
         type="button"
+        id="tour-chat-header"
         class="chat-partner-header"
         *ngIf="partner"
         (click)="openPartnerInfo()"
@@ -218,7 +219,7 @@
 
 <!-- Chat Input Footer -->
 <ion-footer class="chat-footer ion-no-border">
-  <div class="chat-input-bar">
+  <div class="chat-input-bar" id="tour-chat-input-bar">
     <!-- Coach proposal button beside input -->
     <button
       type="button"
@@ -240,6 +241,7 @@
 
     <button
       type="button"
+      id="tour-chat-send-btn"
       class="chat-send-btn"
       [disabled]="!newMessage.trim() || isSending"
       (click)="sendMessage()">

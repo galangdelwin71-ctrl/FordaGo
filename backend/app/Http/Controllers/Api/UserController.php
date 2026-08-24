@@ -110,7 +110,7 @@ class UserController extends Controller
                 Notification::create([
                     'user_id' => $staff->id,
                     'title'   => 'Membership Payment Verification Needed',
-                    'message' => "Si {$user->first_name} {$user->last_name} (@{$user->username}) ay nag-submit ng Premium Pass request via " . strtoupper($paymentMethod) . " (₱500). Paki-verify ang payment sa counter.",
+                    'message' => "{$user->first_name} {$user->last_name} (@{$user->username}) submitted a Premium Pass renewal request via " . strtoupper($paymentMethod) . " (₱500). Please verify payment at the counter.",
                     'is_read' => false,
                 ]);
             }
@@ -123,7 +123,7 @@ class UserController extends Controller
             Notification::create([
                 'user_id' => $user->id,
                 'title'   => 'Renewal Request Pending',
-                'message' => "Na-submit na ang iyong Premium Pass request (₱500 via " . strtoupper($paymentMethod) . "). Paki-punta sa gym counter o ipakita ang iyong GCash reference sa staff para ma-verify at ma-activate ang iyong account.",
+                'message' => "Your Premium Pass request (₱500 via " . strtoupper($paymentMethod) . ") has been submitted. Please proceed to the gym counter or show your payment reference to staff for verification and account activation.",
                 'is_read' => false,
             ]);
         } catch (\Throwable $e) {

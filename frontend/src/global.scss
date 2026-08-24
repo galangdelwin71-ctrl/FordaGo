@@ -32,6 +32,15 @@ ion-modal .modal-save-btn {
   color: #000 !important;
 }
 
+ion-modal .gold-cta-btn {
+  background: linear-gradient(135deg, #fde047 0%, #eab308 100%) !important;
+  color: #0f172a !important;
+
+  span, ion-icon {
+    color: #0f172a !important;
+  }
+}
+
 ion-modal .modal-sheet,
 ion-modal .modal-content,
 ion-modal .modal-inner {
@@ -423,102 +432,330 @@ body.light-theme {
     .form-label { color: rgba(15,23,42,0.5) !important; }
 
     /* Coach Dashboard modals (Manage Profile / Set Availability / Create
-       Program / Roster — see coaching-panel.component.html's `.cd-modal-*`
-       / `.cd-form-*` classes). Same portal problem as everything else in
-       this ion-modal block: ion-modal content is moved by Ionic to
-       document.body, outside app-coaching-panel's own DOM subtree, so
-       that component's `:host-context(body.light-theme)` CSS variables
-       (--bg-secondary, --text-primary, etc. -- see the bottom of
-       coaching-panel.component.scss) never reach these elements; they
-       fall back to the component's literal dark-mode defaults
-       (rgba(255,255,255,*) / #FFFFFF) no matter the theme.
-       NOTE: this replaces a previous block scoped to `.coach-modal`, a
-       class that was never actually present on any element in the app
-       (the real wrapper is `.cd-modal-content`, ported over from the
-       retired standalone coach-dashboard page without updating this
-       selector) -- that block silently never matched anything. These
-       plain (non ion-input/ion-select) elements need literal
-       `background`/`color`, not the --background/--color shadow-part
-       vars the ion-input rule above uses. */
+       Program / Roster / Clients / Requests / Messages / Earnings — see
+       coaching-panel.component.html's `.cd-modal-*`, `.cd-sheet-*`, `.cd-form-*` classes).
+       Ion-modal content is portaled to document.body, so all light theme styles
+       must be declared globally here. */
     .cd-modal-content {
       background: #ffffff !important;
+      color: #0f172a !important;
     }
-    .cd-modal-handle { background: rgba(15,23,42,0.14) !important; }
-    .cd-modal-title { color: #0f172a !important; }
-    // Was rgba(15,23,42,0.5) at the component's base 10px -- too light and
-    // too small to read comfortably against the light modal background
-    // (Create Program / Set Availability field labels). Darker slate plus
-    // a slightly larger size per request, still visually secondary to the
-    // 14px field values below it.
+    .cd-modal-handle,
+    .cd-sheet-handle {
+      background: #cbd5e1 !important;
+    }
+    .cd-modal-title {
+      color: #0f172a !important;
+      font-weight: 850 !important;
+      font-size: 18px !important;
+      letter-spacing: -0.2px !important;
+    }
+
+    /* Bottom Sheet Header & Title (Clients / Requests / Messages / Earnings) */
+    .cd-sheet-header {
+      border-bottom: 1px solid #e2e8f0 !important;
+      background: #ffffff !important;
+      padding: 14px 18px 12px !important;
+    }
+    .cd-sheet-title {
+      color: #0f172a !important;
+      font-weight: 850 !important;
+      font-size: 18px !important;
+      letter-spacing: -0.2px !important;
+
+      ion-icon {
+        color: #d97706 !important;
+      }
+    }
+    .cd-sheet-close {
+      background: #f1f5f9 !important;
+      border: 1px solid #e2e8f0 !important;
+      color: #475569 !important;
+
+      &:hover {
+        background: #e2e8f0 !important;
+        color: #0f172a !important;
+      }
+    }
+    .cd-badge-pill {
+      background: #ffd600 !important;
+      color: #000000 !important;
+      font-weight: 850 !important;
+
+      &--amber {
+        background: #f59e0b !important;
+        color: #ffffff !important;
+      }
+    }
+
+    /* Form Labels, Inputs & Controls */
     .cd-form-label {
       color: #334155 !important;
       font-size: 11.5px !important;
-      font-weight: 750 !important;
+      font-weight: 800 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.5px !important;
     }
     .cd-form-input,
     .cd-form-select {
-      background: rgba(15,23,42,0.05) !important;
-      border-color: rgba(15,23,42,0.12) !important;
+      background: #f8fafc !important;
+      border: 1.5px solid #cbd5e1 !important;
       color: #0f172a !important;
-      &::placeholder { color: rgba(15,23,42,0.35) !important; }
+      border-radius: 12px !important;
+      font-size: 13.5px !important;
+      font-weight: 500 !important;
+      transition: border-color 0.15s ease, background 0.15s ease;
+
+      &::placeholder {
+        color: #94a3b8 !important;
+      }
+      &:focus {
+        border-color: #0f172a !important;
+        background: #ffffff !important;
+      }
     }
     select.cd-form-select option {
       background: #ffffff !important;
       color: #0f172a !important;
     }
     select.cd-form-select {
-      // Full shorthand (image + repeat + position + size) in one
-      // !important declaration -- overriding only background-image here
-      // left background-repeat/position/size to whatever the component's
-      // own rule set, which is normally fine, but this keeps the override
-      // self-contained so it can never end up re-tiling the icon (multiple
-      // stacked chevrons) if that base rule ever changes independently.
-      background: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d97706' stroke-width='2.5'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") no-repeat right 12px center / 14px !important;
-      background-color: rgba(15,23,42,0.05) !important;
+      background: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2.5'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") no-repeat right 12px center / 14px !important;
+      background-color: #f8fafc !important;
     }
-    .cd-form-error { color: #dc2626 !important; }
-    .cd-checkbox-label { color: rgba(15,23,42,0.7) !important; }
+    .cd-form-error {
+      color: #dc2626 !important;
+      font-weight: 600 !important;
+    }
+    .cd-checkbox-label {
+      color: #334155 !important;
+      font-weight: 600 !important;
+    }
     .cd-modal-actions {
-      background: linear-gradient(180deg, rgba(244,245,248,0) 0%, rgba(244,245,248,0.95) 26%, #ffffff 100%) !important;
+      background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.95) 26%, #ffffff 100%) !important;
+    }
+    .cd-modal-save-btn {
+      background: #ffd600 !important;
+      color: #000000 !important;
+      font-weight: 800 !important;
+      border: none !important;
+      border-radius: 12px !important;
+      box-shadow: 0 4px 14px rgba(255, 214, 0, 0.3) !important;
     }
 
-    /* Saved-programs list (Create Program modal) + Availability list (Set
-       Availability modal) + Roster list (Roster modal) -- all reuse the
-       shared .cd-session-name/.cd-session-focus row classes. */
-    .cd-availability-day, .cd-session-name { color: #0f172a !important; }
-    .cd-availability-time, .cd-session-focus { color: rgba(15,23,42,0.55) !important; }
-    .cd-availability-row, .cd-program-row, .cd-session-item, .cd-client-item, .cd-roster-item {
-      border-bottom-color: rgba(15,23,42,0.08) !important;
-      background: transparent !important;
-    }
-    .cd-session-avatar {
+    /* Photo Editor (Manage Profile) */
+    .cd-photo-preview {
       background: #f1f5f9 !important;
-      border-color: rgba(15,23,42,0.12) !important;
+      border: 2px solid #cbd5e1 !important;
       color: #0f172a !important;
+      font-weight: 800 !important;
+    }
+    .cd-photo-btn {
+      background: #f1f5f9 !important;
+      border: 1px solid #cbd5e1 !important;
+      color: #0f172a !important;
+      font-weight: 700 !important;
+      border-radius: 10px !important;
+    }
+    .cd-photo-remove-btn {
+      background: rgba(239, 68, 68, 0.08) !important;
+      border: 1px solid rgba(239, 68, 68, 0.25) !important;
+      color: #dc2626 !important;
+      font-weight: 700 !important;
+      border-radius: 10px !important;
+    }
+
+    /* Sleek Grey Container Cards in Light Mode */
+    .cd-availability-row,
+    .cd-program-row,
+    .cd-session-item,
+    .cd-client-item,
+    .cd-request-item,
+    .cd-roster-item,
+    .cd-earnings-item {
+      background: #f8fafc !important;
+      border: 1px solid #e2e8f0 !important;
+      border-radius: 14px !important;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+      margin-bottom: 10px !important;
+      padding: 12px 14px !important;
+      transition: background 0.15s ease, border-color 0.15s ease;
+
+      &:hover {
+        background: #f1f5f9 !important;
+        border-color: #cbd5e1 !important;
+      }
+    }
+
+    /* Row Content Typography */
+    .cd-availability-day,
+    .cd-session-name {
+      color: #0f172a !important;
+      font-weight: 750 !important;
+      font-size: 14px !important;
+    }
+    .cd-availability-time,
+    .cd-session-focus {
+      color: #475569 !important;
+      font-size: 12px !important;
+    }
+    .cd-session-time {
+      color: #b45309 !important;
+      font-weight: 700 !important;
+      font-size: 11.5px !important;
+    }
+    .cd-client-tag {
+      color: #64748b !important;
+      font-size: 12px !important;
+      font-weight: 600 !important;
+    }
+    .cd-session-empty-msg {
+      color: #94a3b8 !important;
+    }
+    .cd-client-chevron {
+      color: #94a3b8 !important;
+    }
+    .cd-unread-badge {
+      background: #ef4444 !important;
+      color: #ffffff !important;
+      font-weight: 800 !important;
+    }
+
+    /* Section Labels */
+    .cd-section-label {
+      color: #475569 !important;
+      font-weight: 800 !important;
+      font-size: 11.5px !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.5px !important;
+      margin: 14px 4px 8px !important;
+    }
+
+    /* Monthly Breakdown (Earnings modal) */
+    .cd-earnings-month {
+      background: #f8fafc !important;
+      border: 1px solid #e2e8f0 !important;
+      border-left: 4px solid #ffd600 !important;
+      border-radius: 14px !important;
+      padding: 12px 14px !important;
+      margin-bottom: 10px !important;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+    }
+    .cd-earnings-month-label {
+      color: #0f172a !important;
+      font-weight: 800 !important;
+      font-size: 14px !important;
+    }
+    .cd-earnings-amount {
+      color: #059669 !important;
+      font-weight: 850 !important;
+      font-size: 15px !important;
+    }
+    .cd-earnings-count {
+      color: #64748b !important;
+      font-weight: 600 !important;
+      font-size: 11.5px !important;
+    }
+    .cd-earnings-price {
+      background: rgba(16, 185, 129, 0.12) !important;
+      border: 1px solid rgba(16, 185, 129, 0.28) !important;
+      color: #059669 !important;
+      font-weight: 850 !important;
+      border-radius: 8px !important;
+      padding: 4px 10px !important;
+    }
+
+    /* Avatars in Light Mode */
+    .cd-session-avatar {
+      background: #e2e8f0 !important;
+      border: 1.5px solid #cbd5e1 !important;
+      color: #0f172a !important;
+      font-weight: 800 !important;
+    }
+    .cd-session-avatar-dot {
+      border-color: #ffffff !important;
+    }
+
+    /* Action Buttons in Rows */
+    .cd-delete-client-btn {
+      background: rgba(239, 68, 68, 0.08) !important;
+      border: 1px solid rgba(239, 68, 68, 0.2) !important;
+      color: #dc2626 !important;
+      border-radius: 10px !important;
+      &:hover {
+        background: rgba(239, 68, 68, 0.16) !important;
+      }
+    }
+    .cd-request-accept-btn {
+      background: linear-gradient(135deg, #10b981, #059669) !important;
+      color: #ffffff !important;
+      box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3) !important;
+    }
+    .cd-request-decline-btn {
+      background: rgba(239, 68, 68, 0.08) !important;
+      border: 1px solid rgba(239, 68, 68, 0.25) !important;
+      color: #dc2626 !important;
+    }
+    .cd-session-view-btn {
+      background: #f1f5f9 !important;
+      border: 1px solid #cbd5e1 !important;
+      color: #0f172a !important;
+      font-weight: 750 !important;
     }
     .cd-public-badge {
       color: #0f172a !important;
-      background: #f1f5f9 !important;
-      border-color: rgba(15,23,42,0.12) !important;
-    }
-    .cd-program-item-header span { color: rgba(15,23,42,0.45) !important; }
-    .cd-add-item-btn {
-      background: #f1f5f9 !important;
+      background: #e2e8f0 !important;
       border-color: #cbd5e1 !important;
+    }
+    .cd-program-item-header span {
+      color: #64748b !important;
+      font-weight: 700 !important;
+    }
+    .cd-add-item-btn {
+      background: #f8fafc !important;
+      border: 1.5px dashed #cbd5e1 !important;
       color: #0f172a !important;
+      font-weight: 750 !important;
     }
     .cd-roster-btn {
       background: #f1f5f9 !important;
-      border-color: #cbd5e1 !important;
+      border: 1px solid #cbd5e1 !important;
       color: #0f172a !important;
     }
-    .cd-availability-remove-btn, .cd-program-item-remove-btn {
-      background: rgba(220,38,38,0.08) !important;
-      border-color: rgba(220,38,38,0.22) !important;
+    .cd-availability-remove-btn,
+    .cd-program-item-remove-btn {
+      background: rgba(220, 38, 38, 0.08) !important;
+      border: 1px solid rgba(220, 38, 38, 0.22) !important;
       color: #dc2626 !important;
     }
-    .cd-empty-state { color: rgba(15,23,42,0.5) !important; }
-    .cd-empty-state-icon { color: rgba(15,23,42,0.3) !important; }
+
+    /* Empty States in Light Mode */
+    .cd-empty-state {
+      color: #64748b !important;
+      padding: 24px 16px !important;
+    }
+    .cd-empty-state strong {
+      color: #0f172a !important;
+      font-size: 15px !important;
+      font-weight: 800 !important;
+      display: block !important;
+      margin: 8px 0 4px !important;
+    }
+    .cd-empty-state span {
+      color: #64748b !important;
+      font-size: 13px !important;
+    }
+    .cd-empty-state-icon-ring {
+      background: #f1f5f9 !important;
+      border: 1.5px solid #e2e8f0 !important;
+      color: #d97706 !important;
+    }
+    .cd-empty-state-icon {
+      color: #94a3b8 !important;
+    }
+    .cd-card.cd-dashed {
+      border-color: #cbd5e1 !important;
+      background: #f8fafc !important;
+    }
 
     /* Partner Info modal */
     .partner-info-wrapper {
@@ -2072,28 +2309,28 @@ html.light-theme ion-modal .modal-content {
   }
 }
 
-/* FordaGO Premium Mobile Toasts - Clean White BG & Bold Black Text */
+/* FordaGO Premium Theme-Aware Mobile Toasts - Simple & Aesthetic */
 ion-toast.fordago-mobile-toast {
   --background: #ffffff !important;
   --color: #0f172a !important;
-  --border-radius: 18px;
-  --box-shadow: 0 14px 40px rgba(15, 23, 42, 0.18), 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  --border-radius: 16px;
+  --box-shadow: 0 12px 32px rgba(15, 23, 42, 0.14) !important;
   font-family: 'Montserrat', sans-serif !important;
-  font-weight: 750 !important;
+  font-weight: 700 !important;
   font-size: 13px !important;
   padding: 4px 12px;
   margin-top: 12px;
 
   &::part(container) {
     background: #ffffff !important;
-    border: 1.5px solid rgba(15, 23, 42, 0.08) !important;
-    border-radius: 18px !important;
-    box-shadow: 0 14px 40px rgba(15, 23, 42, 0.18) !important;
+    border: 1.5px solid rgba(15, 23, 42, 0.12) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.14) !important;
   }
 
   &::part(message) {
     color: #0f172a !important;
-    font-weight: 750 !important;
+    font-weight: 700 !important;
     line-height: 1.45;
   }
 
@@ -2106,10 +2343,10 @@ ion-toast.fordago-mobile-toast {
     --background: #ffffff !important;
     --color: #0f172a !important;
     &::part(container) {
-      border-left: 5px solid #ffd600 !important;
+      border: 1.5px solid rgba(234, 179, 8, 0.45) !important;
     }
     &::part(icon) {
-      color: #eab308 !important;
+      color: #ca8a04 !important;
     }
   }
 
@@ -2117,10 +2354,93 @@ ion-toast.fordago-mobile-toast {
     --background: #ffffff !important;
     --color: #0f172a !important;
     &::part(container) {
-      border-left: 5px solid #ef4444 !important;
+      border: 1.5px solid rgba(220, 38, 38, 0.35) !important;
     }
     &::part(icon) {
-      color: #ef4444 !important;
+      color: #dc2626 !important;
+    }
+  }
+
+  &.toast-warning {
+    --background: #ffffff !important;
+    --color: #0f172a !important;
+    &::part(container) {
+      border: 1.5px solid rgba(217, 119, 6, 0.35) !important;
+    }
+    &::part(icon) {
+      color: #d97706 !important;
+    }
+  }
+
+  &.toast-info {
+    --background: #ffffff !important;
+    --color: #0f172a !important;
+    &::part(container) {
+      border: 1.5px solid rgba(37, 99, 235, 0.35) !important;
+    }
+    &::part(icon) {
+      color: #2563eb !important;
+    }
+  }
+}
+
+/* Dark Theme Member / Coach App override only when in dark theme and NOT in admin */
+body.ion-palette-dark:not(:has(app-admin)) ion-toast.fordago-mobile-toast {
+  --background: #111428 !important;
+  --color: #ffffff !important;
+  --box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55) !important;
+
+  &::part(container) {
+    background: #111428 !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55) !important;
+  }
+
+  &::part(message) {
+    color: #ffffff !important;
+  }
+
+  &.toast-success {
+    --background: #111428 !important;
+    --color: #ffffff !important;
+    &::part(container) {
+      border: 1.5px solid rgba(255, 214, 0, 0.4) !important;
+    }
+    &::part(icon) {
+      color: #ffd600 !important;
+    }
+  }
+
+  &.toast-error {
+    --background: #111428 !important;
+    --color: #ffffff !important;
+    &::part(container) {
+      border: 1.5px solid rgba(255, 68, 97, 0.4) !important;
+    }
+    &::part(icon) {
+      color: #ff4461 !important;
+    }
+  }
+
+  &.toast-warning {
+    --background: #111428 !important;
+    --color: #ffffff !important;
+    &::part(container) {
+      border: 1.5px solid rgba(255, 149, 0, 0.4) !important;
+    }
+    &::part(icon) {
+      color: #ff9500 !important;
+    }
+  }
+
+  &.toast-info {
+    --background: #111428 !important;
+    --color: #ffffff !important;
+    &::part(container) {
+      border: 1.5px solid rgba(74, 158, 255, 0.4) !important;
+    }
+    &::part(icon) {
+      color: #4a9eff !important;
     }
   }
 }

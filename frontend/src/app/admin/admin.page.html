@@ -1,15 +1,15 @@
-<!-- ── Confirm Delete Dialog ────────────────────────── -->
+<!-- ── Confirm Action Dialog ────────────────────────── -->
 <div class="confirm-overlay" *ngIf="confirmDialog.show">
   <div class="confirm-box">
     <div class="confirm-icon">
-      <ion-icon name="trash-outline"></ion-icon>
+      <ion-icon [name]="confirmDialog.icon || 'trash-outline'"></ion-icon>
     </div>
-    <div class="confirm-title">Delete {{ confirmDialog.label }}?</div>
-    <div class="confirm-msg">This action cannot be undone.</div>
-    <div class="confirm-name">{{ confirmDialog.name }}</div>
+    <div class="confirm-title">{{ confirmDialog.title || ('Delete ' + confirmDialog.label + '?') }}</div>
+    <div class="confirm-msg">{{ confirmDialog.message || 'This action cannot be undone.' }}</div>
+    <div class="confirm-name" *ngIf="confirmDialog.name">{{ confirmDialog.name }}</div>
     <div class="confirm-actions">
       <button class="confirm-cancel" (click)="confirmDialog.show = false">Cancel</button>
-      <button class="confirm-delete" (click)="confirmDialog.onConfirm(); confirmDialog.show = false">Delete</button>
+      <button class="confirm-delete" (click)="confirmDialog.onConfirm(); confirmDialog.show = false">{{ confirmDialog.actionLabel || 'Delete' }}</button>
     </div>
   </div>
 </div>
@@ -29,6 +29,58 @@
   </div>
 </div>
 
+<!-- ── Notification Action Detail Modal ─────────────── -->
+<div class="confirm-overlay notif-modal-overlay" *ngIf="showNotifDetailModal && selectedNotifDetail" (click)="showNotifDetailModal = false">
+  <div class="confirm-box notif-detail-box" (click)="$event.stopPropagation()">
+    <div class="notif-modal-top">
+      <div class="notif-type-pill" [ngClass]="getNotifTypeCategory(selectedNotifDetail).cssClass">
+        <ion-icon [name]="getNotifTypeCategory(selectedNotifDetail).icon"></ion-icon>
+        <span>{{ getNotifTypeCategory(selectedNotifDetail).label }}</span>
+      </div>
+      <button class="notif-modal-close" (click)="showNotifDetailModal = false" aria-label="Close">✕</button>
+    </div>
+
+    <div class="notif-modal-title">{{ selectedNotifDetail.title || 'Notification Notice' }}</div>
+    <div class="notif-modal-time">
+      <ion-icon name="time-outline"></ion-icon>
+      <span>{{ formatNotifDate(selectedNotifDetail.created_at) }}</span>
+    </div>
+
+    <div class="notif-modal-message-box">
+      <p class="notif-modal-text">{{ selectedNotifDetail.message }}</p>
+    </div>
+
+    <div class="notif-modal-actions">
+      <button
+        *ngIf="getNotifTypeCategory(selectedNotifDetail).label === 'MEMBERSHIP' || getNotifTypeCategory(selectedNotifDetail).label === 'REGISTRATION'"
+        class="notif-modal-btn primary"
+        (click)="navigateToMemberFromNotif(selectedNotifDetail)"
+      >
+        <ion-icon name="person-outline"></ion-icon>
+        <span>View Member in Users Tab</span>
+      </button>
+
+      <button
+        *ngIf="getNotifTypeCategory(selectedNotifDetail).label === 'SHOP ORDER'"
+        class="notif-modal-btn primary"
+        (click)="navigateToOrdersFromNotif()"
+      >
+        <ion-icon name="cart-outline"></ion-icon>
+        <span>View in Shop Orders</span>
+      </button>
+
+      <div class="notif-modal-sub-actions">
+        <button class="notif-modal-del-btn" (click)="deleteNotification(selectedNotifDetail)">
+          <ion-icon name="trash-outline"></ion-icon> Delete Notification
+        </button>
+        <button class="notif-modal-close-btn" (click)="showNotifDetailModal = false">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ── Admin Dashboard ───────────────────────────────── -->
 <ion-header [translucent]="false" class="ion-no-border">
   <ion-toolbar class="admin-toolbar">
@@ -41,6 +93,10 @@
     </div>
 
     <div class="toolbar-right" slot="end">
+      <button class="header-bell-btn" (click)="openNotifsTab()" title="Notifications" aria-label="Notifications">
+        <ion-icon name="notifications-outline"></ion-icon>
+        <span class="bell-badge-count" *ngIf="unreadAdminNotifsCount > 0">{{ unreadAdminNotifsCount > 99 ? '99+' : unreadAdminNotifsCount }}</span>
+      </button>
       <button class="header-logout-btn" (click)="logout()" title="Logout of Admin Panel" aria-label="Logout">
         <ion-icon name="log-out-outline"></ion-icon>
         <span class="logout-text">Logout</span>
@@ -79,6 +135,7 @@
       </button>
       <button class="tab-btn" [class.active]="activeTab==='notifs'"      (click)="activeTab='notifs'">
         <ion-icon name="notifications-outline"></ion-icon> Notifs
+        <span class="tab-badge-pill" *ngIf="unreadAdminNotifsCount > 0">{{ unreadAdminNotifsCount }}</span>
       </button>
       <button class="tab-btn" [class.active]="activeTab==='attendance'" (click)="activeTab='attendance'">
         <ion-icon name="clipboard-outline"></ion-icon> Attendance
@@ -92,48 +149,76 @@
     </div>
 
     <!-- ══════════════════════════════════════════════ -->
+    <!-- ══════════════════════════════════════════════ -->
     <!-- TAB: OVERVIEW                                  -->
     <!-- ══════════════════════════════════════════════ -->
     <div *ngIf="activeTab==='overview'">
 
       <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-icon-box people"><ion-icon name="people-outline"></ion-icon></div>
+        <div class="stat-card clickable" (click)="navigateToMembers()" role="button" tabindex="0" (keydown.enter)="navigateToMembers()" title="View Total Members">
+          <div class="stat-card-top">
+            <div class="stat-icon-box people"><ion-icon name="people-outline"></ion-icon></div>
+            <ion-icon name="arrow-forward-outline" class="card-arrow"></ion-icon>
+          </div>
           <div class="stat-value">{{ totalMembers }}</div>
           <div class="stat-label">Total Members</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-icon-box checkins"><ion-icon name="checkmark-circle-outline"></ion-icon></div>
+
+        <div class="stat-card clickable" (click)="navigateToAttendance()" role="button" tabindex="0" (keydown.enter)="navigateToAttendance()" title="View Check-ins & Attendance">
+          <div class="stat-card-top">
+            <div class="stat-icon-box checkins"><ion-icon name="checkmark-circle-outline"></ion-icon></div>
+            <ion-icon name="arrow-forward-outline" class="card-arrow"></ion-icon>
+          </div>
           <div class="stat-value green">{{ activeToday }}</div>
           <div class="stat-label">Check-ins Today</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-icon-box stock"><ion-icon name="cube-outline"></ion-icon></div>
+
+        <div class="stat-card clickable" (click)="navigateToLowStock()" role="button" tabindex="0" (keydown.enter)="navigateToLowStock()" title="View Low Stock Items in Shop">
+          <div class="stat-card-top">
+            <div class="stat-icon-box stock"><ion-icon name="cube-outline"></ion-icon></div>
+            <ion-icon name="arrow-forward-outline" class="card-arrow"></ion-icon>
+          </div>
           <div class="stat-value amber">{{ lowStockCount }}</div>
           <div class="stat-label">Low Stock Items</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-icon-box orders"><ion-icon name="receipt-outline"></ion-icon></div>
+
+        <div class="stat-card clickable" (click)="navigateToPendingOrders()" role="button" tabindex="0" (keydown.enter)="navigateToPendingOrders()" title="View Pending Orders in Shop">
+          <div class="stat-card-top">
+            <div class="stat-icon-box orders"><ion-icon name="receipt-outline"></ion-icon></div>
+            <ion-icon name="arrow-forward-outline" class="card-arrow"></ion-icon>
+          </div>
           <div class="stat-value red">{{ pendingOrders }}</div>
           <div class="stat-label">Pending Orders</div>
         </div>
       </div>
 
       <!-- Expiring memberships -->
-      <div class="section-label plain">Expiring Soon (Within 7 days)</div>
-      <div class="empty-card" *ngIf="expiringMembers.length === 0">
+      <div class="section-label-row">
+        <div class="section-label plain">Expiring Soon (Within 7 days)</div>
+        <button class="view-reports-link" (click)="router.navigate(['/admin-reports'])" *ngIf="expiringMembers.length > 0">
+          View in Reports <ion-icon name="arrow-forward-outline"></ion-icon>
+        </button>
+      </div>
+
+      <div class="empty-card clickable" *ngIf="expiringMembers.length === 0" (click)="navigateToMembers()" role="button" tabindex="0" (keydown.enter)="navigateToMembers()" title="View Members">
         <div class="empty-card-icon"><ion-icon name="time-outline"></ion-icon></div>
         <div class="empty-card-text">No memberships expiring soon</div>
       </div>
-      <div *ngFor="let m of expiringMembers" class="member-row warn">
-        <div class="member-info">
-          <div class="member-avatar">{{ m.initials }}</div>
-          <div>
-            <div class="member-name">{{ m.username }}</div>
-            <div class="member-meta">Expires {{ m.expiryDate }} · {{ m.daysLeft }} days left</div>
+
+      <div *ngFor="let m of expiringMembers" class="member-row warn clickable" (click)="viewExpiringMember(m)" role="button" tabindex="0" (keydown.enter)="viewExpiringMember(m)" title="View {{ m.username }} in Members">
+        <div class="member-row-content">
+          <div class="member-info">
+            <div class="member-avatar">{{ m.initials }}</div>
+            <div>
+              <div class="member-name">{{ m.username }}</div>
+              <div class="member-meta">Expires {{ m.expiryDate }} · {{ m.daysLeft }} days left</div>
+            </div>
+          </div>
+          <div class="member-row-right">
+            <span class="badge warn">Expiring</span>
+            <ion-icon name="chevron-forward-outline" class="row-arrow"></ion-icon>
           </div>
         </div>
-        <span class="badge warn">Expiring</span>
       </div>
 
     </div>
@@ -738,7 +823,7 @@
       </div>
 
       <!-- ── Pending Orders Section ───────────────────────────── -->
-      <div class="section-label" style="margin-top: 24px;">
+      <div id="pending-orders-section" class="section-label" style="margin-top: 24px;">
         <ion-icon name="receipt-outline"></ion-icon> PENDING ORDERS
       </div>
 
@@ -1068,34 +1153,76 @@
 
       <!-- ── VIEW 1: Broadcasts & Admin Notices ───────── -->
       <div *ngIf="notifViewMode === 'broadcasts'">
-        <!-- Search Input -->
-        <div class="search-input-wrap" style="margin-bottom: 12px;">
-          <ion-icon name="search-outline" class="search-icon"></ion-icon>
-          <input
-            class="search-input-field"
-            type="text"
-            placeholder="Search broadcasts & announcements…"
-            [(ngModel)]="broadcastSearch"
-          />
-          <button class="clear-search-btn" *ngIf="broadcastSearch" (click)="broadcastSearch=''">✕</button>
+        <!-- Search & Quick Action Bar -->
+        <div class="notif-control-bar" style="margin-bottom: 12px; display: flex; gap: 8px; align-items: center;">
+          <div class="search-input-wrap" style="flex: 1; margin-bottom: 0;">
+            <ion-icon name="search-outline" class="search-icon"></ion-icon>
+            <input
+              class="search-input-field"
+              type="text"
+              placeholder="Search notifications & announcements…"
+              [(ngModel)]="broadcastSearch"
+            />
+            <button class="clear-search-btn" *ngIf="broadcastSearch" (click)="broadcastSearch=''">✕</button>
+          </div>
+          <button class="notif-mark-all-btn" (click)="markAllNotifsAsRead()" title="Mark all notifications as read">
+            <ion-icon name="checkmark-done-outline"></ion-icon>
+            <span>Mark All Read</span>
+          </button>
         </div>
 
         <div class="empty-state" *ngIf="filteredBroadcastNotifications.length === 0">
-          {{ broadcastSearch ? 'No broadcasts matching "' + broadcastSearch + '".' : 'No announcements or broadcast notifications sent yet.' }}
+          {{ broadcastSearch ? 'No notifications matching "' + broadcastSearch + '".' : 'No announcements or system notifications yet.' }}
         </div>
 
-        <div *ngFor="let n of displayedBroadcastNotifications" class="member-card notif-card">
+        <div
+          *ngFor="let n of displayedBroadcastNotifications"
+          class="member-card notif-card interactive-card"
+          [class.unread-card]="!n.is_read"
+          (click)="viewNotification(n)"
+          role="button"
+          tabindex="0"
+          (keydown.enter)="viewNotification(n)"
+        >
           <div class="notif-card-header">
             <div class="notif-badge-wrap">
-              <span class="notif-type-tag broadcast"><ion-icon name="megaphone"></ion-icon> BROADCAST</span>
+              <span class="notif-type-tag" [ngClass]="getNotifTypeCategory(n).cssClass">
+                <ion-icon [name]="getNotifTypeCategory(n).icon"></ion-icon>
+                <span>{{ getNotifTypeCategory(n).label }}</span>
+              </span>
               <span class="notif-status-tag" [class.new]="!n.is_read">{{ n.is_read ? 'Read' : 'New' }}</span>
             </div>
             <span class="notif-date">{{ formatNotifDate(n.created_at) }}</span>
           </div>
+
           <div class="notif-card-title" *ngIf="n.title">{{ n.title }}</div>
           <div class="notif-card-body">{{ n.message }}</div>
+
           <div class="notif-card-footer">
-            <button class="notif-del-btn" (click)="deleteNotification(n)" title="Delete Notification">
+            <div class="notif-action-hint">
+              <span
+                *ngIf="getNotifTypeCategory(n).label === 'MEMBERSHIP' || getNotifTypeCategory(n).label === 'REGISTRATION'"
+                class="notif-quick-link"
+                (click)="$event.stopPropagation(); navigateToMemberFromNotif(n)"
+              >
+                <ion-icon name="person-outline"></ion-icon> View Member
+              </span>
+              <span
+                *ngIf="getNotifTypeCategory(n).label === 'SHOP ORDER'"
+                class="notif-quick-link"
+                (click)="$event.stopPropagation(); navigateToOrdersFromNotif()"
+              >
+                <ion-icon name="cart-outline"></ion-icon> View in Shop Orders
+              </span>
+              <span
+                *ngIf="getNotifTypeCategory(n).label === 'BROADCAST' || getNotifTypeCategory(n).label === 'NOTICE'"
+                class="notif-quick-link"
+                (click)="$event.stopPropagation(); viewNotification(n)"
+              >
+                <ion-icon name="eye-outline"></ion-icon> View Details
+              </span>
+            </div>
+            <button class="notif-del-btn" (click)="deleteNotification(n, $event)" title="Delete Notification">
               <ion-icon name="trash-outline"></ion-icon> Delete
             </button>
           </div>
@@ -1133,7 +1260,7 @@
 
           <div
             *ngFor="let m of membersForNotifications"
-            class="member-card member-notif-account-card"
+            class="member-card member-notif-account-card interactive-card"
             (click)="selectNotifMember(m)"
           >
             <div class="member-card-main">
@@ -1187,15 +1314,20 @@
           </div>
 
           <div class="empty-state" *ngIf="selectedMemberNotifications.length === 0">
-            No personal or workout notifications found for {{ selectedNotifMember.username }}.
+            No notifications found for {{ selectedNotifMember.username }}.
           </div>
 
-          <div *ngFor="let n of selectedMemberNotifications" class="member-card notif-card">
+          <div
+            *ngFor="let n of selectedMemberNotifications"
+            class="member-card notif-card interactive-card"
+            [class.unread-card]="!n.is_read"
+            (click)="viewNotification(n)"
+          >
             <div class="notif-card-header">
               <div class="notif-badge-wrap">
-                <span class="notif-type-tag member-tag">
-                  <ion-icon [name]="n.session_key ? 'barbell-outline' : 'person-outline'"></ion-icon>
-                  {{ n.session_key ? 'WORKOUT ALERT' : (n.title || 'MEMBER NOTICE') }}
+                <span class="notif-type-tag" [ngClass]="getNotifTypeCategory(n).cssClass">
+                  <ion-icon [name]="getNotifTypeCategory(n).icon"></ion-icon>
+                  <span>{{ getNotifTypeCategory(n).label }}</span>
                 </span>
                 <span class="notif-status-tag" [class.new]="!n.is_read">{{ n.is_read ? 'Read' : 'New' }}</span>
               </div>
@@ -1204,7 +1336,12 @@
             <div class="notif-card-title" *ngIf="n.title && n.title !== 'Notice'">{{ n.title }}</div>
             <div class="notif-card-body" style="white-space: pre-line;">{{ n.message }}</div>
             <div class="notif-card-footer">
-              <button class="notif-del-btn" (click)="deleteNotification(n)" title="Delete Notification">
+              <div class="notif-action-hint">
+                <span class="notif-quick-link" (click)="$event.stopPropagation(); viewNotification(n)">
+                  <ion-icon name="eye-outline"></ion-icon> View Full
+                </span>
+              </div>
+              <button class="notif-del-btn" (click)="deleteNotification(n, $event)" title="Delete Notification">
                 <ion-icon name="trash-outline"></ion-icon> Delete
               </button>
             </div>
