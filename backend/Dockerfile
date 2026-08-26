@@ -3,6 +3,10 @@
 # Compatible with Podman & Docker
 # ==============================================================================
 
+# --- Stage 1: Get official Composer binary ---
+FROM docker.io/library/composer:2.7 AS composer_binary
+
+# --- Stage 2: Main PHP-FPM Application Image ---
 FROM php:8.4-fpm-alpine AS base
 
 # Install system dependencies & extension installer
@@ -50,7 +54,7 @@ RUN chmod +x /usr/local/bin/install-php-extensions && \
     redis
 
 # Install Composer
-COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
+COPY --from=composer_binary /usr/bin/composer /usr/bin/composer
 
 # Set working directory
 WORKDIR /var/www/html
