@@ -1,20 +1,43 @@
 <div class="chat-toast-wrapper" [class.visible]="toast !== null" *ngIf="toast">
   <div class="chat-toast-card" (click)="openChat()">
-    <!-- Avatar -->
-    <div class="chat-toast-avatar">
-      <img *ngIf="toast.senderAvatar" [src]="toast.senderAvatar" [alt]="toast.senderName" />
-      <span *ngIf="!toast.senderAvatar" class="chat-toast-initials">{{ initials }}</span>
+    <!-- Top Header: Avatar + Sender + Message + Close -->
+    <div class="chat-toast-header">
+      <div class="chat-toast-avatar">
+        <img *ngIf="toast.senderAvatar" [src]="toast.senderAvatar" [alt]="toast.senderName" />
+        <span *ngIf="!toast.senderAvatar" class="chat-toast-initials">{{ initials }}</span>
+      </div>
+
+      <div class="chat-toast-body">
+        <div class="chat-toast-sender">{{ toast.senderName }}</div>
+        <div class="chat-toast-preview">{{ toast.messagePreview }}</div>
+      </div>
+
+      <button class="chat-toast-close" (click)="dismiss($event)" aria-label="Close">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
     </div>
 
-    <!-- Content -->
-    <div class="chat-toast-body">
-      <div class="chat-toast-sender">{{ toast.senderName }}</div>
-      <div class="chat-toast-preview">{{ toast.messagePreview }}</div>
+    <!-- Inline Quick Reply Box -->
+    <div class="chat-toast-reply-box" (click)="onInputClick($event)">
+      <input
+        type="text"
+        class="chat-toast-input"
+        placeholder="Reply..."
+        [(ngModel)]="replyText"
+        (keydown)="onInputKeyDown($event)"
+        [disabled]="isSending"
+      />
+      <button
+        type="button"
+        class="chat-toast-send-btn"
+        [class.active]="replyText.trim().length > 0"
+        [disabled]="!replyText.trim() || isSending"
+        (click)="sendReply($event)"
+        aria-label="Send reply"
+      >
+        <ion-icon name="paper-plane-outline"></ion-icon>
+      </button>
     </div>
-
-    <!-- Close button -->
-    <button class="chat-toast-close" (click)="dismiss($event)">
-      <ion-icon name="close-outline"></ion-icon>
-    </button>
   </div>
 </div>
+

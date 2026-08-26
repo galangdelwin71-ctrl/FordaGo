@@ -38,6 +38,7 @@ import { AuthService } from '../../services/auth.service';
 import { EchoService } from '../../services/echo.service';
 import { CoachingNavService, CoachingPanelTab, CoachingPanelHost } from '../../services/coaching-nav.service';
 import { NoNegativeDirective } from '../../directives/no-negative.directive';
+import { ChatToastService } from '../../services/chat-toast.service';
 import { OnboardingService, TourStep } from '../../services/onboarding.service';
 import { getCachedData, setCachedData } from '../../utils/local-cache.util';
 import { CACHE_KEYS } from '../../utils/cache-keys';
@@ -325,6 +326,7 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
     private zone: NgZone,
     public onboardingService: OnboardingService,
     private toast: ToastService,
+    private chatToast: ChatToastService,
   ) {
     // Immediately resolve coach status synchronously from stored auth state
     // so the panel never flashes member "Personal Coaches" UI to a coach.
@@ -1624,6 +1626,18 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
         next: (res) => {
           this.conversations = res || [];
           this.setupEchoListeners();
+
+          const toastConvos = this.conversations.map((convo) => ({
+            id: convo.id,
+            partnerName: convo.partner
+              ? `${convo.partner.first_name || ''} ${convo.partner.last_name || ''}`.trim() ||
+                convo.partner.username ||
+                'FordaGO User'
+              : 'FordaGO User',
+            partnerAvatar: convo.partner?.profile_image,
+          }));
+          this.chatToast.listenForAll(toastConvos);
+
           if (Array.isArray(res)) {
             CoachingPanelComponent.cachedConversations = res;
             void setCachedData(CACHE_KEYS.COACH_CONVERSATIONS, res);

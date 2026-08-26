@@ -47,7 +47,13 @@ return [
 
     'exposed_headers' => [],
 
-    'max_age' => 0,
+    // Cache preflight results for 24 hours — with max_age=0 (the previous
+    // value) the browser fires a fresh OPTIONS preflight before EVERY
+    // single API request, each one occupying a PHP worker for 0.5–8s.
+    // Setting 86400 (24 h, the Chrome maximum) means the browser only sends
+    // one preflight the first time, then reuses the cached result for the
+    // rest of the session — eliminating all those extra 1-8s round-trips.
+    'max_age' => 86400,
 
     'supports_credentials' => false,
 

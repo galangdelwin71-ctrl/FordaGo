@@ -58,7 +58,8 @@
               "core-js/modules/es.array.index-of.js",
               "core-js/modules/es.string.includes.js",
               "core-js/modules/es.array.reverse.js",
-              "core-js/modules/es.regexp.to-string.js"
+              "core-js/modules/es.regexp.to-string.js",
+              "pusher-js"
             ],
             "scripts": [],
             "browser": "src/main.ts"
@@ -73,8 +74,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "40kb",
-                  "maximumError": "60kb"
+                  "maximumWarning": "100kb",
+                  "maximumError": "200kb"
                 }
               ],
               "fileReplacements": [

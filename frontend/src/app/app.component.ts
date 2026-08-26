@@ -1,4 +1,4 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, NgZone, OnDestroy } from '@angular/core';
 import { IonApp, IonRouterOutlet, ToastController } from '@ionic/angular/standalone';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
@@ -96,6 +96,8 @@ import {
 import { WorkoutTrackerService } from './services/workout-tracker.service';
 import { ThemeService } from './services/theme.service';
 import { NotificationCenterService } from './services/notification-center.service';
+import { CoachingService } from './services/coaching.service';
+import { firstValueFrom } from 'rxjs';
 
 // Shape of the handle Capacitor's App.addListener() resolves to — declared
 // locally instead of importing PluginListenerHandle so this file doesn't
@@ -172,9 +174,11 @@ export class AppComponent implements OnDestroy {
     private workoutTracker: WorkoutTrackerService,
     private themeService: ThemeService,
     private notificationCenter: NotificationCenterService,
+    private coachingService: CoachingService,
     private router: Router,
     private location: Location,
     private toastController: ToastController,
+    private zone: NgZone,
   ) {
     addIcons({
       addOutline,
@@ -295,18 +299,56 @@ export class AppComponent implements OnDestroy {
 
     try {
       const { LocalNotifications } = await import('@capacitor/local-notifications');
-      await LocalNotifications.addListener('localNotificationActionPerformed', (action) => {
+      await LocalNotifications.addListener('localNotificationActionPerformed', async (action) => {
         const extra = action.notification?.extra ?? {};
+        const type = extra['type'];
+        const conversationId = extra['conversationId'];
+
+        // If it is an incoming chat notification
+        if (type === 'chat' && conversationId) {
+          // Direct / Inline reply from notification drawer
+          if (action.actionId === 'reply') {
+            const replyText = action.inputValue?.trim();
+            if (replyText) {
+              try {
+                await firstValueFrom(this.coachingService.sendMessage(Number(conversationId), replyText));
+
+                // Clear the notification once replied
+                if (action.notification?.id) {
+                  await LocalNotifications.removeDeliveredNotifications({
+                    notifications: [{
+                      id: action.notification.id,
+                      title: action.notification.title ?? '',
+                      body: action.notification.body ?? '',
+                    }],
+                  });
+                }
+              } catch (err) {
+                console.error('Failed to send inline reply from notification:', err);
+              }
+            }
+            return;
+          }
+
+          // If user tapped notification card or clicked 'open', navigate directly to that chat thread
+          this.zone.run(() => {
+            void this.router.navigate(['/chat', conversationId]);
+          });
+          return;
+        }
+
         const notificationId = extra['notificationId'];
         // `targetRoute` is set by notification types that want to land on a
         // specific page — upcoming-workout reminders set '/schedule' so the
         // member is taken directly to the Schedule page for that session
         // instead of the generic /dashboard notification panel.
         const targetRoute: string | null = typeof extra['targetRoute'] === 'string' ? extra['targetRoute'] : null;
-        this.notificationCenter.openFromDeviceNotification(
-          notificationId ? String(notificationId) : null,
-          targetRoute
-        );
+        this.zone.run(() => {
+          this.notificationCenter.openFromDeviceNotification(
+            notificationId ? String(notificationId) : null,
+            targetRoute
+          );
+        });
       });
     } catch {
       // Non-fatal: same reasoning as registerHardwareBackButton()'s catch --

@@ -15,9 +15,17 @@
  * Configurable target host for Native Capacitor APK builds.
  * For production mobile APK release, point this to your VPS Domain or Public IP (e.g., 'gym.yourdomain.com' or '203.0.113.5').
  */
-export const NATIVE_SERVER_HOST = 'localhost';
+export const NATIVE_SERVER_HOST = '192.168.1.10';
 export const NATIVE_SERVER_PROTOCOL = 'http'; // 'http' or 'https'
-export const NATIVE_SERVER_PORT = ''; // e.g. '8000' or '' if routed through port 80/443 Nginx gateway
+export const NATIVE_SERVER_PORT = '8000'; // LAN Wi-Fi build — port 8000 (php artisan serve)
+
+/**
+ * WSL/Podman backend host for local development.
+ * Auto-patched by start-auto.ps1 on each launch. Do NOT edit manually.
+ * When using Podman on Windows, containers run inside WSL so localhost does not
+ * forward to them — we must use the WSL virtual ethernet IP instead.
+ */
+export const WSL_BACKEND_HOST = '172.24.30.57'; // AUTO-PATCHED BY start-auto.ps1
 
 function isNativePlatform(): boolean {
   return typeof window !== 'undefined' && (
@@ -30,9 +38,9 @@ function isNativePlatform(): boolean {
 function resolveApiBaseUrl(): string {
   if (typeof window !== 'undefined' && !isNativePlatform() && window.location) {
     const loc = window.location;
-    // Local Angular / Ionic dev servers (ports 4200, 8100, etc.)
-    if (loc.port === '4200' || loc.port === '8100') {
-      return `${loc.protocol}//${loc.hostname || 'localhost'}:8000`;
+    // Local Angular / Ionic dev servers (localhost / 127.0.0.1 on any port like 4200, 8100, 8101)
+    if (loc.hostname === 'localhost' || loc.hostname === '127.0.0.1') {
+      return `http://${WSL_BACKEND_HOST}:8000`;
     }
     // Production web: Use the origin directly (e.g. http://YOUR_VPS_IP or https://yourdomain.com)
     return loc.origin;
@@ -47,8 +55,8 @@ function resolveReverbUrl(): string {
   if (typeof window !== 'undefined' && !isNativePlatform() && window.location) {
     const loc = window.location;
     // Local dev server fallback
-    if (loc.port === '4200' || loc.port === '8100') {
-      return `http://${loc.hostname || 'localhost'}:8080`;
+    if (loc.hostname === 'localhost' || loc.hostname === '127.0.0.1') {
+      return `http://${WSL_BACKEND_HOST}:8080`;
     }
     // Production web: Reverb routes through Nginx gateway or origin
     return loc.origin;

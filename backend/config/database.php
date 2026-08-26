@@ -47,11 +47,11 @@ return [
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),
-            'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE', 'laravel'),
-            'username' => env('DB_USERNAME', 'root'),
-            'password' => env('DB_PASSWORD', ''),
+            'host' => getenv('DB_HOST') ?: env('DB_HOST', '127.0.0.1'),
+            'port' => getenv('DB_PORT') ?: env('DB_PORT', '3306'),
+            'database' => getenv('DB_DATABASE') ?: env('DB_DATABASE', 'fordago'),
+            'username' => getenv('DB_USERNAME') ?: env('DB_USERNAME', 'root'),
+            'password' => getenv('DB_PASSWORD') !== false ? getenv('DB_PASSWORD') : env('DB_PASSWORD', ''),
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => env('DB_CHARSET', 'utf8mb4'),
             'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
@@ -59,9 +59,18 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
+            // Timeout options: prevents 40-second hangs on slow/broken
+            // Podman→XAMPP host connections. ATTR_TIMEOUT caps the initial
+            // TCP connect handshake; the INIT_COMMAND variables cap
+            // subsequent per-query network read/write waits.
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
-            ]) : [],
+                PDO::ATTR_TIMEOUT  => 5,   // 5s connect timeout (prevents 40s hangs)
+                PDO::MYSQL_ATTR_INIT_COMMAND => "SET SESSION wait_timeout=28800, net_read_timeout=10, net_write_timeout=10, interactive_timeout=28800",
+            ]) : [
+                PDO::ATTR_TIMEOUT => 5,
+                PDO::MYSQL_ATTR_INIT_COMMAND => "SET SESSION wait_timeout=28800, net_read_timeout=10, net_write_timeout=10, interactive_timeout=28800",
+            ],
         ],
 
         'mariadb' => [

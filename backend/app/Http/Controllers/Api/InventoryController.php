@@ -141,18 +141,24 @@ class InventoryController extends Controller
     /** GET /api/inventory/my-orders */
     public function myOrders(Request $request)
     {
-        $rows = Order::query()
-            ->leftJoin('products', 'products.id', '=', 'orders.product_id')
-            ->where('orders.user_id', $request->user()->id)
-            ->orderByDesc('orders.created_at')
-            ->select(
-                'orders.*',
-                'products.name as product_name_db',
-                'orders.order_group_id as group_id',
-                'orders.payment_method as group_payment_method',
-                'orders.created_at as group_created_at'
-            )
-            ->get();
+        $userId = $request->user()->id;
+        $cacheKey = 'my_orders.user.' . $userId;
+
+        $rows = Cache::remember($cacheKey, 60, function () use ($userId) {
+            return Order::query()
+                ->leftJoin('products', 'products.id', '=', 'orders.product_id')
+                ->where('orders.user_id', $userId)
+                ->orderByDesc('orders.created_at')
+                ->select(
+                    'orders.*',
+                    'products.name as product_name_db',
+                    'orders.order_group_id as group_id',
+                    'orders.payment_method as group_payment_method',
+                    'orders.created_at as group_created_at'
+                )
+                ->get()
+                ->toArray();
+        });
 
         return response()->json($rows);
     }

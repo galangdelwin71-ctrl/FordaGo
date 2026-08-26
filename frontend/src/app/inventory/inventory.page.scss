@@ -839,27 +839,29 @@ ion-modal.overlay-hidden {
 
 // ── Total Box ───────────────────────────────────────────
 .total-box {
-  background: rgba(255,214,0,0.12);
-  border: 1px solid rgba(255,214,0,0.4);
-  border-radius: 12px;
-  padding: 14px;
+  background: #181d28;
+  border: 1px solid rgba(255, 214, 0, 0.35);
+  border-radius: 14px;
+  padding: 14px 16px;
   margin-bottom: 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
 
   .total-label {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
-    color: #ccc;
+    color: #94a3b8;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.6px;
   }
 
   .total-price {
     font-size: 22px;
-    font-weight: 800;
+    font-weight: 850;
     color: #FFD600;
+    text-shadow: 0 0 12px rgba(255, 214, 0, 0.25);
   }
 }
 
@@ -868,9 +870,9 @@ ion-modal.overlay-hidden {
   margin-bottom: 18px;
 
   .section-title {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 800;
-    color: #fff;
+    color: #ffffff;
     text-transform: uppercase;
     letter-spacing: 0.8px;
     margin-bottom: 10px;
@@ -883,44 +885,57 @@ ion-modal.overlay-hidden {
   gap: 10px;
 
   .payment-option {
-    background: var(--bg-tertiary);
-    border: 1px solid rgba(255,255,255,0.14);
-    border-radius: 12px;
+    background: #181d28;
+    border: 1.5px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
     padding: 14px 12px;
     cursor: pointer;
-    transition: all 0.18s;
+    transition: all 0.18s ease;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 6px;
 
     .payment-icon {
-      font-size: 28px;
+      font-size: 26px;
       line-height: 1;
-      color: #ffffff;
+      color: #94a3b8;
+      transition: color 0.18s ease;
     }
 
     .payment-label {
       font-size: 13px;
-      font-weight: 700;
+      font-weight: 750;
       color: #ffffff;
+      transition: color 0.18s ease;
     }
 
     .payment-desc {
       font-size: 11px;
-      color: rgba(255,255,255,0.60);
+      color: #64748b;
     }
 
     &:hover {
-      border-color: rgba(255,214,0,0.4);
+      background: #202636;
+      border-color: rgba(255, 214, 0, 0.35);
+      .payment-icon { color: #cbd5e1; }
     }
 
     &.selected {
-      background: rgba(255,214,0,0.15);
-      border-color: rgba(255,214,0,0.5);
+      background: rgba(255, 214, 0, 0.12);
+      border-color: #FFD600;
+      box-shadow: 0 4px 16px rgba(255, 214, 0, 0.15);
+
+      .payment-icon {
+        color: #FFD600;
+      }
 
       .payment-label {
         color: #FFD600;
+      }
+
+      .payment-desc {
+        color: rgba(255, 255, 255, 0.75);
       }
     }
   }
@@ -931,7 +946,7 @@ ion-modal.overlay-hidden {
   align-items: center;
   justify-content: center;
 
-  ion-icon { font-size: 18px; }
+  ion-icon { font-size: 20px; }
 }
 
 // ── Modal Actions ───────────────────────────────────────
@@ -1426,6 +1441,49 @@ ion-modal.overlay-hidden {
 }
 
 // ── Cart Modal ────────────────────────────────────────
+.cart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+  .cart-header-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .cart-header-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: rgba(255, 214, 0, 0.12);
+    border: 1px solid rgba(255, 214, 0, 0.3);
+    color: #FFD600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+
+  .section-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #ffffff;
+    margin: 0;
+    letter-spacing: -0.2px;
+  }
+
+  .cart-subtitle {
+    font-size: 12px;
+    color: #94a3b8;
+    font-weight: 500;
+    margin-top: 1px;
+  }
+}
+
 .cart-list {
   display: flex;
   flex-direction: column;
@@ -1437,27 +1495,37 @@ ion-modal.overlay-hidden {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 14px;
+  background: #181d28;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
   padding: 12px 14px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+  transition: transform 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.18);
+  }
 
   .cart-item-icon {
     width: 48px;
     height: 48px;
     border-radius: 12px;
-    background: rgba(255,214,0,0.12);
-    border: 1px solid rgba(255,214,0,0.3);
+    background: #232a3b;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    font-size: 14px;
+    font-size: 18px;
     font-weight: 800;
-    color: var(--lime);
+    color: #FFD600;
 
-    img { width: 100%; height: 100%; object-fit: cover; }
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
   }
 
   .cart-item-body {
@@ -1465,78 +1533,187 @@ ion-modal.overlay-hidden {
     min-width: 0;
 
     .cart-item-name {
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 750;
-      color: var(--text);
+      color: #ffffff;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      letter-spacing: -0.1px;
     }
 
     .cart-item-price {
-      font-size: 12px;
-      font-weight: 600;
-      color: #64748b;
+      font-size: 12.5px;
+      font-weight: 650;
+      color: #94a3b8;
       margin-top: 3px;
+
+      .price-unit {
+        font-size: 11px;
+        font-weight: 500;
+        color: #64748b;
+      }
     }
   }
 
   .cart-item-controls {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
+    background: #10141e;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 3px;
     flex-shrink: 0;
 
     .qty-dec-btn.small,
     .qty-inc-btn.small {
-      width: 32px;
-      height: 32px;
-      font-size: 16px;
+      width: 28px;
+      height: 28px;
+      font-size: 15px;
       font-weight: 750;
-      border-radius: 8px;
-      background: #ffffff;
-      color: #0f172a;
-      border: 1px solid rgba(15, 23, 42, 0.15);
-      box-shadow: 0 2px 5px rgba(15, 23, 42, 0.04);
+      border-radius: 7px;
+      background: #232a3b;
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
       display: inline-flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
+      transition: all 0.15s ease;
 
-      &:hover { background: #f1f5f9; }
-      &:disabled { opacity: 0.35; cursor: not-allowed; }
+      &:hover {
+        background: #313a52;
+        color: #FFD600;
+      }
+      &:active {
+        transform: scale(0.92);
+      }
+      &:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255, 255, 255, 0.3);
+        border-color: transparent;
+      }
     }
 
     .qty-display.small {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 800;
-      color: #0f172a;
-      min-width: 24px;
+      color: #ffffff;
+      min-width: 22px;
       text-align: center;
     }
   }
 
   .cart-item-remove {
     flex-shrink: 0;
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
-    background: #ffffff;
-    border: 1px solid rgba(239, 68, 68, 0.2);
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.25);
     color: #ef4444;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    transition: all 0.15s ease;
 
-    ion-icon { font-size: 17px; }
-    &:hover { background: rgba(239, 68, 68, 0.08); }
-    &:active { transform: scale(0.92); }
+    ion-icon {
+      font-size: 16px;
+    }
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.22);
+      border-color: rgba(239, 68, 68, 0.45);
+      color: #f87171;
+      transform: scale(1.05);
+    }
+    &:active {
+      transform: scale(0.92);
+    }
   }
 }
 
-.cart-total-box .total-price {
-  color: #0f172a;
+.cart-total-box {
+  background: #181d28;
+  border: 1px solid rgba(255, 214, 0, 0.35);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+
+  .total-label-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .total-label {
+    font-size: 12px;
+    font-weight: 750;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  .total-sub {
+    font-size: 11px;
+    font-weight: 500;
+    color: #64748b;
+  }
+
+  .total-price {
+    font-size: 24px;
+    font-weight: 850;
+    color: #FFD600;
+    text-shadow: 0 0 16px rgba(255, 214, 0, 0.25);
+  }
+}
+
+.empty-cart {
+  padding: 36px 20px;
+  text-align: center;
+
+  .empty-cart-icon-wrap {
+    width: 68px;
+    height: 68px;
+    margin: 0 auto 14px;
+    border-radius: 18px;
+    background: #181d28;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+
+    .empty-emoji {
+      font-size: 32px;
+      margin: 0;
+    }
+  }
+
+  .empty-text {
+    font-size: 15px;
+    font-weight: 750;
+    color: #ffffff;
+    margin-bottom: 4px;
+  }
+
+  .empty-subtext {
+    font-size: 12px;
+    color: #64748b;
+    max-width: 240px;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
 }
 
 // ── Skeleton Loading (Stage 4) ──────────────────────────
@@ -1865,27 +2042,62 @@ ion-modal.overlay-hidden {
     }
   }
 
-  // Cart items
+  // Cart Header & Items
+  .cart-header {
+    border-bottom-color: rgba(15,23,42,0.08);
+    .cart-header-icon {
+      background: rgba(234, 179, 8, 0.15);
+      border-color: rgba(234, 179, 8, 0.35);
+      color: #a16207;
+    }
+    .section-title { color: #0f172a; }
+    .cart-subtitle { color: #64748b; }
+  }
+
   .cart-item {
     background: #f1f5f9;
     border: 1px solid rgba(15,23,42,0.08);
-    border-radius: 14px;
+    border-radius: 16px;
     box-shadow: 0 2px 8px rgba(15,23,42,0.04);
 
+    .cart-item-icon {
+      background: #ffffff;
+      border: 1px solid rgba(15,23,42,0.08);
+      color: #a16207;
+    }
     .cart-item-name { color: #0f172a; font-weight: 750; }
-    .cart-item-price { color: #475569; font-weight: 700; }
-    .qty-display { color: #0f172a; font-weight: 800; }
-    .qty-dec-btn, .qty-inc-btn {
+    .cart-item-price {
+      color: #475569;
+      font-weight: 700;
+      .price-unit { color: #64748b; }
+    }
+    .cart-item-controls {
+      background: #e2e8f0;
+      border-color: rgba(15,23,42,0.08);
+    }
+    .qty-display.small { color: #0f172a; font-weight: 800; }
+    .qty-dec-btn.small, .qty-inc-btn.small {
       background: #ffffff;
       color: #0f172a;
       border: 1px solid rgba(15,23,42,0.12);
       box-shadow: 0 2px 4px rgba(15,23,42,0.04);
+      &:hover { background: #f8fafc; color: #a16207; }
     }
     .cart-item-remove {
       background: rgba(239, 68, 68, 0.08);
+      border-color: rgba(239, 68, 68, 0.2);
       color: #ef4444;
-      border-radius: 10px;
+      border-radius: 9px;
+      &:hover { background: rgba(239, 68, 68, 0.15); }
     }
+  }
+
+  .cart-total-box {
+    background: #f1f5f9;
+    border-color: rgba(234, 179, 8, 0.4);
+    .total-label { color: #64748b; }
+    .total-sub { color: #94a3b8; }
+    .total-price { color: #a16207; text-shadow: none; }
   }
 
   // Modal action buttons

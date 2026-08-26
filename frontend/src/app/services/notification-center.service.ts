@@ -44,6 +44,14 @@ export class NotificationCenterService {
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private focusListenerRegistered = false;
   private focusDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+  // In-flight deduplication: if a refreshNotifications() call is already
+  // in progress, every subsequent call reuses that same Promise instead of
+  // firing another HTTP request. This eliminates the burst of 5+ simultaneous
+  // GET /api/notifications requests that appear in the network tab when
+  // multiple page components call startPolling() on mount.
+  private inFlightRefresh: Promise<void> | null = null;
+  private lastRefreshAt = 0;
+  private readonly MIN_REFRESH_INTERVAL_MS = 10_000; // 10 seconds minimum between refreshes
   private notificationsSubject = new BehaviorSubject<AppNotificationItem[]>([]);
   readonly notifications$ = this.notificationsSubject.asObservable();
 
@@ -116,6 +124,11 @@ export class NotificationCenterService {
    *     backgrounded) and keeps the list eventually consistent.
    */
   startPolling(): void {
+    // DO NOT start polling or WebSocket listeners if user is not logged in
+    if (!this.auth.token || !this.auth.user) {
+      return;
+    }
+
     if (this.pollTimer) {
       return;
     }
@@ -128,6 +141,10 @@ export class NotificationCenterService {
 
     // Gentle 5-minute fallback HTTP sync for background consistency (real-time events come through WebSocket instantly)
     this.pollTimer = setInterval(() => {
+      if (!this.auth.token || !this.auth.user) {
+        this.stopPolling();
+        return;
+      }
       void this.refreshNotifications();
     }, 5 * 60 * 1000);
 
@@ -137,12 +154,26 @@ export class NotificationCenterService {
     if (typeof window !== 'undefined' && !this.focusListenerRegistered) {
       this.focusListenerRegistered = true;
       window.addEventListener('focus', () => {
+        if (!this.auth.token || !this.auth.user) return;
         if (this.focusDebounceTimer) clearTimeout(this.focusDebounceTimer);
         this.focusDebounceTimer = setTimeout(() => {
           void this.refreshNotifications();
         }, 2000);
       });
     }
+  }
+
+  /** Stop all notification polling and WebSocket listeners (called on logout). */
+  stopPolling(): void {
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer);
+      this.pollTimer = null;
+    }
+    const userId = this.auth.user?.id;
+    if (userId) {
+      this.echoService.leaveChannel(`user.${userId}`);
+    }
+    this.notificationsSubject.next([]);
   }
 
   /**
@@ -183,10 +214,28 @@ export class NotificationCenterService {
     });
   }
 
-  /** Fetches the latest notification list and publishes it to every subscriber (all open panel instances update together). */
-  async refreshNotifications(): Promise<void> {
-    const data = await this.loadNotifications();
-    this.notificationsSubject.next(data);
+  /**
+   * Fetches the latest notification list and publishes it to every subscriber.
+   * Deduplicates in-flight requests: if a fetch is already running, the same
+   * Promise is returned so multiple callers never trigger parallel HTTP calls.
+   * Also enforces a minimum 10-second interval to prevent hammering the backend
+   * on rapid page navigations.
+   */
+  async refreshNotifications(force = false): Promise<void> {
+    const now = Date.now();
+    // Skip if last refresh was too recent (unless forced by a real-time event)
+    if (!force && (now - this.lastRefreshAt) < this.MIN_REFRESH_INTERVAL_MS) {
+      return;
+    }
+    // Deduplicate: reuse existing in-flight promise
+    if (this.inFlightRefresh) {
+      return this.inFlightRefresh;
+    }
+    this.lastRefreshAt = now;
+    this.inFlightRefresh = this.loadNotifications()
+      .then((data) => { this.notificationsSubject.next(data); })
+      .finally(() => { this.inFlightRefresh = null; });
+    return this.inFlightRefresh;
   }
 
   /** Publishes an already-computed list without re-fetching from the server — used after a local mark-as-read mutation so every panel instance reflects it immediately instead of waiting for the next poll. */
@@ -195,6 +244,11 @@ export class NotificationCenterService {
   }
 
   async notifyMissedWorkout(sessionTitle: string, dayDate: Date, uniqueKey: string, homeExercises: string[] = []): Promise<void> {
+    // CRITICAL: NEVER fire missed workout notifications if user is not logged in
+    if (!this.auth.token || !this.auth.user) {
+      return;
+    }
+
     const notified = this.readNotifiedMissed();
     if (notified.includes(uniqueKey)) {
       return;
@@ -292,7 +346,7 @@ export class NotificationCenterService {
       this.writeLocalNotifications(
         this.readLocalNotifications().filter((item) => item.id !== localNotification.id)
       );
-      void this.refreshNotifications();
+      void this.refreshNotifications(true); // force — new data was just written to the server
     } catch {
       // Keep local and device alerts even if backend save/SMS fails.
     }
@@ -410,8 +464,9 @@ export class NotificationCenterService {
         )
       );
 
+      const list = Array.isArray(response) ? response : [];
       const readServerIds = new Set(this.readReadServerNotifications());
-      const serverNotifications: AppNotificationItem[] = response.map((item) => ({
+      const serverNotifications: AppNotificationItem[] = list.map((item) => ({
         id: `server-${item.id}`,
         title: item.title || 'Notice',
         message: item.message,
@@ -615,6 +670,8 @@ export class NotificationCenterService {
           id: this.hashNotificationId(notification.id),
           title: notification.title,
           body: expandedBody,
+          smallIcon: 'ic_stat_icon',
+          iconColor: '#FFD700',
           schedule: { at: new Date(Date.now() + 1000) },
           extra: {
             notificationId: notification.id,

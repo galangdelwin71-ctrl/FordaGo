@@ -98,7 +98,10 @@ export class ChatToastService {
 
           this.toastSubject.next(toast);
 
-          // Auto-dismiss after 5 seconds
+          // Also trigger a system notification on native Android tray / OS center
+          void this.sendNativeChatNotification(convo, preview, data.message.id);
+
+          // Auto-dismiss in-app toast after 5 seconds
           setTimeout(() => {
             // Only clear if it's still the same toast (user didn't get another message)
             if (this.toastSubject.value?.id === toast.id) {
@@ -107,6 +110,87 @@ export class ChatToastService {
           }, 5000);
         });
       });
+    }
+  }
+
+  private actionTypesRegistered = false;
+
+  /**
+   * Registers the CHAT_MESSAGE action type with an inline text input ('reply')
+   * and 'open' action so the user can type and send replies directly from the
+   * Android notification drawer without opening the app.
+   */
+  private async ensureActionTypesRegistered(): Promise<void> {
+    if (this.actionTypesRegistered) return;
+    try {
+      const { LocalNotifications } = await import('@capacitor/local-notifications');
+      await LocalNotifications.registerActionTypes({
+        types: [
+          {
+            id: 'CHAT_MESSAGE',
+            actions: [
+              {
+                id: 'reply',
+                title: 'Reply',
+                input: true,
+                inputButtonTitle: 'Send',
+                inputPlaceholder: 'Type a reply...',
+              },
+              {
+                id: 'open',
+                title: 'Open',
+              },
+            ],
+          },
+        ],
+      });
+      this.actionTypesRegistered = true;
+    } catch {
+      // Non-fatal if action types cannot be registered on this platform
+    }
+  }
+
+  private async sendNativeChatNotification(
+    convo: { id: number; partnerName: string; partnerAvatar?: string },
+    body: string,
+    messageId?: number
+  ): Promise<void> {
+    try {
+      const { Capacitor } = await import('@capacitor/core');
+      if (Capacitor.isNativePlatform()) {
+        const { LocalNotifications } = await import('@capacitor/local-notifications');
+        const permissions = await LocalNotifications.checkPermissions();
+        const granted = permissions.display === 'granted'
+          ? permissions
+          : await LocalNotifications.requestPermissions();
+
+        if (granted.display !== 'granted') return;
+
+        await this.ensureActionTypesRegistered();
+
+        const notifId = Number(convo.id) * 100000 + (messageId ? Number(messageId) % 100000 : Math.floor(Math.random() * 1000));
+
+        await LocalNotifications.schedule({
+          notifications: [{
+            id: notifId,
+            title: convo.partnerName,
+            body: body || 'Sent you a message',
+            smallIcon: 'ic_stat_icon',
+            iconColor: '#FFD700',
+            actionTypeId: 'CHAT_MESSAGE',
+            schedule: { at: new Date(Date.now() + 500) },
+            extra: {
+              type: 'chat',
+              conversationId: convo.id,
+              partnerName: convo.partnerName,
+              targetRoute: `/chat/${convo.id}`,
+            },
+            attachments: convo.partnerAvatar ? [{ id: 'avatar', url: convo.partnerAvatar }] : undefined,
+          }],
+        });
+      }
+    } catch {
+      // Non-fatal error fallback
     }
   }
 

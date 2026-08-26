@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Feedback;
+use App\Models\Notification;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -33,6 +35,7 @@ class FeedbackController extends Controller
     /**
      * POST /api/feedback
      * Submit an NPS rating (0-10) and feedback reason.
+     * Notifies super_admin accounts of the new feedback.
      */
     public function store(Request $request)
     {
@@ -41,11 +44,35 @@ class FeedbackController extends Controller
             'reason' => 'nullable|string|max:1000',
         ]);
 
+        $user = $request->user();
+
         $feedback = Feedback::create([
-            'user_id' => $request->user()->id,
+            'user_id' => $user->id,
             'rating'  => (int) $request->input('rating'),
             'reason'  => $request->input('reason') ? trim((string) $request->input('reason')) : null,
         ]);
+
+        // Determine sentiment label
+        $rating = (int) $request->input('rating');
+        $sentiment = $rating >= 9 ? '😊 Promoter' : ($rating >= 7 ? '😐 Passive' : '😞 Detractor');
+        $stars = str_repeat('⭐', min($rating, 5));
+        $displayName = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')) ?: $user->username;
+
+        // Notify all super_admin and admin accounts
+        try {
+            $superAdmins = User::whereIn('role', ['super_admin', 'admin'])->get();
+            foreach ($superAdmins as $admin) {
+                Notification::create([
+                    'user_id' => $admin->id,
+                    'title'   => "⭐ New Feedback Received — Rating {$rating}/10",
+                    'message' => "{$displayName} (@{$user->username}) submitted feedback. {$sentiment} · Rating: {$rating}/10 {$stars}"
+                        . ($feedback->reason ? " · Comment: \"{$feedback->reason}\"" : ''),
+                    'is_read' => false,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('Failed to notify admins of new feedback: ' . $e->getMessage());
+        }
 
         return response()->json([
             'success' => true,
@@ -65,5 +92,29 @@ class FeedbackController extends Controller
             ->get();
 
         return response()->json($feedbacks);
+    }
+
+    /**
+     * GET /api/feedback/summary
+     * Returns aggregate stats for the admin dashboard.
+     */
+    public function summary(Request $request)
+    {
+        $feedbacks = Feedback::all();
+        $total = $feedbacks->count();
+        $avg = $total > 0 ? round($feedbacks->avg('rating'), 1) : 0;
+        $promoters  = $feedbacks->filter(fn($f) => $f->rating >= 9)->count();
+        $passives   = $feedbacks->filter(fn($f) => $f->rating >= 7 && $f->rating < 9)->count();
+        $detractors = $feedbacks->filter(fn($f) => $f->rating < 7)->count();
+        $nps = $total > 0 ? round((($promoters - $detractors) / $total) * 100) : 0;
+
+        return response()->json([
+            'total'      => $total,
+            'avg_rating' => $avg,
+            'promoters'  => $promoters,
+            'passives'   => $passives,
+            'detractors' => $detractors,
+            'nps'        => $nps,
+        ]);
     }
 }

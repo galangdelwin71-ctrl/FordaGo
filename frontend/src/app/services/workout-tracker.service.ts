@@ -108,6 +108,11 @@ export class WorkoutTrackerService {
   ) {}
 
   startAutoSync(): void {
+    // CRITICAL: NEVER run auto-sync or missed-session notifications if user is not logged in
+    if (!this.auth.token || !this.auth.user) {
+      return;
+    }
+
     // Seed BEFORE syncing statuses so a freshly-seeded month's sessions get
     // their status computed immediately, and so any caller reading the
     // store right after this returns (e.g. Dashboard's stat cards) sees
@@ -126,8 +131,23 @@ export class WorkoutTrackerService {
     }
 
     this.syncTimer = setInterval(() => {
+      if (!this.auth.token || !this.auth.user) {
+        this.stopAutoSync();
+        return;
+      }
       this.syncStoreStatuses();
     }, 15000);
+  }
+
+  stopAutoSync(): void {
+    if (this.syncTimer) {
+      clearInterval(this.syncTimer);
+      this.syncTimer = null;
+    }
+    this.missedCheckTimers.forEach((timer) => clearTimeout(timer));
+    this.missedCheckTimers = [];
+    this.upcomingReminderTimers.forEach((timer) => clearTimeout(timer));
+    this.upcomingReminderTimers = [];
   }
 
   /**

@@ -8,6 +8,7 @@ use App\Models\Notification;
 use App\Models\User;
 use App\Services\SmsService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Ported from server/routes/notification.js.
@@ -46,37 +47,51 @@ class NotificationController extends Controller
      */
     public function index(Request $request)
     {
-        $user = $request->user();
+        $user    = $request->user();
         $isStaff = in_array($user->role, ['admin', 'super_admin', 'employee'], true);
 
-        if ($isStaff) {
-            return response()->json(
-                Notification::with('user:id,username,email,role')
-                    ->select('id', 'user_id', 'title', 'message', 'is_read', 'session_key', 'created_at')
-                    ->where('created_at', '>=', now()->subDays(30))   // cap to last 30 days
-                    ->where('title', 'NOT LIKE', 'Missed Workout%')   // Never show workout reminders in Admin feed
-                    ->where('title', 'NOT LIKE', '%Workout Session%')
-                    ->whereNull('session_key')
+        // 30-second per-user cache: prevents the notification endpoint from
+        // hammering the DB when multiple page components call refreshNotifications()
+        // simultaneously on dashboard open. Cache is per-user so different
+        // users never see each other's notifications.
+        $cacheKey = 'notifications.user.' . $user->id . '.' . ($isStaff ? 'staff' : 'member');
+
+        try {
+            $rows = Cache::remember($cacheKey, 30, function () use ($user, $isStaff) {
+                if ($isStaff) {
+                    return Notification::with('user:id,username,email,role')
+                        ->select('id', 'user_id', 'title', 'message', 'is_read', 'session_key', 'created_at')
+                        ->where('created_at', '>=', now()->subDays(30))   // cap to last 30 days
+                        ->where('title', 'NOT LIKE', 'Missed Workout%')   // Never show workout reminders in Admin feed
+                        ->where('title', 'NOT LIKE', '%Workout Session%')
+                        ->whereNull('session_key')
+                        ->orderByDesc('created_at')
+                        ->limit(100)   // cap rows to prevent large payloads
+                        ->get()
+                        ->toArray();
+                }
+
+                return Notification::select('id', 'user_id', 'title', 'message', 'is_read', 'session_key', 'created_at')
+                    ->where(fn ($q) => $q
+                        ->where('user_id', $user->id)
+                        ->orWhere(fn ($broadcast) => $broadcast
+                            ->whereNull('user_id')
+                            ->where('created_at', '>=', $user->created_at)
+                        )
+                    )
                     ->orderByDesc('created_at')
-                    ->limit(100)   // cap rows to prevent large payloads
+                    ->limit(100)   // cap at 100 to prevent large payloads
                     ->get()
-            );
+                    ->toArray();
+            });
+
+            return response()->json($rows);
+        } catch (\Throwable $e) {
+            // Return empty array instead of 500 error — a temporary DB issue
+            // should not cause a 40-second timeout on the frontend.
+            \Log::warning('NotificationController::index failed: ' . $e->getMessage());
+            return response()->json([]);
         }
-
-
-        $rows = Notification::select('id', 'user_id', 'title', 'message', 'is_read', 'session_key', 'created_at')
-            ->where(fn ($q) => $q
-                ->where('user_id', $user->id)
-                ->orWhere(fn ($broadcast) => $broadcast
-                    ->whereNull('user_id')
-                    ->where('created_at', '>=', $user->created_at)
-                )
-            )
-            ->orderByDesc('created_at')
-            ->limit(100)   // cap at 100 to prevent large payloads
-            ->get();
-
-        return response()->json($rows);
     }
 
     /**

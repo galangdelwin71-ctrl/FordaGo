@@ -144,9 +144,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ── Feedback & Ratings ────────────────────────────────────────────────
     Route::prefix('feedback')->group(function () {
-        Route::get('/status', [FeedbackController::class, 'status']);
-        Route::post('/',      [FeedbackController::class, 'store']);
-        Route::get('/',       [FeedbackController::class, 'index'])->middleware('role:admin,super_admin,employee');
+        Route::get('/status',  [FeedbackController::class, 'status']);
+        Route::post('/',       [FeedbackController::class, 'store']);
+        Route::get('/',        [FeedbackController::class, 'index'])->middleware('role:admin,super_admin,employee');
+        Route::get('/summary', [FeedbackController::class, 'summary'])->middleware('role:admin,super_admin,employee');
     });
 
     // ── Reports (server/routes/reports.js) ────────────────────────────────

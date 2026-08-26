@@ -143,6 +143,10 @@
       <button class="tab-btn" *ngIf="canManageCoaches" [class.active]="activeTab==='coaches'" (click)="activeTab='coaches'">
         <ion-icon name="fitness-outline"></ion-icon> Coaches
       </button>
+      <button class="tab-btn feedback-tab-btn" *ngIf="!isEmployee" [class.active]="activeTab==='feedback'" (click)="activeTab='feedback'">
+        <ion-icon name="star-outline"></ion-icon> Feedback
+        <span class="tab-badge-pill feedback-badge" *ngIf="feedbackSummary.total > 0">{{ feedbackSummary.total }}</span>
+      </button>
       <button class="tab-btn reports-btn" (click)="router.navigate(['/admin-reports'])">
         <ion-icon name="bar-chart-outline"></ion-icon> Reports
       </button>
@@ -1815,5 +1819,109 @@
       </div>
     </div>
 
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- TAB: FEEDBACK                                  -->
+    <!-- ══════════════════════════════════════════════ -->
+    <div *ngIf="activeTab==='feedback'" class="feedback-panel">
+
+      <!-- NPS Summary Cards -->
+      <div class="fb-summary-row">
+        <div class="fb-stat-card fb-nps-card">
+          <div class="fb-stat-icon">📊</div>
+          <div class="fb-stat-val" [class.green]="feedbackSummary.nps >= 50" [class.amber]="feedbackSummary.nps >= 0 && feedbackSummary.nps < 50" [class.red]="feedbackSummary.nps < 0">{{ feedbackSummary.nps }}</div>
+          <div class="fb-stat-lbl">NPS Score</div>
+        </div>
+        <div class="fb-stat-card">
+          <div class="fb-stat-icon">⭐</div>
+          <div class="fb-stat-val">{{ feedbackSummary.avg_rating }}<span class="fb-stat-unit">/10</span></div>
+          <div class="fb-stat-lbl">Avg Rating</div>
+        </div>
+        <div class="fb-stat-card">
+          <div class="fb-stat-icon">💬</div>
+          <div class="fb-stat-val">{{ feedbackSummary.total }}</div>
+          <div class="fb-stat-lbl">Total Reviews</div>
+        </div>
+      </div>
+
+      <!-- Sentiment breakdown bar -->
+      <div class="fb-sentiment-bar-wrap" *ngIf="feedbackSummary.total > 0">
+        <div class="fb-sentiment-bar">
+          <div class="fb-seg promoter" [style.width.%]="feedbackSummary.promoters / feedbackSummary.total * 100" title="Promoters"></div>
+          <div class="fb-seg passive"  [style.width.%]="feedbackSummary.passives  / feedbackSummary.total * 100" title="Passives"></div>
+          <div class="fb-seg detractor" [style.width.%]="feedbackSummary.detractors / feedbackSummary.total * 100" title="Detractors"></div>
+        </div>
+        <div class="fb-sentiment-legend">
+          <span class="fb-leg-item promoter">😊 Promoters {{ feedbackSummary.promoters }}</span>
+          <span class="fb-leg-item passive">😐 Passives {{ feedbackSummary.passives }}</span>
+          <span class="fb-leg-item detractor">😞 Detractors {{ feedbackSummary.detractors }}</span>
+        </div>
+      </div>
+
+      <!-- Search & Filter -->
+      <div class="fb-controls">
+        <div class="search-wrap">
+          <ion-icon name="search-outline" class="search-icon"></ion-icon>
+          <input class="search-input" placeholder="Search by user or comment..." [(ngModel)]="feedbackSearch" />
+        </div>
+        <div class="fb-filter-row">
+          <button class="fb-filter-btn" [class.active]="feedbackFilter==='all'"       (click)="feedbackFilter='all'">All</button>
+          <button class="fb-filter-btn promoter-btn" [class.active]="feedbackFilter==='promoter'"  (click)="feedbackFilter='promoter'">😊 Promoters</button>
+          <button class="fb-filter-btn passive-btn"  [class.active]="feedbackFilter==='passive'"   (click)="feedbackFilter='passive'">😐 Passives</button>
+          <button class="fb-filter-btn detractor-btn" [class.active]="feedbackFilter==='detractor'" (click)="feedbackFilter='detractor'">😞 Detractors</button>
+        </div>
+      </div>
+
+      <!-- Loading / Error -->
+      <div class="loading-block" *ngIf="feedbacksLoading">
+        <ion-spinner name="crescent"></ion-spinner>
+        <span>Loading feedback...</span>
+      </div>
+      <div class="error-block" *ngIf="feedbacksError && !feedbacksLoading">
+        <ion-icon name="warning-outline"></ion-icon> Failed to load feedback. Please refresh.
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" *ngIf="!feedbacksLoading && !feedbacksError && filteredFeedbacks.length === 0">
+        <ion-icon name="star-outline" class="empty-icon"></ion-icon>
+        <p>No feedback records yet.</p>
+        <small>Reviews from members appear here after 3 days of activity.</small>
+      </div>
+
+      <!-- Feedback Cards -->
+      <div class="fb-cards-list" *ngIf="!feedbacksLoading && !feedbacksError">
+        <div class="fb-card" *ngFor="let f of filteredFeedbacks">
+          <div class="fb-card-header">
+            <div class="fb-user-avatar">{{ getInitials(getFeedbackUserName(f)) }}</div>
+            <div class="fb-user-info">
+              <div class="fb-user-name">{{ getFeedbackUserName(f) }}</div>
+              <div class="fb-user-meta">@{{ f.user?.username }} · {{ formatNotifDate(f.created_at) }}</div>
+            </div>
+            <div class="fb-sentiment-pill" [ngClass]="getFeedbackSentiment(f.rating).cls">
+              {{ getFeedbackSentiment(f.rating).emoji }} {{ getFeedbackSentiment(f.rating).label }}
+            </div>
+          </div>
+
+          <!-- Star rating bar -->
+          <div class="fb-rating-row">
+            <div class="fb-stars">
+              <span *ngFor="let s of getFeedbackStars(f.rating)" class="fb-star" [class.filled]="s <= f.rating">★</span>
+            </div>
+            <span class="fb-rating-num">{{ f.rating }}<span class="fb-rating-denom">/10</span></span>
+          </div>
+
+          <!-- Comment -->
+          <div class="fb-comment" *ngIf="f.reason">
+            <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+            <p>{{ f.reason }}</p>
+          </div>
+          <div class="fb-no-comment" *ngIf="!f.reason">
+            <span>No comment provided.</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /feedback panel -->
+
   </div>
 </ion-content>
+

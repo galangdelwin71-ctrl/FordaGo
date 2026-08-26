@@ -35,43 +35,51 @@ echo  Starting all services...
 echo  =========================================================
 echo.
 
-:: ── 0. Clear config cache before starting ─────────────────────
-echo  [0/4] Clearing Laravel config cache...
-cd /d "%BACKEND%"
-php artisan config:clear >nul 2>&1
-php artisan cache:clear >nul 2>&1
-echo  [OK] Cache cleared.
+:: ── 1. Start MySQL in Podman ──────────────────────────────────────
+echo  [1/5] Starting MySQL Database in Podman...
+podman start fordago_db >nul 2>&1
+if %ERRORLEVEL% neq 0 (
+    podman compose up -d db >nul 2>&1
+)
+echo  [OK] MySQL Database is running on port 3306.
 echo.
 
-:: ── 1. Laravel Backend (API on 0.0.0.0:8000) ─────────────────
-echo  [1/4] Starting Laravel backend on 0.0.0.0:8000...
-start "FordaGO Backend (Laravel :8000)" cmd /k "cd /d "%BACKEND%" && echo [BACKEND] Starting Laravel API... && php artisan serve --host=0.0.0.0 --port=8000 --no-reload"
+:: ── 2. Laravel Backend (0.0.0.0:8000 for direct LAN Wi-Fi) ────────
+echo  [2/5] Starting Laravel API on 0.0.0.0:8000...
+start "FordaGO Backend (Laravel :8000)" cmd /k "cd /d "%BACKEND%" && echo [BACKEND] Listening on 0.0.0.0:8000 (LAN: %LOCAL_IP%:8000)... && php artisan serve --host=0.0.0.0 --port=8000 --no-reload"
 
 ping 127.0.0.1 -n 2 >nul
 
-:: ── 2. Laravel Reverb (WebSocket on 0.0.0.0:8080) ───────────
-echo  [2/4] Starting Reverb WebSocket server on 0.0.0.0:8080...
-start "FordaGO Reverb (WebSocket :8080)" cmd /k "cd /d "%BACKEND%" && echo [REVERB] Starting WebSocket server... && php artisan reverb:start --host=0.0.0.0 --port=8080"
+:: ── 3. Laravel Reverb WebSocket (0.0.0.0:8080 for direct LAN) ──────
+echo  [3/5] Starting Reverb WebSocket server on 0.0.0.0:8080...
+start "FordaGO Reverb (WebSocket :8080)" cmd /k "cd /d "%BACKEND%" && echo [REVERB] WebSocket listening on 0.0.0.0:8080 (LAN: ws://%LOCAL_IP%:8080)... && php artisan reverb:start --host=0.0.0.0 --port=8080"
 
 ping 127.0.0.1 -n 2 >nul
 
-:: ── 3. Laravel Queue Worker ───────────────────────────────────
-echo  [3/4] Starting Laravel Queue Worker...
-start "FordaGO Queue Worker" cmd /k "cd /d "%BACKEND%" && echo [QUEUE] Starting Queue Worker (broadcast via sync - mail/SMS jobs only)... && php artisan queue:work --sleep=1 --tries=3 --max-time=3600"
+:: ── 4. Laravel Queue Worker ────────────────────────────────────────
+echo  [4/5] Starting Laravel Queue Worker...
+start "FordaGO Queue Worker" cmd /k "cd /d "%BACKEND%" && echo [QUEUE] Queue Worker running... && php artisan queue:work --sleep=1 --tries=3"
 
 ping 127.0.0.1 -n 2 >nul
 
-:: ── 4. Ionic/Angular Frontend ─────────────────────────────────
-echo  [4/4] Starting Ionic/Angular frontend dev server...
-start "FordaGO Frontend (Ionic :4200)" cmd /k "cd /d "%FRONTEND%" && echo [FRONTEND] Starting dev server on 0.0.0.0:4200... && npx ng serve --host=0.0.0.0 --port=4200"
+:: ── 5. Ionic / Angular Frontend (0.0.0.0:4200) ─────────────────────
+echo  [5/5] Starting Ionic/Angular frontend on 0.0.0.0:4200...
+start "FordaGO Frontend (Ionic :4200)" cmd /k "cd /d "%FRONTEND%" && echo [FRONTEND] Frontend dev server on 0.0.0.0:4200... && npx ng serve --host=0.0.0.0 --port=4200"
 
 echo.
 echo  =========================================================
-echo  All services started in LAN Mode!
+echo  DIRECT LAN MODE ACTIVE (NO TUNNEL / ZERO LATENCY)
 echo.
-echo  Frontend:  http://localhost:4200
-echo  API:       http://%LOCAL_IP%:8000
-echo  WebSocket: ws://%LOCAL_IP%:8080
+echo  Local Laptop:
+echo    - Frontend:         http://localhost:4200
+echo    - API:              http://localhost:8000/api
+echo    - WebSocket:        ws://localhost:8080
+echo.
+echo  Mobile Phone (Same Wi-Fi: %LOCAL_IP%):
+echo    - Phone Web:        http://%LOCAL_IP%:4200
+echo    - Phone API:        http://%LOCAL_IP%:8000/api
+echo    - Phone WebSocket:  ws://%LOCAL_IP%:8080
 echo  =========================================================
 echo.
+echo  Keep this window open or press any key to exit.
 pause

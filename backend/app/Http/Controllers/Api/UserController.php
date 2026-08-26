@@ -198,6 +198,30 @@ class UserController extends Controller
             'membership_expiry' => $membershipExpiry,
         ]);
 
+        // Notify super_admin of new account creation
+        try {
+            $roleLabel = match ($assignedRole) {
+                'super_admin' => 'Super Admin',
+                'admin'       => 'Admin',
+                'employee'    => 'Employee',
+                default       => 'Member',
+            };
+            $creator = $request->user();
+            $creatorLabel = trim(($creator->first_name ?? '') . ' ' . ($creator->last_name ?? '')) ?: $creator->username;
+            $superAdmins = User::where('role', 'super_admin')->get();
+            foreach ($superAdmins as $sa) {
+                if ($sa->id === $creator->id) continue; // Don't notify yourself
+                Notification::create([
+                    'user_id' => $sa->id,
+                    'title'   => "🆕 New {$roleLabel} Account Created",
+                    'message' => "{$creatorLabel} created a new {$roleLabel} account for @{$username} ({$rawEmail}) via {$paymentMethod}.",
+                    'is_read' => false,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('Failed to notify super_admin of new account: ' . $e->getMessage());
+        }
+
         return response()->json(['message' => 'Account created.', 'id' => $user->id], 201);
     }
 

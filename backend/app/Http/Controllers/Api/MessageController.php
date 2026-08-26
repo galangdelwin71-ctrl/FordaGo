@@ -29,13 +29,13 @@ class MessageController extends Controller
         }
 
         // Fetch latest 100 messages with sender & proposal details.
-        // Ordered ASC for chat display; subquery fetches the LAST 100 rows
-        // so long conversations don't scan the entire history on every open.
+        // Omit profile_image from sender since avatars are 125KB base64 strings
+        // and only the chat header displays the partner avatar.
         $messages = Message::with([
-            'sender:id,username,first_name,last_name,profile_image,role',
+            'sender:id,username,first_name,last_name,role',
             'proposal.items',
-            'proposal.coach:id,username,first_name,last_name,profile_image',
-            'proposal.client:id,username,first_name,last_name,profile_image',
+            'proposal.coach:id,username,first_name,last_name',
+            'proposal.client:id,username,first_name,last_name',
         ])
         ->where('conversation_id', $conversationId)
         ->orderBy('created_at', 'desc')
@@ -107,7 +107,7 @@ class MessageController extends Controller
 
         // Load relations for event broadcasting & response
         $message->load([
-            'sender:id,username,first_name,last_name,profile_image,role',
+            'sender:id,username,first_name,last_name,role',
             'proposal.items',
         ]);
 

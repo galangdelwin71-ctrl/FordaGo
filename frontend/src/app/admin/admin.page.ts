@@ -45,7 +45,7 @@ export class AdminPage implements OnInit, OnDestroy {
   private readonly thumbnailImageDimension = 300;
   private readonly thumbnailImageQuality = 0.7;
 
-  activeTab: 'overview' | 'members' | 'schedule' | 'inventory' | 'equipment' | 'coaches' | 'notifs' | 'attendance' = 'overview';
+  activeTab: 'overview' | 'members' | 'schedule' | 'inventory' | 'equipment' | 'coaches' | 'notifs' | 'attendance' | 'feedback' = 'overview';
   private readonly api = this.resolveApiBase();
 
   private resolveApiBase(): string {
@@ -71,22 +71,24 @@ export class AdminPage implements OnInit, OnDestroy {
    *  this via role:admin,super_admin on /admin/coaches (employees excluded),
    *  so the tab itself is hidden for employees rather than shown-then-403ing. */
   get canManageCoaches(): boolean { return !this.isEmployee; }
+  private readonly superAdminAssignableRoles = [
+    { value: 'user', label: 'Member (User)' },
+    { value: 'employee', label: 'Employee' },
+    { value: 'admin', label: 'Admin' },
+  ];
+  private readonly adminAssignableRoles = [
+    { value: 'user', label: 'Member (User)' },
+    { value: 'employee', label: 'Employee' },
+  ];
+  private readonly defaultAssignableRoles = [
+    { value: 'user', label: 'Member (User)' }
+  ];
+
   /** Roles the current user is allowed to assign when creating accounts */
   get assignableRoles(): { value: string; label: string }[] {
-    if (this.isSuperAdmin) {
-      return [
-        { value: 'user', label: 'Member (User)' },
-        { value: 'employee', label: 'Employee' },
-        { value: 'admin', label: 'Admin' },
-      ];
-    }
-    if (this.currentRole === 'admin') {
-      return [
-        { value: 'user', label: 'Member (User)' },
-        { value: 'employee', label: 'Employee' },
-      ];
-    }
-    return [{ value: 'user', label: 'Member (User)' }];
+    if (this.isSuperAdmin) return this.superAdminAssignableRoles;
+    if (this.currentRole === 'admin') return this.adminAssignableRoles;
+    return this.defaultAssignableRoles;
   }
 
   // ── Confirm Dialog ───────────────────────────────────
@@ -744,6 +746,7 @@ export class AdminPage implements OnInit, OnDestroy {
   private attendancePollInterval: ReturnType<typeof setInterval> | null = null;
 
   ionViewWillEnter() {
+    this.stopAttendancePoll();
     this.loadAll();
     // Start auto-refresh for attendance every 15 seconds
     this.attendancePollInterval = setInterval(() => {
@@ -848,6 +851,11 @@ export class AdminPage implements OnInit, OnDestroy {
       next: data => this.notifications = data,
       error: () => this.notifications = []
     });
+
+    // Feedback (admin/super_admin only)
+    if (!this.isEmployee) {
+      this.loadFeedbacks();
+    }
 
     // Attendance — pending daily payments
     this.attendancePendingLoading = true;
@@ -1973,6 +1981,75 @@ export class AdminPage implements OnInit, OnDestroy {
         error: () => this.toast.error('Failed to decline member')
       });
     });
+  }
+
+  // ── Feedback ────────────────────────────────────────────
+  feedbacks: any[] = [];
+  feedbacksLoading = false;
+  feedbacksError   = false;
+  feedbackSummary = { total: 0, avg_rating: 0, promoters: 0, passives: 0, detractors: 0, nps: 0 };
+  feedbackSearch = '';
+  feedbackFilter: 'all' | 'promoter' | 'passive' | 'detractor' = 'all';
+
+  get filteredFeedbacks(): any[] {
+    const q = this.feedbackSearch.trim().toLowerCase();
+    return this.feedbacks.filter(f => {
+      const matchSearch = !q
+        || (f.user?.username ?? '').toLowerCase().includes(q)
+        || (f.user?.first_name ?? '').toLowerCase().includes(q)
+        || (f.user?.last_name ?? '').toLowerCase().includes(q)
+        || (f.reason ?? '').toLowerCase().includes(q);
+      const matchFilter = this.feedbackFilter === 'all'
+        ? true
+        : this.feedbackFilter === 'promoter'
+          ? f.rating >= 9
+          : this.feedbackFilter === 'passive'
+            ? (f.rating >= 7 && f.rating < 9)
+            : f.rating < 7;
+      return matchSearch && matchFilter;
+    });
+  }
+
+  getFeedbackSentiment(rating: number): { label: string; cls: string; emoji: string } {
+    if (rating >= 9) return { label: 'Promoter', cls: 'fb-promoter', emoji: '😊' };
+    if (rating >= 7) return { label: 'Passive', cls: 'fb-passive', emoji: '😐' };
+    return { label: 'Detractor', cls: 'fb-detractor', emoji: '😞' };
+  }
+
+  getFeedbackStars(rating: number): number[] {
+    return Array.from({ length: 10 }, (_, i) => i + 1);
+  }
+
+  getFeedbackUserName(f: any): string {
+    const fn = f.user?.first_name || '';
+    const ln = f.user?.last_name || '';
+    const full = (fn + ' ' + ln).trim();
+    return full || f.user?.username || `User #${f.user_id}`;
+  }
+
+  loadFeedbacks() {
+    const headers = { Authorization: `Bearer ${this.auth.token}` };
+    this.feedbacksLoading = true;
+    this.feedbacksError = false;
+    this.http.get<any[]>(`${this.api}/feedback`, { headers }).subscribe({
+      next: data => {
+        this.feedbacksLoading = false;
+        this.feedbacks = data;
+      },
+      error: () => {
+        this.feedbacksLoading = false;
+        this.feedbacksError = true;
+        this.feedbacks = [];
+      }
+    });
+    this.http.get<any>(`${this.api}/feedback/summary`, { headers }).subscribe({
+      next: data => this.feedbackSummary = data,
+      error: () => {}
+    });
+  }
+
+  navigateToFeedback() {
+    this.activeTab = 'feedback';
   }
 
   // ── Logout ────────────────────────────────────────────

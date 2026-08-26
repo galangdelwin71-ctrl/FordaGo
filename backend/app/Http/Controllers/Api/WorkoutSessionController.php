@@ -104,9 +104,14 @@ class WorkoutSessionController extends Controller
             $query->whereDate('session_date', '<=', $to);
         }
 
-        return response()->json(
-            $query->orderBy('session_date')->get()
+        // 30-second cache per user+range: prevents the 287kB payload from
+        // being re-fetched on every page open when multiple components load.
+        $rangeCacheKey = "workout_sessions.{$userId}." . ($from ?? 'all') . '.' . ($to ?? 'all');
+        $rows = Cache::remember($rangeCacheKey, 30, fn () =>
+            $query->orderBy('session_date')->get()->toArray()
         );
+
+        return response()->json($rows);
     }
 
     /**
@@ -127,6 +132,10 @@ class WorkoutSessionController extends Controller
             ],
             $validated
         );
+
+        // Invalidate the cached session list for this user
+        Cache::forget("workout_sessions.{$request->user()->id}.all.all");
+        Cache::forget("workout_session_sync_{$request->user()->id}_" . now()->toDateString());
 
         return response()->json($session, 201);
     }

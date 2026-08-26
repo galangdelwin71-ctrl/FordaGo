@@ -23,6 +23,10 @@ const config: CapacitorConfig = {
       hidden: false,
       animation: 'NONE',
     },
+    LocalNotifications: {
+      smallIcon: 'ic_stat_icon',
+      iconColor: '#FFD700',
+    },
   },
 };
 

@@ -341,23 +341,34 @@
 <ion-modal
   [isOpen]="cartModalOpen"
   (didDismiss)="closeCart()"
-  [breakpoints]="[0, 0.72, 1]"
-  [initialBreakpoint]="0.72"
+  [breakpoints]="[0, 0.75, 1]"
+  [initialBreakpoint]="0.75"
   [handle]="true"
-  class="bottom-sheet-modal"
+  class="bottom-sheet-modal cart-sheet-modal"
 >
   <ng-template>
-    <div class="modal-sheet">
+    <div class="modal-sheet cart-modal-sheet">
       <div class="modal-handle"></div>
 
       <div class="modal-scroll-body">
-        <div class="orders-header">
-          <div class="section-title">Your Cart</div>
+        <div class="orders-header cart-header">
+          <div class="cart-header-title-wrap">
+            <div class="cart-header-icon">
+              <ion-icon name="cart-outline"></ion-icon>
+            </div>
+            <div>
+              <div class="section-title">Your Cart</div>
+              <div class="cart-subtitle" *ngIf="cart.length > 0">{{ cartItemCount }} item{{ cartItemCount > 1 ? 's' : '' }} ready for checkout</div>
+            </div>
+          </div>
         </div>
 
-        <div class="empty-orders" *ngIf="cart.length === 0">
-          <ion-icon name="cart-outline" class="empty-emoji"></ion-icon>
+        <div class="empty-orders empty-cart" *ngIf="cart.length === 0">
+          <div class="empty-cart-icon-wrap">
+            <ion-icon name="cart-outline" class="empty-emoji"></ion-icon>
+          </div>
           <div class="empty-text">Your cart is empty</div>
+          <div class="empty-subtext">Add supplements, drinks, or gym gear to get started.</div>
         </div>
 
         <div class="cart-list" *ngIf="cart.length > 0">
@@ -368,21 +379,24 @@
             </div>
             <div class="cart-item-body">
               <div class="cart-item-name">{{ item.product.name }}</div>
-              <div class="cart-item-price">₱{{ item.product.price }} each</div>
+              <div class="cart-item-price">₱{{ item.product.price }} <span class="price-unit">each</span></div>
             </div>
             <div class="cart-item-controls">
               <button class="qty-dec-btn small" (click)="decrementCartItem(item)" aria-label="Decrease quantity">−</button>
               <span class="qty-display small">{{ item.quantity }}</span>
               <button class="qty-inc-btn small" (click)="incrementCartItem(item)" [disabled]="item.quantity >= item.product.stock" aria-label="Increase quantity">+</button>
             </div>
-            <button class="cart-item-remove" (click)="removeCartItem(item)" aria-label="Remove item">
+            <button class="cart-item-remove" (click)="removeCartItem(item)" aria-label="Remove item" title="Remove item">
               <ion-icon name="trash-outline"></ion-icon>
             </button>
           </div>
         </div>
 
         <div class="total-box cart-total-box" *ngIf="cart.length > 0">
-          <span class="total-label">Cart Total</span>
+          <div class="total-label-wrap">
+            <span class="total-label">Cart Total</span>
+            <span class="total-sub">Total amount to pay</span>
+          </div>
           <span class="total-price">₱{{ cartTotal }}</span>
         </div>
 

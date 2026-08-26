@@ -6,20 +6,30 @@ services:
       dockerfile: Dockerfile
     container_name: fordago_backend
     restart: unless-stopped
-    command: php artisan serve --host=0.0.0.0 --port=8000
+    command: php artisan serve --host=0.0.0.0 --port=8000 --no-reload
     ports:
       - "8000:8000"
     env_file:
       - ./backend/.env
     environment:
+      PHP_CLI_SERVER_WORKERS: 8
+      DB_HOST: 172.24.16.1
+      DB_PORT: 3306
+      DB_DATABASE: fordago
+      DB_USERNAME: root
+      DB_PASSWORD: ""
       RUN_MIGRATIONS: "false"
+      REVERB_HOST: reverb
+      REVERB_SERVER_HOST: reverb
+    extra_hosts:
+      - "host.containers.internal:host-gateway"
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./backend:/var/www/html
       - ./backend/storage:/var/www/html/storage
       - ./backend/public:/var/www/html/public
-    extra_hosts:
-      - "host.containers.internal:host-gateway"
-      - "host.docker.internal:host-gateway"
+    networks:
+      - fordago_net
 
   # ─── 2. Reverb WebSocket Server ───────────────────────────────────────────
   reverb:
@@ -34,13 +44,24 @@ services:
     env_file:
       - ./backend/.env
     environment:
+      DB_HOST: 172.24.16.1
+      DB_PORT: 3306
+      DB_DATABASE: fordago
+      DB_USERNAME: root
+      DB_PASSWORD: ""
       RUN_MIGRATIONS: "false"
-    volumes:
-      - ./backend:/var/www/html
-      - ./backend/storage:/var/www/html/storage
+      REVERB_HOST: 0.0.0.0
+      REVERB_SERVER_HOST: 0.0.0.0
     extra_hosts:
       - "host.containers.internal:host-gateway"
       - "host.docker.internal:host-gateway"
+    volumes:
+      - ./backend:/var/www/html
+      - ./backend/storage:/var/www/html/storage
+    depends_on:
+      - backend
+    networks:
+      - fordago_net
 
   # ─── 3. Laravel Queue Worker ──────────────────────────────────────────────
   queue:
@@ -53,10 +74,25 @@ services:
     env_file:
       - ./backend/.env
     environment:
+      DB_HOST: 172.24.16.1
+      DB_PORT: 3306
+      DB_DATABASE: fordago
+      DB_USERNAME: root
+      DB_PASSWORD: ""
       RUN_MIGRATIONS: "false"
-    volumes:
-      - ./backend:/var/www/html
-      - ./backend/storage:/var/www/html/storage
+      REVERB_HOST: reverb
+      REVERB_SERVER_HOST: reverb
     extra_hosts:
       - "host.containers.internal:host-gateway"
       - "host.docker.internal:host-gateway"
+    volumes:
+      - ./backend:/var/www/html
+      - ./backend/storage:/var/www/html/storage
+    depends_on:
+      - backend
+    networks:
+      - fordago_net
+
+networks:
+  fordago_net:
+    driver: bridge

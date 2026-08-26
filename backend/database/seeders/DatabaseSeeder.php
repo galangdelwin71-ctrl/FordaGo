@@ -13,7 +13,24 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Super Admin Account
+        // 1. Primary Super Admin Account
+        User::updateOrCreate(
+            ['email' => 'superadmin@fordago.com'],
+            [
+                'username'          => 'Super Admin',
+                'first_name'        => 'Super',
+                'last_name'         => 'Admin',
+                'password'          => Hash::make('SuperAdmin@1'),
+                'role'              => 'super_admin',
+                'phone'             => '09191234567',
+                'gender'            => 'male',
+                'membership_type'   => 'premium',
+                'membership_status' => 'active',
+                'payment_method'    => 'cash',
+            ]
+        );
+
+        // 2. Personal Super Admin Account
         User::updateOrCreate(
             ['email' => 'delwinfermin3@gmail.com'],
             [
