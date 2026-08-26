@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -e
 
+# Check if vendor dependencies are present (handles cases where host volume is mounted over /var/www/html)
+if [ ! -f "/var/www/html/vendor/autoload.php" ]; then
+    echo "📦 vendor/autoload.php not found. Installing composer dependencies..."
+    composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+fi
+
 # Ensure writable permissions
 mkdir -p /var/www/html/storage/framework/{sessions,views,cache} /var/www/html/storage/logs /var/www/html/bootstrap/cache
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache

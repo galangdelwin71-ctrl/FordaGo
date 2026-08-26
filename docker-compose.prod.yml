@@ -32,9 +32,7 @@ services:
       DB_HOST: db
       RUN_MIGRATIONS: "true"
     volumes:
-      - ./backend:/var/www/html
       - ./backend/storage:/var/www/html/storage
-      - ./backend/public:/var/www/html/public
     depends_on:
       - db
     networks:
@@ -54,7 +52,6 @@ services:
       DB_HOST: db
       RUN_MIGRATIONS: "false"
     volumes:
-      - ./backend:/var/www/html
       - ./backend/storage:/var/www/html/storage
     depends_on:
       - backend
@@ -75,7 +72,6 @@ services:
       DB_HOST: db
       RUN_MIGRATIONS: "false"
     volumes:
-      - ./backend:/var/www/html
       - ./backend/storage:/var/www/html/storage
     depends_on:
       - backend
