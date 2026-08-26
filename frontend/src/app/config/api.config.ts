@@ -15,17 +15,15 @@
  * Configurable target host for Native Capacitor APK builds.
  * For production mobile APK release, point this to your VPS Domain or Public IP (e.g., 'gym.yourdomain.com' or '203.0.113.5').
  */
-export const NATIVE_SERVER_HOST = '192.168.1.10';
+export const NATIVE_SERVER_HOST = '168.144.141.27';
 export const NATIVE_SERVER_PROTOCOL = 'http'; // 'http' or 'https'
-export const NATIVE_SERVER_PORT = '8000'; // LAN Wi-Fi build — port 8000 (php artisan serve)
+export const NATIVE_SERVER_PORT = '8000'; // port 8000 on VPS
+export const REVERB_SERVER_PORT = '8080'; // port 8080 on VPS
 
 /**
  * WSL/Podman backend host for local development.
- * Auto-patched by start-auto.ps1 on each launch. Do NOT edit manually.
- * When using Podman on Windows, containers run inside WSL so localhost does not
- * forward to them — we must use the WSL virtual ethernet IP instead.
  */
-export const WSL_BACKEND_HOST = '172.24.30.57'; // AUTO-PATCHED BY start-auto.ps1
+export const WSL_BACKEND_HOST = '168.144.141.27';
 
 function isNativePlatform(): boolean {
   return typeof window !== 'undefined' && (
@@ -40,10 +38,13 @@ function resolveApiBaseUrl(): string {
     const loc = window.location;
     // Local Angular / Ionic dev servers (localhost / 127.0.0.1 on any port like 4200, 8100, 8101)
     if (loc.hostname === 'localhost' || loc.hostname === '127.0.0.1') {
-      return `http://${WSL_BACKEND_HOST}:8000`;
+      return `http://${NATIVE_SERVER_HOST}:${NATIVE_SERVER_PORT}`;
     }
-    // Production web: Use the origin directly (e.g. http://YOUR_VPS_IP or https://yourdomain.com)
-    return loc.origin;
+    // Production web: If accessed via VPS IP or Domain directly
+    if (loc.port === '' || loc.port === '80' || loc.port === '443') {
+      return loc.origin;
+    }
+    return `http://${loc.hostname}:${NATIVE_SERVER_PORT}`;
   }
 
   // Capacitor Native APK Fallback
@@ -56,14 +57,17 @@ function resolveReverbUrl(): string {
     const loc = window.location;
     // Local dev server fallback
     if (loc.hostname === 'localhost' || loc.hostname === '127.0.0.1') {
-      return `http://${WSL_BACKEND_HOST}:8080`;
+      return `http://${NATIVE_SERVER_HOST}:${REVERB_SERVER_PORT}`;
     }
-    // Production web: Reverb routes through Nginx gateway or origin
-    return loc.origin;
+    // Production web: Reverb routes through Nginx gateway or origin port
+    if (loc.port === '' || loc.port === '80' || loc.port === '443') {
+      return loc.origin;
+    }
+    return `http://${loc.hostname}:${REVERB_SERVER_PORT}`;
   }
 
   // Capacitor Native APK Fallback
-  const portSuffix = NATIVE_SERVER_PORT ? `:${NATIVE_SERVER_PORT}` : '';
+  const portSuffix = REVERB_SERVER_PORT ? `:${REVERB_SERVER_PORT}` : '';
   return `${NATIVE_SERVER_PROTOCOL}://${NATIVE_SERVER_HOST}${portSuffix}`;
 }
 

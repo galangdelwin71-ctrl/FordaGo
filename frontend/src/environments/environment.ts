@@ -3,7 +3,11 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+  production: false,
+  apiUrl: 'http://168.144.141.27:8000/api',
+  apiBaseUrl: 'http://168.144.141.27:8000',
+  reverbHost: '168.144.141.27',
+  reverbPort: 8080,
 };
 
 /*

@@ -13,11 +13,6 @@ services:
       - ./backend/.env
     environment:
       PHP_CLI_SERVER_WORKERS: 8
-      DB_HOST: 172.24.16.1
-      DB_PORT: 3306
-      DB_DATABASE: fordago
-      DB_USERNAME: root
-      DB_PASSWORD: ""
       RUN_MIGRATIONS: "false"
       REVERB_HOST: reverb
       REVERB_SERVER_HOST: reverb
@@ -45,11 +40,6 @@ services:
     env_file:
       - ./backend/.env
     environment:
-      DB_HOST: 172.24.16.1
-      DB_PORT: 3306
-      DB_DATABASE: fordago
-      DB_USERNAME: root
-      DB_PASSWORD: ""
       RUN_MIGRATIONS: "false"
       REVERB_HOST: 0.0.0.0
       REVERB_SERVER_HOST: 0.0.0.0
@@ -76,11 +66,6 @@ services:
     env_file:
       - ./backend/.env
     environment:
-      DB_HOST: 172.24.16.1
-      DB_PORT: 3306
-      DB_DATABASE: fordago
-      DB_USERNAME: root
-      DB_PASSWORD: ""
       RUN_MIGRATIONS: "false"
       REVERB_HOST: reverb
       REVERB_SERVER_HOST: reverb
