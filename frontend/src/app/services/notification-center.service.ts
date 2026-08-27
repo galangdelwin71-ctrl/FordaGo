@@ -204,35 +204,42 @@ export class NotificationCenterService {
     try {
       const { LocalNotifications } = await import('@capacitor/local-notifications');
 
-      // fordago-alerts: Admin announcements / incoming alerts
-      // sound: '' → use the device's default notification ringtone
-      // vibration: true → vibrate when phone is in Ring or Vibrate mode
+      // Request permission on init if needed
+      await LocalNotifications.requestPermissions();
+
+      // Delete legacy channels if existing to avoid stale sound config
+      try {
+        await LocalNotifications.deleteChannel({ id: 'fordago-alerts' });
+        await LocalNotifications.deleteChannel({ id: 'fordago-reminders' });
+      } catch {}
+
+      // fordago-alerts-v2: Admin announcements / incoming alerts
+      // Omitting sound property uses Android's native system default notification ringtone
+      // vibration: true ensures device vibrates in Ring or Vibrate mode, and stays silent in Mute mode
       await LocalNotifications.createChannel({
-        id: 'fordago-alerts',
+        id: 'fordago-alerts-v2',
         name: 'FordaGO Alerts & Announcements',
-        description: 'Admin announcements and gym notifications',
-        importance: 5,       // IMPORTANCE_HIGH — shows as heads-up popup
+        description: 'Admin announcements, check-in confirmations, and gym notifications',
+        importance: 5,       // IMPORTANCE_HIGH (5 is MAX — shows as heads-up banner)
         visibility: 1,       // VISIBILITY_PUBLIC — shows on lock screen
-        sound: 'default',    // Use device default ringtone (respects ringer mode)
         vibration: true,
         lights: true,
         lightColor: '#FFD700',
       });
 
-      // fordago-reminders: Workout reminders (30-min before session)
+      // fordago-reminders-v2: Workout reminders (30-min before session & duration alarm)
       await LocalNotifications.createChannel({
-        id: 'fordago-reminders',
-        name: 'Workout Reminders',
-        description: '30-minute reminders before your workout sessions',
+        id: 'fordago-reminders-v2',
+        name: 'Workout Reminders & Alarms',
+        description: '30-minute reminders before workout sessions and duration alarms',
         importance: 5,
         visibility: 1,
-        sound: 'default',
         vibration: true,
         lights: true,
         lightColor: '#FFD700',
       });
     } catch (err) {
-      this.channelsInitialized = false; // allow retry on next call
+      this.channelsInitialized = false;
       console.warn('Failed to initialize native notification channels:', err);
     }
   }
@@ -777,7 +784,7 @@ export class NotificationCenterService {
             id: notifId,
             title,
             body: message,
-            channelId: 'fordago-reminders',
+            channelId: 'fordago-reminders-v2',
             smallIcon: 'ic_stat_icon',
             iconColor: '#FFD700',
             schedule: {
@@ -794,6 +801,73 @@ export class NotificationCenterService {
         console.warn('Failed to schedule native upcoming reminder:', err);
       }
     }
+  }
+
+  /**
+   * Schedules a native notification for when a workout time has passed and becomes missed,
+   * so it rings and sends home workout alternative suggestions even if the app is closed.
+   */
+  public async scheduleNativeMissedAlert(
+    sessionTitle: string,
+    uniqueKey: string,
+    missedDate: Date,
+    homeExercises?: string[]
+  ): Promise<void> {
+    if (missedDate.getTime() <= Date.now()) {
+      return;
+    }
+
+    const title = `Missed Workout: ${sessionTitle}`;
+    const normalizedExercises = (homeExercises || []).slice(0, 6);
+    const body = normalizedExercises.length
+      ? `You missed your scheduled ${sessionTitle} session today.\n\n🏠 Suggested Home Workout:\n${normalizedExercises.map((ex, i) => `${i + 1}. ${ex}`).join('\n')}`
+      : `You missed your scheduled ${sessionTitle} session today. Tap to view home alternative exercises!`;
+
+    const notifId = this.hashNotificationId(`missed-${uniqueKey}`);
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const { LocalNotifications } = await import('@capacitor/local-notifications');
+        await this.initNativeNotificationChannels();
+        await LocalNotifications.schedule({
+          notifications: [{
+            id: notifId,
+            title,
+            body,
+            channelId: 'fordago-reminders-v2',
+            smallIcon: 'ic_stat_icon',
+            iconColor: '#FFD700',
+            schedule: {
+              at: missedDate,
+              allowWhileIdle: true,
+            },
+            extra: {
+              type: 'missed_workout',
+              targetRoute: '/schedule',
+              uniqueKey,
+            },
+          }],
+        });
+      } catch (err) {
+        console.warn('Failed to schedule native missed alert:', err);
+      }
+    }
+  }
+
+  /**
+   * Cancels any scheduled native reminders / missed alerts for a given workout session key.
+   * Called when a workout is completed or actively started.
+   */
+  public async cancelNativeWorkoutAlerts(uniqueKey: string): Promise<void> {
+    if (!uniqueKey || !Capacitor.isNativePlatform()) return;
+    try {
+      const { LocalNotifications } = await import('@capacitor/local-notifications');
+      const upcomingId = this.hashNotificationId(uniqueKey);
+      const missedId = this.hashNotificationId(`missed-${uniqueKey}`);
+      await LocalNotifications.cancel({
+        notifications: [{ id: upcomingId }, { id: missedId }],
+      });
+    } catch {}
   }
 
   /**
@@ -820,7 +894,7 @@ export class NotificationCenterService {
             id: notifId,
             title,
             body: message,
-            channelId: 'fordago-alerts',
+            channelId: 'fordago-reminders-v2',
             smallIcon: 'ic_stat_icon',
             iconColor: '#FFD700',
             schedule: {
@@ -861,12 +935,12 @@ export class NotificationCenterService {
 
   /**
    * @param targetRoute Optional route to navigate to when the notification is tapped.
-   * @param channelId Optional notification channel ID ('fordago-alerts' or 'fordago-reminders').
+   * @param channelId Optional notification channel ID ('fordago-alerts-v2' or 'fordago-reminders-v2').
    */
   private async sendDeviceNotification(
     notification: StoredNotificationItem,
     targetRoute?: string,
-    channelId: string = 'fordago-alerts'
+    channelId: string = 'fordago-alerts-v2'
   ): Promise<void> {
     if (Capacitor.isNativePlatform()) {
       const { LocalNotifications } = await import('@capacitor/local-notifications');

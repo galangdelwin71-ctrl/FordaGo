@@ -878,15 +878,22 @@ export class WorkoutTrackerService {
       const scheduledAt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0, 0);
       const msUntilDue = scheduledAt.getTime() - now.getTime();
 
-      // Already due right now (e.g. this ran moments after the scheduled
-      // time, or a session was just edited into the past) — whatever wrote
-      // the store already has (or is about to have, via its own call chain)
-      // a syncStoreStatuses() pass covering this moment; scheduling a
-      // zero/negative-delay timer here would just race it redundantly.
-      if (msUntilDue <= 0) {
-        return;
-      }
+      const uniqueKey = `${todayKey}-${session.id ?? session.title}-${session.timeVal}-${session.timeAmpm}`;
+      const durationMins = this.durationToMinutes(session.duration || '60 min') || 60;
+      const missedTriggerAt = new Date(scheduledAt.getTime() + durationMins * 60 * 1000);
+      const homeAlternatives = session.exercises?.length
+        ? session.exercises.slice(0, 6).map((exercise) => `${exercise.sets} x ${exercise.reps} ${exercise.name}`)
+        : (this.homeWorkoutMap[session.title] || this.homeWorkoutMap['Full Body']);
 
+      // 1. Schedule Native AlarmManager notification for when the session becomes missed
+      void this.notificationCenter.scheduleNativeMissedAlert(
+        session.title,
+        uniqueKey,
+        missedTriggerAt,
+        homeAlternatives
+      );
+
+      // 2. Foreground JS timer fallback while app is actively viewed
       const timer = setTimeout(() => {
         this.syncStoreStatuses();
       }, msUntilDue);
