@@ -45,10 +45,21 @@ return [
         'sender' => env('SEMAPHORE_SENDER', 'FordaGO'),
     ],
 
+
     'twilio' => [
-        'sid' => env('TWILIO_ACCOUNT_SID'),
+        'sid'   => env('TWILIO_ACCOUNT_SID'),
         'token' => env('TWILIO_AUTH_TOKEN'),
-        'from' => env('TWILIO_FROM_NUMBER'),
+        'from'  => env('TWILIO_FROM_NUMBER'),
+    ],
+
+    // Firebase Cloud Messaging (HTTP v1 API)
+    // FIREBASE_PROJECT_ID  → Firebase Console → Project Settings → General → Project ID
+    // FIREBASE_SERVICE_ACCOUNT_JSON → Project Settings → Service Accounts → Generate new private key
+    //   (paste the entire JSON content as a single-line string in .env)
+    'firebase' => [
+        'project_id'           => env('FIREBASE_PROJECT_ID', ''),
+        'service_account_json' => env('FIREBASE_SERVICE_ACCOUNT_JSON', ''),
     ],
 
 ];
+

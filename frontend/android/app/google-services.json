@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "192849525678",
+    "project_id": "fordago-18588",
+    "storage_bucket": "fordago-18588.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:192849525678:android:f4cdd6d2efa8b1043e263f",
+        "android_client_info": {
+          "package_name": "io.ionic.starter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC5F0UvO7ZBfadHaW6jJEyOzFMb0uajO4M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

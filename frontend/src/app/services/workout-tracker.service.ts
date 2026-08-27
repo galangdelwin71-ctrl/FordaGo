@@ -753,10 +753,8 @@ export class WorkoutTrackerService {
       const [hours, minutes] = this.to24(session.timeVal, session.timeAmpm).split(':').map(Number);
       const sessionMinutes = hours * 60 + minutes;
       const nowMinutes = now.getHours() * 60 + now.getMinutes();
-      // No grace period: a session becomes 'missed' the moment its
-      // scheduled time passes (member request — previously waited 30 min
-      // past the scheduled time before flagging it).
-      if (nowMinutes > sessionMinutes) {
+      // Instant miss: a session is 'missed' the moment its scheduled minute arrives.
+      if (nowMinutes >= sessionMinutes) {
         return 'missed';
       }
     }
@@ -876,28 +874,33 @@ export class WorkoutTrackerService {
       }
 
       const scheduledAt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0, 0);
-      const msUntilDue = scheduledAt.getTime() - now.getTime();
+      // Fire at EXACTLY the scheduled time — consistent with autoComputeStatus() which marks a
+      // session 'missed' the instant its scheduled minute arrives (nowMinutes >= sessionMinutes).
+      const msUntilScheduled = scheduledAt.getTime() - now.getTime();
 
       const uniqueKey = `${todayKey}-${session.id ?? session.title}-${session.timeVal}-${session.timeAmpm}`;
-      const durationMins = this.durationToMinutes(session.duration || '60 min') || 60;
-      const missedTriggerAt = new Date(scheduledAt.getTime() + durationMins * 60 * 1000);
       const homeAlternatives = session.exercises?.length
         ? session.exercises.slice(0, 6).map((exercise) => `${exercise.sets} x ${exercise.reps} ${exercise.name}`)
         : (this.homeWorkoutMap[session.title] || this.homeWorkoutMap['Full Body']);
 
-      // 1. Schedule Native AlarmManager notification for when the session becomes missed
+      // 1. Schedule Native AlarmManager notification to ring at the exact scheduled time.
+      //    This is what fires even when the app is closed/backgrounded on Android.
       void this.notificationCenter.scheduleNativeMissedAlert(
         session.title,
         uniqueKey,
-        missedTriggerAt,
+        scheduledAt,
         homeAlternatives
       );
 
-      // 2. Foreground JS timer fallback while app is actively viewed
-      const timer = setTimeout(() => {
-        this.syncStoreStatuses();
-      }, msUntilDue);
-      this.missedCheckTimers.push(timer);
+      // 2. Foreground JS timer fallback while app is actively viewed.
+      //    Fires 500ms after the scheduled time to ensure autoComputeStatus()
+      //    returns 'missed' (>= scheduledAt) before syncStoreStatuses() runs.
+      if (msUntilScheduled > 0) {
+        const timer = setTimeout(() => {
+          this.syncStoreStatuses();
+        }, msUntilScheduled + 500);
+        this.missedCheckTimers.push(timer);
+      }
     });
   }
 

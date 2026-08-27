@@ -813,9 +813,13 @@ export class NotificationCenterService {
     missedDate: Date,
     homeExercises?: string[]
   ): Promise<void> {
-    if (missedDate.getTime() <= Date.now()) {
+    // Skip only if the target time is meaningfully in the past (>5s).
+    // Allowing near-exact times through so the alarm fires even if there's
+    // slight latency between scheduling and the OS registering the alarm.
+    if (missedDate.getTime() < Date.now() - 5000) {
       return;
     }
+
 
     const title = `Missed Workout: ${sessionTitle}`;
     const normalizedExercises = (homeExercises || []).slice(0, 6);

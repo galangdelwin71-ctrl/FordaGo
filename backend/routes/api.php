@@ -55,10 +55,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/me',              [UserController::class, 'me']);
         Route::post('/membership/renew', [UserController::class, 'renewOrUpgradeMembership']);
         Route::post('/create',         [UserController::class, 'store'])->middleware('role:admin,super_admin,employee');
+        Route::put('/fcm-token',       [UserController::class, 'updateFcmToken']); // FCM push registration
         Route::put('/{id}',            [UserController::class, 'update'])->whereNumber('id');
         Route::put('/{id}/membership', [UserController::class, 'updateMembership'])->whereNumber('id')->middleware('role:admin,super_admin,employee');
         Route::delete('/{id}',         [UserController::class, 'destroy'])->whereNumber('id')->middleware('role:admin,super_admin,employee');
     });
+
 
     // ── Equipment (server/routes/equipment.js) ────────────────────────────
     Route::prefix('equipment')->group(function () {

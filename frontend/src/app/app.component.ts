@@ -98,6 +98,7 @@ import { ThemeService } from './services/theme.service';
 import { NotificationCenterService } from './services/notification-center.service';
 import { CoachingService } from './services/coaching.service';
 import { AuthService } from './services/auth.service';
+import { FcmService } from './services/fcm.service';
 import { firstValueFrom } from 'rxjs';
 
 // Shape of the handle Capacitor's App.addListener() resolves to — declared
@@ -176,6 +177,7 @@ export class AppComponent implements OnDestroy {
     private notificationCenter: NotificationCenterService,
     private coachingService: CoachingService,
     private auth: AuthService,
+    private fcmService: FcmService,
     private router: Router,
     private location: Location,
     private toastController: ToastController,
@@ -274,11 +276,15 @@ export class AppComponent implements OnDestroy {
     this.registerHardwareBackButton();
     void this.notificationCenter.initNativeNotificationChannels();
     void this.registerNotificationTapListener();
+    void this.fcmService.init();
 
-    // Automatically poll and listen for real-time notifications for any logged-in user
+    // Automatically poll and listen for real-time notifications for any logged-in user.
+    // Also register FCM token on login so backend can send background push notifications.
     this.auth.user$.subscribe(user => {
       if (user) {
         this.notificationCenter.startPolling();
+        // Register FCM token with backend — runs async, non-blocking
+        void this.fcmService.registerFcmToken();
       } else {
         this.notificationCenter.stopPolling();
       }

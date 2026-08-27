@@ -25,6 +25,7 @@ use Laravel\Sanctum\HasApiTokens;
     'membership_status',
     'first_name',
     'last_name',
+    'fcm_token',
 ])]
 #[Hidden(['password'])]
 class User extends Authenticatable

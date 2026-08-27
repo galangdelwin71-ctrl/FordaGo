@@ -175,10 +175,11 @@ export class ChatToastService {
             id: notifId,
             title: convo.partnerName,
             body: body || 'Sent you a message',
+            channelId: 'fordago-alerts-v2',
             smallIcon: 'ic_stat_icon',
             iconColor: '#FFD700',
             actionTypeId: 'CHAT_MESSAGE',
-            schedule: { at: new Date(Date.now() + 500) },
+            schedule: { at: new Date(Date.now() + 50) },
             extra: {
               type: 'chat',
               conversationId: convo.id,

@@ -27,6 +27,12 @@ const config: CapacitorConfig = {
       smallIcon: 'ic_stat_icon',
       iconColor: '#FFD700',
     },
+    // Firebase Cloud Messaging — enables background push notifications via FCM.
+    // Requires google-services.json in android/app/ (download from Firebase Console).
+    FirebaseMessaging: {
+      presentationOptions: ['badge', 'sound', 'alert'],
+    },
+
   },
 };
 

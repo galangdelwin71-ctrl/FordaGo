@@ -366,4 +366,21 @@ class UserController extends Controller
 
         return response()->json(['message' => 'User deleted']);
     }
+
+    /**
+     * PUT /api/user/fcm-token
+     * Save or refresh the FCM device token for the authenticated user.
+     * Called by the Angular app each time it obtains a new FCM token from Firebase.
+     */
+    public function updateFcmToken(Request $request)
+    {
+        $request->validate([
+            'fcm_token' => 'required|string|max:512',
+        ]);
+
+        $request->user()->update(['fcm_token' => $request->input('fcm_token')]);
+
+        return response()->json(['message' => 'FCM token updated.']);
+    }
 }
+
