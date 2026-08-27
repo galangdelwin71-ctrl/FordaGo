@@ -26,6 +26,9 @@ services:
       dockerfile: Dockerfile
     container_name: fordago_backend
     restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     env_file:
       - ./backend/.env
     environment:
@@ -45,6 +48,9 @@ services:
       dockerfile: Dockerfile
     container_name: fordago_reverb
     restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     command: php artisan reverb:start --host=0.0.0.0 --port=8080
     env_file:
       - ./backend/.env
@@ -65,6 +71,9 @@ services:
       dockerfile: Dockerfile
     container_name: fordago_queue
     restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     command: php artisan queue:work --tries=3 --timeout=90
     env_file:
       - ./backend/.env
