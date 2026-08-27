@@ -1026,8 +1026,14 @@ export class SchedulePage implements OnInit, OnDestroy {
       ? validExercises.map(ex => ({ ...ex }))
       : this.buildExercises(s.title, s.customTarget);
 
-    this.expandedCard = null;
     const editedDayDate = this.weekDays[this.selectedDayIndex].date;
+    // If the session is not completed, re-evaluate its status for the new time
+    // so editing a missed session to a future time resets it to 'upcoming'
+    if (s.status !== 'done') {
+      s.status = this.workoutTracker.autoComputeStatus(s as unknown as StoredWorkoutSession, editedDayDate);
+    }
+
+    this.expandedCard = null;
     this.saveSessionsForDate(editedDayDate, this.sessions);
     // Push this edit to the backend immediately — without this the edit
     // stays local-only and gets silently reverted the next time

@@ -861,10 +861,8 @@ export class WorkoutTrackerService {
     const todaySessions = store[todayKey] ?? [];
 
     todaySessions.forEach((session) => {
-      // Same exemptions as autoComputeStatus()/syncStoreStatuses(): a
-      // session that's already done/missed, a rest day, or currently being
-      // actively timed never needs a missed-check scheduled for it.
-      if (session.status === 'done' || session.status === 'missed' || session.isRestDay || session.startedAt) {
+      // Done sessions, rest days, or sessions with active timer never need missed check
+      if (session.status === 'done' || session.isRestDay || session.startedAt) {
         return;
       }
 
@@ -874,9 +872,12 @@ export class WorkoutTrackerService {
       }
 
       const scheduledAt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0, 0);
-      // Fire at EXACTLY the scheduled time — consistent with autoComputeStatus() which marks a
-      // session 'missed' the instant its scheduled minute arrives (nowMinutes >= sessionMinutes).
       const msUntilScheduled = scheduledAt.getTime() - now.getTime();
+
+      // Only schedule alarms for sessions whose scheduled time is in the FUTURE
+      if (msUntilScheduled <= 0) {
+        return;
+      }
 
       const uniqueKey = `${todayKey}-${session.id ?? session.title}-${session.timeVal}-${session.timeAmpm}`;
       const homeAlternatives = session.exercises?.length

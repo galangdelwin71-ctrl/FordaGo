@@ -833,6 +833,12 @@ export class NotificationCenterService {
       try {
         const { LocalNotifications } = await import('@capacitor/local-notifications');
         await this.initNativeNotificationChannels();
+        const permissions = await LocalNotifications.checkPermissions();
+        if (permissions.display !== 'granted') {
+          const req = await LocalNotifications.requestPermissions();
+          if (req.display !== 'granted') return;
+        }
+
         await LocalNotifications.schedule({
           notifications: [{
             id: notifId,
@@ -1031,6 +1037,6 @@ export class NotificationCenterService {
       hash = ((hash << 5) - hash) + input.charCodeAt(index);
       hash |= 0;
     }
-    return Math.abs(hash) || Date.now();
+    return (Math.abs(hash) % 2147483647) || 1;
   }
 }
