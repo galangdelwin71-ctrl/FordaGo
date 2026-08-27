@@ -123,12 +123,14 @@
       </button>
       <button class="tab-btn" [class.active]="activeTab==='members'"     (click)="activeTab='members'">
         <ion-icon name="people-outline"></ion-icon> Members
+        <span class="tab-badge-pill" *ngIf="pendingMembers.length > 0">{{ pendingMembers.length }}</span>
       </button>
       <button class="tab-btn" [class.active]="activeTab==='schedule'"    (click)="activeTab='schedule'">
         <ion-icon name="calendar-outline"></ion-icon> Schedule
       </button>
       <button class="tab-btn" [class.active]="activeTab==='inventory'"   (click)="activeTab='inventory'">
         <ion-icon name="cart-outline"></ion-icon> Shop
+        <span class="tab-badge-pill" *ngIf="pendingOrders > 0">{{ pendingOrders }}</span>
       </button>
       <button class="tab-btn" [class.active]="activeTab==='equipment'"   (click)="activeTab='equipment'">
         <ion-icon name="barbell-outline"></ion-icon> Equipment
@@ -139,13 +141,13 @@
       </button>
       <button class="tab-btn" [class.active]="activeTab==='attendance'" (click)="activeTab='attendance'">
         <ion-icon name="clipboard-outline"></ion-icon> Attendance
+        <span class="tab-badge-pill" *ngIf="attendancePending.length > 0">{{ attendancePending.length }}</span>
       </button>
       <button class="tab-btn" *ngIf="canManageCoaches" [class.active]="activeTab==='coaches'" (click)="activeTab='coaches'">
         <ion-icon name="fitness-outline"></ion-icon> Coaches
       </button>
       <button class="tab-btn feedback-tab-btn" *ngIf="!isEmployee" [class.active]="activeTab==='feedback'" (click)="activeTab='feedback'">
         <ion-icon name="star-outline"></ion-icon> Feedback
-        <span class="tab-badge-pill feedback-badge" *ngIf="feedbackSummary.total > 0">{{ feedbackSummary.total }}</span>
       </button>
       <button class="tab-btn reports-btn" (click)="router.navigate(['/admin-reports'])">
         <ion-icon name="bar-chart-outline"></ion-icon> Reports

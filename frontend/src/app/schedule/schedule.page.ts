@@ -946,21 +946,66 @@ export class SchedulePage implements OnInit, OnDestroy {
 
   // ── Card Actions ─────────────────────────────────────────
 
+  editDurationMinutes: number | null = 60;
+  editDurationUnit: 'min' | 'hrs' = 'min';
+  editDurationInputValue: number | null = 60;
+
   toggleEditPanel(index: number, event: Event): void {
     event.stopPropagation();
     if (this.expandedCard === index) { this.expandedCard = null; return; }
 
     const s = this.sessions[index];
     const exercises = this.getExercises(s).map(ex => ({ ...ex }));
+    const durationMatch = (s.duration || '').match(/(\d+)/);
+    const initialMins = durationMatch ? Number(durationMatch[1]) : 60;
+    this.editDurationMinutes = initialMins;
+    this.editDurationUnit = 'min';
+    this.editDurationInputValue = initialMins;
+
     this.editBuffer = {
       timeRaw:      this.to24(s.timeVal, s.timeAmpm),
-      duration:     s.duration,
+      duration:     s.duration || `${initialMins} min`,
       coach:        s.coach,
       location:     s.location,
       customTarget: s.customTarget ?? '',
       exercises,
     };
     this.expandedCard = index;
+  }
+
+  onEditDurationInputChange(value: number | string | null): void {
+    if (value === null || value === undefined || value === '') {
+      this.editDurationInputValue = null;
+      return;
+    }
+    const numeric = typeof value === 'string' ? parseFloat(value) : value;
+    if (Number.isNaN(numeric)) return;
+
+    this.editDurationInputValue = numeric;
+    if (numeric <= 0) return;
+
+    const minutesValue = this.editDurationUnit === 'hrs' ? numeric * 60 : numeric;
+    const clamped = this.clampDurationMinutes(minutesValue);
+    this.editDurationMinutes = clamped;
+    this.editBuffer.duration = `${clamped} min`;
+  }
+
+  onEditDurationUnitChange(unit: 'min' | 'hrs'): void {
+    if (this.editDurationUnit === unit) return;
+    this.editDurationUnit = unit;
+    const minutes = this.editDurationMinutes ?? this.clampDurationMinutes(60);
+    this.editDurationInputValue = unit === 'hrs'
+      ? Math.round((minutes / 60) * 100) / 100
+      : minutes;
+  }
+
+  selectEditDurationPreset(preset: string): void {
+    const match = preset.match(/(\d+)/);
+    const minutes = match ? this.clampDurationMinutes(Number(match[1])) : this.editDurationMinutes;
+    this.editDurationMinutes = minutes;
+    this.editBuffer.duration = preset;
+    this.editDurationUnit = 'min';
+    this.editDurationInputValue = minutes;
   }
 
   saveEdit(index: number): void {

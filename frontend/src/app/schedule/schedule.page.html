@@ -167,29 +167,87 @@
 
           <!-- Inline Edit Panel -->
           <div class="edit-panel" [class.open]="expandedCard === sessionIndex(s)">
-            <div class="edit-row">
-              <input
-                class="edit-input"
-                type="time"
-                [(ngModel)]="editBuffer.timeRaw" />
-              <select class="edit-select" [(ngModel)]="editBuffer.duration">
-                <option *ngFor="let d of durationOptions" [value]="d">{{ d }}</option>
-              </select>
+            <div class="two-col">
+              <div class="field-group">
+                <label class="field-label">Time</label>
+                <div class="field-wrap">
+                  <span class="field-icon"><ion-icon name="alarm-outline"></ion-icon></span>
+                  <input
+                    type="time"
+                    [(ngModel)]="editBuffer.timeRaw" />
+                </div>
+              </div>
+              <div class="field-group">
+                <label class="field-label">Location</label>
+                <div class="field-wrap">
+                  <span class="field-icon">📍</span>
+                  <select [(ngModel)]="editBuffer.location">
+                    <option *ngFor="let l of locations" [value]="l">{{ l }}</option>
+                  </select>
+                </div>
+              </div>
             </div>
-            <div class="edit-row">
-              <select class="edit-select" [(ngModel)]="editBuffer.location">
-                <option *ngFor="let l of locations" [value]="l">{{ l }}</option>
-              </select>
+
+            <div class="field-group">
+              <label class="field-label">Duration</label>
+              <div class="duration-input-row">
+                <div class="field-wrap duration-field-wrap">
+                  <span class="field-icon">⏱</span>
+                  <input
+                    type="number"
+                    inputmode="decimal"
+                    appNoNegative
+                    [min]="editDurationUnit === 'hrs' ? 0.25 : 1"
+                    [max]="editDurationUnit === 'hrs' ? 8 : 480"
+                    [step]="editDurationUnit === 'hrs' ? 0.25 : 1"
+                    pattern="[0-9]*\.?[0-9]*"
+                    [placeholder]="editDurationUnit === 'hrs' ? 'e.g. 1.5' : 'e.g. 45'"
+                    [ngModel]="editDurationInputValue"
+                    (ngModelChange)="onEditDurationInputChange($event)" />
+                </div>
+                <div class="duration-unit-toggle">
+                  <button
+                    type="button"
+                    class="duration-unit-btn"
+                    [class.active]="editDurationUnit === 'min'"
+                    (click)="onEditDurationUnitChange('min')">Min</button>
+                  <button
+                    type="button"
+                    class="duration-unit-btn"
+                    [class.active]="editDurationUnit === 'hrs'"
+                    (click)="onEditDurationUnitChange('hrs')">Hrs</button>
+                </div>
+              </div>
+              <!-- Quick presets -->
+              <div class="target-suggestions">
+                <span
+                  *ngFor="let d of durationOptions"
+                  class="target-chip"
+                  [class.selected]="editBuffer.duration === d"
+                  (click)="selectEditDurationPreset(d)">
+                  {{ d }}
+                </span>
+              </div>
             </div>
+
             <!-- Custom Target Input -->
-            <div class="edit-row single">
-              <div class="target-input-wrap">
-                <span class="target-input-icon"><ion-icon name="locate-outline"></ion-icon></span>
+            <div class="field-group">
+              <label class="field-label">Specific Target <span class="label-optional">(Optional)</span></label>
+              <div class="field-wrap">
+                <span class="field-icon"><ion-icon name="locate-outline"></ion-icon></span>
                 <input
-                  class="edit-input target-input"
                   type="text"
                   placeholder="Custom target (e.g. Back & Bicep)"
                   [(ngModel)]="editBuffer.customTarget" />
+              </div>
+              <div class="target-suggestions" *ngIf="s.title">
+                <span
+                  *ngFor="let t of getSuggestedTargets(s.title)"
+                  class="target-chip"
+                  [class.selected]="editBuffer.customTarget === t"
+                  (click)="editBuffer.customTarget = t">
+                  {{ t }}
+                </span>
               </div>
             </div>
 
@@ -200,8 +258,12 @@
             </app-exercise-list-editor>
 
             <div class="edit-actions">
-              <button class="edit-save" (click)="saveEdit(sessionIndex(s))">Save changes</button>
-              <button class="edit-delete" (click)="deleteSession(sessionIndex(s), $event)">Remove</button>
+              <button class="edit-save" (click)="saveEdit(sessionIndex(s))">
+                <ion-icon name="checkmark-outline" style="margin-right: 4px; vertical-align: -1px; font-size: 14px;"></ion-icon> Save changes
+              </button>
+              <button class="edit-delete" (click)="deleteSession(sessionIndex(s), $event)">
+                <ion-icon name="trash-outline" style="margin-right: 4px; vertical-align: -1px; font-size: 14px;"></ion-icon> Remove
+              </button>
             </div>
           </div>
         </div>
@@ -351,7 +413,7 @@
           <div class="field-group">
             <label class="field-label">Time</label>
             <div class="field-wrap">
-              <span class="field-icon">⏰</span>
+              <span class="field-icon"><ion-icon name="alarm-outline"></ion-icon></span>
               <input type="time" [(ngModel)]="newWorkoutTime" (ngModelChange)="newWorkoutTimeWarning = ''" />
             </div>
             <div class="field-warning" *ngIf="newWorkoutTimeWarning">{{ newWorkoutTimeWarning }}</div>

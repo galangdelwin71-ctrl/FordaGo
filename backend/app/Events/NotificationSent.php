@@ -3,6 +3,7 @@
 namespace App\Events;
 
 use App\Models\Notification;
+use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -10,9 +11,9 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Broadcast on user.{id} whenever a new server notification is persisted
- * so the Ionic frontend can update its notification list and badge count
- * in real-time via WebSocket instead of waiting for the 15s poll interval.
+ * Broadcast on user.{id} (or notifications.global for broadcasts) whenever a
+ * new server notification is persisted so the Ionic frontend can update its
+ * notification list and badge count in real-time via WebSocket.
  */
 class NotificationSent implements ShouldBroadcast
 {
@@ -29,17 +30,16 @@ class NotificationSent implements ShouldBroadcast
     }
 
     /**
-     * Broadcast on the recipient's private channel.
-     * NULL user_id means it was a broadcast notification — skip WebSocket push
-     * (the next poll will pick it up; every user's channel would need to be
-     * enumerated otherwise, which is impractical).
+     * Broadcast on the recipient's private channel or public announcements channel.
      *
      * @return array<int, \Illuminate\Broadcasting\Channel>
      */
     public function broadcastOn(): array
     {
         if (! $this->userId) {
-            return [];
+            return [
+                new Channel('notifications.global'),
+            ];
         }
 
         return [

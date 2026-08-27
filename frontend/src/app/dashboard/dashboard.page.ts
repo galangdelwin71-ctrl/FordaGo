@@ -618,6 +618,11 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.clearHeatmapLongPressTimer();
     const targetElement = event.currentTarget as HTMLElement;
     const targetRect = targetElement.getBoundingClientRect();
+    const cardElement = targetElement.closest('.card') as HTMLElement | null;
+    const cardRect = cardElement ? cardElement.getBoundingClientRect() : null;
+
+    const popupX = cardRect ? (targetRect.left - cardRect.left + targetRect.width / 2) : (targetRect.left + targetRect.width / 2);
+    const popupY = cardRect ? (targetRect.top - cardRect.top) : targetRect.top;
 
     // Pointer capture keeps this element receiving pointer events for the
     // whole gesture even if the finger drifts a few pixels while held —
@@ -634,8 +639,8 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.heatmapLongPressTimer = setTimeout(() => {
       this.activeHeatmapPopup = {
         cell,
-        x: targetRect.left + targetRect.width / 2,
-        y: targetRect.top,
+        x: popupX,
+        y: popupY,
       };
     }, DashboardPage.HEATMAP_LONG_PRESS_MS);
   }
@@ -919,6 +924,16 @@ export class DashboardPage implements OnInit, OnDestroy {
    */
   private checkDurationAlerts(): void {
     this.todayWorkouts.forEach((workout) => {
+      // Never alert for finished or missed sessions, or if timer isn't running
+      if (workout.status === 'done' || workout.status === 'missed' || !workout.startedAt) return;
+
+      // Auto-stop stale session if running for more than 12 hours (e.g. from previous days)
+      const elapsedMinutes = this.getElapsedMinutes(workout);
+      if (elapsedMinutes > 720) {
+        this.stopWorkoutSession(workout);
+        return;
+      }
+
       if (!this.isDurationReached(workout)) return;
       if (this.durationAlertedSessionIds.has(workout.sessionId)) return;
 
@@ -1082,6 +1097,10 @@ export class DashboardPage implements OnInit, OnDestroy {
     if (!workout.startedAt) return;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    this.stopAlarmLoop();
+    if (this.durationPromptWorkout?.sessionId === workout.sessionId) {
+      this.durationPromptWorkout = null;
+    }
     this.workoutTracker.stopSession(today, workout.sessionId);
     this.durationAlertedSessionIds.delete(workout.sessionId);
     this.refreshDashboardFromSchedule();

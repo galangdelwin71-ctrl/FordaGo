@@ -13,6 +13,7 @@ import autoTable from 'jspdf-autotable';
 import { API_URL } from '../config/api.config';
 import { CoachingService } from '../services/coaching.service';
 import { ToastService } from '../services/toast.service';
+import { NotificationCenterService } from '../services/notification-center.service';
 import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refresh.component';
 
 @Component({
@@ -731,7 +732,8 @@ export class AdminPage implements OnInit, OnDestroy {
     public router: Router,
     private http: HttpClient,
     private coaching: CoachingService,
-    private toast: ToastService
+    private toast: ToastService,
+    private notificationCenter: NotificationCenterService
   ) {}
 
   // ── Members load state ──────────────────────────────────
@@ -747,6 +749,7 @@ export class AdminPage implements OnInit, OnDestroy {
 
   ionViewWillEnter() {
     this.stopAttendancePoll();
+    this.notificationCenter.startPolling();
     this.loadAll();
     // Start auto-refresh for attendance every 15 seconds
     this.attendancePollInterval = setInterval(() => {
@@ -899,7 +902,10 @@ export class AdminPage implements OnInit, OnDestroy {
   }
 
   private toIsoDate(date: Date): string {
-    return date.toISOString().slice(0, 10);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   onReportDateChange() {
@@ -916,6 +922,9 @@ export class AdminPage implements OnInit, OnDestroy {
       next: data => {
         this.attendanceTodayLoading = false;
         this.attendanceToday = data.map(a => ({ ...a, initials: this.getInitials(a.username) }));
+        if (date === this.toIsoDate(new Date())) {
+          this.activeToday = this.attendanceToday.length;
+        }
       },
       error: () => {
         this.attendanceTodayLoading = false;

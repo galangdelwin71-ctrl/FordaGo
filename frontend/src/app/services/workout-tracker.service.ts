@@ -606,10 +606,23 @@ export class WorkoutTrackerService {
       ? 'done'
       : this.autoComputeStatus({ ...existingSession, status: baseStatus }, dayDate);
 
+    let updatedStartedAt = existingSession.startedAt;
+    let updatedActualMinutes = existingSession.actualMinutes;
+
+    // If all exercises are done and timer was running, auto-complete the timer and cancel alarm
+    if (summary.allDone && existingSession.startedAt) {
+      const startedMs = new Date(existingSession.startedAt).getTime();
+      updatedActualMinutes = Number.isNaN(startedMs) ? 0 : Math.max(1, Math.round((Date.now() - startedMs) / 60000));
+      updatedStartedAt = null;
+      void this.notificationCenter.cancelNativeDurationAlarm(existingSession.id || sessionId);
+    }
+
     sessions[sessionIndex] = {
       ...existingSession,
       exercises: normalizedExercises,
       status: nextStatus,
+      startedAt: updatedStartedAt,
+      actualMinutes: updatedActualMinutes,
     };
     store[key] = sessions;
     this.writeStore(store);
@@ -618,11 +631,23 @@ export class WorkoutTrackerService {
     return sessions[sessionIndex];
   }
 
+  public durationToMinutes(duration?: string): number {
+    if (!duration) return 0;
+    const text = duration.toLowerCase();
+    if (text.includes('hr') || text.includes('hour')) {
+      const match = text.match(/([\d.]+)/);
+      return match ? Math.round(parseFloat(match[1]) * 60) : 60;
+    }
+    const match = text.match(/(\d+)/);
+    return match ? Number(match[1]) : 0;
+  }
+
   /**
    * Starts the live session timer: stamps `startedAt` so elapsed time can be
    * computed later (and resumed correctly even if the app is closed/reopened
    * mid-session, since we always recompute elapsed time from this timestamp
    * rather than trusting client-side interval state alone).
+   * Also schedules a native exact alarm on Android so the phone rings even if asleep/closed.
    */
   startSession(dayDate: Date, sessionId: string): StoredWorkoutSession | null {
     const store = this.readStore();
@@ -634,13 +659,24 @@ export class WorkoutTrackerService {
       return null;
     }
 
+    const sessionObj = sessions[sessionIndex];
     sessions[sessionIndex] = {
-      ...this.normalizeSession(sessions[sessionIndex]),
+      ...this.normalizeSession(sessionObj),
       startedAt: new Date().toISOString(),
     };
     store[key] = sessions;
     this.writeStore(store);
     this.pushSession(dayDate, sessions[sessionIndex]);
+
+    // Schedule exact native AlarmManager notification on device
+    const durationMins = this.durationToMinutes(sessionObj.duration);
+    if (durationMins > 0) {
+      void this.notificationCenter.scheduleNativeDurationAlarm(
+        sessionObj.title,
+        durationMins,
+        sessionObj.id || sessionId
+      );
+    }
 
     return sessions[sessionIndex];
   }
@@ -651,6 +687,7 @@ export class WorkoutTrackerService {
    * marks the session done so it's counted in monthly stats. Safe to call
    * even if no timer was running (e.g. double-tap) — returns the session
    * unchanged in that case instead of throwing.
+   * Cancels any pending native duration alarm.
    */
   stopSession(dayDate: Date, sessionId: string): { session: StoredWorkoutSession; elapsedMinutes: number } | null {
     const store = this.readStore();
@@ -663,6 +700,8 @@ export class WorkoutTrackerService {
     }
 
     const existingSession = this.normalizeSession(sessions[sessionIndex]);
+    void this.notificationCenter.cancelNativeDurationAlarm(existingSession.id || sessionId);
+
     if (!existingSession.startedAt) {
       return { session: existingSession, elapsedMinutes: existingSession.actualMinutes ?? 0 };
     }
@@ -908,6 +947,11 @@ export class WorkoutTrackerService {
       // Human-readable session time for the notification body.
       const sessionTime = `${session.timeVal} ${session.timeAmpm}`;
 
+      // 1. Schedule Native AlarmManager notification so it triggers even when the app is closed
+      const reminderDate = new Date(scheduledAt.getTime() - THIRTY_MIN_MS);
+      void this.notificationCenter.scheduleNativeUpcomingReminder(session.title, sessionTime, uniqueKey, reminderDate);
+
+      // 2. Foreground JS timer fallback while app is actively viewed
       const timer = setTimeout(() => {
         void this.notificationCenter.notifyUpcomingWorkout(session.title, sessionTime, uniqueKey);
       }, msUntilReminder);

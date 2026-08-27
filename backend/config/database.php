@@ -59,6 +59,7 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
+            'timezone' => env('DB_TIMEZONE', '+08:00'),
             // Timeout options: prevents 40-second hangs on slow/broken
             // Podman→XAMPP host connections. ATTR_TIMEOUT caps the initial
             // TCP connect handshake; the INIT_COMMAND variables cap

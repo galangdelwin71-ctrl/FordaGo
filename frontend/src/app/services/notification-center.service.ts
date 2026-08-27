@@ -29,6 +29,7 @@ export class NotificationCenterService {
   private readonly notifiedDurationKey = 'fordago_notified_duration_v1';
   private readonly notifiedUpcomingKey = 'fordago_notified_upcoming_v1';
   private readonly readServerNotificationsKey = 'fordago_read_server_notifications_v1';
+  private readonly deliveredServerNotificationsKey = 'fordago_delivered_server_notifications_v1';
 
   // Shared poll state (providedIn: 'root' — one instance for the whole
   // app). NotificationPanelComponent is embedded on nearly every page
@@ -123,6 +124,9 @@ export class NotificationCenterService {
    *     user missed while the socket was disconnected (e.g. app was
    *     backgrounded) and keeps the list eventually consistent.
    */
+  /**
+   * Starts real-time WebSocket listeners and background poll.
+   */
   startPolling(): void {
     // DO NOT start polling or WebSocket listeners if user is not logged in
     if (!this.auth.token || !this.auth.user) {
@@ -133,13 +137,16 @@ export class NotificationCenterService {
       return;
     }
 
+    // Initialize Android Notification Channels with high importance (heads-up banners)
+    void this.initNativeNotificationChannels();
+
     // Immediate first load
     void this.refreshNotifications();
 
-    // WebSocket real-time listener
+    // WebSocket real-time listener (Private user channel + Global announcements)
     this.listenWebSocket();
 
-    // Gentle 5-minute fallback HTTP sync for background consistency (real-time events come through WebSocket instantly)
+    // Gentle 5-minute fallback HTTP sync for background consistency
     this.pollTimer = setInterval(() => {
       if (!this.auth.token || !this.auth.user) {
         this.stopPolling();
@@ -148,9 +155,7 @@ export class NotificationCenterService {
       void this.refreshNotifications();
     }, 5 * 60 * 1000);
 
-    // Sync when app/tab regains focus — debounced 2s to prevent
-    // double-firing when the focus event and the interval coincide,
-    // or when the user briefly switches windows.
+    // Sync when app/tab regains focus
     if (typeof window !== 'undefined' && !this.focusListenerRegistered) {
       this.focusListenerRegistered = true;
       window.addEventListener('focus', () => {
@@ -173,27 +178,79 @@ export class NotificationCenterService {
     if (userId) {
       this.echoService.leaveChannel(`user.${userId}`);
     }
+    this.echoService.leaveChannel('notifications.global');
     this.notificationsSubject.next([]);
   }
 
   /**
-   * Subscribe to the current user's private WebSocket channel so new
-   * notifications arrive in real-time instead of waiting for the poll.
+   * Initializes native Android notification channels with High Importance so Android
+   * displays incoming notifications as Heads-Up banners on top of the screen.
+   *
+   * Sound behavior follows the device's ringer mode automatically:
+   *  - Ring mode   → default notification sound plays
+   *  - Vibrate mode → vibrates only, no sound
+   *  - Silent mode  → no sound, no vibration (system override)
+   *
+   * NOTE: Android channel settings are locked after the first creation on a given device.
+   * If the user has customized sound/vibration in Settings → Apps → FordaGO → Notifications,
+   * those preferences take priority (this is correct Android behaviour).
+   */
+  private channelsInitialized = false;
+  public async initNativeNotificationChannels(): Promise<void> {
+    if (!Capacitor.isNativePlatform() || this.channelsInitialized) {
+      return;
+    }
+    this.channelsInitialized = true;
+    try {
+      const { LocalNotifications } = await import('@capacitor/local-notifications');
+
+      // fordago-alerts: Admin announcements / incoming alerts
+      // sound: '' → use the device's default notification ringtone
+      // vibration: true → vibrate when phone is in Ring or Vibrate mode
+      await LocalNotifications.createChannel({
+        id: 'fordago-alerts',
+        name: 'FordaGO Alerts & Announcements',
+        description: 'Admin announcements and gym notifications',
+        importance: 5,       // IMPORTANCE_HIGH — shows as heads-up popup
+        visibility: 1,       // VISIBILITY_PUBLIC — shows on lock screen
+        sound: 'default',    // Use device default ringtone (respects ringer mode)
+        vibration: true,
+        lights: true,
+        lightColor: '#FFD700',
+      });
+
+      // fordago-reminders: Workout reminders (30-min before session)
+      await LocalNotifications.createChannel({
+        id: 'fordago-reminders',
+        name: 'Workout Reminders',
+        description: '30-minute reminders before your workout sessions',
+        importance: 5,
+        visibility: 1,
+        sound: 'default',
+        vibration: true,
+        lights: true,
+        lightColor: '#FFD700',
+      });
+    } catch (err) {
+      this.channelsInitialized = false; // allow retry on next call
+      console.warn('Failed to initialize native notification channels:', err);
+    }
+  }
+
+  /**
+   * Subscribe to the current user's private WebSocket channel and the global announcements
+   * channel so new notifications arrive in real-time instantly.
    */
   private listenWebSocket(): void {
     const userId = this.auth.user?.id;
     if (!userId) return;
 
-    const channel = this.echoService.privateChannel(`user.${userId}`);
-    if (!channel) return;
-
-    channel.listen('.notification.sent', (data: any) => {
+    const handleIncomingNotification = (incoming: any) => {
       this.zone.run(() => {
-        const incoming = data?.notification;
         if (!incoming) return;
 
         // Map backend shape to AppNotificationItem
-        const item = {
+        const item: AppNotificationItem = {
           id: `server-${incoming.id}`,
           title: incoming.title || 'Notice',
           message: incoming.message,
@@ -208,10 +265,26 @@ export class NotificationCenterService {
         const deduped = [item, ...current.filter((n) => n.id !== item.id)];
         this.publishNotifications(this.sortNotifications(deduped));
 
-        // Also send a device notification so the OS shows a banner
-        void this.sendDeviceNotification({ ...item, key: undefined });
+        // Send a native device notification banner with High Importance
+        void this.sendDeviceNotification({ ...item, key: undefined }, undefined, 'fordago-alerts');
       });
-    });
+    };
+
+    // 1. User-specific private channel
+    const userChannel = this.echoService.privateChannel(`user.${userId}`);
+    if (userChannel) {
+      userChannel.listen('.notification.sent', (data: any) => {
+        handleIncomingNotification(data?.notification);
+      });
+    }
+
+    // 2. Global announcements public channel
+    const globalChannel = this.echoService.channel('notifications.global');
+    if (globalChannel) {
+      globalChannel.listen('.notification.sent', (data: any) => {
+        handleIncomingNotification(data?.notification);
+      });
+    }
   }
 
   /**
@@ -466,15 +539,37 @@ export class NotificationCenterService {
 
       const list = Array.isArray(response) ? response : [];
       const readServerIds = new Set(this.readReadServerNotifications());
-      const serverNotifications: AppNotificationItem[] = list.map((item) => ({
-        id: `server-${item.id}`,
-        title: item.title || 'Notice',
-        message: item.message,
-        createdAt: item.created_at || new Date().toISOString(),
-        unread: !item.is_read && !readServerIds.has(item.id),
-        source: 'server',
-        homeExercises: this.extractHomeExercises(item.message),
-      }));
+      const deliveredIds = new Set(this.readDeliveredServerNotifications());
+      const isStaff = this.auth.hasAdminAccess();
+      const defaultTargetRoute = isStaff ? '/admin' : '/dashboard';
+      let hasNewDelivered = false;
+
+      const serverNotifications: AppNotificationItem[] = list.map((item) => {
+        const unread = !item.is_read && !readServerIds.has(item.id);
+        const appItem: AppNotificationItem = {
+          id: `server-${item.id}`,
+          title: item.title || (isStaff ? 'FordaGO Admin Alert' : 'Notice'),
+          message: item.message,
+          createdAt: item.created_at || new Date().toISOString(),
+          unread,
+          source: 'server',
+          homeExercises: this.extractHomeExercises(item.message),
+        };
+
+        // If this unread notification hasn't been delivered as a native device banner yet
+        if (unread && !deliveredIds.has(item.id)) {
+          deliveredIds.add(item.id);
+          hasNewDelivered = true;
+          // Trigger native notification with sound & vibration
+          void this.sendDeviceNotification(appItem, defaultTargetRoute, 'fordago-alerts');
+        }
+
+        return appItem;
+      });
+
+      if (hasNewDelivered) {
+        this.writeDeliveredServerNotifications(Array.from(deliveredIds));
+      }
 
       return this.sortNotifications([...localNotifications, ...serverNotifications]);
     } catch {
@@ -613,6 +708,19 @@ export class NotificationCenterService {
     localStorage.setItem(this.getScopedStorageKey(this.readServerNotificationsKey), JSON.stringify(Array.from(new Set(ids))));
   }
 
+  private readDeliveredServerNotifications(): number[] {
+    try {
+      const raw = localStorage.getItem(this.getScopedStorageKey(this.deliveredServerNotificationsKey));
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private writeDeliveredServerNotifications(ids: number[]): void {
+    localStorage.setItem(this.getScopedStorageKey(this.deliveredServerNotificationsKey), JSON.stringify(Array.from(new Set(ids)).slice(-300)));
+  }
+
   private getScopedStorageKey(baseKey: string): string {
     const userId = this.auth.user?.id ? String(this.auth.user.id) : 'guest';
     return `${baseKey}_${userId}`;
@@ -647,9 +755,122 @@ export class NotificationCenterService {
    *   localNotificationActionPerformed handler. For web notifications it is
    *   passed directly to openFromDeviceNotification().
    */
-  private async sendDeviceNotification(notification: StoredNotificationItem, targetRoute?: string): Promise<void> {
+  /**
+   * Schedules an exact native notification on Android AlarmManager
+   * so it rings and displays on the phone 30 minutes before workout EVEN IF THE APP IS CLOSED.
+   */
+  public async scheduleNativeUpcomingReminder(sessionTitle: string, sessionTime: string, uniqueKey: string, reminderDate: Date): Promise<void> {
+    if (reminderDate.getTime() <= Date.now()) {
+      return;
+    }
+
+    const title = `⏰ Upcoming Workout: ${sessionTitle}`;
+    const message = `Your ${sessionTitle} session starts in 30 minutes (${sessionTime}). Get ready!`;
+    const notifId = this.hashNotificationId(uniqueKey);
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const { LocalNotifications } = await import('@capacitor/local-notifications');
+        await this.initNativeNotificationChannels();
+        await LocalNotifications.schedule({
+          notifications: [{
+            id: notifId,
+            title,
+            body: message,
+            channelId: 'fordago-reminders',
+            smallIcon: 'ic_stat_icon',
+            iconColor: '#FFD700',
+            schedule: {
+              at: reminderDate,
+              allowWhileIdle: true,
+            },
+            extra: {
+              targetRoute: '/schedule',
+              uniqueKey,
+            },
+          }],
+        });
+      } catch (err) {
+        console.warn('Failed to schedule native upcoming reminder:', err);
+      }
+    }
+  }
+
+  /**
+   * Schedules an exact native notification on Android AlarmManager
+   * so it rings and vibrates when the workout duration is reached,
+   * EVEN IF THE APP IS CLOSED OR THE PHONE IS SLEEPING.
+   */
+  public async scheduleNativeDurationAlarm(sessionTitle: string, durationMinutes: number, sessionId: string): Promise<void> {
+    if (durationMinutes <= 0) {
+      return;
+    }
+
+    const triggerAt = new Date(Date.now() + durationMinutes * 60 * 1000);
+    const title = `⏰ Workout Duration Reached: ${sessionTitle}`;
+    const message = `You've reached your scheduled ${durationMinutes} min workout. Tap to complete or view your session.`;
+    const notifId = this.hashNotificationId(`duration-${sessionId}`);
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const { LocalNotifications } = await import('@capacitor/local-notifications');
+        await this.initNativeNotificationChannels();
+        await LocalNotifications.schedule({
+          notifications: [{
+            id: notifId,
+            title,
+            body: message,
+            channelId: 'fordago-alerts',
+            smallIcon: 'ic_stat_icon',
+            iconColor: '#FFD700',
+            schedule: {
+              at: triggerAt,
+              allowWhileIdle: true,
+            },
+            extra: {
+              type: 'workout_duration',
+              sessionId,
+              targetRoute: '/dashboard',
+            },
+          }],
+        });
+      } catch (err) {
+        console.warn('Failed to schedule native duration alarm:', err);
+      }
+    }
+  }
+
+  /**
+   * Cancels any scheduled native duration alarm for a given session.
+   * Called when session is stopped, completed, or all exercises are checked.
+   */
+  public async cancelNativeDurationAlarm(sessionId: string): Promise<void> {
+    if (!sessionId) return;
+    const notifId = this.hashNotificationId(`duration-${sessionId}`);
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const { LocalNotifications } = await import('@capacitor/local-notifications');
+        await LocalNotifications.cancel({
+          notifications: [{ id: notifId }],
+        });
+      } catch (err) {
+        console.warn('Failed to cancel native duration alarm:', err);
+      }
+    }
+  }
+
+  /**
+   * @param targetRoute Optional route to navigate to when the notification is tapped.
+   * @param channelId Optional notification channel ID ('fordago-alerts' or 'fordago-reminders').
+   */
+  private async sendDeviceNotification(
+    notification: StoredNotificationItem,
+    targetRoute?: string,
+    channelId: string = 'fordago-alerts'
+  ): Promise<void> {
     if (Capacitor.isNativePlatform()) {
       const { LocalNotifications } = await import('@capacitor/local-notifications');
+      await this.initNativeNotificationChannels();
       const permissions = await LocalNotifications.checkPermissions();
       const granted = permissions.display === 'granted'
         ? permissions
@@ -670,13 +891,12 @@ export class NotificationCenterService {
           id: this.hashNotificationId(notification.id),
           title: notification.title,
           body: expandedBody,
+          channelId: channelId,
           smallIcon: 'ic_stat_icon',
           iconColor: '#FFD700',
-          schedule: { at: new Date(Date.now() + 1000) },
+          schedule: { at: new Date(Date.now() + 500), allowWhileIdle: true },
           extra: {
             notificationId: notification.id,
-            // Consumed by app.component.ts's localNotificationActionPerformed
-            // handler to choose which route to navigate to on tap.
             targetRoute: targetRoute ?? null,
           },
           largeBody: expandedBody,

@@ -541,14 +541,18 @@ ion-content {
 .heat-2 { background: rgba(255,214,0,0.5); }
 .heat-3 { background: #FFD600; }
 
+#tour-activity-heatmap {
+  position: relative;
+}
+
 // Long-press popup shown while holding a single heat-cell (see
-// onHeatCellPressStart/onHeatCellPressEnd in dashboard.page.ts). Fixed
-// positioning + pointer-events: none so it never blocks the pointerup that
-// has to land back on the cell to dismiss it.
+// onHeatCellPressStart/onHeatCellPressEnd in dashboard.page.ts). Absolute
+// positioning relative to #tour-activity-heatmap so it renders directly on
+// top of the held cell, immune to scroll/viewport offsets.
 .heat-popup {
-  position: fixed;
+  position: absolute;
   z-index: 1200;
-  transform: translate(-50%, -100%) translateY(-12px);
+  transform: translate(-50%, -100%) translateY(-10px);
   min-width: 148px;
   max-width: 210px;
   padding: 10px 14px 11px;

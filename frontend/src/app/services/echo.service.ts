@@ -140,6 +140,15 @@ export class EchoService {
   }
 
   /**
+   * Listen on a public channel (e.g. notifications.global).
+   */
+  public channel(channelName: string) {
+    const echo = this.getEcho();
+    if (!echo) return null;
+    return echo.channel(channelName);
+  }
+
+  /**
    * Listen on a private channel.
    * Always checks whether the token changed since last init so that
    * subscriptions after login always use an authenticated connection.

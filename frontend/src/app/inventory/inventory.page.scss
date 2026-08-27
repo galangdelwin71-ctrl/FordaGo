@@ -976,6 +976,16 @@ ion-modal.overlay-hidden {
   -webkit-overflow-scrolling: touch;
 }
 
+// Sticky footer inside the cart modal that keeps the Close + Checkout
+// buttons always visible without the user needing to scroll down.
+// Uses flex-shrink: 0 so it never gets squeezed by the scroll body.
+.cart-sticky-footer {
+  flex-shrink: 0;
+  background: var(--bg-secondary);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding-top: 4px;
+}
+
 .modal-actions {
   flex-shrink: 0;
   display: grid;

@@ -275,24 +275,25 @@ ion-content {
   z-index: 9999;
   background: rgba(0, 0, 0, 0.82);
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 20px 16px;
   overflow-y: auto;
 }
 
 .equipment-modal-card {
   width: 100%;
-  max-width: 520px;
-  min-height: 100%;
+  max-width: 480px;
+  max-height: 88vh;        // Never taller than 88% of screen height
+  overflow-y: auto;         // Internal scroll if content overflows
   background:
     radial-gradient(circle at top left, rgba(232, 255, 71, 0.08), transparent 30%),
     #101010;
   color: #ffffff;
-  padding: 18px 18px 32px;
+  padding: 16px 16px 20px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   border-radius: 24px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
 }
@@ -325,11 +326,12 @@ ion-content {
 
 .modal-photo-wrap {
   width: 100%;
-  height: 240px;
-  border-radius: 18px;
+  height: 160px;           // Reduced from 240px → compact but still visual
+  border-radius: 16px;
   overflow: hidden;
   background: #1a1a1a;
   border: 1px solid #262626;
+  flex-shrink: 0;           // Don't squeeze the photo
 
   .modal-photo {
     width: 100%;
@@ -345,14 +347,14 @@ ion-content {
     justify-content: center;
 
     ion-icon {
-      font-size: 54px;
+      font-size: 42px;
       color: #2a2a2a;
     }
   }
 }
 
 .modal-name {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 800;
   color: #fff;
   letter-spacing: -0.3px;
@@ -396,24 +398,24 @@ ion-content {
 .info-card {
   background: #141414;
   border: 1px solid #262626;
-  border-radius: 16px;
-  padding: 14px;
+  border-radius: 12px;
+  padding: 10px 12px;
 }
 
 .info-label {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.8px;
   color: #8f8f8f;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .info-value {
-  font-size: 14px;
+  font-size: 13px;
   color: #ffffff;
   font-weight: 700;
-  line-height: 1.6;
+  line-height: 1.5;
 
   &.muted {
     color: #8f8f8f;
@@ -422,15 +424,16 @@ ion-content {
 
 .close-modal-btn {
   width: 100%;
-  margin-top: auto;
-  padding: 14px;
+  margin-top: 4px;
+  padding: 12px;
   background: linear-gradient(135deg, #e8ff47, #ffd600);
   border: none;
-  border-radius: 14px;
+  border-radius: 12px;
   color: #0d0d0d;
   font-size: 14px;
   font-weight: 800;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 // -- Animations ----------------------------------------

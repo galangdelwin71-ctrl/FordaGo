@@ -115,14 +115,12 @@ class NotificationController extends Controller
             'message' => $message,
         ]);
 
-        // Push to recipient's private channel so the Ionic app updates
-        // instantly without waiting for the next 15-second poll tick.
-        if ($targetUserId) {
-            try {
-                broadcast(new NotificationSent($notification, (int) $targetUserId))->toOthers();
-            } catch (\Throwable $e) {
-                \Log::warning('Broadcasting NotificationSent failed: ' . $e->getMessage());
-            }
+        // Push to recipient's channel (or notifications.global for broadcasts) so
+        // the Ionic app updates instantly without waiting for the next poll tick.
+        try {
+            broadcast(new NotificationSent($notification, $targetUserId ? (int) $targetUserId : null))->toOthers();
+        } catch (\Throwable $e) {
+            \Log::warning('Broadcasting NotificationSent failed: ' . $e->getMessage());
         }
 
         return response()->json(['id' => $notification->id, 'message' => 'Notification sent'], 201);

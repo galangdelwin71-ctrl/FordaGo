@@ -77,6 +77,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/products',           [InventoryController::class, 'storeProduct'])->middleware('role:admin,super_admin,employee');
         Route::put('/products/{id}',       [InventoryController::class, 'updateProduct'])->whereNumber('id')->middleware('role:admin,super_admin,employee');
         Route::delete('/products/{id}',    [InventoryController::class, 'destroyProduct'])->whereNumber('id')->middleware('role:admin,super_admin,employee');
+        // Cart checkout — multi-item atomic order placed from the cart modal
+        Route::post('/cart/checkout',      [InventoryController::class, 'checkout']);
         // Orders
         Route::get('/my-orders',           [InventoryController::class, 'myOrders']);
         Route::get('/orders',              [InventoryController::class, 'orders'])->middleware('role:admin,super_admin,employee');

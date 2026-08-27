@@ -70,20 +70,30 @@ class AttendanceController extends Controller
             'check_in_time'   => now(),
         ]);
 
-        // Notify admin for daily pass check-ins
-        if ($user->membership_type === 'daily') {
-            try {
-                $admin = User::where('role', 'admin')->first();
-                if ($admin) {
+        // Notify all staff (admin, super_admin, employee) for gym attendance
+        try {
+            $staffMembers = User::whereIn('role', ['admin', 'super_admin', 'employee'])->get();
+            $displayName = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')) ?: $user->username;
+
+            foreach ($staffMembers as $staff) {
+                if ($user->membership_type === 'daily') {
                     Notification::create([
-                        'user_id' => $admin->id,
-                        'title'   => "Payment Pending: {$user->username}",
-                        'message' => "{$user->username} is requesting check-in (Daily Pass ₱40). Please collect payment and confirm to complete their attendance.",
+                        'user_id' => $staff->id,
+                        'title'   => "Payment Pending: {$displayName}",
+                        'message' => "{$displayName} (@{$user->username}) scanned the gym QR. Please collect ₱100 daily pass payment to confirm attendance.",
+                        'is_read' => false,
+                    ]);
+                } else {
+                    Notification::create([
+                        'user_id' => $staff->id,
+                        'title'   => "Gym Check-in: {$displayName}",
+                        'message' => "{$displayName} (@{$user->username}) checked into the gym (Premium Member).",
+                        'is_read' => false,
                     ]);
                 }
-            } catch (\Throwable) {
-                // best-effort
             }
+        } catch (\Throwable $e) {
+            \Log::warning('Failed to notify staff of gym check-in: ' . $e->getMessage());
         }
 
         return response()->json([

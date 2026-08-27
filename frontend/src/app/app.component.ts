@@ -97,6 +97,7 @@ import { WorkoutTrackerService } from './services/workout-tracker.service';
 import { ThemeService } from './services/theme.service';
 import { NotificationCenterService } from './services/notification-center.service';
 import { CoachingService } from './services/coaching.service';
+import { AuthService } from './services/auth.service';
 import { firstValueFrom } from 'rxjs';
 
 // Shape of the handle Capacitor's App.addListener() resolves to — declared
@@ -131,14 +132,13 @@ interface BackButtonListenerHandle {
 // the back button randomly "jumping" to an unrelated screen instead of
 // exiting the app like a normal Android root screen. Treating every tab
 // page as a root page (double-press-to-exit, see handleRootBackPress())
-// fixes that. A drill-in page reached FROM a tab (chat, coach profile,
-// transactions, admin-reports) is deliberately NOT listed here -- those
-// still fall through to Location.back() below, which correctly returns to
-// whichever tab pushed them.
 const BACK_BUTTON_ROOT_PATHS = new Set([
   '/dashboard',
   '/admin',
   '/login',
+]);
+
+const TAB_NAVIGATION_PATHS = new Set([
   '/schedule',
   '/equipment',
   '/inventory',
@@ -175,6 +175,7 @@ export class AppComponent implements OnDestroy {
     private themeService: ThemeService,
     private notificationCenter: NotificationCenterService,
     private coachingService: CoachingService,
+    private auth: AuthService,
     private router: Router,
     private location: Location,
     private toastController: ToastController,
@@ -271,7 +272,17 @@ export class AppComponent implements OnDestroy {
     this.themeService.initTheme();
     this.workoutTracker.startAutoSync();
     this.registerHardwareBackButton();
+    void this.notificationCenter.initNativeNotificationChannels();
     void this.registerNotificationTapListener();
+
+    // Automatically poll and listen for real-time notifications for any logged-in user
+    this.auth.user$.subscribe(user => {
+      if (user) {
+        this.notificationCenter.startPolling();
+      } else {
+        this.notificationCenter.stopPolling();
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -375,23 +386,76 @@ export class AppComponent implements OnDestroy {
    *      guard bounces them straight back out instead of showing the login
    *      screen.
    */
+  /**
+   * Checks if any modal, sheet, or overlay is currently open in the DOM
+   * and dismisses it instead of navigating away.
+   */
+  private dismissTopOverlay(): boolean {
+    if (typeof document === 'undefined') return false;
+
+    // 1. Ionic native overlays / modals
+    const openModals = Array.from(document.querySelectorAll('ion-modal, ion-alert, ion-action-sheet, ion-popover')) as any[];
+    for (let i = openModals.length - 1; i >= 0; i--) {
+      const modal = openModals[i];
+      // Check if modal is visible / open
+      if (modal && (modal.classList.contains('show-modal') || modal.isOpen || modal.getAttribute('aria-hidden') !== 'true')) {
+        if (typeof modal.dismiss === 'function') {
+          try {
+            void modal.dismiss();
+            return true;
+          } catch {}
+        }
+      }
+    }
+
+    // 2. Custom overlays, coaching panel, and bottom sheets
+    const activeOverlay = document.querySelector(
+      '.notif-overlay, .equipment-modal-backdrop, .bottom-sheet-modal, .quick-confirm-sheet, app-coaching-panel'
+    );
+    if (activeOverlay) {
+      const closeBtn = activeOverlay.querySelector(
+        '.notif-dismiss-btn, .close-modal-btn, .close-btn, .cancel-btn, .modal-close-btn, .btn-close, .action-btn.cancel, .coaching-header-close, .notif-icon-btn'
+      ) as HTMLElement | null;
+      if (closeBtn) {
+        closeBtn.click();
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Hierarchical Android back-button behavior (Messenger-style):
+   * 1. If an overlay/modal/edit panel is open -> dismiss it first.
+   * 2. If on a root page (dashboard/admin/login) -> double-press-to-exit.
+   * 3. If on another tab (schedule/shop/equipment/profile/qr/coaching) -> navigate to /dashboard.
+   * 4. For drill-in sub-routes (chat, coach profile, etc.) -> Location.back().
+   */
   private registerHardwareBackButton(): void {
     App.addListener('backButton', () => {
+      // 1. Dismiss any open modal/sheet/overlay first
+      if (this.dismissTopOverlay()) {
+        return;
+      }
+
       const currentPath = this.router.url.split('?')[0].split('#')[0];
 
+      // 2. Double-press-to-exit on true root entry points only (Dashboard, Admin, Login)
       if (BACK_BUTTON_ROOT_PATHS.has(currentPath)) {
         void this.handleRootBackPress();
         return;
       }
 
-      // Plain history navigation for every other route, including a chat
-      // thread (/chat/:conversationId) or a coach profile (/coach/:id).
-      // Any "reopen the coaching panel on the right tab" instruction was
-      // already recorded via CoachingNavService BEFORE that route was
-      // ever pushed — see CoachingPanelComponent.navigateAway() — so this
-      // handler doesn't need to (and must not) special-case any path or
-      // guess a tab itself; it just mirrors what the on-screen back arrow
-      // already does via ChatPage.goBack() / CoachDetailPage.goBack().
+      // 3. Tab pages: return to dashboard first
+      if (TAB_NAVIGATION_PATHS.has(currentPath)) {
+        this.zone.run(() => {
+          void this.router.navigate(['/dashboard']);
+        });
+        return;
+      }
+
+      // 4. Drill-in sub-routes: standard history back
       this.location.back();
     })
       .then((handle) => {
@@ -399,8 +463,6 @@ export class AppComponent implements OnDestroy {
       })
       .catch(() => {
         // Non-fatal: this listener only ever fires on Android via Capacitor.
-        // On web/iOS builds (or if native registration itself fails) the app
-        // must keep starting up normally rather than crash on this call.
       });
   }
 
