@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\NotificationSent;
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\Notification;
 use App\Models\User;
+use App\Services\FcmService;
 use Illuminate\Http\Request;
 
 /**
@@ -188,16 +190,40 @@ class AttendanceController extends Controller
         ]);
 
         try {
-            Notification::create([
+            $notif = Notification::create([
                 'user_id' => $attendance->user_id,
                 'title'   => 'Check-in Confirmed! ✅',
-                'message' => 'Your ₱40 daily pass payment has been confirmed by the admin. Your attendance has been recorded. Enjoy your workout! 💪',
+                'message' => 'Your ₱100 daily pass payment has been confirmed by the admin. Your attendance has been recorded. Enjoy your workout! 💪',
+                'is_read' => false,
             ]);
-        } catch (\Throwable) {
-            // best-effort
+
+            try {
+                broadcast(new NotificationSent($notif, $attendance->user_id));
+            } catch (\Throwable $e) {
+                \Log::warning('Broadcast notification failed: ' . $e->getMessage());
+            }
+
+            $member = User::find($attendance->user_id);
+            if ($member && $member->fcm_token) {
+                app(FcmService::class)->sendToToken(
+                    $member->fcm_token,
+                    'Check-in Confirmed! ✅',
+                    'Your ₱100 daily pass payment has been confirmed. Have a great workout! 💪',
+                    [
+                        'type'          => 'attendance_confirmed',
+                        'attendance_id' => (string) $attendance->id,
+                        'targetRoute'   => '/qr-scanner',
+                    ]
+                );
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('Attendance confirm notification failed: ' . $e->getMessage());
         }
 
-        return response()->json(['message' => 'Attendance confirmed and payment recorded.']);
+        return response()->json([
+            'message'    => 'Attendance confirmed and payment recorded.',
+            'attendance' => $attendance,
+        ]);
     }
 
     /**

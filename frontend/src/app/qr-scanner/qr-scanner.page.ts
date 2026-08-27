@@ -7,9 +7,11 @@ import {
   IonFooter,
   IonIcon,
   IonModal,
+  IonSpinner,
 } from '@ionic/angular/standalone';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
+import { EchoService } from '../services/echo.service';
 import { Html5Qrcode } from 'html5-qrcode';
 import { HeaderComponent } from '../shared/header/header.component';
 import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.component';
@@ -56,6 +58,7 @@ export interface EquipmentTutorial {
     IonFooter,
     IonIcon,
     IonModal,
+    IonSpinner,
     HeaderComponent,
     CoachingPanelComponent,
     PullToRefreshComponent,
@@ -171,6 +174,12 @@ export class QrScannerPage implements OnInit, OnDestroy {
   scannedTime          = '';
   checkInMessage       = '';
 
+  // Live daily pass payment waiting state
+  pendingAttendanceId: number | null = null;
+  isPendingPaymentConfirmed = false;
+  isVerifyingPayment = false;
+  private pendingCheckTimer: ReturnType<typeof setInterval> | null = null;
+
   // Equipment tutorial modal
   tutorialModalOpen  = false;
   activeEquipment:   EquipmentTutorial | null = null;
@@ -196,6 +205,7 @@ export class QrScannerPage implements OnInit, OnDestroy {
     private router: Router,
     private http: HttpClient,
     public auth: AuthService,
+    private echoService: EchoService,
     private coachingNav: CoachingNavService,
     private coachingService: CoachingService,
     private toast: ToastService,
@@ -376,6 +386,7 @@ export class QrScannerPage implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     void this.stopCameraScan();
+    this.stopPendingAttendanceWatcher();
   }
 
   // ── Load attendance history ───────────────────────────
@@ -602,26 +613,42 @@ export class QrScannerPage implements OnInit, OnDestroy {
       next: (res) => {
         const now  = new Date();
         const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        this.myLogs = [
-          {
-            type: 'attendance',
-            label: `Gym Check-in (${res.payment_status === 'pending' ? 'Pending' : 'Confirmed'})`,
-            time,
-            date: this.formatLogDate(now),
-          },
-          ...this.myLogs,
-        ];
         this.scannedTime = time;
-        if (res.payment_status === 'pending') {
-          this.checkInMessage = 'Your check-in is pending. Please pay ₱100 to the admin and wait for confirmation.';
-          this.pendingModalOpen = true;
-        } else {
-          this.checkInMessage = 'You\'re checked in! Welcome to the gym.';
-          this.attendanceModalOpen = true;
-        }
         this.isScanning = false;
         this.isProcessingScan = false;
         this.scanStatusMessage = 'Scan complete. You can scan again anytime.';
+
+        if (res.payment_status === 'pending') {
+          this.pendingAttendanceId = res.attendance_id || null;
+          this.isPendingPaymentConfirmed = false;
+          this.checkInMessage = res.message || 'Please proceed to the cashier counter to pay your ₱100 Daily Pass fee.';
+          this.pendingModalOpen = true;
+
+          this.myLogs = [
+            {
+              type: 'attendance',
+              label: 'Gym Check-in (Pending Payment)',
+              time,
+              date: this.formatLogDate(now),
+            },
+            ...this.myLogs,
+          ];
+
+          this.startPendingAttendanceWatcher(res.attendance_id);
+        } else {
+          this.checkInMessage = res.message || 'You\'re checked in! Welcome to FordaGO 💪';
+          this.attendanceModalOpen = true;
+
+          this.myLogs = [
+            {
+              type: 'attendance',
+              label: 'Gym Check-in (Confirmed)',
+              time,
+              date: this.formatLogDate(now),
+            },
+            ...this.myLogs,
+          ];
+        }
       },
       error: (err) => {
         this.isScanning = false;
@@ -631,6 +658,74 @@ export class QrScannerPage implements OnInit, OnDestroy {
         this.toast.error(msg);
       }
     });
+  }
+
+  startPendingAttendanceWatcher(attendanceId?: number): void {
+    this.stopPendingAttendanceWatcher();
+    this.isPendingPaymentConfirmed = false;
+    if (attendanceId) this.pendingAttendanceId = attendanceId;
+
+    // 1. High-frequency live polling every 1.5 seconds for instant update
+    this.pendingCheckTimer = setInterval(() => {
+      this.checkMyLatestAttendanceStatus(false);
+    }, 1500);
+
+    // 2. Real-time WebSocket event listener on private-user channel
+    const userId = this.auth.user?.id;
+    if (userId) {
+      const channel = this.echoService.privateChannel(`user.${userId}`);
+      if (channel) {
+        channel.listen('.notification.sent', (data: any) => {
+          const title = String(data?.notification?.title || '');
+          const msg   = String(data?.notification?.message || '');
+          if (title.includes('Check-in Confirmed') || msg.includes('daily pass payment') || msg.includes('attendance has been recorded')) {
+            this.handlePaymentConfirmed();
+          }
+        });
+      }
+    }
+  }
+
+  checkMyLatestAttendanceStatus(manualClick = false): void {
+    if (!this.auth.token || this.isPendingPaymentConfirmed) return;
+    if (manualClick) this.isVerifyingPayment = true;
+
+    const headers = { Authorization: `Bearer ${this.auth.token}` };
+    this.http.get<any[]>(`${this.api}/attendance/my`, { headers }).subscribe({
+      next: (rows) => {
+        if (manualClick) this.isVerifyingPayment = false;
+        if (!rows || rows.length === 0) return;
+        const todayStr = new Date().toISOString().split('T')[0];
+        const matching = rows.find(r =>
+          (this.pendingAttendanceId && Number(r.id) === Number(this.pendingAttendanceId)) ||
+          (r.check_in_time && String(r.check_in_time).startsWith(todayStr))
+        );
+
+        if (matching && matching.payment_status === 'paid') {
+          this.handlePaymentConfirmed();
+        } else if (manualClick) {
+          this.toast.info('Payment still pending. Please pay at the counter and wait for cashier confirmation.');
+        }
+      },
+      error: () => {
+        if (manualClick) this.isVerifyingPayment = false;
+      }
+    });
+  }
+
+  handlePaymentConfirmed(): void {
+    if (this.isPendingPaymentConfirmed) return;
+    this.isPendingPaymentConfirmed = true;
+    this.stopPendingAttendanceWatcher();
+    this.loadMyAttendanceLogs();
+    this.toast.success('Payment Confirmed! Attendance Recorded ✅');
+  }
+
+  stopPendingAttendanceWatcher(): void {
+    if (this.pendingCheckTimer) {
+      clearInterval(this.pendingCheckTimer);
+      this.pendingCheckTimer = null;
+    }
   }
 
   // ── Log ───────────────────────────────────────────────
@@ -645,6 +740,8 @@ export class QrScannerPage implements OnInit, OnDestroy {
 
   closePendingModal(): void {
     this.pendingModalOpen = false;
+    this.stopPendingAttendanceWatcher();
+    this.loadMyAttendanceLogs();
   }
 
   closeTutorialModal(): void {

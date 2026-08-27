@@ -343,55 +343,139 @@
     <div class="modal-sheet attendance-pending-sheet">
       <div class="modal-handle"></div>
 
-      <div class="success-hero pending">
-        <div class="glow-orb amber"></div>
-        <div class="success-icon-ring amber">
-          <div class="icon-inner-pulse amber"></div>
-          <ion-icon class="success-emoji" name="time"></ion-icon>
-        </div>
-        <div class="modal-title">Payment Pending</div>
-        <div class="modal-sub">Daily pass recorded · Awaiting counter confirmation</div>
-      </div>
-
-      <!-- FordaGO Digital Pass Card (Pending) -->
-      <div class="digital-pass-card pending">
-        <div class="pass-header">
-          <div class="pass-brand">
-            <span class="brand-logo">FordaGO</span>
-            <span class="pass-type-badge pending">DAILY PASS</span>
+      <!-- State 1: Awaiting Cashier Confirmation -->
+      <ng-container *ngIf="!isPendingPaymentConfirmed">
+        <div class="success-hero pending">
+          <div class="glow-orb amber"></div>
+          <div class="success-icon-ring amber">
+            <div class="icon-inner-pulse amber"></div>
+            <ion-icon class="success-emoji" name="time"></ion-icon>
           </div>
-          <div class="pass-status-pill pending">
-            <span class="status-dot amber"></span>
-            <span>AWAITING PAYMENT</span>
-          </div>
+          <div class="modal-title">Payment Required</div>
+          <div class="modal-sub">Please proceed to the cashier to pay your Daily Pass</div>
         </div>
 
-        <div class="pass-divider"></div>
-
-        <div class="pass-grid">
-          <div class="pass-item">
-            <span class="pass-lbl">MEMBER</span>
-            <span class="pass-val member-highlight">
-              <span class="pass-avatar" *ngIf="initials">{{ initials }}</span>
-              {{ currentUserName }}
-            </span>
+        <!-- FordaGO Digital Pass Card (Pending) -->
+        <div class="digital-pass-card pending">
+          <div class="pass-header">
+            <div class="pass-brand">
+              <span class="brand-logo">FordaGO</span>
+              <span class="pass-type-badge pending">DAILY PASS</span>
+            </div>
+            <div class="pass-status-pill pending">
+              <span class="status-dot amber"></span>
+              <span>AWAITING PAYMENT</span>
+            </div>
           </div>
-          <div class="pass-item right">
-            <span class="pass-lbl">TIME IN</span>
-            <span class="pass-val time-val">{{ scannedTime || 'Just Now' }}</span>
+
+          <div class="pass-divider"></div>
+
+          <div class="pass-grid">
+            <div class="pass-item">
+              <span class="pass-lbl">MEMBER</span>
+              <span class="pass-val member-highlight">
+                <span class="pass-avatar" *ngIf="initials">{{ initials }}</span>
+                {{ currentUserName }}
+              </span>
+            </div>
+            <div class="pass-item right">
+              <span class="pass-lbl">TIME SCANNED</span>
+              <span class="pass-val time-val">{{ scannedTime || 'Just Now' }}</span>
+            </div>
+            <div class="pass-item">
+              <span class="pass-lbl">AMOUNT DUE</span>
+              <span class="pass-val fee-highlight">₱100.00</span>
+            </div>
+            <div class="pass-item right">
+              <span class="pass-lbl">STATUS</span>
+              <span class="pass-val status-waiting-text">
+                <ion-spinner name="crescent" class="status-mini-spinner"></ion-spinner>
+                Waiting for Cashier
+              </span>
+            </div>
+          </div>
+
+          <div class="pending-notice-box">
+            <ion-icon name="information-circle"></ion-icon>
+            <span>{{ checkInMessage || 'Please proceed to the admin or front desk counter to pay ₱100 and activate your day pass.' }}</span>
+          </div>
+
+          <div class="pending-live-sync-indicator">
+            <div class="live-dot-pulse"></div>
+            <span>Auto-updating in real-time once payment is confirmed</span>
           </div>
         </div>
 
-        <div class="pending-notice-box">
-          <ion-icon name="information-circle"></ion-icon>
-          <span>{{ checkInMessage || 'Please proceed to the admin or front desk to pay and activate your day pass.' }}</span>
+        <div class="pending-btn-row">
+          <button type="button" class="btn-check-status-gold" (click)="checkMyLatestAttendanceStatus(true)" [disabled]="isVerifyingPayment">
+            <ion-spinner *ngIf="isVerifyingPayment" name="dots"></ion-spinner>
+            <ng-container *ngIf="!isVerifyingPayment">
+              <ion-icon name="refresh-outline"></ion-icon>
+              <span>I've Paid at the Counter</span>
+            </ng-container>
+          </button>
+          <button type="button" class="btn-dismiss-text" (click)="closePendingModal()">
+            Dismiss
+          </button>
         </div>
-      </div>
+      </ng-container>
 
-      <button class="gold-cta-btn" (click)="closePendingModal()">
-        <span>OK, Got It</span>
-        <ion-icon name="checkmark-outline"></ion-icon>
-      </button>
+      <!-- State 2: Payment Confirmed by Admin! -->
+      <ng-container *ngIf="isPendingPaymentConfirmed">
+        <div class="success-hero">
+          <div class="glow-orb"></div>
+          <div class="success-icon-ring">
+            <div class="icon-inner-pulse"></div>
+            <ion-icon class="success-emoji" name="checkmark-circle"></ion-icon>
+          </div>
+          <div class="modal-title">Payment Confirmed! ✅</div>
+          <div class="modal-sub">Check-in confirmed · Have a great workout!</div>
+        </div>
+
+        <!-- FordaGO Digital Pass Card (Confirmed) -->
+        <div class="digital-pass-card">
+          <div class="pass-header">
+            <div class="pass-brand">
+              <span class="brand-logo">FordaGO</span>
+              <span class="pass-type-badge">DAILY PASS</span>
+            </div>
+            <div class="pass-status-pill success">
+              <span class="status-dot"></span>
+              <span>VERIFIED</span>
+            </div>
+          </div>
+
+          <div class="pass-divider"></div>
+
+          <div class="pass-grid">
+            <div class="pass-item">
+              <span class="pass-lbl">MEMBER</span>
+              <span class="pass-val member-highlight">
+                <span class="pass-avatar" *ngIf="initials">{{ initials }}</span>
+                {{ currentUserName }}
+              </span>
+            </div>
+            <div class="pass-item right">
+              <span class="pass-lbl">TIME IN</span>
+              <span class="pass-val time-val">{{ scannedTime || 'Just Now' }}</span>
+            </div>
+            <div class="pass-item">
+              <span class="pass-lbl">PAYMENT</span>
+              <span class="pass-val fee-paid">₱100.00 Paid</span>
+            </div>
+            <div class="pass-item right">
+              <span class="pass-lbl">ACCESS</span>
+              <span class="pass-val access-val">Gym Floor Granted</span>
+            </div>
+          </div>
+        </div>
+
+        <button class="gold-cta-btn" (click)="closePendingModal()">
+          <span>Done · Start Workout</span>
+          <ion-icon name="arrow-forward-outline"></ion-icon>
+        </button>
+      </ng-container>
+
     </div>
   </ng-template>
 </ion-modal>
