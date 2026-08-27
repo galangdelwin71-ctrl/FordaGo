@@ -28,7 +28,9 @@ class FcmService
         $this->projectId = config('services.firebase.project_id', 'fordago-18588');
         
         $serviceAccountJson = config('services.firebase.service_account_json', '');
-        if ($serviceAccountJson) {
+        if (is_array($serviceAccountJson)) {
+            $this->serviceAccount = $serviceAccountJson;
+        } elseif (is_string($serviceAccountJson) && trim($serviceAccountJson) !== '') {
             $this->serviceAccount = json_decode($serviceAccountJson, true);
         } else {
             $filePath = storage_path('app/firebase-service-account.json');
@@ -87,7 +89,7 @@ class FcmService
             $url = "https://fcm.googleapis.com/v1/projects/{$this->projectId}/messages:send";
 
             $response = Http::withToken($accessToken)
-                ->timeout(10)
+                ->timeout(3)
                 ->post($url, $payload);
 
             if ($response->successful()) {
@@ -140,12 +142,21 @@ class FcmService
                     'exp'   => $now + 3600,
                 ]));
 
+                // Unescape newlines in private key if loaded from JSON string in .env
+                $privateKey = str_replace(["\\n", '\n'], "\n", $sa['private_key']);
+
                 $signingInput = "{$header}.{$payload}";
-                openssl_sign($signingInput, $signature, $sa['private_key'], 'SHA256');
+                $signSuccess = openssl_sign($signingInput, $signature, $privateKey, 'SHA256');
+
+                if (! $signSuccess) {
+                    Log::error('FCM: openssl_sign failed: ' . openssl_error_string());
+                    return null;
+                }
+
                 $jwt = "{$signingInput}." . $this->base64UrlEncode($signature);
 
                 $response = Http::asForm()
-                    ->timeout(5)
+                    ->timeout(4)
                     ->post('https://oauth2.googleapis.com/token', [
                         'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
                         'assertion'  => $jwt,
