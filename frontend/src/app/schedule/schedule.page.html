@@ -355,124 +355,132 @@
         <div class="modal-handle"></div>
         <div class="modal-title">Add Workout</div>
 
-        <div class="field-group" id="tour-add-workout-type">
-          <label class="field-label">Workout Type</label>
-          <div class="field-wrap">
-            <span class="field-icon"><ion-icon name="barbell-outline"></ion-icon></span>
-            <select [(ngModel)]="newWorkoutType" (ngModelChange)="onWorkoutTypeChange($event)">
-              <option *ngFor="let wt of workoutTypes" [value]="wt">{{ wt }}</option>
-            </select>
-          </div>
+        <div class="wplan-rest-row" style="margin-bottom: 16px;">
+          <span class="wplan-rest-label" style="font-size: 14px; font-weight: 700;">Rest Day</span>
+          <label class="toggle-switch">
+            <input type="checkbox" [(ngModel)]="newWorkoutIsRest" />
+            <span class="toggle-slider"></span>
+          </label>
         </div>
 
-        <!-- Custom Target Input (shown for all types except Rest Day) -->
-        <div class="field-group" *ngIf="newWorkoutType !== 'Rest Day'">
-          <label class="field-label">Specific Target <span class="label-optional">(Optional)</span></label>
-          <div class="field-wrap">
-            <span class="field-icon"><ion-icon name="locate-outline"></ion-icon></span>
-            <input
-              type="text"
-              [(ngModel)]="newWorkoutCustomTarget"
-              [placeholder]="getTargetPlaceholder(newWorkoutType)" />
-          </div>
-          <!-- Suggested targets as chips -->
-          <div class="target-suggestions">
-            <span
-              *ngFor="let t of getSuggestedTargets(newWorkoutType)"
-              class="target-chip"
-              [class.selected]="newWorkoutCustomTarget === t"
-              (click)="selectTarget(t)">
-              {{ t }}
-            </span>
-          </div>
-        </div>
-
-        <!-- Exercise Preview (shown when target is selected) -->
-        <div class="modal-exercise-preview" *ngIf="newWorkoutCustomTarget || newWorkoutType">
-          <div class="preview-header">
-            <span class="preview-title">Recommended Exercises</span>
-            <span class="preview-sub">{{ getModalExercises().length }} exercises</span>
-          </div>
-          <div class="preview-list">
-            <div class="preview-ex" *ngFor="let ex of getModalExercises(); let j = index">
-              <span class="ex-num">{{ j + 1 }}</span>
-              <span class="ex-name">{{ ex.name }}</span>
-              <span class="ex-detail">{{ ex.sets }}×{{ ex.reps }}</span>
+        <ng-container *ngIf="!newWorkoutIsRest">
+          <div class="field-group" id="tour-add-workout-type">
+            <label class="field-label">Workout Type</label>
+            <div class="field-wrap">
+              <span class="field-icon"><ion-icon name="barbell-outline"></ion-icon></span>
+              <select [(ngModel)]="newWorkoutType" (ngModelChange)="onWorkoutTypeChange($event)">
+                <option *ngFor="let wt of workoutTypes" [value]="wt">{{ wt }}</option>
+              </select>
             </div>
           </div>
-        </div>
 
-
-        <div class="field-group" id="tour-add-workout-date">
-          <label class="field-label">Time</label>
-          <div class="field-wrap">
-            <span class="field-icon"><ion-icon name="alarm-outline"></ion-icon></span>
-            <input type="time" [(ngModel)]="newWorkoutTime" (ngModelChange)="newWorkoutTimeWarning = ''" />
-          </div>
-          <div class="field-warning" *ngIf="newWorkoutTimeWarning">{{ newWorkoutTimeWarning }}</div>
-        </div>
-
-        <div class="field-group" id="tour-add-workout-duration">
-          <label class="field-label">Duration</label>
-          <div class="duration-input-row">
-            <div class="field-wrap duration-field-wrap">
-              <span class="field-icon">⏱</span>
+          <!-- Custom Target Input (shown for all types except Rest Day) -->
+          <div class="field-group" *ngIf="newWorkoutType !== 'Rest Day'">
+            <label class="field-label">Specific Target <span class="label-optional">(Optional)</span></label>
+            <div class="field-wrap">
+              <span class="field-icon"><ion-icon name="locate-outline"></ion-icon></span>
               <input
-                type="number"
-                inputmode="decimal"
-                appNoNegative
-                [min]="newWorkoutDurationUnit === 'hrs' ? 0.25 : 1"
-                [max]="newWorkoutDurationUnit === 'hrs' ? 8 : 480"
-                [step]="newWorkoutDurationUnit === 'hrs' ? 0.25 : 1"
-                pattern="[0-9]*\.?[0-9]*"
-                [placeholder]="newWorkoutDurationUnit === 'hrs' ? 'e.g. 1.5' : 'e.g. 45'"
-                [ngModel]="newWorkoutDurationInputValue"
-                (ngModelChange)="onDurationInputChange($event)" />
+                type="text"
+                [(ngModel)]="newWorkoutCustomTarget"
+                [placeholder]="getTargetPlaceholder(newWorkoutType)" />
             </div>
-            <!-- Min / Hrs unit toggle — switches how the number above is
-                 interpreted; the underlying stored duration always stays in
-                 minutes so nothing elsewhere in the app needs to change. -->
-            <div class="duration-unit-toggle">
-              <button
-                type="button"
-                class="duration-unit-btn"
-                [class.active]="newWorkoutDurationUnit === 'min'"
-                (click)="onDurationUnitChange('min')">Min</button>
-              <button
-                type="button"
-                class="duration-unit-btn"
-                [class.active]="newWorkoutDurationUnit === 'hrs'"
-                (click)="onDurationUnitChange('hrs')">Hrs</button>
+            <!-- Suggested targets as chips -->
+            <div class="target-suggestions">
+              <span
+                *ngFor="let t of getSuggestedTargets(newWorkoutType)"
+                class="target-chip"
+                [class.selected]="newWorkoutCustomTarget === t"
+                (click)="selectTarget(t)">
+                {{ t }}
+              </span>
             </div>
           </div>
-          <!-- Quick presets — tap to fill the field above, or just type any
-               specific duration (in minutes or hours) instead. -->
-          <div class="target-suggestions">
-            <span
-              *ngFor="let d of durationOptions"
-              class="target-chip"
-              [class.selected]="newWorkoutDuration === d"
-              (click)="selectDurationPreset(d)">
-              {{ d }}
-            </span>
-          </div>
-        </div>
 
-        <div class="field-group" id="tour-add-workout-location">
-          <label class="field-label">Location <span class="label-optional">(Optional)</span></label>
-          <div class="field-wrap">
-            <span class="field-icon">📍</span>
-            <input type="text" [(ngModel)]="newWorkoutLocation" placeholder="e.g. Gym Floor B, Home, Cardio Area..." />
+          <!-- Exercise Preview (shown when target is selected) -->
+          <div class="modal-exercise-preview" *ngIf="newWorkoutCustomTarget || newWorkoutType">
+            <div class="preview-header">
+              <span class="preview-title">Recommended Exercises</span>
+              <span class="preview-sub">{{ getModalExercises().length }} exercises</span>
+            </div>
+            <div class="preview-list">
+              <div class="preview-ex" *ngFor="let ex of getModalExercises(); let j = index">
+                <span class="ex-num">{{ j + 1 }}</span>
+                <span class="ex-name">{{ ex.name }}</span>
+                <span class="ex-detail">{{ ex.sets }}×{{ ex.reps }}</span>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <!-- Exercise Editor -->
-        <div id="tour-add-workout-exercises">
-          <app-exercise-list-editor
-            [(exercises)]="newWorkoutExercises"
-            title="My Exercises (Optional)"
-            emptyHint="Leave empty to use recommended exercises, or add your own below">
-          </app-exercise-list-editor>
+          <div class="field-group" id="tour-add-workout-date">
+            <label class="field-label">Time</label>
+            <div class="field-wrap">
+              <span class="field-icon"><ion-icon name="alarm-outline"></ion-icon></span>
+              <input type="time" [(ngModel)]="newWorkoutTime" (ngModelChange)="newWorkoutTimeWarning = ''" />
+            </div>
+            <div class="field-warning" *ngIf="newWorkoutTimeWarning">{{ newWorkoutTimeWarning }}</div>
+          </div>
+
+          <div class="field-group" id="tour-add-workout-duration">
+            <label class="field-label">Duration</label>
+            <div class="duration-input-row">
+              <div class="field-wrap duration-field-wrap">
+                <span class="field-icon">⏱</span>
+                <input
+                  type="number"
+                  inputmode="decimal"
+                  appNoNegative
+                  [min]="newWorkoutDurationUnit === 'hrs' ? 0.25 : 1"
+                  [max]="newWorkoutDurationUnit === 'hrs' ? 8 : 480"
+                  [step]="newWorkoutDurationUnit === 'hrs' ? 0.25 : 1"
+                  pattern="[0-9]*\.?[0-9]*"
+                  [placeholder]="newWorkoutDurationUnit === 'hrs' ? 'e.g. 1.5' : 'e.g. 45'"
+                  [ngModel]="newWorkoutDurationInputValue"
+                  (ngModelChange)="onDurationInputChange($event)" />
+              </div>
+              <div class="duration-unit-toggle">
+                <button
+                  type="button"
+                  class="duration-unit-btn"
+                  [class.active]="newWorkoutDurationUnit === 'min'"
+                  (click)="onDurationUnitChange('min')">Min</button>
+                <button
+                  type="button"
+                  class="duration-unit-btn"
+                  [class.active]="newWorkoutDurationUnit === 'hrs'"
+                  (click)="onDurationUnitChange('hrs')">Hrs</button>
+              </div>
+            </div>
+            <div class="target-suggestions">
+              <span
+                *ngFor="let d of durationOptions"
+                class="target-chip"
+                [class.selected]="newWorkoutDuration === d"
+                (click)="selectDurationPreset(d)">
+                {{ d }}
+              </span>
+            </div>
+          </div>
+
+          <div class="field-group" id="tour-add-workout-location">
+            <label class="field-label">Location <span class="label-optional">(Optional)</span></label>
+            <div class="field-wrap">
+              <span class="field-icon">📍</span>
+              <input type="text" [(ngModel)]="newWorkoutLocation" placeholder="e.g. Gym Floor B, Home, Cardio Area..." />
+            </div>
+          </div>
+
+          <!-- Exercise Editor -->
+          <div id="tour-add-workout-exercises">
+            <app-exercise-list-editor
+              [(exercises)]="newWorkoutExercises"
+              title="My Exercises (Optional)"
+              emptyHint="Leave empty to use recommended exercises, or add your own below">
+            </app-exercise-list-editor>
+          </div>
+        </ng-container>
+
+        <div class="info-box" *ngIf="newWorkoutIsRest" style="margin: 12px 0 20px;">
+          😴 This day will be scheduled as a recovery Rest Day.
         </div>
 
         <div class="modal-actions">
@@ -481,8 +489,8 @@
             id="tour-add-workout-save-btn"
             class="btn btn-primary btn-yellow" 
             (click)="saveWorkout()"
-            [disabled]="!!newWorkoutTimeWarning">
-            Save Workout
+            [disabled]="!newWorkoutIsRest && !!newWorkoutTimeWarning">
+            {{ newWorkoutIsRest ? 'Save Rest Day' : 'Save Workout' }}
           </button>
         </div>
       </div>
@@ -500,10 +508,6 @@
 <ion-modal [isOpen]="homeWorkoutModalOpen" (didDismiss)="closeHomeWorkoutModal()" [breakpoints]="[0,0.65,0.95]" [initialBreakpoint]="0.65">
   <ng-template>
     <ion-content class="modal-content">
-      <!-- Wrapped in .modal-sheet -- same structure as Add Workout / History /
-           Week Plan below. Without this wrapper the sheet had no bottom
-           safe-area padding and didn't fill its allotted breakpoint height,
-           which is what showed up as a black gap under the content. -->
       <div class="modal-sheet">
         <div class="modal-handle"></div>
         <div class="modal-title">Home Workout Guide</div>
@@ -583,31 +587,28 @@
 
         <!-- Day Tab Selector -->
         <div class="week-plan-day-tabs" id="tour-week-plan-tabs">
-          <div
+          <button
             *ngFor="let label of weekDayLabels; let di = index"
-            class="wplan-day-tab-wrap"
-            [class.active]="weekPlanActiveDay === di">
-            <button
-              class="wplan-day-tab"
-              [class.active]="weekPlanActiveDay === di"
-              [class.rest]="weekPlanDays[di]?.isRest"
-              (click)="weekPlanActiveDay = di">
-              {{ label.slice(0,3) }}
-            </button>
-            <button
-              type="button"
-              class="wplan-rest-badge"
-              [class.is-rest]="weekPlanDays[di]?.isRest"
-              (click)="$event.stopPropagation(); toggleWeekPlanRest(di)"
-              [title]="weekPlanDays[di]?.isRest ? 'Remove rest day' : 'Set as rest day'">
-              {{ weekPlanDays[di]?.isRest ? '😴' : 'Rest' }}
-            </button>
-          </div>
+            class="wplan-day-tab"
+            [class.active]="weekPlanActiveDay === di"
+            [class.rest]="weekPlanDays[di]?.isRest"
+            (click)="weekPlanActiveDay = di">
+            {{ label.slice(0,3) }}
+          </button>
         </div>
 
         <!-- Day Editor -->
         <div class="week-plan-day-editor" *ngIf="weekPlanDays[weekPlanActiveDay] as day">
           <div class="wplan-day-name">{{ weekDayLabels[weekPlanActiveDay] }}</div>
+
+          <!-- Rest Day toggle -->
+          <div class="wplan-rest-row" id="tour-week-plan-rest">
+            <span class="wplan-rest-label">Rest Day</span>
+            <label class="toggle-switch">
+              <input type="checkbox" [(ngModel)]="day.isRest" (ngModelChange)="day.title = day.isRest ? 'Rest Day' : 'Upper Body'" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
 
           <ng-container *ngIf="!day.isRest">
             <div class="field-group" id="tour-week-plan-type">

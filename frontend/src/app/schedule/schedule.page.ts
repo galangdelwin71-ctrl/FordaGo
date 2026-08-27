@@ -288,6 +288,7 @@ export class SchedulePage implements OnInit, OnDestroy {
   // ── Add modal ─────────────────────────────────────────────
   addModalOpen             = false;
   newWorkoutType           = 'Upper Body';
+  newWorkoutIsRest         = false;
   newWorkoutCustomTarget   = '';
   newWorkoutDate           = '';
   newWorkoutTime           = '';
@@ -1127,6 +1128,7 @@ export class SchedulePage implements OnInit, OnDestroy {
     this.newWorkoutLocation      = 'Gym Floor B';
     this.newWorkoutCustomTarget  = '';
     this.newWorkoutType          = 'Upper Body';
+    this.newWorkoutIsRest        = false;
     this.newWorkoutExercises     = [];
     this.addModalOpen            = true;
     this.checkAndStartAddWorkoutTour();
@@ -1142,6 +1144,39 @@ export class SchedulePage implements OnInit, OnDestroy {
     const [y, mo, day] = this.newWorkoutDate.split('-').map(Number);
     const targetDate   = new Date(y, mo - 1, day);
     const key          = this.dateKey(targetDate);
+
+    if (this.newWorkoutIsRest) {
+      const session: WorkoutSession = this.normalizeSession({
+        id:           `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        timeVal:      '07:00',
+        timeAmpm:     'AM',
+        title:        'Rest Day',
+        duration:     '0 min',
+        location:     'Home',
+        coach:        '',
+        membersCount: 0,
+        status:       'upcoming',
+        isRestDay:    true,
+        isCustom:     true,
+        exercises:    [],
+      });
+
+      const store = this.readStoredSessions();
+      store[key] = [session];
+      this.writeStoredSessions(store);
+      this.workoutTracker.pushSession(targetDate, session as unknown as StoredWorkoutSession);
+
+      void this.workoutTracker.scheduleMissedChecks();
+      this.workoutTracker.scheduleUpcomingReminders();
+
+      const selKey = this.dateKey(this.weekDays[this.selectedDayIndex]?.date ?? new Date());
+      if (key === selKey) this.renderSessions();
+
+      this.buildWeekStrip();
+      this.closeAddModal();
+      this.toast.success('Rest day scheduled!');
+      return;
+    }
 
     // Check if time is in the past for today
     const now = new Date();
@@ -1179,7 +1214,7 @@ export class SchedulePage implements OnInit, OnDestroy {
     });
 
     const store = this.readStoredSessions();
-    const sessionsForDate = (store[key] ?? []).map(item => this.normalizeSession(item));
+    const sessionsForDate = (store[key] ?? []).filter(item => !item.isRestDay).map(item => this.normalizeSession(item));
     sessionsForDate.push(session);
     store[key] = sessionsForDate;
     this.writeStoredSessions(store);
@@ -1187,9 +1222,7 @@ export class SchedulePage implements OnInit, OnDestroy {
 
     // Re-register native Android AlarmManager alarms so the new session fires
     // a notification at the exact scheduled time even when the app is closed/backgrounded.
-    // Without this call, scheduleMissedChecks() only runs on app start or internal
-    // store mutations — never when schedule.page.ts directly writes to localStorage.
-    this.workoutTracker.scheduleMissedChecks();
+    void this.workoutTracker.scheduleMissedChecks();
     this.workoutTracker.scheduleUpcomingReminders();
 
     const selKey = this.dateKey(this.weekDays[this.selectedDayIndex]?.date ?? new Date());
