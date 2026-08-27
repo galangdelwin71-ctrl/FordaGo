@@ -45,6 +45,7 @@ import { AuthService } from '../../services/auth.service';
 import { CoachingService, Conversation, Message, WorkoutPlanProposal, CoachProgram } from '../../services/coaching.service';
 import { EchoService } from '../../services/echo.service';
 import { ChatToastService } from '../../services/chat-toast.service';
+import { FcmService } from '../../services/fcm.service';
 import { OnboardingService, TourStep } from '../../services/onboarding.service';
 import { getCachedData, setCachedData } from '../../utils/local-cache.util';
 
@@ -90,6 +91,11 @@ export class ChatPage implements OnInit, OnDestroy {
   isPartnerTyping = false;
   private typingTimer: any = null;
   private lastTypingSent = 0;
+
+  /** Active live sync timer (polls every 2s while chat screen is open) */
+  private pollTimer: any = null;
+  /** Cleanup function for native FCM foreground message listener */
+  private fcmCleanup: (() => void) | null = null;
 
   /** Cached reference to the active Echo private channel. Populated by
    * setupEchoListener() and cleared in ionViewWillLeave(). Using a cached
@@ -160,6 +166,7 @@ export class ChatPage implements OnInit, OnDestroy {
     private coachingService: CoachingService,
     private echoService: EchoService,
     private chatToastService: ChatToastService,
+    private fcmService: FcmService,
     private zone: NgZone,
     private modalCtrl: ModalController,
     public onboardingService: OnboardingService,
@@ -237,8 +244,8 @@ export class ChatPage implements OnInit, OnDestroy {
     // Refresh messages in case any arrived while we were away
     this.loadMessages();
 
-    // (Re)connect the WebSocket listener for this conversation
-    this.setupEchoListener();
+    // Start live sync (WebSocket + FCM Foreground Listener + Smart 2s Polling)
+    this.startLiveSync();
 
     this.checkAndStartChatTour();
   }
@@ -275,25 +282,87 @@ export class ChatPage implements OnInit, OnDestroy {
   }
 
   /**
-   * Called by Ionic every time this page is about to leave the active view
-   * (back button, navigating to a child route, tab switch, etc.).
-   * We leave the private channel here so we stop accumulating events while
-   * off-screen. ionViewWillEnter() rejoins on the next activation.
+   * Called by Ionic every time this page is about to leave the active view.
    */
   ionViewWillLeave() {
-    // Send a final "stopped typing" whisper so the partner's indicator clears
+    this.stopLiveSync();
+  }
+
+  ngOnDestroy() {
+    this.stopLiveSync();
+    this.chatToastService.setActiveChat(null);
+  }
+
+  /**
+   * Starts all real-time sync mechanisms:
+   * 1. Laravel Echo / Reverb WebSockets (sub-second push)
+   * 2. Native FCM foreground push listener (instant foreground arrival)
+   * 3. Smart 2-second background polling while chat screen is open
+   */
+  private startLiveSync(): void {
+    this.setupEchoListener();
+    this.setupFcmForegroundListener();
+    this.startActivePolling();
+  }
+
+  /**
+   * Stops all active listeners and timers when navigating away from chat.
+   */
+  private stopLiveSync(): void {
     clearTimeout(this.typingTimer);
+    this.stopActivePolling();
+
+    if (this.fcmCleanup) {
+      try { this.fcmCleanup(); } catch { /* ignore */ }
+      this.fcmCleanup = null;
+    }
+
     if (this.activeChannel) {
       try {
         this.activeChannel.whisper('typing', { userId: this.currentUserId, isTyping: false });
-      } catch { /* ignore if WS is already closed */ }
+      } catch { /* ignore */ }
     }
-    // Leave the channel – this removes all listeners and unsubscribes from Reverb
+
     if (this.channelName) {
       this.echoService.leaveChannel(this.channelName);
     }
     this.activeChannel = null;
     this.isPartnerTyping = false;
+  }
+
+  /**
+   * Listens for Firebase Push Notifications while app is in foreground.
+   * If a message for this conversation arrives, instantly refreshes chat messages.
+   */
+  private setupFcmForegroundListener(): void {
+    void this.fcmService.listenForForegroundMessages((_title, _body, data) => {
+      if (data && (Number(data['conversationId']) === Number(this.conversationId) || data['type'] === 'chat')) {
+        this.zone.run(() => {
+          this.loadMessagesSilently();
+        });
+      }
+    }).then((cleanup) => {
+      this.fcmCleanup = cleanup;
+    });
+  }
+
+  /**
+   * Starts 2.5-second polling interval while sitting on the active chat view.
+   */
+  private startActivePolling(): void {
+    this.stopActivePolling();
+    this.zone.runOutsideAngular(() => {
+      this.pollTimer = setInterval(() => {
+        this.loadMessagesSilently();
+      }, 2500);
+    });
+  }
+
+  private stopActivePolling(): void {
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer);
+      this.pollTimer = null;
+    }
   }
 
   /**
@@ -330,18 +399,6 @@ export class ChatPage implements OnInit, OnDestroy {
         this.scrollToBottom();
       }
     }
-  }
-
-  ngOnDestroy() {
-    // Safety-net: leave the channel if ionViewWillLeave() wasn't called
-    // (e.g. app killed, hard-navigation, or modal dismiss).
-    if (this.channelName && this.activeChannel) {
-      this.echoService.leaveChannel(this.channelName);
-      this.activeChannel = null;
-    }
-    clearTimeout(this.typingTimer);
-    // Re-enable toasts for this conversation now that the page is gone.
-    this.chatToastService.setActiveChat(null);
   }
 
   get currentUserId(): number {
@@ -422,6 +479,56 @@ export class ChatPage implements OnInit, OnDestroy {
       error: (err) => {
         console.error('Failed to load messages', err);
         this.isLoading = false;
+      },
+    });
+  }
+
+  /**
+   * Silently polls and syncs messages in the background without showing any spinners.
+   * If a new partner message arrived, updates the chat bubbles and scrolls smoothly.
+   */
+  loadMessagesSilently(): void {
+    if (!this.conversationId) return;
+
+    this.coachingService.getMessages(this.conversationId).subscribe({
+      next: (res) => {
+        const incoming = res || [];
+        if (!incoming.length && !this.messages.length) return;
+
+        const countDiff = incoming.length !== this.messages.length;
+        const lastLocalId = this.messages.length ? this.messages[this.messages.length - 1].id : 0;
+        const lastIncomingId = incoming.length ? incoming[incoming.length - 1].id : 0;
+
+        let hasDiff = countDiff || (lastLocalId !== lastIncomingId);
+
+        // Check if any read status or proposal status changed
+        if (!hasDiff && incoming.length === this.messages.length) {
+          for (let i = incoming.length - 1; i >= Math.max(0, incoming.length - 8); i--) {
+            const inc = incoming[i];
+            const loc = this.messages[i];
+            if (inc.read_at !== loc?.read_at || inc.proposal?.status !== loc?.proposal?.status) {
+              hasDiff = true;
+              break;
+            }
+          }
+        }
+
+        if (hasDiff) {
+          this.zone.run(() => {
+            this.messages = incoming;
+            this.isLoading = false;
+            ChatPage.messagesCache.set(this.conversationId, incoming);
+            void setCachedData(`fordago.cache.chat_msgs_${this.conversationId}`, incoming);
+
+            if (countDiff || lastLocalId !== lastIncomingId) {
+              this.scrollToBottom();
+              this.coachingService.markConversationAsRead(this.conversationId, true);
+            }
+          });
+        }
+      },
+      error: () => {
+        // Silent error handling for background polling
       },
     });
   }
