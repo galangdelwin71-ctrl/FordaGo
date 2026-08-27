@@ -34,9 +34,24 @@ class MessageSent implements ShouldBroadcast
      */
     public function broadcastOn(): array
     {
-        return [
+        $channels = [
             new PrivateChannel('conversation.' . $this->message->conversation_id),
         ];
+
+        try {
+            $conversation = $this->message->conversation;
+            if ($conversation) {
+                $recipientId = (int) $conversation->coach_id === (int) $this->message->sender_id
+                    ? $conversation->client_id
+                    : $conversation->coach_id;
+
+                if ($recipientId) {
+                    $channels[] = new PrivateChannel('user.' . $recipientId);
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        return $channels;
     }
 
     /**

@@ -110,44 +110,58 @@ class FcmService
      * Get a short-lived OAuth2 access token from the service account credentials
      * using Google's JWT Bearer flow (no external SDK needed).
      */
+    private function base64UrlEncode(string $data): string
+    {
+        return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+    }
+
+    /**
+     * Get a short-lived OAuth2 access token from the service account credentials
+     * using Google's JWT Bearer flow (no external SDK needed).
+     * Cached in Laravel Cache for 50 minutes to eliminate latency on every message.
+     */
     private function getAccessToken(): ?string
     {
-        try {
-            $sa = $this->serviceAccount;
-            if (! $sa || empty($sa['private_key']) || empty($sa['client_email'])) {
-                Log::warning('FCM: Service account JSON is missing private_key or client_email.');
+        return \Illuminate\Support\Facades\Cache::remember('fcm_google_access_token', 3000, function () {
+            try {
+                $sa = $this->serviceAccount;
+                if (! $sa || empty($sa['private_key']) || empty($sa['client_email'])) {
+                    Log::warning('FCM: Service account JSON is missing private_key or client_email.');
+                    return null;
+                }
+
+                $now = time();
+                $header  = $this->base64UrlEncode(json_encode(['alg' => 'RS256', 'typ' => 'JWT']));
+                $payload = $this->base64UrlEncode(json_encode([
+                    'iss'   => $sa['client_email'],
+                    'scope' => 'https://www.googleapis.com/auth/firebase.messaging',
+                    'aud'   => 'https://oauth2.googleapis.com/token',
+                    'iat'   => $now,
+                    'exp'   => $now + 3600,
+                ]));
+
+                $signingInput = "{$header}.{$payload}";
+                openssl_sign($signingInput, $signature, $sa['private_key'], 'SHA256');
+                $jwt = "{$signingInput}." . $this->base64UrlEncode($signature);
+
+                $response = Http::asForm()
+                    ->timeout(5)
+                    ->post('https://oauth2.googleapis.com/token', [
+                        'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+                        'assertion'  => $jwt,
+                    ]);
+
+                if ($response->successful()) {
+                    return $response->json('access_token');
+                }
+
+                Log::warning('FCM: Failed to get access token', ['body' => $response->body()]);
+                return null;
+
+            } catch (\Throwable $e) {
+                Log::error('FCM: Access token exception: ' . $e->getMessage());
                 return null;
             }
-
-            $now = time();
-            $header  = base64_encode(json_encode(['alg' => 'RS256', 'typ' => 'JWT']));
-            $payload = base64_encode(json_encode([
-                'iss'   => $sa['client_email'],
-                'scope' => 'https://www.googleapis.com/auth/firebase.messaging',
-                'aud'   => 'https://oauth2.googleapis.com/token',
-                'iat'   => $now,
-                'exp'   => $now + 3600,
-            ]));
-
-            $signingInput = "{$header}.{$payload}";
-            openssl_sign($signingInput, $signature, $sa['private_key'], 'SHA256');
-            $jwt = "{$signingInput}." . base64_encode($signature);
-
-            $response = Http::asForm()->post('https://oauth2.googleapis.com/token', [
-                'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-                'assertion'  => $jwt,
-            ]);
-
-            if ($response->successful()) {
-                return $response->json('access_token');
-            }
-
-            Log::warning('FCM: Failed to get access token', ['body' => $response->body()]);
-            return null;
-
-        } catch (\Throwable $e) {
-            Log::error('FCM: Access token exception: ' . $e->getMessage());
-            return null;
-        }
+        });
     }
 }

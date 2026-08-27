@@ -99,6 +99,8 @@ import { NotificationCenterService } from './services/notification-center.servic
 import { CoachingService } from './services/coaching.service';
 import { AuthService } from './services/auth.service';
 import { FcmService } from './services/fcm.service';
+import { ChatToastService } from './services/chat-toast.service';
+import { EchoService } from './services/echo.service';
 import { firstValueFrom } from 'rxjs';
 
 // Shape of the handle Capacitor's App.addListener() resolves to — declared
@@ -178,6 +180,8 @@ export class AppComponent implements OnDestroy {
     private coachingService: CoachingService,
     private auth: AuthService,
     private fcmService: FcmService,
+    private chatToastService: ChatToastService,
+    private echoService: EchoService,
     private router: Router,
     private location: Location,
     private toastController: ToastController,
@@ -285,6 +289,27 @@ export class AppComponent implements OnDestroy {
         this.notificationCenter.startPolling();
         // Register FCM token with backend — runs async, non-blocking
         void this.fcmService.registerFcmToken();
+
+        // Listen for real-time incoming chat messages anywhere in the app (Coach or Member)
+        const userChannel = this.echoService.privateChannel(`user.${user.id}`);
+        if (userChannel) {
+          userChannel.listen('.message.sent', (data: any) => {
+            const msg = data?.message;
+            if (!msg || Number(msg.sender_id) === Number(user.id)) return;
+
+            this.zone.run(() => {
+              this.coachingService.incrementUnreadCount(1);
+
+              const senderName = `${msg.sender?.first_name || ''} ${msg.sender?.last_name || ''}`.trim() || msg.sender?.username || 'New Message';
+              const convo = {
+                id: Number(data.conversation_id),
+                partnerName: senderName,
+                partnerAvatar: msg.sender?.profile_image,
+              };
+              this.chatToastService.showIncomingMessage(convo, msg.body, msg.id);
+            });
+          });
+        }
       } else {
         this.notificationCenter.stopPolling();
       }

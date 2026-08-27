@@ -83,34 +83,47 @@ export class ChatToastService {
         if (Number(data.message.sender_id) === Number(this.auth.user?.id)) return;
         if (this.activeChatConversationId === convo.id) return;
 
-        this.zone.run(() => {
-          const preview = data.message.body?.length > 60
-            ? data.message.body.slice(0, 60) + '…'
-            : data.message.body;
-
-          const toast: ChatToastPayload = {
-            id: `chat-toast-${Date.now()}`,
-            senderName: convo.partnerName,
-            senderAvatar: convo.partnerAvatar,
-            messagePreview: preview,
-            conversationId: convo.id,
-          };
-
-          this.toastSubject.next(toast);
-
-          // Also trigger a system notification on native Android tray / OS center
-          void this.sendNativeChatNotification(convo, preview, data.message.id);
-
-          // Auto-dismiss in-app toast after 5 seconds
-          setTimeout(() => {
-            // Only clear if it's still the same toast (user didn't get another message)
-            if (this.toastSubject.value?.id === toast.id) {
-              this.toastSubject.next(null);
-            }
-          }, 5000);
+          this.showIncomingMessage(convo, data.message.body, data.message.id);
         });
       });
     }
+  }
+
+  /**
+   * Broadcasts an incoming message toast and native notification immediately (0ms delay).
+   */
+  showIncomingMessage(
+    convo: { id: number; partnerName: string; partnerAvatar?: string },
+    body: string,
+    messageId?: number
+  ): void {
+    if (this.activeChatConversationId === convo.id) return;
+
+    this.zone.run(() => {
+      const preview = body?.length > 60
+        ? body.slice(0, 60) + '…'
+        : body;
+
+      const toast: ChatToastPayload = {
+        id: `chat-toast-${Date.now()}`,
+        senderName: convo.partnerName,
+        senderAvatar: convo.partnerAvatar,
+        messagePreview: preview,
+        conversationId: convo.id,
+      };
+
+      this.toastSubject.next(toast);
+
+      // Trigger a system notification on native Android tray / OS center with Quick Reply
+      void this.sendNativeChatNotification(convo, preview, messageId);
+
+      // Auto-dismiss in-app toast after 5 seconds
+      setTimeout(() => {
+        if (this.toastSubject.value?.id === toast.id) {
+          this.toastSubject.next(null);
+        }
+      }, 5000);
+    });
   }
 
   private actionTypesRegistered = false;
