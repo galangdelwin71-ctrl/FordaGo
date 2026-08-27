@@ -347,14 +347,14 @@ export class ChatPage implements OnInit, OnDestroy {
   }
 
   /**
-   * Starts 2.5-second polling interval while sitting on the active chat view.
+   * Starts 1.5-second polling interval while sitting on the active chat view.
    */
   private startActivePolling(): void {
     this.stopActivePolling();
     this.zone.runOutsideAngular(() => {
       this.pollTimer = setInterval(() => {
         this.loadMessagesSilently();
-      }, 2500);
+      }, 1500);
     });
   }
 
