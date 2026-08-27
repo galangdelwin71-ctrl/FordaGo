@@ -112,51 +112,49 @@ class MessageController extends Controller
             'proposal.items',
         ]);
 
-        // Broadcast real-time message event via Laravel Reverb
-        try {
-            broadcast(new MessageSent($message));
-        } catch (\Throwable $e) {
-            // Log broadcast error but don't fail message delivery
-            \Log::warning('Broadcasting MessageSent failed: ' . $e->getMessage());
-        }
-
-        // Send FCM push notification to the RECIPIENT's device so they get
-        // a native notification even when the app is closed or backgrounded.
-        // This runs after the response is sent so it never delays the API.
-        try {
-            // Determine recipient (the other person in the conversation)
-            $recipientId = (int) $conversation->coach_id === (int) $userId
-                ? $conversation->client_id
-                : $conversation->coach_id;
-
-            // Load recipient and send FCM if they have a token registered
-            $recipient = \App\Models\User::find($recipientId);
-            if ($recipient && $recipient->fcm_token) {
-                // Sender display name
-                $senderName = trim(($message->sender->first_name ?? '') . ' ' . ($message->sender->last_name ?? ''));
-                if (! $senderName) {
-                    $senderName = $message->sender->username ?? 'FordaGO';
-                }
-
-                $preview = mb_strlen($message->body) > 80
-                    ? mb_substr($message->body, 0, 80) . '…'
-                    : $message->body;
-
-                app(FcmService::class)->sendToToken(
-                    $recipient->fcm_token,
-                    $senderName,
-                    $preview,
-                    [
-                        'type'           => 'chat',
-                        'conversationId' => (string) $conversationId,
-                        'targetRoute'    => '/chat/' . $conversationId,
-                        'senderName'     => $senderName,
-                    ]
-                );
+        // Execute broadcast and FCM push in terminating lifecycle so the HTTP response
+        // is delivered to the sender immediately (5ms response time) without any lag.
+        app()->terminating(function () use ($message, $conversation, $userId, $conversationId) {
+            // 1. Broadcast real-time message event via Laravel Reverb
+            try {
+                broadcast(new MessageSent($message));
+            } catch (\Throwable $e) {
+                \Log::warning('Broadcasting MessageSent failed: ' . $e->getMessage());
             }
-        } catch (\Throwable $e) {
-            \Log::warning('FCM push failed for chat message: ' . $e->getMessage());
-        }
+
+            // 2. Send FCM push notification to the RECIPIENT's device
+            try {
+                $recipientId = (int) $conversation->coach_id === (int) $userId
+                    ? $conversation->client_id
+                    : $conversation->coach_id;
+
+                $recipient = \App\Models\User::find($recipientId);
+                if ($recipient && $recipient->fcm_token) {
+                    $senderName = trim(($message->sender->first_name ?? '') . ' ' . ($message->sender->last_name ?? ''));
+                    if (! $senderName) {
+                        $senderName = $message->sender->username ?? 'FordaGO';
+                    }
+
+                    $preview = mb_strlen($message->body) > 80
+                        ? mb_substr($message->body, 0, 80) . '…'
+                        : $message->body;
+
+                    app(FcmService::class)->sendToToken(
+                        $recipient->fcm_token,
+                        $senderName,
+                        $preview,
+                        [
+                            'type'           => 'chat',
+                            'conversationId' => (string) $conversationId,
+                            'targetRoute'    => '/chat/' . $conversationId,
+                            'senderName'     => $senderName,
+                        ]
+                    );
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('FCM push failed for chat message: ' . $e->getMessage());
+            }
+        });
 
         return response()->json($message, 201);
 
