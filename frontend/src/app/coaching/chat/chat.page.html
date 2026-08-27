@@ -258,8 +258,8 @@
   [isOpen]="partnerInfoOpen"
   (didDismiss)="closePartnerInfo()"
   class="partner-info-modal"
-  [breakpoints]="[0, 0.4]"
-  [initialBreakpoint]="0.4">
+  [breakpoints]="[0, 0.72, 0.92]"
+  [initialBreakpoint]="0.72">
   <ng-template>
     <div class="partner-info-wrapper" *ngIf="partner">
       <div class="partner-info-handle"></div>
@@ -282,6 +282,41 @@
         <ion-icon name="person-circle-outline"></ion-icon>
         {{ conversation?.partner_role === 'coach' ? 'Personal Coach' : 'Client' }}
       </span>
+
+      <!-- ── NOTIFICATIONS & MUTE / SNOOZE CONTROLS ──────── -->
+      <div class="mute-controls-card">
+        <div class="mute-status-header">
+          <div class="status-left">
+            <ion-icon [name]="muteInfo.isMuted ? 'notifications-off-outline' : 'notifications-outline'" [class.is-muted]="muteInfo.isMuted"></ion-icon>
+            <div class="status-text">
+              <span class="status-title">Notifications</span>
+              <span class="status-subtitle" [class.muted-label]="muteInfo.isMuted">{{ muteInfo.label }}</span>
+            </div>
+          </div>
+          <button *ngIf="muteInfo.isMuted" type="button" class="btn-unmute-pill" (click)="unmuteConversation()">
+            <ion-icon name="notifications-outline"></ion-icon> Unmute
+          </button>
+        </div>
+
+        <div class="snooze-options-grid">
+          <button type="button" class="snooze-btn" [class.active]="isCurrentSnooze(1)" (click)="snoozeConversation(1)">
+            <ion-icon name="time-outline"></ion-icon>
+            <span>1 Hour</span>
+          </button>
+          <button type="button" class="snooze-btn" [class.active]="isCurrentSnooze(8)" (click)="snoozeConversation(8)">
+            <ion-icon name="time-outline"></ion-icon>
+            <span>8 Hours</span>
+          </button>
+          <button type="button" class="snooze-btn" [class.active]="isCurrentSnooze(24)" (click)="snoozeConversation(24)">
+            <ion-icon name="alarm-outline"></ion-icon>
+            <span>24 Hours</span>
+          </button>
+          <button type="button" class="snooze-btn mute-btn" [class.active]="muteInfo.mutedUntil === 'infinite'" (click)="muteConversationPermanently()">
+            <ion-icon name="notifications-off-outline"></ion-icon>
+            <span>Always Mute</span>
+          </button>
+        </div>
+      </div>
 
       <button type="button" class="partner-info-close-btn" (click)="closePartnerInfo()">Close</button>
     </div>

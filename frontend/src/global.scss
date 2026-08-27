@@ -780,6 +780,21 @@ body.light-theme {
       border-color: rgba(15,23,42,0.12) !important;
       color: #0f172a !important;
     }
+    .mute-controls-card {
+      background: rgba(15,23,42,0.04) !important;
+      border-color: rgba(15,23,42,0.1) !important;
+    }
+    .mute-controls-card .status-title { color: #0f172a !important; }
+    .mute-controls-card .status-subtitle { color: rgba(15,23,42,0.45) !important; }
+    .mute-controls-card .snooze-btn {
+      background: rgba(15,23,42,0.05) !important;
+      border-color: rgba(15,23,42,0.1) !important;
+      color: #0f172a !important;
+    }
+    .mute-controls-card .snooze-btn.active {
+      background: rgba(234,179,8,0.12) !important;
+      border-color: rgba(234,179,8,0.4) !important;
+    }
 
     /* Propose Workout Plan modal */
     &.proposal-modal .modal-wrapper {

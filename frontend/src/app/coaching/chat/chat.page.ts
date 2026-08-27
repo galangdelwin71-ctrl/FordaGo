@@ -40,12 +40,16 @@ import {
   personCircleOutline,
   atOutline,
   saveOutline,
+  notificationsOutline,
+  notificationsOffOutline,
+  alarmOutline,
 } from 'ionicons/icons';
 import { AuthService } from '../../services/auth.service';
 import { CoachingService, Conversation, Message, WorkoutPlanProposal, CoachProgram } from '../../services/coaching.service';
 import { EchoService } from '../../services/echo.service';
 import { ChatToastService } from '../../services/chat-toast.service';
 import { FcmService } from '../../services/fcm.service';
+import { ChatMuteService, ConvoMuteInfo } from '../../services/chat-mute.service';
 import { OnboardingService, TourStep } from '../../services/onboarding.service';
 import { getCachedData, setCachedData } from '../../utils/local-cache.util';
 
@@ -77,6 +81,7 @@ interface ProposalFormExercise {
 export class ChatPage implements OnInit, OnDestroy {
   @ViewChild('messagesContainer') private messagesContainer?: ElementRef;
   @ViewChild(IonContent, { static: false }) private content?: IonContent;
+
 
   conversationId!: number;
   conversation: Conversation | null = null;
@@ -167,6 +172,7 @@ export class ChatPage implements OnInit, OnDestroy {
     private echoService: EchoService,
     private chatToastService: ChatToastService,
     private fcmService: FcmService,
+    private chatMuteService: ChatMuteService,
     private zone: NgZone,
     private modalCtrl: ModalController,
     public onboardingService: OnboardingService,
@@ -198,6 +204,9 @@ export class ChatPage implements OnInit, OnDestroy {
       personCircleOutline,
       atOutline,
       saveOutline,
+      notificationsOutline,
+      notificationsOffOutline,
+      alarmOutline,
     });
   }
 
@@ -442,6 +451,34 @@ export class ChatPage implements OnInit, OnDestroy {
 
   closePartnerInfo(): void {
     this.partnerInfoOpen = false;
+  }
+
+  // ── Mute & Snooze Controls ──────────────────────────────────────────
+
+  get muteInfo(): ConvoMuteInfo {
+    return this.chatMuteService.getMuteInfo(this.conversationId);
+  }
+
+  snoozeConversation(hours: number): void {
+    this.chatMuteService.snooze(this.conversationId, hours);
+    this.showToast(`⏰ Notifications snoozed for ${hours} ${hours === 1 ? 'hour' : 'hours'}`);
+  }
+
+  muteConversationPermanently(): void {
+    this.chatMuteService.mutePermanently(this.conversationId);
+    this.showToast('🔕 Notifications muted until you turn them back on');
+  }
+
+  unmuteConversation(): void {
+    this.chatMuteService.unmute(this.conversationId);
+    this.showToast('🔔 Notifications unmuted');
+  }
+
+  isCurrentSnooze(hours: number): boolean {
+    const info = this.muteInfo;
+    if (!info.isSnoozed || typeof info.mutedUntil !== 'number') return false;
+    const diffHours = (info.mutedUntil - Date.now()) / (1000 * 60 * 60);
+    return Math.abs(diffHours - hours) < 0.6;
   }
 
   loadConversation() {

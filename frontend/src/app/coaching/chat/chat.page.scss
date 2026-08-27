@@ -1373,6 +1373,136 @@
       transform: scale(0.98);
     }
   }
+
+  // ── Mute & Snooze Controls Card ──────────────────────────
+  .mute-controls-card {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 16px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    box-sizing: border-box;
+
+    .mute-status-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+
+      .status-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        ion-icon {
+          font-size: 22px;
+          color: rgba(255, 255, 255, 0.55);
+
+          &.is-muted {
+            color: #ff6b6b;
+          }
+        }
+
+        .status-text {
+          display: flex;
+          flex-direction: column;
+          gap: 1px;
+
+          .status-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.85);
+          }
+
+          .status-subtitle {
+            font-size: 11px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.4);
+
+            &.muted-label {
+              color: #ff6b6b;
+              font-weight: 700;
+            }
+          }
+        }
+      }
+
+      .btn-unmute-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: rgba(0, 214, 143, 0.15);
+        border: 1px solid rgba(0, 214, 143, 0.35);
+        color: #00d68f;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 6px 12px;
+        border-radius: 20px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.2s ease;
+
+        ion-icon { font-size: 14px; }
+
+        &:active { transform: scale(0.96); }
+      }
+    }
+
+    .snooze-options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+
+      .snooze-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 12px 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: rgba(255, 255, 255, 0.7);
+
+        ion-icon {
+          font-size: 18px;
+          color: rgba(255, 214, 0, 0.7);
+        }
+
+        span {
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.2px;
+        }
+
+        &.active {
+          background: rgba(255, 214, 0, 0.14);
+          border-color: rgba(255, 214, 0, 0.45);
+          color: #ffd600;
+
+          ion-icon { color: #ffd600; }
+        }
+
+        &.mute-btn ion-icon {
+          color: rgba(255, 107, 107, 0.8);
+        }
+
+        &.mute-btn.active {
+          background: rgba(255, 107, 107, 0.12);
+          border-color: rgba(255, 107, 107, 0.4);
+          color: #ff6b6b;
+
+          ion-icon { color: #ff6b6b; }
+        }
+
+        &:active { transform: scale(0.96); }
+      }
+    }
+  }
 }
 
 // ── Light Theme ────────────────────────────────────────────────

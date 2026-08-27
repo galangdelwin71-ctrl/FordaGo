@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { EchoService } from './echo.service';
 import { AuthService } from './auth.service';
 import { Message } from './coaching.service';
+import { ChatMuteService } from './chat-mute.service';
 
 export interface ChatToastPayload {
   id: string;
@@ -43,6 +44,7 @@ export class ChatToastService {
   constructor(
     private echoService: EchoService,
     private auth: AuthService,
+    private chatMuteService: ChatMuteService,
     private zone: NgZone,
     private router: Router,
   ) {}
@@ -75,13 +77,13 @@ export class ChatToastService {
 
       channel.listen('.message.sent', (data: { message: Message; conversation_id: number }) => {
         // Ignore if:
-        // - Message is from ourselves (guard against string vs number mismatch
-        //   since auth.user.id comes from JSON.parse(localStorage) and may be
-        //   a string, while sender_id in the WebSocket payload is a number)
+        // - Message is from ourselves
         // - User is currently inside this exact chat
+        // - Conversation is currently MUTED or SNOOZED
         if (!data?.message) return;
         if (Number(data.message.sender_id) === Number(this.auth.user?.id)) return;
         if (this.activeChatConversationId === convo.id) return;
+        if (this.chatMuteService.isMuted(convo.id)) return;
 
         this.showIncomingMessage(convo, data.message.body, data.message.id);
       });
@@ -97,6 +99,7 @@ export class ChatToastService {
     messageId?: number
   ): void {
     if (this.activeChatConversationId === convo.id) return;
+    if (this.chatMuteService.isMuted(convo.id)) return;
 
     this.zone.run(() => {
       const preview = body?.length > 60
