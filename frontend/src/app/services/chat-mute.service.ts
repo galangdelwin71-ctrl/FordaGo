@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { Preferences } from '@capacitor/preferences';
 
 export interface ConvoMuteInfo {
   isMuted: boolean;
@@ -74,6 +75,7 @@ export class ChatMuteService {
         } else {
           // Snooze duration expired
           localStorage.removeItem(this.getStorageKey(conversationId));
+          void Preferences.remove({ key: this.getStorageKey(conversationId) });
           return { isMuted: false, isSnoozed: false, mutedUntil: null, label: 'Active' };
         }
       }
@@ -90,12 +92,14 @@ export class ChatMuteService {
   snooze(conversationId: number, durationHours: number): void {
     if (!conversationId) return;
     const mutedUntil = Date.now() + durationHours * 60 * 60 * 1000;
+    const data = JSON.stringify({
+      conversationId,
+      mutedUntil,
+      snoozedAt: Date.now(),
+    });
     try {
-      localStorage.setItem(this.getStorageKey(conversationId), JSON.stringify({
-        conversationId,
-        mutedUntil,
-        snoozedAt: Date.now(),
-      }));
+      localStorage.setItem(this.getStorageKey(conversationId), data);
+      void Preferences.set({ key: this.getStorageKey(conversationId), value: data });
     } catch { /* ignore */ }
     this.muteChangeSubject.next(conversationId);
   }
@@ -105,12 +109,14 @@ export class ChatMuteService {
    */
   mutePermanently(conversationId: number): void {
     if (!conversationId) return;
+    const data = JSON.stringify({
+      conversationId,
+      mutedUntil: 'infinite',
+      mutedAt: Date.now(),
+    });
     try {
-      localStorage.setItem(this.getStorageKey(conversationId), JSON.stringify({
-        conversationId,
-        mutedUntil: 'infinite',
-        mutedAt: Date.now(),
-      }));
+      localStorage.setItem(this.getStorageKey(conversationId), data);
+      void Preferences.set({ key: this.getStorageKey(conversationId), value: data });
     } catch { /* ignore */ }
     this.muteChangeSubject.next(conversationId);
   }
@@ -122,6 +128,7 @@ export class ChatMuteService {
     if (!conversationId) return;
     try {
       localStorage.removeItem(this.getStorageKey(conversationId));
+      void Preferences.remove({ key: this.getStorageKey(conversationId) });
     } catch { /* ignore */ }
     this.muteChangeSubject.next(conversationId);
   }

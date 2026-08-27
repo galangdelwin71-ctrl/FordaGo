@@ -66,22 +66,12 @@ class FcmService
             $payload = [
                 'message' => [
                     'token' => $fcmToken,
-                    // notification block: shown in the system tray even when app is closed
-                    'notification' => [
-                        'title' => $title,
-                        'body'  => $body,
-                    ],
-                    // data block: passed to the app when it opens from the notification
-                    'data' => array_map('strval', $data),
+                    'data'  => array_merge([
+                        'title' => (string) $title,
+                        'body'  => (string) $body,
+                    ], array_map('strval', $data)),
                     'android' => [
                         'priority' => 'high',
-                        'notification' => [
-                            'channel_id'   => 'fordago-alerts-v2',
-                            'icon'         => 'ic_stat_icon',
-                            'color'        => '#FFD700',
-                            'default_sound' => true,
-                            'default_vibrate_timings' => true,
-                        ],
                     ],
                 ],
             ];

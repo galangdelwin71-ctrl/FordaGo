@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, tap, catchError, throwError } from 'rxjs';
+import { Preferences } from '@capacitor/preferences';
 import { API_BASE_URL, API_URL } from '../config/api.config';
 import { clearCachedData } from '../utils/local-cache.util';
 import { CACHE_KEYS } from '../utils/cache-keys';
@@ -14,15 +15,21 @@ export class AuthService {
   constructor(private http: HttpClient) {
     try {
       const raw = localStorage.getItem('user');
+      const token = localStorage.getItem('token');
       if (raw) {
         const user = JSON.parse(raw);
         if (user && user.id) {
           this.userSubject.next(user);
         }
       }
+      if (token) {
+        void Preferences.set({ key: 'token', value: token });
+      }
     } catch {
       localStorage.removeItem('user');
       localStorage.removeItem('token');
+      void Preferences.remove({ key: 'token' });
+      void Preferences.remove({ key: 'user' });
     }
   }
 
@@ -40,6 +47,8 @@ export class AuthService {
         if (res && res.token && res.user) {
           localStorage.setItem('token', res.token);
           localStorage.setItem('user', JSON.stringify(res.user));
+          void Preferences.set({ key: 'token', value: res.token });
+          void Preferences.set({ key: 'user', value: JSON.stringify(res.user) });
           this.userSubject.next(res.user);
         }
       }),
@@ -50,6 +59,8 @@ export class AuthService {
   logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    void Preferences.remove({ key: 'token' });
+    void Preferences.remove({ key: 'user' });
     this.userSubject.next(null);
     // Stage 3 local-first caches (see utils/local-cache.util.ts) are keyed
     // per cache-slot, not per-user -- clear them on logout so a different

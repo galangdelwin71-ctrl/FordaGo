@@ -36,6 +36,22 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
+
+        <service
+            android:name=".FordaGoFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter android:priority="999">
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <receiver
+            android:name=".DirectReplyReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="io.ionic.starter.ACTION_DIRECT_REPLY" />
+            </intent-filter>
+        </receiver>
     </application>
 
     <!-- Permissions -->
