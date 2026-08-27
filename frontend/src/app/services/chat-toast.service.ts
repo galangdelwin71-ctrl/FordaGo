@@ -83,8 +83,7 @@ export class ChatToastService {
         if (Number(data.message.sender_id) === Number(this.auth.user?.id)) return;
         if (this.activeChatConversationId === convo.id) return;
 
-          this.showIncomingMessage(convo, data.message.body, data.message.id);
-        });
+        this.showIncomingMessage(convo, data.message.body, data.message.id);
       });
     }
   }

@@ -57,10 +57,10 @@ export class WorkoutTrackerService {
   private readonly homeWorkoutMap: Record<string, string[]> = {
     'Upper Body': ['3 x 15 Push-ups', '3 x 12 Tricep Dips', '3 x 10 Pike Push-ups', '2 x 15 Diamond Push-ups'],
     'Lower Body / Leg Day': ['3 x 15 Squats', '3 x 12 Lunges each leg', '3 x 20 Calf Raises', '2 x 30s Wall Sit'],
-    'Cardio & Core': ['3 x 20 Mountain Climbers', '3 x 15 Burpees', '3 x 30 Bicycle Crunches', '2 min Jump Rope'],
+    'Cardio & Core': ['3 x 20 Mountain Climbers', '3 x 15 Burpees', '3 x 30 Bicycle Crunches', '2 min High Knees'],
     'Full Body': ['3 x 10 Burpees', '3 x 12 Push-ups', '3 x 15 Squats', '3 x 20 Jumping Jacks'],
     'Mobility & Stretch': ['2 min Hip Flexor Stretch', '2 min Hamstring Stretch', '90s Shoulder Mobility', '2 min Cat-Cow Flow'],
-    'Rest Day': ['10 min Light Walk', '5 min Deep Breathing', 'Foam Roll 15 min', 'Hydrate and rest'],
+    'Rest Day': ['10 min Light Walk', '5 min Deep Breathing', '15 min Gentle Stretching', 'Hydrate and rest'],
   };
   private syncTimer: ReturnType<typeof setInterval> | null = null;
   // Precise per-session timers (see scheduleMissedChecks()) so a session
@@ -782,9 +782,12 @@ export class WorkoutTrackerService {
           const now = new Date();
           const diffDays = Math.abs((now.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24));
           if (diffDays <= 2) {
-            const homeAlternatives = normalizedSession.exercises?.length
-              ? normalizedSession.exercises.slice(0, 6).map((exercise) => `${exercise.sets} x ${exercise.reps} ${exercise.name}`)
-              : (this.homeWorkoutMap[normalizedSession.title] || this.homeWorkoutMap['Full Body']);
+            // Always suggest equipment-free bodyweight moves for a missed
+            // session's home alternative — echoing the session's own logged
+            // exercises here previously caused gym-equipment moves (e.g.
+            // "Bench Press", "Deadlift") to appear as a "home workout"
+            // whenever the session already had exercises logged.
+            const homeAlternatives = this.homeWorkoutMap[normalizedSession.title] || this.homeWorkoutMap['Full Body'];
             void this.notificationCenter.notifyMissedWorkout(
               normalizedSession.title,
               sessionDate,
@@ -880,9 +883,17 @@ export class WorkoutTrackerService {
       }
 
       const uniqueKey = `${todayKey}-${session.id ?? session.title}-${session.timeVal}-${session.timeAmpm}`;
-      const homeAlternatives = session.exercises?.length
-        ? session.exercises.slice(0, 6).map((exercise) => `${exercise.sets} x ${exercise.reps} ${exercise.name}`)
-        : (this.homeWorkoutMap[session.title] || this.homeWorkoutMap['Full Body']);
+      // Same equipment-free rule as syncStoreStatuses() above — never echo
+      // the session's own (possibly gym-equipment) exercises back as the
+      // "home alternative" suggestion.
+      const homeAlternatives = this.homeWorkoutMap[session.title] || this.homeWorkoutMap['Full Body'];
+      // Dedupe key for the MISSED alert specifically: must match the exact
+      // format notifyMissedWorkout() builds in syncStoreStatuses() above
+      // (`${dateKey}-${id || title}`, no time suffix) so both code paths
+      // resolve to the same Android notification ID (see
+      // NotificationCenterService.hashNotificationId()) and whichever fires
+      // second overwrites the first instead of stacking a duplicate banner.
+      const missedDedupeKey = `${todayKey}-${session.id || session.title}`;
 
       // 1. Schedule Workout START alert at the exact scheduled time (e.g. 9:25:00 PM)
       if (msUntilScheduled > 0) {
@@ -898,7 +909,7 @@ export class WorkoutTrackerService {
       if (missedAt.getTime() > now.getTime()) {
         void this.notificationCenter.scheduleNativeMissedAlert(
           session.title,
-          uniqueKey,
+          missedDedupeKey,
           missedAt,
           homeAlternatives
         );

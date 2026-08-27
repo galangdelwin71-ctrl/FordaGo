@@ -53,6 +53,17 @@ export class NotificationCenterService {
   private inFlightRefresh: Promise<void> | null = null;
   private lastRefreshAt = 0;
   private readonly MIN_REFRESH_INTERVAL_MS = 10_000; // 10 seconds minimum between refreshes
+  // In-memory record of missed-workout titles whose device banner was JUST
+  // sent via the local notifyMissedWorkout() path below. loadNotifications()
+  // checks this before sending its OWN device banner for the same alert once
+  // it reappears as a 'server' item on the forced refresh that follows the
+  // backend save — without this check, one missed session produced THREE
+  // separate banners (local fire, native scheduled alert, and this
+  // server-sync re-delivery). Session-only (not persisted): it only needs
+  // to survive the few seconds between the local fire and that one
+  // follow-up refresh, not across app restarts.
+  private recentlyDeliveredTitles = new Map<string, number>();
+  private readonly DUPLICATE_BANNER_WINDOW_MS = 2 * 60 * 1000; // 2 minutes
   private notificationsSubject = new BehaviorSubject<AppNotificationItem[]>([]);
   readonly notifications$ = this.notificationsSubject.asObservable();
 
@@ -381,6 +392,7 @@ export class NotificationCenterService {
     this.writeNotifiedMissed(notified);
     this.writeLocalNotifications([localNotification, ...this.readLocalNotifications()]);
     await this.sendDeviceNotification(localNotification);
+    this.markTitleDelivered(title);
 
     // Publish immediately so every open panel/badge reflects this the
     // instant it happens instead of waiting for the next 15s poll tick —
@@ -564,8 +576,14 @@ export class NotificationCenterService {
         if (unread && !deliveredIds.has(item.id)) {
           deliveredIds.add(item.id);
           hasNewDelivered = true;
-          // Trigger native notification with sound & vibration
-          void this.sendDeviceNotification(appItem, defaultTargetRoute, 'fordago-alerts');
+          // Skip if the local notifyMissedWorkout() flow already showed a
+          // device banner for this exact title moments ago (see
+          // recentlyDeliveredTitles) — still marked "delivered" above so it
+          // is never retried, just not re-shown as a second banner.
+          if (!this.wasRecentlyDelivered(appItem.title)) {
+            // Trigger native notification with sound & vibration
+            void this.sendDeviceNotification(appItem, defaultTargetRoute, 'fordago-alerts');
+          }
         }
 
         return appItem;
@@ -734,6 +752,27 @@ export class NotificationCenterService {
     return [...notifications].sort((left, right) => (
       new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()
     ));
+  }
+
+  /** Records that a device banner for this exact notification title was just sent, so a near-duplicate from another code path can be suppressed for a short window (see recentlyDeliveredTitles). */
+  private markTitleDelivered(title: string): void {
+    this.recentlyDeliveredTitles.set(title, Date.now());
+    // Opportunistic cleanup so this map never grows unbounded across a long session.
+    const cutoff = Date.now() - this.DUPLICATE_BANNER_WINDOW_MS;
+    this.recentlyDeliveredTitles.forEach((timestamp, key) => {
+      if (timestamp < cutoff) {
+        this.recentlyDeliveredTitles.delete(key);
+      }
+    });
+  }
+
+  /** True if a device banner for this exact title was sent within the last DUPLICATE_BANNER_WINDOW_MS. */
+  private wasRecentlyDelivered(title: string): boolean {
+    const timestamp = this.recentlyDeliveredTitles.get(title);
+    if (!timestamp) {
+      return false;
+    }
+    return (Date.now() - timestamp) < this.DUPLICATE_BANNER_WINDOW_MS;
   }
 
   private extractHomeExercises(message: string): string[] {
@@ -984,40 +1023,51 @@ export class NotificationCenterService {
     channelId: string = 'fordago-alerts-v2'
   ): Promise<void> {
     if (Capacitor.isNativePlatform()) {
-      const { LocalNotifications } = await import('@capacitor/local-notifications');
-      await this.initNativeNotificationChannels();
-      const permissions = await LocalNotifications.checkPermissions();
-      const granted = permissions.display === 'granted'
-        ? permissions
-        : await LocalNotifications.requestPermissions();
+      // Wrapped in try/catch: every caller in this file invokes
+      // sendDeviceNotification() fire-and-forget (`void this.sendDeviceNotification(...)`),
+      // so an uncaught rejection here — e.g. the LocalNotifications plugin
+      // missing on a given build, or a permission-check glitch on some
+      // Android OEM skins — would surface as an unhandled promise rejection
+      // instead of failing quietly like the other native scheduling methods
+      // in this file (scheduleNative*, cancelNative*) already do.
+      try {
+        const { LocalNotifications } = await import('@capacitor/local-notifications');
+        await this.initNativeNotificationChannels();
+        const permissions = await LocalNotifications.checkPermissions();
+        const granted = permissions.display === 'granted'
+          ? permissions
+          : await LocalNotifications.requestPermissions();
 
-      if (granted.display !== 'granted') {
-        return;
+        if (granted.display !== 'granted') {
+          return;
+        }
+
+        // Build a detailed body with exercises on separate lines for native platforms
+        const exercises = notification.homeExercises ?? [];
+        const expandedBody = exercises.length
+          ? `${notification.message}\n\n🏠 Home Workout Plan:\n${exercises.map((ex, i) => `${i + 1}. ${ex}`).join('\n')}`
+          : notification.message;
+
+        await LocalNotifications.schedule({
+          notifications: [{
+            id: this.hashNotificationId(notification.id),
+            title: notification.title,
+            body: expandedBody,
+            channelId: channelId,
+            smallIcon: 'ic_stat_icon',
+            iconColor: '#FFD700',
+            schedule: { at: new Date(Date.now() + 500), allowWhileIdle: true },
+            extra: {
+              notificationId: notification.id,
+              targetRoute: targetRoute ?? null,
+            },
+            largeBody: expandedBody,
+            summaryText: exercises.length ? `${exercises.length} exercises to do at home` : undefined,
+          }],
+        });
+      } catch (err) {
+        console.warn('Failed to send native device notification:', err);
       }
-
-      // Build a detailed body with exercises on separate lines for native platforms
-      const exercises = notification.homeExercises ?? [];
-      const expandedBody = exercises.length
-        ? `${notification.message}\n\n🏠 Home Workout Plan:\n${exercises.map((ex, i) => `${i + 1}. ${ex}`).join('\n')}`
-        : notification.message;
-
-      await LocalNotifications.schedule({
-        notifications: [{
-          id: this.hashNotificationId(notification.id),
-          title: notification.title,
-          body: expandedBody,
-          channelId: channelId,
-          smallIcon: 'ic_stat_icon',
-          iconColor: '#FFD700',
-          schedule: { at: new Date(Date.now() + 500), allowWhileIdle: true },
-          extra: {
-            notificationId: notification.id,
-            targetRoute: targetRoute ?? null,
-          },
-          largeBody: expandedBody,
-          summaryText: exercises.length ? `${exercises.length} exercises to do at home` : undefined,
-        }],
-      });
       return;
     }
 
