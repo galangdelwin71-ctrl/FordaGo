@@ -2777,3 +2777,74 @@ ion-content.fordago-page-content {
   }
 }
 
+// ── Week Plan Tab Wrap + Rest Badge ──────────────────────────────────────────
+.week-plan-day-tabs {
+  display: flex !important;
+  gap: 4px !important;
+  overflow-x: auto !important;
+}
+
+.wplan-day-tab-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.wplan-rest-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.45);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+
+  &:hover {
+    background: rgba(245, 158, 11, 0.12);
+    border-color: rgba(245, 158, 11, 0.3);
+    color: #fbbf24;
+  }
+
+  &.is-rest {
+    background: rgba(5, 150, 105, 0.12);
+    border-color: rgba(5, 150, 105, 0.3);
+    color: #34d399;
+    font-size: 14px;
+    padding: 0 4px;
+  }
+}
+
+:host-context(body.light-theme) {
+  .wplan-rest-badge {
+    border-color: rgba(15, 23, 42, 0.1);
+    background: #f1f5f9;
+    color: #64748b;
+
+    &:hover {
+      background: rgba(245, 158, 11, 0.1);
+      border-color: rgba(245, 158, 11, 0.3);
+      color: #b45309;
+    }
+
+    &.is-rest {
+      background: rgba(5, 150, 105, 0.1);
+      border-color: rgba(5, 150, 105, 0.25);
+      color: #059669;
+    }
+  }
+}
+
+// ── Ensure dark mode day-pills are same size as light mode ────────────────────
+// The V3 redesign block already sets min-height:72px for both, but this
+// reinforces it directly on the dark-mode base so it wins over earlier rules.
+.day-pill {
+  min-height: 72px !important;
+  padding: 10px 3px 9px !important;
+  box-sizing: border-box !important;
+}

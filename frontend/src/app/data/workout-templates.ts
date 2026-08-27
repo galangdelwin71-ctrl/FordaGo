@@ -372,7 +372,6 @@ export const workoutTypes: string[] = [
   'Cardio & Core',
   'Full Body',
   'Mobility & Stretch',
-  'Rest Day',
 ];
 
 export const suggestedTargetsMap: Record<string, string[]> = {

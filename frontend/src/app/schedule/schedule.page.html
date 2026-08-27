@@ -402,22 +402,14 @@
           </div>
         </div>
 
-        <div class="two-col" id="tour-add-workout-date">
-          <div class="field-group">
-            <label class="field-label">Date</label>
-            <div class="field-wrap">
-              <span class="field-icon"><ion-icon name="calendar-outline"></ion-icon></span>
-              <input type="date" [(ngModel)]="newWorkoutDate" />
-            </div>
+
+        <div class="field-group" id="tour-add-workout-date">
+          <label class="field-label">Time</label>
+          <div class="field-wrap">
+            <span class="field-icon"><ion-icon name="alarm-outline"></ion-icon></span>
+            <input type="time" [(ngModel)]="newWorkoutTime" (ngModelChange)="newWorkoutTimeWarning = ''" />
           </div>
-          <div class="field-group">
-            <label class="field-label">Time</label>
-            <div class="field-wrap">
-              <span class="field-icon"><ion-icon name="alarm-outline"></ion-icon></span>
-              <input type="time" [(ngModel)]="newWorkoutTime" (ngModelChange)="newWorkoutTimeWarning = ''" />
-            </div>
-            <div class="field-warning" *ngIf="newWorkoutTimeWarning">{{ newWorkoutTimeWarning }}</div>
-          </div>
+          <div class="field-warning" *ngIf="newWorkoutTimeWarning">{{ newWorkoutTimeWarning }}</div>
         </div>
 
         <div class="field-group" id="tour-add-workout-duration">
@@ -467,12 +459,10 @@
         </div>
 
         <div class="field-group" id="tour-add-workout-location">
-          <label class="field-label">Location</label>
+          <label class="field-label">Location <span class="label-optional">(Optional)</span></label>
           <div class="field-wrap">
             <span class="field-icon">📍</span>
-            <select [(ngModel)]="newWorkoutLocation">
-              <option *ngFor="let l of locations" [value]="l">{{ l }}</option>
-            </select>
+            <input type="text" [(ngModel)]="newWorkoutLocation" placeholder="e.g. Gym Floor B, Home, Cardio Area..." />
           </div>
         </div>
 
@@ -593,28 +583,31 @@
 
         <!-- Day Tab Selector -->
         <div class="week-plan-day-tabs" id="tour-week-plan-tabs">
-          <button
+          <div
             *ngFor="let label of weekDayLabels; let di = index"
-            class="wplan-day-tab"
-            [class.active]="weekPlanActiveDay === di"
-            [class.rest]="weekPlanDays[di]?.isRest"
-            (click)="weekPlanActiveDay = di">
-            {{ label.slice(0,3) }}
-          </button>
+            class="wplan-day-tab-wrap"
+            [class.active]="weekPlanActiveDay === di">
+            <button
+              class="wplan-day-tab"
+              [class.active]="weekPlanActiveDay === di"
+              [class.rest]="weekPlanDays[di]?.isRest"
+              (click)="weekPlanActiveDay = di">
+              {{ label.slice(0,3) }}
+            </button>
+            <button
+              type="button"
+              class="wplan-rest-badge"
+              [class.is-rest]="weekPlanDays[di]?.isRest"
+              (click)="$event.stopPropagation(); toggleWeekPlanRest(di)"
+              [title]="weekPlanDays[di]?.isRest ? 'Remove rest day' : 'Set as rest day'">
+              {{ weekPlanDays[di]?.isRest ? '😴' : 'Rest' }}
+            </button>
+          </div>
         </div>
 
         <!-- Day Editor -->
         <div class="week-plan-day-editor" *ngIf="weekPlanDays[weekPlanActiveDay] as day">
           <div class="wplan-day-name">{{ weekDayLabels[weekPlanActiveDay] }}</div>
-
-          <!-- Rest Day toggle -->
-          <div class="wplan-rest-row" id="tour-week-plan-rest">
-            <span class="wplan-rest-label">Rest Day</span>
-            <label class="toggle-switch">
-              <input type="checkbox" [(ngModel)]="day.isRest" (ngModelChange)="day.title = day.isRest ? 'Rest Day' : 'Upper Body'" />
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
 
           <ng-container *ngIf="!day.isRest">
             <div class="field-group" id="tour-week-plan-type">
@@ -664,12 +657,10 @@
             </div>
 
             <div class="field-group">
-              <label class="field-label">Location</label>
+              <label class="field-label">Location <span class="label-optional">(Optional)</span></label>
               <div class="field-wrap">
                 <span class="field-icon">📍</span>
-                <select [(ngModel)]="day.location">
-                  <option *ngFor="let l of locations" [value]="l">{{ l }}</option>
-                </select>
+                <input type="text" [(ngModel)]="day.location" placeholder="e.g. Gym Floor B, Home, Cardio Area..." />
               </div>
             </div>
 

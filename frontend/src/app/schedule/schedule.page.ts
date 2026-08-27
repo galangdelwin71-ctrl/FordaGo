@@ -1417,6 +1417,20 @@ export class SchedulePage implements OnInit, OnDestroy {
     this.weekPlanModalOpen = false;
   }
 
+  toggleWeekPlanRest(dayIndex: number): void {
+    const day = this.weekPlanDays[dayIndex];
+    day.isRest = !day.isRest;
+    if (day.isRest) {
+      day.title = 'Rest Day';
+      day.customTarget = '';
+      day.exercises = [];
+    } else {
+      day.title = 'Upper Body';
+    }
+    // If this is the active day, switch to it to show the updated editor
+    this.weekPlanActiveDay = dayIndex;
+  }
+
   onWeekPlanTypeChange(dayIndex: number): void {
     const day = this.weekPlanDays[dayIndex];
     day.isRest = day.title === 'Rest Day';
