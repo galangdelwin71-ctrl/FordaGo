@@ -1168,6 +1168,13 @@ export class SchedulePage implements OnInit, OnDestroy {
     this.writeStoredSessions(store);
     this.workoutTracker.pushSession(targetDate, session as unknown as StoredWorkoutSession);
 
+    // Re-register native Android AlarmManager alarms so the new session fires
+    // a notification at the exact scheduled time even when the app is closed/backgrounded.
+    // Without this call, scheduleMissedChecks() only runs on app start or internal
+    // store mutations — never when schedule.page.ts directly writes to localStorage.
+    this.workoutTracker.scheduleMissedChecks();
+    this.workoutTracker.scheduleUpcomingReminders();
+
     const selKey = this.dateKey(this.weekDays[this.selectedDayIndex]?.date ?? new Date());
     if (key === selKey) this.renderSessions();
 
@@ -1175,6 +1182,7 @@ export class SchedulePage implements OnInit, OnDestroy {
     this.closeAddModal();
     this.toast.success('Workout added to schedule!');
   }
+
 
   private to12String(hour: number, min: number): string {
     const ampm = hour >= 12 ? 'PM' : 'AM';

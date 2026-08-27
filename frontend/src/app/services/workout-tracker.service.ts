@@ -852,7 +852,7 @@ export class WorkoutTrackerService {
    * every mutation) — the number of sessions in a single day is always
    * small, so this is cheap.
    */
-  private scheduleMissedChecks(): void {
+  scheduleMissedChecks(): void {
     this.clearMissedCheckTimers();
 
     const store = this.readStore();
@@ -920,7 +920,7 @@ export class WorkoutTrackerService {
    *  - Session timer already running (startedAt set) → member already working out.
    *  - Reminder time is in the past (session is < 30 min away or already started) → skip.
    */
-  private scheduleUpcomingReminders(): void {
+  scheduleUpcomingReminders(): void {
     this.clearUpcomingReminderTimers();
 
     const store = this.readStore();
