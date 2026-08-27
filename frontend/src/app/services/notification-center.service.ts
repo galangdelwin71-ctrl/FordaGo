@@ -934,6 +934,47 @@ export class NotificationCenterService {
   }
 
   /**
+   * Cleans up all pending workout-related native alarms (start, missed, upcoming)
+   * so stale / modified / deleted / replaced sessions never trigger "ghost" notifications.
+   */
+  public async cancelAllPendingWorkoutAlarms(): Promise<void> {
+    if (!Capacitor.isNativePlatform()) return;
+    try {
+      const { LocalNotifications } = await import('@capacitor/local-notifications');
+      const pending = await LocalNotifications.getPending();
+      if (pending && Array.isArray(pending.notifications) && pending.notifications.length > 0) {
+        const workoutAlarms = pending.notifications.filter((n) => {
+          const extra = n.extra;
+          if (extra && extra.type === 'workout_duration') {
+            return false; // Preserve live workout duration alarms
+          }
+          if (extra && (
+            extra.type === 'missed_workout' ||
+            extra.type === 'workout_start' ||
+            extra.type === 'upcoming_reminder' ||
+            extra.type === 'workout'
+          )) {
+            return true;
+          }
+          const rawItem = n as any;
+          if (rawItem.channelId === 'fordago-alarms-v3' || rawItem.channelId === 'fordago-alarms') {
+            return true;
+          }
+          return false;
+        });
+
+        if (workoutAlarms.length > 0) {
+          await LocalNotifications.cancel({
+            notifications: workoutAlarms.map((n) => ({ id: n.id })),
+          });
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to clean up pending workout alarms:', err);
+    }
+  }
+
+  /**
    * Cancels any scheduled native reminders / missed alerts for a given workout session key.
    * Called when a workout is completed or actively started.
    */
@@ -944,8 +985,20 @@ export class NotificationCenterService {
       const upcomingId = this.hashNotificationId(uniqueKey);
       const startId = this.hashNotificationId(`start-${uniqueKey}`);
       const missedId = this.hashNotificationId(`missed-${uniqueKey}`);
+      const parts = uniqueKey.split('-');
+      const plainMissedId = parts.length >= 3 ? this.hashNotificationId(`missed-${parts.slice(0, 4).join('-')}`) : null;
+
+      const notifsToCancel: Array<{ id: number }> = [
+        { id: upcomingId },
+        { id: startId },
+        { id: missedId },
+      ];
+      if (plainMissedId && plainMissedId !== missedId) {
+        notifsToCancel.push({ id: plainMissedId });
+      }
+
       await LocalNotifications.cancel({
-        notifications: [{ id: upcomingId }, { id: startId }, { id: missedId }],
+        notifications: notifsToCancel,
       });
     } catch {}
   }

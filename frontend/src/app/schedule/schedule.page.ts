@@ -1040,6 +1040,8 @@ export class SchedulePage implements OnInit, OnDestroy {
     // WorkoutTrackerService.pullFromServer() merges the (stale) server copy
     // back into the local store (e.g. on the next Dashboard visit).
     this.workoutTracker.pushSession(editedDayDate, s as unknown as StoredWorkoutSession);
+    void this.workoutTracker.scheduleMissedChecks();
+    this.workoutTracker.scheduleUpcomingReminders();
     this.renderSessions();
     this.toast.success('Workout updated!');
   }
@@ -1054,12 +1056,19 @@ export class SchedulePage implements OnInit, OnDestroy {
     if (!session) return;
 
     const dayDate = this.weekDays[this.selectedDayIndex].date;
+    const todayKey = this.dateKey(dayDate);
+    const uniqueKey = `${todayKey}-${session.id ?? session.title}-${session.timeVal}-${session.timeAmpm}`;
+    void this.notificationCenter.cancelNativeWorkoutAlerts(uniqueKey);
+
     this.sessions.splice(index, 1);
     this.saveSessionsForDate(dayDate, this.sessions);
     // Delete on the backend too — otherwise the deleted session still
     // exists server-side and pullFromServer() re-adds it as a "new"
     // session the next time the local store no longer has a matching id.
     this.workoutTracker.deleteSessionFromServer(dayDate, session.id);
+
+    void this.workoutTracker.scheduleMissedChecks();
+    this.workoutTracker.scheduleUpcomingReminders();
 
     this.expandedCard = null;
     this.buildWeekStrip();
@@ -1090,9 +1099,16 @@ export class SchedulePage implements OnInit, OnDestroy {
     this.saveSessionsForDate(dayDate, this.sessions);
     this.workoutTracker.pushSession(dayDate, s as unknown as StoredWorkoutSession);
     this.renderSessions();
+
     if (s.status === 'done') {
+      const todayKey = this.dateKey(dayDate);
+      const uniqueKey = `${todayKey}-${s.id ?? s.title}-${s.timeVal}-${s.timeAmpm}`;
+      void this.notificationCenter.cancelNativeWorkoutAlerts(uniqueKey);
       this.toast.success('Workout completed! Keep up the streak 🔥');
     }
+
+    void this.workoutTracker.scheduleMissedChecks();
+    this.workoutTracker.scheduleUpcomingReminders();
   }
 
   // ── Add Modal ─────────────────────────────────────────────
@@ -1443,6 +1459,8 @@ export class SchedulePage implements OnInit, OnDestroy {
     this.weekPlanSaved = true;
     // Apply template to the current week (unseeded days)
     this.applyWeekPlanToCurrentWeek();
+    void this.workoutTracker.scheduleMissedChecks();
+    this.workoutTracker.scheduleUpcomingReminders();
     setTimeout(() => {
       this.closeWeekPlanModal();
       this.buildWeekStrip();
@@ -1455,6 +1473,8 @@ export class SchedulePage implements OnInit, OnDestroy {
     localStorage.removeItem(this.WEEK_PLAN_KEY);
     this.weekPlanDays = this.buildDefaultWeekPlanDays();
     this.weekPlanSaved = false;
+    void this.workoutTracker.scheduleMissedChecks();
+    this.workoutTracker.scheduleUpcomingReminders();
   }
 
   private loadWeekPlanTemplate(): WeekPlanDay[] | null {

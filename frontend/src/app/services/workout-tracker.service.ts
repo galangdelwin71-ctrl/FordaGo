@@ -617,6 +617,12 @@ export class WorkoutTrackerService {
       void this.notificationCenter.cancelNativeDurationAlarm(existingSession.id || sessionId);
     }
 
+    if (summary.allDone) {
+      const todayKey = this.getDateKey(dayDate);
+      const uniqueKey = `${todayKey}-${existingSession.id ?? existingSession.title}-${existingSession.timeVal}-${existingSession.timeAmpm}`;
+      void this.notificationCenter.cancelNativeWorkoutAlerts(uniqueKey);
+    }
+
     sessions[sessionIndex] = {
       ...existingSession,
       exercises: normalizedExercises,
@@ -660,6 +666,10 @@ export class WorkoutTrackerService {
     }
 
     const sessionObj = sessions[sessionIndex];
+    const todayKey = this.getDateKey(dayDate);
+    const uniqueKey = `${todayKey}-${sessionObj.id ?? sessionObj.title}-${sessionObj.timeVal}-${sessionObj.timeAmpm}`;
+    void this.notificationCenter.cancelNativeWorkoutAlerts(uniqueKey);
+
     sessions[sessionIndex] = {
       ...this.normalizeSession(sessionObj),
       startedAt: new Date().toISOString(),
@@ -711,11 +721,18 @@ export class WorkoutTrackerService {
       ? 0
       : Math.max(1, Math.round((Date.now() - startedMs) / 60000));
 
+    const finalStatus = existingSession.status === 'missed' ? existingSession.status : 'done';
+    if (finalStatus === 'done') {
+      const todayKey = this.getDateKey(dayDate);
+      const uniqueKey = `${todayKey}-${existingSession.id ?? existingSession.title}-${existingSession.timeVal}-${existingSession.timeAmpm}`;
+      void this.notificationCenter.cancelNativeWorkoutAlerts(uniqueKey);
+    }
+
     sessions[sessionIndex] = {
       ...existingSession,
       startedAt: null,
       actualMinutes: elapsedMinutes,
-      status: existingSession.status === 'missed' ? existingSession.status : 'done',
+      status: finalStatus,
     };
     store[key] = sessions;
     this.writeStore(store);
@@ -855,8 +872,11 @@ export class WorkoutTrackerService {
    * every mutation) — the number of sessions in a single day is always
    * small, so this is cheap.
    */
-  scheduleMissedChecks(): void {
+  async scheduleMissedChecks(): Promise<void> {
     this.clearMissedCheckTimers();
+
+    // Cancel all stale pending workout alarms first so modified/deleted/replaced sessions won't trigger ghost alarms
+    await this.notificationCenter.cancelAllPendingWorkoutAlarms();
 
     const store = this.readStore();
     const now = new Date();
