@@ -1148,6 +1148,7 @@ export class SchedulePage implements OnInit, OnDestroy {
     const validCustomExercises = this.newWorkoutExercises.filter(ex => ex.name.trim() !== '');
 
     const session: WorkoutSession = this.normalizeSession({
+      id:           `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       timeVal:      time,
       timeAmpm:     ampm,
       title:        this.newWorkoutType,

@@ -874,8 +874,8 @@ export class WorkoutTrackerService {
       const scheduledAt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0, 0);
       const msUntilScheduled = scheduledAt.getTime() - now.getTime();
 
-      // Only schedule alarms for sessions whose scheduled time is in the FUTURE
-      if (msUntilScheduled <= 0) {
+      // Only schedule alarms for sessions whose scheduled time is in the FUTURE (or within next 1 min)
+      if (msUntilScheduled <= -60000) {
         return;
       }
 
@@ -884,18 +884,27 @@ export class WorkoutTrackerService {
         ? session.exercises.slice(0, 6).map((exercise) => `${exercise.sets} x ${exercise.reps} ${exercise.name}`)
         : (this.homeWorkoutMap[session.title] || this.homeWorkoutMap['Full Body']);
 
-      // 1. Schedule Native AlarmManager notification to ring at the exact scheduled time.
-      //    This is what fires even when the app is closed/backgrounded on Android.
-      void this.notificationCenter.scheduleNativeMissedAlert(
-        session.title,
-        uniqueKey,
-        scheduledAt,
-        homeAlternatives
-      );
+      // 1. Schedule Workout START alert at the exact scheduled time (e.g. 9:25:00 PM)
+      if (msUntilScheduled > 0) {
+        void this.notificationCenter.scheduleNativeWorkoutStartAlert(
+          session.title,
+          uniqueKey,
+          scheduledAt
+        );
+      }
 
-      // 2. Foreground JS timer fallback while app is actively viewed.
-      //    Fires 500ms after the scheduled time to ensure autoComputeStatus()
-      //    returns 'missed' (>= scheduledAt) before syncStoreStatuses() runs.
+      // 2. Schedule MISSED alert 1 minute after scheduled time (e.g. 9:26:00 PM)
+      const missedAt = new Date(scheduledAt.getTime() + 60 * 1000);
+      if (missedAt.getTime() > now.getTime()) {
+        void this.notificationCenter.scheduleNativeMissedAlert(
+          session.title,
+          uniqueKey,
+          missedAt,
+          homeAlternatives
+        );
+      }
+
+      // 3. Foreground JS timer fallback while app is actively viewed.
       if (msUntilScheduled > 0) {
         const timer = setTimeout(() => {
           this.syncStoreStatuses();

@@ -213,25 +213,22 @@ export class NotificationCenterService {
         await LocalNotifications.deleteChannel({ id: 'fordago-reminders' });
       } catch {}
 
-      // fordago-alerts-v2: Admin announcements / incoming alerts
-      // Omitting sound property uses Android's native system default notification ringtone
-      // vibration: true ensures device vibrates in Ring or Vibrate mode, and stays silent in Mute mode
+      // fordago-alarms-v3: High priority channel for workout start, reminders, and missed alerts
       await LocalNotifications.createChannel({
-        id: 'fordago-alerts-v2',
-        name: 'FordaGO Alerts & Announcements',
-        description: 'Admin announcements, check-in confirmations, and gym notifications',
-        importance: 5,       // IMPORTANCE_HIGH (5 is MAX — shows as heads-up banner)
-        visibility: 1,       // VISIBILITY_PUBLIC — shows on lock screen
+        id: 'fordago-alarms-v3',
+        name: 'FordaGO Workout Alarms & Reminders',
+        description: 'Instant alerts and alarms for scheduled workouts, reminders, and gym updates',
+        importance: 5,       // IMPORTANCE_HIGH (Heads-up banner + sound + vibration)
+        visibility: 1,       // VISIBILITY_PUBLIC (Shows on Lock Screen)
         vibration: true,
         lights: true,
         lightColor: '#FFD700',
       });
 
-      // fordago-reminders-v2: Workout reminders (30-min before session & duration alarm)
       await LocalNotifications.createChannel({
-        id: 'fordago-reminders-v2',
-        name: 'Workout Reminders & Alarms',
-        description: '30-minute reminders before workout sessions and duration alarms',
+        id: 'fordago-alerts-v2',
+        name: 'FordaGO Alerts & Announcements',
+        description: 'Admin announcements, check-in confirmations, and gym notifications',
         importance: 5,
         visibility: 1,
         vibration: true,
@@ -784,7 +781,7 @@ export class NotificationCenterService {
             id: notifId,
             title,
             body: message,
-            channelId: 'fordago-reminders-v2',
+            channelId: 'fordago-alarms-v3',
             smallIcon: 'ic_stat_icon',
             iconColor: '#FFD700',
             schedule: {
@@ -804,6 +801,49 @@ export class NotificationCenterService {
   }
 
   /**
+   * Schedules an exact native notification on Android AlarmManager
+   * that rings at the EXACT start time of the workout (e.g. 9:25 PM).
+   */
+  public async scheduleNativeWorkoutStartAlert(sessionTitle: string, uniqueKey: string, startDate: Date): Promise<void> {
+    // If the scheduled start time is in the past, skip
+    if (startDate.getTime() <= Date.now()) {
+      return;
+    }
+
+    const title = `🏋️ Workout Time: ${sessionTitle}`;
+    const body = `It's time for your scheduled ${sessionTitle} session! Open FordaGO to track your workout.`;
+    const notifId = this.hashNotificationId(`start-${uniqueKey}`);
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const { LocalNotifications } = await import('@capacitor/local-notifications');
+        await this.initNativeNotificationChannels();
+        await LocalNotifications.schedule({
+          notifications: [{
+            id: notifId,
+            title,
+            body,
+            channelId: 'fordago-alarms-v3',
+            smallIcon: 'ic_stat_icon',
+            iconColor: '#FFD700',
+            schedule: {
+              at: startDate,
+              allowWhileIdle: true,
+            },
+            extra: {
+              type: 'workout_start',
+              targetRoute: '/schedule',
+              uniqueKey,
+            },
+          }],
+        });
+      } catch (err) {
+        console.warn('Failed to schedule native workout start alert:', err);
+      }
+    }
+  }
+
+  /**
    * Schedules a native notification for when a workout time has passed and becomes missed,
    * so it rings and sends home workout alternative suggestions even if the app is closed.
    */
@@ -813,15 +853,11 @@ export class NotificationCenterService {
     missedDate: Date,
     homeExercises?: string[]
   ): Promise<void> {
-    // Skip only if the target time is meaningfully in the past (>5s).
-    // Allowing near-exact times through so the alarm fires even if there's
-    // slight latency between scheduling and the OS registering the alarm.
-    if (missedDate.getTime() < Date.now() - 5000) {
+    if (missedDate.getTime() <= Date.now()) {
       return;
     }
 
-
-    const title = `Missed Workout: ${sessionTitle}`;
+    const title = `⚠️ Missed Workout: ${sessionTitle}`;
     const normalizedExercises = (homeExercises || []).slice(0, 6);
     const body = normalizedExercises.length
       ? `You missed your scheduled ${sessionTitle} session today.\n\n🏠 Suggested Home Workout:\n${normalizedExercises.map((ex, i) => `${i + 1}. ${ex}`).join('\n')}`
@@ -833,18 +869,12 @@ export class NotificationCenterService {
       try {
         const { LocalNotifications } = await import('@capacitor/local-notifications');
         await this.initNativeNotificationChannels();
-        const permissions = await LocalNotifications.checkPermissions();
-        if (permissions.display !== 'granted') {
-          const req = await LocalNotifications.requestPermissions();
-          if (req.display !== 'granted') return;
-        }
-
         await LocalNotifications.schedule({
           notifications: [{
             id: notifId,
             title,
             body,
-            channelId: 'fordago-reminders-v2',
+            channelId: 'fordago-alarms-v3',
             smallIcon: 'ic_stat_icon',
             iconColor: '#FFD700',
             schedule: {
@@ -873,9 +903,10 @@ export class NotificationCenterService {
     try {
       const { LocalNotifications } = await import('@capacitor/local-notifications');
       const upcomingId = this.hashNotificationId(uniqueKey);
+      const startId = this.hashNotificationId(`start-${uniqueKey}`);
       const missedId = this.hashNotificationId(`missed-${uniqueKey}`);
       await LocalNotifications.cancel({
-        notifications: [{ id: upcomingId }, { id: missedId }],
+        notifications: [{ id: upcomingId }, { id: startId }, { id: missedId }],
       });
     } catch {}
   }
