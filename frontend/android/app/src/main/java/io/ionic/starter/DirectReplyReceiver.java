@@ -63,26 +63,33 @@ public class DirectReplyReceiver extends BroadcastReceiver {
             try {
                 SharedPreferences prefs = context.getSharedPreferences("CapacitorStorage", Context.MODE_PRIVATE);
                 String token = prefs.getString("token", null);
+                if (token == null) {
+                    token = prefs.getString("auth_token", null);
+                }
 
                 if (token == null) {
                     Log.e(TAG, "Cannot send reply: Auth token is missing in SharedPreferences.");
                     return;
                 }
 
-                // Remove surrounding quotes if token was JSON stringified
+                // Remove surrounding quotes or backslashes if stored via JSON
+                token = token.trim();
                 if (token.startsWith("\"") && token.endsWith("\"") && token.length() > 2) {
                     token = token.substring(1, token.length() - 1);
                 }
+                if (token.startsWith("Bearer ")) {
+                    token = token.substring(7);
+                }
 
-                URL url = new URL("https://fordago.site/api/conversations/" + conversationId + "/messages");
+                URL url = new URL("http://168.144.141.27:8000/api/conversations/" + conversationId + "/messages");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
-                conn.setRequestProperty("Content-Type", "application/json");
+                conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
                 conn.setRequestProperty("Accept", "application/json");
                 conn.setRequestProperty("Authorization", "Bearer " + token);
                 conn.setDoOutput(true);
-                conn.setConnectTimeout(8000);
-                conn.setReadTimeout(8000);
+                conn.setConnectTimeout(10000);
+                conn.setReadTimeout(10000);
 
                 JSONObject jsonBody = new JSONObject();
                 jsonBody.put("body", replyText);
@@ -91,6 +98,7 @@ public class DirectReplyReceiver extends BroadcastReceiver {
                 byte[] input = jsonBody.toString().getBytes(StandardCharsets.UTF_8);
                 try (OutputStream os = conn.getOutputStream()) {
                     os.write(input, 0, input.length);
+                    os.flush();
                 }
 
                 int responseCode = conn.getResponseCode();
