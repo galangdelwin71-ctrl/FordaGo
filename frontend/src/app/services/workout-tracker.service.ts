@@ -210,7 +210,7 @@ export class WorkoutTrackerService {
    * (empty array vs. explicit isRestDay session) depending on which page
    * happened to seed a given day first (Stage 3 follow-up fix).
    */
-  buildDaySessions(dayIdx: number, template: WeekPlanTemplateDay[] | null): StoredWorkoutSession[] {
+  buildDaySessions(dayIdx: number, template: WeekPlanTemplateDay[] | null, sessionDate?: Date): StoredWorkoutSession[] {
     if (template) {
       const templateDay = template[dayIdx];
       if (!templateDay || templateDay.isRest) {
@@ -225,7 +225,7 @@ export class WorkoutTrackerService {
         ? customExercises
         : buildExercisesFromTemplate(templateDay.title, templateDay.customTarget);
 
-      return [this.buildSeededSession({
+      const session = this.buildSeededSession({
         timeVal: time,
         timeAmpm: ampm,
         title: templateDay.title,
@@ -237,7 +237,16 @@ export class WorkoutTrackerService {
         customTarget: templateDay.customTarget || undefined,
         isCustom: false,
         exercises,
-      })];
+      });
+
+      // Compute accurate status based on the actual calendar date so that
+      // a past day shows 'missed' immediately instead of flip-flopping
+      // between 'upcoming' and 'missed' on navigation.
+      if (sessionDate) {
+        session.status = this.autoComputeStatus(session, sessionDate);
+      }
+
+      return [session];
     }
 
     const defaultDaySessions = defaultSessionsByDayIdx[dayIdx] ?? [];
@@ -245,19 +254,25 @@ export class WorkoutTrackerService {
       return [this.buildRestDaySession()];
     }
 
-    return defaultDaySessions.map((day) => this.buildSeededSession({
-      timeVal: day.timeVal,
-      timeAmpm: day.timeAmpm,
-      title: day.title,
-      duration: day.duration,
-      location: day.location,
-      coach: day.coach,
-      membersCount: day.membersCount,
-      status: day.status,
-      customTarget: day.customTarget,
-      isCustom: false,
-      exercises: buildExercisesFromTemplate(day.title, day.customTarget),
-    }));
+    return defaultDaySessions.map((day) => {
+      const s = this.buildSeededSession({
+        timeVal: day.timeVal,
+        timeAmpm: day.timeAmpm,
+        title: day.title,
+        duration: day.duration,
+        location: day.location,
+        coach: day.coach,
+        membersCount: day.membersCount,
+        status: day.status,
+        customTarget: day.customTarget,
+        isCustom: false,
+        exercises: buildExercisesFromTemplate(day.title, day.customTarget),
+      });
+      if (sessionDate) {
+        s.status = this.autoComputeStatus(s, sessionDate);
+      }
+      return s;
+    });
   }
 
   /** Builds a fully-formed, uniquely-id'd session ready to write into the store. */
@@ -370,27 +385,14 @@ export class WorkoutTrackerService {
     this.scheduleUpcomingReminders();
   }
 
-  // ── Backend sync (Stage 2) ───────────────────────────────────────────
-  // localStorage stays as the source the UI reads from synchronously (so
-  // nothing here changes) — these methods make it a CACHE instead of the
-  // source of truth: pull on load merges in whatever the server already
-  // has (so a different device's progress shows up here), and every local
-  // mutation pushes to the server in the background so it's never the
-  // only place the data lives.
-
   /**
    * Fetches this user's sessions from the backend and merges them into the
    * local store, filling in status/exercises/actualMinutes/startedAt for
-   * any session the server already knows about. Silently keeps the local
-   * store as-is if the request fails (offline-safe) — this is a best-
-   * effort enrichment, never a hard dependency for the UI to render.
+   * any session the server already knows about.
    */
   async pullFromServer(): Promise<void> {
     if (!this.auth.token) return;
 
-    // If a pull is already in flight, piggy-back on it instead of firing
-    // a second HTTP request (fixes Dashboard ngOnInit + ionViewWillEnter
-    // both calling this simultaneously on first open).
     if (this._pullInFlight) {
       return this._pullInFlight;
     }
@@ -412,33 +414,20 @@ export class WorkoutTrackerService {
       );
 
       if (!Array.isArray(rows) || rows.length === 0) {
-        // Nothing on the server at all for this user. Any day still
-        // marked pending simply has no server history to reconcile
-        // against, so the local default placeholder stands as-is —
-        // settle those keys so future pulls treat them normally again.
         this.pendingServerReconcileKeys.clear();
         return;
       }
 
       const store = this.readStore();
-      // Tracks which pending keys this pass has already replaced, so a day
-      // with MULTIPLE server rows gets them all appended onto the same
-      // fresh array instead of each row wiping out the previous one.
       const replacedThisPass = new Set<string>();
 
       rows.forEach((row) => {
         const isoDate = String(row.session_date || '').slice(0, 10);
         const [y, m, d] = isoDate.split('-').map(Number);
         if (!y || !m || !d) return;
-        // Rebuild the internal 0-indexed-month key from the real date.
         const key = `${y}-${m - 1}-${d}`;
+        const sessionDate = new Date(y, m - 1, d);
 
-        // A day that was just blind-seeded (see pendingServerReconcileKeys)
-        // gets its local placeholder session(s) discarded entirely on the
-        // FIRST server row that lands for it this pass — the member's real
-        // synced history replaces the guess instead of sitting duplicated
-        // next to it. Subsequent rows for the same day in this same pass
-        // then append normally onto that now-real array.
         if (this.pendingServerReconcileKeys.has(key) && !replacedThisPass.has(key)) {
           store[key] = [];
           replacedThisPass.add(key);
@@ -446,6 +435,21 @@ export class WorkoutTrackerService {
 
         const daySessions = store[key] ?? [];
         const idx = daySessions.findIndex((s) => s.id === row.client_session_id);
+
+        const serverStatus = row.status ?? daySessions[idx]?.status ?? 'upcoming';
+        const isRestDay = typeof row.is_rest_day === 'boolean' ? row.is_rest_day : daySessions[idx]?.isRestDay;
+        const startedAt = row.started_at ?? daySessions[idx]?.startedAt ?? null;
+
+        const baseStatus = serverStatus === 'done'
+          ? 'done'
+          : this.autoComputeStatus({
+              title: row.title ?? daySessions[idx]?.title ?? '',
+              timeVal: row.time_val ?? daySessions[idx]?.timeVal ?? '',
+              timeAmpm: row.time_ampm ?? daySessions[idx]?.timeAmpm ?? '',
+              status: serverStatus,
+              isRestDay,
+              startedAt,
+            } as StoredWorkoutSession, sessionDate);
 
         const merged: StoredWorkoutSession = {
           ...(idx !== -1 ? daySessions[idx] : {}),
@@ -456,18 +460,11 @@ export class WorkoutTrackerService {
           location: row.location ?? daySessions[idx]?.location ?? '',
           coach: row.coach ?? daySessions[idx]?.coach ?? '',
           customTarget: row.custom_target ?? daySessions[idx]?.customTarget,
-          status: row.status ?? daySessions[idx]?.status ?? 'upcoming',
-          // Stage 3 fix: this was missing entirely, so a session pulled
-          // fresh from the server (e.g. first login on a new device) never
-          // got its rest-day flag — silently breaking streak-skip and the
-          // missed-notification exemption for that device until the day
-          // was re-seeded locally. Falls back to whatever the local copy
-          // already had so an existing local flag is never clobbered by an
-          // absent field on a partial server row.
-          isRestDay: typeof row.is_rest_day === 'boolean' ? row.is_rest_day : daySessions[idx]?.isRestDay,
+          status: baseStatus,
+          isRestDay,
           exercises: Array.isArray(row.exercises) ? row.exercises : daySessions[idx]?.exercises,
           actualMinutes: row.actual_minutes ?? daySessions[idx]?.actualMinutes,
-          startedAt: row.started_at ?? daySessions[idx]?.startedAt ?? null,
+          startedAt,
           duration: row.duration ?? daySessions[idx]?.duration ?? '60 min',
           membersCount: daySessions[idx]?.membersCount ?? 0,
         };

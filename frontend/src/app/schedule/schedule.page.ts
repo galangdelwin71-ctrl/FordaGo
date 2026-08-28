@@ -685,8 +685,8 @@ export class SchedulePage implements OnInit, OnDestroy {
    * silently determine whether the dashboard's streak logic saw a proper
    * rest-day flag or a blank record.)
    */
-  private buildDaySessionsFromTracker(dayIdx: number, template: WeekPlanDay[] | null): WorkoutSession[] {
-    const built = this.workoutTracker.buildDaySessions(dayIdx, template as unknown as WeekPlanTemplateDay[] | null);
+  private buildDaySessionsFromTracker(dayIdx: number, template: WeekPlanDay[] | null, sessionDate?: Date): WorkoutSession[] {
+    const built = this.workoutTracker.buildDaySessions(dayIdx, template as unknown as WeekPlanTemplateDay[] | null, sessionDate);
     return (built as unknown as WorkoutSession[]).map(session => this.normalizeSession(session));
   }
 
@@ -715,7 +715,7 @@ export class SchedulePage implements OnInit, OnDestroy {
     }
 
     if (fallbackIndex === undefined) return [];
-    return this.buildDaySessionsFromTracker(fallbackIndex, this.loadWeekPlanTemplate());
+    return this.buildDaySessionsFromTracker(fallbackIndex, this.loadWeekPlanTemplate(), dayDate);
   }
 
   private saveSessionsForDate(dayDate: Date, sessions: WorkoutSession[]): void {
@@ -736,7 +736,8 @@ export class SchedulePage implements OnInit, OnDestroy {
       const key = this.dateKey(d);
       if (store[key]) continue; // already seeded
 
-      store[key] = this.buildDaySessionsFromTracker(i, template);
+      // Pass date so status is correct immediately (past days = missed)
+      store[key] = this.buildDaySessionsFromTracker(i, template, d);
       changed = true;
     }
 
@@ -775,7 +776,8 @@ export class SchedulePage implements OnInit, OnDestroy {
       const jsDay = d.getDay();
       const idx = jsDay === 0 ? 6 : jsDay - 1;
 
-      store[key] = this.buildDaySessionsFromTracker(idx, template);
+      // Pass date so status is correct immediately (past days = missed)
+      store[key] = this.buildDaySessionsFromTracker(idx, template, d);
       changed = true;
     }
 
@@ -1531,17 +1533,19 @@ export class SchedulePage implements OnInit, OnDestroy {
       const key = this.dateKey(d);
 
       const existingSessions = store[key] ?? [];
-      const builtSessions = this.buildDaySessionsFromTracker(i, template);
+      // Pass the actual calendar date so buildDaySessionsFromTracker can
+      // compute the correct initial status (missed vs upcoming) instead of
+      // always starting as 'upcoming' — fixes the flip-flop bug where
+      // a past workout saved via Weekly Plan showed as 'upcoming' until
+      // navigation away triggered a server pull that corrected it.
+      const builtSessions = this.buildDaySessionsFromTracker(i, template, d);
 
       // Reuse the existing session id(s) for this date (matched by position)
-      // instead of the fresh random id buildDaySessionsFromTracker just
-      // generated. Without this, every Week Plan save orphans the old
-      // backend row (the new id never matches it) — that old row then comes
-      // back as a DUPLICATE the next time pullFromServer() merges server
-      // data into the local store.
       const sessions = builtSessions.map((session, idx) => ({
         ...session,
         id: existingSessions[idx]?.id ?? session.id,
+        // If there was already a server-confirmed 'done' session, keep it done
+        status: existingSessions[idx]?.status === 'done' ? 'done' : session.status,
       }));
 
       store[key] = sessions;
