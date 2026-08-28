@@ -277,7 +277,14 @@ class CoachController extends Controller
             $profile->specialty = trim((string) $request->input('specialty')) ?: null;
         }
         if ($request->has('photo_url')) {
-            $profile->photo_url = trim((string) $request->input('photo_url')) ?: null;
+            $rawPhoto = $request->input('photo_url');
+            $processedPhoto = \App\Services\AvatarService::processAvatar($rawPhoto, $request->user()->id);
+            $profile->photo_url = $processedPhoto;
+
+            // Unify with user account profile image
+            try {
+                $request->user()->update(['profile_image' => $processedPhoto]);
+            } catch (\Throwable $e) {}
         }
         if ($request->has('rate')) {
             $profile->rate = round((float) $request->input('rate'), 2);
@@ -288,10 +295,11 @@ class CoachController extends Controller
         return response()->json([
             'message' => 'Profile updated.',
             'profile' => [
-                'bio'       => $profile->bio,
-                'specialty' => $profile->specialty,
-                'photo_url' => $profile->photo_url,
-                'rate'      => (float) $profile->rate,
+                'bio'           => $profile->bio,
+                'specialty'     => $profile->specialty,
+                'photo_url'     => $profile->photo_url,
+                'profile_image' => $profile->photo_url,
+                'rate'          => (float) $profile->rate,
             ],
         ]);
     }

@@ -1174,10 +1174,24 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
         photo_url: this.profileForm.photo_url.trim(),
         rate: Number(this.profileForm.rate),
       }).subscribe({
-        next: () => {
+        next: (res: any) => {
           this.isSavingProfile = false;
           this.profileModalOpen = false;
           this.reloadProfileOnly();
+
+          const updatedPhoto = res?.profile?.profile_image || res?.profile?.photo_url || this.profileForm.photo_url.trim();
+          if (this.auth.user && updatedPhoto) {
+            (this.auth.user as any).profile_image = updatedPhoto;
+            try {
+              const stored = localStorage.getItem('fordago_user');
+              if (stored) {
+                const parsed = JSON.parse(stored);
+                parsed.profile_image = updatedPhoto;
+                localStorage.setItem('fordago_user', JSON.stringify(parsed));
+              }
+            } catch {}
+          }
+
           void this.toast.success('Coach profile updated successfully!');
         },
         error: (err) => {

@@ -211,6 +211,8 @@ public class FordaGoFirebaseMessagingService extends FirebaseMessagingService {
             return null;
         }
 
+        avatarUrl = avatarUrl.trim();
+
         try {
             // Handle Base64 data URL
             if (avatarUrl.startsWith("data:image")) {
@@ -222,20 +224,27 @@ public class FordaGoFirebaseMessagingService extends FirebaseMessagingService {
                 }
             }
 
-            // Handle HTTP/HTTPS URL with strict short timeout
+            // Handle relative storage path fallback
+            if (avatarUrl.startsWith("/")) {
+                avatarUrl = "http://168.144.141.27" + avatarUrl;
+            }
+
+            // Handle HTTP/HTTPS URL with generous 2.5s network timeout
             URL url = new URL(avatarUrl);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setDoInput(true);
-            conn.setConnectTimeout(1500);
-            conn.setReadTimeout(1500);
+            conn.setInstanceFollowRedirects(true);
+            conn.setConnectTimeout(2500);
+            conn.setReadTimeout(2500);
             conn.connect();
 
             InputStream is = conn.getInputStream();
             Bitmap bitmap = BitmapFactory.decodeStream(is);
             is.close();
+            conn.disconnect();
             return bitmap;
         } catch (Exception e) {
-            Log.w(TAG, "Could not fetch avatar bitmap: " + e.getMessage());
+            Log.w(TAG, "Could not fetch avatar bitmap from " + avatarUrl + ": " + e.getMessage());
             return null;
         }
     }

@@ -255,6 +255,11 @@ class UserController extends Controller
             return response()->json(['message' => 'User not found'], 404);
         }
 
+        $rawProfileImage = $request->input('profile_image');
+        $processedAvatar = $request->has('profile_image')
+            ? \App\Services\AvatarService::processAvatar($rawProfileImage, $user->id)
+            : $user->profile_image;
+
         if ($isAdmin) {
             $dataToUpdate = [
                 'username'          => $username ?: $user->username,
@@ -264,7 +269,7 @@ class UserController extends Controller
                 'role'              => $request->input('role', $user->role),
                 'phone'             => $normalizedPhone,
                 'gender'            => $request->input('gender') ?: null,
-                'profile_image'     => $request->input('profile_image') ?: null,
+                'profile_image'     => $processedAvatar,
                 'membership_type'   => $request->input('membership_type', $user->membership_type),
                 'payment_method'    => $request->input('payment_method', $user->payment_method),
                 'membership_expiry' => $request->input('membership_expiry') ?: null,
@@ -288,11 +293,18 @@ class UserController extends Controller
                 'email'         => $email     ?? $user->email,
                 'phone'         => $normalizedPhone,
                 'gender'        => $request->input('gender') ?: null,
-                'profile_image' => $request->input('profile_image') ?: null,
+                'profile_image' => $processedAvatar,
             ])->save();
         }
 
-        return response()->json(['message' => 'User updated']);
+        // Keep Coach Profile photo in 100% sync
+        if ($request->has('profile_image')) {
+            try {
+                \App\Models\CoachProfile::where('user_id', $user->id)->update(['photo_url' => $processedAvatar]);
+            } catch (\Throwable $e) {}
+        }
+
+        return response()->json(['message' => 'User updated', 'profile_image' => $processedAvatar]);
     }
 
     /**
