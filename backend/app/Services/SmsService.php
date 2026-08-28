@@ -78,19 +78,21 @@ class SmsService
      */
     protected static function sendViaPhilSMS(string $to, string $message): array
     {
-        $apiToken = config('services.philsms.api_token');
+        $apiToken = config('services.philsms.api_token') ?: env('PHILSMS_API_TOKEN');
         $senderId = config('services.philsms.sender_id', 'PhilSMS');
 
         if (! $apiToken) {
             return ['sent' => false, 'skippedReason' => 'Missing PHILSMS_API_TOKEN in .env'];
         }
 
-        // PhilSMS accepts 09XXXXXXXXX or 639XXXXXXXXX
+        // PhilSMS API v3 requires international format +639XXXXXXXXX or 639XXXXXXXXX
         $cleanDigits = preg_replace('/\D/', '', $to);
-        $recipient = $cleanDigits;
-        if (str_starts_with($cleanDigits, '63') && strlen($cleanDigits) === 12) {
-            $recipient = '0' . substr($cleanDigits, 2);
+        if (str_starts_with($cleanDigits, '0') && strlen($cleanDigits) === 11) {
+            $cleanDigits = '63' . substr($cleanDigits, 1);
+        } elseif (strlen($cleanDigits) === 10 && str_starts_with($cleanDigits, '9')) {
+            $cleanDigits = '63' . $cleanDigits;
         }
+        $recipient = "+{$cleanDigits}";
 
         $payload = [
             'recipient' => $recipient,
@@ -98,14 +100,6 @@ class SmsService
             'type'      => 'plain',
             'message'   => $message,
         ];
-
-        $resolve = self::getCurlResolve('dashboard.philsms.com', 443);
-        $curlOptions = [
-            CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
-        ];
-        if (!empty($resolve)) {
-            $curlOptions[CURLOPT_RESOLVE] = $resolve;
-        }
 
         $client = Http::withHeaders([
             'Authorization' => "Bearer {$apiToken}",
@@ -115,30 +109,29 @@ class SmsService
         ->withOptions([
             'force_ip_resolve' => 'v4',
             'connect_timeout'  => 8,
-            'curl'             => $curlOptions,
         ])
         ->timeout(15);
+
         if (PHP_OS_FAMILY === 'Windows' || config('app.env') === 'local') {
             $client = $client->withoutVerifying();
         }
-        $response = $client->post('https://dashboard.philsms.com/api/v3/sms/send', $payload);
 
-        // Fallback to app.philsms.com if dashboard endpoint is unavailable
-        if (! $response->successful() && $response->status() === 404) {
-            $response = $client->post('https://app.philsms.com/api/v3/sms/send', $payload);
-        }
+        $response = $client->post('https://app.philsms.com/api/v3/sms/send', $payload);
 
-        if (! $response->successful()) {
-            $body = $response->body();
-            Log::warning('PhilSMS failed', [
+        $body = $response->json() ?? [];
+        $status = strtolower((string) ($body['status'] ?? ''));
+
+        if (! $response->successful() || $status === 'error') {
+            $errMsg = $body['message'] ?? $response->body() ?? 'PhilSMS request failed';
+            Log::warning('PhilSMS delivery failed', [
                 'status'    => $response->status(),
                 'body'      => $body,
                 'recipient' => $recipient,
             ]);
-            throw new \RuntimeException("PhilSMS request failed: {$response->status()} {$body}");
+            throw new \RuntimeException("PhilSMS: {$errMsg}");
         }
 
-        Log::info('PhilSMS sent successfully', ['to' => $recipient, 'provider' => 'philsms']);
+        Log::info('PhilSMS sent successfully', ['to' => $recipient, 'provider' => 'philsms', 'response' => $body]);
 
         return ['sent' => true, 'provider' => 'philsms'];
     }
