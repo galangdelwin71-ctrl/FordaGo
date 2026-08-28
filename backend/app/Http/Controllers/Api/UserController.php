@@ -240,71 +240,110 @@ class UserController extends Controller
 
         $firstName = trim((string) ($request->input('first_name') ?? $request->input('firstName') ?? ''));
         $lastName  = trim((string) ($request->input('last_name')  ?? $request->input('lastName')  ?? ''));
-        $username  = trim((string) $request->input('username', '')) ?: trim("{$firstName} {$lastName}");
-        $email          = $request->input('email');
-        $rawPhone       = $request->input('phone');
-        $phoneProvided  = ! is_null($rawPhone) && trim((string) $rawPhone) !== '';
-        $normalizedPhone = $phoneProvided ? $this->normalizePhone($rawPhone) : null;
-
-        if ($phoneProvided && ! $this->isValidPhone($normalizedPhone)) {
-            return response()->json(['message' => 'Phone number must be exactly 11 digits (e.g. 09171234567).'], 400);
-        }
+        $rawEmail  = $request->input('email');
+        $email     = $rawEmail ? strtolower(trim((string) $rawEmail)) : null;
 
         $user = User::find($id);
         if (! $user) {
             return response()->json(['message' => 'User not found'], 404);
         }
 
+        $username = trim((string) $request->input('username', ''));
+        if ($username === '') {
+            $username = trim("{$firstName} {$lastName}") ?: $user->username;
+        }
+
+        // Check if username is already taken by another user
+        if ($username && $username !== $user->username) {
+            $taken = User::where('username', $username)->where('id', '!=', $user->id)->exists();
+            if ($taken) {
+                // If username derived from name collides, fallback to keeping original username
+                $username = $user->username;
+            }
+        }
+
+        // Check if email is already in use by another user
+        if ($email && $email !== $user->email) {
+            $emailTaken = User::where('email', $email)->where('id', '!=', $user->id)->exists();
+            if ($emailTaken) {
+                return response()->json(['message' => 'That email address is already in use by another account.'], 400);
+            }
+        }
+
+        $rawPhone        = $request->input('phone');
+        $phoneProvided   = ! is_null($rawPhone) && trim((string) $rawPhone) !== '';
+        $normalizedPhone = $phoneProvided ? $this->normalizePhone($rawPhone) : ($rawPhone === '' ? null : $user->phone);
+
+        if ($phoneProvided && ! $this->isValidPhone($normalizedPhone)) {
+            return response()->json(['message' => 'Phone number must be exactly 11 digits (e.g. 09171234567).'], 400);
+        }
+
+        // Normalize gender to valid lowercase enum ('male', 'female', 'other')
+        $rawGender = strtolower(trim((string) ($request->input('gender') ?? '')));
+        $gender = in_array($rawGender, ['male', 'female', 'other'], true)
+            ? $rawGender
+            : ($user->gender ?: null);
+
         $rawProfileImage = $request->input('profile_image');
         $processedAvatar = $request->has('profile_image')
             ? \App\Services\AvatarService::processAvatar($rawProfileImage, $user->id)
             : $user->profile_image;
 
-        if ($isAdmin) {
-            $dataToUpdate = [
-                'username'          => $username ?: $user->username,
-                'first_name'        => $firstName ?: $user->first_name,
-                'last_name'         => $lastName  ?: $user->last_name,
-                'email'             => $email     ?? $user->email,
-                'role'              => $request->input('role', $user->role),
-                'phone'             => $normalizedPhone,
-                'gender'            => $request->input('gender') ?: null,
-                'profile_image'     => $processedAvatar,
-                'membership_type'   => $request->input('membership_type', $user->membership_type),
-                'payment_method'    => $request->input('payment_method', $user->payment_method),
-                'membership_expiry' => $request->input('membership_expiry') ?: null,
-            ];
+        // Clean full URL prefixes to keep clean relative storage paths in DB
+        if ($processedAvatar && preg_match('#/storage/avatars/[^\s"\']+#', $processedAvatar, $m)) {
+            $processedAvatar = $m[0];
+        }
 
-            $password = $request->input('password');
-            if (is_string($password) && trim($password) !== '') {
-                $password = trim($password);
-                if (strlen($password) < 8 || strlen($password) > 128) {
-                    return response()->json(['message' => 'Password must be 8-128 characters.'], 400);
+        try {
+            if ($isAdmin) {
+                $dataToUpdate = [
+                    'username'          => $username ?: $user->username,
+                    'first_name'        => $firstName ?: $user->first_name,
+                    'last_name'         => $lastName  ?: $user->last_name,
+                    'email'             => $email     ?? $user->email,
+                    'role'              => $request->input('role', $user->role),
+                    'phone'             => $normalizedPhone,
+                    'gender'            => $gender,
+                    'profile_image'     => $processedAvatar,
+                    'membership_type'   => $request->input('membership_type', $user->membership_type),
+                    'payment_method'    => $request->input('payment_method', $user->payment_method),
+                    'membership_expiry' => $request->input('membership_expiry') ?: null,
+                ];
+
+                $password = $request->input('password');
+                if (is_string($password) && trim($password) !== '') {
+                    $password = trim($password);
+                    if (strlen($password) < 8 || strlen($password) > 128) {
+                        return response()->json(['message' => 'Password must be 8-128 characters.'], 400);
+                    }
+                    $dataToUpdate['password'] = Hash::make($password);
                 }
-                $dataToUpdate['password'] = Hash::make($password);
+
+                $user->fill($dataToUpdate)->save();
+            } else {
+                $user->fill([
+                    'username'      => $username ?: $user->username,
+                    'first_name'    => $firstName ?: $user->first_name,
+                    'last_name'     => $lastName  ?: $user->last_name,
+                    'email'         => $email     ?? $user->email,
+                    'phone'         => $normalizedPhone,
+                    'gender'        => $gender,
+                    'profile_image' => $processedAvatar,
+                ])->save();
             }
 
-            $user->fill($dataToUpdate)->save();
-        } else {
-            $user->fill([
-                'username'      => $username ?: $user->username,
-                'first_name'    => $firstName ?: $user->first_name,
-                'last_name'     => $lastName  ?: $user->last_name,
-                'email'         => $email     ?? $user->email,
-                'phone'         => $normalizedPhone,
-                'gender'        => $request->input('gender') ?: null,
-                'profile_image' => $processedAvatar,
-            ])->save();
-        }
+            // Keep Coach Profile photo in sync if user is a coach
+            if ($request->has('profile_image')) {
+                try {
+                    \App\Models\CoachProfile::where('user_id', $user->id)->update(['photo_url' => $processedAvatar]);
+                } catch (\Throwable) {}
+            }
 
-        // Keep Coach Profile photo in 100% sync
-        if ($request->has('profile_image')) {
-            try {
-                \App\Models\CoachProfile::where('user_id', $user->id)->update(['photo_url' => $processedAvatar]);
-            } catch (\Throwable $e) {}
+            return response()->json(['message' => 'User updated', 'profile_image' => $processedAvatar]);
+        } catch (\Throwable $e) {
+            \Log::error('User update failed: ' . $e->getMessage(), ['user_id' => $id]);
+            return response()->json(['message' => 'Failed to update profile: ' . $e->getMessage()], 500);
         }
-
-        return response()->json(['message' => 'User updated', 'profile_image' => $processedAvatar]);
     }
 
     /**

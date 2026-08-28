@@ -382,7 +382,7 @@ export class ProfilePage implements OnInit {
       last_name:     nextLastName,
       email:         nextEmail,
       phone:         safePhone,
-      gender:        this.profile.gender,
+      gender:        (this.profile.gender || '').toLowerCase() || null,
       profile_image: nextImage || null,
     };
 
