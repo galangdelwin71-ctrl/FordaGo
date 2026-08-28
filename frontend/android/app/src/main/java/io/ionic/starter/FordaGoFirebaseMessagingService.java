@@ -6,20 +6,34 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.BitmapShader;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
+import android.graphics.Shader;
+import android.graphics.Typeface;
 import android.os.Build;
+import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.core.app.Person;
 import androidx.core.app.RemoteInput;
+import androidx.core.graphics.drawable.IconCompat;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
 import org.json.JSONObject;
 
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.Map;
 
 public class FordaGoFirebaseMessagingService extends FirebaseMessagingService {
@@ -128,8 +142,33 @@ public class FordaGoFirebaseMessagingService extends FirebaseMessagingService {
             .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setContentIntent(pendingIntent);
 
-        // If chat message, add DIRECT REPLY action!
+        // If chat message, format with Messenger-style MessagingStyle + Sender Avatar + Direct Reply
         if ("chat".equals(type) && conversationIdStr != null) {
+            String senderName = data.get("senderName");
+            if (senderName == null || senderName.trim().isEmpty()) {
+                senderName = title;
+            }
+            String senderAvatarUrl = data.get("senderAvatar");
+
+            Bitmap rawAvatar = fetchAvatarBitmap(senderAvatarUrl);
+            if (rawAvatar == null) {
+                rawAvatar = createInitialAvatarBitmap(senderName);
+            }
+
+            Bitmap circularAvatar = getCircularBitmap(rawAvatar);
+
+            Person sender = new Person.Builder()
+                .setName(senderName)
+                .setIcon(IconCompat.createWithBitmap(circularAvatar))
+                .build();
+
+            NotificationCompat.MessagingStyle messagingStyle = new NotificationCompat.MessagingStyle(sender)
+                .setConversationTitle(null)
+                .addMessage(body, System.currentTimeMillis(), sender);
+
+            builder.setStyle(messagingStyle)
+                   .setLargeIcon(circularAvatar);
+
             RemoteInput remoteInput = new RemoteInput.Builder(KEY_TEXT_REPLY)
                 .setLabel("Reply...")
                 .build();
@@ -138,7 +177,7 @@ public class FordaGoFirebaseMessagingService extends FirebaseMessagingService {
             replyIntent.setAction("io.ionic.starter.ACTION_DIRECT_REPLY");
             replyIntent.putExtra("conversationId", conversationIdStr);
             replyIntent.putExtra("notificationId", notifId);
-            replyIntent.putExtra("senderTitle", title);
+            replyIntent.putExtra("senderTitle", senderName);
 
             PendingIntent replyPendingIntent = PendingIntent.getBroadcast(
                 this,
@@ -165,6 +204,93 @@ public class FordaGoFirebaseMessagingService extends FirebaseMessagingService {
         } catch (SecurityException e) {
             Log.w(TAG, "Notification permission missing", e);
         }
+    }
+
+    private Bitmap fetchAvatarBitmap(String avatarUrl) {
+        if (avatarUrl == null || avatarUrl.trim().isEmpty()) {
+            return null;
+        }
+
+        try {
+            // Handle Base64 data URL
+            if (avatarUrl.startsWith("data:image")) {
+                int commaIdx = avatarUrl.indexOf(',');
+                if (commaIdx != -1) {
+                    String base64Data = avatarUrl.substring(commaIdx + 1);
+                    byte[] decoded = Base64.decode(base64Data, Base64.DEFAULT);
+                    return BitmapFactory.decodeByteArray(decoded, 0, decoded.length);
+                }
+            }
+
+            // Handle HTTP/HTTPS URL with strict short timeout
+            URL url = new URL(avatarUrl);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setDoInput(true);
+            conn.setConnectTimeout(1500);
+            conn.setReadTimeout(1500);
+            conn.connect();
+
+            InputStream is = conn.getInputStream();
+            Bitmap bitmap = BitmapFactory.decodeStream(is);
+            is.close();
+            return bitmap;
+        } catch (Exception e) {
+            Log.w(TAG, "Could not fetch avatar bitmap: " + e.getMessage());
+            return null;
+        }
+    }
+
+    private Bitmap getCircularBitmap(Bitmap bitmap) {
+        if (bitmap == null) return null;
+        try {
+            int width = bitmap.getWidth();
+            int height = bitmap.getHeight();
+            int size = Math.min(width, height);
+
+            int x = (width - size) / 2;
+            int y = (height - size) / 2;
+            Bitmap squared = Bitmap.createBitmap(bitmap, x, y, size, size);
+
+            Bitmap output = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(output);
+            Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            BitmapShader shader = new BitmapShader(squared, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
+            paint.setShader(shader);
+
+            float r = size / 2f;
+            canvas.drawCircle(r, r, r, paint);
+            return output;
+        } catch (Exception e) {
+            return bitmap;
+        }
+    }
+
+    private Bitmap createInitialAvatarBitmap(String name) {
+        int size = 192;
+        Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+
+        // Gold circle background
+        Paint bgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        bgPaint.setColor(Color.parseColor("#FFD700"));
+        canvas.drawCircle(size / 2f, size / 2f, size / 2f, bgPaint);
+
+        String initial = (name != null && !name.trim().isEmpty())
+            ? name.trim().substring(0, 1).toUpperCase()
+            : "F";
+
+        Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        textPaint.setColor(Color.parseColor("#121212"));
+        textPaint.setTextSize(96);
+        textPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+        textPaint.setTextAlign(Paint.Align.CENTER);
+
+        Rect bounds = new Rect();
+        textPaint.getTextBounds(initial, 0, initial.length(), bounds);
+        float y = (size / 2f) + (bounds.height() / 2f) - bounds.bottom;
+        canvas.drawText(initial, size / 2f, y, textPaint);
+
+        return bitmap;
     }
 
     private void createNotificationChannel() {

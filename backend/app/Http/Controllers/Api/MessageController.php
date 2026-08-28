@@ -139,6 +139,11 @@ class MessageController extends Controller
                         ? mb_substr($message->body, 0, 80) . '…'
                         : $message->body;
 
+                    $senderAvatar = $message->sender->profile_image ?? '';
+                    if ($senderAvatar && ! str_starts_with($senderAvatar, 'http') && ! str_starts_with($senderAvatar, 'data:')) {
+                        $senderAvatar = url($senderAvatar);
+                    }
+
                     app(FcmService::class)->sendToToken(
                         $recipient->fcm_token,
                         $senderName,
@@ -148,6 +153,7 @@ class MessageController extends Controller
                             'conversationId' => (string) $conversationId,
                             'targetRoute'    => '/chat/' . $conversationId,
                             'senderName'     => $senderName,
+                            'senderAvatar'   => $senderAvatar ?: '',
                         ]
                     );
                 }
