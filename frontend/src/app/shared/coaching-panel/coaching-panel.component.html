@@ -85,10 +85,6 @@
 
     <!-- Profile card -->
     <div class="cd-profile-card" *ngIf="myProfile" id="tour-coach-profile-card">
-      <div class="cd-profile-avatar">
-        <img *ngIf="myProfile.profile_image" [src]="myProfile.profile_image" alt="" />
-        <span *ngIf="!myProfile.profile_image">{{ (myProfile.first_name || myProfile.username || 'C').charAt(0) }}</span>
-      </div>
       <div class="cd-profile-body">
         <div class="cd-profile-top">
           <div class="cd-profile-name">&#64;{{ myProfile.username }}</div>
@@ -641,21 +637,7 @@
       <div class="cd-modal-handle"></div>
       <div class="cd-modal-title">Manage Profile</div>
 
-      <div class="cd-photo-editor">
-        <div class="cd-photo-preview" *ngIf="!profileForm.photo_url">{{ (myProfile?.first_name || myProfile?.username || 'C').charAt(0) }}</div>
-        <img *ngIf="profileForm.photo_url" [src]="profileForm.photo_url" alt="Profile preview" class="cd-photo-preview cd-photo-preview-img" />
-        <div class="cd-photo-actions">
-          <label class="cd-photo-btn" for="coachProfilePhotoInput">Upload Photo</label>
-          <button type="button" class="cd-photo-remove-btn" *ngIf="profileForm.photo_url" (click)="removeCoachPhoto()">Remove</button>
-        </div>
-        <input
-          id="coachProfilePhotoInput"
-          type="file"
-          accept="image/png,image/jpeg,image/webp"
-          class="cd-photo-file-input"
-          (change)="onCoachPhotoSelected($event)"
-        />
-      </div>
+
 
       <div class="cd-form-group">
         <label class="cd-form-label">Specialty</label>
