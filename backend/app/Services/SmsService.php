@@ -49,7 +49,12 @@ class SmsService
             return ['sent' => false, 'skippedReason' => 'Missing destination number or message'];
         }
 
-        $provider = strtolower(trim((string) config('services.sms.provider')));
+        $provider = strtolower(trim((string) (config('services.sms.provider') ?: env('SMS_PROVIDER', ''))));
+        if ($provider === '' || $provider === 'semaphore') {
+            if (config('services.philsms.api_token') || env('PHILSMS_API_TOKEN')) {
+                $provider = 'philsms';
+            }
+        }
         if ($provider === '') {
             return ['sent' => false, 'skippedReason' => 'SMS_PROVIDER not configured'];
         }
