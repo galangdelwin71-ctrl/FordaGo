@@ -28,7 +28,7 @@ import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refres
 import { FeedbackService } from '../services/feedback.service';
 import { OnboardingService, TourStep } from '../services/onboarding.service';
 import { ToastService } from '../services/toast.service';
-import { API_URL } from '../config/api.config';
+import { API_URL, resolveImageUrl } from '../config/api.config';
 
 // ─────────────────────────────────────────────────────
 // INTERFACES
@@ -1691,7 +1691,7 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.initials = this.memberName
       ? this.memberName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
       : '';
-    this.profileImage = (user as any)?.profile_image || '';
+    this.profileImage = resolveImageUrl((user as any)?.profile_image || '');
 
     const membershipType = (user as any)?.membership_type || 'premium';
     const expiryRaw = (user as any)?.membership_expiry || null;

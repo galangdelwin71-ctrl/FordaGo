@@ -18,7 +18,7 @@ import { CoachingNavService, CoachingPanelTab } from '../services/coaching-nav.s
 import { CoachingService } from '../services/coaching.service';
 import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refresh.component';
 import { OnboardingService, TourStep } from '../services/onboarding.service';
-import { API_URL } from '../config/api.config';
+import { API_URL, resolveImageUrl } from '../config/api.config';
 import { getCachedData, setCachedData } from '../utils/local-cache.util';
 import { CACHE_KEYS } from '../utils/cache-keys';
 
@@ -58,6 +58,11 @@ export interface EquipmentItem {
   ],
 })
 export class EquipmentPage implements OnInit {
+
+  /** Resolves relative /storage/... paths to full backend URL. */
+  resolveImg(path: string | null | undefined): string {
+    return resolveImageUrl(path);
+  }
 
   handleRefresh(event: any): void {
     try {

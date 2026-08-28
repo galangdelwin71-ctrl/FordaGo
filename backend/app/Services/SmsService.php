@@ -98,7 +98,12 @@ class SmsService
             'Authorization' => "Bearer {$apiToken}",
             'Accept'        => 'application/json',
             'Content-Type'  => 'application/json',
-        ])->timeout(15);
+        ])
+        ->withOptions([
+            'force_ip_resolve' => 'v4',
+            'connect_timeout'  => 10,
+        ])
+        ->timeout(15);
         if (PHP_OS_FAMILY === 'Windows' || config('app.env') === 'local') {
             $client = $client->withoutVerifying();
         }
@@ -128,12 +133,17 @@ class SmsService
             return ['sent' => false, 'skippedReason' => 'Missing SEMAPHORE_API_KEY'];
         }
 
-        $response = Http::asForm()->post('https://api.semaphore.co/api/v4/messages', [
-            'apikey'     => $apikey,
-            'number'     => $to,
-            'message'    => $message,
-            'sendername' => $senderName,
-        ]);
+        $response = Http::asForm()
+            ->withOptions([
+                'force_ip_resolve' => 'v4',
+                'connect_timeout'  => 10,
+            ])
+            ->post('https://api.semaphore.co/api/v4/messages', [
+                'apikey'     => $apiKey,
+                'number'     => $to,
+                'message'    => $message,
+                'sendername' => $senderName,
+            ]);
 
         if (! $response->successful()) {
             $body = $response->body();

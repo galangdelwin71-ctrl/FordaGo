@@ -97,7 +97,7 @@
              yet) instead of downloading the full image just to render it
              at card size. Detail overlay below keeps the full image_url. -->
         <div class="equip-photo-wrap">
-          <img *ngIf="item.thumbnail_url" [src]="item.thumbnail_url" alt="{{ item.name }}" class="equip-photo" />
+          <img *ngIf="item.thumbnail_url" [src]="resolveImg(item.thumbnail_url)" alt="{{ item.name }}" class="equip-photo" />
           <div *ngIf="!item.thumbnail_url" class="equip-photo-placeholder">
             <ion-icon name="barbell-outline"></ion-icon>
           </div>
@@ -164,7 +164,7 @@
     </div>
 
     <div class="modal-photo-wrap">
-      <img *ngIf="selectedItem.image_url" [src]="selectedItem.image_url" alt="{{ selectedItem.name }}" class="modal-photo" />
+      <img *ngIf="selectedItem.image_url" [src]="resolveImg(selectedItem.image_url)" alt="{{ selectedItem.name }}" class="modal-photo" />
       <div *ngIf="!selectedItem.image_url" class="modal-photo-placeholder">
         <ion-icon name="barbell-outline"></ion-icon>
       </div>

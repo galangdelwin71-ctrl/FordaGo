@@ -185,7 +185,12 @@ class MailService
         }
 
         try {
-            $client = Http::withToken($apiKey)->timeout(15);
+            $client = Http::withToken($apiKey)
+                ->withOptions([
+                    'force_ip_resolve' => 'v4',
+                    'connect_timeout'  => 10,
+                ])
+                ->timeout(15);
             if (PHP_OS_FAMILY === 'Windows' || config('app.env') === 'local') {
                 $client = $client->withoutVerifying();
             }
@@ -230,7 +235,12 @@ class MailService
                 'api-key'      => $apiKey,
                 'Content-Type' => 'application/json',
                 'Accept'       => 'application/json',
-            ])->timeout(15);
+            ])
+            ->withOptions([
+                'force_ip_resolve' => 'v4',
+                'connect_timeout'  => 10,
+            ])
+            ->timeout(15);
             if (PHP_OS_FAMILY === 'Windows' || config('app.env') === 'local') {
                 $client = $client->withoutVerifying();
             }

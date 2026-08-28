@@ -35,7 +35,7 @@ import {
   cloudOfflineOutline,
   cubeOutline,
 } from 'ionicons/icons';
-import { API_URL } from '../config/api.config';
+import { API_URL, resolveImageUrl } from '../config/api.config';
 import { getCachedData, setCachedData } from '../utils/local-cache.util';
 import { CACHE_KEYS } from '../utils/cache-keys';
 
@@ -106,6 +106,11 @@ export interface OrderGroup {
   ],
 })
 export class InventoryPage implements OnInit {
+
+  /** Resolves relative /storage/... paths to full backend URL. */
+  resolveImg(path: string | null | undefined): string {
+    return resolveImageUrl(path);
+  }
 
   handleRefresh(event: any): void {
     try {

@@ -796,7 +796,7 @@
       <!-- Product Cards (matching reference design) -->
       <div *ngFor="let p of displayedProducts" class="member-card product-card">
         <div class="product-card-main">
-          <img *ngIf="p.image_url" [src]="p.thumbnail_url || p.image_url" class="product-card-thumb" alt="{{ p.name }}" />
+          <img *ngIf="p.image_url" [src]="resolveImg(p.thumbnail_url || p.image_url)" class="product-card-thumb" alt="{{ p.name }}" />
           <div *ngIf="!p.image_url" class="product-card-thumb fallback">{{ p.icon || '🛍️' }}</div>
 
           <div class="product-card-info">
@@ -994,7 +994,7 @@
       <!-- Equipment Cards (matching reference design) -->
       <div *ngFor="let e of displayedEquipment" class="member-card product-card equipment-card">
         <div class="product-card-main">
-          <img *ngIf="e.image_url" [src]="e.thumbnail_url || e.image_url" class="product-card-thumb" alt="{{ e.name }}" />
+          <img *ngIf="e.image_url" [src]="resolveImg(e.thumbnail_url || e.image_url)" class="product-card-thumb" alt="{{ e.name }}" />
           <div *ngIf="!e.image_url" class="product-card-thumb fallback">{{ e.icon || '🏋️' }}</div>
 
           <div class="product-card-info">
