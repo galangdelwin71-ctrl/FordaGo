@@ -9,6 +9,7 @@ import { firstValueFrom } from 'rxjs';
 import { NoNegativeDirective } from '../directives/no-negative.directive';
 import QRCode from 'qrcode';
 import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { API_URL, resolveImageUrl } from '../config/api.config';
 import { CoachingService } from '../services/coaching.service';
 import { ToastService } from '../services/toast.service';
