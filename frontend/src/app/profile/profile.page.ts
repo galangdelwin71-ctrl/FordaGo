@@ -27,7 +27,7 @@ import { FeedbackModalComponent } from '../shared/feedback-modal/feedback-modal.
 import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refresh.component';
 import { OnboardingService, TourStep } from '../services/onboarding.service';
 import { FeedbackService } from '../services/feedback.service';
-import { API_URL } from '../config/api.config';
+import { API_URL, resolveImageUrl } from '../config/api.config';
 
 // ── Interfaces ────────────────────────────────────────
 export interface MemberProfile {
@@ -298,7 +298,7 @@ export class ProfilePage implements OnInit {
       email:          user.email || '',
       phone:          safePhone,
       gender:         (user as any).gender || '',
-      profileImage:   (user as any).profile_image || '',
+      profileImage:   resolveImageUrl((user as any).profile_image),
       membershipPlan: membershipType === 'premium' ? 'Premium' : 'Daily Pass',
       expiryDate,
       initials:       this.buildInitials(first, last || first),
@@ -324,7 +324,7 @@ export class ProfilePage implements OnInit {
           email:          freshUser.email || '',
           phone:          this.normalizePhone(freshUser.phone || ''),
           gender:         freshUser.gender || '',
-          profileImage:   freshUser.profile_image || '',
+          profileImage:   resolveImageUrl(freshUser.profile_image),
           membershipPlan: fMemType === 'premium' ? 'Premium' : 'Daily Pass',
           expiryDate:     fExpDate,
           initials:       this.buildInitials(fFirst, fLast || fFirst),
@@ -398,7 +398,7 @@ export class ProfilePage implements OnInit {
           lastName:     nextLastName,
           email:        nextEmail,
           phone:        safePhone,
-          profileImage: nextImage,
+          profileImage: resolveImageUrl(nextImage),
           initials:     this.buildInitials(nextFirstName, nextLastName),
         };
         this.auth.updateCurrentUser(payload);

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, tap, catchError, throwError } from 'rxjs';
 import { Preferences } from '@capacitor/preferences';
-import { API_BASE_URL, API_URL } from '../config/api.config';
+import { API_BASE_URL, API_URL, resolveImageUrl } from '../config/api.config';
 import { clearCachedData } from '../utils/local-cache.util';
 import { CACHE_KEYS } from '../utils/cache-keys';
 
@@ -118,6 +118,10 @@ export class AuthService {
   updateCurrentUser(patch: Record<string, any>) {
     const current = this.userSubject.value;
     if (!current) return;
+    // Resolve relative /storage/... avatar paths to absolute URLs before storing
+    if (patch['profile_image'] != null) {
+      patch = { ...patch, profile_image: resolveImageUrl(patch['profile_image']) };
+    }
     const nextUser = { ...current, ...patch };
     localStorage.setItem('user', JSON.stringify(nextUser));
     this.userSubject.next(nextUser);

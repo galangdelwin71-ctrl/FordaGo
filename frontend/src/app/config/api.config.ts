@@ -77,6 +77,24 @@ export const REVERB_TUNNEL_URL = resolveReverbUrl();
 export const LOCAL_IP = typeof window !== 'undefined' && window.location?.hostname ? window.location.hostname : NATIVE_SERVER_HOST;
 
 /**
+ * Resolves a backend avatar/storage URL that may be stored as a relative
+ * /storage/... path to the correct absolute URL for the current runtime.
+ *
+ * - base64 data URIs are returned as-is
+ * - full http/https URLs are returned as-is
+ * - relative /storage/... paths are prepended with API_BASE_URL
+ */
+export function resolveImageUrl(path: string | null | undefined): string {
+  if (!path || path.trim() === '') return '';
+  const p = path.trim();
+  if (p.startsWith('data:') || p.startsWith('http://') || p.startsWith('https://')) {
+    return p;
+  }
+  // Relative storage path — prefix with backend base URL
+  return `${API_BASE_URL}${p.startsWith('/') ? '' : '/'}${p}`;
+}
+
+/**
  * Official Facebook Page / Messenger URL for AFFORDA Gym / FordaGO feedback and inquiries.
  */
 export const FACEBOOK_PAGE_URL = 'https://www.facebook.com/';
