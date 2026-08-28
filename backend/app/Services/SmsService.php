@@ -94,6 +94,14 @@ class SmsService
             'message'   => $message,
         ];
 
+        $resolve = self::getCurlResolve('app.philsms.com', 443);
+        $curlOptions = [
+            CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
+        ];
+        if (!empty($resolve)) {
+            $curlOptions[CURLOPT_RESOLVE] = $resolve;
+        }
+
         $client = Http::withHeaders([
             'Authorization' => "Bearer {$apiToken}",
             'Accept'        => 'application/json',
@@ -101,7 +109,8 @@ class SmsService
         ])
         ->withOptions([
             'force_ip_resolve' => 'v4',
-            'connect_timeout'  => 10,
+            'connect_timeout'  => 8,
+            'curl'             => $curlOptions,
         ])
         ->timeout(15);
         if (PHP_OS_FAMILY === 'Windows' || config('app.env') === 'local') {
@@ -133,10 +142,19 @@ class SmsService
             return ['sent' => false, 'skippedReason' => 'Missing SEMAPHORE_API_KEY'];
         }
 
+        $resolve = self::getCurlResolve('api.semaphore.co', 443);
+        $curlOptions = [
+            CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
+        ];
+        if (!empty($resolve)) {
+            $curlOptions[CURLOPT_RESOLVE] = $resolve;
+        }
+
         $response = Http::asForm()
             ->withOptions([
                 'force_ip_resolve' => 'v4',
-                'connect_timeout'  => 10,
+                'connect_timeout'  => 8,
+                'curl'             => $curlOptions,
             ])
             ->post('https://api.semaphore.co/api/v4/messages', [
                 'apikey'     => $apiKey,
@@ -179,9 +197,70 @@ class SmsService
             ]);
 
         if (! $response->successful()) {
-            throw new \RuntimeException("Twilio request failed: {$response->status()} {$response->body()}");
+            throw new \RuntimeException("Twilio request failed: {$response->status()} {$response->body}");
         }
 
         return ['sent' => true, 'provider' => 'twilio'];
+    }
+
+    /**
+     * Resolve a hostname to its IPv4 address via DNS-over-HTTPS (via raw IP 1.1.1.1)
+     * and static Anycast edge IPs so cURL NEVER hangs on container DNS timeouts.
+     *
+     * @return string[] Array suitable for CURLOPT_RESOLVE, e.g. ["app.philsms.com:443:172.67.143.149"]
+     */
+    private static function getCurlResolve(string $host, int $port = 443): array
+    {
+        $resolvedIps = [];
+
+        // 1. Static known Anycast Edge IPs as instant zero-latency fallback
+        $staticFallbacks = [
+            'app.philsms.com'  => ['172.67.143.149', '104.21.32.186'],
+            'api.semaphore.co' => ['104.26.2.82', '172.67.70.198', '104.26.3.82'],
+        ];
+
+        // 2. Try DNS over HTTPS (DoH) via raw IP 1.1.1.1 (requires zero DNS lookup)
+        try {
+            $ch = curl_init("https://1.1.1.1/dns-query?name={$host}&type=A");
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_HTTPHEADER     => ['accept: application/dns-json'],
+                CURLOPT_TIMEOUT        => 2,
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_SSL_VERIFYHOST => false,
+            ]);
+            $res = curl_exec($ch);
+            curl_close($ch);
+            if ($res) {
+                $json = json_decode($res, true);
+                if (!empty($json['Answer'])) {
+                    foreach ($json['Answer'] as $ans) {
+                        if (($ans['type'] ?? 0) === 1 && !empty($ans['data']) && filter_var($ans['data'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+                            $resolvedIps[] = $ans['data'];
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable) {}
+
+        // 3. Fall back to static Anycast IPs if DoH didn't return
+        if (empty($resolvedIps) && isset($staticFallbacks[$host])) {
+            $resolvedIps = $staticFallbacks[$host];
+        }
+
+        // 4. Try standard gethostbyname if still empty
+        if (empty($resolvedIps)) {
+            $ip = @gethostbyname($host);
+            if ($ip && $ip !== $host && filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+                $resolvedIps[] = $ip;
+            }
+        }
+
+        $entries = [];
+        foreach ($resolvedIps as $ip) {
+            $entries[] = "{$host}:{$port}:{$ip}";
+        }
+
+        return $entries;
     }
 }
