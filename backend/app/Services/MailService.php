@@ -170,7 +170,12 @@ class MailService
     protected static function sendViaResend(string $to, string $subject, string $text, ?string $html = null): array
     {
         $apiKey = config('services.resend.key');
-        $fromEmail = config('services.resend.from_email') ?: config('mail.from.address') ?: 'onboarding@resend.dev';
+        $rawFrom = config('services.resend.from_email') ?: config('mail.from.address') ?: 'onboarding@resend.dev';
+        // Public email providers (@gmail.com, @yahoo.com) cannot be used as Resend senders.
+        // Fall back to Resend's official sandbox 'onboarding@resend.dev'.
+        $fromEmail = (preg_match('/@(gmail|yahoo|hotmail|outlook)\.com$/i', $rawFrom) || empty($rawFrom))
+            ? 'onboarding@resend.dev'
+            : $rawFrom;
         $fromName = config('services.resend.from_name') ?: config('mail.from.name') ?: 'FordaGO Gym';
 
         $payload = [
