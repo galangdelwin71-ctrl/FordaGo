@@ -169,6 +169,10 @@ class WorkoutSessionController extends Controller
 
         $session->update($validated);
 
+        // Invalidate the cached session list for this user
+        Cache::forget("workout_sessions.{$request->user()->id}.all.all");
+        Cache::forget("workout_session_sync_{$request->user()->id}_" . now()->toDateString());
+
         return response()->json($session);
     }
 
@@ -184,6 +188,10 @@ class WorkoutSessionController extends Controller
             ->where('client_session_id', $clientSessionId)
             ->where('session_date', $sessionDate)
             ->delete();
+
+        // Invalidate the cached session list for this user
+        Cache::forget("workout_sessions.{$request->user()->id}.all.all");
+        Cache::forget("workout_session_sync_{$request->user()->id}_" . now()->toDateString());
 
         if (! $deleted) {
             return response()->json(['message' => 'Session not found.'], 404);

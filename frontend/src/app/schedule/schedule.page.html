@@ -155,7 +155,7 @@
               <ion-icon name="create-outline"></ion-icon>
               {{ expandedCard === sessionIndex(s) ? 'Close' : 'Edit' }}
             </button>
-            <button class="action-btn" (click)="cycleStatus(sessionIndex(s), $event)">
+            <button class="action-btn" *ngIf="!s.isRestDay && s.title !== 'Rest Day'" (click)="cycleStatus(sessionIndex(s), $event)">
               <ion-icon name="checkmark-outline"></ion-icon>
               {{ s.status === 'done' ? 'Undo' : 'Mark Done' }}
             </button>

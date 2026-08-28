@@ -1533,30 +1533,31 @@ export class SchedulePage implements OnInit, OnDestroy {
       const key = this.dateKey(d);
 
       const existingSessions = store[key] ?? [];
-      // Pass the actual calendar date so buildDaySessionsFromTracker can
-      // compute the correct initial status (missed vs upcoming) instead of
-      // always starting as 'upcoming' — fixes the flip-flop bug where
-      // a past workout saved via Weekly Plan showed as 'upcoming' until
-      // navigation away triggered a server pull that corrected it.
+      const doneSessions = existingSessions.filter((s) => s.status === 'done');
+      const uncompletedSessions = existingSessions.filter((s) => s.status !== 'done');
+
+      // Delete all uncompleted/missed old sessions from the server so they don't persist
+      uncompletedSessions.forEach((oldSession) => {
+        if (oldSession.id) {
+          this.workoutTracker.deleteSessionFromServer(d, oldSession.id);
+        }
+      });
+
+      // Build the new session(s) from the weekly plan template for this day
       const builtSessions = this.buildDaySessionsFromTracker(i, template, d);
 
-      // Reuse the existing session id(s) for this date (matched by position)
-      const sessions = builtSessions.map((session, idx) => ({
-        ...session,
-        id: existingSessions[idx]?.id ?? session.id,
-        // If there was already a server-confirmed 'done' session, keep it done
-        status: existingSessions[idx]?.status === 'done' ? 'done' : session.status,
-      }));
+      // If this day already had completed workout(s), preserve them alongside the plan
+      const finalSessions = doneSessions.length > 0
+        ? [...doneSessions, ...builtSessions.filter((s) => !s.isRestDay)]
+        : builtSessions;
 
-      store[key] = sessions;
+      store[key] = finalSessions;
 
-      sessions.forEach((session) => this.workoutTracker.pushSession(d, session as unknown as StoredWorkoutSession));
-
-      // If this day used to have MORE sessions than the new template
-      // produces, the leftover old ones are gone locally — delete them
-      // server-side too so they don't come back as orphaned duplicates later.
-      existingSessions.slice(sessions.length).forEach((oldSession) => {
-        if (oldSession.id) this.workoutTracker.deleteSessionFromServer(d, oldSession.id);
+      // Push new template sessions to server
+      finalSessions.forEach((session) => {
+        if (session.status !== 'done') {
+          this.workoutTracker.pushSession(d, session as unknown as StoredWorkoutSession);
+        }
       });
     }
     this.writeStoredSessions(store);

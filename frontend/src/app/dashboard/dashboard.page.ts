@@ -717,8 +717,12 @@ export class DashboardPage implements OnInit, OnDestroy {
     const now = new Date();
 
     // Keep only sessions that should stay visible in Today's Workout.
-    // Missed sessions are removed; only future sessions or done sessions remain.
+    // Missed sessions and Rest Days are removed; only active/future sessions or done workout sessions remain.
     const filteredSessions = todaySessions.filter((session) => {
+      if (session.isRestDay || session.title === 'Rest Day') {
+        return false;
+      }
+
       if (session.status === 'missed') {
         return false;
       }
