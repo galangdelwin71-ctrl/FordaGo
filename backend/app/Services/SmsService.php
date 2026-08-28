@@ -94,11 +94,14 @@ class SmsService
         }
         $recipient = "+{$cleanDigits}";
 
-        $payload = [
-            'recipient' => $recipient,
-            'sender_id' => $senderId ?: 'PhilSMS',
-            'type'      => 'plain',
-            'message'   => $message,
+        $curlOptions = [
+            CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
+            CURLOPT_RESOLVE   => [
+                'app.philsms.com:443:172.67.194.35',
+                'app.philsms.com:443:104.21.92.130',
+                'dashboard.philsms.com:443:172.67.194.35',
+                'dashboard.philsms.com:443:104.21.92.130',
+            ],
         ];
 
         $client = Http::withHeaders([
@@ -109,6 +112,7 @@ class SmsService
         ->withOptions([
             'force_ip_resolve' => 'v4',
             'connect_timeout'  => 8,
+            'curl'             => $curlOptions,
         ])
         ->timeout(15);
 

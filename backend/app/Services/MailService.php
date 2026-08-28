@@ -190,13 +190,13 @@ class MailService
         }
 
         try {
-            $resolve = self::getCurlResolve('api.resend.com', 443);
             $curlOptions = [
                 CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
+                CURLOPT_RESOLVE   => [
+                    'api.resend.com:443:104.18.2.146',
+                    'api.resend.com:443:104.18.3.146',
+                ],
             ];
-            if (!empty($resolve)) {
-                $curlOptions[CURLOPT_RESOLVE] = $resolve;
-            }
 
             $client = Http::withToken($apiKey)
                 ->withOptions([
