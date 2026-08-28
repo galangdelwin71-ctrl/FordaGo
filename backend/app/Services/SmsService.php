@@ -85,22 +85,22 @@ class SmsService
             return ['sent' => false, 'skippedReason' => 'Missing PHILSMS_API_TOKEN in .env'];
         }
 
-        // PhilSMS API v3 requires international format +639XXXXXXXXX or 639XXXXXXXXX
+        // PhilSMS API v3 requires 639XXXXXXXXX or +639XXXXXXXXX
         $cleanDigits = preg_replace('/\D/', '', $to);
         if (str_starts_with($cleanDigits, '0') && strlen($cleanDigits) === 11) {
             $cleanDigits = '63' . substr($cleanDigits, 1);
         } elseif (strlen($cleanDigits) === 10 && str_starts_with($cleanDigits, '9')) {
             $cleanDigits = '63' . $cleanDigits;
         }
-        $recipient = "+{$cleanDigits}";
+        $recipient = $cleanDigits;
 
         $curlOptions = [
             CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
             CURLOPT_RESOLVE   => [
-                'app.philsms.com:443:172.67.194.35',
-                'app.philsms.com:443:104.21.92.130',
                 'dashboard.philsms.com:443:172.67.194.35',
                 'dashboard.philsms.com:443:104.21.92.130',
+                'app.philsms.com:443:172.67.194.35',
+                'app.philsms.com:443:104.21.92.130',
             ],
         ];
 
@@ -127,7 +127,7 @@ class SmsService
             'message'   => $message,
         ];
 
-        $response = $client->post('https://app.philsms.com/api/v3/sms/send', $payload);
+        $response = $client->post('https://dashboard.philsms.com/api/v3/sms/send', $payload);
 
         $body = $response->json() ?? [];
         $status = strtolower((string) ($body['status'] ?? ''));
