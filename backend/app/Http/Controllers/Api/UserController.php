@@ -326,11 +326,22 @@ class UserController extends Controller
             ? "Your Premium payment has been verified by admin. You can now log in. Membership valid until {$membershipExpiry}."
             : 'Your Daily Pass account has been verified by admin. You can now log in. Payment is required each time you scan for attendance.';
 
+        $notifTitle = $membershipType === 'premium' ? 'Premium Payment Verified ✅' : 'Account Verified ✅';
         Notification::create([
             'user_id' => $user->id,
-            'title'   => $membershipType === 'premium' ? 'Premium Payment Verified' : 'Account Verified',
+            'title'   => $notifTitle,
             'message' => $inAppMessage,
         ]);
+
+        // Push directly to user's device
+        try {
+            app(\App\Services\FcmService::class)->sendToUser($user->id, $notifTitle, $inAppMessage, [
+                'type'        => 'membership_approved',
+                'targetRoute' => '/dashboard',
+            ]);
+        } catch (\Throwable $e) {
+            \Log::warning('Failed to send FCM push on membership update: ' . $e->getMessage());
+        }
 
         // SMS notification (best-effort)
         $smsPhone = SmsService::normalizePhoneNumber($user->phone);

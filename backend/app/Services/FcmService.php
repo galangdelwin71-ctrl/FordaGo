@@ -99,6 +99,72 @@ class FcmService
     }
 
     /**
+     * Send a notification to all registered Admin and Super Admin devices.
+     */
+    public function sendToAdmins(string $title, string $body, array $data = []): int
+    {
+        try {
+            $adminTokens = \App\Models\User::whereIn('role', ['admin', 'super_admin'])
+                ->whereNotNull('fcm_token')
+                ->pluck('fcm_token')
+                ->filter(fn ($t) => ! empty(trim((string) $t)))
+                ->unique();
+
+            $sent = 0;
+            foreach ($adminTokens as $token) {
+                if ($this->sendToToken($token, $title, $body, $data)) {
+                    $sent++;
+                }
+            }
+            return $sent;
+        } catch (\Throwable $e) {
+            Log::warning('FCM sendToAdmins failed: ' . $e->getMessage());
+            return 0;
+        }
+    }
+
+    /**
+     * Send a notification to a specific user by user ID.
+     */
+    public function sendToUser(int $userId, string $title, string $body, array $data = []): bool
+    {
+        try {
+            $user = \App\Models\User::find($userId);
+            if (! $user || ! $user->fcm_token) {
+                return false;
+            }
+            return $this->sendToToken($user->fcm_token, $title, $body, $data);
+        } catch (\Throwable $e) {
+            Log::warning("FCM sendToUser({$userId}) failed: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Send a notification to all registered users (broadcast).
+     */
+    public function sendToAllUsers(string $title, string $body, array $data = []): int
+    {
+        try {
+            $tokens = \App\Models\User::whereNotNull('fcm_token')
+                ->pluck('fcm_token')
+                ->filter(fn ($t) => ! empty(trim((string) $t)))
+                ->unique();
+
+            $sent = 0;
+            foreach ($tokens as $token) {
+                if ($this->sendToToken($token, $title, $body, $data)) {
+                    $sent++;
+                }
+            }
+            return $sent;
+        } catch (\Throwable $e) {
+            Log::warning('FCM sendToAllUsers failed: ' . $e->getMessage());
+            return 0;
+        }
+    }
+
+    /**
      * Get a short-lived OAuth2 access token from the service account credentials
      * using Google's JWT Bearer flow (no external SDK needed).
      */

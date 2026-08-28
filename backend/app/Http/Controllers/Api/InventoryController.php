@@ -318,13 +318,24 @@ class InventoryController extends Controller
                 $orderUser = $request->user();
                 $staffMembers = User::whereIn('role', ['admin', 'super_admin', 'employee'])->get();
                 $itemCount = count($orders);
+                $userName = trim(($orderUser->first_name ?? '') . ' ' . ($orderUser->last_name ?? '')) ?: $orderUser->username;
                 foreach ($staffMembers as $staff) {
                     Notification::create([
                         'user_id' => $staff->id,
                         'title'   => 'New Shop Order Placed',
-                        'message' => "{$orderUser->first_name} {$orderUser->last_name} (@{$orderUser->username}) placed an order for {$itemCount} item(s) (₱" . number_format($total, 2) . " via " . strtoupper($paymentMethod) . "). Please verify in Shop orders.",
+                        'message' => "{$userName} (@{$orderUser->username}) placed an order for {$itemCount} item(s) (₱" . number_format($total, 2) . " via " . strtoupper($paymentMethod) . "). Please verify in Shop orders.",
                     ]);
                 }
+
+                // Push to Admin mobile & tablet devices
+                app(\App\Services\FcmService::class)->sendToAdmins(
+                    'New Shop Order 🛒',
+                    "{$userName} placed an order for {$itemCount} item(s) (₱" . number_format($total, 2) . ").",
+                    [
+                        'type'        => 'admin_order',
+                        'targetRoute' => '/admin',
+                    ]
+                );
             } catch (\Throwable $e) {
                 \Log::warning('Failed to notify staff about new order: ' . $e->getMessage());
             }

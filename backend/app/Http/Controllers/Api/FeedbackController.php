@@ -70,6 +70,14 @@ class FeedbackController extends Controller
                     'is_read' => false,
                 ]);
             }
+
+            // Push to Admin mobile & tablet devices
+            $fcmTitle = "New Member Feedback ({$rating}/10) ⭐";
+            $fcmBody = "{$displayName} ({$sentiment}): " . ($feedback->reason ? "\"{$feedback->reason}\"" : "Rating {$rating}/10");
+            app(\App\Services\FcmService::class)->sendToAdmins($fcmTitle, $fcmBody, [
+                'type'        => 'admin_feedback',
+                'targetRoute' => '/admin',
+            ]);
         } catch (\Throwable $e) {
             \Log::warning('Failed to notify admins of new feedback: ' . $e->getMessage());
         }

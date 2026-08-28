@@ -109,9 +109,10 @@ class NotificationController extends Controller
             ? ($request->input('user_id') ?: null)
             : $request->user()->id;
 
+        $title = $request->input('title') ?: 'Notice';
         $notification = Notification::create([
             'user_id' => $targetUserId,
-            'title'   => $request->input('title') ?: 'Notice',
+            'title'   => $title,
             'message' => $message,
         ]);
 
@@ -121,6 +122,24 @@ class NotificationController extends Controller
             broadcast(new NotificationSent($notification, $targetUserId ? (int) $targetUserId : null))->toOthers();
         } catch (\Throwable $e) {
             \Log::warning('Broadcasting NotificationSent failed: ' . $e->getMessage());
+        }
+
+        // Push notification directly to user's device (or all devices if broadcast)
+        try {
+            $fcmService = app(\App\Services\FcmService::class);
+            if ($targetUserId) {
+                $fcmService->sendToUser((int) $targetUserId, $title, $message, [
+                    'type'        => 'admin_announcement',
+                    'targetRoute' => '/dashboard',
+                ]);
+            } else {
+                $fcmService->sendToAllUsers($title, $message, [
+                    'type'        => 'admin_broadcast',
+                    'targetRoute' => '/dashboard',
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('FCM push for notification failed: ' . $e->getMessage());
         }
 
         return response()->json(['id' => $notification->id, 'message' => 'Notification sent'], 201);

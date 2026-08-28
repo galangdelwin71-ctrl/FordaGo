@@ -94,6 +94,17 @@ class AttendanceController extends Controller
                     ]);
                 }
             }
+
+            // Push to Admin mobile & tablet devices
+            $fcmTitle = $user->membership_type === 'daily' ? "Daily Pass Payment Pending 💵" : "Member Checked In 🏋️";
+            $fcmBody = $user->membership_type === 'daily'
+                ? "{$displayName} scanned QR. Please collect ₱100 daily pass payment."
+                : "{$displayName} checked into the gym (Premium Member).";
+
+            app(FcmService::class)->sendToAdmins($fcmTitle, $fcmBody, [
+                'type'        => 'admin_attendance',
+                'targetRoute' => '/admin',
+            ]);
         } catch (\Throwable $e) {
             \Log::warning('Failed to notify staff of gym check-in: ' . $e->getMessage());
         }

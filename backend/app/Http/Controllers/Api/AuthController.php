@@ -333,7 +333,7 @@ class AuthController extends Controller
             'membership_expiry' => null,
         ]);
 
-        // Notify all staff (admin, super_admin, employee)
+        // Notify all staff (admin, super_admin, employee) via in-app & FCM Push
         try {
             $staffMembers = User::whereIn('role', ['admin', 'super_admin', 'employee'])->get();
             foreach ($staffMembers as $staff) {
@@ -345,6 +345,14 @@ class AuthController extends Controller
                         : "{$firstName} {$lastName} (@{$username}) registered as Daily Pass. Please verify and activate account before login.",
                 ]);
             }
+
+            // Push directly to Admin mobile & tablet devices
+            $fcmTitle = "New Member Registration 👤";
+            $fcmBody = "{$firstName} {$lastName} registered ({$normalizedMembershipType}). Pending approval.";
+            app(\App\Services\FcmService::class)->sendToAdmins($fcmTitle, $fcmBody, [
+                'type'        => 'admin_member',
+                'targetRoute' => '/admin',
+            ]);
         } catch (\Throwable $e) {
             \Log::warning('Failed to notify staff on registration: ' . $e->getMessage());
         }
