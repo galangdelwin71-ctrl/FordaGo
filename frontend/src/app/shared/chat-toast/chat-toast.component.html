@@ -3,7 +3,7 @@
     <!-- Top Header: Avatar + Sender + Message + Close -->
     <div class="chat-toast-header">
       <div class="chat-toast-avatar">
-        <img *ngIf="toast.senderAvatar" [src]="toast.senderAvatar" [alt]="toast.senderName" />
+        <img *ngIf="toast.senderAvatar" [src]="resolveImg(toast.senderAvatar)" [alt]="toast.senderName" />
         <span *ngIf="!toast.senderAvatar" class="chat-toast-initials">{{ initials }}</span>
       </div>
 

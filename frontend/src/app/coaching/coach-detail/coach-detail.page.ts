@@ -20,6 +20,7 @@ import {
   shieldCheckmarkOutline,
 } from 'ionicons/icons';
 import { CoachingService, Coach } from '../../services/coaching.service';
+import { resolveImageUrl } from '../../config/api.config';
 
 @Component({
   selector: 'app-coach-detail',
@@ -37,6 +38,11 @@ import { CoachingService, Coach } from '../../services/coaching.service';
   ],
 })
 export class CoachDetailPage implements OnInit {
+  /** Resolves relative /storage/... avatar paths to the correct backend URL. */
+  resolveImg(path: string | null | undefined): string {
+    return resolveImageUrl(path);
+  }
+
   coachId!: number;
   coach: Coach | null = null;
   isLoading = true;

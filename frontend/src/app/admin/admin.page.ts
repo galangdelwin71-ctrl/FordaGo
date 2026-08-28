@@ -9,8 +9,7 @@ import { firstValueFrom } from 'rxjs';
 import { NoNegativeDirective } from '../directives/no-negative.directive';
 import QRCode from 'qrcode';
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import { API_URL } from '../config/api.config';
+import { API_URL, resolveImageUrl } from '../config/api.config';
 import { CoachingService } from '../services/coaching.service';
 import { ToastService } from '../services/toast.service';
 import { NotificationCenterService } from '../services/notification-center.service';
@@ -25,6 +24,11 @@ import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refres
   imports: [IonHeader, IonToolbar, IonContent, IonIcon, IonSpinner, CommonModule, FormsModule, NoNegativeDirective, PullToRefreshComponent],
 })
 export class AdminPage implements OnInit, OnDestroy {
+  /** Resolves relative /storage/... avatar paths to the correct backend URL. */
+  resolveImg(path: string | null | undefined): string {
+    return resolveImageUrl(path);
+  }
+
   handleRefresh(event: any): void {
     try {
       this.loadAll();

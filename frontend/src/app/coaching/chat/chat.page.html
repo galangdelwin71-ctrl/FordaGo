@@ -14,7 +14,7 @@
         (click)="openPartnerInfo()"
         [attr.aria-label]="'View ' + partnerDisplayName + ' profile'">
         <div class="chat-partner-avatar">
-          <img *ngIf="partner.profile_image" [src]="partner.profile_image" />
+          <img *ngIf="partner.profile_image" [src]="resolveImg(partner.profile_image)" />
           <div *ngIf="!partner.profile_image" class="avatar-placeholder">
             {{ (partner.first_name || partner.username || 'U').charAt(0) }}
           </div>
@@ -92,7 +92,7 @@
 
         <!-- Incoming message avatar -->
         <div class="msg-avatar-col" *ngIf="msg.sender_id !== currentUserId">
-          <img *ngIf="msg.sender && msg.sender.profile_image" [src]="msg.sender.profile_image" class="msg-avatar-img" />
+          <img *ngIf="msg.sender && msg.sender.profile_image" [src]="resolveImg(msg.sender.profile_image)" class="msg-avatar-img" />
           <div *ngIf="!msg.sender || !msg.sender.profile_image" class="msg-avatar-ph">
             {{ (msg.sender?.first_name || msg.sender?.username || 'U').charAt(0) }}
           </div>
@@ -265,7 +265,7 @@
       <div class="partner-info-handle"></div>
 
       <div class="partner-info-avatar">
-        <img *ngIf="partner.profile_image" [src]="partner.profile_image" />
+        <img *ngIf="partner.profile_image" [src]="resolveImg(partner.profile_image)" />
         <div *ngIf="!partner.profile_image" class="avatar-placeholder">
           {{ (partner.first_name || partner.username || 'U').charAt(0) }}
         </div>

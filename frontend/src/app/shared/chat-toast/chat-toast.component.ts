@@ -7,6 +7,7 @@ import { closeOutline, sendOutline, paperPlaneOutline, chatbubbleEllipsesOutline
 import { Subscription, firstValueFrom } from 'rxjs';
 import { ChatToastService, ChatToastPayload } from '../../services/chat-toast.service';
 import { CoachingService } from '../../services/coaching.service';
+import { resolveImageUrl } from '../../config/api.config';
 
 @Component({
   selector: 'app-chat-toast',
@@ -16,6 +17,11 @@ import { CoachingService } from '../../services/coaching.service';
   styleUrls: ['./chat-toast.component.scss'],
 })
 export class ChatToastComponent implements OnInit, OnDestroy {
+  /** Resolves relative /storage/... avatar paths to the correct backend URL. */
+  resolveImg(path: string | null | undefined): string {
+    return resolveImageUrl(path);
+  }
+
   toast: ChatToastPayload | null = null;
   replyText = '';
   isSending = false;

@@ -27,7 +27,7 @@
       <!-- Hero Header -->
       <div class="coach-hero-card">
         <div class="hero-avatar-wrap">
-          <img *ngIf="coach.profile_image" [src]="coach.profile_image" class="hero-avatar-img" />
+          <img *ngIf="coach.profile_image" [src]="resolveImg(coach.profile_image)" class="hero-avatar-img" />
           <div *ngIf="!coach.profile_image" class="hero-avatar-placeholder">
             {{ (coach.first_name || coach.username || 'C').charAt(0) }}
           </div>

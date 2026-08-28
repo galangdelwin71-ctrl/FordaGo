@@ -1075,7 +1075,7 @@
           <!-- If a member is chosen -->
           <div class="selected-member-chip-card" *ngIf="selectedNotifTargetMember">
             <div class="member-mini-avatar">
-              <img *ngIf="selectedNotifTargetMember.photo_url" [src]="selectedNotifTargetMember.photo_url" alt="{{ selectedNotifTargetMember.username }}" />
+              <img *ngIf="selectedNotifTargetMember.photo_url" [src]="resolveImg(selectedNotifTargetMember.photo_url)" alt="{{ selectedNotifTargetMember.username }}" />
               <span *ngIf="!selectedNotifTargetMember.photo_url">{{ selectedNotifTargetMember.username?.charAt(0)?.toUpperCase() || 'M' }}</span>
             </div>
             <div class="selected-member-info">
@@ -1110,7 +1110,7 @@
                 (click)="selectNotifTargetMember(m)"
               >
                 <div class="member-mini-avatar">
-                  <img *ngIf="m.photo_url" [src]="m.photo_url" alt="{{ m.username }}" />
+                  <img *ngIf="m.photo_url" [src]="resolveImg(m.photo_url)" alt="{{ m.username }}" />
                   <span *ngIf="!m.photo_url">{{ m.username?.charAt(0)?.toUpperCase() || 'M' }}</span>
                 </div>
                 <div class="member-picker-info">
@@ -1271,7 +1271,7 @@
           >
             <div class="member-card-main">
               <div class="member-avatar">
-                <img *ngIf="m.photo_url" [src]="m.photo_url" alt="{{ m.username }}" />
+                <img *ngIf="m.photo_url" [src]="resolveImg(m.photo_url)" alt="{{ m.username }}" />
                 <span *ngIf="!m.photo_url">{{ m.username?.charAt(0)?.toUpperCase() || 'M' }}</span>
               </div>
               <div class="member-card-details">
@@ -1304,7 +1304,7 @@
             </button>
             <div class="selected-member-summary">
               <div class="member-avatar mini">
-                <img *ngIf="selectedNotifMember.photo_url" [src]="selectedNotifMember.photo_url" alt="{{ selectedNotifMember.username }}" />
+                <img *ngIf="selectedNotifMember.photo_url" [src]="resolveImg(selectedNotifMember.photo_url)" alt="{{ selectedNotifMember.username }}" />
                 <span *ngIf="!selectedNotifMember.photo_url">{{ selectedNotifMember.username?.charAt(0)?.toUpperCase() || 'M' }}</span>
               </div>
               <div class="summary-info">
@@ -1764,7 +1764,7 @@
       <div *ngFor="let c of displayedCoaches" class="member-card coach-card" [class.pending-card]="!c.is_active">
         <div class="member-card-main">
           <div class="member-avatar coach-avatar">
-            <img *ngIf="c.profile_image" [src]="c.profile_image" alt="{{ c.username }}" />
+            <img *ngIf="c.profile_image" [src]="resolveImg(c.profile_image)" alt="{{ c.username }}" />
             <span *ngIf="!c.profile_image">{{ c.username?.charAt(0)?.toUpperCase() || 'C' }}</span>
           </div>
           <div class="member-card-details">

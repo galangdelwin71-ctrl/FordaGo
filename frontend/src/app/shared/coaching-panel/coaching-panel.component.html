@@ -145,7 +145,7 @@
       <ng-container *ngIf="!isLoadingTodaySessions">
         <div class="cd-session-item" *ngFor="let session of todaySessions" (click)="openTodaySession(session)">
           <div class="cd-session-avatar">
-            <img *ngIf="session.clientAvatar" [src]="session.clientAvatar" alt="" />
+            <img *ngIf="session.clientAvatar" [src]="resolveImg(session.clientAvatar)" alt="" />
             <span *ngIf="!session.clientAvatar">{{ session.clientName.charAt(0) }}</span>
             <span class="cd-session-avatar-dot"></span>
           </div>
@@ -212,7 +212,7 @@
             </div>
             <div class="cd-client-item cd-client-item--clean" *ngFor="let item of clients; trackBy: trackByClient">
               <div class="cd-session-avatar">
-                <img *ngIf="item.client.profile_image" [src]="item.client.profile_image" alt="" />
+                <img *ngIf="item.client.profile_image" [src]="resolveImg(item.client.profile_image)" alt="" />
                 <span *ngIf="!item.client.profile_image">{{ (item.client.first_name || item.client.username || 'C').charAt(0) }}</span>
               </div>
               <div class="cd-session-info">
@@ -259,7 +259,7 @@
             </div>
             <div class="cd-request-item" *ngFor="let item of requests; trackBy: trackByRequest">
               <div class="cd-session-avatar">
-                <img *ngIf="item.client.profile_image" [src]="item.client.profile_image" alt="" />
+                <img *ngIf="item.client.profile_image" [src]="resolveImg(item.client.profile_image)" alt="" />
                 <span *ngIf="!item.client.profile_image">{{ (item.client.first_name || item.client.username || 'C').charAt(0) }}</span>
               </div>
               <div class="cd-session-info">
@@ -316,7 +316,7 @@
             </div>
             <div class="cd-client-item" *ngFor="let convo of conversations" (click)="openConversation(convo)">
               <div class="cd-session-avatar">
-                <img *ngIf="convo.partner.profile_image" [src]="convo.partner.profile_image" alt="" />
+                <img *ngIf="convo.partner.profile_image" [src]="resolveImg(convo.partner.profile_image)" alt="" />
                 <span *ngIf="!convo.partner.profile_image">{{ (convo.partner.first_name || convo.partner.username || 'U').charAt(0) }}</span>
               </div>
               <div class="cd-session-info">
@@ -370,7 +370,7 @@
             </div>
             <div class="cd-earnings-item" *ngFor="let item of earningsHistory; trackBy: trackByIndex">
               <div class="cd-session-avatar">
-                <img *ngIf="item.client?.profile_image" [src]="item.client.profile_image" alt="" />
+                <img *ngIf="item.client?.profile_image" [src]="resolveImg(item.client.profile_image)" alt="" />
                 <span *ngIf="!item.client?.profile_image">{{ (item.client?.first_name || item.client?.username || 'C').charAt(0) }}</span>
               </div>
               <div class="cd-session-info">
@@ -457,7 +457,7 @@
       <div class="coach-card" *ngFor="let coach of coaches; let ci = index; trackBy: trackByCoach" [id]="ci === 0 ? 'tour-coach-first-card' : null">
         <div class="coach-card-header">
           <div class="coach-avatar-wrap">
-            <img *ngIf="coach.profile_image" [src]="coach.profile_image" [alt]="coach.first_name" class="coach-avatar-img" />
+            <img *ngIf="coach.profile_image" [src]="resolveImg(coach.profile_image)" [alt]="coach.first_name" class="coach-avatar-img" />
             <div *ngIf="!coach.profile_image" class="coach-avatar-placeholder">
               {{ (coach.first_name || coach.username || 'C').charAt(0) }}
             </div>
@@ -517,7 +517,7 @@
         *ngFor="let convo of conversations; trackBy: trackByConversation"
         (click)="openConversation(convo)">
         <div class="convo-avatar-wrap">
-          <img *ngIf="convo.partner.profile_image" [src]="convo.partner.profile_image" class="convo-avatar-img" />
+          <img *ngIf="convo.partner.profile_image" [src]="resolveImg(convo.partner.profile_image)" class="convo-avatar-img" />
           <div *ngIf="!convo.partner.profile_image" class="convo-avatar-placeholder">
             {{ (convo.partner.first_name || convo.partner.username || 'U').charAt(0) }}
           </div>
@@ -567,7 +567,7 @@
       <div class="coach-card" *ngFor="let program of publicPrograms; trackBy: trackByProgram">
         <div class="coach-card-header">
           <div class="coach-avatar-wrap">
-            <img *ngIf="program.coach?.profile_image" [src]="program.coach?.profile_image" [alt]="program.coach?.first_name" class="coach-avatar-img" />
+            <img *ngIf="program.coach?.profile_image" [src]="resolveImg(program.coach?.profile_image)" [alt]="program.coach?.first_name" class="coach-avatar-img" />
             <div *ngIf="!program.coach?.profile_image" class="coach-avatar-placeholder">
               {{ (program.coach?.first_name || program.coach?.username || 'C').charAt(0) }}
             </div>
@@ -875,7 +875,7 @@
       <ng-container *ngIf="!isLoadingRoster">
         <div class="cd-client-item cd-roster-item" *ngFor="let booking of rosterBookings">
           <div class="cd-session-avatar">
-            <img *ngIf="booking.member?.profile_image" [src]="booking.member?.profile_image" alt="" />
+            <img *ngIf="booking.member?.profile_image" [src]="resolveImg(booking.member?.profile_image)" alt="" />
             <span *ngIf="!booking.member?.profile_image">{{ (booking.member?.first_name || booking.member?.username || 'M').charAt(0) }}</span>
           </div>
           <div class="cd-session-info">

@@ -57,6 +57,7 @@ import {
   WorkoutPlanProposal,
 } from '../../services/coaching.service';
 import { ToastService } from '../../services/toast.service';
+import { resolveImageUrl } from '../../config/api.config';
 
 /** A single row in the coach dashboard's "Today's Sessions" list. */
 interface TodaySessionView {
@@ -93,6 +94,11 @@ const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frid
   styleUrls: ['./coaching-panel.component.scss'],
 })
 export class CoachingPanelComponent implements OnChanges, OnDestroy {
+  /** Resolves relative /storage/... avatar paths to the correct backend URL. */
+  resolveImg(path: string | null | undefined): string {
+    return resolveImageUrl(path);
+  }
+
   handleRefresh(event: any): void {
     try {
       this.loadMyProfile();

@@ -52,6 +52,7 @@ import { FcmService } from '../../services/fcm.service';
 import { ChatMuteService, ConvoMuteInfo } from '../../services/chat-mute.service';
 import { OnboardingService, TourStep } from '../../services/onboarding.service';
 import { getCachedData, setCachedData } from '../../utils/local-cache.util';
+import { resolveImageUrl } from '../../config/api.config';
 
 interface ProposalFormExercise {
   name: string;
@@ -79,6 +80,11 @@ interface ProposalFormExercise {
   ],
 })
 export class ChatPage implements OnInit, OnDestroy {
+  /** Resolves relative /storage/... avatar paths to the correct backend URL. */
+  resolveImg(path: string | null | undefined): string {
+    return resolveImageUrl(path);
+  }
+
   @ViewChild('messagesContainer') private messagesContainer?: ElementRef;
   @ViewChild(IonContent, { static: false }) private content?: IonContent;
 
