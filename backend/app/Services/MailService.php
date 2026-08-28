@@ -185,10 +185,19 @@ class MailService
         }
 
         try {
+            $resolve = self::getCurlResolve('api.resend.com', 443);
+            $curlOptions = [
+                CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
+            ];
+            if (!empty($resolve)) {
+                $curlOptions[CURLOPT_RESOLVE] = $resolve;
+            }
+
             $client = Http::withToken($apiKey)
                 ->withOptions([
                     'force_ip_resolve' => 'v4',
-                    'connect_timeout'  => 10,
+                    'connect_timeout'  => 8,
+                    'curl'             => $curlOptions,
                 ])
                 ->timeout(15);
             if (PHP_OS_FAMILY === 'Windows' || config('app.env') === 'local') {
@@ -231,6 +240,14 @@ class MailService
         }
 
         try {
+            $resolve = self::getCurlResolve('api.brevo.com', 443);
+            $curlOptions = [
+                CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
+            ];
+            if (!empty($resolve)) {
+                $curlOptions[CURLOPT_RESOLVE] = $resolve;
+            }
+
             $client = Http::withHeaders([
                 'api-key'      => $apiKey,
                 'Content-Type' => 'application/json',
@@ -238,7 +255,8 @@ class MailService
             ])
             ->withOptions([
                 'force_ip_resolve' => 'v4',
-                'connect_timeout'  => 10,
+                'connect_timeout'  => 8,
+                'curl'             => $curlOptions,
             ])
             ->timeout(15);
             if (PHP_OS_FAMILY === 'Windows' || config('app.env') === 'local') {
@@ -258,5 +276,26 @@ class MailService
             Log::warning('Brevo HTTP error', ['error' => $e->getMessage()]);
             return ['sent' => false, 'provider' => 'brevo', 'error' => $e->getMessage()];
         }
+    }
+
+    /**
+     * Resolve a hostname to its IPv4 address via multiple fallback channels
+     * to guarantee cURL never hangs on DNS timeouts inside restricted VPS/Podman containers.
+     *
+     * @return string[] Array suitable for CURLOPT_RESOLVE, e.g. ["api.resend.com:443:104.18.2.1"]
+     */
+    private static function getCurlResolve(string $host, int $port = 443): array
+    {
+        $ip = @gethostbyname($host);
+        if ($ip && $ip !== $host && filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            return ["{$host}:{$port}:{$ip}"];
+        }
+
+        $records = @dns_get_record($host, DNS_A);
+        if (!empty($records[0]['ip'])) {
+            return ["{$host}:{$port}:{$records[0]['ip']}"];
+        }
+
+        return [];
     }
 }
