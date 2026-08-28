@@ -185,9 +185,11 @@ class MailService
         }
 
         try {
-            $response = Http::withToken($apiKey)
-                ->timeout(15)
-                ->post('https://api.resend.com/emails', $payload);
+            $client = Http::withToken($apiKey)->timeout(15);
+            if (PHP_OS_FAMILY === 'Windows' || config('app.env') === 'local') {
+                $client = $client->withoutVerifying();
+            }
+            $response = $client->post('https://api.resend.com/emails', $payload);
 
             if (! $response->successful()) {
                 $err = $response->json('message') ?? $response->body();
@@ -224,11 +226,15 @@ class MailService
         }
 
         try {
-            $response = Http::withHeaders([
+            $client = Http::withHeaders([
                 'api-key'      => $apiKey,
                 'Content-Type' => 'application/json',
                 'Accept'       => 'application/json',
-            ])->timeout(15)->post('https://api.brevo.com/v3/smtp/email', $payload);
+            ])->timeout(15);
+            if (PHP_OS_FAMILY === 'Windows' || config('app.env') === 'local') {
+                $client = $client->withoutVerifying();
+            }
+            $response = $client->post('https://api.brevo.com/v3/smtp/email', $payload);
 
             if (! $response->successful()) {
                 $err = $response->json('message') ?? $response->body();

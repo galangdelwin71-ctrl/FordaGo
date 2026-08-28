@@ -94,11 +94,15 @@ class SmsService
             'message'   => $message,
         ];
 
-        $response = Http::withHeaders([
+        $client = Http::withHeaders([
             'Authorization' => "Bearer {$apiToken}",
             'Accept'        => 'application/json',
             'Content-Type'  => 'application/json',
-        ])->timeout(15)->post('https://app.philsms.com/api/v3/sms/send', $payload);
+        ])->timeout(15);
+        if (PHP_OS_FAMILY === 'Windows' || config('app.env') === 'local') {
+            $client = $client->withoutVerifying();
+        }
+        $response = $client->post('https://app.philsms.com/api/v3/sms/send', $payload);
 
         if (! $response->successful()) {
             $body = $response->body();
