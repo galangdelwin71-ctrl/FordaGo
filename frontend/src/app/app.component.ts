@@ -286,6 +286,9 @@ export class AppComponent implements OnDestroy {
     // Also register FCM token on login so backend can send background push notifications.
     this.auth.user$.subscribe(user => {
       if (user) {
+        // Fetch fresh profile state (including synced avatars) from server
+        void this.auth.fetchCurrentUser().subscribe();
+
         this.notificationCenter.startPolling();
         // Register FCM token with backend — runs async, non-blocking
         void this.fcmService.registerFcmToken();
