@@ -468,17 +468,22 @@ class AuthController extends Controller
             'expires_at'  => now()->addSeconds(self::RESET_CODE_TTL_SECONDS),
         ]);
 
-        RateLimiter::hit($limitKey.':hourly', 3600);
-        RateLimiter::hit($limitKey.':cooldown', self::RESET_CODE_RESEND_SECONDS);
-
         $displayName    = trim(($user->first_name ?? '').' '.($user->last_name ?? '')) ?: ($user->username ?? 'Member');
         $message        = "FordaGO: Your password reset code is {$code}. It expires in 10 minutes. If you didn't request this, ignore this message.";
         $deliveryResult = $channel === 'email'
             ? MailService::sendPasswordResetOtp($destination, $code, $displayName)
             : SmsService::send($destination, $message);
 
-        $skippedReason = strtolower((string) ($deliveryResult['skippedReason'] ?? ''));
         $isSent = (bool) ($deliveryResult['sent'] ?? false);
+
+        if ($isSent) {
+            RateLimiter::hit($limitKey.':hourly', 3600);
+            RateLimiter::hit($limitKey.':cooldown', self::RESET_CODE_RESEND_SECONDS);
+        } else {
+            RateLimiter::clear($limitKey.':cooldown');
+        }
+
+        $skippedReason = strtolower((string) ($deliveryResult['skippedReason'] ?? ''));
 
         // devCode is only exposed in local/debug mode so the OTP is never
         // visible in production responses when SMS or email delivery fails.
