@@ -120,6 +120,13 @@ class SmsService
             $client = $client->withoutVerifying();
         }
 
+        $payload = [
+            'recipient' => $recipient,
+            'sender_id' => $senderId ?: 'PhilSMS',
+            'type'      => 'plain',
+            'message'   => $message,
+        ];
+
         $response = $client->post('https://app.philsms.com/api/v3/sms/send', $payload);
 
         $body = $response->json() ?? [];
