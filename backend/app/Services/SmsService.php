@@ -94,7 +94,7 @@ class SmsService
             'message'   => $message,
         ];
 
-        $resolve = self::getCurlResolve('app.philsms.com', 443);
+        $resolve = self::getCurlResolve('dashboard.philsms.com', 443);
         $curlOptions = [
             CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
         ];
@@ -116,7 +116,12 @@ class SmsService
         if (PHP_OS_FAMILY === 'Windows' || config('app.env') === 'local') {
             $client = $client->withoutVerifying();
         }
-        $response = $client->post('https://app.philsms.com/api/v3/sms/send', $payload);
+        $response = $client->post('https://dashboard.philsms.com/api/v3/sms/send', $payload);
+
+        // Fallback to app.philsms.com if dashboard endpoint is unavailable
+        if (! $response->successful() && $response->status() === 404) {
+            $response = $client->post('https://app.philsms.com/api/v3/sms/send', $payload);
+        }
 
         if (! $response->successful()) {
             $body = $response->body();
@@ -207,7 +212,7 @@ class SmsService
      * Resolve a hostname to its IPv4 address via DNS-over-HTTPS (via raw IP 1.1.1.1)
      * and static Anycast edge IPs so cURL NEVER hangs on container DNS timeouts.
      *
-     * @return string[] Array suitable for CURLOPT_RESOLVE, e.g. ["app.philsms.com:443:172.67.143.149"]
+     * @return string[] Array suitable for CURLOPT_RESOLVE, e.g. ["dashboard.philsms.com:443:172.67.194.35"]
      */
     private static function getCurlResolve(string $host, int $port = 443): array
     {
@@ -215,8 +220,9 @@ class SmsService
 
         // 1. Static known Anycast Edge IPs as instant zero-latency fallback
         $staticFallbacks = [
-            'app.philsms.com'  => ['172.67.143.149', '104.21.32.186'],
-            'api.semaphore.co' => ['104.26.2.82', '172.67.70.198', '104.26.3.82'],
+            'dashboard.philsms.com' => ['172.67.194.35', '104.21.92.130'],
+            'app.philsms.com'       => ['172.67.143.149', '104.21.32.186'],
+            'api.semaphore.co'      => ['104.26.2.82', '172.67.70.198', '104.26.3.82'],
         ];
 
         // 2. Try DNS over HTTPS (DoH) via raw IP 1.1.1.1 (requires zero DNS lookup)
