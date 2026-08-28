@@ -1065,10 +1065,12 @@ export class SchedulePage implements OnInit, OnDestroy {
 
     this.sessions.splice(index, 1);
     this.saveSessionsForDate(dayDate, this.sessions);
-    // Delete on the backend too — otherwise the deleted session still
-    // exists server-side and pullFromServer() re-adds it as a "new"
-    // session the next time the local store no longer has a matching id.
-    this.workoutTracker.deleteSessionFromServer(dayDate, session.id);
+
+    if (this.sessions.length === 0) {
+      this.workoutTracker.deleteSessionsForDate(dayDate, false);
+    } else {
+      this.workoutTracker.deleteSessionFromServer(dayDate, session.id);
+    }
 
     void this.workoutTracker.scheduleMissedChecks();
     this.workoutTracker.scheduleUpcomingReminders();
@@ -1534,14 +1536,9 @@ export class SchedulePage implements OnInit, OnDestroy {
 
       const existingSessions = store[key] ?? [];
       const doneSessions = existingSessions.filter((s) => s.status === 'done');
-      const uncompletedSessions = existingSessions.filter((s) => s.status !== 'done');
 
-      // Delete all uncompleted/missed old sessions from the server so they don't persist
-      uncompletedSessions.forEach((oldSession) => {
-        if (oldSession.id) {
-          this.workoutTracker.deleteSessionFromServer(d, oldSession.id);
-        }
-      });
+      // Delete all uncompleted/missed sessions on the backend for this date
+      this.workoutTracker.deleteSessionsForDate(d, true);
 
       // Build the new session(s) from the weekly plan template for this day
       const builtSessions = this.buildDaySessionsFromTracker(i, template, d);

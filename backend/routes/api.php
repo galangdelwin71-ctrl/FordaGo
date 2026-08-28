@@ -124,10 +124,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // per-user daily session tracker that used to live only in
     // WorkoutTrackerService localStorage.
     Route::prefix('workout-sessions')->group(function () {
-        Route::get('/',                    [WorkoutSessionController::class, 'index']);
-        Route::post('/',                   [WorkoutSessionController::class, 'store']);
-        Route::patch('/{clientSessionId}', [WorkoutSessionController::class, 'update']);
-        Route::delete('/{clientSessionId}', [WorkoutSessionController::class, 'destroy']);
+        Route::get('/',                           [WorkoutSessionController::class, 'index']);
+        Route::post('/',                          [WorkoutSessionController::class, 'store']);
+        Route::delete('/date/{sessionDate}',      [WorkoutSessionController::class, 'deleteByDate']);
+        Route::patch('/{clientSessionId}',        [WorkoutSessionController::class, 'update']);
+        Route::delete('/{clientSessionId}',       [WorkoutSessionController::class, 'destroy']);
     });
 
     Route::prefix('personal-records')->group(function () {

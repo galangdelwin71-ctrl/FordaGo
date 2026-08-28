@@ -470,9 +470,13 @@ export class WorkoutTrackerService {
         };
 
         if (idx === -1) {
-          const nonRest = daySessions.filter((s) => !s.isRestDay);
-          nonRest.push(merged);
-          store[key] = nonRest;
+          if (merged.isRestDay) {
+            store[key] = [merged];
+          } else {
+            const nonRest = daySessions.filter((s) => !s.isRestDay);
+            nonRest.push(merged);
+            store[key] = nonRest;
+          }
         } else {
           daySessions[idx] = merged;
           store[key] = daySessions;
@@ -575,7 +579,27 @@ export class WorkoutTrackerService {
         params: { session_date: isoDate },
       })
       .subscribe({
-        error: (err) => console.warn('[WorkoutTracker] failed to delete session on server', err),
+        error: () => {},
+      });
+  }
+
+  /**
+   * Deletes all uncompleted (or all) sessions for a specific calendar date
+   * from the backend by date in a single call.
+   */
+  deleteSessionsForDate(dayDate: Date, keepDone: boolean = true): void {
+    if (!this.auth.token) return;
+
+    const isoDate = this.dateKeyToIsoDate(this.getDateKey(dayDate));
+    if (!isoDate) return;
+
+    this.http
+      .delete(`${API_URL}/workout-sessions/date/${isoDate}`, {
+        headers: { Authorization: `Bearer ${this.auth.token}` },
+        params: { keep_done: keepDone ? '1' : '0' },
+      })
+      .subscribe({
+        error: () => {},
       });
   }
 

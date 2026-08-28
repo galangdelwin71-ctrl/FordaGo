@@ -193,9 +193,28 @@ class WorkoutSessionController extends Controller
         Cache::forget("workout_sessions.{$request->user()->id}.all.all");
         Cache::forget("workout_session_sync_{$request->user()->id}_" . now()->toDateString());
 
-        if (! $deleted) {
-            return response()->json(['message' => 'Session not found.'], 404);
+        return response()->noContent();
+    }
+
+    /** DELETE /api/workout-sessions/date/{sessionDate}?keep_done=1 */
+    public function deleteByDate(Request $request, string $sessionDate)
+    {
+        if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', $sessionDate)) {
+            return response()->json(['message' => 'session_date (YYYY-MM-DD) is required.'], 400);
         }
+
+        $query = WorkoutSession::where('user_id', $request->user()->id)
+            ->where('session_date', $sessionDate);
+
+        if ($request->boolean('keep_done', false)) {
+            $query->where('status', '!=', 'done');
+        }
+
+        $query->delete();
+
+        // Invalidate the cached session list for this user
+        Cache::forget("workout_sessions.{$request->user()->id}.all.all");
+        Cache::forget("workout_session_sync_{$request->user()->id}_" . now()->toDateString());
 
         return response()->noContent();
     }
