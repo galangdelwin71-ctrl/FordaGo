@@ -279,23 +279,65 @@ class MailService
     }
 
     /**
-     * Resolve a hostname to its IPv4 address via multiple fallback channels
-     * to guarantee cURL never hangs on DNS timeouts inside restricted VPS/Podman containers.
+     * Resolve a hostname to its IPv4 address via DNS-over-HTTPS (via raw IP 1.1.1.1)
+     * and static Anycast edge IPs so cURL NEVER hangs on container DNS timeouts.
      *
-     * @return string[] Array suitable for CURLOPT_RESOLVE, e.g. ["api.resend.com:443:104.18.2.1"]
+     * @return string[] Array suitable for CURLOPT_RESOLVE, e.g. ["api.resend.com:443:104.20.29.242"]
      */
     private static function getCurlResolve(string $host, int $port = 443): array
     {
-        $ip = @gethostbyname($host);
-        if ($ip && $ip !== $host && filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-            return ["{$host}:{$port}:{$ip}"];
+        $resolvedIps = [];
+
+        // 1. Static known Anycast Edge IPs as instant zero-latency fallback
+        $staticFallbacks = [
+            'api.resend.com'   => ['104.20.29.242', '172.66.165.132'],
+            'api.brevo.com'    => ['185.107.232.253', '185.107.232.254', '1.179.112.50'],
+            'app.philsms.com'  => ['172.67.143.149', '104.21.32.186'],
+            'api.semaphore.co' => ['104.26.2.82', '172.67.70.198', '104.26.3.82'],
+        ];
+
+        // 2. Try DNS over HTTPS (DoH) via raw IP 1.1.1.1 (requires zero DNS lookup)
+        try {
+            $ch = curl_init("https://1.1.1.1/dns-query?name={$host}&type=A");
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_HTTPHEADER     => ['accept: application/dns-json'],
+                CURLOPT_TIMEOUT        => 2,
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_SSL_VERIFYHOST => false,
+            ]);
+            $res = curl_exec($ch);
+            curl_close($ch);
+            if ($res) {
+                $json = json_decode($res, true);
+                if (!empty($json['Answer'])) {
+                    foreach ($json['Answer'] as $ans) {
+                        if (($ans['type'] ?? 0) === 1 && !empty($ans['data']) && filter_var($ans['data'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+                            $resolvedIps[] = $ans['data'];
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable) {}
+
+        // 3. Fall back to static Anycast IPs if DoH didn't return
+        if (empty($resolvedIps) && isset($staticFallbacks[$host])) {
+            $resolvedIps = $staticFallbacks[$host];
         }
 
-        $records = @dns_get_record($host, DNS_A);
-        if (!empty($records[0]['ip'])) {
-            return ["{$host}:{$port}:{$records[0]['ip']}"];
+        // 4. Try standard gethostbyname if still empty
+        if (empty($resolvedIps)) {
+            $ip = @gethostbyname($host);
+            if ($ip && $ip !== $host && filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+                $resolvedIps[] = $ip;
+            }
         }
 
-        return [];
+        $entries = [];
+        foreach ($resolvedIps as $ip) {
+            $entries[] = "{$host}:{$port}:{$ip}";
+        }
+
+        return $entries;
     }
 }
