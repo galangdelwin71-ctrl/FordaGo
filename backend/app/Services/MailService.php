@@ -39,7 +39,7 @@ class MailService
         }
 
         // 3. Standard Laravel Mailer (SMTP / log)
-        $mailer = config('mail.default');
+        $mailer = config('mail.default') ?: 'log';
 
         if ($mailer === 'log') {
             try {
@@ -119,7 +119,7 @@ class MailService
         }
 
         // 3. Fallback to Laravel Mailer
-        $mailer = config('mail.default');
+        $mailer = config('mail.default') ?: 'log';
 
         if ($mailer === 'log') {
             try {
