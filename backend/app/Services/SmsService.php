@@ -6,8 +6,9 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Ported from server/services/sms.js — same providers (Semaphore, Twilio),
- * same phone normalization rules, same return shape:
+ * SMS Dispatcher supporting PhilSMS, Semaphore, and Twilio.
+ *
+ * Return shape:
  *   ['sent' => bool, 'provider' => ?string, 'skippedReason' => ?string, 'error' => ?string]
  */
 class SmsService
@@ -55,15 +56,63 @@ class SmsService
 
         try {
             return match ($provider) {
+                'philsms'   => self::sendViaPhilSMS($normalizedTo, $text),
                 'semaphore' => self::sendViaSemaphore($normalizedTo, $text),
-                'twilio' => self::sendViaTwilio($normalizedTo, $text),
-                default => ['sent' => false, 'skippedReason' => "Unsupported SMS provider: {$provider}"],
+                'twilio'    => self::sendViaTwilio($normalizedTo, $text),
+                default     => ['sent' => false, 'skippedReason' => "Unsupported SMS provider: {$provider}"],
             };
         } catch (\Throwable $e) {
             Log::warning('SMS send failed', ['provider' => $provider, 'error' => $e->getMessage()]);
 
             return ['sent' => false, 'error' => $e->getMessage()];
         }
+    }
+
+    /**
+     * Send SMS via PhilSMS API (https://app.philsms.com/api/v3/sms/send)
+     */
+    protected static function sendViaPhilSMS(string $to, string $message): array
+    {
+        $apiToken = config('services.philsms.api_token');
+        $senderId = config('services.philsms.sender_id', 'PhilSMS');
+
+        if (! $apiToken) {
+            return ['sent' => false, 'skippedReason' => 'Missing PHILSMS_API_TOKEN in .env'];
+        }
+
+        // PhilSMS accepts 09XXXXXXXXX or 639XXXXXXXXX
+        $cleanDigits = preg_replace('/\D/', '', $to);
+        $recipient = $cleanDigits;
+        if (str_starts_with($cleanDigits, '63') && strlen($cleanDigits) === 12) {
+            $recipient = '0' . substr($cleanDigits, 2);
+        }
+
+        $payload = [
+            'recipient' => $recipient,
+            'sender_id' => $senderId ?: 'PhilSMS',
+            'type'      => 'plain',
+            'message'   => $message,
+        ];
+
+        $response = Http::withHeaders([
+            'Authorization' => "Bearer {$apiToken}",
+            'Accept'        => 'application/json',
+            'Content-Type'  => 'application/json',
+        ])->timeout(15)->post('https://app.philsms.com/api/v3/sms/send', $payload);
+
+        if (! $response->successful()) {
+            $body = $response->body();
+            Log::warning('PhilSMS failed', [
+                'status'    => $response->status(),
+                'body'      => $body,
+                'recipient' => $recipient,
+            ]);
+            throw new \RuntimeException("PhilSMS request failed: {$response->status()} {$body}");
+        }
+
+        Log::info('PhilSMS sent successfully', ['to' => $recipient, 'provider' => 'philsms']);
+
+        return ['sent' => true, 'provider' => 'philsms'];
     }
 
     protected static function sendViaSemaphore(string $to, string $message): array
@@ -76,7 +125,7 @@ class SmsService
         }
 
         $response = Http::asForm()->post('https://api.semaphore.co/api/v4/messages', [
-            'apikey'     => $apiKey,
+            'apikey'     => $apikey,
             'number'     => $to,
             'message'    => $message,
             'sendername' => $senderName,

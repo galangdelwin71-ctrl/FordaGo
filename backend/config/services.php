@@ -19,7 +19,15 @@ return [
     ],
 
     'resend' => [
-        'key' => env('RESEND_API_KEY'),
+        'key'        => env('RESEND_API_KEY'),
+        'from_email' => env('MAIL_FROM_ADDRESS', 'onboarding@resend.dev'),
+        'from_name'  => env('MAIL_FROM_NAME', 'FordaGO Gym'),
+    ],
+
+    'brevo' => [
+        'key'        => env('BREVO_API_KEY'),
+        'from_email' => env('MAIL_FROM_ADDRESS', 'no-reply@fordago.com'),
+        'from_name'  => env('MAIL_FROM_NAME', 'FordaGO Gym'),
     ],
 
     'ses' => [
@@ -35,16 +43,20 @@ return [
         ],
     ],
 
-    // SMS provider switch: semaphore or twilio (ported from server/services/sms.js)
+    // SMS provider switch: philsms, semaphore, or twilio
     'sms' => [
         'provider' => env('SMS_PROVIDER'),
+    ],
+
+    'philsms' => [
+        'api_token' => env('PHILSMS_API_TOKEN'),
+        'sender_id' => env('PHILSMS_SENDER_ID', 'PhilSMS'),
     ],
 
     'semaphore' => [
         'api_key' => env('SEMAPHORE_API_KEY'),
         'sender' => env('SEMAPHORE_SENDER', 'FordaGO'),
     ],
-
 
     'twilio' => [
         'sid'   => env('TWILIO_ACCOUNT_SID'),
@@ -53,13 +65,9 @@ return [
     ],
 
     // Firebase Cloud Messaging (HTTP v1 API)
-    // FIREBASE_PROJECT_ID  → Firebase Console → Project Settings → General → Project ID
-    // FIREBASE_SERVICE_ACCOUNT_JSON → Project Settings → Service Accounts → Generate new private key
-    //   (paste the entire JSON content as a single-line string in .env)
     'firebase' => [
         'project_id'           => env('FIREBASE_PROJECT_ID', ''),
         'service_account_json' => env('FIREBASE_SERVICE_ACCOUNT_JSON', ''),
     ],
-
 ];
 
