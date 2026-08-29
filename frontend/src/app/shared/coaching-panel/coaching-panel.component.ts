@@ -631,7 +631,8 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
             this.loadConversations();
           }
           this.sortConversations();
-          this.coachingService.incrementUnreadCount(1);
+          const totalUnread = this.conversations.reduce((sum, c) => sum + (Number(c.unread_count) || 0), 0);
+          this.coachingService.setUnreadCount(totalUnread);
           CoachingPanelComponent.cachedConversations = this.conversations;
         });
       });

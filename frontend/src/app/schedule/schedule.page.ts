@@ -1218,7 +1218,17 @@ export class SchedulePage implements OnInit, OnDestroy {
     });
 
     const store = this.readStoredSessions();
-    const sessionsForDate = (store[key] ?? []).filter(item => !item.isRestDay).map(item => this.normalizeSession(item));
+    const existingForDate = store[key] ?? [];
+    // If the day was a rest day, delete the old rest-day session(s) from the
+    // server before replacing them locally — otherwise pullFromServer() would
+    // keep returning the stale rest-day record and try to restore it.
+    const replacingRestDay = existingForDate.some(item => item.isRestDay);
+    if (replacingRestDay) {
+      existingForDate
+        .filter(item => item.isRestDay)
+        .forEach(restSession => this.workoutTracker.deleteSessionFromServer(targetDate, restSession.id));
+    }
+    const sessionsForDate = existingForDate.filter(item => !item.isRestDay).map(item => this.normalizeSession(item));
     sessionsForDate.push(session);
     store[key] = sessionsForDate;
     this.writeStoredSessions(store);

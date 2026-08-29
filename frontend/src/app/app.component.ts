@@ -304,9 +304,7 @@ export class AppComponent implements OnDestroy {
 
             this.zone.run(() => {
               const incomingConvoId = Number(data.conversation_id);
-
-              // Always increment unread badge count
-              this.coachingService.incrementUnreadCount(1);
+            this.coachingService.getConversations().subscribe();
 
               // Only show in-app toast & native push notification if user is NOT
               // currently reading this exact conversation, and conversation is NOT muted/snoozed.

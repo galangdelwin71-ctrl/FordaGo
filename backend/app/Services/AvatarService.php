@@ -73,10 +73,14 @@ class AvatarService
             }
         }
 
+        if (str_starts_with($avatarPath, 'http://localhost') || str_starts_with($avatarPath, 'http://127.0.0.1')) {
+            return preg_replace('#^http://(localhost|127\.0\.0\.1)(:\d+)?#', 'http://168.144.141.27', $avatarPath);
+        }
+
         if (str_starts_with($avatarPath, 'http://') || str_starts_with($avatarPath, 'https://')) {
             return $avatarPath;
         }
 
-        return url($avatarPath);
+        return 'http://168.144.141.27' . ($avatarPath[0] === '/' ? $avatarPath : '/' . $avatarPath);
     }
 }

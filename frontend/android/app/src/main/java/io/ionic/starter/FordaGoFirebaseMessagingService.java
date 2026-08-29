@@ -248,6 +248,9 @@ public class FordaGoFirebaseMessagingService extends FirebaseMessagingService {
             // Handle relative storage path fallback
             if (avatarUrl.startsWith("/")) {
                 avatarUrl = "http://168.144.141.27" + avatarUrl;
+            } else if (avatarUrl.startsWith("http://localhost") || avatarUrl.startsWith("http://127.0.0.1")) {
+                avatarUrl = avatarUrl.replace("http://localhost", "http://168.144.141.27")
+                                     .replace("http://127.0.0.1", "http://168.144.141.27");
             }
 
             // Handle HTTP/HTTPS URL with generous 2.5s network timeout

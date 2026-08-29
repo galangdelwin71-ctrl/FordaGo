@@ -471,7 +471,18 @@ export class WorkoutTrackerService {
 
         if (idx === -1) {
           if (merged.isRestDay) {
-            store[key] = [merged];
+            // Only replace the local day with the server rest-day placeholder if
+            // the local store currently has NO real (non-rest) workouts for this
+            // day. If the member added a workout locally after marking the day a
+            // rest day, that real workout is NOT yet on the server (or has a
+            // different id) — replacing the whole day here would silently revert
+            // their change every time ionViewWillEnter() calls pullFromServer().
+            const localNonRest = daySessions.filter((s) => !s.isRestDay);
+            if (localNonRest.length === 0) {
+              store[key] = [merged];
+            }
+            // else: local store already has real sessions → server's stale
+            // rest-day row is outdated; leave local sessions untouched.
           } else {
             const nonRest = daySessions.filter((s) => !s.isRestDay);
             nonRest.push(merged);

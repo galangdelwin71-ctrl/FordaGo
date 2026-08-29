@@ -267,11 +267,11 @@ export class CoachingService {
   public markConversationAsRead(conversationId: number, fireApi = true): void {
     // 1. Update in-memory cached conversations
     const convo = this.cachedConversations.find((c) => c.id === conversationId);
-    if (convo && convo.unread_count > 0) {
-      const clearedCount = convo.unread_count;
+    if (convo) {
       convo.unread_count = 0;
-      this.decrementUnreadCount(clearedCount);
     }
+    const remaining = this.cachedConversations.reduce((sum, c) => sum + (Number(c.unread_count) || 0), 0);
+    this.setUnreadCount(remaining);
 
     // 2. Clear from persistent storage cache
     void (async () => {
