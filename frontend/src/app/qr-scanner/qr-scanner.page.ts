@@ -294,6 +294,52 @@ export class QrScannerPage implements OnInit, OnDestroy {
 
   ionViewWillEnter(): void {
     this.applyPendingCoachingReopen();
+    this.checkAndStartQrTour();
+  }
+
+  private checkAndStartQrTour(): void {
+    const user = this.auth.user;
+    if (!user || user.role === 'admin' || user.role === 'coach') return;
+
+    setTimeout(() => {
+      if (this.onboardingService.isRunning || this.coachingPanelOpen) return;
+
+      const steps: TourStep[] = [
+        {
+          targetId: '#tour-scanner-modes',
+          title: 'Scan Mode Selection',
+          description: 'Toggle between Attendance (checking into the gym) and Equipment (scanning machine QR codes for tutorials).',
+          icon: 'scan-outline',
+          position: 'bottom',
+        },
+        {
+          targetId: '#tour-scanner-frame',
+          title: 'Camera Viewfinder',
+          description: 'Point your camera directly at the gym entrance QR code or machine label to automatically scan.',
+          icon: 'camera-outline',
+          position: 'bottom',
+        },
+        {
+          targetId: '#tour-scanner-action',
+          title: 'Start Scanner',
+          description: 'Tap to activate the live camera scanner whenever you are ready.',
+          icon: 'play-outline',
+          position: 'top',
+        },
+        {
+          targetId: '#tour-scanner-history',
+          title: 'My Scan Attendance Log',
+          description: 'Review all your verified Time In and Time Out timestamps and attendance logs.',
+          icon: 'time-outline',
+          position: 'top',
+        },
+      ];
+
+      const available = steps.filter((s) => !!document.querySelector(s.targetId));
+      if (available.length > 0) {
+        this.onboardingService.startTour('scanner_main', available, false, user.id);
+      }
+    }, 600);
   }
 
   // ── Camera permission ──────────────────────────────────
