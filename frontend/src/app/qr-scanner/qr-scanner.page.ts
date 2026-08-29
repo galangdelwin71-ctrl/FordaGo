@@ -388,6 +388,15 @@ export class QrScannerPage implements OnInit, OnDestroy {
     }
   }
 
+  ionViewWillLeave(): void {
+    // Ionic caches this page — when the user navigates away the DOM element
+    // that html5Qrcode holds is destroyed, so we MUST stop & null the
+    // instance here. On re-entry, startScan() will create a fresh one.
+    void this.stopCameraScan();
+    this.isScanning = false;
+    this.isProcessingScan = false;
+  }
+
   ngOnDestroy(): void {
     void this.stopCameraScan();
     this.stopPendingAttendanceWatcher();
@@ -451,7 +460,18 @@ export class QrScannerPage implements OnInit, OnDestroy {
       }
 
       const preferredCamera = cameras.find(camera => /back|rear|environment/i.test(camera.label)) || cameras[0];
-      this.html5QrCode ??= new Html5Qrcode(this.scannerRegionId);
+
+      // Always create a fresh instance — the Ionic router caches this page
+      // and the previous html5QrCode instance may still hold a reference to
+      // a DOM element that was torn down when the user navigated away, which
+      // causes a hard crash/freeze on re-entry. Null-coalescing (??=) would
+      // silently reuse the stale instance, so we always new it up here.
+      if (this.html5QrCode) {
+        try { await this.html5QrCode.stop(); } catch { /* ignore */ }
+        try { await this.html5QrCode.clear(); } catch { /* ignore */ }
+        this.html5QrCode = null;
+      }
+      this.html5QrCode = new Html5Qrcode(this.scannerRegionId);
 
       await this.html5QrCode.start(
         preferredCamera.id,
@@ -604,6 +624,10 @@ export class QrScannerPage implements OnInit, OnDestroy {
     } catch {
       // Ignore clear errors from partially initialized scanner instances.
     }
+
+    // Null the reference so the next startScan() always creates a clean
+    // instance bound to the current (live) DOM element.
+    this.html5QrCode = null;
   }
 
   // ── Real check-in API call ────────────────────────────
