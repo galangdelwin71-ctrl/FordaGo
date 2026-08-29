@@ -124,8 +124,8 @@ export class WorkoutTrackerService {
     // syncStoreStatuses() never calls writeStore() at all (nothing
     // `changed`), so nothing would otherwise schedule today's precise
     // missed-check timers on a fresh app launch.
-    this.scheduleMissedChecks();
-    this.scheduleUpcomingReminders();
+    void this.scheduleMissedChecks();
+    void this.scheduleUpcomingReminders();
     if (this.syncTimer) {
       return;
     }
@@ -381,8 +381,8 @@ export class WorkoutTrackerService {
     // whatever just changed (new session added, time edited, session
     // started/stopped/marked done, a session just flipped to 'missed', etc.)
     // so they never drift out of sync with the actual store contents.
-    this.scheduleMissedChecks();
-    this.scheduleUpcomingReminders();
+    void this.scheduleMissedChecks();
+    void this.scheduleUpcomingReminders();
   }
 
   /**
@@ -905,8 +905,15 @@ export class WorkoutTrackerService {
     const todaySessions = store[todayKey] ?? [];
 
     todaySessions.forEach((session) => {
-      // Done sessions, rest days, or sessions with active timer never need missed check
-      if (session.status === 'done' || session.isRestDay || session.startedAt) {
+      const titleLower = (session.title || '').toLowerCase();
+      // Done sessions, rest days, optional sessions, or sessions with active timer never need missed check
+      if (
+        session.status === 'done' ||
+        session.status === 'optional' ||
+        session.isRestDay ||
+        titleLower.includes('rest') ||
+        session.startedAt
+      ) {
         return;
       }
 
@@ -977,12 +984,13 @@ export class WorkoutTrackerService {
    *
    * Exemptions (same rules as scheduleMissedChecks()):
    *  - Session is already 'done' or 'missed' → no reminder needed.
-   *  - Rest day → skip (no workout to prepare for).
+   *  - Rest day or optional schedule → skip (no workout to prepare for).
    *  - Session timer already running (startedAt set) → member already working out.
    *  - Reminder time is in the past (session is < 30 min away or already started) → skip.
    */
-  scheduleUpcomingReminders(): void {
+  async scheduleUpcomingReminders(): Promise<void> {
     this.clearUpcomingReminderTimers();
+    await this.notificationCenter.cancelAllPendingWorkoutAlarms();
 
     const store = this.readStore();
     const now = new Date();
@@ -990,8 +998,16 @@ export class WorkoutTrackerService {
     const todaySessions = store[todayKey] ?? [];
 
     todaySessions.forEach((session) => {
+      const titleLower = (session.title || '').toLowerCase();
       // Same exemptions as scheduleMissedChecks()
-      if (session.status === 'done' || session.status === 'missed' || session.isRestDay || session.startedAt) {
+      if (
+        session.status === 'done' ||
+        session.status === 'missed' ||
+        session.status === 'optional' ||
+        session.isRestDay ||
+        titleLower.includes('rest') ||
+        session.startedAt
+      ) {
         return;
       }
 

@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonContent, IonIcon, IonSpinner } from '@ionic/angular/standalone';
 import { NoNegativeDirective } from '../directives/no-negative.directive';
+import { resolveImageUrl } from '../config/api.config';
 import { addIcons } from 'ionicons';
 import {
   alertCircleOutline,
@@ -96,7 +97,7 @@ export class LoginPage implements OnDestroy {
   regSuccessSmsReason = '';
 
   // Forgot-password fields
-  fpStep: 1 | 2 | 3 | 4 | 5 = 1;
+  fpStep: number = 1;
   fpIdentifier = '';
   fpEmailMasked = '';
   fpHasPhone = false;
@@ -114,6 +115,19 @@ export class LoginPage implements OnDestroy {
   fpSentMessage = '';
   fpDevCode = '';
   fpResendCountdown = 0;
+  fpAccounts: Array<{
+    id: number;
+    name: string;
+    username: string;
+    emailMasked: string;
+    phoneMasked: string | null;
+    hasPhone: boolean;
+    avatar: string | null;
+    membershipType: string;
+    membershipStatus: string;
+  }> = [];
+  fpSelectedUserId: number | null = null;
+  fpSelectedAccountName = '';
   private fpResendTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(private auth: AuthService, private router: Router) {
@@ -275,6 +289,9 @@ export class LoginPage implements OnDestroy {
     this.fpSentMessage = '';
     this.fpDevCode = '';
     this.fpResendCountdown = 0;
+    this.fpAccounts = [];
+    this.fpSelectedUserId = null;
+    this.fpSelectedAccountName = '';
   }
 
   private startResendCountdown(seconds = 60): void {
@@ -427,10 +444,23 @@ export class LoginPage implements OnDestroy {
     const normalized = isEmail ? raw.toLowerCase() : digits;
     this.fpIdentifier = normalized;
     this.fpLoading = true;
+    this.fpAccounts = [];
+    this.fpSelectedUserId = null;
+    this.fpSelectedAccountName = '';
 
     this.auth.forgotPasswordLookup(normalized).subscribe({
       next: (res: any) => {
         this.fpLoading = false;
+
+        // If multiple accounts share the same phone number, show account picker
+        if (res?.multiple && Array.isArray(res.accounts) && res.accounts.length > 1) {
+          this.fpAccounts = res.accounts;
+          this.fpStep = 1.5;
+          return;
+        }
+
+        this.fpSelectedUserId = res?.userId || null;
+        this.fpSelectedAccountName = res?.name || '';
         this.fpEmailMasked = res?.emailMasked || '';
         this.fpHasPhone = Boolean(res?.hasPhone);
         this.fpPhoneMasked = res?.phoneMasked || '';
@@ -444,6 +474,20 @@ export class LoginPage implements OnDestroy {
         this.fpError = err?.error?.message || 'Could not find an account with that email or phone.';
       },
     });
+  }
+
+  selectFpAccount(account: any): void {
+    this.fpSelectedUserId = account.id;
+    this.fpSelectedAccountName = account.name || account.username || '';
+    this.fpEmailMasked = account.emailMasked || '';
+    this.fpHasPhone = Boolean(account.hasPhone);
+    this.fpPhoneMasked = account.phoneMasked || '';
+    this.fpChannel = this.fpHasPhone ? 'sms' : 'email';
+    this.fpStep = 2;
+  }
+
+  resolveAccountAvatar(avatar: string | null | undefined): string {
+    return resolveImageUrl(avatar);
   }
 
   fpChooseChannel(channel: 'email' | 'sms'): void {
@@ -460,7 +504,7 @@ export class LoginPage implements OnDestroy {
 
     this.fpLoading = true;
 
-    this.auth.forgotPasswordSend(this.fpIdentifier, this.fpChannel).subscribe({
+    this.auth.forgotPasswordSend(this.fpIdentifier, this.fpChannel, this.fpSelectedUserId ?? undefined).subscribe({
       next: (res: any) => {
         this.fpLoading = false;
         this.fpDevCode = res?.devCode || '';
@@ -511,7 +555,7 @@ export class LoginPage implements OnDestroy {
 
     this.fpLoading = true;
 
-    this.auth.forgotPasswordVerify(this.fpIdentifier, code).subscribe({
+    this.auth.forgotPasswordVerify(this.fpIdentifier, code, this.fpSelectedUserId ?? undefined).subscribe({
       next: (res: any) => {
         this.fpLoading = false;
         this.clearResendTimer();

@@ -618,16 +618,16 @@
           <button
             type="button"
             class="auth-back-btn"
-            (click)="fpStep === 1 ? goToLogin() : fpStep = (fpStep === 3 ? 2 : (fpStep === 4 ? 3 : 1))"
+            (click)="fpStep === 1 ? goToLogin() : (fpStep === 1.5 ? fpStep = 1 : (fpStep === 2 ? fpStep = (fpAccounts.length > 1 ? 1.5 : 1) : (fpStep === 3 ? fpStep = 2 : fpStep = 3)))"
             [attr.aria-label]="fpStep === 1 ? 'Back to sign in' : 'Previous step'"
           >
             <ion-icon name="chevron-back-outline" aria-hidden="true"></ion-icon>
           </button>
 
           <div class="forgot-step-indicator">
-            <span class="step-badge">Step {{ fpStep }} of 4</span>
+            <span class="step-badge">Step {{ fpStep === 1.5 ? '1' : (fpStep | number:'1.0-0') }} of 4</span>
             <div class="step-progress-track">
-              <div class="step-progress-fill" [style.width.%]="(fpStep / 4) * 100"></div>
+              <div class="step-progress-fill" [style.width.%]="fpStep === 1.5 ? 25 : (fpStep / 4) * 100"></div>
             </div>
           </div>
         </div>
@@ -686,6 +686,71 @@
         </div>
 
         <!-- ═════════════════════════════════════════════════════════════ -->
+        <!-- STEP 1.5: Multi-Account Selection                           -->
+        <!-- ═════════════════════════════════════════════════════════════ -->
+        <div *ngIf="fpStep === 1.5" class="subview-panel">
+          <div class="feature-icon-wrapper">
+            <span class="feature-icon">
+              <ion-icon name="people-outline" aria-hidden="true"></ion-icon>
+            </span>
+          </div>
+
+          <header class="panel-heading centered-heading">
+            <h2>Select Your Account</h2>
+            <p>Multiple accounts were found registered with <strong>{{ fpIdentifier }}</strong>. Choose which account to reset:</p>
+          </header>
+
+          <div class="fp-accounts-list">
+            <button
+              type="button"
+              class="fp-account-card"
+              *ngFor="let acc of fpAccounts"
+              (click)="selectFpAccount(acc)"
+            >
+              <div class="fp-account-avatar">
+                <img
+                  *ngIf="acc.avatar"
+                  [src]="resolveAccountAvatar(acc.avatar)"
+                  alt=""
+                  class="fp-avatar-img"
+                  (error)="acc.avatar = null"
+                />
+                <span *ngIf="!acc.avatar" class="fp-avatar-fallback">
+                  {{ (acc.name || acc.username || 'U').slice(0, 1).toUpperCase() }}
+                </span>
+              </div>
+              <div class="fp-account-info">
+                <div class="fp-account-name-row">
+                  <strong class="fp-account-name">{{ acc.name }}</strong>
+                  <span
+                    class="fp-plan-badge"
+                    [class.premium]="acc.membershipType === 'premium'"
+                  >
+                    {{ acc.membershipType === 'premium' ? 'Premium' : 'Daily Pass' }}
+                  </span>
+                </div>
+                <div class="fp-account-meta">
+                  <span class="fp-account-email">
+                    <ion-icon name="mail-outline" aria-hidden="true"></ion-icon>
+                    {{ acc.emailMasked }}
+                  </span>
+                  <span class="fp-account-phone" *ngIf="acc.phoneMasked">
+                    <ion-icon name="call-outline" aria-hidden="true"></ion-icon>
+                    {{ acc.phoneMasked }}
+                  </span>
+                </div>
+              </div>
+              <ion-icon name="chevron-forward-outline" class="fp-account-arrow" aria-hidden="true"></ion-icon>
+            </button>
+          </div>
+
+          <button type="button" class="back-btn full-width-btn" (click)="fpStep = 1">
+            <ion-icon name="arrow-back-outline" aria-hidden="true"></ion-icon>
+            <span>Search Different Account</span>
+          </button>
+        </div>
+
+        <!-- ═════════════════════════════════════════════════════════════ -->
         <!-- STEP 2: Choose Delivery Method (Email vs SMS)               -->
         <!-- ═════════════════════════════════════════════════════════════ -->
         <div *ngIf="fpStep === 2" class="subview-panel">
@@ -698,6 +763,10 @@
           <header class="panel-heading centered-heading">
             <h2>Select OTP Destination</h2>
             <p>Where would you like us to send your 6-digit one-time password?</p>
+            <div class="selected-account-pill" *ngIf="fpSelectedAccountName">
+              <ion-icon name="person-outline" aria-hidden="true"></ion-icon>
+              <span>Resetting for: <strong>{{ fpSelectedAccountName }}</strong></span>
+            </div>
           </header>
 
           <div class="delivery-channel-list">

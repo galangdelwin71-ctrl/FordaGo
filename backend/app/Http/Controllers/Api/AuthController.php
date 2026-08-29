@@ -119,18 +119,23 @@ class AuthController extends Controller
         return ['type' => 'phone', 'email' => '', 'phone' => $phone, 'value' => $phone];
     }
 
-    private function findUserByIdentifier(?string $identifierInput): ?User
+    private function findAllUsersByIdentifier(?string $identifierInput): \Illuminate\Database\Eloquent\Collection
     {
         $identifier = $this->parseAccountIdentifier($identifierInput);
 
         if ($identifier['type'] === 'email') {
-            if (! $this->isValidEmail($identifier['email'])) return null;
-            return User::where('email', $identifier['email'])->first();
+            if (! $this->isValidEmail($identifier['email'])) {
+                return User::whereRaw('0 = 1')->get();
+            }
+            return User::where('email', $identifier['email'])->get();
         }
+
         if ($identifier['type'] === 'phone') {
             $digits = preg_replace('/\D/', '', $identifier['phone']);
             $last10 = substr($digits, -10);
-            if (strlen($last10) !== 10) return null;
+            if (strlen($last10) !== 10) {
+                return User::whereRaw('0 = 1')->get();
+            }
             $local = '0'.$last10;
             $intl  = '+63'.$last10;
             $rawIntl = '63'.$last10;
@@ -140,9 +145,21 @@ class AuthController extends Controller
                 ->orWhere('phone', $rawIntl)
                 ->orWhere('phone', $digits)
                 ->orWhere('phone', 'like', '%'.$last10)
-                ->first();
+                ->get();
         }
-        return null;
+
+        return User::whereRaw('0 = 1')->get();
+    }
+
+    private function findUserByIdentifier(?string $identifierInput, ?int $userId = null): ?User
+    {
+        if ($userId) {
+            $user = User::find($userId);
+            if ($user) {
+                return $user;
+            }
+        }
+        return $this->findAllUsersByIdentifier($identifierInput)->first();
     }
 
     private function buildUniqueUsername(string $firstName, string $lastName): string
@@ -411,18 +428,51 @@ class AuthController extends Controller
             return response()->json(['message' => 'Enter a valid email or 11-digit phone number.'], 400);
         }
 
-        $user = $this->findUserByIdentifier($identifierInput);
-        if (! $user) {
+        $users = $this->findAllUsersByIdentifier($identifierInput);
+        if ($users->isEmpty()) {
             return response()->json(['message' => 'No account found with that email or phone number.'], 404);
         }
 
+        if ($users->count() > 1) {
+            $accounts = $users->map(function ($u) {
+                $hasPhone = (bool) ($u->phone && SmsService::normalizePhoneNumber($u->phone));
+                $displayName = trim(($u->first_name ?? '').' '.($u->last_name ?? '')) ?: ($u->username ?? 'Member');
+                return [
+                    'id'               => $u->id,
+                    'name'             => $displayName,
+                    'username'         => $u->username,
+                    'emailMasked'      => $this->maskEmail($u->email),
+                    'hasPhone'         => $hasPhone,
+                    'phoneMasked'      => $hasPhone ? $this->maskPhone($u->phone) : null,
+                    'avatar'           => $u->profile_image,
+                    'membershipType'   => $u->membership_type,
+                    'membershipStatus' => $u->membership_status,
+                ];
+            })->values();
+
+            return response()->json([
+                'multiple'        => true,
+                'identifierType'  => $parsed['type'],
+                'identifierValue' => $parsed['value'],
+                'accounts'        => $accounts,
+            ]);
+        }
+
+        $user = $users->first();
         $hasPhone = (bool) ($user->phone && SmsService::normalizePhoneNumber($user->phone));
+        $displayName = trim(($user->first_name ?? '').' '.($user->last_name ?? '')) ?: ($user->username ?? 'Member');
+
         return response()->json([
+            'multiple'        => false,
             'identifierType'  => $parsed['type'],
             'identifierValue' => $parsed['value'],
+            'userId'          => $user->id,
+            'name'            => $displayName,
             'emailMasked'     => $this->maskEmail($user->email),
             'hasPhone'        => $hasPhone,
             'phoneMasked'     => $hasPhone ? $this->maskPhone($user->phone) : null,
+            'avatar'          => $user->profile_image,
+            'membershipType'  => $user->membership_type,
         ]);
     }
 
@@ -431,6 +481,7 @@ class AuthController extends Controller
         $identifierInput = trim((string) ($request->input('identifier') ?? $request->input('email') ?? $request->input('phone') ?? ''));
         $parsed  = $this->parseAccountIdentifier($identifierInput);
         $channel = $request->input('channel') === 'sms' ? 'sms' : ($request->input('channel') === 'email' ? 'email' : '');
+        $targetUserId = $request->input('userId') ?? $request->input('user_id');
 
         if (($parsed['type'] === 'email' && ! $this->isValidEmail($parsed['email']))
             || ($parsed['type'] === 'phone' && ! $this->isValidPhone($parsed['phone']))
@@ -446,7 +497,7 @@ class AuthController extends Controller
             return response()->json(['message' => 'Please wait a moment before requesting another code.'], 429);
         }
 
-        $user = $this->findUserByIdentifier($identifierInput);
+        $user = $this->findUserByIdentifier($identifierInput, $targetUserId ? (int) $targetUserId : null);
         if (! $user) {
             return response()->json(['message' => 'No account found with that email or phone number.'], 404);
         }
@@ -503,6 +554,7 @@ class AuthController extends Controller
         $identifierInput = trim((string) ($request->input('identifier') ?? $request->input('email') ?? $request->input('phone') ?? ''));
         $parsed = $this->parseAccountIdentifier($identifierInput);
         $code   = trim((string) $request->input('code', ''));
+        $targetUserId = $request->input('userId') ?? $request->input('user_id');
 
         if (($parsed['type'] === 'email' && ! $this->isValidEmail($parsed['email']))
             || ($parsed['type'] === 'phone' && ! $this->isValidPhone($parsed['phone']))
@@ -510,7 +562,7 @@ class AuthController extends Controller
             return response()->json(['message' => 'Please enter the 6-digit code sent to you.'], 400);
         }
 
-        $user = $this->findUserByIdentifier($identifierInput);
+        $user = $this->findUserByIdentifier($identifierInput, $targetUserId ? (int) $targetUserId : null);
         if (! $user) {
             return response()->json(['message' => 'No account found with that email or phone number.'], 404);
         }

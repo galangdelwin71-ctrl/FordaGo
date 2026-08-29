@@ -144,14 +144,14 @@ export class AuthService {
     );
   }
 
-  forgotPasswordSend(identifier: string, channel: 'email' | 'sms') {
-    return this.http.post<any>(`${this.apiUrl}/forgot-password/send`, { identifier, channel }).pipe(
+  forgotPasswordSend(identifier: string, channel: 'email' | 'sms', userId?: number) {
+    return this.http.post<any>(`${this.apiUrl}/forgot-password/send`, { identifier, channel, userId }).pipe(
       catchError((err: HttpErrorResponse) => this.handleError(err))
     );
   }
 
-  forgotPasswordVerify(identifier: string, code: string) {
-    return this.http.post<any>(`${this.apiUrl}/forgot-password/verify`, { identifier, code }).pipe(
+  forgotPasswordVerify(identifier: string, code: string, userId?: number) {
+    return this.http.post<any>(`${this.apiUrl}/forgot-password/verify`, { identifier, code, userId }).pipe(
       catchError((err: HttpErrorResponse) => this.handleError(err))
     );
   }

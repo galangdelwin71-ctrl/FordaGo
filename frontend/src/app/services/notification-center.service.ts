@@ -828,6 +828,7 @@ export class NotificationCenterService {
               allowWhileIdle: true,
             },
             extra: {
+              type: 'upcoming_reminder',
               targetRoute: '/schedule',
               uniqueKey,
             },
@@ -960,7 +961,16 @@ export class NotificationCenterService {
           if (rawItem.channelId === 'fordago-alarms-v3' || rawItem.channelId === 'fordago-alarms') {
             return true;
           }
-          return false;
+          const title = String(n.title || '');
+          if (
+            title.includes('Upcoming Workout') ||
+            title.includes('Workout Time') ||
+            title.includes('Missed Workout') ||
+            title.includes('Workout:')
+          ) {
+            return true;
+          }
+          return true; // Cancel any non-duration alarm to prevent ghost alerts
         });
 
         if (workoutAlarms.length > 0) {
