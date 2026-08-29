@@ -777,10 +777,16 @@ ion-content::part(scroll) {
 }
 
 // ── Shared Modal Sheet ────────────────────────────────────
+.fordago-app-footer.nav-hidden {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
 .bottom-sheet-modal {
   --background: transparent;
   align-items: flex-end;
-  z-index: 1000 !important;
+  z-index: 9999 !important;
 
   &::part(content) {
     background: transparent;

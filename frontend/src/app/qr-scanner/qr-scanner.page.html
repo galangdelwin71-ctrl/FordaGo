@@ -150,7 +150,7 @@
   </div>
 </ion-content>
 
-<ion-footer class="fordago-app-footer ion-no-border">
+<ion-footer class="fordago-app-footer ion-no-border" [class.nav-hidden]="anyModalOpen">
   <nav class="fordago-bottom-nav" aria-label="Main navigation">
     <button type="button" class="fordago-nav-item" (click)="goToDashboard()" aria-label="Home">
       <span class="fordago-nav-icon"><ion-icon name="home-outline"></ion-icon></span>

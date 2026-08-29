@@ -200,6 +200,10 @@ export class QrScannerPage implements OnInit, OnDestroy {
     return this.auth.user?.username || 'Member';
   }
 
+  get anyModalOpen(): boolean {
+    return this.attendanceModalOpen || this.pendingModalOpen || this.tutorialModalOpen;
+  }
+
   // ── Lifecycle ─────────────────────────────────────────
   constructor(
     private router: Router,
