@@ -108,7 +108,8 @@ class MessageController extends Controller
 
         // Load relations for event broadcasting & response
         $message->load([
-            'sender:id,username,first_name,last_name,role',
+            'sender:id,username,first_name,last_name,profile_image,role',
+            'sender.coachProfile',
             'proposal.items',
         ]);
 

@@ -249,24 +249,32 @@ public class FordaGoFirebaseMessagingService extends FirebaseMessagingService {
             if (avatarUrl.startsWith("/")) {
                 avatarUrl = "http://168.144.141.27" + avatarUrl;
             } else if (avatarUrl.startsWith("http://localhost") || avatarUrl.startsWith("http://127.0.0.1")) {
-                avatarUrl = avatarUrl.replace("http://localhost", "http://168.144.141.27")
+                avatarUrl = avatarUrl.replace("http://localhost:8000", "http://168.144.141.27")
+                                     .replace("http://127.0.0.1:8000", "http://168.144.141.27")
+                                     .replace("http://localhost", "http://168.144.141.27")
                                      .replace("http://127.0.0.1", "http://168.144.141.27");
             }
 
-            // Handle HTTP/HTTPS URL with generous 2.5s network timeout
+            // Handle HTTP/HTTPS URL with generous 5s network timeout
             URL url = new URL(avatarUrl);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setDoInput(true);
             conn.setInstanceFollowRedirects(true);
-            conn.setConnectTimeout(2500);
-            conn.setReadTimeout(2500);
+            conn.setConnectTimeout(5000);
+            conn.setReadTimeout(5000);
+            conn.setRequestProperty("User-Agent", "FordaGO-Android");
             conn.connect();
 
-            InputStream is = conn.getInputStream();
-            Bitmap bitmap = BitmapFactory.decodeStream(is);
-            is.close();
+            int responseCode = conn.getResponseCode();
+            if (responseCode >= 200 && responseCode < 300) {
+                InputStream is = conn.getInputStream();
+                Bitmap bitmap = BitmapFactory.decodeStream(is);
+                is.close();
+                conn.disconnect();
+                return bitmap;
+            }
             conn.disconnect();
-            return bitmap;
+            return null;
         } catch (Exception e) {
             Log.w(TAG, "Could not fetch avatar bitmap from " + avatarUrl + ": " + e.getMessage());
             return null;
