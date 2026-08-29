@@ -149,7 +149,7 @@ export class FcmService {
   }
 
   private async sendTokenToBackend(token: string): Promise<void> {
-    const authToken = this.auth.token;
+    const authToken = this.auth.token || localStorage.getItem('token');
     if (!authToken) {
       return; // Not logged in yet — token will be sent after login
     }
@@ -160,6 +160,7 @@ export class FcmService {
         { fcm_token: token },
         { headers: { Authorization: `Bearer ${authToken}` } }
       ).toPromise();
+      console.log('FCM: Device token registered successfully with backend.');
     } catch (err) {
       console.warn('FCM: Failed to send token to backend:', err);
     }
