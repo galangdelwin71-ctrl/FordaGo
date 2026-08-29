@@ -9,6 +9,7 @@ const config: CapacitorConfig = {
   // (see src/app/config/api.config.ts). Remove these two development HTTP
   // allowances once the API is deployed on HTTPS.
   server: {
+    androidScheme: 'http',
     cleartext: true,
   },
 

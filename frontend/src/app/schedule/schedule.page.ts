@@ -26,7 +26,7 @@ import { ExerciseListEditorComponent } from '../shared/exercise-list-editor/exer
 import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refresh.component';
 import { OnboardingService, TourStep } from '../services/onboarding.service';
 import { ToastService } from '../services/toast.service';
-import { API_URL } from '../config/api.config';
+import { API_URL, resolveImageUrl } from '../config/api.config';
 import { buildExercisesFromTemplate, workoutTypes as sharedWorkoutTypes, getSuggestedTargets as sharedGetSuggestedTargets, getTargetPlaceholder as sharedGetTargetPlaceholder } from '../data/workout-templates';
 import type { WeekPlanTemplateDay, StoredWorkoutSession } from '../services/workout-tracker.service';
 
@@ -612,7 +612,7 @@ export class SchedulePage implements OnInit, OnDestroy {
     this.initials = username
       ? username.split(' ').map((part) => part[0]).join('').toUpperCase().slice(0, 2)
       : 'U';
-    this.profileImage = String(user?.profile_image || '').trim();
+    this.profileImage = resolveImageUrl((user as any)?.profile_image);
   }
 
   // ── Auto status calculation ────────────────────────────

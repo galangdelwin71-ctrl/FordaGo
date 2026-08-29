@@ -29,8 +29,8 @@
 
     <!-- Profile Hero Section -->
     <div class="profile-hero fade-up" id="tour-profile-hero">
-      <div class="profile-avatar" *ngIf="!profile.profileImage">{{ profile.initials }}</div>
-      <img *ngIf="profile.profileImage" [src]="profile.profileImage" alt="Profile" class="profile-avatar profile-avatar-img" />
+      <div class="profile-avatar" *ngIf="!profile.profileImage || profileImageFailed">{{ profile.initials }}</div>
+      <img *ngIf="profile.profileImage && !profileImageFailed" [src]="profile.profileImage" (error)="onProfileImageError()" alt="" class="profile-avatar profile-avatar-img" />
       <div class="profile-name">{{ fullName }}</div>
       <div class="profile-email">{{ profile.email }}</div>
       <div class="badges-row">
@@ -198,7 +198,7 @@
 
       <div class="profile-photo-editor">
         <div class="photo-preview" *ngIf="!editForm.profileImage">{{ profile.initials }}</div>
-        <img *ngIf="editForm.profileImage" [src]="editForm.profileImage" alt="Profile preview" class="photo-preview photo-preview-img" />
+        <img *ngIf="editForm.profileImage" [src]="editForm.profileImage" alt="" class="photo-preview photo-preview-img" />
         <div class="photo-actions">
           <label class="photo-btn" for="profileImageInput">Upload Photo</label>
           <button type="button" class="photo-remove-btn" *ngIf="editForm.profileImage" (click)="removeProfileImage()">Remove</button>

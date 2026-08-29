@@ -112,6 +112,11 @@ export class ProfilePage implements OnInit {
   editForm: Partial<MemberProfile> = {};
   phoneInvalid = false;
   savingProfile = false;
+  profileImageFailed = false;
+
+  onProfileImageError(): void {
+    this.profileImageFailed = true;
+  }
 
   // ── Password Form ─────────────────────────────────────
   passwordForm = {
@@ -390,18 +395,21 @@ export class ProfilePage implements OnInit {
     this.savingProfile = true;
 
     this.http.put(`${this.api}/users/${userId}`, payload, { headers }).subscribe({
-      next: () => {
+      next: (res: any) => {
         this.savingProfile = false;
+        const returnedAvatar = res?.profile_image ?? nextImage;
+        const resolved = resolveImageUrl(returnedAvatar);
         this.profile = {
           ...this.profile,
           firstName:    nextFirstName,
           lastName:     nextLastName,
           email:        nextEmail,
           phone:        safePhone,
-          profileImage: resolveImageUrl(nextImage),
+          profileImage: resolved,
           initials:     this.buildInitials(nextFirstName, nextLastName),
         };
-        this.auth.updateCurrentUser(payload);
+        this.profileImageFailed = false;
+        this.auth.updateCurrentUser({ ...payload, profile_image: returnedAvatar });
         this.closeEdit();
         void this.showMobileToast('Profile updated successfully!');
       },

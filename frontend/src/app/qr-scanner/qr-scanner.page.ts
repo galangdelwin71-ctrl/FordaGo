@@ -19,7 +19,7 @@ import { CoachingNavService, CoachingPanelTab } from '../services/coaching-nav.s
 import { CoachingService } from '../services/coaching.service';
 import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refresh.component';
 import { OnboardingService, TourStep } from '../services/onboarding.service';
-import { API_URL } from '../config/api.config';
+import { API_URL, resolveImageUrl } from '../config/api.config';
 import { ToastService } from '../services/toast.service';
 
 // ── Interfaces ────────────────────────────────────────────
@@ -266,7 +266,7 @@ export class QrScannerPage implements OnInit, OnDestroy {
     this.initials = name
       ? name.split(' ').map((p: string) => p[0]).join('').toUpperCase().slice(0, 2)
       : 'U';
-    this.profileImage = String(user?.profile_image || '').trim();
+    this.profileImage = resolveImageUrl((user as any)?.profile_image);
     void this.checkCameraPermission();
   }
 

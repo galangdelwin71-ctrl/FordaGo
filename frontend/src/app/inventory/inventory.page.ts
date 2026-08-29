@@ -489,7 +489,7 @@ export class InventoryPage implements OnInit {
     this.initials = name
       ? name.split(' ').map((p: string) => p[0]).join('').toUpperCase().slice(0, 2)
       : 'U';
-    this.profileImage = String(user?.profile_image || '').trim();
+    this.profileImage = resolveImageUrl((user as any)?.profile_image);
     this.notifPanelOpen = false;
     this.checkAndStartShopTour();
   }

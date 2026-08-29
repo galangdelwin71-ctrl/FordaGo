@@ -38,8 +38,8 @@
       </button>
 
       <button type="button" id="tour-profile-header-btn" class="profile-button" (click)="profileClick.emit()" aria-label="Open profile">
-        <span class="avatar" *ngIf="!profileImage">{{ initials || 'U' }}</span>
-        <img *ngIf="profileImage" [src]="profileImage" alt="Profile" class="avatar avatar-img" />
+        <span class="avatar" *ngIf="!profileImage || imageFailed">{{ initials || 'U' }}</span>
+        <img *ngIf="profileImage && !imageFailed" [src]="profileImage" alt="" (error)="onImgError()" class="avatar avatar-img" />
       </button>
     </div>
   </ion-toolbar>
