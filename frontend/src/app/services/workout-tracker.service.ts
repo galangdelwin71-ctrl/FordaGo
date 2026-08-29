@@ -485,12 +485,27 @@ export class WorkoutTrackerService {
             // rest-day row is outdated; leave local sessions untouched.
           } else {
             const nonRest = daySessions.filter((s) => !s.isRestDay);
-            nonRest.push(merged);
-            store[key] = nonRest;
+            if (this.pendingServerReconcileKeys.has(key)) {
+              store[key] = [merged];
+              this.pendingServerReconcileKeys.delete(key);
+            } else {
+              nonRest.push(merged);
+              store[key] = nonRest;
+            }
           }
         } else {
           daySessions[idx] = merged;
           store[key] = daySessions;
+        }
+      });
+
+      // Clean up any mixed days: if a day has real workouts, discard rest-day placeholders
+      Object.keys(store).forEach((k) => {
+        if (Array.isArray(store[k]) && store[k].length > 1) {
+          const hasReal = store[k].some((s) => !s.isRestDay);
+          if (hasReal) {
+            store[k] = store[k].filter((s) => !s.isRestDay);
+          }
         }
       });
 

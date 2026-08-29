@@ -107,9 +107,26 @@ class WorkoutSessionController extends Controller
         // 30-second cache per user+range: prevents the 287kB payload from
         // being re-fetched on every page open when multiple components load.
         $rangeCacheKey = "workout_sessions.{$userId}." . ($from ?? 'all') . '.' . ($to ?? 'all');
-        $rows = Cache::remember($rangeCacheKey, 30, fn () =>
-            $query->orderBy('session_date')->get()->toArray()
-        );
+        $rows = Cache::remember($rangeCacheKey, 30, function () use ($query) {
+            $sessions = $query->orderBy('session_date')->get();
+            $grouped = $sessions->groupBy(fn ($s) => substr((string) $s->session_date, 0, 10));
+            $cleaned = [];
+            foreach ($grouped as $date => $dateSessions) {
+                $hasNonRest = $dateSessions->contains(fn ($s) => ! $s->is_rest_day);
+                if ($hasNonRest) {
+                    foreach ($dateSessions as $s) {
+                        if (! $s->is_rest_day) {
+                            $cleaned[] = $s->toArray();
+                        }
+                    }
+                } else {
+                    foreach ($dateSessions as $s) {
+                        $cleaned[] = $s->toArray();
+                    }
+                }
+            }
+            return $cleaned;
+        });
 
         return response()->json($rows);
     }
@@ -123,6 +140,21 @@ class WorkoutSessionController extends Controller
     public function store(Request $request)
     {
         $validated = $this->validatePayload($request, forCreate: true);
+
+        // If storing an active workout on this date, remove any stale rest-day records on this date
+        if (! empty($validated['is_rest_day'])) {
+            // User marked this date as Rest Day -> clean up non-rest records
+            WorkoutSession::where('user_id', $request->user()->id)
+                ->where('session_date', $validated['session_date'])
+                ->where('is_rest_day', false)
+                ->delete();
+        } else {
+            // User added a real workout -> clean up any rest day records on this date
+            WorkoutSession::where('user_id', $request->user()->id)
+                ->where('session_date', $validated['session_date'])
+                ->where('is_rest_day', true)
+                ->delete();
+        }
 
         $session = WorkoutSession::updateOrCreate(
             [
