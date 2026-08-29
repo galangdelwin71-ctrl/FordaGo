@@ -100,6 +100,7 @@ import { CoachingService } from './services/coaching.service';
 import { AuthService } from './services/auth.service';
 import { FcmService } from './services/fcm.service';
 import { ChatToastService } from './services/chat-toast.service';
+import { ChatMuteService } from './services/chat-mute.service';
 import { EchoService } from './services/echo.service';
 import { firstValueFrom } from 'rxjs';
 
@@ -181,6 +182,7 @@ export class AppComponent implements OnDestroy {
     private auth: AuthService,
     private fcmService: FcmService,
     private chatToastService: ChatToastService,
+    private chatMuteService: ChatMuteService,
     private echoService: EchoService,
     private router: Router,
     private location: Location,
@@ -307,9 +309,11 @@ export class AppComponent implements OnDestroy {
               this.coachingService.incrementUnreadCount(1);
 
               // Only show in-app toast & native push notification if user is NOT
-              // currently reading this exact conversation. This prevents
-              // duplicate/unwanted notifications while inside the chat page.
-              if (this.chatToastService.getActiveChatId() !== incomingConvoId) {
+              // currently reading this exact conversation, and conversation is NOT muted/snoozed.
+              if (
+                this.chatToastService.getActiveChatId() !== incomingConvoId &&
+                !this.chatMuteService.isMuted(incomingConvoId)
+              ) {
                 const senderName = `${msg.sender?.first_name || ''} ${msg.sender?.last_name || ''}`.trim() || msg.sender?.username || 'New Message';
                 const convo = {
                   id: incomingConvoId,

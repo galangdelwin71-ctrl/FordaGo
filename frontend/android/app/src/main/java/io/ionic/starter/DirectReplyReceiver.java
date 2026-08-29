@@ -61,10 +61,19 @@ public class DirectReplyReceiver extends BroadcastReceiver {
         // Send message in background thread to backend
         new Thread(() -> {
             try {
-                SharedPreferences prefs = context.getSharedPreferences("CapacitorStorage", Context.MODE_PRIVATE);
-                String token = prefs.getString("token", null);
-                if (token == null) {
-                    token = prefs.getString("auth_token", null);
+                SharedPreferences[] prefSources = new SharedPreferences[] {
+                    context.getSharedPreferences("CapacitorStorage", Context.MODE_PRIVATE),
+                    android.preference.PreferenceManager.getDefaultSharedPreferences(context)
+                };
+
+                String token = null;
+                for (SharedPreferences p : prefSources) {
+                    if (p == null) continue;
+                    if (token == null) token = p.getString("token", null);
+                    if (token == null) token = p.getString("_cap_token", null);
+                    if (token == null) token = p.getString("auth_token", null);
+                    if (token == null) token = p.getString("_cap_auth_token", null);
+                    if (token != null) break;
                 }
 
                 if (token == null) {

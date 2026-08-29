@@ -75,24 +75,45 @@ public class FordaGoFirebaseMessagingService extends FirebaseMessagingService {
     }
 
     private boolean isConversationMuted(String conversationIdStr) {
+        if (conversationIdStr == null || conversationIdStr.trim().isEmpty()) {
+            return false;
+        }
         try {
-            SharedPreferences prefs = getSharedPreferences("CapacitorStorage", Context.MODE_PRIVATE);
-            String raw = prefs.getString("fordago_mute_convo_" + conversationIdStr, null);
-            if (raw == null) {
-                raw = prefs.getString("mute_convo_" + conversationIdStr, null);
-            }
-            if (raw == null) return false;
+            SharedPreferences[] prefSources = new SharedPreferences[] {
+                getSharedPreferences("CapacitorStorage", Context.MODE_PRIVATE),
+                android.preference.PreferenceManager.getDefaultSharedPreferences(this)
+            };
 
-            JSONObject obj = new JSONObject(raw);
-            if (obj.has("mutedUntil")) {
-                Object mutedUntilObj = obj.get("mutedUntil");
-                if ("infinite".equals(mutedUntilObj) || "forever".equals(mutedUntilObj)) {
-                    return true;
-                }
-                if (mutedUntilObj instanceof Number) {
-                    long until = ((Number) mutedUntilObj).longValue();
-                    if (System.currentTimeMillis() < until) {
-                        return true;
+            String[] keyPatterns = new String[] {
+                "fordago_mute_convo_" + conversationIdStr,
+                "_cap_fordago_mute_convo_" + conversationIdStr,
+                "mute_convo_" + conversationIdStr,
+                "_cap_mute_convo_" + conversationIdStr
+            };
+
+            for (SharedPreferences prefs : prefSources) {
+                if (prefs == null) continue;
+                for (String k : keyPatterns) {
+                    String raw = prefs.getString(k, null);
+                    if (raw != null && !raw.trim().isEmpty()) {
+                        try {
+                            JSONObject obj = new JSONObject(raw);
+                            if (obj.has("mutedUntil")) {
+                                Object mutedUntilObj = obj.get("mutedUntil");
+                                if ("infinite".equals(mutedUntilObj) || "forever".equals(mutedUntilObj)) {
+                                    return true;
+                                }
+                                if (mutedUntilObj instanceof Number) {
+                                    long until = ((Number) mutedUntilObj).longValue();
+                                    if (System.currentTimeMillis() < until) {
+                                        return true;
+                                    }
+                                }
+                            }
+                            if (obj.optBoolean("isMuted", false)) {
+                                return true;
+                            }
+                        } catch (Exception ignored) {}
                     }
                 }
             }

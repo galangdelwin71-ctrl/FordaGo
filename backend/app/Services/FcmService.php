@@ -63,13 +63,26 @@ class FcmService
                 return false;
             }
 
-            $payload = [
-                'message' => [
+            $isChat = ($data['type'] ?? '') === 'chat';
+
+            if ($isChat) {
+                // High-priority DATA message for Chat:
+                // Android delivers this to FordaGoFirebaseMessagingService.java onMessageReceived,
+                // which creates the Messenger-style notification with Circular Avatar,
+                // small FordaGO badge, inline Direct Reply textfield, and checks isConversationMuted.
+                $messagePayload = [
                     'token' => $fcmToken,
-                    // 'notification' key → Android OS will show this in the
-                    // notification tray even when the app is closed/backgrounded.
-                    // Without this, FCM sends a silent data-only message that is
-                    // only delivered when the app is open in foreground.
+                    'data'  => array_merge([
+                        'title' => (string) $title,
+                        'body'  => (string) $body,
+                    ], array_map('strval', $data)),
+                    'android' => [
+                        'priority' => 'high',
+                    ],
+                ];
+            } else {
+                $messagePayload = [
+                    'token' => $fcmToken,
                     'notification' => [
                         'title' => (string) $title,
                         'body'  => (string) $body,
@@ -81,14 +94,16 @@ class FcmService
                     'android' => [
                         'priority' => 'high',
                         'notification' => [
-                            'channel_id'   => 'fordago-alerts-v2',
+                            'channel_id'   => 'fordago-alerts-v3',
                             'icon'         => 'ic_stat_icon',
                             'color'        => '#FFD700',
                             'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
                         ],
                     ],
-                ],
-            ];
+                ];
+            }
+
+            $payload = ['message' => $messagePayload];
 
             $url = "https://fcm.googleapis.com/v1/projects/{$this->projectId}/messages:send";
 
@@ -98,6 +113,10 @@ class FcmService
 
             if ($response->successful()) {
                 return true;
+            }
+
+            if ($response->status() === 404 || str_contains($response->body(), 'UNREGISTERED')) {
+                \App\Models\User::where('fcm_token', $fcmToken)->update(['fcm_token' => null]);
             }
 
             Log::warning('FCM send failed', [
