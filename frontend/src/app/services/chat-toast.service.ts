@@ -58,6 +58,16 @@ export class ChatToastService {
   }
 
   /**
+   * Returns the conversation ID the user is currently viewing, or null.
+   * Used by app.component.ts to suppress native notifications when the
+   * user is already inside that conversation.
+   */
+  getActiveChatId(): number | null {
+    return this.activeChatConversationId;
+  }
+
+
+  /**
    * Start listening for new messages across all given conversations.
    * partnerMap maps conversationId → { name, avatar? } so we can show
    * who sent the message in the toast.

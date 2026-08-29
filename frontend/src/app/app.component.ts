@@ -301,15 +301,23 @@ export class AppComponent implements OnDestroy {
             if (!msg || Number(msg.sender_id) === Number(user.id)) return;
 
             this.zone.run(() => {
+              const incomingConvoId = Number(data.conversation_id);
+
+              // Always increment unread badge count
               this.coachingService.incrementUnreadCount(1);
 
-              const senderName = `${msg.sender?.first_name || ''} ${msg.sender?.last_name || ''}`.trim() || msg.sender?.username || 'New Message';
-              const convo = {
-                id: Number(data.conversation_id),
-                partnerName: senderName,
-                partnerAvatar: msg.sender?.profile_image,
-              };
-              this.chatToastService.showIncomingMessage(convo, msg.body, msg.id);
+              // Only show in-app toast & native push notification if user is NOT
+              // currently reading this exact conversation. This prevents
+              // duplicate/unwanted notifications while inside the chat page.
+              if (this.chatToastService.getActiveChatId() !== incomingConvoId) {
+                const senderName = `${msg.sender?.first_name || ''} ${msg.sender?.last_name || ''}`.trim() || msg.sender?.username || 'New Message';
+                const convo = {
+                  id: incomingConvoId,
+                  partnerName: senderName,
+                  partnerAvatar: msg.sender?.profile_image,
+                };
+                this.chatToastService.showIncomingMessage(convo, msg.body, msg.id);
+              }
             });
           });
         }

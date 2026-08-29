@@ -301,6 +301,8 @@ export class ChatPage implements OnInit, OnDestroy {
    */
   ionViewWillLeave() {
     this.stopLiveSync();
+    // Re-enable notifications for this conversation as soon as user navigates away
+    this.chatToastService.setActiveChat(null);
   }
 
   ngOnDestroy() {
