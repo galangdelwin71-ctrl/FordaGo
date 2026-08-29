@@ -1,5 +1,5 @@
 <!-- onboarding-guide.component.html -->
-<div class="onboarding-overlay" *ngIf="isVisible" (click)="$event.stopPropagation()">
+<div class="onboarding-overlay" *ngIf="isVisible" (click)="onSkip()">
   <!-- Spotlight Cutout: The giant box-shadow darkens the background outside, leaving the element 100% clear and unblurred -->
   <div
     class="spotlight-ring"
@@ -19,6 +19,7 @@
     #tooltipCard
     class="tooltip-card"
     *ngIf="currentStep"
+    (click)="$event.stopPropagation()"
     [style.top.px]="tooltipPos.top"
     [style.left.px]="tooltipPos.left">
     
