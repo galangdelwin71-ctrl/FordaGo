@@ -444,28 +444,59 @@ export class ProfilePage implements OnInit {
     const file = input?.files?.[0];
     if (!file) return;
 
-    const isAllowedType = ['image/png', 'image/jpeg', 'image/webp'].includes(file.type);
+    const isAllowedType = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'].includes(file.type.toLowerCase()) || file.type.startsWith('image/');
     if (!isAllowedType) {
       void this.showMobileToast('Please select a PNG, JPG, or WEBP image.', true);
       input.value = '';
       return;
     }
 
-    const maxBytes = 2 * 1024 * 1024;
-    if (file.size > maxBytes) {
-      void this.showMobileToast('Image must be 2MB or smaller.', true);
-      input.value = '';
-      return;
-    }
-
     const reader = new FileReader();
     reader.onload = () => {
-      const result = String(reader.result || '');
-      if (!result.startsWith('data:image/')) {
+      const rawDataUrl = String(reader.result || '');
+      if (!rawDataUrl.startsWith('data:image/')) {
         void this.showMobileToast('Invalid image file.', true);
         return;
       }
-      this.editForm.profileImage = result;
+
+      // Auto-compress and scale down large photos from phone cameras
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          const maxDim = 800; // 800x800 is sharp and lightweight (<150KB)
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            this.editForm.profileImage = canvas.toDataURL('image/jpeg', 0.85);
+          } else {
+            this.editForm.profileImage = rawDataUrl;
+          }
+        } catch {
+          this.editForm.profileImage = rawDataUrl;
+        }
+      };
+      img.onerror = () => {
+        this.editForm.profileImage = rawDataUrl;
+      };
+      img.src = rawDataUrl;
     };
     reader.readAsDataURL(file);
   }
