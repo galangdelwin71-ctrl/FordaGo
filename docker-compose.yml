@@ -24,6 +24,9 @@ services:
       - /var/www/html/vendor
       - ./backend/storage:/var/www/html/storage
       - ./backend/public:/var/www/html/public
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     networks:
       - fordago_net
 
@@ -52,6 +55,9 @@ services:
       - ./backend/storage:/var/www/html/storage
     depends_on:
       - backend
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     networks:
       - fordago_net
 
@@ -78,6 +84,9 @@ services:
       - ./backend/storage:/var/www/html/storage
     depends_on:
       - backend
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     networks:
       - fordago_net
 
