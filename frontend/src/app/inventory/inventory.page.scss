@@ -884,6 +884,10 @@ ion-modal.overlay-hidden {
   grid-template-columns: 1fr 1fr;
   gap: 10px;
 
+  &.single-option {
+    grid-template-columns: 1fr;
+  }
+
   .payment-option {
     background: #181d28;
     border: 1.5px solid rgba(255, 255, 255, 0.1);

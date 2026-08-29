@@ -376,7 +376,7 @@ class AuthController extends Controller
 
         $normalizedPhone = SmsService::normalizePhoneNumber($phone);
         $smsMessage = $normalizedMembershipType === 'premium'
-            ? "FordaGO: Hi {$firstName}, your Premium registration is pending admin verification. Please pay P500 via ".($normalizedPaymentMethod === 'gcash' ? 'GCash' : 'cash at the gym counter').' and wait for approval before login.'
+            ? "FordaGO: Hi {$firstName}, your Premium registration is pending admin verification. Please proceed to the gym counter to pay P500 (Cash or Online Payment at desk) to activate your account."
             : "FordaGO: Hi {$firstName}, your Daily Pass registration is pending admin verification. You can log in after approval.";
 
         $smsResult = $normalizedPhone !== ''

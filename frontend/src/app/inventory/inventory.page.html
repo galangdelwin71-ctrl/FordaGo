@@ -239,29 +239,15 @@
         <span class="total-price">₱{{ selectedProduct.price * orderQty }}</span>
       </div>
 
-      <!-- Payment Method (used for either Add to Cart's later checkout
-           default, or immediately by Place Order Now below) -->
+      <!-- Payment Method -->
       <div class="payment-section">
         <div class="section-title">Payment Method</div>
-        <div class="payment-options">
-          <button
-            class="payment-option"
-            [class.selected]="cartPaymentMethod === 'cash'"
-            (click)="selectCartPaymentMethod('cash')"
-          >
+        <div class="payment-options single-option">
+          <div class="payment-option selected single" style="cursor: default; width: 100%;">
             <span class="payment-icon"><ion-icon name="card-outline"></ion-icon></span>
-            <span class="payment-label">Cash</span>
-            <span class="payment-desc">Pay at counter</span>
-          </button>
-          <button
-            class="payment-option"
-            [class.selected]="cartPaymentMethod === 'gcash'"
-            (click)="selectCartPaymentMethod('gcash')"
-          >
-            <span class="payment-icon"><ion-icon name="scan-outline"></ion-icon></span>
-            <span class="payment-label">GCash</span>
-            <span class="payment-desc">QR code payment</span>
-          </button>
+            <span class="payment-label">Cash / Online Payment</span>
+            <span class="payment-desc">Pay at gym counter upon pickup</span>
+          </div>
         </div>
       </div>
 
@@ -403,25 +389,12 @@
 
         <div class="payment-section" *ngIf="cart.length > 0">
           <div class="section-title">Payment Method</div>
-          <div class="payment-options">
-            <button
-              class="payment-option"
-              [class.selected]="cartPaymentMethod === 'cash'"
-              (click)="selectCartPaymentMethod('cash')"
-            >
+          <div class="payment-options single-option">
+            <div class="payment-option selected single" style="cursor: default; width: 100%;">
               <span class="payment-icon"><ion-icon name="card-outline"></ion-icon></span>
-              <span class="payment-label">Cash</span>
-              <span class="payment-desc">Pay at counter</span>
-            </button>
-            <button
-              class="payment-option"
-              [class.selected]="cartPaymentMethod === 'gcash'"
-              (click)="selectCartPaymentMethod('gcash')"
-            >
-              <span class="payment-icon"><ion-icon name="scan-outline"></ion-icon></span>
-              <span class="payment-label">GCash</span>
-              <span class="payment-desc">QR code payment</span>
-            </button>
+              <span class="payment-label">Cash / Online Payment</span>
+              <span class="payment-desc">Pay at gym counter upon pickup</span>
+            </div>
           </div>
         </div>
       </div><!-- end modal-scroll-body -->
@@ -479,7 +452,7 @@
           </div>
           <div class="summary-item">
             <span class="summary-label">Payment Method</span>
-            <span class="summary-value">{{ lastOrderPayment === 'cash' ? 'Cash at Counter' : 'GCash QR' }}</span>
+            <span class="summary-value">Cash or Online at Counter</span>
           </div>
           <div class="summary-item">
             <span class="summary-label">Status</span>
@@ -496,8 +469,7 @@
             </div>
             <div class="step">
               <span class="step-num">2</span>
-              <span *ngIf="lastOrderPayment === 'cash'" class="step-text">Pay ₱{{ lastOrderTotal }} in cash to admin</span>
-              <span *ngIf="lastOrderPayment === 'gcash'" class="step-text">Scan QR code & transfer ₱{{ lastOrderTotal }} via GCash</span>
+              <span class="step-text">Pay ₱{{ lastOrderTotal }} (Cash or Online Payment) to the cashier/admin</span>
             </div>
             <div class="step">
               <span class="step-num">3</span>

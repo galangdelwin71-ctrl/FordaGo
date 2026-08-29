@@ -415,40 +415,20 @@
         </div>
 
         <div *ngIf="reg.membership_type === 'premium'" class="payment-section">
-          <span class="section-lbl">Payment Method</span>
+          <span class="section-lbl">Payment Details</span>
 
-          <div class="payment-options">
-            <button
-              type="button"
-              class="pay-opt"
-              [class.active]="reg.payment_method === 'cash'"
-              (click)="reg.payment_method = 'cash'"
-            >
+          <div class="payment-options single-option">
+            <div class="pay-opt active single">
               <ion-icon name="cash-outline" aria-hidden="true"></ion-icon>
-              <span>Cash</span>
-            </button>
-
-            <button
-              type="button"
-              class="pay-opt"
-              [class.active]="reg.payment_method === 'gcash'"
-              (click)="reg.payment_method = 'gcash'"
-            >
-              <ion-icon name="phone-portrait-outline" aria-hidden="true"></ion-icon>
-              <span>GCash</span>
-            </button>
+              <span>Cash / Online Payment (Pay at Counter)</span>
+            </div>
           </div>
 
           <div class="info-box">
             <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
             <p>
               <strong>Premium membership requires payment before activation.</strong>
-              <span *ngIf="reg.payment_method === 'cash'">
-                Pay ₱500 at the gym counter. The admin will confirm the payment and activate your account.
-              </span>
-              <span *ngIf="reg.payment_method === 'gcash'">
-                Send ₱500 through GCash and present your receipt to the admin for verification.
-              </span>
+              Please proceed to the front desk / gym counter to pay ₱500 (via Cash or Counter QR/Online Payment). The admin will confirm your payment and activate your account.
             </p>
           </div>
         </div>
@@ -528,10 +508,10 @@
           </div>
 
           <div class="summary-row" *ngIf="reg.membership_type === 'premium'">
-            <span class="summary-icon"><ion-icon name="card-outline"></ion-icon></span>
+            <span class="summary-icon"><ion-icon name="cash-outline"></ion-icon></span>
             <span class="summary-copy">
               <small>Payment</small>
-              <strong>{{ reg.payment_method === 'gcash' ? 'GCash' : 'Cash' }}</strong>
+              <strong>Cash or Online Payment at Counter</strong>
             </span>
           </div>
         </div>
@@ -546,7 +526,7 @@
         <div class="info-box" *ngIf="reg.membership_type === 'premium'">
           <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
           <p>
-            After registration, pay ₱500 {{ reg.payment_method === 'gcash' ? 'through GCash' : 'at the gym counter' }}. Your account becomes available after admin approval.
+            After registration, pay ₱500 at the gym counter (Cash or Online Payment). Your account becomes available after admin approval.
           </p>
         </div>
 
@@ -588,8 +568,7 @@
         </p>
 
         <p *ngIf="regSuccessMembershipType === 'premium'">
-          Your Premium registration is waiting for admin verification. Please pay ₱500
-          {{ regSuccessPaymentMethod === 'gcash' ? 'through GCash' : 'at the gym counter' }} before activation.
+          Your Premium registration is waiting for admin verification. Please pay ₱500 at the gym counter (Cash or Online Payment) before activation.
         </p>
 
         <div class="status-note" *ngIf="regSuccessPhone && regSuccessSmsSent">
