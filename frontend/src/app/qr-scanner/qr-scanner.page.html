@@ -267,13 +267,11 @@
 <ion-modal
   [isOpen]="attendanceModalOpen"
   (didDismiss)="closeAttendanceModal()"
-  [breakpoints]="[0, 1]"
-  [initialBreakpoint]="1"
-  class="bottom-sheet-modal attendance-sheet-modal"
+  [backdropDismiss]="true"
+  class="centered-dialog-modal attendance-dialog-modal"
 >
   <ng-template>
     <div class="modal-sheet attendance-success-sheet">
-      <div class="modal-handle"></div>
 
       <div class="success-hero">
         <div class="glow-orb"></div>
@@ -335,13 +333,11 @@
 <ion-modal
   [isOpen]="pendingModalOpen"
   (didDismiss)="closePendingModal()"
-  [breakpoints]="[0, 1]"
-  [initialBreakpoint]="1"
-  class="bottom-sheet-modal attendance-sheet-modal"
+  [backdropDismiss]="true"
+  class="centered-dialog-modal attendance-dialog-modal"
 >
   <ng-template>
     <div class="modal-sheet attendance-pending-sheet">
-      <div class="modal-handle"></div>
 
       <!-- State 1: Awaiting Cashier Confirmation -->
       <ng-container *ngIf="!isPendingPaymentConfirmed">
@@ -484,13 +480,11 @@
 <ion-modal
   [isOpen]="tutorialModalOpen"
   (didDismiss)="closeTutorialModal()"
-  [breakpoints]="[0, 1]"
-  [initialBreakpoint]="1"
-  class="bottom-sheet-modal tutorial-modal"
+  [backdropDismiss]="true"
+  class="centered-dialog-modal tutorial-dialog-modal"
 >
   <ng-template>
     <div class="modal-sheet tutorial-sheet">
-      <div class="modal-handle"></div>
 
       <div class="equip-header" *ngIf="activeEquipment">
         <div class="equip-icon-big">

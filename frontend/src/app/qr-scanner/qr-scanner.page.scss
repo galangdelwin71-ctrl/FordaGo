@@ -783,10 +783,33 @@ ion-content::part(scroll) {
   pointer-events: none !important;
 }
 
+.centered-dialog-modal {
+  --background: transparent;
+  --backdrop-opacity: 0.85;
+  --width: 92%;
+  --max-width: 440px;
+  --height: auto;
+  --border-radius: 28px;
+  --box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999 !important;
+
+  &::part(content) {
+    background: transparent;
+    border-radius: 28px;
+    box-shadow: none;
+    overflow: hidden;
+    margin: auto;
+    max-height: 90vh;
+  }
+}
+
 .bottom-sheet-modal {
   --background: transparent;
   align-items: flex-end;
-  z-index: 9999 !important;
+  z-index: 99999 !important;
 
   &::part(content) {
     background: transparent;
@@ -796,21 +819,30 @@ ion-content::part(scroll) {
 }
 
 .modal-sheet {
-  background: radial-gradient(circle at 50% 0%, rgba(234, 179, 8, 0.12) 0%, #0e121b 45%, #090c12 100%);
-  border-radius: 28px 28px 0 0;
-  padding: 0 20px 32px;
-  border-top: 1px solid rgba(234, 179, 8, 0.35);
-  box-shadow: 0 -14px 45px rgba(0, 0, 0, 0.7);
-  animation: slideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  background: radial-gradient(circle at 50% 0%, rgba(234, 179, 8, 0.15) 0%, #0e121b 45%, #090c12 100%);
+  border-radius: 28px;
+  padding: 26px 20px 28px;
+  border: 1.5px solid rgba(234, 179, 8, 0.4);
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.85);
+  animation: zoomInModal 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   overflow: hidden;
+  max-height: 88vh;
+  overflow-y: auto;
 
   .modal-handle {
-    width: 42px;
-    height: 4px;
-    border-radius: 99px;
-    background: rgba(255, 255, 255, 0.22);
-    margin: 12px auto 18px;
+    display: none;
+  }
+}
+
+@keyframes zoomInModal {
+  from {
+    transform: scale(0.92);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
   }
 }
 

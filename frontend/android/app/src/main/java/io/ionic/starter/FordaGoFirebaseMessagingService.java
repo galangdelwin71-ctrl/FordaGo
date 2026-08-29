@@ -247,12 +247,14 @@ public class FordaGoFirebaseMessagingService extends FirebaseMessagingService {
 
             // Handle relative storage path fallback
             if (avatarUrl.startsWith("/")) {
-                avatarUrl = "http://168.144.141.27" + avatarUrl;
+                avatarUrl = "http://168.144.141.27:8000" + avatarUrl;
             } else if (avatarUrl.startsWith("http://localhost") || avatarUrl.startsWith("http://127.0.0.1")) {
-                avatarUrl = avatarUrl.replace("http://localhost:8000", "http://168.144.141.27")
-                                     .replace("http://127.0.0.1:8000", "http://168.144.141.27")
-                                     .replace("http://localhost", "http://168.144.141.27")
-                                     .replace("http://127.0.0.1", "http://168.144.141.27");
+                avatarUrl = avatarUrl.replace("http://localhost:8000", "http://168.144.141.27:8000")
+                                     .replace("http://127.0.0.1:8000", "http://168.144.141.27:8000")
+                                     .replace("http://localhost", "http://168.144.141.27:8000")
+                                     .replace("http://127.0.0.1", "http://168.144.141.27:8000");
+            } else if (avatarUrl.startsWith("http://168.144.141.27/") && !avatarUrl.contains(":8000")) {
+                avatarUrl = avatarUrl.replace("http://168.144.141.27/", "http://168.144.141.27:8000/");
             }
 
             // Handle HTTP/HTTPS URL with generous 5s network timeout
