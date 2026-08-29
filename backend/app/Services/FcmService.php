@@ -66,12 +66,26 @@ class FcmService
             $payload = [
                 'message' => [
                     'token' => $fcmToken,
+                    // 'notification' key → Android OS will show this in the
+                    // notification tray even when the app is closed/backgrounded.
+                    // Without this, FCM sends a silent data-only message that is
+                    // only delivered when the app is open in foreground.
+                    'notification' => [
+                        'title' => (string) $title,
+                        'body'  => (string) $body,
+                    ],
                     'data'  => array_merge([
                         'title' => (string) $title,
                         'body'  => (string) $body,
                     ], array_map('strval', $data)),
                     'android' => [
                         'priority' => 'high',
+                        'notification' => [
+                            'channel_id'   => 'fordago-alerts-v2',
+                            'icon'         => 'ic_stat_icon',
+                            'color'        => '#FFD700',
+                            'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
+                        ],
                     ],
                 ],
             ];
