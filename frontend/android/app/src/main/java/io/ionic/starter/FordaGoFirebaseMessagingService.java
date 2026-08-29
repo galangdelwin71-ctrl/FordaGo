@@ -187,8 +187,7 @@ public class FordaGoFirebaseMessagingService extends FirebaseMessagingService {
                 .setConversationTitle(null)
                 .addMessage(body, System.currentTimeMillis(), sender);
 
-            builder.setStyle(messagingStyle)
-                   .setLargeIcon(circularAvatar);
+            builder.setStyle(messagingStyle);
 
             RemoteInput remoteInput = new RemoteInput.Builder(KEY_TEXT_REPLY)
                 .setLabel("Reply...")
