@@ -1,6 +1,6 @@
 import { Component, NgZone, OnDestroy } from '@angular/core';
 import { IonApp, IonRouterOutlet, ToastController } from '@ionic/angular/standalone';
-import { Router } from '@angular/router';
+import { NavigationStart, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
@@ -155,6 +155,7 @@ const TAB_NAVIGATION_PATHS = new Set([
 // this many ms actually exits the app; otherwise we just show a warning
 // toast and arm the timer. 2s matches the platform-typical Android pattern.
 import { OnboardingGuideComponent } from './shared/onboarding-guide/onboarding-guide.component';
+import { OnboardingService } from './services/onboarding.service';
 
 const EXIT_CONFIRM_WINDOW_MS = 2000;
 
@@ -188,6 +189,7 @@ export class AppComponent implements OnDestroy {
     private location: Location,
     private toastController: ToastController,
     private zone: NgZone,
+    private onboardingService: OnboardingService,
   ) {
     addIcons({
       addOutline,
@@ -283,6 +285,18 @@ export class AppComponent implements OnDestroy {
     void this.notificationCenter.initNativeNotificationChannels();
     void this.registerNotificationTapListener();
     void this.fcmService.init();
+
+    // Auto-dismiss any running onboarding tour when the user navigates to a
+    // new page. The tour overlay (position:fixed, z-index:999999,
+    // pointer-events:auto) covers the entire screen. If the user taps a
+    // bottom-nav button while a tour is showing on another page the overlay
+    // stays alive on the new page and blocks every tap — making the whole
+    // app feel frozen. Dismissing on NavigationStart clears it instantly.
+    this.router.events.subscribe(event => {
+      if (event instanceof NavigationStart && this.onboardingService.isRunning) {
+        this.onboardingService.finishTour();
+      }
+    });
 
     // Automatically poll and listen for real-time notifications for any logged-in user.
     // Also register FCM token on login so backend can send background push notifications.
