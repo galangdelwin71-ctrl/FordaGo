@@ -394,16 +394,6 @@ class UserController extends Controller
             \Log::warning('Failed to send FCM push on membership update: ' . $e->getMessage());
         }
 
-        // SMS notification (best-effort)
-        $smsPhone = SmsService::normalizePhoneNumber($user->phone);
-        if ($smsPhone !== '') {
-            $smsMessage = $membershipType === 'premium'
-                ? "FordaGO: Hi {$user->username}, your Premium payment is verified. You can now log in. Membership valid until {$membershipExpiry}."
-                : "FordaGO: Hi {$user->username}, your Daily Pass account is verified. You can now log in. Please pay at each attendance QR scan.";
-
-            SmsService::send($smsPhone, $smsMessage);
-        }
-
         return response()->json(['message' => 'Membership updated and user notified.']);
     }
 

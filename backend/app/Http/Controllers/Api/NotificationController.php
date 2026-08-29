@@ -191,31 +191,8 @@ class NotificationController extends Controller
             \Log::warning('Broadcasting NotificationSent failed: ' . $e->getMessage());
         }
 
-        // SMS (best-effort)
-        $user      = User::find($request->user()->id);
-        $smsPhone  = $user?->phone ? SmsService::normalizePhoneNumber($user->phone) : '';
-        $username  = $user?->username ?? 'Member';
-        $smsResult = ['sent' => false, 'skippedReason' => 'No phone number on file'];
-
-        if ($smsPhone !== '') {
-            $preview = implode(' | ', array_filter(
-                array_slice(array_map('trim', $homeExercises), 0, 2),
-                fn ($e) => $e !== ''
-            ));
-
-            $smsMessage = $preview
-                ? "FordaGO: Hi {$username}, you missed {$sessionTitle} ({$dayLabel}). Home workout: {$preview}. Open app for full guide."
-                : "FordaGO: Hi {$username}, you missed {$sessionTitle} ({$dayLabel}). Open app for your home workout guide.";
-
-            $smsResult = SmsService::send($smsPhone, $smsMessage);
-        }
-
         return response()->json([
-            'message'   => 'Missed workout alert delivered.',
-            'smsSent'   => (bool) $smsResult['sent'],
-            'smsReason' => $smsResult['sent']
-                ? null
-                : ($smsResult['skippedReason'] ?? $smsResult['error'] ?? 'SMS not sent'),
+            'message' => 'Missed workout alert delivered.',
         ], 201);
     }
 
@@ -252,10 +229,9 @@ class NotificationController extends Controller
     public function destroy(int $id)
     {
         $notification = Notification::find($id);
-        if (! $notification) {
-            return response()->json(['message' => 'Notification not found'], 404);
+        if ($notification) {
+            $notification->delete();
         }
-        $notification->delete();
         return response()->json(['message' => 'Notification deleted']);
     }
 }

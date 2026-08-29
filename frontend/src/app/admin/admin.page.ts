@@ -1,5 +1,55 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { IonHeader, IonToolbar, IonContent, IonIcon, IonSpinner } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import {
+  paperPlaneOutline,
+  chevronUpOutline,
+  chevronDownOutline,
+  trashOutline,
+  logOutOutline,
+  timeOutline,
+  megaphoneOutline,
+  peopleOutline,
+  personOutline,
+  personAddOutline,
+  cardOutline,
+  cartOutline,
+  informationCircleOutline,
+  notificationsOutline,
+  createOutline,
+  checkmarkCircleOutline,
+  alertCircleOutline,
+  closeOutline,
+  addOutline,
+  refreshOutline,
+  searchOutline,
+  eyeOutline,
+  checkmarkOutline,
+  closeCircleOutline,
+  barbellOutline,
+  pricetagOutline,
+  readerOutline,
+  fitnessOutline,
+  calendarOutline,
+  mailOutline,
+  callOutline,
+  imageOutline,
+  downloadOutline,
+  qrCodeOutline,
+  cubeOutline,
+  warningOutline,
+  starOutline,
+  chatbubbleEllipsesOutline,
+  shieldCheckmarkOutline,
+  sparklesOutline,
+  cashOutline,
+  keyOutline,
+  documentTextOutline,
+  lockClosedOutline,
+  layersOutline,
+  optionsOutline,
+  ellipsisVerticalOutline,
+} from 'ionicons/icons';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -739,7 +789,57 @@ export class AdminPage implements OnInit, OnDestroy {
     private coaching: CoachingService,
     private toast: ToastService,
     private notificationCenter: NotificationCenterService
-  ) {}
+  ) {
+    addIcons({
+      paperPlaneOutline,
+      chevronUpOutline,
+      chevronDownOutline,
+      trashOutline,
+      logOutOutline,
+      timeOutline,
+      megaphoneOutline,
+      peopleOutline,
+      personOutline,
+      personAddOutline,
+      cardOutline,
+      cartOutline,
+      informationCircleOutline,
+      notificationsOutline,
+      createOutline,
+      checkmarkCircleOutline,
+      alertCircleOutline,
+      closeOutline,
+      addOutline,
+      refreshOutline,
+      searchOutline,
+      eyeOutline,
+      checkmarkOutline,
+      closeCircleOutline,
+      barbellOutline,
+      pricetagOutline,
+      readerOutline,
+      fitnessOutline,
+      calendarOutline,
+      mailOutline,
+      callOutline,
+      imageOutline,
+      downloadOutline,
+      qrCodeOutline,
+      cubeOutline,
+      warningOutline,
+      starOutline,
+      chatbubbleEllipsesOutline,
+      shieldCheckmarkOutline,
+      sparklesOutline,
+      cashOutline,
+      keyOutline,
+      documentTextOutline,
+      lockClosedOutline,
+      layersOutline,
+      optionsOutline,
+      ellipsisVerticalOutline,
+    });
+  }
 
   // ── Members load state ──────────────────────────────────
   membersLoading = false;
@@ -1741,7 +1841,19 @@ export class AdminPage implements OnInit, OnDestroy {
           }
           this.toast.success('Notification deleted successfully');
         },
-        error: () => this.toast.error('Failed to delete notification')
+        error: (err) => {
+          // If already removed or not found (404), clean up local list
+          if (err?.status === 404 || err?.status === 200) {
+            this.notifications = this.notifications.filter(x => x.id !== n.id);
+            if (this.selectedNotifDetail?.id === n.id) {
+              this.showNotifDetailModal = false;
+              this.selectedNotifDetail = null;
+            }
+            this.toast.success('Notification removed');
+            return;
+          }
+          this.toast.error('Failed to delete notification');
+        }
       });
     });
   }
