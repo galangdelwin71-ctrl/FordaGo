@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { API_URL } from '../config/api.config';
 
@@ -28,11 +28,17 @@ export class ProfileService {
   }
 
   loadProfile(): void {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      this.profileSubject.next(null);
+      return;
+    }
+
     this.http.get<UserProfile>(`${this.apiUrl}/me`).pipe(
       tap(profile => this.profileSubject.next(profile)),
       catchError(() => {
         this.profileSubject.next(null);
-        return throwError(() => new Error('Failed to load profile'));
+        return of(null);
       })
     ).subscribe();
   }
