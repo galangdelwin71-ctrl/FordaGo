@@ -27,6 +27,7 @@ import { FeedbackModalComponent } from '../shared/feedback-modal/feedback-modal.
 import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refresh.component';
 import { OnboardingService, TourStep } from '../services/onboarding.service';
 import { FeedbackService } from '../services/feedback.service';
+import { FcmService } from '../services/fcm.service';
 import { API_URL, resolveImageUrl } from '../config/api.config';
 
 // ── Interfaces ────────────────────────────────────────
@@ -180,6 +181,7 @@ export class ProfilePage implements OnInit {
     private coachingService: CoachingService,
     private toast: ToastService,
     public onboardingService: OnboardingService,
+    private fcmService: FcmService,
   ) {}
 
   private showMobileToast(message: string, isError = false): Promise<void> {
@@ -638,16 +640,21 @@ export class ProfilePage implements OnInit {
 
   logout(): void {
     this.logoutModalOpen = false;
-    this.auth.logout();
-    // replaceUrl: true -- logout is an auth boundary, same reasoning as
-    // login.page.ts's post-login navigate(). A plain push here left
-    // /login stacked UNDER the next account's /dashboard entry, so
-    // walking back far enough (or a stray extra back-pop) from a later
-    // drill-in page could resolve straight to a stale /login screen
-    // instead of the currently logged-in account's dashboard. Since /login
-    // has nothing meaningful to preserve as a "came from" page, replacing
-    // is strictly correct here, not just a back-button workaround.
-    this.router.navigate(['/login'], { replaceUrl: true });
+    // Clear the FCM device token on the backend FIRST (while the auth token
+    // is still in localStorage) so this device no longer receives push
+    // notifications for the account that just logged out.
+    void this.fcmService.clearFcmToken().finally(() => {
+      this.auth.logout();
+      // replaceUrl: true -- logout is an auth boundary, same reasoning as
+      // login.page.ts's post-login navigate(). A plain push here left
+      // /login stacked UNDER the next account's /dashboard entry, so
+      // walking back far enough (or a stray extra back-pop) from a later
+      // drill-in page could resolve straight to a stale /login screen
+      // instead of the currently logged-in account's dashboard. Since /login
+      // has nothing meaningful to preserve as a "came from" page, replacing
+      // is strictly correct here, not just a back-button workaround.
+      this.router.navigate(['/login'], { replaceUrl: true });
+    });
   }
 
   // ── Notifications panel ────────────────────────────────

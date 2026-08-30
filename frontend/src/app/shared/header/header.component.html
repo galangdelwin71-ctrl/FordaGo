@@ -17,13 +17,13 @@
            buttons, so every page keeps the same right-to-left order. -->
       <ng-content select="[header-extra]"></ng-content>
 
+      <button type="button" id="tour-equip-header-btn" class="equip-header-btn" (click)="equipmentClick.emit()" aria-label="Open equipment">
+        <ion-icon name="barbell-outline" aria-hidden="true"></ion-icon>
+      </button>
+
       <button type="button" id="tour-coach-header-btn" class="coach-header-btn" [class.has-unread]="coachUnreadCount > 0" (click)="coachingClick.emit()" aria-label="Open coaching">
         <ion-icon name="person-circle-outline" aria-hidden="true"></ion-icon>
         <span class="notif-bell-badge" *ngIf="coachUnreadCount > 0">{{ coachUnreadCount > 99 ? '99+' : coachUnreadCount }}</span>
-      </button>
-
-      <button type="button" id="tour-equip-header-btn" class="equip-header-btn" (click)="equipmentClick.emit()" aria-label="Open equipment">
-        <ion-icon name="barbell-outline" aria-hidden="true"></ion-icon>
       </button>
 
       <button

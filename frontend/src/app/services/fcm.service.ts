@@ -148,6 +148,31 @@ export class FcmService {
     }
   }
 
+  /**
+   * Called on logout. Tells the backend to clear this device's FCM token so
+   * the device no longer receives push notifications for the signed-out account.
+   * Fire-and-forget from the call site; errors are non-fatal.
+   */
+  async clearFcmToken(): Promise<void> {
+    if (!Capacitor.isNativePlatform()) {
+      return;
+    }
+    const authToken = this.auth.token || localStorage.getItem('token');
+    if (!authToken) {
+      return;
+    }
+    try {
+      await this.http.delete(
+        `${this.api}/users/fcm-token`,
+        { headers: { Authorization: `Bearer ${authToken}` } }
+      ).toPromise();
+      console.log('FCM: Device token cleared from backend on logout.');
+    } catch (err) {
+      // Non-fatal — the token will eventually expire or be overwritten on next login
+      console.warn('FCM: Failed to clear token on logout:', err);
+    }
+  }
+
   private async sendTokenToBackend(token: string): Promise<void> {
     const authToken = this.auth.token || localStorage.getItem('token');
     if (!authToken) {

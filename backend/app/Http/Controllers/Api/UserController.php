@@ -420,7 +420,7 @@ class UserController extends Controller
     }
 
     /**
-     * PUT /api/user/fcm-token
+     * PUT /api/users/fcm-token
      * Save or refresh the FCM device token for the authenticated user.
      * Called by the Angular app each time it obtains a new FCM token from Firebase.
      */
@@ -434,5 +434,19 @@ class UserController extends Controller
 
         return response()->json(['message' => 'FCM token updated.']);
     }
+
+    /**
+     * DELETE /api/users/fcm-token
+     * Remove the FCM device token for the authenticated user on logout.
+     * Prevents the device from receiving push notifications for this account
+     * after the user has signed out.
+     */
+    public function clearFcmToken(Request $request)
+    {
+        $request->user()->update(['fcm_token' => null]);
+
+        return response()->json(['message' => 'FCM token cleared.']);
+    }
 }
+
 
