@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FordaGO - QR #20 Equipment Scan Guide Preview</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: #06080f;
+      color: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
+
+    .preview-header {
+      text-align: center;
+      margin-bottom: 20px;
+      max-width: 500px;
+    }
+    .preview-header h1 {
+      font-size: 20px;
+      font-weight: 800;
+      color: #ffd600;
+      margin-bottom: 6px;
+    }
+    .preview-header p {
+      font-size: 13px;
+      color: #94a3b8;
+    }
+
+    /* Modal Simulation Container */
+    .mobile-modal-card {
+      width: 100%;
+      max-width: 440px;
+      background: #0f172a;
+      border: 1.5px solid #334155;
+      border-radius: 28px;
+      padding: 20px;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .modal-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand-pill {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      color: #ffd600;
+      background: rgba(255, 214, 0, 0.12);
+      border: 1px solid rgba(255, 214, 0, 0.3);
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+    .close-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #94a3b8;
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .equip-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .equip-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: rgba(255, 214, 0, 0.12);
+      border: 1px solid rgba(255, 214, 0, 0.3);
+      display: grid;
+      place-items: center;
+      font-size: 22px;
+    }
+    .equip-name {
+      font-size: 17px;
+      font-weight: 800;
+      color: #f8fafc;
+      line-height: 1.25;
+    }
+    .equip-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .equip-cat {
+      font-size: 11px;
+      color: #94a3b8;
+      font-weight: 600;
+    }
+    .status-badge {
+      font-size: 9px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 12px;
+      background: rgba(34, 197, 94, 0.15);
+      color: #22c55e;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    /* Variation Selector */
+    .variation-wrap {
+      margin-top: 2px;
+    }
+    .variation-title {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.6px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      margin-bottom: 7px;
+    }
+    .variation-pills {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+    }
+    .var-pill {
+      padding: 7px 14px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      background: #1e293b;
+      border: 1.5px solid #334155;
+      color: #94a3b8;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .var-pill.active {
+      background: rgba(255, 214, 0, 0.12);
+      border-color: rgba(255, 214, 0, 0.4);
+      color: #ffd600;
+    }
+
+    /* Illustration Guide Card */
+    .illustration-card {
+      background: #0b1120;
+      border: 1.5px solid #334155;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+    .illustration-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #f8fafc;
+    }
+    .difficulty-tag {
+      font-size: 9px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 12px;
+      background: rgba(34, 197, 94, 0.18);
+      color: #4ade80;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      text-transform: uppercase;
+    }
+
+    .svg-container {
+      width: 100%;
+      background: #090d16;
+      border-bottom: 1px solid #1e293b;
+    }
+    .svg-container svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .muscles-box {
+      padding: 12px 14px;
+      background: #111827;
+    }
+    .muscle-line {
+      margin-bottom: 6px;
+    }
+    .muscle-label {
+      font-size: 9px;
+      font-weight: 800;
+      color: #94a3b8;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 3px;
+    }
+    .primary-tag {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 800;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      padding: 4px 10px;
+      border-radius: 8px;
+    }
+    .secondary-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .sec-pill {
+      font-size: 10px;
+      font-weight: 600;
+      color: #cbd5e1;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+
+    .protocol-ribbon {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      background: rgba(245, 158, 11, 0.08);
+      border-top: 1px solid rgba(245, 158, 11, 0.18);
+      font-size: 11px;
+      color: #fbbf24;
+    }
+    .protocol-ribbon strong { color: #fef08a; }
+
+    /* Steps Section */
+    .steps-section {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .steps-title {
+      font-size: 10px;
+      font-weight: 800;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+    .step-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 10px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 10px;
+    }
+    .step-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(255, 214, 0, 0.12);
+      border: 1px solid rgba(255, 214, 0, 0.3);
+      font-size: 10px;
+      font-weight: 800;
+      color: #ffd600;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+    .step-text {
+      font-size: 11.5px;
+      color: #e2e8f0;
+      line-height: 1.5;
+    }
+
+    /* Actions */
+    .btn-log {
+      width: 100%;
+      height: 46px;
+      border-radius: 13px;
+      background: linear-gradient(135deg, #ffd600 0%, #eab308 100%);
+      border: none;
+      color: #000000;
+      font-size: 13px;
+      font-weight: 850;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(234, 179, 8, 0.3);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="preview-header">
+    <h1>Screen Preview for QR #20 Scan</h1>
+    <p>Multi-Function Cable / Pulley Column (Tricep Pushdown &amp; Chest Fly Guide)</p>
+  </div>
+
+  <div class="mobile-modal-card">
+
+    <!-- Modal Top -->
+    <div class="modal-top-bar">
+      <span class="brand-pill">AFFORDA GYM GUIDE</span>
+      <span class="close-btn">✕</span>
+    </div>
+
+    <!-- Equipment Info Header -->
+    <div class="equip-header">
+      <div class="equip-icon">🏋️</div>
+      <div>
+        <div class="equip-name">Multi-Function Cable / Pulley Column</div>
+        <div class="equip-meta">
+          <span class="equip-cat">Strength Training Equipment</span>
+          <span class="status-badge">AVAILABLE</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Workout Variations Selector -->
+    <div class="variation-wrap">
+      <div class="variation-title">SELECT WORKOUT EXERCISE:</div>
+      <div class="variation-pills">
+        <button class="var-pill active">● Cable Rope Tricep Pushdown</button>
+        <button class="var-pill">Standing Cable Chest Fly</button>
+      </div>
+    </div>
+
+    <!-- 2-Pose Vector Guide Illustration -->
+    <div class="illustration-card">
+      <div class="illustration-card-header">
+        <span class="card-title">Cable Rope Tricep Pushdown</span>
+        <span class="difficulty-tag">BEGINNER</span>
+      </div>
+
+      <div class="svg-container">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0.9" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#22c55e" />
+    </linearGradient>
+    <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000" flood-opacity="0.45" />
+    </filter>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="800" height="480" fill="url(#bgGrad)" rx="24" />
+  
+  <!-- Subtle Grid Pattern -->
+  <g opacity="0.05" stroke="#ffffff" stroke-width="1">
+    <line x1="40" y1="0" x2="40" y2="480" />
+    <line x1="200" y1="0" x2="200" y2="480" />
+    <line x1="400" y1="0" x2="400" y2="480" stroke-dasharray="4 4" opacity="0.4" />
+    <line x1="600" y1="0" x2="600" y2="480" />
+    <line x1="760" y1="0" x2="760" y2="480" />
+    <line x1="0" y1="60" x2="800" y2="60" />
+    <line x1="0" y1="420" x2="800" y2="420" />
+  </g>
+
+  <!-- Title Badge -->
+  <g transform="translate(40, 24)">
+    <rect width="720" height="44" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1.5" />
+    <circle cx="24" cy="22" r="7" fill="#38bdf8" />
+    <text x="42" y="27" fill="#f8fafc" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" letter-spacing="0.5">CABLE TRICEP PUSHDOWN</text>
+    <text x="700" y="27" text-anchor="end" fill="#94a3b8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="500">Target: Triceps Brachii</text>
+  </g>
+
+  <!-- LEFT PANEL: STARTING POSITION -->
+  <g transform="translate(40, 84)">
+    <rect width="345" height="340" rx="18" fill="url(#cardGrad)" stroke="#334155" stroke-width="1.5" filter="url(#cardShadow)" />
+    <!-- Step Badge -->
+    <rect x="18" y="16" width="130" height="28" rx="8" fill="#0f172a" stroke="#475569" stroke-width="1" />
+    <circle cx="32" cy="30" r="5" fill="#38bdf8" />
+    <text x="46" y="35" fill="#38bdf8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="700">1. START FORM</text>
+    
+    <!-- Floor Platform -->
+    <line x1="30" y1="290" x2="315" y2="290" stroke="#475569" stroke-width="3" stroke-linecap="round" />
+    <ellipse cx="172" cy="290" rx="120" ry="14" fill="#38bdf8" opacity="0.08" />
+
+    <!-- Left Graphic Illustration -->
+    <g transform="translate(40, 20)">
+      
+      <!-- Cable Machine Rig -->
+      <rect x="30" y="40" width="16" height="230" fill="#64748b" rx="3" />
+      <rect x="25" y="40" width="70" height="12" fill="#475569" rx="2" />
+      <circle cx="85" cy="46" r="10" fill="#94a3b8" />
+      <line x1="85" y1="46" x2="160" y2="135" stroke="#cbd5e1" stroke-width="2.5" />
+      
+      <!-- Athlete Setup -->
+      <!-- Head -->
+      <circle cx="190" cy="95" r="18" fill="#fbcfe8" />
+      <!-- Torso -->
+      <path d="M 180 115 L 175 195 L 205 195 L 200 115 Z" fill="#3b82f6" />
+      <!-- Legs -->
+      <path d="M 175 195 L 170 270 M 205 195 L 210 270" stroke="#1e293b" stroke-width="14" stroke-linecap="round" />
+      <!-- Arm: Bent at 90 deg -->
+      <path d="M 185 125 L 180 160 L 160 140" stroke="#f472b6" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+      <!-- Attachment Rope -->
+      <circle cx="160" cy="140" r="6" fill="#e2e8f0" />
+    
+    </g>
+
+    <!-- Pose Label -->
+    <text x="172" y="322" text-anchor="middle" fill="#94a3b8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="500">Elbows tucked at 90°, chest upright</text>
+  </g>
+
+  <!-- CENTER MOTION ARROW -->
+  <g transform="translate(388, 240)">
+    <circle cx="12" cy="12" r="22" fill="#1e293b" stroke="#475569" stroke-width="1.5" />
+    <path d="M 4 12 L 18 12 M 13 6 L 19 12 L 13 18" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+  </g>
+
+  <!-- RIGHT PANEL: FINISHING POSITION -->
+  <g transform="translate(415, 84)">
+    <rect width="345" height="340" rx="18" fill="url(#cardGrad)" stroke="#334155" stroke-width="1.5" filter="url(#cardShadow)" />
+    <!-- Step Badge -->
+    <rect x="18" y="16" width="136" height="28" rx="8" fill="#0f172a" stroke="#475569" stroke-width="1" />
+    <circle cx="32" cy="30" r="5" fill="#22c55e" />
+    <text x="46" y="35" fill="#22c55e" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="700">2. FINISH DRIVE</text>
+    
+    <!-- Floor Platform -->
+    <line x1="30" y1="290" x2="315" y2="290" stroke="#475569" stroke-width="3" stroke-linecap="round" />
+    <ellipse cx="172" cy="290" rx="120" ry="14" fill="#22c55e" opacity="0.1" />
+
+    <!-- Right Graphic Illustration -->
+    <g transform="translate(40, 20)">
+      
+      <!-- Cable Machine Rig -->
+      <rect x="30" y="40" width="16" height="230" fill="#64748b" rx="3" />
+      <rect x="25" y="40" width="70" height="12" fill="#475569" rx="2" />
+      <circle cx="85" cy="46" r="10" fill="#94a3b8" />
+      <line x1="85" y1="46" x2="175" y2="200" stroke="#cbd5e1" stroke-width="2.5" />
+      
+      <!-- Athlete Finish -->
+      <!-- Head -->
+      <circle cx="190" cy="95" r="18" fill="#fbcfe8" />
+      <!-- Torso -->
+      <path d="M 180 115 L 175 195 L 205 195 L 200 115 Z" fill="#3b82f6" />
+      <!-- Legs -->
+      <path d="M 175 195 L 170 270 M 205 195 L 210 270" stroke="#1e293b" stroke-width="14" stroke-linecap="round" />
+      <!-- Arm: Fully Extended Down -->
+      <path d="M 185 125 L 180 165 L 175 205" stroke="#4ade80" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+      <!-- Attachment Rope -->
+      <circle cx="175" cy="205" r="6" fill="#e2e8f0" />
+      <!-- Force Highlight -->
+      <ellipse cx="180" cy="165" rx="8" ry="14" fill="#22c55e" opacity="0.6" />
+    
+    </g>
+
+    <!-- Pose Label -->
+    <text x="172" y="322" text-anchor="middle" fill="#cbd5e1" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="600">Full downward extension & squeeze</text>
+  </g>
+
+  <!-- Footer Info Line -->
+  <g transform="translate(40, 442)">
+    <text x="0" y="16" fill="#64748b" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="500">AFFORDA Gym Training Guide · Keep core tight &amp; breathe steadily</text>
+    <text x="720" y="16" text-anchor="end" fill="#fbbf24" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600">3-4 Sets · 8-12 Reps</text>
+  </g>
+</svg>
+      </div>
+
+      <div class="muscles-box">
+        <div class="muscle-line">
+          <span class="muscle-label">PRIMARY TARGET:</span>
+          <span class="primary-tag">Triceps Brachii (Lateral &amp; Long Head)</span>
+        </div>
+        <div class="muscle-line">
+          <span class="muscle-label">SECONDARY / STABILIZERS:</span>
+          <div class="secondary-tags">
+            <span class="sec-pill">Forearm Brachioradialis</span>
+            <span class="sec-pill">Core</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="protocol-ribbon">
+        <span>🔥 Recommended Protocol: <strong>3-4 Sets · 12-15 Reps</strong></span>
+      </div>
+    </div>
+
+    <!-- Execution Steps -->
+    <div class="steps-section">
+      <span class="steps-title">Step-by-Step Form &amp; Execution</span>
+      <div class="step-card">
+        <span class="step-num">1</span>
+        <span class="step-text">Set pulley to highest notch and attach double-rope attachment.</span>
+      </div>
+      <div class="step-card">
+        <span class="step-num">2</span>
+        <span class="step-text">Grip ropes with neutral grip and tuck elbows tightly against ribcage.</span>
+      </div>
+      <div class="step-card">
+        <span class="step-num">3</span>
+        <span class="step-text">Push rope straight down, spreading ends apart at bottom for maximum squeeze.</span>
+      </div>
+      <div class="step-card">
+        <span class="step-num">4</span>
+        <span class="step-text">Control return to a 90-degree elbow bend over 2 seconds.</span>
+      </div>
+    </div>
+
+    <!-- Action Button -->
+    <button class="btn-log">➕ Log to Workout Tracker</button>
+
+  </div>
+
+</body>
+</html>
