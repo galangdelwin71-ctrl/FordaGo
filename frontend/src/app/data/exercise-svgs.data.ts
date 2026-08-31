@@ -15,6 +15,21 @@ export const EXERCISE_RAW_SVGS: Record<string, string> = {
 export function getExerciseSvgHtml(keyOrFilename: string | undefined): string {
   if (!keyOrFilename) return EXERCISE_RAW_SVGS['squat_rack_squats.svg'] || '';
   
+  // 0. If it's a data:image/svg+xml;base64,... decode directly
+  if (keyOrFilename.startsWith('data:image/svg+xml;base64,')) {
+    try {
+      const base64Data = keyOrFilename.replace('data:image/svg+xml;base64,', '');
+      return atob(base64Data);
+    } catch {
+      // Fallback
+    }
+  }
+
+  // 0.1 If it's already raw SVG XML markup
+  if (keyOrFilename.trim().startsWith('<svg')) {
+    return keyOrFilename;
+  }
+  
   // 1. Direct filename match
   const filename = keyOrFilename.split('/').pop() || '';
   if (EXERCISE_RAW_SVGS[filename]) {

@@ -609,8 +609,8 @@ export class QrScannerPage implements OnInit, OnDestroy {
         id: String(guide.equipmentId),
         name: guide.name,
         category: guide.category,
-        muscles: guide.muscles,
-        warning: guide.warning,
+        muscles: guide.muscles || [],
+        warning: guide.warning || '',
         steps: guide.variations[0]?.steps || []
       };
       this.tutorialModalOpen = true;
