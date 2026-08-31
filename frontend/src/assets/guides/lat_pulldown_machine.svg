@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0.9" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#ec4899" />
+    </linearGradient>
+    <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000" flood-opacity="0.45" />
+    </filter>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="800" height="480" fill="url(#bgGrad)" rx="24" />
+  
+  <!-- Subtle Grid Pattern -->
+  <g opacity="0.05" stroke="#ffffff" stroke-width="1">
+    <line x1="40" y1="0" x2="40" y2="480" />
+    <line x1="200" y1="0" x2="200" y2="480" />
+    <line x1="400" y1="0" x2="400" y2="480" stroke-dasharray="4 4" opacity="0.4" />
+    <line x1="600" y1="0" x2="600" y2="480" />
+    <line x1="760" y1="0" x2="760" y2="480" />
+    <line x1="0" y1="60" x2="800" y2="60" />
+    <line x1="0" y1="420" x2="800" y2="420" />
+  </g>
+
+  <!-- Title Badge -->
+  <g transform="translate(40, 24)">
+    <rect width="720" height="44" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1.5" />
+    <circle cx="24" cy="22" r="7" fill="#6366f1" />
+    <text x="42" y="27" fill="#f8fafc" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" letter-spacing="0.5">WIDE-GRIP LAT PULLDOWN</text>
+    <text x="700" y="27" text-anchor="end" fill="#94a3b8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="500">Target: Latissimus Dorsi & Biceps</text>
+  </g>
+
+  <!-- LEFT PANEL: STARTING POSITION -->
+  <g transform="translate(40, 84)">
+    <rect width="345" height="340" rx="18" fill="url(#cardGrad)" stroke="#334155" stroke-width="1.5" filter="url(#cardShadow)" />
+    <!-- Step Badge -->
+    <rect x="18" y="16" width="130" height="28" rx="8" fill="#0f172a" stroke="#475569" stroke-width="1" />
+    <circle cx="32" cy="30" r="5" fill="#38bdf8" />
+    <text x="46" y="35" fill="#38bdf8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="700">1. START FORM</text>
+    
+    <!-- Floor Platform -->
+    <line x1="30" y1="290" x2="315" y2="290" stroke="#475569" stroke-width="3" stroke-linecap="round" />
+    <ellipse cx="172" cy="290" rx="120" ry="14" fill="#38bdf8" opacity="0.08" />
+
+    <!-- Left Graphic Illustration -->
+    <g transform="translate(40, 20)">
+      
+      <!-- Machine Frame & Top Pulley -->
+      <rect x="120" y="30" width="16" height="240" fill="#64748b" />
+      <rect x="80" y="30" width="95" height="12" fill="#475569" />
+      <circle cx="85" cy="36" r="8" fill="#94a3b8" />
+      <line x1="85" y1="36" x2="85" y2="70" stroke="#cbd5e1" stroke-width="2.5" />
+      <!-- Wide Bar -->
+      <line x1="30" y1="70" x2="140" y2="70" stroke="#f59e0b" stroke-width="6" stroke-linecap="round" />
+      <!-- Seat & Thigh Pad -->
+      <rect x="65" y="200" width="40" height="12" fill="#1e293b" rx="3" />
+      <rect x="75" y="165" width="20" height="10" fill="#475569" rx="2" />
+      
+      <!-- Athlete Seated High Reach -->
+      <circle cx="85" cy="120" r="16" fill="#fbcfe8" />
+      <rect x="75" y="140" width="20" height="60" fill="#3b82f6" rx="4" />
+      <!-- Arms straight up -->
+      <path d="M 75 145 L 50 75 M 95 145 L 120 75" stroke="#f472b6" stroke-width="7" stroke-linecap="round" />
+      <path d="M 75 200 L 75 270 M 95 200 L 95 270" stroke="#1e293b" stroke-width="12" stroke-linecap="round" />
+    
+    </g>
+
+    <!-- Pose Label -->
+    <text x="172" y="322" text-anchor="middle" fill="#94a3b8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="500">Arms extended with wide overhand grip</text>
+  </g>
+
+  <!-- CENTER MOTION ARROW -->
+  <g transform="translate(388, 240)">
+    <circle cx="12" cy="12" r="22" fill="#1e293b" stroke="#475569" stroke-width="1.5" />
+    <path d="M 4 12 L 18 12 M 13 6 L 19 12 L 13 18" stroke="#6366f1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+  </g>
+
+  <!-- RIGHT PANEL: FINISHING POSITION -->
+  <g transform="translate(415, 84)">
+    <rect width="345" height="340" rx="18" fill="url(#cardGrad)" stroke="#334155" stroke-width="1.5" filter="url(#cardShadow)" />
+    <!-- Step Badge -->
+    <rect x="18" y="16" width="136" height="28" rx="8" fill="#0f172a" stroke="#475569" stroke-width="1" />
+    <circle cx="32" cy="30" r="5" fill="#ec4899" />
+    <text x="46" y="35" fill="#ec4899" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="700">2. FINISH DRIVE</text>
+    
+    <!-- Floor Platform -->
+    <line x1="30" y1="290" x2="315" y2="290" stroke="#475569" stroke-width="3" stroke-linecap="round" />
+    <ellipse cx="172" cy="290" rx="120" ry="14" fill="#ec4899" opacity="0.1" />
+
+    <!-- Right Graphic Illustration -->
+    <g transform="translate(40, 20)">
+      
+      <!-- Machine Frame & Top Pulley -->
+      <rect x="120" y="30" width="240" height="240" fill="none" />
+      <rect x="120" y="30" width="16" height="240" fill="#64748b" />
+      <rect x="80" y="30" width="95" height="12" fill="#475569" />
+      <circle cx="85" cy="36" r="8" fill="#94a3b8" />
+      <line x1="85" y1="36" x2="85" y2="125" stroke="#cbd5e1" stroke-width="2.5" />
+      <!-- Wide Bar Pulled Down -->
+      <line x1="30" y1="125" x2="140" y2="125" stroke="#f59e0b" stroke-width="6" stroke-linecap="round" />
+      <!-- Seat & Thigh Pad -->
+      <rect x="65" y="200" width="40" height="12" fill="#1e293b" rx="3" />
+      
+      <!-- Athlete Seated Contracting Lats -->
+      <circle cx="85" cy="120" r="16" fill="#fbcfe8" />
+      <rect x="75" y="140" width="20" height="60" fill="#3b82f6" rx="4" />
+      <!-- Arms Pulled Down -->
+      <path d="M 75 145 L 45 155 L 45 125 M 95 145 L 125 155 L 125 125" stroke="#6366f1" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+      <!-- Lat Muscle Activation -->
+      <ellipse cx="65" cy="150" rx="8" ry="14" fill="#ec4899" opacity="0.6" />
+      <ellipse cx="105" cy="150" rx="8" ry="14" fill="#ec4899" opacity="0.6" />
+      <path d="M 75 200 L 75 270 M 95 200 L 95 270" stroke="#1e293b" stroke-width="12" stroke-linecap="round" />
+    
+    </g>
+
+    <!-- Pose Label -->
+    <text x="172" y="322" text-anchor="middle" fill="#cbd5e1" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="600">Pull bar to upper collarbone, elbows down</text>
+  </g>
+
+  <!-- Footer Info Line -->
+  <g transform="translate(40, 442)">
+    <text x="0" y="16" fill="#64748b" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="500">AFFORDA Gym Training Guide · Keep core tight &amp; breathe steadily</text>
+    <text x="720" y="16" text-anchor="end" fill="#fbbf24" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600">3-4 Sets · 8-12 Reps</text>
+  </g>
+</svg>

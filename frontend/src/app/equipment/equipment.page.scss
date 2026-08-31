@@ -284,54 +284,66 @@ ion-content {
 .equipment-modal-card {
   width: 100%;
   max-width: 480px;
-  max-height: 88vh;        // Never taller than 88% of screen height
-  overflow-y: auto;         // Internal scroll if content overflows
-  background:
-    radial-gradient(circle at top left, rgba(232, 255, 71, 0.08), transparent 30%),
-    #101010;
+  max-height: 90vh;
+  background: #0d1117;
+  border: 1px solid #1e293b;
   color: #ffffff;
-  padding: 16px 16px 20px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
   border-radius: 24px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
-}
-
-.modal-sheet {
-  min-height: 100%;
-  background:
-    radial-gradient(circle at top left, rgba(232, 255, 71, 0.08), transparent 30%),
-    #101010;
-  color: #ffffff;
-  padding: 18px 18px 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
 }
 
 .modal-header {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #1e293b;
+  flex-shrink: 0;
+
+  .modal-title {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+    color: #ffd600;
+    text-transform: uppercase;
+  }
+
+  .modal-dismiss-btn {
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #94a3b8;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    ion-icon { font-size: 18px; }
+    &:hover { color: #ffffff; }
+  }
 }
 
-.modal-title {
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: 0.4px;
-  color: #f2f2f2;
-  text-transform: uppercase;
+.modal-scroll-body {
+  overflow-y: auto;
+  padding: 12px 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
 }
 
 .modal-photo-wrap {
   width: 100%;
-  height: 160px;           // Reduced from 240px → compact but still visual
+  height: 160px;
   border-radius: 16px;
   overflow: hidden;
-  background: #1a1a1a;
-  border: 1px solid #262626;
-  flex-shrink: 0;           // Don't squeeze the photo
+  background: #161b22;
+  border: 1px solid #30363d;
+  flex-shrink: 0;
 
   .modal-photo {
     width: 100%;
@@ -348,13 +360,13 @@ ion-content {
 
     ion-icon {
       font-size: 42px;
-      color: #2a2a2a;
+      color: #30363d;
     }
   }
 }
 
 .modal-name {
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 800;
   color: #fff;
   letter-spacing: -0.3px;
@@ -363,41 +375,164 @@ ion-content {
 .modal-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 
   .modal-cat {
     font-size: 11px;
-    font-weight: 800;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.8px;
-    color: #f0f0f0;
-    background: #1f1f1f;
-    border: 1px solid #2a2a2a;
-    padding: 5px 10px;
+    letter-spacing: 0.6px;
+    color: #94a3b8;
+    background: #1e293b;
+    border: 1px solid #334155;
+    padding: 4px 10px;
     border-radius: 999px;
   }
 
   .modal-status {
     font-size: 11px;
     font-weight: 800;
-    padding: 5px 10px;
+    padding: 4px 10px;
     border-radius: 999px;
 
     &.available {
-      background: rgba(0, 214, 143, 0.14);
-      color: #00d68f;
+      background: rgba(34, 197, 94, 0.14);
+      color: #22c55e;
+      border: 1px solid rgba(34, 197, 94, 0.25);
     }
     &.unavailable {
-      background: rgba(255, 68, 97, 0.14);
-      color: #ff4461;
+      background: rgba(239, 68, 68, 0.14);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.25);
     }
   }
 }
 
+.variation-selector-wrap {
+  margin-top: 4px;
+  .selector-title {
+    display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 800;
+    letter-spacing: 0.6px; color: #94a3b8; text-transform: uppercase; margin-bottom: 7px;
+    ion-icon { font-size: 13px; color: #ffd600; }
+  }
+  .variation-pills-scroll {
+    display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;
+    scrollbar-width: none; &::-webkit-scrollbar { display: none; }
+  }
+  .variation-pill {
+    flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 20px; font-size: 11px; font-weight: 700;
+    background: #161b22; border: 1.5px solid #30363d;
+    color: #94a3b8; cursor: pointer; transition: all 0.2s ease;
+    .pill-dot { width: 6px; height: 6px; border-radius: 50%; background: #ffd600; }
+    &.active {
+      background: rgba(255, 214, 0, 0.12); border-color: rgba(255, 214, 0, 0.4);
+      color: #ffd600; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+  }
+}
+
+.illustration-guide-card {
+  background: #0f172a;
+  border: 1.5px solid #334155;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+
+  .illustration-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; background: #1e293b; border-bottom: 1px solid #334155;
+    .illustration-title { font-size: 13px; font-weight: 800; color: #f8fafc; }
+    .difficulty-tag {
+      font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 12px;
+      letter-spacing: 0.3px; text-transform: uppercase;
+      &.beginner { background: rgba(34, 197, 94, 0.18); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+      &.intermediate { background: rgba(234, 179, 8, 0.18); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.3); }
+      &.advanced { background: rgba(239, 68, 68, 0.18); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+      &.all-levels { background: rgba(56, 189, 248, 0.18); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+    }
+  }
+
+  .illustration-media-box {
+    width: 100%;
+    background: #090d16;
+    display: flex; align-items: center; justify-content: center;
+    border-bottom: 1px solid #1e293b;
+    .pose-vector-graphic {
+      width: 100%; height: auto; max-height: 200px; display: block; object-fit: contain;
+    }
+  }
+
+  .target-muscles-box {
+    padding: 12px 14px; background: #111827;
+    .muscle-line {
+      display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px;
+      &:last-child { margin-bottom: 0; }
+    }
+    .muscle-role-label {
+      font-size: 9px; font-weight: 800; letter-spacing: 0.6px; color: #94a3b8; text-transform: uppercase;
+    }
+    .primary-badge {
+      display: inline-block; font-size: 12px; font-weight: 800; color: #38bdf8;
+      background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.25);
+      padding: 4px 10px; border-radius: 8px;
+    }
+    .sec-tags-row { display: flex; flex-wrap: wrap; gap: 5px; }
+    .sec-muscle-pill {
+      font-size: 10px; font-weight: 600; color: #cbd5e1;
+      background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 2px 8px; border-radius: 12px;
+    }
+  }
+
+  .sets-reps-ribbon {
+    display: flex; align-items: center; gap: 6px; padding: 7px 14px;
+    background: rgba(245, 158, 11, 0.08); border-top: 1px solid rgba(245, 158, 11, 0.18);
+    font-size: 11px; color: #fbbf24;
+    ion-icon { font-size: 13px; }
+    strong { color: #fef08a; }
+  }
+}
+
+.tut-section {
+  .tut-section-title {
+    display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 800;
+    color: #94a3b8; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px;
+    ion-icon { font-size: 13px; color: #ffd600; }
+  }
+  .tut-step-list { display: flex; flex-direction: column; gap: 7px; }
+  .tut-step-card {
+    display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px;
+    background: #161b22; border: 1px solid #30363d;
+    border-radius: 10px;
+    .step-num-circle {
+      width: 22px; height: 22px; border-radius: 50%; background: rgba(255, 214, 0, 0.12);
+      border: 1px solid rgba(255, 214, 0, 0.3); font-size: 10px; font-weight: 800;
+      color: #ffd600; display: grid; place-items: center; flex-shrink: 0; margin-top: 1px;
+    }
+    .step-desc { font-size: 11.5px; color: #e2e8f0; line-height: 1.55; }
+  }
+}
+
+.safety-card {
+  background: rgba(239, 68, 68, 0.07);
+  border: 1px solid rgba(239, 68, 68, 0.22);
+  border-radius: 12px; padding: 10px 12px;
+  .safety-card-header {
+    display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 800;
+    color: #f87171; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
+    ion-icon { font-size: 14px; }
+  }
+  .safety-list {
+    margin: 0; padding-left: 16px; font-size: 11px; color: #cbd5e1; line-height: 1.5;
+    li { margin-bottom: 4px; &:last-child { margin-bottom: 0; } }
+  }
+}
+
 .info-card {
-  background: #141414;
-  border: 1px solid #262626;
+  background: #161b22;
+  border: 1px solid #30363d;
   border-radius: 12px;
   padding: 10px 12px;
 }
@@ -422,18 +557,36 @@ ion-content {
   }
 }
 
-.close-modal-btn {
-  width: 100%;
-  margin-top: 4px;
-  padding: 12px;
-  background: linear-gradient(135deg, #e8ff47, #ffd600);
-  border: none;
-  border-radius: 12px;
-  color: #0d0d0d;
-  font-size: 14px;
-  font-weight: 800;
-  cursor: pointer;
+.modal-actions-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #1e293b;
   flex-shrink: 0;
+
+  .btn-log-workout-gold {
+    width: 100%; height: 44px; border-radius: 12px;
+    background: linear-gradient(135deg, #ffd600 0%, #eab308 100%);
+    border: none; color: #000000; font-size: 13px; font-weight: 850;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    box-shadow: 0 4px 16px rgba(234, 179, 8, 0.3); cursor: pointer;
+    ion-icon { font-size: 18px; }
+    &:active { transform: scale(0.98); opacity: 0.9; }
+  }
+
+  .close-modal-btn {
+    width: 100%;
+    height: 38px;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    color: #94a3b8;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    &:active { background: #1e293b; color: #ffffff; }
+  }
 }
 
 // -- Animations ----------------------------------------

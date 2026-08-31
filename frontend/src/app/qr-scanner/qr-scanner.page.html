@@ -476,7 +476,7 @@
   </ng-template>
 </ion-modal>
 
-<!-- ─── Equipment Tutorial Modal ─────────────────────────── -->
+<!-- ─── Equipment Tutorial & Exercise Guide Modal ─────────────────────────── -->
 <ion-modal
   [isOpen]="tutorialModalOpen"
   (didDismiss)="closeTutorialModal()"
@@ -486,37 +486,160 @@
   <ng-template>
     <div class="modal-sheet tutorial-sheet">
 
-      <div class="equip-header" *ngIf="activeEquipment">
+      <!-- Modal Top Bar -->
+      <div class="tut-modal-top">
+        <div class="tut-brand-badge">
+          <ion-icon name="barbell-outline"></ion-icon>
+          <span>AFFORDA GYM GUIDE</span>
+        </div>
+        <button type="button" class="tut-close-icon-btn" (click)="closeTutorialModal()" aria-label="Close guide">
+          <ion-icon name="close-outline"></ion-icon>
+        </button>
+      </div>
+
+      <!-- Equipment Header -->
+      <div class="equip-header" *ngIf="activeFullGuide || activeEquipment">
         <div class="equip-icon-big">
-          <ion-icon class="equip-emoji" name="barbell-outline"></ion-icon>
+          <ion-icon class="equip-emoji" name="barbell"></ion-icon>
         </div>
-        <div>
-          <div class="equip-name">{{ activeEquipment.name }}</div>
-          <div class="equip-cat">{{ activeEquipment.category }}</div>
-        </div>
-      </div>
-
-      <div class="warning-box" *ngIf="activeEquipment">
-        <ion-icon class="warning-emoji" name="warning-outline"></ion-icon>
-        <div class="warning-text">{{ activeEquipment.warning }}</div>
-      </div>
-
-      <div class="tut-section" *ngIf="activeEquipment">
-        <div class="tut-section-title">Muscles Worked</div>
-        <div class="muscle-tags">
-          <span class="muscle-tag" *ngFor="let m of activeEquipment.muscles">{{ m }}</span>
+        <div class="equip-header-text">
+          <div class="equip-name">{{ activeFullGuide?.name || activeEquipment?.name }}</div>
+          <div class="equip-meta-row">
+            <span class="equip-cat">{{ activeFullGuide?.category || activeEquipment?.category }}</span>
+            <span class="equip-status-pill available">
+              <span class="status-dot"></span>
+              <span>{{ (activeFullGuide?.status || 'available') | uppercase }}</span>
+            </span>
+          </div>
         </div>
       </div>
 
-      <div class="tut-section" *ngIf="activeEquipment">
-        <div class="tut-section-title">How to Use</div>
-        <div class="tut-step" *ngFor="let step of activeEquipment.steps; let j = index">
-          <span class="step-num">{{ j + 1 }}</span>
-          <span class="step-text">{{ step }}</span>
+      <!-- Available Weights Banner if specified -->
+      <div class="weights-banner" *ngIf="activeFullGuide?.weightScale">
+        <ion-icon name="scale-outline"></ion-icon>
+        <span>Available Weights: <strong>{{ activeFullGuide?.weightScale }}</strong></span>
+      </div>
+
+      <!-- ── Dynamic Exercise Variations Selector ── -->
+      <div class="variation-selector-wrap" *ngIf="activeFullGuide && activeFullGuide.variations && activeFullGuide.variations.length > 1">
+        <div class="selector-title">
+          <ion-icon name="swap-horizontal-outline"></ion-icon>
+          <span>SELECT WORKOUT EXERCISE:</span>
+        </div>
+        <div class="variation-pills-scroll">
+          <button
+            type="button"
+            class="variation-pill"
+            *ngFor="let v of activeFullGuide.variations; let idx = index"
+            [class.active]="activeVariationIndex === idx"
+            (click)="selectVariation(idx)"
+          >
+            <span class="pill-dot" *ngIf="activeVariationIndex === idx"></span>
+            <span>{{ v.title }}</span>
+          </button>
         </div>
       </div>
 
-      <button class="tut-done-btn" (click)="closeTutorialModal()">Got it</button>
+      <!-- ── Visual 2-Pose Illustration Guide Card ── -->
+      <ng-container *ngIf="activeVariation as curVar">
+        <div class="illustration-guide-card">
+          <div class="illustration-header">
+            <div class="illustration-title">{{ curVar.title }}</div>
+            <span class="difficulty-tag" [ngClass]="curVar.difficulty.toLowerCase().replace(' ', '-')">
+              {{ curVar.difficulty }}
+            </span>
+          </div>
+
+          <!-- SVG / Vector Visual Graphic -->
+          <div class="illustration-media-box">
+            <img
+              [src]="curVar.illustrationUrl"
+              [alt]="curVar.title + ' form guide'"
+              class="pose-vector-graphic"
+            />
+          </div>
+
+          <!-- Target Muscles Badges -->
+          <div class="target-muscles-box">
+            <div class="muscle-line primary">
+              <span class="muscle-role-label">PRIMARY TARGET:</span>
+              <span class="muscle-val-badge primary-badge">{{ curVar.targetMuscle }}</span>
+            </div>
+            <div class="muscle-line secondary" *ngIf="curVar.secondaryMuscles && curVar.secondaryMuscles.length">
+              <span class="muscle-role-label">SECONDARY / STABILIZERS:</span>
+              <div class="sec-tags-row">
+                <span class="sec-muscle-pill" *ngFor="let m of curVar.secondaryMuscles">{{ m }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="sets-reps-ribbon">
+            <ion-icon name="flame-outline"></ion-icon>
+            <span>Recommended Protocol: <strong>{{ curVar.recommendedSetsReps }}</strong></span>
+          </div>
+        </div>
+
+        <!-- ── Step-by-Step Numbered Execution Cards ── -->
+        <div class="tut-section" *ngIf="curVar.steps && curVar.steps.length">
+          <div class="tut-section-title">
+            <ion-icon name="list-outline"></ion-icon>
+            <span>Step-by-Step Form &amp; Execution</span>
+          </div>
+          <div class="tut-step-list">
+            <div class="tut-step-card" *ngFor="let step of curVar.steps; let j = index">
+              <span class="step-num-circle">{{ j + 1 }}</span>
+              <span class="step-desc">{{ step }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Safety Warnings & Injury Prevention ── -->
+        <div class="safety-card" *ngIf="curVar.safetyWarnings && curVar.safetyWarnings.length">
+          <div class="safety-card-header">
+            <ion-icon name="shield-checkmark-outline"></ion-icon>
+            <span>Safety Tips &amp; Injury Prevention</span>
+          </div>
+          <ul class="safety-list">
+            <li *ngFor="let warn of curVar.safetyWarnings">{{ warn }}</li>
+          </ul>
+        </div>
+      </ng-container>
+
+      <!-- Fallback steps & warning if basic equipment -->
+      <ng-container *ngIf="!activeVariation && activeEquipment as equip">
+        <div class="tut-section" *ngIf="equip.steps && equip.steps.length">
+          <div class="tut-section-title">
+            <ion-icon name="list-outline"></ion-icon>
+            <span>How to Use</span>
+          </div>
+          <div class="tut-step-list">
+            <div class="tut-step-card" *ngFor="let step of equip.steps; let j = index">
+              <span class="step-num-circle">{{ j + 1 }}</span>
+              <span class="step-desc">{{ step }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="safety-card" *ngIf="equip.warning">
+          <div class="safety-card-header">
+            <ion-icon name="shield-checkmark-outline"></ion-icon>
+            <span>Safety Tips &amp; Injury Prevention</span>
+          </div>
+          <div class="safety-text">{{ equip.warning }}</div>
+        </div>
+      </ng-container>
+
+      <!-- ── Action Buttons ── -->
+      <div class="modal-actions-row">
+        <button type="button" class="btn-log-workout-gold" (click)="logWorkoutFromGuide()">
+          <ion-icon name="add-circle-outline"></ion-icon>
+          <span>Log to Workout / PR Tracker</span>
+        </button>
+        <button type="button" class="tut-done-btn" (click)="closeTutorialModal()">
+          Close Guide
+        </button>
+      </div>
+
     </div>
   </ng-template>
 </ion-modal>

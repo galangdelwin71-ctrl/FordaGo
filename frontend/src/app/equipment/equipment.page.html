@@ -159,38 +159,140 @@
 <!-- Equipment Detail Overlay -->
 <div class="equipment-modal-backdrop" *ngIf="modalOpen" (click)="closeModal()">
   <div class="equipment-modal-card" *ngIf="selectedItem" (click)="$event.stopPropagation()">
+    
     <div class="modal-header">
-      <div class="modal-title">Equipment Details</div>
+      <div class="modal-title">Equipment Guide &amp; Form Tutorial</div>
+      <button type="button" class="modal-dismiss-btn" (click)="closeModal()" aria-label="Close">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
     </div>
 
-    <div class="modal-photo-wrap">
-      <img *ngIf="selectedItem.image_url" [src]="resolveImg(selectedItem.image_url)" alt="{{ selectedItem.name }}" class="modal-photo" />
-      <div *ngIf="!selectedItem.image_url" class="modal-photo-placeholder">
-        <ion-icon name="barbell-outline"></ion-icon>
+    <!-- Scrollable Body -->
+    <div class="modal-scroll-body">
+      
+      <!-- Photo Wrap -->
+      <div class="modal-photo-wrap">
+        <img *ngIf="selectedItem.image_url" [src]="resolveImg(selectedItem.image_url)" alt="{{ selectedItem.name }}" class="modal-photo" />
+        <div *ngIf="!selectedItem.image_url" class="modal-photo-placeholder">
+          <ion-icon name="barbell-outline"></ion-icon>
+        </div>
       </div>
+
+      <div class="modal-name">{{ selectedItem.name }}</div>
+
+      <div class="modal-row">
+        <span class="modal-cat" *ngIf="selectedItem.category">{{ selectedItem.category }}</span>
+        <span class="modal-status"
+              [class.available]="selectedItem.status === 'available'"
+              [class.unavailable]="selectedItem.status !== 'available'">
+          {{ selectedItem.status === 'available' ? 'Available' : 'Unavailable' }}
+        </span>
+      </div>
+
+      <div class="info-card" *ngIf="selectedItem.weight_scale">
+        <div class="info-label">Available Weights</div>
+        <div class="info-value">{{ selectedItem.weight_scale }}</div>
+      </div>
+
+      <!-- Exercise Variation Tabs -->
+      <div class="variation-selector-wrap" *ngIf="selectedGuide && selectedGuide.variations && selectedGuide.variations.length > 1">
+        <div class="selector-title">
+          <ion-icon name="swap-horizontal-outline"></ion-icon>
+          <span>SELECT WORKOUT EXERCISE:</span>
+        </div>
+        <div class="variation-pills-scroll">
+          <button
+            type="button"
+            class="variation-pill"
+            *ngFor="let v of selectedGuide.variations; let idx = index"
+            [class.active]="activeVariationIndex === idx"
+            (click)="selectVariation(idx)"
+          >
+            <span class="pill-dot" *ngIf="activeVariationIndex === idx"></span>
+            <span>{{ v.title }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Visual Pose Illustration Card -->
+      <ng-container *ngIf="activeVariation as curVar">
+        <div class="illustration-guide-card">
+          <div class="illustration-header">
+            <div class="illustration-title">{{ curVar.title }}</div>
+            <span class="difficulty-tag" [ngClass]="curVar.difficulty.toLowerCase().replace(' ', '-')">
+              {{ curVar.difficulty }}
+            </span>
+          </div>
+
+          <div class="illustration-media-box">
+            <img
+              [src]="curVar.illustrationUrl"
+              [alt]="curVar.title + ' form guide'"
+              class="pose-vector-graphic"
+            />
+          </div>
+
+          <!-- Target Muscles Badges -->
+          <div class="target-muscles-box">
+            <div class="muscle-line primary">
+              <span class="muscle-role-label">PRIMARY TARGET:</span>
+              <span class="muscle-val-badge primary-badge">{{ curVar.targetMuscle }}</span>
+            </div>
+            <div class="muscle-line secondary" *ngIf="curVar.secondaryMuscles && curVar.secondaryMuscles.length">
+              <span class="muscle-role-label">SECONDARY / STABILIZERS:</span>
+              <div class="sec-tags-row">
+                <span class="sec-muscle-pill" *ngFor="let m of curVar.secondaryMuscles">{{ m }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="sets-reps-ribbon">
+            <ion-icon name="flame-outline"></ion-icon>
+            <span>Recommended Protocol: <strong>{{ curVar.recommendedSetsReps }}</strong></span>
+          </div>
+        </div>
+
+        <!-- Step-by-Step Form & Execution -->
+        <div class="tut-section" *ngIf="curVar.steps && curVar.steps.length">
+          <div class="tut-section-title">
+            <ion-icon name="list-outline"></ion-icon>
+            <span>Step-by-Step Form &amp; Execution</span>
+          </div>
+          <div class="tut-step-list">
+            <div class="tut-step-card" *ngFor="let step of curVar.steps; let j = index">
+              <span class="step-num-circle">{{ j + 1 }}</span>
+              <span class="step-desc">{{ step }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Safety Tips -->
+        <div class="safety-card" *ngIf="curVar.safetyWarnings && curVar.safetyWarnings.length">
+          <div class="safety-card-header">
+            <ion-icon name="shield-checkmark-outline"></ion-icon>
+            <span>Safety Tips &amp; Injury Prevention</span>
+          </div>
+          <ul class="safety-list">
+            <li *ngFor="let warn of curVar.safetyWarnings">{{ warn }}</li>
+          </ul>
+        </div>
+      </ng-container>
+
+      <!-- Description / Overview if present -->
+      <div class="info-card" *ngIf="selectedItem.description">
+        <div class="info-label">Equipment Overview</div>
+        <div class="info-value">{{ selectedItem.description }}</div>
+      </div>
+
     </div>
 
-    <div class="modal-name">{{ selectedItem.name }}</div>
-
-    <div class="modal-row">
-      <span class="modal-cat" *ngIf="selectedItem.category">{{ selectedItem.category }}</span>
-      <span class="modal-status"
-            [class.available]="selectedItem.status === 'available'"
-            [class.unavailable]="selectedItem.status !== 'available'">
-        {{ selectedItem.status === 'available' ? 'Available' : 'Unavailable' }}
-      </span>
+    <div class="modal-actions-row">
+      <button type="button" class="btn-log-workout-gold" (click)="logWorkoutFromGuide()">
+        <ion-icon name="add-circle-outline"></ion-icon>
+        <span>Log to Workout Tracker</span>
+      </button>
+      <button class="close-modal-btn" (click)="closeModal()" type="button">Close Guide</button>
     </div>
 
-    <div class="info-card" *ngIf="selectedItem.weight_scale">
-      <div class="info-label">Available weights</div>
-      <div class="info-value">{{ selectedItem.weight_scale }}</div>
-    </div>
-
-    <div class="info-card" *ngIf="selectedItem.description">
-      <div class="info-label">Description</div>
-      <div class="info-value">{{ selectedItem.description }}</div>
-    </div>
-
-    <button class="close-modal-btn" (click)="closeModal()" type="button">Close</button>
   </div>
 </div>

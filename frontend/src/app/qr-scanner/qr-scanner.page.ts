@@ -21,6 +21,8 @@ import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refres
 import { OnboardingService, TourStep } from '../services/onboarding.service';
 import { API_URL, resolveImageUrl } from '../config/api.config';
 import { ToastService } from '../services/toast.service';
+import { EquipmentGuideService } from '../services/equipment-guide.service';
+import { EquipmentFullGuide, ExerciseVariation } from '../data/equipment-guides.data';
 
 // ── Interfaces ────────────────────────────────────────────
 
@@ -183,6 +185,25 @@ export class QrScannerPage implements OnInit, OnDestroy {
   // Equipment tutorial modal
   tutorialModalOpen  = false;
   activeEquipment:   EquipmentTutorial | null = null;
+  activeFullGuide:   EquipmentFullGuide | null = null;
+  activeVariationIndex = 0;
+
+  get activeVariation(): ExerciseVariation | null {
+    if (!this.activeFullGuide || !this.activeFullGuide.variations?.length) return null;
+    return this.activeFullGuide.variations[this.activeVariationIndex] || this.activeFullGuide.variations[0];
+  }
+
+  selectVariation(index: number): void {
+    this.activeVariationIndex = index;
+  }
+
+  logWorkoutFromGuide(): void {
+    const equipName = this.activeFullGuide?.name || this.activeEquipment?.name || 'Workout';
+    this.closeTutorialModal();
+    this.router.navigate(['/profile'], {
+      queryParams: { tab: 'records', log: equipName }
+    });
+  }
 
   private html5QrCode: Html5Qrcode | null = null;
 
@@ -214,6 +235,7 @@ export class QrScannerPage implements OnInit, OnDestroy {
     private coachingService: CoachingService,
     private toast: ToastService,
     public onboardingService: OnboardingService,
+    public guideService: EquipmentGuideService,
   ) {}
 
   // ── Header avatar ─────────────────────────────────────
@@ -555,6 +577,35 @@ export class QrScannerPage implements OnInit, OnDestroy {
     }
 
     const normalizedCode = String(decodedText || '').trim().toLowerCase().replace(/^equipment:/, '');
+    
+    // 1. Check in full 46-item Equipment Guide Service
+    const guide = this.guideService.getGuideById(normalizedCode) || this.guideService.getGuideByName(normalizedCode);
+    if (guide) {
+      const now = new Date();
+      const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      this.myLogs = [
+        { type: 'equipment', label: guide.name, time, date: this.formatLogDate(now) },
+        ...this.myLogs,
+      ];
+      this.saveEquipmentScanLog({ id: String(guide.equipmentId), name: guide.name }, decodedText);
+      this.activeFullGuide = guide;
+      this.activeVariationIndex = 0;
+      this.activeEquipment = {
+        id: String(guide.equipmentId),
+        name: guide.name,
+        category: guide.category,
+        muscles: guide.muscles,
+        warning: guide.warning,
+        steps: guide.variations[0]?.steps || []
+      };
+      this.tutorialModalOpen = true;
+      this.isScanning = false;
+      this.isProcessingScan = false;
+      this.scanStatusMessage = `Equipment guide opened for ${guide.name}.`;
+      return;
+    }
+
+    // 2. Fallback to basic equipment library
     const equipment = this.equipmentLibrary.find(item =>
       item.id === normalizedCode || item.name.toLowerCase() === normalizedCode
     );
@@ -583,6 +634,8 @@ export class QrScannerPage implements OnInit, OnDestroy {
     ];
     this.saveEquipmentScanLog(equipment, decodedText);
     this.activeEquipment = equipment;
+    this.activeFullGuide = this.guideService.getGuideByName(equipment.name);
+    this.activeVariationIndex = 0;
     this.tutorialModalOpen = true;
     this.isScanning = false;
     this.isProcessingScan = false;

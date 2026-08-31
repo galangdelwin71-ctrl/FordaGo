@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0.9" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#38bdf8" />
+    </linearGradient>
+    <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000" flood-opacity="0.45" />
+    </filter>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="800" height="480" fill="url(#bgGrad)" rx="24" />
+  
+  <!-- Subtle Grid Pattern -->
+  <g opacity="0.05" stroke="#ffffff" stroke-width="1">
+    <line x1="40" y1="0" x2="40" y2="480" />
+    <line x1="200" y1="0" x2="200" y2="480" />
+    <line x1="400" y1="0" x2="400" y2="480" stroke-dasharray="4 4" opacity="0.4" />
+    <line x1="600" y1="0" x2="600" y2="480" />
+    <line x1="760" y1="0" x2="760" y2="480" />
+    <line x1="0" y1="60" x2="800" y2="60" />
+    <line x1="0" y1="420" x2="800" y2="420" />
+  </g>
+
+  <!-- Title Badge -->
+  <g transform="translate(40, 24)">
+    <rect width="720" height="44" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1.5" />
+    <circle cx="24" cy="22" r="7" fill="#10b981" />
+    <text x="42" y="27" fill="#f8fafc" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" letter-spacing="0.5">BARBELL BACK SQUAT</text>
+    <text x="700" y="27" text-anchor="end" fill="#94a3b8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="500">Target: Quadriceps, Glutes & Core</text>
+  </g>
+
+  <!-- LEFT PANEL: STARTING POSITION -->
+  <g transform="translate(40, 84)">
+    <rect width="345" height="340" rx="18" fill="url(#cardGrad)" stroke="#334155" stroke-width="1.5" filter="url(#cardShadow)" />
+    <!-- Step Badge -->
+    <rect x="18" y="16" width="130" height="28" rx="8" fill="#0f172a" stroke="#475569" stroke-width="1" />
+    <circle cx="32" cy="30" r="5" fill="#38bdf8" />
+    <text x="46" y="35" fill="#38bdf8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="700">1. START FORM</text>
+    
+    <!-- Floor Platform -->
+    <line x1="30" y1="290" x2="315" y2="290" stroke="#475569" stroke-width="3" stroke-linecap="round" />
+    <ellipse cx="172" cy="290" rx="120" ry="14" fill="#38bdf8" opacity="0.08" />
+
+    <!-- Left Graphic Illustration -->
+    <g transform="translate(40, 20)">
+      
+      <!-- Squat Cage Posts -->
+      <rect x="40" y="40" width="12" height="230" fill="#64748b" />
+      <rect x="220" y="40" width="12" height="230" fill="#64748b" />
+      <rect x="35" y="160" width="40" height="12" fill="#ef4444" rx="2" />
+      
+      <!-- Athlete Standing -->
+      <circle cx="130" cy="85" r="16" fill="#fbcfe8" />
+      <path d="M 122 105 L 120 180 L 140 180 L 138 105 Z" fill="#3b82f6" />
+      <!-- Bar across traps -->
+      <line x1="80" y1="105" x2="180" y2="105" stroke="#94a3b8" stroke-width="7" stroke-linecap="round" />
+      <circle cx="80" cy="105" r="16" fill="#f59e0b" />
+      <circle cx="180" cy="105" r="16" fill="#f59e0b" />
+      <!-- Legs straight -->
+      <path d="M 124 180 L 120 270 M 136 180 L 140 270" stroke="#1e293b" stroke-width="14" stroke-linecap="round" />
+    
+    </g>
+
+    <!-- Pose Label -->
+    <text x="172" y="322" text-anchor="middle" fill="#94a3b8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="500">Unrack bar across upper traps</text>
+  </g>
+
+  <!-- CENTER MOTION ARROW -->
+  <g transform="translate(388, 240)">
+    <circle cx="12" cy="12" r="22" fill="#1e293b" stroke="#475569" stroke-width="1.5" />
+    <path d="M 4 12 L 18 12 M 13 6 L 19 12 L 13 18" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+  </g>
+
+  <!-- RIGHT PANEL: FINISHING POSITION -->
+  <g transform="translate(415, 84)">
+    <rect width="345" height="340" rx="18" fill="url(#cardGrad)" stroke="#334155" stroke-width="1.5" filter="url(#cardShadow)" />
+    <!-- Step Badge -->
+    <rect x="18" y="16" width="136" height="28" rx="8" fill="#0f172a" stroke="#475569" stroke-width="1" />
+    <circle cx="32" cy="30" r="5" fill="#38bdf8" />
+    <text x="46" y="35" fill="#38bdf8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="700">2. FINISH DRIVE</text>
+    
+    <!-- Floor Platform -->
+    <line x1="30" y1="290" x2="315" y2="290" stroke="#475569" stroke-width="3" stroke-linecap="round" />
+    <ellipse cx="172" cy="290" rx="120" ry="14" fill="#38bdf8" opacity="0.1" />
+
+    <!-- Right Graphic Illustration -->
+    <g transform="translate(40, 20)">
+      
+      <!-- Squat Cage Posts -->
+      <rect x="40" y="40" width="12" height="230" fill="#64748b" />
+      <rect x="220" y="40" width="12" height="230" fill="#64748b" />
+      <rect x="35" y="160" width="40" height="12" fill="#ef4444" rx="2" />
+      
+      <!-- Athlete Deep Squat -->
+      <circle cx="120" cy="135" r="16" fill="#fbcfe8" />
+      <path d="M 112 155 L 95 210 L 115 215 L 128 155 Z" fill="#3b82f6" />
+      <!-- Bar across traps lower -->
+      <line x1="70" y1="155" x2="170" y2="155" stroke="#94a3b8" stroke-width="7" stroke-linecap="round" />
+      <circle cx="70" cy="155" r="16" fill="#10b981" />
+      <circle cx="170" cy="155" r="16" fill="#10b981" />
+      <!-- Legs bent parallel -->
+      <path d="M 100 210 L 145 210 L 140 270" stroke="#10b981" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+      <!-- Quad Activation Glow -->
+      <ellipse cx="120" cy="210" rx="18" ry="10" fill="#10b981" opacity="0.5" />
+    
+    </g>
+
+    <!-- Pose Label -->
+    <text x="172" y="322" text-anchor="middle" fill="#cbd5e1" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="600">Descend to parallel, knees out, drive up</text>
+  </g>
+
+  <!-- Footer Info Line -->
+  <g transform="translate(40, 442)">
+    <text x="0" y="16" fill="#64748b" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="500">AFFORDA Gym Training Guide · Keep core tight &amp; breathe steadily</text>
+    <text x="720" y="16" text-anchor="end" fill="#fbbf24" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600">3-4 Sets · 8-12 Reps</text>
+  </g>
+</svg>

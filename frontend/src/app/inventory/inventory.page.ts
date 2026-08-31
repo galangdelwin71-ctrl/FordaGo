@@ -483,6 +483,7 @@ export class InventoryPage implements OnInit {
     // doc-comment. On later re-entries hydration is already resolved, so
     // this adds no more than a microtask of delay.
     void this.loadProductsWithHydration();
+    this.loadMyOrders();
 
     const user = this.auth.user;
     const name = String(user?.username || '').trim();
@@ -1024,6 +1025,7 @@ export class InventoryPage implements OnInit {
     // failure doesn't keep showing on top of an otherwise-fine list.
     this.orderError = '';
     this.ordersModalOpen = true;
+    this.loadMyOrders();
   }
 
   closeOrders(): void {

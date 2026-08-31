@@ -21,6 +21,8 @@ import { OnboardingService, TourStep } from '../services/onboarding.service';
 import { API_URL, resolveImageUrl } from '../config/api.config';
 import { getCachedData, setCachedData } from '../utils/local-cache.util';
 import { CACHE_KEYS } from '../utils/cache-keys';
+import { EquipmentGuideService } from '../services/equipment-guide.service';
+import { EquipmentFullGuide, ExerciseVariation } from '../data/equipment-guides.data';
 
 export type EquipmentCategory = 'All' | 'Strength' | 'Cardio' | 'Machines' | 'Free Weights' | string;
 
@@ -96,6 +98,26 @@ export class EquipmentPage implements OnInit {
 
   private readonly api = API_URL;
 
+  selectedGuide: EquipmentFullGuide | null = null;
+  activeVariationIndex = 0;
+
+  get activeVariation(): ExerciseVariation | null {
+    if (!this.selectedGuide || !this.selectedGuide.variations?.length) return null;
+    return this.selectedGuide.variations[this.activeVariationIndex] || this.selectedGuide.variations[0];
+  }
+
+  selectVariation(idx: number): void {
+    this.activeVariationIndex = idx;
+  }
+
+  logWorkoutFromGuide(): void {
+    const equipName = this.selectedGuide?.name || this.selectedItem?.name || 'Workout';
+    this.closeModal();
+    this.router.navigate(['/profile'], {
+      queryParams: { tab: 'records', log: equipName }
+    });
+  }
+
   constructor(
     public router: Router,
     private http: HttpClient,
@@ -103,6 +125,7 @@ export class EquipmentPage implements OnInit {
     private coachingNav: CoachingNavService,
     private coachingService: CoachingService,
     public onboardingService: OnboardingService,
+    public guideService: EquipmentGuideService,
   ) {}
 
   // ── Header avatar ───────────────────────────────────
@@ -372,12 +395,16 @@ export class EquipmentPage implements OnInit {
   // ── Modal ─────────────────────────────────────────────
   openModal(item: EquipmentItem): void {
     this.selectedItem = item;
+    this.selectedGuide = this.guideService.getGuideById(item.id) || this.guideService.getGuideByName(item.name);
+    this.activeVariationIndex = 0;
     this.modalOpen    = true;
   }
 
   closeModal(): void {
     this.modalOpen    = false;
     this.selectedItem = null;
+    this.selectedGuide = null;
+    this.activeVariationIndex = 0;
   }
 
   // ── User Info ─────────────────────────────────────────
