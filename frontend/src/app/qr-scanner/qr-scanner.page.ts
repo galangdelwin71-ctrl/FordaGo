@@ -1,7 +1,8 @@
 // qr-scanner.page.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Router } from '@angular/router';
+import { getExerciseSvgHtml } from '../data/exercise-svgs.data';
 import { CommonModule } from '@angular/common';
 import {
   IonContent,
@@ -203,6 +204,13 @@ export class QrScannerPage implements OnInit, OnDestroy {
     return resolveImageUrl(path);
   }
 
+  /** Returns sanitized SVG HTML for native vector rendering. */
+  getSafeSvg(variation: ExerciseVariation | null): SafeHtml {
+    if (!variation) return '';
+    const raw = getExerciseSvgHtml(variation.illustrationUrl || variation.id || variation.title);
+    return this.sanitizer.bypassSecurityTrustHtml(raw);
+  }
+
   logWorkoutFromGuide(): void {
     const equipName = this.activeFullGuide?.name || this.activeEquipment?.name || 'Workout';
     this.closeTutorialModal();
@@ -242,6 +250,7 @@ export class QrScannerPage implements OnInit, OnDestroy {
     private toast: ToastService,
     public onboardingService: OnboardingService,
     public guideService: EquipmentGuideService,
+    private sanitizer: DomSanitizer,
   ) {}
 
   // ── Header avatar ─────────────────────────────────────

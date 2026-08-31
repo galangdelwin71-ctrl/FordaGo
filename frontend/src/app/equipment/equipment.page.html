@@ -225,11 +225,10 @@
           </div>
 
           <div class="illustration-media-box">
-            <img
-              [src]="curVar.illustrationUrl"
-              [alt]="curVar.title + ' form guide'"
-              class="pose-vector-graphic"
-            />
+            <div
+              class="pose-svg-render-wrap"
+              [innerHTML]="getSafeSvg(curVar)"
+            ></div>
           </div>
 
           <!-- Target Muscles Badges -->

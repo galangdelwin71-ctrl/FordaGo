@@ -457,10 +457,32 @@ ion-content {
   .illustration-media-box {
     width: 100%;
     background: #090d16;
-    display: flex; align-items: center; justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border-bottom: 1px solid #1e293b;
+    overflow: hidden;
+
+    .pose-svg-render-wrap {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      svg {
+        width: 100% !important;
+        height: auto !important;
+        max-height: 240px;
+        display: block;
+      }
+    }
+
     .pose-vector-graphic {
-      width: 100%; height: auto; max-height: 200px; display: block; object-fit: contain;
+      width: 100%;
+      height: auto;
+      max-height: 220px;
+      display: block;
+      object-fit: contain;
     }
   }
 

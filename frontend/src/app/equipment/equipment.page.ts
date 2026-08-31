@@ -1,6 +1,7 @@
 // equipment.page.ts
 
 import { Component, OnInit } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -23,6 +24,7 @@ import { getCachedData, setCachedData } from '../utils/local-cache.util';
 import { CACHE_KEYS } from '../utils/cache-keys';
 import { EquipmentGuideService } from '../services/equipment-guide.service';
 import { EquipmentFullGuide, ExerciseVariation } from '../data/equipment-guides.data';
+import { getExerciseSvgHtml } from '../data/exercise-svgs.data';
 
 export type EquipmentCategory = 'All' | 'Strength' | 'Cardio' | 'Machines' | 'Free Weights' | string;
 
@@ -118,6 +120,13 @@ export class EquipmentPage implements OnInit {
     });
   }
 
+  /** Returns sanitized SVG HTML for native vector rendering. */
+  getSafeSvg(variation: ExerciseVariation | null): SafeHtml {
+    if (!variation) return '';
+    const raw = getExerciseSvgHtml(variation.illustrationUrl || variation.id || variation.title);
+    return this.sanitizer.bypassSecurityTrustHtml(raw);
+  }
+
   constructor(
     public router: Router,
     private http: HttpClient,
@@ -126,6 +135,7 @@ export class EquipmentPage implements OnInit {
     private coachingService: CoachingService,
     public onboardingService: OnboardingService,
     public guideService: EquipmentGuideService,
+    private sanitizer: DomSanitizer,
   ) {}
 
   // ── Header avatar ───────────────────────────────────
