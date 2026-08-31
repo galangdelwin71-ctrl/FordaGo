@@ -500,7 +500,13 @@
       <!-- Equipment Header -->
       <div class="equip-header" *ngIf="activeFullGuide || activeEquipment">
         <div class="equip-icon-big">
-          <ion-icon class="equip-emoji" name="barbell"></ion-icon>
+          <img
+            *ngIf="activeFullGuide?.imageUrl"
+            [src]="resolveImg(activeFullGuide?.imageUrl)"
+            class="equip-thumb-img"
+            alt=""
+          />
+          <ion-icon *ngIf="!activeFullGuide?.imageUrl" class="equip-emoji" name="barbell"></ion-icon>
         </div>
         <div class="equip-header-text">
           <div class="equip-name">{{ activeFullGuide?.name || activeEquipment?.name }}</div>
@@ -511,6 +517,19 @@
               <span>{{ (activeFullGuide?.status || 'available') | uppercase }}</span>
             </span>
           </div>
+        </div>
+      </div>
+
+      <!-- Real Machine Photo Card -->
+      <div class="scanned-machine-photo-wrap" *ngIf="activeFullGuide?.imageUrl">
+        <img
+          [src]="resolveImg(activeFullGuide?.imageUrl)"
+          [alt]="(activeFullGuide?.name || 'Equipment') + ' Photo'"
+          class="scanned-machine-photo"
+        />
+        <div class="machine-photo-badge">
+          <ion-icon name="camera-outline"></ion-icon>
+          <span>AFFORDA GYM MACHINE PHOTO</span>
         </div>
       </div>
 

@@ -1,5 +1,6 @@
 // qr-scanner.page.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import {
@@ -195,6 +196,11 @@ export class QrScannerPage implements OnInit, OnDestroy {
 
   selectVariation(index: number): void {
     this.activeVariationIndex = index;
+  }
+
+  /** Resolves relative /storage/... paths to full backend URL. */
+  resolveImg(path: string | null | undefined): string {
+    return resolveImageUrl(path);
   }
 
   logWorkoutFromGuide(): void {
