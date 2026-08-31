@@ -4,6 +4,7 @@
 
   # **FordaGO**
   ### *Smart Gym Management & Interactive Fitness Platform*
+  **AFFORDA Gym – Cabiao Branch**
 
   <p align="center">
     <b>A full-stack, real-time fitness ecosystem connecting Gym Members, Coaches, and Staff into one unified digital gym experience.</b>
@@ -18,7 +19,7 @@
     <a href="#-license"><img src="https://img.shields.io/badge/License-Proprietary-EAB308?style=flat-square" alt="License" /></a>
   </p>
 
-  <sub>Bachelor of Science in Information Technology — Capstone Project<br>Nueva Ecija University of Science and Technology (NEUST), San Isidro Campus</sub>
+  <sub>Bachelor of Science in Information Technology — Capstone Project<br><b>Nueva Ecija University of Science and Technology (NEUST)</b>, San Isidro Campus</sub>
 
 </div>
 
@@ -26,60 +27,62 @@
 
 ## 📌 Project Summary
 
-**FordaGO** is an end-to-end gym digitalization platform engineered to streamline fitness operations, eliminate manual paper logs, and provide interactive training assistance. The system empowers gym-goers with personal workout tracking and direct coaching consultations while equipping gym owners with automated QR attendance, inventory control, and real-time financial reporting.
+**FordaGO** is an end-to-end gym digitalization platform engineered to modernize fitness operations, eliminate manual paper attendance logs, provide interactive equipment orientation, and facilitate real-time trainer-trainee collaboration. Developed specifically for **AFFORDA Gym – Cabiao Branch** (Cabiao, Nueva Ecija), the system empowers gym members with personal workout tracking, on-demand machine execution tutorials, and direct coach consultations, while providing gym owners and staff with automated QR attendance, inventory control, and instant financial and attendance reporting.
 
 ---
 
-## 🏛️ Core Modules & Experience
+## 🏛️ Tri-Tier System Architecture & Experience
 
 ```
                            ┌───────────────────────────────┐
-                           │      FordaGO Ecosystem        │
-                           └──────────────┬────────────────┘
-                                          │
-         ┌────────────────────────────────┼────────────────────────────────┐
-         │                                │                                │
-         ▼                                ▼                                ▼
+                            │      FordaGO Ecosystem        │
+                            └──────────────┬────────────────┘
+                                           │
+          ┌────────────────────────────────┼────────────────────────────────┐
+          │                                │                                │
+          ▼                                ▼                                ▼
 ┌──────────────────┐            ┌──────────────────┐            ┌──────────────────┐
 │   MEMBER APP     │            │   COACH STUDIO   │            │   ADMIN PANEL    │
 │  (Mobile Portal) │            │   (Trainer Hub)  │            │ (Command Center) │
 └────────┬─────────┘            └────────┬─────────┘            └────────┬─────────┘
          │                               │                               │
-         ├─ PR Metric Tracker            ├─ Trainee Roster Management    ├─ QR Attendance Scanner
-         ├─ Split Routine Planner        ├─ 1-on-1 Real-Time Chat        ├─ Pass Verification
-         ├─ Equipment QR Scanner         ├─ Workout Plan Proposals       ├─ Shop POS & GCash Audit
-         ├─ Supplement Shop & GCash      ├─ Public Group Fitness Classes ├─ Equipment Catalog & QRs
-         └─ Interactive App Tour Guides  └─ Weekly Availability Slots    └─ PDF/Excel Export Engine
+         ├─ Personal QR Check-In         ├─ Trainee Roster Management    ├─ Digital QR Turnstile Scanner
+         ├─ PR Metric Tracker            ├─ 1-on-1 Real-Time Chat        ├─ Anti-Pass-Sharing Check
+         ├─ Split Routine Planner        ├─ In-Chat Workout Proposals    ├─ Pass Status & Renewals
+         ├─ Equipment QR Scanner         ├─ Public Group Fitness Classes ├─ Shop POS & GCash Audit
+         ├─ Supplement Shop & GCash      ├─ Weekly Availability Slots    ├─ Equipment Catalog & QRs
+         └─ Interactive App Tour Guides  └─ Trainer Earnings Tracking    └─ PDF/Excel Export Engine
 ```
 
 ---
 
-### 📱 1. Member Mobile Portal
+### 📱 1. Member Mobile Portal (Android APK / Web)
+* **Personal QR Attendance Check-In:** Generate instant personal QR codes for turnstile check-in with live visit history and attendance heatmaps.
 * **Personal Record (PR) Milestones:** Record bench press, deadlift, and squat metrics with automated percentage gain calculators and progress badges.
 * **Weekly Split Planner:** Plan daily workouts (Monday to Sunday) with time duration targets (Min/Hrs), gym floor locations (Floor A/Floor B), and custom exercise builders.
-* **Interactive QR Equipment Scanner:** Scan physical QR codes posted on gym machines to instantly view machine photo previews, targeted muscle highlights, and proper exercise execution tutorials.
-* **Real-Time Trainer Chat:** Message personal trainers with live read receipts, instant typing updates, and direct workout plan proposals.
-* **Shop & Supplement Orders:** Add pre-workouts, proteins, and gym apparel to cart with checkout via Counter Cash or GCash reference verification.
+* **Interactive QR Equipment Scanner:** Scan physical QR placards on gym machines using the device camera to view machine photos, targeted muscle group diagrams, and step-by-step exercise execution tutorials.
+* **Real-Time Trainer Chat:** Message accredited coaches with live read receipts, instant typing updates, and interactive in-chat workout proposals.
+* **Shop & Supplement Orders:** Add pre-workouts, protein powders, and gym apparel to cart with checkout via Counter Cash or GCash reference verification.
 * **Guided Feature Onboarding:** Auto-centering interactive spotlights that guide new members step-by-step without blocking UI controls.
 
 ---
 
-### 🏋️ 2. Coach Studio
-* **Client Roster & Request Dispatch:** Review incoming trainee coaching requests and manage active personal training clients.
-* **In-Chat Workout Proposals:** Send structured exercise routines with scheduled dates, time, price, and target muscles directly into the chat for 1-tap client acceptance.
-* **Group Fitness Classes:** Create public fitness classes with participant limits, schedules, and live roster tracking.
+### 🏋️ 2. Coach Studio (Trainer Hub)
+* **Client Roster Management:** Review incoming coaching applications, accept trainees, and manage active personal training clients.
+* **In-Chat Workout Plan Proposals:** Compose and dispatch structured exercise routines with scheduled dates, time, price, and target muscles directly into chat with 1-tap client acceptance.
+* **Group Fitness Classes:** Create public fitness classes with participant seat limits, schedules, and live roster tracking.
 * **Availability Management:** Set weekly recurring coaching hours and working days.
 * **Trainer Financial Insights:** Track completed client sessions and estimated monthly coaching earnings.
 
 ---
 
 ### 🛡️ 3. Admin Command Center
-* **Digital QR Turnstile & Attendance:** Instant camera scanner to log member daily check-ins with anti-pass-sharing timestamp verification.
+* **Digital QR Turnstile Scanner:** Instant camera scanner to log member daily check-ins with anti-pass-sharing timestamp verification.
 * **Membership Pass Management:** Activate, monitor, and extend 30-day Premium Passes or Daily Visit passes.
-* **Shop Orders Fulfillment & Stock Reconciliation:** Verify GCash reference numbers or cash payments, approve orders, and automatically deduct warehouse inventory.
-* **Equipment Management & QR Placard Generator:** Register gym equipment and download printable QR code stickers for gym equipment placement.
+* **Shop POS Orders & Stock Reconciliation:** Verify GCash reference numbers or cash payments, approve orders, and automatically deduct warehouse inventory atomically.
+* **Equipment Management & QR Placard Generator:** Register gym equipment and download printable QR code stickers for gym machine placement.
 * **Coach Account Administration:** Register certified gym coaches and manage credentials.
-* **Data Analytics & Reports:** Instant export of attendance traffic, sales revenue, and inventory stock to PDF and Excel spreadsheets.
+* **Data Analytics & Reports:** Instant export of attendance traffic, sales revenue, and inventory stock to vector PDF documents and Excel/CSV spreadsheets.
 
 ---
 
@@ -87,14 +90,14 @@
 
 | Domain | Technology | Purpose |
 | :--- | :--- | :--- |
-| **Mobile & Web Client** | **Ionic 8 + Angular** | Hybrid mobile UI (Android / iOS) with standalone components |
+| **Mobile & Web Client** | **Ionic 8 + Angular** | Hybrid mobile UI (Android / iOS / Web) with standalone components |
 | **Styling & Theming** | **SCSS + CSS Custom Properties** | Theme-aware interface (Dark fitness mode & Crisp white admin) |
 | **Backend REST API** | **Laravel 11 (PHP 8.2+)** | Token authentication (Sanctum), business logic, and API routes |
 | **Real-Time WebSockets** | **Laravel Reverb + Echo** | Sub-second real-time chat, unread notifications, and live status sync |
-| **Database** | **MySQL / MariaDB** | Relational data persistence with strict foreign key constraints |
+| **Database Management** | **MySQL 8.0** | Relational data persistence with strict foreign key constraints |
 | **Hardware & Devices** | **Capacitor + Barcode Scanner** | Native device access for mobile camera QR scanning |
 | **Reporting Engine** | **jsPDF + AutoTable** | Client-side vector PDF report generation and CSV/Excel exports |
-| **Deployment / Cloud** | **Docker + Nginx** | Production containerization and reverse proxy routing |
+| **Deployment / Containers**| **Docker + Nginx / Podman** | Production containerization and reverse proxy routing |
 
 ---
 
@@ -165,26 +168,35 @@ start-dev-lan.bat
 
 ---
 
-## 📚 Capstone Documentation Index
+## 📚 Capstone Research & Technical Documentation
 
+* 📖 **[Chapter 1: Introduction](./docs/chapters/chapter-1.md)** — Problem background, theoretical frameworks (TAM, Codd, Fielding, ISO), IPO conceptual model, scope & delimitations, and RRL.
+* 🔬 **[Chapter 2: Research Methodology](./docs/chapters/chapter-2.md)** — Agile developmental design, SDLC phases, research locale, sampling, and 4-Point Likert statistical treatment.
+* 📊 **[Chapter 3: Results and Discussions](./docs/chapters/chapter-3.md)** — System implementation, ISO/IEC 25010 evaluation results (IT Experts: 3.75, Staff/Coaches: 3.84, Members: 3.82), and synthesis of findings.
+* 📋 **[Survey Questionnaire Instrument](./docs/SURVEY_QUESTIONNAIRE.md)** — Official 20-item ISO/IEC 25010 software quality evaluation survey.
 * 📑 **[Capstone Defense Practical Guide](./docs/CAPSTONE_DEFENSE_PRACTICAL_GUIDE.md)** — Presentation talking points and live demo checklist.
 * 🛡️ **[Defense Strategy](./docs/DEFENSE_STRATEGY.md)** — Panel Q&A strategy and system architecture defense.
 * 🎬 **[Demo Script Quick Ref](./docs/DEMO_SCRIPT_QUICK_REF.md)** — Step-by-step role-by-role live presentation guide.
-* ⚙️ **[System Documentation](./docs/SYSTEM_DOCUMENTATION.md)** — Database schemas, API endpoints, and WebSocket channels.
 * 🐳 **[Podman & Docker Deployment Guide](./DEPLOYMENT_GUIDE_PODMAN.md)** — Containerized VPS deployment manual.
 
 ---
 
-## 🔮 Future Enhancements
+## 👥 Capstone Researchers & Proponents
 
-1. **Smart Wearables Integration:** Sync heart rate, calories, and active workout duration via Apple HealthKit and Google Health Connect.
-2. **AI Computer Vision Form Coach:** Real-time pose estimation to analyze lifting technique and provide audio posture cues.
-3. **Automated Turnstile Hardware:** Microcontroller-driven physical gate integration via relay triggers upon QR scan.
+**Bachelor of Science in Information Technology**  
+*College of Information and Communications Technology (CICT)*  
+**Nueva Ecija University of Science and Technology (NEUST) – San Isidro Campus**
+
+* **BERNALDO, CARL ANDREW B.**
+* **GALANG, DELWIN F.**
+* **JAVIER, JAYLEE T.**
+* **MEDINA, ETHAN JEROME G.**
+* **PONGCO, RYZA MAE M.**
 
 ---
 
 ## 📜 Intellectual Property & License
 
-This project is developed solely for academic capstone presentation and gym management evaluation. All rights reserved. Unauthorized reproduction, modification, or commercial distribution is strictly prohibited.
+This project is developed solely for academic capstone presentation and gym management evaluation. All rights reserved.
 
 © 2026 Delwin Galang & FordaGO Capstone Team.

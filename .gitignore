@@ -7,6 +7,9 @@
 *.log
 log.txt
 $RECYCLE.BIN/
+*.sql
+*.sqlite
+*.db
 
 # Node dependencies
 **/node_modules/
@@ -42,6 +45,7 @@ plugins/
 # VS Code / IDE
 .vscode/
 .idea/
+.qodo/
 .project
 .classpath
 .c9/
