@@ -439,13 +439,47 @@ export class QrScannerPage implements OnInit, OnDestroy {
     this.stopPendingAttendanceWatcher();
   }
 
-  // ── Load attendance history ───────────────────────────
+  // ── Local Storage Persistence for Scan Logs ──────────
+  private getLocalLogsKey(): string {
+    const userId = this.auth.user?.id || 'guest';
+    return `fordago_scan_logs_${userId}`;
+  }
+
+  private getLocalEquipmentLogs(): ScanLogEntry[] {
+    try {
+      const raw = localStorage.getItem(this.getLocalLogsKey());
+      if (raw) {
+        return JSON.parse(raw);
+      }
+    } catch {
+      // Ignore JSON parse errors
+    }
+    return [];
+  }
+
+  private persistEquipmentLog(entry: ScanLogEntry): void {
+    try {
+      const logs = this.getLocalEquipmentLogs();
+      const updated = [entry, ...logs.filter(l => !(l.label === entry.label && l.time === entry.time && l.date === entry.date))].slice(0, 50);
+      localStorage.setItem(this.getLocalLogsKey(), JSON.stringify(updated));
+    } catch {
+      // Ignore localStorage errors
+    }
+  }
+
+  // ── Load attendance history & combine with equipment logs ────
   loadMyAttendanceLogs(): void {
-    if (!this.auth.token) return;
+    const localEquipLogs = this.getLocalEquipmentLogs();
+
+    if (!this.auth.token) {
+      this.myLogs = localEquipLogs;
+      return;
+    }
+
     const headers = { Authorization: `Bearer ${this.auth.token}` };
     this.http.get<any[]>(`${this.api}/attendance/my`, { headers }).subscribe({
       next: (records) => {
-        this.myLogs = records.map(r => {
+        const attendanceLogs: ScanLogEntry[] = records.map(r => {
           const dt = new Date(r.check_in_time);
           return {
             type: 'attendance' as ScanMode,
@@ -454,8 +488,13 @@ export class QrScannerPage implements OnInit, OnDestroy {
             date: this.formatLogDate(dt),
           };
         });
+
+        // Merge backend attendance logs with persisted local equipment scan logs
+        this.myLogs = [...localEquipLogs, ...attendanceLogs];
       },
-      error: () => { this.myLogs = []; }
+      error: () => {
+        this.myLogs = localEquipLogs;
+      }
     });
   }
 
@@ -586,41 +625,48 @@ export class QrScannerPage implements OnInit, OnDestroy {
 
     await this.stopCameraScan();
 
-    if (this.scanMode === 'attendance') {
+    const raw = String(decodedText || '').trim();
+    const isExplicitEquipment = raw.toLowerCase().startsWith('equipment:');
+    const normalizedCode = raw.toLowerCase().replace(/^equipment:/, '').trim();
+
+    // 1. Check if the scanned QR matches an equipment guide
+    const guide = this.guideService.getGuideById(normalizedCode) || this.guideService.getGuideByName(normalizedCode);
+    
+    if (guide || isExplicitEquipment) {
+      if (guide) {
+        const now = new Date();
+        const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const newLogEntry: ScanLogEntry = { type: 'equipment', label: guide.name, time, date: this.formatLogDate(now) };
+        
+        this.myLogs = [newLogEntry, ...this.myLogs];
+        this.persistEquipmentLog(newLogEntry);
+        this.saveEquipmentScanLog({ id: String(guide.equipmentId), name: guide.name }, decodedText);
+
+        this.activeFullGuide = guide;
+        this.activeVariationIndex = 0;
+        this.activeEquipment = {
+          id: String(guide.equipmentId),
+          name: guide.name,
+          category: guide.category,
+          muscles: guide.muscles || [],
+          warning: guide.warning || '',
+          steps: guide.variations[0]?.steps || []
+        };
+        this.tutorialModalOpen = true;
+        this.isScanning = false;
+        this.isProcessingScan = false;
+        this.scanStatusMessage = `Equipment guide opened for ${guide.name}.`;
+        return;
+      }
+    }
+
+    // 2. If it's an attendance scan or not recognized as equipment
+    if (this.scanMode === 'attendance' || raw.toLowerCase().startsWith('attendance:') || raw.toLowerCase().startsWith('gym:')) {
       await this.doCheckIn(decodedText);
       return;
     }
 
-    const normalizedCode = String(decodedText || '').trim().toLowerCase().replace(/^equipment:/, '');
-    
-    // 1. Check in full 46-item Equipment Guide Service
-    const guide = this.guideService.getGuideById(normalizedCode) || this.guideService.getGuideByName(normalizedCode);
-    if (guide) {
-      const now = new Date();
-      const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      this.myLogs = [
-        { type: 'equipment', label: guide.name, time, date: this.formatLogDate(now) },
-        ...this.myLogs,
-      ];
-      this.saveEquipmentScanLog({ id: String(guide.equipmentId), name: guide.name }, decodedText);
-      this.activeFullGuide = guide;
-      this.activeVariationIndex = 0;
-      this.activeEquipment = {
-        id: String(guide.equipmentId),
-        name: guide.name,
-        category: guide.category,
-        muscles: guide.muscles || [],
-        warning: guide.warning || '',
-        steps: guide.variations[0]?.steps || []
-      };
-      this.tutorialModalOpen = true;
-      this.isScanning = false;
-      this.isProcessingScan = false;
-      this.scanStatusMessage = `Equipment guide opened for ${guide.name}.`;
-      return;
-    }
-
-    // 2. Fallback to basic equipment library
+    // 3. Fallback to basic equipment library
     const equipment = this.equipmentLibrary.find(item =>
       item.id === normalizedCode || item.name.toLowerCase() === normalizedCode
     );
@@ -629,11 +675,12 @@ export class QrScannerPage implements OnInit, OnDestroy {
       const now = new Date();
       const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       const fallbackName = `Equipment (${normalizedCode || 'Unknown'})`;
-      this.myLogs = [
-        { type: 'equipment', label: fallbackName, time, date: this.formatLogDate(now) },
-        ...this.myLogs,
-      ];
+      const newLogEntry: ScanLogEntry = { type: 'equipment', label: fallbackName, time, date: this.formatLogDate(now) };
+      
+      this.myLogs = [newLogEntry, ...this.myLogs];
+      this.persistEquipmentLog(newLogEntry);
       this.saveEquipmentScanLog({ id: normalizedCode || 'unknown', name: fallbackName }, decodedText);
+      
       this.isProcessingScan = false;
       this.isScanning = false;
       this.scanStatusMessage = 'QR detected. Usage was recorded, but no tutorial is mapped yet for this equipment.';
@@ -643,11 +690,12 @@ export class QrScannerPage implements OnInit, OnDestroy {
 
     const now = new Date();
     const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    this.myLogs = [
-      { type: 'equipment', label: equipment.name, time, date: this.formatLogDate(now) },
-      ...this.myLogs,
-    ];
+    const newLogEntry: ScanLogEntry = { type: 'equipment', label: equipment.name, time, date: this.formatLogDate(now) };
+    
+    this.myLogs = [newLogEntry, ...this.myLogs];
+    this.persistEquipmentLog(newLogEntry);
     this.saveEquipmentScanLog(equipment, decodedText);
+    
     this.activeEquipment = equipment;
     this.activeFullGuide = this.guideService.getGuideByName(equipment.name);
     this.activeVariationIndex = 0;

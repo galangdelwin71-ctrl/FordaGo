@@ -1,5 +1,5 @@
 // equipment-guides.data.ts
-// Complete machine-specific exercise guides with real equipment photos and 100% Accurate 2-Step Anatomical Machine Guides for all 46 equipment items (IDs 9-54).
+// Complete machine-specific exercise guides with real equipment photos and 100% Realistic Anatomical Artworks for all 46 equipment items (IDs 9-54).
 
 export interface ExerciseVariation {
   id: string;
@@ -73,7 +73,7 @@ export const EQUIPMENT_GUIDES: EquipmentGuide[] = [
         ],
         "recommendedSetsReps": "3-4 Sets × 8-12 Reps",
         "difficulty": "Beginner",
-        "illustrationUrl": "assets/guides/v_squat_lever_machine.svg",
+        "illustrationUrl": "assets/guides/hackSquat.jpg",
         "setup": [
           "Step onto the non-slip center platform with feet shoulder-width apart.",
           "Adjust the machine shoulder pads / belt height to engage comfortably at your frame.",
@@ -563,7 +563,7 @@ export const EQUIPMENT_GUIDES: EquipmentGuide[] = [
         ],
         "recommendedSetsReps": "3-4 Sets × 8-12 Reps",
         "difficulty": "Beginner",
-        "illustrationUrl": "assets/guides/dumbbell_flat_bench_press.svg",
+        "illustrationUrl": "assets/guides/seatedChestPress.jpg",
         "setup": [
           "Select a matching pair of dumbbells from the weight rack.",
           "Sit at the edge of a flat bench with dumbbells resting upright on your knees.",
@@ -697,7 +697,7 @@ export const EQUIPMENT_GUIDES: EquipmentGuide[] = [
         ],
         "recommendedSetsReps": "Continuous Play / Drills",
         "difficulty": "Beginner",
-        "illustrationUrl": "assets/guides/kettlebell_swings.svg",
+        "illustrationUrl": "assets/guides/squatRack.jpg",
         "setup": [
           "Position yourself right behind the Non-Volley Zone (Kitchen) line.",
           "Hold paddle in front of chest with a relaxed Continental grip.",
@@ -1335,7 +1335,7 @@ export const EQUIPMENT_GUIDES: EquipmentGuide[] = [
         ],
         "recommendedSetsReps": "3-4 Sets × 8-12 Reps",
         "difficulty": "Beginner",
-        "illustrationUrl": "assets/guides/latPulldown.jpg",
+        "illustrationUrl": "assets/guides/assistedPullup.jpg",
         "setup": [
           "Adjust seat height so handles are at hip/lower rib level when seated.",
           "Secure thighs under the hold-down roller pads.",
@@ -1970,7 +1970,7 @@ export const EQUIPMENT_GUIDES: EquipmentGuide[] = [
         ],
         "recommendedSetsReps": "3-4 Sets × 8-12 Reps",
         "difficulty": "Beginner",
-        "illustrationUrl": "assets/guides/dumbbell_incline_bench_press.svg",
+        "illustrationUrl": "assets/guides/seatedChestPress.jpg",
         "setup": [
           "Set bench backrest angle to 30 or 45 degrees using the adjustment pin.",
           "Set seat angle up one notch to prevent sliding down during the set.",
@@ -2748,7 +2748,7 @@ export const EQUIPMENT_GUIDES: EquipmentGuide[] = [
         ],
         "recommendedSetsReps": "3-4 Sets × 10-12 Reps",
         "difficulty": "Beginner",
-        "illustrationUrl": "assets/guides/standing_ez_bar_curl.svg",
+        "illustrationUrl": "assets/guides/preacherCurl.jpg",
         "setup": [
           "Select desired assembled barbell / EZ-curl bar from rack.",
           "Stand upright with feet shoulder-width apart and grip bar with underhand grip."
@@ -3260,7 +3260,7 @@ export const EQUIPMENT_GUIDES: EquipmentGuide[] = [
         ],
         "recommendedSetsReps": "4 Sets × 15-20 Reps",
         "difficulty": "Beginner",
-        "illustrationUrl": "assets/guides/kettlebell_swings.svg",
+        "illustrationUrl": "assets/guides/hipThrust.jpg",
         "setup": [
           "Place kettlebell on floor one foot in front of you.",
           "Hinge at hips with a flat back and grip the top handle with both hands."
