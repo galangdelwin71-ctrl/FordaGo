@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FordaGO - Entity Relationship Diagram (ERD)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap');
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      background-color: #0b0f19;
+      color: #f1f5f9;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 2560px;
+      height: 1440px;
+      overflow: hidden;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+    .header h1 {
+      font-size: 32px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.5px;
+    }
+    .header p {
+      font-size: 15px;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+
+    .diagram-container {
+      position: relative;
+      width: 2460px;
+      height: 1260px;
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 16px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    svg.connector-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .entity-card {
+      position: absolute;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+      z-index: 2;
+      overflow: hidden;
+      font-size: 11px;
+    }
+
+    .entity-header {
+      background: #0f172a;
+      border-bottom: 2px solid #3b82f6;
+      padding: 8px 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #e2e8f0;
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .entity-header.hub {
+      border-bottom: 2px solid #ef4444;
+      background: #1e1b4b;
+    }
+    .entity-header.gym {
+      border-bottom: 2px solid #10b981;
+    }
+    .entity-header.coach {
+      border-bottom: 2px solid #f59e0b;
+    }
+    .entity-header.shop {
+      border-bottom: 2px solid #8b5cf6;
+    }
+
+    .entity-rows {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .field-row {
+      display: flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-bottom: 1px solid #283548;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+    }
+    .field-row:last-child {
+      border-bottom: none;
+    }
+    .field-row:nth-child(even) {
+      background: rgba(255, 255, 255, 0.015);
+    }
+
+    .field-type {
+      color: #64748b;
+      width: 78px;
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+    .field-name {
+      color: #cbd5e1;
+      font-weight: 500;
+      flex-grow: 1;
+    }
+    .field-key {
+      font-weight: 700;
+      font-size: 9px;
+      padding: 1px 4px;
+      border-radius: 3px;
+      margin-left: 6px;
+      flex-shrink: 0;
+    }
+    .key-pk {
+      background: #ef444422;
+      color: #f87171;
+      border: 1px solid #ef444455;
+    }
+    .key-fk {
+      background: #3b82f622;
+      color: #60a5fa;
+      border: 1px solid #3b82f655;
+    }
+
+    /* Legend */
+    .legend {
+      position: absolute;
+      bottom: 20px;
+      right: 25px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 10px 16px;
+      display: flex;
+      gap: 18px;
+      font-size: 11px;
+      color: #94a3b8;
+      z-index: 10;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .legend-color {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>FordaGO: Entity Relationship Diagram (ERD)</h1>
+    <p>Complete Relational Database Schema &middot; AFFORDA Gym &ndash; Cabiao Branch &middot; 3NF Normalized</p>
+  </div>
+
+  <div class="diagram-container">
+    
+    <svg class="connector-canvas" id="svgCanvas">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569" />
+        </marker>
+        <marker id="crowsfoot" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M 0 1 L 10 6 L 0 11 M 10 0 L 10 12" stroke="#60a5fa" stroke-width="1.5" fill="none" />
+        </marker>
+      </defs>
+
+      <!-- SVG Lines drawn dynamically or clean paths -->
+      <!-- USERS -> ATTENDANCE -->
+      <path d="M 1230 420 L 1230 780" stroke="#38bdf8" stroke-width="1.8" stroke-dasharray="4,4" fill="none" marker-end="url(#crowsfoot)" />
+      <!-- USERS -> NOTIFICATIONS -->
+      <path d="M 1375 220 L 1570 220" stroke="#38bdf8" stroke-width="1.8" fill="none" marker-end="url(#crowsfoot)" />
+      <!-- USERS -> COACH_PROFILES -->
+      <path d="M 1085 240 L 840 240" stroke="#f59e0b" stroke-width="1.8" fill="none" marker-end="url(#crowsfoot)" />
+      <!-- USERS -> WORKOUT_SESSIONS -->
+      <path d="M 1120 420 L 1120 540 L 920 540 L 920 620" stroke="#38bdf8" stroke-width="1.8" fill="none" marker-end="url(#crowsfoot)" />
+      <!-- USERS -> PERSONAL_RECORDS -->
+      <path d="M 1100 420 L 1100 500 L 590 500 L 590 620" stroke="#38bdf8" stroke-width="1.8" fill="none" marker-end="url(#crowsfoot)" />
+      <!-- USERS -> ORDERS -->
+      <path d="M 1340 420 L 1340 540 L 1540 540 L 1540 620" stroke="#8b5cf6" stroke-width="1.8" fill="none" marker-end="url(#crowsfoot)" />
+      <!-- PRODUCTS -> ORDERS -->
+      <path d="M 1790 730 L 1660 730" stroke="#8b5cf6" stroke-width="1.8" fill="none" marker-end="url(#crowsfoot)" />
+      <!-- COACH_PROFILES -> CONVERSATIONS -->
+      <path d="M 700 370 L 700 470 L 330 470 L 330 540" stroke="#f59e0b" stroke-width="1.8" fill="none" marker-end="url(#crowsfoot)" />
+      <!-- CONVERSATIONS -> MESSAGES -->
+      <path d="M 270 710 L 270 810" stroke="#f59e0b" stroke-width="1.8" fill="none" marker-end="url(#crowsfoot)" />
+      <!-- CONVERSATIONS -> WORKOUT_PLAN_PROPOSALS -->
+      <path d="M 390 630 L 460 630 L 460 810" stroke="#f59e0b" stroke-width="1.8" fill="none" marker-end="url(#crowsfoot)" />
+      <!-- EQUIPMENT -> EQUIPMENT_SCAN_LOGS -->
+      <path d="M 2150 420 L 2150 560" stroke="#10b981" stroke-width="1.8" fill="none" marker-end="url(#crowsfoot)" />
+      <!-- USERS -> EQUIPMENT_SCAN_LOGS -->
+      <path d="M 1375 280 L 1950 280 L 1950 630 L 2020 630" stroke="#10b981" stroke-width="1.8" stroke-dasharray="4,4" fill="none" marker-end="url(#crowsfoot)" />
+      <!-- USERS -> FEEDBACKS -->
+      <path d="M 1375 350 L 1800 350 L 1800 480" stroke="#38bdf8" stroke-width="1.8" stroke-dasharray="4,4" fill="none" marker-end="url(#crowsfoot)" />
+    </svg>
+
+    <!-- 1. CENTRAL HUB: USERS -->
+    <div class="entity-card" style="left: 1085px; top: 70px; width: 290px;">
+      <div class="entity-header hub">
+        <span>users</span>
+        <span style="font-size: 10px; color: #fca5a5;">Core Identity Table</span>
+      </div>
+      <div class="entity-rows">
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">id</span><span class="field-key key-pk">PK</span></div>
+        <div class="field-row"><span class="field-type">VARCHAR(100)</span><span class="field-name">username</span></div>
+        <div class="field-row"><span class="field-type">VARCHAR(100)</span><span class="field-name">first_name</span></div>
+        <div class="field-row"><span class="field-type">VARCHAR(100)</span><span class="field-name">last_name</span></div>
+        <div class="field-row"><span class="field-type">VARCHAR(150)</span><span class="field-name">email</span></div>
+        <div class="field-row"><span class="field-type">VARCHAR(255)</span><span class="field-name">password</span></div>
+        <div class="field-row"><span class="field-type">ENUM</span><span class="field-name">role</span></div>
+        <div class="field-row"><span class="field-type">VARCHAR(20)</span><span class="field-name">phone</span></div>
+        <div class="field-row"><span class="field-type">ENUM</span><span class="field-name">gender</span></div>
+        <div class="field-row"><span class="field-type">LONGTEXT</span><span class="field-name">profile_image</span></div>
+        <div class="field-row"><span class="field-type">ENUM</span><span class="field-name">membership_type</span></div>
+        <div class="field-row"><span class="field-type">ENUM</span><span class="field-name">membership_status</span></div>
+        <div class="field-row"><span class="field-type">ENUM</span><span class="field-name">payment_method</span></div>
+        <div class="field-row"><span class="field-type">DATE</span><span class="field-name">membership_expiry</span></div>
+        <div class="field-row"><span class="field-type">TIMESTAMP</span><span class="field-name">created_at</span></div>
+      </div>
+    </div>
+
+    <!-- 2. ATTENDANCE -->
+    <div class="entity-card" style="left: 1095px; top: 780px; width: 270px;">
+      <div class="entity-header gym">
+        <span>attendance</span>
+        <span style="font-size: 10px; color: #6ee7b7;">QR Turnstile Logs</span>
+      </div>
+      <div class="entity-rows">
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">id</span><span class="field-key key-pk">PK</span></div>
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">user_id</span><span class="field-key key-fk">FK</span></div>
+        <div class="field-row"><span class="field-type">DATETIME</span><span class="field-name">check_in_time</span></div>
+        <div class="field-row"><span class="field-type">ENUM</span><span class="field-name">membership_type</span></div>
+        <div class="field-row"><span class="field-type">ENUM</span><span class="field-name">payment_status</span></div>
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">confirmed_by</span><span class="field-key key-fk">FK</span></div>
+        <div class="field-row"><span class="field-type">DATETIME</span><span class="field-name">confirmed_at</span></div>
+        <div class="field-row"><span class="field-type">TEXT</span><span class="field-name">notes</span></div>
+      </div>
+    </div>
+
+    <!-- 3. COACH PROFILES -->
+    <div class="entity-card" style="left: 580px; top: 120px; width: 260px;">
+      <div class="entity-header coach">
+        <span>coach_profiles</span>
+        <span style="font-size: 10px; color: #fde68a;">Trainer Hub</span>
+      </div>
+      <div class="entity-rows">
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">id</span><span class="field-key key-pk">PK</span></div>
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">user_id</span><span class="field-key key-fk">FK</span></div>
+        <div class="field-row"><span class="field-type">TEXT</span><span class="field-name">specialties</span></div>
+        <div class="field-row"><span class="field-type">DECIMAL(10,2)</span><span class="field-name">rate_per_session</span></div>
+        <div class="field-row"><span class="field-type">TEXT</span><span class="field-name">bio</span></div>
+        <div class="field-row"><span class="field-type">LONGTEXT</span><span class="field-name">photo_url</span></div>
+        <div class="field-row"><span class="field-type">BOOLEAN</span><span class="field-name">is_active</span></div>
+      </div>
+    </div>
+
+    <!-- 4. CONVERSATIONS -->
+    <div class="entity-card" style="left: 170px; top: 540px; width: 240px;">
+      <div class="entity-header coach">
+        <span>conversations</span>
+        <span style="font-size: 10px; color: #fde68a;">Chat Channels</span>
+      </div>
+      <div class="entity-rows">
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">id</span><span class="field-key key-pk">PK</span></div>
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">coach_id</span><span class="field-key key-fk">FK</span></div>
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">client_id</span><span class="field-key key-fk">FK</span></div>
+        <div class="field-row"><span class="field-type">ENUM</span><span class="field-name">status</span></div>
+        <div class="field-row"><span class="field-type">TIMESTAMP</span><span class="field-name">created_at</span></div>
+      </div>
+    </div>
+
+    <!-- 5. MESSAGES -->
+    <div class="entity-card" style="left: 150px; top: 810px; width: 250px;">
+      <div class="entity-header coach">
+        <span>messages</span>
+        <span style="font-size: 10px; color: #fde68a;">Live Chat Stream</span>
+      </div>
+      <div class="entity-rows">
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">id</span><span class="field-key key-pk">PK</span></div>
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">conversation_id</span><span class="field-key key-fk">FK</span></div>
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">sender_id</span><span class="field-key key-fk">FK</span></div>
+        <div class="field-row"><span class="field-type">TEXT</span><span class="field-name">body</span></div>
+        <div class="field-row"><span class="field-type">ENUM</span><span class="field-name">type</span></div>
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">proposal_id</span><span class="field-key key-fk">FK</span></div>
+        <div class="field-row"><span class="field-type">DATETIME</span><span class="field-name">read_at</span></div>
+      </div>
+    </div>
+
+    <!-- 6. WORKOUT PLAN PROPOSALS -->
+    <div class="entity-card" style="left: 440px; top: 810px; width: 260px;">
+      <div class="entity-header coach">
+        <span>workout_plan_proposals</span>
+        <span style="font-size: 10px; color: #fde68a;">In-Chat Proposals</span>
+      </div>
+      <div class="entity-rows">
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">id</span><span class="field-key key-pk">PK</span></div>
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">conversation_id</span><span class="field-key key-fk">FK</span></div>
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">coach_id</span><span class="field-key key-fk">FK</span></div>
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">client_id</span><span class="field-key key-fk">FK</span></div>
+        <div class="field-row"><span class="field-type">VARCHAR(150)</span><span class="field-name">title</span></div>
+        <div class="field-row"><span class="field-type">DECIMAL(10,2)</span><span class="field-name">price</span></div>
+        <div class="field-row"><span class="field-type">DATE</span><span class="field-name">scheduled_date</span></div>
+        <div class="field-row"><span class="field-type">ENUM</span><span class="field-name">status</span></div>
+      </div>
+    </div>
+
+    <!-- 7. PERSONAL RECORDS -->
+    <div class="entity-card" style="left: 480px; top: 620px; width: 240px;">
+      <div class="entity-header gym">
+        <span>personal_records</span>
+        <span style="font-size: 10px; color: #6ee7b7;">PR Milestones</span>
+      </div>
+      <div class="entity-rows">
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">id</span><span class="field-key key-pk">PK</span></div>
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">user_id</span><span class="field-key key-fk">FK</span></div>
+        <div class="field-row"><span class="field-type">VARCHAR(100)</span><span class="field-name">exercise_name</span></div>
+        <div class="field-row"><span class="field-type">DECIMAL(8,2)</span><span class="field-name">max_weight</span></div>
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">reps</span></div>
+        <div class="field-row"><span class="field-type">DATE</span><span class="field-name">achieved_at</span></div>
+      </div>
+    </div>
+
+    <!-- 8. WORKOUT SESSIONS -->
+    <div class="entity-card" style="left: 770px; top: 620px; width: 250px;">
+      <div class="entity-header gym">
+        <span>workout_sessions</span>
+        <span style="font-size: 10px; color: #6ee7b7;">Daily Splits & Logs</span>
+      </div>
+      <div class="entity-rows">
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">id</span><span class="field-key key-pk">PK</span></div>
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">user_id</span><span class="field-key key-fk">FK</span></div>
+        <div class="field-row"><span class="field-type">VARCHAR(100)</span><span class="field-name">client_session_id</span></div>
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">coach_id</span><span class="field-key key-fk">FK</span></div>
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">proposal_id</span><span class="field-key key-fk">FK</span></div>
+        <div class="field-row"><span class="field-type">DATE</span><span class="field-name">session_date</span></div>
+        <div class="field-row"><span class="field-type">VARCHAR(50)</span><span class="field-name">split_day</span></div>
+        <div class="field-row"><span class="field-type">JSON</span><span class="field-name">exercises</span></div>
+      </div>
+    </div>
+
+    <!-- 9. ORDERS -->
+    <div class="entity-card" style="left: 1420px; top: 620px; width: 240px;">
+      <div class="entity-header shop">
+        <span>orders</span>
+        <span style="font-size: 10px; color: #c4b5fd;">Shop POS & GCash</span>
+      </div>
+      <div class="entity-rows">
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">id</span><span class="field-key key-pk">PK</span></div>
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">user_id</span><span class="field-key key-fk">FK</span></div>
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">product_id</span><span class="field-key key-fk">FK</span></div>
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">quantity</span></div>
+        <div class="field-row"><span class="field-type">DECIMAL(10,2)</span><span class="field-name">total</span></div>
+        <div class="field-row"><span class="field-type">ENUM</span><span class="field-name">status</span></div>
+        <div class="field-row"><span class="field-type">VARCHAR(100)</span><span class="field-name">order_group_id</span></div>
+        <div class="field-row"><span class="field-type">ENUM</span><span class="field-name">payment_method</span></div>
+      </div>
+    </div>
+
+    <!-- 10. PRODUCTS -->
+    <div class="entity-card" style="left: 1790px; top: 620px; width: 230px;">
+      <div class="entity-header shop">
+        <span>products</span>
+        <span style="font-size: 10px; color: #c4b5fd;">Supplement Inventory</span>
+      </div>
+      <div class="entity-rows">
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">id</span><span class="field-key key-pk">PK</span></div>
+        <div class="field-row"><span class="field-type">VARCHAR(150)</span><span class="field-name">name</span></div>
+        <div class="field-row"><span class="field-type">VARCHAR(100)</span><span class="field-name">brand</span></div>
+        <div class="field-row"><span class="field-type">DECIMAL(10,2)</span><span class="field-name">price</span></div>
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">stock</span></div>
+        <div class="field-row"><span class="field-type">VARCHAR(255)</span><span class="field-name">image_url</span></div>
+      </div>
+    </div>
+
+    <!-- 11. NOTIFICATIONS -->
+    <div class="entity-card" style="left: 1570px; top: 120px; width: 230px;">
+      <div class="entity-header">
+        <span>notifications</span>
+        <span style="font-size: 10px; color: #93c5fd;">Push & Alerts</span>
+      </div>
+      <div class="entity-rows">
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">id</span><span class="field-key key-pk">PK</span></div>
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">user_id</span><span class="field-key key-fk">FK</span></div>
+        <div class="field-row"><span class="field-type">VARCHAR(150)</span><span class="field-name">title</span></div>
+        <div class="field-row"><span class="field-type">TEXT</span><span class="field-name">message</span></div>
+        <div class="field-row"><span class="field-type">BOOLEAN</span><span class="field-name">is_read</span></div>
+        <div class="field-row"><span class="field-type">TIMESTAMP</span><span class="field-name">created_at</span></div>
+      </div>
+    </div>
+
+    <!-- 12. EQUIPMENT -->
+    <div class="entity-card" style="left: 2040px; top: 240px; width: 240px;">
+      <div class="entity-header gym">
+        <span>equipment</span>
+        <span style="font-size: 10px; color: #6ee7b7;">Machine Placards</span>
+      </div>
+      <div class="entity-rows">
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">id</span><span class="field-key key-pk">PK</span></div>
+        <div class="field-row"><span class="field-type">VARCHAR(150)</span><span class="field-name">name</span></div>
+        <div class="field-row"><span class="field-type">VARCHAR(100)</span><span class="field-name">category</span></div>
+        <div class="field-row"><span class="field-type">VARCHAR(100)</span><span class="field-name">muscle_group</span></div>
+        <div class="field-row"><span class="field-type">VARCHAR(100)</span><span class="field-name">qr_code</span></div>
+        <div class="field-row"><span class="field-type">TEXT</span><span class="field-name">description</span></div>
+      </div>
+    </div>
+
+    <!-- 13. EQUIPMENT SCAN LOGS -->
+    <div class="entity-card" style="left: 2040px; top: 560px; width: 240px;">
+      <div class="entity-header gym">
+        <span>equipment_scan_logs</span>
+        <span style="font-size: 10px; color: #6ee7b7;">QR Tutorial Hits</span>
+      </div>
+      <div class="entity-rows">
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">id</span><span class="field-key key-pk">PK</span></div>
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">user_id</span><span class="field-key key-fk">FK</span></div>
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">equipment_id</span><span class="field-key key-fk">FK</span></div>
+        <div class="field-row"><span class="field-type">DATETIME</span><span class="field-name">scanned_at</span></div>
+      </div>
+    </div>
+
+    <!-- 14. FEEDBACKS -->
+    <div class="entity-card" style="left: 1720px; top: 440px; width: 220px;">
+      <div class="entity-header">
+        <span>feedbacks</span>
+        <span style="font-size: 10px; color: #cbd5e1;">App Ratings</span>
+      </div>
+      <div class="entity-rows">
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">id</span><span class="field-key key-pk">PK</span></div>
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">user_id</span><span class="field-key key-fk">FK</span></div>
+        <div class="field-row"><span class="field-type">INT</span><span class="field-name">rating</span></div>
+        <div class="field-row"><span class="field-type">TEXT</span><span class="field-name">comments</span></div>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+      <div class="legend-item"><span class="legend-color" style="background:#ef4444;"></span><span>Core Identity (users)</span></div>
+      <div class="legend-item"><span class="legend-color" style="background:#10b981;"></span><span>Gym Operations & Equipment</span></div>
+      <div class="legend-item"><span class="legend-color" style="background:#f59e0b;"></span><span>Coaching & Real-Time Chat</span></div>
+      <div class="legend-item"><span class="legend-color" style="background:#8b5cf6;"></span><span>Supplement POS & Orders</span></div>
+      <div class="legend-item"><span style="font-family:'JetBrains Mono'; font-weight:700; color:#f87171; font-size:10px;">PK</span><span>Primary Key</span></div>
+      <div class="legend-item"><span style="font-family:'JetBrains Mono'; font-weight:700; color:#60a5fa; font-size:10px;">FK</span><span>Foreign Key</span></div>
+    </div>
+
+  </div>
+
+</body>
+</html>
