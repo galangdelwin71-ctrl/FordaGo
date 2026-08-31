@@ -1,5 +1,7 @@
 # Temporary files
 *~
+~$*
+~$*.docx
 *.sw[mnpcod]
 .tmp
 *.tmp
