@@ -13,9 +13,14 @@ export const EXERCISE_RAW_SVGS: Record<string, string> = {
 };
 
 export function getExerciseSvgHtml(keyOrFilename: string | undefined): string {
-  if (!keyOrFilename) return EXERCISE_RAW_SVGS['squat_rack_squats.svg'] || '';
+  if (!keyOrFilename) return '';
   
-  // 0. If it's a data:image/svg+xml;base64,... decode directly
+  // 0. If it's a data URI for raster image (JPEG, PNG, WebP) or an asset image path, render an img tag
+  if (keyOrFilename.startsWith('data:image/jpeg') || keyOrFilename.startsWith('data:image/png') || keyOrFilename.startsWith('data:image/webp') || keyOrFilename.startsWith('assets/')) {
+    return `<img src="${keyOrFilename}" class="pose-vector-graphic" style="width:100%;height:auto;max-height:280px;object-fit:contain;display:block;border-radius:12px;background:#090d16;" alt="Anatomical Exercise Guide" />`;
+  }
+
+  // 0.1 If it's a data:image/svg+xml;base64,... decode directly
   if (keyOrFilename.startsWith('data:image/svg+xml;base64,')) {
     try {
       const base64Data = keyOrFilename.replace('data:image/svg+xml;base64,', '');
@@ -25,7 +30,7 @@ export function getExerciseSvgHtml(keyOrFilename: string | undefined): string {
     }
   }
 
-  // 0.1 If it's already raw SVG XML markup
+  // 0.2 If it's already raw SVG XML markup
   if (keyOrFilename.trim().startsWith('<svg')) {
     return keyOrFilename;
   }
