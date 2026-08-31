@@ -29,24 +29,10 @@ This study utilizes a **Developmental Research Design** anchored on the **Agile 
 
 According to Richey (1994) and Richey and Klein (2007), developmental research is the systematic study of designing, developing, and evaluating instructional programs, processes, and software products that must meet criteria of internal consistency, effectiveness, and user acceptability. This research design is appropriate because the primary aim of the study is not merely theoretical inquiry, but the engineering, implementation, and empirical validation of a functional software artifact—the FordaGO gym management platform—tailored specifically to resolve operational bottlenecks at **AFFORDA Gym – Cabiao Branch**.
 
-```
-       ┌─────────────────────────────────────────────────────────────┐
-       │                Agile Developmental Workflow                 │
-       └──────────────────────────────┬──────────────────────────────┘
-                                      │
-           ┌──────────────────────────┴──────────────────────────┐
-           │                                                     │
-           ▼                                                     ▼
-┌──────────────────────┐                             ┌──────────────────────┐
-│  SPRINT ITERATIONS   │                             │ ISO/IEC 25010 EVAL   │
-│  ──────────────────  │                             │ ───────────────────  │
-│  1. Requirements     │ ── (Iterative Feedback) ──► │ • Functionality      │
-│  2. Architectural UI │                             │ • Usability          │
-│  3. Full-Stack Code  │ ◄── (Refinements & Bug) ─── │ • Reliability        │
-│  4. Module Testing   │                             │ • Security           │
-│  5. Client Demo      │                             │ • Performance        │
-└──────────────────────┘                             └──────────────────────┘
-```
+| Phase / Track | Core Developmental Activities | Evaluative Feedback Loop |
+| :--- | :--- | :--- |
+| **Sprint Iterations (Engineering)** | **1.** Continuous Requirements Elicitation<br>**2.** UI/UX & Wireframe Prototyping<br>**3.** Full-Stack Programming (Ionic/Laravel)<br>**4.** Automated & Module Testing<br>**5.** Working Build Demonstrations | ➔ **Iterative Feedback** to Refine Features |
+| **ISO/IEC 25010 Quality Evaluation** | **1.** Functional Suitability Testing<br>**2.** Usability & Navigation Audits<br>**3.** Operational Reliability Checks<br>**4.** Security & Encryption Verification<br>**5.** Performance Latency Benchmarks | ➔ **Refinements & Bug Resolution** to Sprints |
 <p align="center"><b>Figure 3.</b> <i>Agile Developmental Research Workflow for FordaGO</i></p>
 
 The researchers chose the **Agile Methodology** (Pressman & Maxim, 2020; Sommerville, 2019) over traditional linear waterfall models due to the dynamic, multi-module nature of the project. Agile promotes iterative sprint cycles, frequent integration, continuous client feedback, and rapid response to evolving requirements. Developing FordaGO in modular iterations allowed the team to construct, test, and refine distinct features—such as QR turnstile check-ins, interactive equipment orientation catalogs, real-time WebSocket coaching chats, and point-of-sale inventory deductions—ensuring seamless horizontal integration across the entire application ecosystem.
@@ -57,21 +43,13 @@ The researchers chose the **Agile Methodology** (Pressman & Maxim, 2020; Sommerv
 
 The engineering of FordaGO followed the **Agile System Development Life Cycle (SDLC)**, structured into five systematic, iterative phases:
 
-```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│     PHASE 1     │     │     PHASE 2     │     │     PHASE 3     │
-│  Requirements   │ ──► │  System Design  │ ──► │  Development &  │
-│    Analysis     │     │  & Architecture │     │ Implementation  │
-└─────────────────┘     └─────────────────┘     └────────┬────────┘
-                                                         │
-                        ┌─────────────────┐              │
-                        │     PHASE 5     │              ▼
-                        │  Deployment &   │     ┌─────────────────┐
-                        │ ISO Evaluation  │ ◄── │     PHASE 4     │
-                        └─────────────────┘     │ Integration &   │
-                                                │ System Testing  │
-                                                └─────────────────┘
-```
+| SDLC Phase | Focus Area | Key Deliverables & Outputs |
+| :---: | :--- | :--- |
+| **Phase 1** | **Requirements Gathering & Analysis** | On-site interviews, SRS documentation, role matrix definition |
+| **Phase 2** | **System & Architectural Design** | 3NF database ERDs, RESTful API endpoints, UI wireframes |
+| **Phase 3** | **Development & Implementation** | Ionic 8 / Angular frontend, Laravel 11 API, Reverb WebSockets |
+| **Phase 4** | **Integration & System Testing** | Unit tests, camera barcode scanner tests, end-to-end verification |
+| **Phase 5** | **Deployment & Evaluation** | On-premise deployment, live demos, ISO/IEC 25010 survey evaluation |
 <p align="center"><b>Figure 4.</b> <i>Agile System Development Life Cycle (SDLC) Phases of FordaGO</i></p>
 
 ### Phase 1: Requirements Gathering and Analysis
@@ -108,17 +86,12 @@ The finalized FordaGO system was deployed in a local network test environment an
 
 The study was conducted at **AFFORDA Gym – Cabiao Branch**, located in the municipality of **Cabiao, Nueva Ecija, Philippines**.
 
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│                        LOCALE OF THE STUDY                             │
-├────────────────────────────────────────────────────────────────────────┤
-│ Facility Name : AFFORDA Gym – Cabiao Branch                            │
-│ Location      : Cabiao, Nueva Ecija, Philippines                       │
-│ Environment   : Commercial Fitness Center & Conditioning Facility      │
-│ Target Users  : Gym Owner, Front-Desk Staff, Certified Coaches,        │
-│                 and Active Gym Members                                 │
-└────────────────────────────────────────────────────────────────────────┘
-```
+| Parameter | Description |
+| :--- | :--- |
+| **Facility Name** | AFFORDA Gym – Cabiao Branch |
+| **Location** | Cabiao, Nueva Ecija, Philippines |
+| **Environment** | Commercial Fitness Center & Strength Conditioning Facility |
+| **Target User Base** | Gym Owner, Front-Desk Staff, Certified Coaches, Active Gym Members |
 
 AFFORDA Gym – Cabiao Branch was selected as the research locale because it represents an active commercial gym environment that currently utilizes manual logbooks for attendance, paper-based membership tracking, and physical inventory lists. This location provides an authentic operational setting to deploy, evaluate, and test the capabilities of the FordaGO platform under real daily gym conditions.
 
@@ -134,23 +107,13 @@ This study employed **Purposive Sampling**, a non-probability sampling technique
 
 A total of **fifteen (15) respondents** were selected, categorized into two evaluation groups:
 
-```
-┌──────────────────────────────────────────────────────────────────────────┐
-│                   DISTRIBUTION OF EVALUATORS / RESPONDENTS               │
-├──────────────────────────┬───────────────────┬────────────┬──────────────┤
-│ Evaluator Category       │ Role / Expertise  │ Count (n)  │ Percentage   │
-├──────────────────────────┼───────────────────┼────────────┼──────────────┤
-│ 1. Technical Experts     │ IT Professionals, │     5      │    33.33%    │
-│                          │ Software Devs,    │            │              │
-│                          │ Database Admins   │            │              │
-├──────────────────────────┼───────────────────┼────────────┼──────────────┤
-│ 2. End-Users             │ Gym Admin / Staff │     2      │    13.33%    │
-│                          │ Gym Coaches       │     3      │    20.00%    │
-│                          │ Active Members    │     5      │    33.34%    │
-├──────────────────────────┴───────────────────┼────────────┼──────────────┤
-│ TOTAL RESPONDENTS                            │    15      │   100.00%    │
-└──────────────────────────────────────────────┴────────────┴──────────────┘
-```
+| Evaluator Category | Specific Role / Expertise | Count ($n$) | Percentage (%) |
+| :--- | :--- | :---: | :---: |
+| **1. Technical Experts** | IT Professionals, Software Developers, Database Administrators | 5 | 33.33% |
+| **2. End-Users** | Gym Owner & Front-Desk Staff | 2 | 13.33% |
+| | Certified Personal Trainers / Coaches | 3 | 20.00% |
+| | Active Gym Members | 5 | 33.34% |
+| **TOTAL RESPONDENTS** | | **15** | **100.00%** |
 
 ---
 
@@ -168,16 +131,12 @@ The instrument assessed five (5) core software product quality characteristics:
 
 A **4-Point Likert Scale (Forced-Choice)** was utilized across all questionnaire items, consistent with the standard evaluation rubrics established by the College of Information and Communications Technology (CICT).
 
-```
-┌───────┬───────────────────────────────┬───────────────────────────────┐
-│ Scale │ Numerical Range               │ Verbal Interpretation         │
-├───────┼───────────────────────────────┼───────────────────────────────┤
-│   4   │ 3.26 – 4.00                   │ Excellent / Strongly Agree    │
-│   3   │ 2.51 – 3.25                   │ Very Good / Agree             │
-│   2   │ 1.76 – 2.50                   │ Fair / Disagree               │
-│   1   │ 1.00 – 1.75                   │ Poor / Strongly Disagree      │
-└───────┴───────────────────────────────┴───────────────────────────────┘
-```
+| Scale | Numerical Range | Descriptive Rating | Verbal Interpretation |
+| :---: | :---: | :--- | :--- |
+| **4** | 3.26 – 4.00 | Strongly Agree (SA) | Excellent / Highly Acceptable |
+| **3** | 2.51 – 3.25 | Agree (A) | Very Good / Acceptable |
+| **2** | 1.76 – 2.50 | Disagree (D) | Fair / Needs Improvement |
+| **1** | 1.00 – 1.75 | Strongly Disagree (SD) | Poor / Unacceptable |
 
 ---
 
@@ -185,17 +144,13 @@ A **4-Point Likert Scale (Forced-Choice)** was utilized across all questionnaire
 
 The researchers executed a systematic, five-stage data gathering procedure:
 
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│                        DATA GATHERING PHASES                           │
-├────────────────────────────────────────────────────────────────────────┤
-│ Phase 1: Protocol & Consent Securing                                   │
-│ Phase 2: System Development, Verification & Deployment                 │
-│ Phase 3: Live System Demonstration & Hands-On User Testing             │
-│ Phase 4: Questionnaire Administration & Data Collection               │
-│ Phase 5: Statistical Processing, Analysis & Interpretation             │
-└────────────────────────────────────────────────────────────────────────┘
-```
+| Stage | Data Gathering Phase | Primary Activity |
+| :---: | :--- | :--- |
+| **Phase 1** | Protocol & Consent Securing | Submitting permission letters and distributing informed consent forms |
+| **Phase 2** | System Verification & Deployment | Deploying LAN servers and configuring Android APK test builds |
+| **Phase 3** | Demonstration & Hands-On User Testing | Guiding respondents through attendance, coaching, POS, and export workflows |
+| **Phase 4** | Questionnaire Administration | Administering the 20-item ISO/IEC 25010 4-point Likert instrument |
+| **Phase 5** | Statistical Processing & Analysis | Computing weighted means, composite means, and grand overall means |
 
 ### Phase 1: Protocol and Consent Securing
 The researchers submitted a formal letter of request to the management of AFFORDA Gym – Cabiao Branch to obtain administrative authorization for research, personnel interviews, and on-site system testing. Informed consent forms outlining research objectives were distributed to all respondents prior to participation.

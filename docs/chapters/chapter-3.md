@@ -72,34 +72,12 @@ The system architecture follows a decoupled **Client-Server Model** consisting o
 3. **Real-Time Communication Layer:** **Laravel Reverb WebSocket Server** integrated with Laravel Echo for instant duplex messaging, live typing status, and proposal notifications.
 4. **Data Persistence Layer:** **MySQL 8.0** relational database management system enforcing foreign key referential integrity and atomic transaction processing.
 
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│                        FORDAGO SYSTEM ARCHITECTURE                     │
-├────────────────────────────────────────────────────────────────────────┤
-│                                                                        │
-│   ┌─────────────────────┐     ┌────────────────────────────────────┐   │
-│   │  MEMBER MOBILE APP  │     │   ADMIN / COACH WEB & MOBILE HUB   │   │
-│   │   (Ionic / Angular) │     │         (Ionic / Angular)          │   │
-│   └──────────┬──────────┘     └─────────────────┬──────────────────┘   │
-│              │                                  │                      │
-│              │ (HTTPS REST API / Sanctum Token) │                      │
-│              ▼                                  ▼                      │
-│   ┌────────────────────────────────────────────────────────────────┐   │
-│   │                 LARAVEL 11 RESTful API BACKEND                 │   │
-│   │   • Controllers   • Sanctum Auth   • Middleware Role Guards    │   │
-│   │   • Eloquent ORM  • Business Logic • Vector PDF Export Engine  │   │
-│   └──────────────┬──────────────────────────────┬──────────────────┘   │
-│                  │                              │                      │
-│     (Persistent TCP WebSockets)    (SQL Queries / Foreign Keys)        │
-│                  ▼                              ▼                      │
-│   ┌────────────────────────────┐  ┌────────────────────────────────┐   │
-│   │   LARAVEL REVERB SERVER    │  │    MySQL 8.0 RELATIONAL DB     │   │
-│   │   (Duplex Real-Time Chat & │  │  (Users, Attendance, Workouts, │   │
-│   │    Instant Proposal Alerts)│  │   Equipment, Shop Inventory)   │   │
-│   └────────────────────────────┘  └────────────────────────────────┘   │
-│                                                                        │
-└────────────────────────────────────────────────────────────────────────┘
-```
+| Layer / Tier | Core Technology & Framework | Architectural Role & Responsibilities |
+| :--- | :--- | :--- |
+| **Presentation Tier (Frontend)** | **Ionic 8 + Angular** *(TypeScript, SCSS)* | Cross-platform responsive client, Member Mobile Portal, Coach Studio, Admin Web/Mobile Hub, Capacitor Camera plugin |
+| **Application Tier (Backend API)** | **Laravel 11 RESTful API** *(PHP 8.2+)* | Business logic controllers, Eloquent ORM, Sanctum token authentication, RBAC middleware guards, vector PDF/Excel engine |
+| **Real-Time Communication Tier** | **Laravel Reverb WebSocket Server** | High-throughput duplex WebSocket channels (Port 8080), instant chat broadcasting, live typing status, real-time proposal alerts |
+| **Data Persistence Tier (Database)** | **MySQL 8.0 Relational DB** | 3NF normalized tables (`users`, `memberships`, `attendances`, `equipment`, `products`, `orders`), ACID transaction compliance |
 <p align="center"><b>Figure 5.</b> <i>FordaGO Full-Stack Architectural Framework</i></p>
 
 ---
@@ -107,39 +85,21 @@ The system architecture follows a decoupled **Client-Server Model** consisting o
 #### Use Case Diagram
 The Use Case Diagram illustrates the functional capabilities available to the three primary actors: **Gym Member**, **Gym Coach**, and **Gym Administrator / Front-Desk Staff**.
 
-```
-                           ┌──────────────────────────────────────────────┐
-                           │          FordaGO SYSTEM BOUNDARY             │
-                           │                                              │
-                           │  ( Authenticate & Login ) ◄──────────────────┼── [ Member ]
-                           │                                              │   [ Coach  ]
-                           │  ( Check-In via QR Code ) ◄──────────────────┼── [ Admin  ]
-                           │                                              │
-                           │  ( Scan Equipment QR Guides ) ───────────────┼── [ Member ]
-                           │                                              │
-                           │  ( Log PRs & Split Routines ) ───────────────┼── [ Member ]
-                           │                                              │
-                           │  ( Browse Supplements & Cart Checkout ) ─────┼── [ Member ]
-                           │                                              │
-                           │  ( Real-Time Coach-Trainee Chat ) ───────────┼── [ Member ]
-                           │         ▲                                    │   [ Coach  ]
-                           │         │ <<includes>>                       │
-                           │  ( In-Chat Workout Plan Proposals ) ─────────┼── [ Coach  ]
-                           │                                              │
-                           │  ( Manage Coach Availability & Classes ) ────┼── [ Coach  ]
-                           │                                              │
-                           │  ( Turnstile Camera QR Attendance ) ─────────┼── [ Admin ]
-                           │                                              │
-                           │  ( Verify Membership Passes & Renewals ) ────┼── [ Admin ]
-                           │                                              │
-                           │  ( Supplement POS & GCash Stock Audit ) ─────┼── [ Admin ]
-                           │                                              │
-                           │  ( Generate Equipment Placards & QRs ) ──────┼── [ Admin ]
-                           │                                              │
-                           │  ( Export PDF / Excel Business Reports ) ────┼── [ Admin ]
-                           │                                              │
-                           └──────────────────────────────────────────────┘
-```
+| Functional Capability / Use Case | Gym Member | Gym Coach | Gym Administrator / Staff |
+| :--- | :---: | :---: | :---: |
+| **Account Login & Sanctum Token Auth** | ✓ | ✓ | ✓ |
+| **Optical QR Attendance Check-In** | ✓ | — | — |
+| **Digital Camera Turnstile Verification** | — | — | ✓ |
+| **Scan Equipment QR & View Muscle Guides** | ✓ | — | — |
+| **Log Personal Records (PR) & Split Plans** | ✓ | — | — |
+| **Browse Supplements & Cart Checkout** | ✓ | — | — |
+| **1-on-1 Real-Time WebSocket Chat** | ✓ | ✓ | — |
+| **Create & Propose In-Chat Workout Plans** | — | ✓ | — |
+| **Manage Availability Slots & Group Classes** | — | ✓ | — |
+| **Verify Membership Passes & Renewals** | — | — | ✓ |
+| **Supplement POS & GCash Stock Audit** | — | — | ✓ |
+| **Generate & Print Equipment Placard QRs** | — | — | ✓ |
+| **Export Dynamic PDF / Excel Business Reports** | — | — | ✓ |
 <p align="center"><b>Figure 6.</b> <i>Use Case Diagram of FordaGO</i></p>
 
 ---
@@ -149,37 +109,11 @@ The Use Case Diagram illustrates the functional capabilities available to the th
 ##### Context Diagram Level 0
 The Level 0 Context Diagram establishes the global boundary of FordaGO, illustrating data input and information feedback between the system and its primary external entities.
 
-```
-       ┌────────────────────────┐
-       │       GYM MEMBER       │
-       └─────┬────────────▲─────┘
-             │            │
-  Login / QR Data /       │ Check-in Status / Exercise Guides /
-  Orders / PR Metrics /   │ Routine Plans / Coaching Proposals /
-  Chat Messages           │ Order Invoices
-             │            │
-             ▼            │
-       ┌──────────────────┴─────┐
-       │           0            │
-       │                        │
-       │        FordaGO         │ ◄─── Credentials / Class Schedules /
-       │      GYM DATABASE      │      Availability / Workout Proposals
-       │   MANAGEMENT SYSTEM    │
-       │                        │ ───► Trainee Inquiries / Booking Rosters /
-       │                        │      Chat Messages / Earnings Insights
-       └─────┬────────────▲─────┘
-             │            │       ┌────────────────────────┐
-             │            │       │       GYM COACH        │
-  Operational Summaries / │       └────────────────────────┘
-  Turnstile Scan Logs /   │ Credentials / Admin Commands /
-  Sales & Inventory PDF/  │ Pass Approvals / Product Updates /
-  Excel Reports           │ Equipment Details
-             │            │
-             ▼            │
-       ┌──────────────────┴─────┐
-       │   GYM ADMINISTRATOR    │
-       └────────────────────────┘
-```
+| External Entity | Primary Data Inputs to FordaGO | Information Outputs from FordaGO |
+| :--- | :--- | :--- |
+| **Gym Member** | Login credentials, attendance QR scans, supplement orders, PR metrics, chat messages | Check-in confirmations, exercise guides, routine schedules, coaching proposals, order invoices |
+| **Gym Coach** | Login credentials, class schedules, weekly availability slots, workout proposals | Trainee consultation inquiries, booking rosters, direct chat messages, earnings insights |
+| **Gym Administrator / Staff** | Admin credentials, command overrides, pass approvals, product stock updates, equipment specs | Real-time traffic summaries, turnstile scan logs, sales & inventory audits, PDF/Excel reports |
 <p align="center"><b>Figure 7.</b> <i>Context Diagram Level 0 of FordaGO</i></p>
 
 ---
@@ -187,31 +121,15 @@ The Level 0 Context Diagram establishes the global boundary of FordaGO, illustra
 ##### Context Diagram Level 1 (Data Flow Diagram)
 The Level 1 Diagram decomposes the system into its primary functional subprocesses and database stores.
 
-```
-                                  ┌───────────────┐
-                                  │   users_tbl   │
-                                  └───────┬───────┘
-                                          │
- ┌──────────┐  (1.0) Auth & Sanctum Token │
- │   USER   ├─────────────────────────────┘
- └────┬─────┘
-      │
-      ├────────────────► (2.0) QR Turnstile Check-In ───► ┌──────────────────┐
-      │                                                   │ attendances_tbl  │
-      ├────────────────► (3.0) Equipment QR Scanner ────► ┌──────────────────┐
-      │                                                   │  equipment_tbl   │
-      ├────────────────► (4.0) PR & Split Workout Engine─►┌──────────────────┐
-      │                                                   │  workouts_tbl    │
-      ├────────────────► (5.0) WebSocket Chat & Proposal─►┌──────────────────┐
-      │                                                   │ messages_tbl /   │
-      │                                                   │ proposals_tbl    │
-      ├────────────────► (6.0) Supplement POS & Cart ───► ┌──────────────────┐
-      │                                                   │ products_tbl /   │
-      │                                                   │ orders_tbl       │
-      └────────────────► (7.0) PDF/Excel Export Engine ─► ┌──────────────────┐
-                                                          │ System Summaries │
-                                                          └──────────────────┘
-```
+| Process ID | Functional Subprocess | Primary Input Entity | Target Database Store | Key Generated Output |
+| :---: | :--- | :--- | :--- | :--- |
+| **1.0** | **Authentication & Authorization** | All User Roles | `users` | Sanctum Bearer Tokens & Secure Sessions |
+| **2.0** | **QR Turnstile Attendance** | Member / Admin Turnstile | `attendances` | Confirmed Attendance Stamp & Traffic Logs |
+| **3.0** | **Equipment QR Information** | Member Camera Sensor | `equipment` | Targeted Muscle Diagram & Step Guide |
+| **4.0** | **PR & Split Routine Planner** | Member | `personal_records`, `workout_splits` | Strength Milestone Metrics & Workout Routine |
+| **5.0** | **WebSocket Chat & Proposals** | Member / Coach | `chat_messages`, `workout_proposals` | Instant Message Broadcast & 1-Tap Accept |
+| **6.0** | **Supplement POS & Inventory** | Member / Admin Staff | `products`, `orders`, `order_items` | Verified GCash Receipt & Atomic Stock Deduct |
+| **7.0** | **PDF / Excel Export Engine** | Admin Staff | Aggregated Relational Queries | Dynamic Vector PDF & CSV/Excel Spreadsheets |
 <p align="center"><b>Figure 8.</b> <i>Context Diagram Level 1 (Data Flow Diagram) of FordaGO</i></p>
 
 ---
@@ -235,39 +153,27 @@ To ensure high data integrity, minimize redundancy, and preserve transactional c
 ##### 1. Unnormalized Form (UNF)
 In the unnormalized state, all attributes across users, attendance check-ins, memberships, workout routines, coaching proposals, products, and supplement orders were represented in a single flat structure with multivalued and repeating groups.
 
-```
-UNNORMALIZED DATA (UNF):
-user_id, first_name, last_name, email, password, role, contact_number,
-membership_type, membership_start, membership_expiry, membership_status,
-attendance_id, attendance_date, check_in_time, check_in_status,
-equipment_id, equipment_name, equipment_category, muscle_group, media_url,
-pr_id, exercise_name, max_weight, reps, pr_date,
-workout_id, split_day, target_duration, routine_details,
-coach_id, coach_specialty, coach_rate, availability_schedule,
-proposal_id, proposal_title, proposal_price, proposal_status, proposal_date,
-conversation_id, sender_id, receiver_id, message_text, message_timestamp,
-product_id, product_name, product_category, price, stock_quantity,
-order_id, order_date, payment_method, gcash_reference, order_total, order_status
-```
+> **UNNORMALIZED DATA ATTRIBUTES (UNF):**
+> 
+> `user_id`, `first_name`, `last_name`, `email`, `password`, `role`, `contact_number`, `membership_type`, `membership_start`, `membership_expiry`, `membership_status`, `attendance_id`, `attendance_date`, `check_in_time`, `check_in_status`, `equipment_id`, `equipment_name`, `equipment_category`, `muscle_group`, `media_url`, `pr_id`, `exercise_name`, `max_weight`, `reps`, `pr_date`, `workout_id`, `split_day`, `target_duration`, `routine_details`, `coach_id`, `coach_specialty`, `coach_rate`, `availability_schedule`, `proposal_id`, `proposal_title`, `proposal_price`, `proposal_status`, `proposal_date`, `conversation_id`, `sender_id`, `receiver_id`, `message_text`, `message_timestamp`, `product_id`, `product_name`, `product_category`, `price`, `stock_quantity`, `order_id`, `order_date`, `payment_method`, `gcash_reference`, `order_total`, `order_status`
 
 ##### 2. First Normal Form (1NF)
 All multivalued attributes and repeating groups were eliminated. Atomic column structures were defined, and unique primary keys were designated for each distinct table.
 
-```
-1NF RELATION SCHEMAS:
-• users (user_id [PK], first_name, last_name, email, password, role, contact_number, created_at)
-• memberships (membership_id [PK], user_id, type, start_date, end_date, status, price)
-• attendances (attendance_id [PK], user_id, date, check_in_time, status)
-• equipment (equipment_id [PK], name, category, target_muscle, media_url, status)
-• personal_records (pr_id [PK], user_id, exercise_name, weight, reps, record_date)
-• workout_splits (workout_id [PK], user_id, day_of_week, duration_minutes, routine_json)
-• coach_profiles (coach_id [PK], user_id, specialty, hourly_rate, bio, availability_json)
-• workout_proposals (proposal_id [PK], coach_id, member_id, title, price, routine_json, status)
-• chat_messages (message_id [PK], conversation_id, sender_id, message_text, created_at)
-• products (product_id [PK], name, category, price, stock_quantity, image_url)
-• orders (order_id [PK], user_id, total_amount, payment_method, gcash_ref, status, created_at)
-• order_items (item_id [PK], order_id, product_id, quantity, unit_price, subtotal)
-```
+| Relation / Table Entity | Primary Key (PK) | Atomic Column Schema (1NF) |
+| :--- | :---: | :--- |
+| **`users`** | `user_id` | `first_name`, `last_name`, `email`, `password`, `role`, `contact_number`, `created_at` |
+| **`memberships`** | `membership_id` | `user_id`, `type`, `start_date`, `end_date`, `status`, `price` |
+| **`attendances`** | `attendance_id` | `user_id`, `date`, `check_in_time`, `status` |
+| **`equipment`** | `equipment_id` | `name`, `category`, `target_muscle`, `media_url`, `status` |
+| **`personal_records`** | `pr_id` | `user_id`, `exercise_name`, `weight`, `reps`, `record_date` |
+| **`workout_splits`** | `workout_id` | `user_id`, `day_of_week`, `duration_minutes`, `routine_json` |
+| **`coach_profiles`** | `coach_id` | `user_id`, `specialty`, `hourly_rate`, `bio`, `availability_json` |
+| **`workout_proposals`** | `proposal_id` | `coach_id`, `member_id`, `title`, `price`, `routine_json`, `status` |
+| **`chat_messages`** | `message_id` | `conversation_id`, `sender_id`, `message_text`, `created_at` |
+| **`products`** | `product_id` | `name`, `category`, `price`, `stock_quantity`, `image_url` |
+| **`orders`** | `order_id` | `user_id`, `total_amount`, `payment_method`, `gcash_ref`, `status`, `created_at` |
+| **`order_items`** | `item_id` | `order_id`, `product_id`, `quantity`, `unit_price`, `subtotal` |
 
 ##### 3. Second Normal Form (2NF)
 Partial functional dependencies were removed. All non-key attributes were made fully functionally dependent on the entire primary key of their respective tables.
@@ -275,83 +181,36 @@ Partial functional dependencies were removed. All non-key attributes were made f
 ##### 4. Third Normal Form (3NF)
 Transitive dependencies were removed. Non-key attributes depend solely and directly on the primary key, preventing update, insertion, and deletion anomalies.
 
-```
-3NF NORMALIZED RELATIONAL SCHEMAS:
-┌────────────────────────────────────────┐   ┌────────────────────────────────────────┐
-│ users                                  │   │ memberships                            │
-├────────────────────────────────────────┤   ├────────────────────────────────────────┤
-│ • user_id (PK)                         │   │ • membership_id (PK)                   │
-│ • first_name, last_name, email         │   │ • user_id (FK -> users.user_id)        │
-│ • password (Bcrypt Hash)               │   │ • pass_type, start_date, end_date      │
-│ • role ('member','coach','admin'...)   │   │ • status ('active','expired')          │
-│ • contact_number, fcm_token            │   │ • price_paid, created_at               │
-└────────────────────────────────────────┘   └────────────────────────────────────────┘
-
-┌────────────────────────────────────────┐   ┌────────────────────────────────────────┐
-│ attendances                            │   │ equipment                              │
-├────────────────────────────────────────┤   ├────────────────────────────────────────┤
-│ • attendance_id (PK)                   │   │ • equipment_id (PK)                    │
-│ • user_id (FK -> users.user_id)        │   │ • name, category, target_muscle        │
-│ • check_in_date, check_in_time         │   │ • media_url, qr_code_identifier        │
-│ • status ('confirmed','rejected')      │   │ • maintenance_status, created_at       │
-└────────────────────────────────────────┘   └────────────────────────────────────────┘
-
-┌────────────────────────────────────────┐   ┌────────────────────────────────────────┐
-│ workout_proposals                      │   │ products                               │
-├────────────────────────────────────────┤   ├────────────────────────────────────────┤
-│ • proposal_id (PK)                     │   │ • product_id (PK)                      │
-│ • coach_id (FK -> users.user_id)       │   │ • name, category, price                │
-│ • member_id (FK -> users.user_id)      │   │ • stock_quantity, image_path           │
-│ • title, scheduled_date, price         │   │ • status ('in_stock','out_of_stock')   │
-│ • routine_data (JSON), status          │   │ • created_at, updated_at               │
-└────────────────────────────────────────┘   └────────────────────────────────────────┘
-
-┌────────────────────────────────────────┐   ┌────────────────────────────────────────┐
-│ orders                                 │   │ order_items                            │
-├────────────────────────────────────────┤   ├────────────────────────────────────────┤
-│ • order_id (PK)                        │   │ • item_id (PK)                         │
-│ • user_id (FK -> users.user_id)        │   │ • order_id (FK -> orders.order_id)     │
-│ • total_amount, payment_method         │   │ • product_id (FK -> products.prod_id)  │
-│ • gcash_reference, payment_proof_img   │   │ • quantity, unit_price, subtotal       │
-│ • status ('pending','approved'...)     │   └────────────────────────────────────────┘
-└────────────────────────────────────────┘
-```
+| Table Name | Primary Key | Foreign Keys & Core Columns |
+| :--- | :--- | :--- |
+| **`users`** | `user_id` (PK) | `first_name`, `last_name`, `email`, `password` *(Bcrypt)*, `role`, `contact_number`, `fcm_token` |
+| **`memberships`** | `membership_id` (PK) | `user_id` *(FK ➔ `users`)*, `pass_type`, `start_date`, `end_date`, `status`, `price_paid` |
+| **`attendances`** | `attendance_id` (PK) | `user_id` *(FK ➔ `users`)*, `check_in_date`, `check_in_time`, `status` |
+| **`equipment`** | `equipment_id` (PK) | `name`, `category`, `target_muscle`, `media_url`, `qr_code_identifier`, `status` |
+| **`personal_records`** | `pr_id` (PK) | `user_id` *(FK ➔ `users`)*, `exercise_name`, `weight_kg`, `reps`, `record_date` |
+| **`workout_splits`** | `workout_id` (PK) | `user_id` *(FK ➔ `users`)*, `day_of_week`, `target_duration`, `routine_details` *(JSON)* |
+| **`workout_proposals`** | `proposal_id` (PK) | `coach_id` *(FK ➔ `users`)*, `member_id` *(FK ➔ `users`)*, `title`, `price`, `routine_json`, `status` |
+| **`chat_messages`** | `message_id` (PK) | `conversation_id`, `sender_id` *(FK ➔ `users`)*, `message_text`, `created_at` |
+| **`products`** | `product_id` (PK) | `name`, `category`, `price`, `stock_quantity`, `image_url`, `status` |
+| **`orders`** | `order_id` (PK) | `user_id` *(FK ➔ `users`)*, `total_amount`, `payment_method`, `gcash_reference`, `status` |
+| **`order_items`** | `item_id` (PK) | `order_id` *(FK ➔ `orders`)*, `product_id` *(FK ➔ `products`)*, `quantity`, `unit_price`, `subtotal` |
 
 ---
 
 #### Entity-Relationship Diagram (ERD)
 The Entity-Relationship Diagram illustrates the logical tables, primary keys, foreign keys, and cardinalities defining the FordaGO database structure.
 
-```
-       ┌──────────────────┐
-       │   memberships    │
-       └────────▲─────────┘
-                │ (1:N)
-       ┌────────┴─────────┐ (1:N) ┌──────────────────┐
-       │      users       ├──────►│   attendances    │
-       └───┬────┬────┬────┘       └──────────────────┘
-           │    │    │ (1:N)      ┌──────────────────┐
-     (1:N) │    │    └───────────►│ personal_records │
-           │    │                 └──────────────────┘
-           │    │ (1:N)           ┌──────────────────┐
-           │    └────────────────►│ workout_sessions │
-           │                      └──────────────────┘
-           ├──────────────────────────────┐
-           │ (1:N)                        │ (1:N)
-           ▼                              ▼
-┌──────────────────────┐       ┌──────────────────────┐
-│  workout_proposals   │       │        orders        │
-└──────────────────────┘       └──────────┬───────────┘
-                                          │ (1:N)
-┌──────────────────────┐                  ▼
-│      equipment       │       ┌──────────────────────┐
-└──────────────────────┘       │     order_items      │
-                               └──────────▲───────────┘
-                                          │ (N:1)
-                               ┌──────────┴───────────┐
-                               │       products       │
-                               └──────────────────────┘
-```
+| Primary / Parent Entity (1) | Cardinality | Related / Child Entity (N) | Foreign Key Relationship | Business Logic & Integrity Constraint |
+| :--- | :---: | :--- | :--- | :--- |
+| **`users`** | **1 : N** | **`memberships`** | `memberships.user_id` ➔ `users.user_id` | Member pass subscription history and renewal tracking |
+| **`users`** | **1 : N** | **`attendances`** | `attendances.user_id` ➔ `users.user_id` | Optical turnstile QR check-in log generation |
+| **`users`** | **1 : N** | **`personal_records`** | `personal_records.user_id` ➔ `users.user_id` | Exercise milestone and strength percentage gains |
+| **`users`** | **1 : N** | **`workout_splits`** | `workout_splits.user_id` ➔ `users.user_id` | 7-day personalized workout split routines |
+| **`users` *(Coach)*** | **1 : N** | **`workout_proposals`** | `workout_proposals.coach_id` ➔ `users.user_id` | Structured in-chat workout proposal dispatch |
+| **`users` *(Member)*** | **1 : N** | **`workout_proposals`** | `workout_proposals.member_id` ➔ `users.user_id` | Member proposal receipt, review, and 1-tap acceptance |
+| **`users`** | **1 : N** | **`orders`** | `orders.user_id` ➔ `users.user_id` | Multi-item supplement and merchandise purchases |
+| **`orders`** | **1 : N** | **`order_items`** | `order_items.order_id` ➔ `orders.order_id` | Line item breakdown per cart order |
+| **`products`** | **1 : N** | **`order_items`** | `order_items.product_id` ➔ `products.product_id` | Product catalog linkage and atomic stock deductions |
 <p align="center"><b>Figure 9.</b> <i>Entity-Relationship Diagram (ERD) of FordaGO</i></p>
 
 ---
@@ -668,3 +527,4 @@ Gym members rated the application with an overall Grand Mean of **3.82 (Excellen
 ## 5. Synthesis of Findings
 
 The empirical findings from all evaluation groups demonstrate that **FordaGO: Mobile-Based Gym Database Management System** successfully resolves the operational inefficiencies of **AFFORDA Gym – Cabiao Branch**. By replacing manual paper logbooks with digital QR turnstile verification, providing interactive equipment QR execution tutorials, facilitating real-time WebSocket coaching collaboration with structured in-chat proposals, and automating supplement POS inventory tracking, FordaGO delivers an innovative, highly acceptable, and technically robust gym management ecosystem.
+

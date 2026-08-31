@@ -45,20 +45,12 @@ Through the implementation of FordaGO, AFFORDA Gym – Cabiao Branch can moderni
 
 The development and evaluation of the FordaGO system are anchored on several foundational theories in Information Systems, Computer Science, and Human-Computer Interaction:
 
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│                         THEORETICAL FOUNDATION                         │
-├────────────────────────────────────────────────────────────────────────┤
-│ 1. Technology Acceptance Model (TAM) (Davis, 1989)                     │
-│    • Perceived Usefulness (PU) & Perceived Ease of Use (PEOU)          │
-│ 2. Relational Database Theory (Codd, 1970)                             │
-│    • Schema Normalization, Referential Integrity & ACID Properties     │
-│ 3. Client-Server & Real-Time Event Architecture (Fielding, 2000)       │
-│    • RESTful API (Laravel 11) & Full-Duplex WebSockets (Reverb)        │
-│ 4. ISO/IEC 25010 Software Product Quality Model (ISO, 2011)            │
-│    • Functional Suitability, Usability, Reliability, Security, Perf.   │
-└────────────────────────────────────────────────────────────────────────┘
-```
+| Theoretical Foundation | Key Concept & Application in FordaGO |
+| :--- | :--- |
+| **1. Technology Acceptance Model (TAM)** *(Davis, 1989)* | Perceived Usefulness (PU) & Perceived Ease of Use (PEOU) in mobile UI/UX and QR workflows |
+| **2. Relational Database Theory** *(Codd, 1970)* | Schema normalization (3NF/BCNF), referential integrity, and ACID transaction guarantees |
+| **3. Client-Server & Real-Time Event Architecture** *(Fielding, 2000)* | Decoupled RESTful API (Laravel 11) and persistent full-duplex WebSockets (Laravel Reverb) |
+| **4. ISO/IEC 25010 Software Quality Model** *(ISO, 2011)* | Empirical quality benchmarks: Functional Suitability, Usability, Reliability, Security, and Performance |
 
 1. **Technology Acceptance Model (TAM) (Davis, 1989):** TAM posits that the adoption and utilization of an information system depend fundamentally on two user beliefs: *Perceived Usefulness (PU)*—the degree to which a user believes the system enhances their task performance—and *Perceived Ease of Use (PEOU)*—the degree to which using the system is free of cognitive effort. In FordaGO, TAM guides the user interface (UI/UX) design, ensuring that QR attendance scanning, equipment guides, and mobile coaching are intuitive, fast, and accessible for both non-technical gym members and administrative personnel.
 2. **Relational Database Theory (Codd, 1970):** Formulated by Edgar F. Codd, this theory dictates that data must be organized into normalized, two-dimensional relation tables linked through primary and foreign keys to prevent data redundancy and maintain referential integrity. FordaGO applies Boyce-Codd Normal Form (BCNF) / Third Normal Form (3NF) within MySQL to guarantee ACID (Atomicity, Consistency, Isolation, Durability) transaction compliance during concurrent check-ins and point-of-sale inventory deductions.
@@ -71,33 +63,10 @@ The development and evaluation of the FordaGO system are anchored on several fou
 
 The conceptual model of this study is structured using the **Input-Process-Output (IPO)** framework, illustrating the transformation of raw operational gym inputs into structured digital outputs through iterative software engineering and quality evaluation.
 
-```
-┌──────────────────────────────────┐      ┌──────────────────────────────────┐      ┌──────────────────────────────────┐
-│              INPUT               │      │             PROCESS              │      │              OUTPUT              │
-├──────────────────────────────────┤      ├──────────────────────────────────┤      ├──────────────────────────────────┤
-│ 1. User & Account Data:          │      │ 1. Requirements Analysis &       │      │ 1. Deployed FordaGO System:      │
-│    • Member, Coach, Admin        │      │    Agile Sprint Planning         │      │    • Member Mobile Portal        │
-│      Profiles & Credentials      │      │ 2. System Architecture & UI/UX   │      │    • Coach Studio Hub            │
-│ 2. Gym Operational Data:         │      │    Wireframe Modeling            │      │    • Admin Command Center        │
-│    • Membership Pass Types,      │      │ 3. Database Modeling &           │ 2. Digital QR Attendance        │
-│      Durations & Pricing         │      │    Schema Normalization (MySQL)  │    Check-In & Traffic Logs       │
-│    • Equipment Records, Specs    │ ───► │ 4. Backend REST API Development  │ ───► │ 3. Interactive Equipment QR      │
-│      & Muscle Target Media       │      │    & Sanctum Auth (Laravel 11)   │    Tutorial & Media Catalog      │
-│    • Personal Records (PR) &     │      │ 5. Real-Time WebSocket Event     │ 4. Personal Record (PR) &       │
-│      Workout Split Routines      │      │    Broadcasting (Laravel Reverb) │    Weekly Split Workout Plans    │
-│    • Supplement Products, Stock  │      │ 6. Mobile Cross-Platform Client  │ 5. Real-Time Coach-Trainee Chat │
-│      Counts & POS Orders         │      │    Construction (Ionic/Angular)  │    & In-Chat Workout Proposals   │
-│ 3. Hardware / Sensor Data:       │      │ 7. Camera Barcode QR Processing  │ 6. Supplement POS Transaction   │
-│    • Mobile Camera QR Optical    │      │ 8. POS Cart Atomic Deductions    │    Records & Verified Receipts   │
-│      Data Streams                │      │ 9. Vector PDF/Excel Export       │ 7. Dynamic Vector PDF/Excel     │
-│ 4. Evaluation Parameters:        │      │ 10. ISO/IEC 25010 System Testing │    Administrative Reports        │
-│    • ISO/IEC 25010 Criteria      │      │     & Statistical Evaluation     │ 8. Standardized Software         │
-│      & 4-Point Likert Instrument │      │                                  │    Quality Assessment Report     │
-└──────────────────────────────────┘      └──────────────────────────────────┘      └──────────────────────────────────┘
-                 ▲                                                                                      │
-                 │                                                                                      │
-                 └────────────────────────────── FEEDBACK & ITERATION ──────────────────────────────────┘
-```
+| INPUT | PROCESS | OUTPUT |
+| :--- | :--- | :--- |
+| **1. User & Account Data:**<br>• Member, Coach, Admin Profiles & Encrypted Credentials<br><br>**2. Gym Operational Data:**<br>• Membership Pass Types, Durations & Pricing<br>• Equipment Records, Specs & Muscle Target Media<br>• Personal Records (PR) & Weekly Split Routines<br>• Supplement Products, Stock Counts & POS Orders<br><br>**3. Hardware / Sensor Data:**<br>• Mobile Camera Optical Data Streams for QR Codes<br><br>**4. Evaluation Parameters:**<br>• ISO/IEC 25010 Criteria & 4-Point Likert Instrument | **1.** Requirements Analysis & Agile Sprint Planning<br>**2.** System Architecture & UI/UX Wireframing<br>**3.** Database Modeling & Schema Normalization (MySQL 3NF)<br>**4.** Backend REST API & Sanctum Auth Development (Laravel 11)<br>**5.** Real-Time WebSocket Event Broadcasting (Laravel Reverb)<br>**6.** Mobile Cross-Platform Client Development (Ionic 8 / Angular)<br>**7.** Optical Camera Barcode/QR Code Decoding<br>**8.** POS Cart Atomic Inventory Deductions<br>**9.** Dynamic Vector PDF/Excel Export Generation<br>**10.** ISO/IEC 25010 System Testing & Statistical Evaluation | **1. Deployed FordaGO Multi-Tier System:**<br>• Member Mobile Portal<br>• Coach Studio Hub<br>• Admin Command Center<br><br>**2.** Digital QR Attendance Check-In & Traffic Logs<br>**3.** Interactive Equipment QR Tutorial & Media Catalog<br>**4.** Personal Record (PR) & Weekly Split Workout Plans<br>**5.** Real-Time Coach-Trainee Chat & In-Chat Workout Proposals<br>**6.** Supplement POS Transactions & Verified Receipts<br>**7.** Dynamic Vector PDF/Excel Administrative Reports<br>**8.** Standardized Software Quality Assessment Report |
+| 🡑 | ⮜─── **FEEDBACK & ITERATIVE REFINEMENT LOOP** ─── | 🡓 |
 <p align="center"><b>Figure 1.</b> <i>Conceptual Framework of the Study (Input-Process-Output Model)</i></p>
 
 ### Narrative Description of the IPO Components
@@ -184,26 +153,9 @@ To achieve the general objective, the study will accomplish the following specif
 ### Scope of the Study
 This study encompasses the full design, development, integration, and empirical evaluation of **FordaGO: Mobile-Based Gym Database Management System for AFFORDA Gym – Cabiao Branch**. The system serves three primary user groups:
 
-```
-                           ┌───────────────────────────────┐
-                           │      FordaGO Ecosystem        │
-                           └──────────────┬────────────────┘
-                                          │
-         ┌────────────────────────────────┼────────────────────────────────┐
-         │                                │                                │
-         ▼                                ▼                                ▼
-┌──────────────────┐            ┌──────────────────┐            ┌──────────────────┐
-│   MEMBER APP     │            │   COACH STUDIO   │            │   ADMIN PANEL    │
-│  (Mobile Portal) │            │   (Trainer Hub)  │            │ (Command Center) │
-└────────┬─────────┘            └────────┬─────────┘            └────────┬─────────┘
-         │                               │                               │
-         ├─ QR Attendance Check-in       ├─ Trainee Roster Management    ├─ Digital QR Turnstile Scanner
-         ├─ PR Metric Tracker            ├─ 1-on-1 Real-Time Chat        ├─ Pass Verification & Renewal
-         ├─ Split Routine Planner        ├─ In-Chat Workout Proposals    ├─ Shop POS & GCash Audit
-         ├─ Equipment QR Scanner         ├─ Public Group Fitness Classes ├─ Equipment Catalog & QRs
-         ├─ Supplement Shop & Cart       ├─ Weekly Availability Slots    ├─ Coach Account Administration
-         └─ Interactive Feature Guides   └─ Trainer Earnings Tracking    └─ PDF/Excel Export Engine
-```
+| Member Mobile App *(Mobile Portal)* | Coach Studio *(Trainer Hub)* | Admin Command Center *(Administrative Panel)* |
+| :--- | :--- | :--- |
+| • Digital QR Attendance Pass<br>• Personal Record (PR) Metric Tracker<br>• 7-Day Split Routine Builder<br>• Equipment QR Scanner & Media Guides<br>• Supplement Shop & Cart Checkout<br>• In-Chat Coaching Proposal Acceptance<br>• Interactive Feature Walkthrough Guides | • Trainee Roster Management<br>• 1-on-1 Real-Time WebSocket Chat<br>• In-Chat Workout Plan Proposals<br>• Public Group Fitness Class Publishing<br>• Weekly Availability Slot Scheduler<br>• Trainer Consultation Earnings Tracker | • Digital Optical QR Turnstile Scanner<br>• Membership Pass Verification & Renewal<br>• Supplement POS & GCash Audit Logs<br>• Equipment Catalog & Placard Generator<br>• Coach Account & Profile Administration<br>• Client-Side Vector PDF & Excel Reports |
 <p align="center"><b>Figure 2.</b> <i>FordaGO Tri-Tier Ecosystem Architecture</i></p>
 
 The system's functional scope is divided into nine major modules:
@@ -282,23 +234,19 @@ Managing personal health and customer records necessitates strict compliance wit
 
 To establish a comparative baseline, five existing commercial gym management platforms were examined alongside the proposed FordaGO system:
 
-```
-┌───────────────────────────────────┬───────────┬───────────┬───────────┬───────────┬───────────┬─────────────────────────┐
-│ Feature / Capability              │ Virtuagym │ ZenPlan.  │ Mindbody  │ Glofox    │ TeamUp    │ **FordaGO (Proposed)**  │
-├───────────────────────────────────┼───────────┼───────────┼───────────┼───────────┼───────────┼─────────────────────────┤
-│ Target Environment                │ Int'l Gym │ Boutique  │ Spa/Yoga  │ Studios   │ Small Gym │ **AFFORDA Gym (Cabiao)**│
-│ Mobile Member App                 │ Yes       │ Yes       │ Yes       │ Yes       │ Yes       │ **Yes (Ionic / Angular) │
-│ Optical QR Attendance Scanner     │ Partial   │ Partial   │ Barcode   │ Barcode   │ No        │ **Yes (Turnstile Cam)** │
-│ Equipment QR Guidance Scanner     │ No        │ No        │ No        │ No        │ No        │ **Yes (Target Muscles)**│
-│ Personal Record (PR) Tracker      │ Yes       │ Yes       │ No        │ No        │ No        │ **Yes (Milestones & %)**│
-│ Weekly Split Routine Planner      │ Yes       │ Partial   │ No        │ No        │ No        │ **Yes (Monday–Sunday)** │
-│ In-Chat Workout Plan Proposals    │ No        │ No        │ No        │ No        │ No        │ **Yes (1-Tap Accept)**  │
-│ Real-Time WebSocket Chat          │ No (Email)│ No        │ No        │ No        │ No        │ **Yes (Laravel Reverb)**│
-│ Local Supplement POS & GCash Audit│ No        │ No        │ Add-on    │ No        │ No        │ **Yes (Cart & GCash)**  │
-│ Client-Side Vector PDF/Excel Engine│ No (SaaS) │ No (SaaS) │ No (SaaS) │ No (SaaS) │ No (SaaS) │ **Yes (jsPDF/AutoTable) │
-│ Pricing Model                     │ High SaaS │ High SaaS │ High SaaS │ High SaaS │ High SaaS │ **Custom / Standalone** │
-└───────────────────────────────────┴───────────┴───────────┴───────────┴───────────┴───────────┴─────────────────────────┘
-```
+| Feature / Capability | Virtuagym | Zen Planner | Mindbody | Glofox | TeamUp | **FordaGO (Proposed)** |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Target Environment** | Int'l Gym | Boutique Studio | Spa / Yoga | Boutique Studio | Small Gym | **AFFORDA Gym – Cabiao** |
+| **Mobile Member App** | Yes | Yes | Yes | Yes | Yes | **Yes (Ionic / Angular)** |
+| **Optical QR Attendance Scanner** | Partial | Partial | Barcode only | Barcode only | No | **Yes (Camera Turnstile)** |
+| **Equipment QR Guidance Scanner** | No | No | No | No | No | **Yes (Muscle Highlights)** |
+| **Personal Record (PR) Tracker** | Yes | Yes | No | No | No | **Yes (Milestones & % Gains)** |
+| **Weekly Split Routine Planner** | Yes | Partial | No | No | No | **Yes (Monday – Sunday)** |
+| **In-Chat Workout Plan Proposals** | No | No | No | No | No | **Yes (1-Tap Accept)** |
+| **Real-Time WebSocket Chat** | No (Email only) | No | No | No | No | **Yes (Laravel Reverb)** |
+| **Local Supplement POS & GCash Audit** | No | No | Add-on | No | No | **Yes (Cart & GCash Verify)** |
+| **Client-Side Vector PDF / Excel Engine** | No (SaaS only) | No (SaaS only) | No (SaaS only) | No (SaaS only) | No (SaaS only) | **Yes (jsPDF / AutoTable)** |
+| **Pricing Model** | High SaaS Fee | High SaaS Fee | High SaaS Fee | High SaaS Fee | High SaaS Fee | **Custom / Standalone (Free)** |
 
 ### 1. Virtuagym
 Virtuagym is a fitness management system offering membership tracking and workout builders. While comprehensive, it targets large enterprise gym chains with high monthly SaaS fees. It lacks localized Philippine payment workflows (GCash verification) and does not provide an equipment QR scanner for on-premise machine tutorials.
