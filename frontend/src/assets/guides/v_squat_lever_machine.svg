@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="vsqBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b1120" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+    <linearGradient id="vsqCard" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" stop-opacity="0.95" />
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0.95" />
+    </linearGradient>
+    <filter id="glowOrange" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <rect width="800" height="450" fill="url(#vsqBg)" rx="16" />
+
+  <!-- Header Banner -->
+  <rect x="30" y="16" width="740" height="38" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1.5" />
+  <text x="50" y="41" fill="#f8fafc" font-family="-apple-system, sans-serif" font-size="15" font-weight="700" letter-spacing="0.5">SELECTORIZED LEVER SQUAT MACHINE (V-SQUAT)</text>
+  <text x="750" y="41" text-anchor="end" fill="#f59e0b" font-family="-apple-system, sans-serif" font-size="13" font-weight="600">Target: Quadriceps &amp; Glutes</text>
+
+  <!-- Left Panel: Step 1 Setup -->
+  <g transform="translate(30, 68)">
+    <rect width="355" height="360" rx="14" fill="url(#vsqCard)" stroke="#334155" stroke-width="1.5" />
+    <rect x="16" y="14" width="160" height="26" rx="6" fill="#0f172a" stroke="#38bdf8" stroke-width="1" />
+    <text x="96" y="32" text-anchor="middle" fill="#38bdf8" font-family="-apple-system, sans-serif" font-size="12" font-weight="700">STEP 1: SETUP ON PLATFORM</text>
+    
+    <!-- Machine Weight Tower on right -->
+    <rect x="270" y="70" width="40" height="240" rx="4" fill="#475569" />
+    <!-- Angled Floor Platform -->
+    <polygon points="60,305 240,285 240,310 60,310" fill="#334155" />
+    <!-- Pivot Arm with Red Shoulder Pad -->
+    <line x1="70" y1="280" x2="190" y2="155" stroke="#64748b" stroke-width="14" stroke-linecap="round" />
+    <rect x="145" y="140" width="45" height="18" rx="4" fill="#ef4444" transform="rotate(-30 167 149)" />
+
+    <!-- Lifter Standing on Platform under shoulder pad -->
+    <circle cx="160" cy="120" r="15" fill="#cbd5e1" />
+    <line x1="160" y1="135" x2="150" y2="215" stroke="#94a3b8" stroke-width="18" stroke-linecap="round" />
+    <path d="M 150 215 L 140 295" stroke="#94a3b8" stroke-width="14" stroke-linecap="round" />
+
+    <text x="177" y="344" text-anchor="middle" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="12" font-weight="500">Shoulders snug under red pads, feet shoulder-width</text>
+  </g>
+
+  <!-- Right Panel: Step 2 Deep Squat -->
+  <g transform="translate(415, 68)">
+    <rect width="355" height="360" rx="14" fill="url(#vsqCard)" stroke="#334155" stroke-width="1.5" />
+    <rect x="16" y="14" width="160" height="26" rx="6" fill="#0f172a" stroke="#f59e0b" stroke-width="1" />
+    <text x="96" y="32" text-anchor="middle" fill="#f59e0b" font-family="-apple-system, sans-serif" font-size="12" font-weight="700">STEP 2: DEEP SQUAT &amp; DRIVE</text>
+    
+    <!-- Machine Weight Tower on right -->
+    <rect x="270" y="70" width="40" height="240" rx="4" fill="#475569" />
+    <!-- Angled Floor Platform -->
+    <polygon points="60,305 240,285 240,310 60,310" fill="#334155" />
+    <!-- Pivot Arm Lowered with Red Shoulder Pad -->
+    <line x1="70" y1="280" x2="190" y2="195" stroke="#64748b" stroke-width="14" stroke-linecap="round" />
+    <rect x="145" y="180" width="45" height="18" rx="4" fill="#ef4444" transform="rotate(-30 167 189)" />
+
+    <!-- Lifter in Squat with Quadriceps Glowing -->
+    <circle cx="160" cy="160" r="15" fill="#cbd5e1" />
+    <line x1="160" y1="175" x2="135" y2="240" stroke="#94a3b8" stroke-width="18" stroke-linecap="round" />
+    <!-- Legs bent 90 degrees with orange glow -->
+    <path d="M 135 240 L 175 245 L 140 295" stroke="#f97316" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" fill="none" filter="url(#glowOrange)" />
+    <path d="M 135 240 L 175 245 L 140 295" stroke="#ea580c" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+
+    <text x="177" y="344" text-anchor="middle" fill="#f8fafc" font-family="-apple-system, sans-serif" font-size="12" font-weight="600">Squat to parallel depth, drive heels into platform</text>
+  </g>
+</svg>

@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="dbBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b1120" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+    <linearGradient id="dbCard" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" stop-opacity="0.95" />
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0.95" />
+    </linearGradient>
+    <filter id="glowOrange" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <rect width="800" height="450" fill="url(#dbBg)" rx="16" />
+
+  <!-- Header Banner -->
+  <rect x="30" y="16" width="740" height="38" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1.5" />
+  <text x="50" y="41" fill="#f8fafc" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="700" letter-spacing="0.5">FLAT DUMBBELL BENCH PRESS</text>
+  <text x="750" y="41" text-anchor="end" fill="#f59e0b" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="600">Target: Pectoralis Major &amp; Triceps</text>
+
+  <!-- Left Panel: Step 1 Setup -->
+  <g transform="translate(30, 68)">
+    <rect width="355" height="360" rx="14" fill="url(#dbCard)" stroke="#334155" stroke-width="1.5" />
+    <rect x="16" y="14" width="160" height="26" rx="6" fill="#0f172a" stroke="#38bdf8" stroke-width="1" />
+    <text x="96" y="32" text-anchor="middle" fill="#38bdf8" font-family="-apple-system, sans-serif" font-size="12" font-weight="700">STEP 1: LOWER &amp; STRETCH</text>
+    
+    <!-- Flat Bench -->
+    <rect x="40" y="240" width="270" height="18" rx="4" fill="#475569" />
+    <rect x="80" y="258" width="16" height="55" fill="#334155" />
+    <rect x="230" y="258" width="16" height="55" fill="#334155" />
+    <line x1="30" y1="313" x2="320" y2="313" stroke="#64748b" stroke-width="2" />
+
+    <!-- Lifter Lying on Bench -->
+    <!-- Head -->
+    <circle cx="70" cy="225" r="16" fill="#cbd5e1" />
+    <!-- Torso -->
+    <rect x="85" y="225" width="105" height="22" rx="6" fill="#94a3b8" />
+    <!-- Legs bent to floor -->
+    <path d="M 190 238 L 225 255 L 225 313" stroke="#94a3b8" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <!-- Feet flat on floor -->
+    <rect x="215" y="310" width="30" height="8" rx="3" fill="#cbd5e1" />
+
+    <!-- Arms lowered with Dumbbells (90 deg stretch at chest level) -->
+    <path d="M 125 225 L 125 185 M 145 225 L 145 185" stroke="#cbd5e1" stroke-width="10" stroke-linecap="round" />
+    <!-- Dumbbells -->
+    <rect x="110" y="170" width="14" height="28" rx="3" fill="#38bdf8" />
+    <rect x="130" y="170" width="14" height="28" rx="3" fill="#38bdf8" />
+    <rect x="120" y="180" width="15" height="8" fill="#64748b" />
+    
+    <rect x="140" y="170" width="14" height="28" rx="3" fill="#38bdf8" />
+    <rect x="160" y="170" width="14" height="28" rx="3" fill="#38bdf8" />
+    <rect x="150" y="180" width="15" height="8" fill="#64748b" />
+
+    <text x="177" y="344" text-anchor="middle" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="12" font-weight="500">Lower bells to chest level, 90° elbow bend</text>
+  </g>
+
+  <!-- Right Panel: Step 2 Press -->
+  <g transform="translate(415, 68)">
+    <rect width="355" height="360" rx="14" fill="url(#dbCard)" stroke="#334155" stroke-width="1.5" />
+    <rect x="16" y="14" width="160" height="26" rx="6" fill="#0f172a" stroke="#f59e0b" stroke-width="1" />
+    <text x="96" y="32" text-anchor="middle" fill="#f59e0b" font-family="-apple-system, sans-serif" font-size="12" font-weight="700">STEP 2: PRESS &amp; SQUEEZE</text>
+    
+    <!-- Flat Bench -->
+    <rect x="40" y="240" width="270" height="18" rx="4" fill="#475569" />
+    <rect x="80" y="258" width="16" height="55" fill="#334155" />
+    <rect x="230" y="258" width="16" height="55" fill="#334155" />
+    <line x1="30" y1="313" x2="320" y2="313" stroke="#64748b" stroke-width="2" />
+
+    <!-- Lifter Lying on Bench with glowing chest -->
+    <!-- Head -->
+    <circle cx="70" cy="225" r="16" fill="#cbd5e1" />
+    <!-- Torso glowing orange -->
+    <rect x="85" y="225" width="105" height="22" rx="6" fill="#f97316" filter="url(#glowOrange)" />
+    <rect x="85" y="225" width="105" height="22" rx="6" fill="#ea580c" />
+    <!-- Legs bent to floor -->
+    <path d="M 190 238 L 225 255 L 225 313" stroke="#94a3b8" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <rect x="215" y="310" width="30" height="8" rx="3" fill="#cbd5e1" />
+
+    <!-- Arms pressed straight up overhead -->
+    <path d="M 125 225 L 132 135 M 145 225 L 138 135" stroke="#fed7aa" stroke-width="10" stroke-linecap="round" />
+    <!-- Dumbbells together at peak -->
+    <rect x="115" y="115" width="14" height="28" rx="3" fill="#f59e0b" />
+    <rect x="135" y="115" width="14" height="28" rx="3" fill="#f59e0b" />
+    <rect x="125" y="125" width="15" height="8" fill="#64748b" />
+    
+    <!-- Motion arrows -->
+    <path d="M 115 175 L 115 145 M 110 152 L 115 142 L 120 152" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" fill="none" />
+    <path d="M 155 175 L 155 145 M 150 152 L 155 142 L 160 152" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" fill="none" />
+
+    <text x="177" y="344" text-anchor="middle" fill="#f8fafc" font-family="-apple-system, sans-serif" font-size="12" font-weight="600">Press straight up over chest, squeeze pecs</text>
+  </g>
+</svg>

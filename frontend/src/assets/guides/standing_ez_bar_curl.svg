@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="ezBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b1120" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+    <linearGradient id="ezCard" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" stop-opacity="0.95" />
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0.95" />
+    </linearGradient>
+    <filter id="glowPink" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <rect width="800" height="450" fill="url(#ezBg)" rx="16" />
+
+  <!-- Header Banner -->
+  <rect x="30" y="16" width="740" height="38" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1.5" />
+  <text x="50" y="41" fill="#f8fafc" font-family="-apple-system, sans-serif" font-size="15" font-weight="700" letter-spacing="0.5">STANDING FIXED EZ-BAR BICEP CURL</text>
+  <text x="750" y="41" text-anchor="end" fill="#ec4899" font-family="-apple-system, sans-serif" font-size="13" font-weight="600">Target: Biceps Brachii &amp; Brachioradialis</text>
+
+  <!-- Left Panel: Step 1 Setup -->
+  <g transform="translate(30, 68)">
+    <rect width="355" height="360" rx="14" fill="url(#ezCard)" stroke="#334155" stroke-width="1.5" />
+    <rect x="16" y="14" width="160" height="26" rx="6" fill="#0f172a" stroke="#38bdf8" stroke-width="1" />
+    <text x="96" y="32" text-anchor="middle" fill="#38bdf8" font-family="-apple-system, sans-serif" font-size="12" font-weight="700">STEP 1: START STRETCH</text>
+    
+    <line x1="40" y1="310" x2="310" y2="310" stroke="#64748b" stroke-width="2" />
+
+    <!-- Lifter Standing Upright -->
+    <circle cx="175" cy="115" r="16" fill="#cbd5e1" />
+    <rect x="163" y="133" width="24" height="85" rx="6" fill="#94a3b8" />
+    <path d="M 168 218 L 163 310 M 182 218 L 187 310" stroke="#94a3b8" stroke-width="14" stroke-linecap="round" />
+
+    <!-- Arms extended down with EZ-Bar -->
+    <path d="M 165 140 L 155 220" stroke="#cbd5e1" stroke-width="9" stroke-linecap="round" />
+    <path d="M 130 220 Q 145 225 155 220 Q 165 215 180 220" stroke="#38bdf8" stroke-width="6" fill="none" stroke-linecap="round" />
+    <circle cx="130" cy="220" r="10" fill="#38bdf8" />
+    <circle cx="180" cy="220" r="10" fill="#38bdf8" />
+
+    <text x="177" y="344" text-anchor="middle" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="12" font-weight="500">Underhand grip on inner bends, full arm extension</text>
+  </g>
+
+  <!-- Right Panel: Step 2 Curl -->
+  <g transform="translate(415, 68)">
+    <rect width="355" height="360" rx="14" fill="url(#ezCard)" stroke="#334155" stroke-width="1.5" />
+    <rect x="16" y="14" width="160" height="26" rx="6" fill="#0f172a" stroke="#ec4899" stroke-width="1" />
+    <text x="96" y="32" text-anchor="middle" fill="#ec4899" font-family="-apple-system, sans-serif" font-size="12" font-weight="700">STEP 2: PEAK CURL &amp; SQUEEZE</text>
+    
+    <line x1="40" y1="310" x2="310" y2="310" stroke="#64748b" stroke-width="2" />
+
+    <!-- Lifter Standing with Biceps Glowing -->
+    <circle cx="175" cy="115" r="16" fill="#cbd5e1" />
+    <rect x="163" y="133" width="24" height="85" rx="6" fill="#94a3b8" />
+    <path d="M 168 218 L 163 310 M 182 218 L 187 310" stroke="#94a3b8" stroke-width="14" stroke-linecap="round" />
+
+    <!-- Arms Curled Up (Biceps Glowing) -->
+    <ellipse cx="150" cy="160" rx="12" ry="16" fill="#ec4899" filter="url(#glowPink)" />
+    <ellipse cx="150" cy="160" rx="10" ry="14" fill="#f43f5e" />
+    <path d="M 165 140 L 148 175 L 155 145" stroke="#fed7aa" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <!-- Bar near collarbone -->
+    <path d="M 130 145 Q 145 150 155 145 Q 165 140 180 145" stroke="#ec4899" stroke-width="6" fill="none" stroke-linecap="round" />
+    <circle cx="130" cy="145" r="10" fill="#f43f5e" />
+    <circle cx="180" cy="145" r="10" fill="#f43f5e" />
+
+    <text x="177" y="344" text-anchor="middle" fill="#f8fafc" font-family="-apple-system, sans-serif" font-size="12" font-weight="600">Curl to shoulder level, keep elbows pinned</text>
+  </g>
+</svg>

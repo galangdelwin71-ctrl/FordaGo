@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="incBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b1120" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+    <linearGradient id="incCard" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" stop-opacity="0.95" />
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0.95" />
+    </linearGradient>
+    <filter id="glowOrange" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <rect width="800" height="450" fill="url(#incBg)" rx="16" />
+
+  <!-- Header Banner -->
+  <rect x="30" y="16" width="740" height="38" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1.5" />
+  <text x="50" y="41" fill="#f8fafc" font-family="-apple-system, sans-serif" font-size="15" font-weight="700" letter-spacing="0.5">INCLINE DUMBBELL BENCH PRESS (30°- 45°)</text>
+  <text x="750" y="41" text-anchor="end" fill="#f59e0b" font-family="-apple-system, sans-serif" font-size="13" font-weight="600">Target: Upper Pectoralis (Clavicular Head)</text>
+
+  <!-- Left Panel: Step 1 Setup -->
+  <g transform="translate(30, 68)">
+    <rect width="355" height="360" rx="14" fill="url(#incCard)" stroke="#334155" stroke-width="1.5" />
+    <rect x="16" y="14" width="160" height="26" rx="6" fill="#0f172a" stroke="#38bdf8" stroke-width="1" />
+    <text x="96" y="32" text-anchor="middle" fill="#38bdf8" font-family="-apple-system, sans-serif" font-size="12" font-weight="700">STEP 1: INCLINE SETUP</text>
+    
+    <!-- 45-degree Incline Bench Frame -->
+    <line x1="80" y1="260" x2="190" y2="150" stroke="#475569" stroke-width="16" stroke-linecap="round" />
+    <rect x="60" y="250" width="45" height="14" rx="3" fill="#334155" />
+    <line x1="60" y1="310" x2="250" y2="310" stroke="#64748b" stroke-width="2" />
+
+    <!-- Lifter on Incline Bench -->
+    <circle cx="175" cy="135" r="16" fill="#cbd5e1" />
+    <line x1="165" y1="150" x2="95" y2="245" stroke="#94a3b8" stroke-width="22" stroke-linecap="round" />
+    <!-- Leg to floor -->
+    <path d="M 95 245 L 140 265 L 140 310" stroke="#94a3b8" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+
+    <!-- Dumbbells Lowered at Chest -->
+    <path d="M 140 175 L 125 140" stroke="#cbd5e1" stroke-width="10" stroke-linecap="round" />
+    <rect x="110" y="125" width="28" height="14" rx="3" fill="#38bdf8" />
+
+    <text x="177" y="344" text-anchor="middle" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="12" font-weight="500">Back on 30°-45° pad, dumbbells at shoulders</text>
+  </g>
+
+  <!-- Right Panel: Step 2 Press -->
+  <g transform="translate(415, 68)">
+    <rect width="355" height="360" rx="14" fill="url(#incCard)" stroke="#334155" stroke-width="1.5" />
+    <rect x="16" y="14" width="160" height="26" rx="6" fill="#0f172a" stroke="#f59e0b" stroke-width="1" />
+    <text x="96" y="32" text-anchor="middle" fill="#f59e0b" font-family="-apple-system, sans-serif" font-size="12" font-weight="700">STEP 2: INCLINE DRIVE</text>
+    
+    <!-- 45-degree Incline Bench Frame -->
+    <line x1="80" y1="260" x2="190" y2="150" stroke="#475569" stroke-width="16" stroke-linecap="round" />
+    <rect x="60" y="250" width="45" height="14" rx="3" fill="#334155" />
+    <line x1="60" y1="310" x2="250" y2="310" stroke="#64748b" stroke-width="2" />
+
+    <!-- Lifter on Incline Bench with Upper Chest Glowing -->
+    <circle cx="175" cy="135" r="16" fill="#cbd5e1" />
+    <line x1="165" y1="150" x2="95" y2="245" stroke="#f97316" stroke-width="22" stroke-linecap="round" filter="url(#glowOrange)" />
+    <line x1="165" y1="150" x2="95" y2="245" stroke="#ea580c" stroke-width="20" stroke-linecap="round" />
+    <path d="M 95 245 L 140 265 L 140 310" stroke="#94a3b8" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+
+    <!-- Dumbbells Pressed Upward -->
+    <path d="M 140 175 L 175 95" stroke="#fed7aa" stroke-width="10" stroke-linecap="round" />
+    <rect x="160" y="80" width="28" height="14" rx="3" fill="#f59e0b" />
+
+    <!-- Upward arrow -->
+    <path d="M 135 140 L 165 95 M 150 95 L 165 95 L 165 110" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" fill="none" />
+
+    <text x="177" y="344" text-anchor="middle" fill="#f8fafc" font-family="-apple-system, sans-serif" font-size="12" font-weight="600">Press dumbbells upward &amp; converge at top</text>
+  </g>
+</svg>
