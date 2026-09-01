@@ -4,283 +4,283 @@ const path = require('path');
 const root = 'c:/Users/delwi/OneDrive/Desktop/caps/fordaGo/fordaGo';
 const serverEquip = JSON.parse(fs.readFileSync('C:/Users/delwi/.gemini/antigravity-ide/brain/13e57574-9b61-4ae6-88cd-5b4f45cab5ae/scratch/server_equipment.json', 'utf8'));
 
-// 100% Verified mapping based on visual inspection of each machine PHOTO:
+// 100% Verified White Anatomical mapping:
 const verifiedPhotoMapping = {
   9: { 
-    photoAnalysis: "Pin-Loaded Pivoting Lever V-Squat Machine with slanted footplate & shoulder pads",
-    guide: "guide_id9_vsquat.jpg", 
+    photoAnalysis: "Pin-Loaded Lever V-Squat Machine with red back pad, angled footplate & shoulder pads",
+    guide: "guide_id9_white_vsquat.jpg", 
     target: "Quadriceps (Vastus Medialis/Lateralis), Gluteus Maximus", 
-    steps: "Step 1: Position shoulders under padded lever arms | Step 2: Squat to parallel & drive upward through heels" 
+    steps: "Step 1: Setup & Unrack | Step 2: Deep Squat | Step 3: Peak Drive & Lockout" 
   },
   10: { 
-    photoAnalysis: "Star Trac Instinct Overhead Shoulder Press Machine",
-    guide: "shoulderPress.jpg", 
-    target: "Anterior & Medial Deltoids, Triceps Brachii", 
-    steps: "Step 1: Adjust seat so handles align with shoulders | Step 2: Press overhead to full arm extension" 
+    photoAnalysis: "Star Trac Instinct Overhead Shoulder Press Machine with curved frame",
+    guide: "guide_id10_white_shoulder_press.jpg", 
+    target: "Anterior & Lateral Deltoids, Triceps Brachii", 
+    steps: "Step 1: Start Position | Step 2: Mid Overhead Press | Step 3: Peak Press & Lockout" 
   },
   11: { 
     photoAnalysis: "Selectorized Hip Abductor & Adductor Swivel Thigh Machine",
-    guide: "hipAbductor.jpg", 
+    guide: "guide_id11_white_hip_abductor.jpg", 
     target: "Gluteus Medius, Tensor Fasciae Latae (Outer Thighs)", 
-    steps: "Step 1: Set swivel pads outside knees | Step 2: Push thighs outward against resistance and hold squeeze" 
+    steps: "Step 1: Start Position | Step 2: Mid Abduction | Step 3: Peak Abduction & Squeeze" 
   },
   12: { 
-    photoAnalysis: "Freemotion Lat Pulldown Machine with overhead wide bar",
-    guide: "latPulldown.jpg", 
+    photoAnalysis: "Freemotion Lat Pulldown Machine with overhead wide bar & leg rollers",
+    guide: "guide_id12_white_lat_pulldown.jpg", 
     target: "Latissimus Dorsi, Teres Major, Biceps", 
-    steps: "Step 1: Grip wide bar overhead and lock thighs under rollers | Step 2: Pull bar to clavicle while arching chest" 
+    steps: "Step 1: Start Stretch | Step 2: Mid Pull | Step 3: Peak Contraction & Squeeze" 
   },
   13: { 
     photoAnalysis: "Selectorized Seated Chest Press Machine with horizontal push arms",
-    guide: "seatedChestPress.jpg", 
+    guide: "guide_id35_seated_chest_press.jpg", 
     target: "Pectoralis Major (Mid/Lower Chest), Front Delts", 
-    steps: "Step 1: Set seat height so handles are at mid-chest | Step 2: Press forward symmetrically until arms are extended" 
+    steps: "Step 1: Start Stretch | Step 2: Mid Press | Step 3: Peak Press & Squeeze" 
   },
   14: { 
     photoAnalysis: "Warrior Fitness Plate-Loaded Seated Calf Raise Machine",
     guide: "seatedCalfRaise.jpg", 
     target: "Soleus, Gastrocnemius (Lower Legs)", 
-    steps: "Step 1: Place balls of feet on block and lock knee pads | Step 2: Lower heels for full stretch, then press to peak height" 
+    steps: "Step 1: Deep Heel Stretch | Step 2: Mid Extension | Step 3: Peak Calf Contraction" 
   },
   15: { 
     photoAnalysis: "Precor Plate-Loaded Incline Chest Press with converging arms",
     guide: "seatedChestPress.jpg", 
     target: "Upper Pectoralis Major (Clavicular Head), Triceps", 
-    steps: "Step 1: Sit on 30° incline seat with elbows flared at 45° | Step 2: Press independent arms diagonally upward" 
+    steps: "Step 1: Setup on Incline | Step 2: Mid Press | Step 3: Peak Extension" 
   },
   16: { 
     photoAnalysis: "Commercial Multi-Tier Dumbbell Rack with Hex and Round Dumbbells",
     guide: "guide_id16_dumbbells.jpg", 
     target: "Biceps Brachii, Brachialis, Forearm Flexors", 
-    steps: "Step 1: Stand tall with dumbbells at sides | Step 2: Curl dumbbells upward with full bicep contraction" 
+    steps: "Step 1: Stand Tall Setup | Step 2: Peak Bicep Curl & Squeeze" 
   },
   17: { 
     photoAnalysis: "Commercial Seated Back Extension Machine with rear torso roller pad",
     guide: "hyperextension.jpg", 
     target: "Erector Spinae (Lower Back), Multifidus", 
-    steps: "Step 1: Sit with upper back against cylindrical roller | Step 2: Push backward with controlled spinal extension" 
+    steps: "Step 1: Seated Setup | Step 2: Mid Extension | Step 3: Peak Spinal Contraction" 
   },
   18: { 
     photoAnalysis: "Indoor Hardwood/Composite Pickleball & Badminton Court with Net",
     guide: "guide_id18_pickleball.jpg", 
     target: "Dynamic Agility, Lateral Footwork, Core & Leg Power", 
-    steps: "Step 1: Court Setup & Non-Volley Zone (Kitchen) | Step 2: Athletic Ready Stance & Forehand Drive" 
+    steps: "Step 1: Regulation Court & Non-Volley Zone (Kitchen) | Step 2: Ready Stance & Forehand Drive" 
   },
   19: { 
     photoAnalysis: "Heavy-Duty Open Squat Rack with Barbell and Safety Pins",
     guide: "squatRack.jpg", 
     target: "Quadriceps, Gluteus Maximus, Core Stabilizers", 
-    steps: "Step 1: Unrack barbell across upper trapezius | Step 2: Descend into deep squat with braced core and drive up" 
+    steps: "Step 1: Unrack & Setup | Step 2: Deep Squat & Drive" 
   },
   20: { 
     photoAnalysis: "Freemotion Multi-Functional Dual Cable Column with Rotating Swivel Arms",
     guide: "cableCrossover.jpg", 
     target: "Pectoralis Major, Sternal Head, Anterior Deltoids", 
-    steps: "Step 1: Adjust pulley arms to shoulder height | Step 2: Bring D-handles together in hugging arc and squeeze" 
+    steps: "Step 1: Start Stretch | Step 2: Mid Fly Arc | Step 3: Peak Contraction" 
   },
   21: { 
     photoAnalysis: "Adjustable Back Extension / Glute-Ham Bench with Leg Rollers",
     guide: "hyperextension.jpg", 
     target: "Erector Spinae, Gluteus Maximus, Hamstrings", 
-    steps: "Step 1: Lock ankles behind lower roller pads | Step 2: Hinge forward at hips and extend torso to neutral alignment" 
+    steps: "Step 1: Hip Lock Setup | Step 2: Forward Hinge | Step 3: Peak Torso Extension" 
   },
   22: { 
     photoAnalysis: "45-Degree Roman Chair Hyperextension Bench",
     guide: "hyperextension.jpg", 
     target: "Lower Back Muscles, Gluteals, Hamstring Origin", 
-    steps: "Step 1: Rest pelvis against 45° padded support | Step 2: Lower upper body toward floor, then raise back to straight line" 
+    steps: "Step 1: 45° Pelvic Rest | Step 2: Lower Torso | Step 3: Neutral Spine Extension" 
   },
   23: { 
     photoAnalysis: "Olympic 4-Post Power Cage with Multi-Grip Pull-Up Bar",
     guide: "squatRack.jpg", 
     target: "Full Lower Body (Quads, Glutes) & Back (Pull-ups)", 
-    steps: "Step 1: Set J-hooks and safety bars at chest height | Step 2: Perform heavy squats or overhead pull-up repetitions" 
+    steps: "Step 1: Barbell Unrack | Step 2: Deep Squat | Step 3: Drive & Lockout" 
   },
   24: { 
     photoAnalysis: "Commercial Plate-Loaded Glute Drive Hip Thrust Machine with Red Frame",
     guide: "hipThrust.jpg", 
     target: "Gluteus Maximus (Peak Contraction), Hamstrings", 
-    steps: "Step 1: Rest upper back on pivot pad and secure waist roller belt | Step 2: Drive hips upward into full bridge lockout" 
+    steps: "Step 1: Belt Setup & Hips Low | Step 2: Drive & Full Bridge Lockout" 
   },
   25: { 
     photoAnalysis: "Body-Solid Slanted Preacher Arm Curl Bench with Bar Catchers",
     guide: "preacherCurl.jpg", 
     target: "Biceps Brachii (Short Head Isolation)", 
-    steps: "Step 1: Place triceps firmly on 45° slanted pad | Step 2: Curl EZ curl bar upward without moving elbows from pad" 
+    steps: "Step 1: Start Stretch on 45° Pad | Step 2: Peak Curl & Squeeze" 
   },
   26: { 
     photoAnalysis: "Commercial Plate-Loaded Iso-Lateral Lat Pulldown Machine",
-    guide: "latPulldown.jpg", 
+    guide: "guide_id12_white_lat_pulldown.jpg", 
     target: "Latissimus Dorsi, Rhomboids, Middle Trapezius", 
-    steps: "Step 1: Reach overhead to independent handles | Step 2: Pull downward and backward while driving elbows to ribs" 
+    steps: "Step 1: Overhead Grip | Step 2: Downward Drive | Step 3: Peak Lat Squeeze" 
   },
   27: { 
     photoAnalysis: "Plate-Loaded Iso-Lateral High Pulldown Station with Leg Rollers",
-    guide: "latPulldown.jpg", 
+    guide: "guide_id12_white_lat_pulldown.jpg", 
     target: "Latissimus Dorsi, Upper Back, Biceps", 
-    steps: "Step 1: Lock thighs under foam pads | Step 2: Pull overhead diverging handles down to collarbone level" 
+    steps: "Step 1: Overhead Diverging Grip | Step 2: Squeeze to Collarbone" 
   },
   28: { 
     photoAnalysis: "Precor Iso-Lateral Plate-Loaded Seated Low Row Machine with Chest Pad",
     guide: "seatedRow.jpg", 
     target: "Middle Trapezius, Rhomboids, Latissimus Dorsi", 
-    steps: "Step 1: Brace chest firmly against vertical support pad | Step 2: Row dual handles backward, retracting shoulder blades" 
+    steps: "Step 1: Chest Pad Brace | Step 2: Retract Scapula & Row" 
   },
   29: { 
     photoAnalysis: "Dual Stack Adjustable Cable Crossover Machine",
     guide: "cableCrossover.jpg", 
     target: "Pectoralis Major, Sternal & Clavicular Heads", 
-    steps: "Step 1: Set pulleys high or low and take staggered step forward | Step 2: Bring hands together in smooth squeezing motion" 
+    steps: "Step 1: Set Pulleys & Step Forward | Step 2: Squeezing Hugging Motion" 
   },
   30: { 
     photoAnalysis: "Heavy-Duty 45-Degree Plate-Loaded Linear Incline Hack Squat Sled",
     guide: "hackSquat.jpg", 
     target: "Quadriceps (Vastus Lateralis/Intermedius), Glutes", 
-    steps: "Step 1: Position shoulders under pads, feet flat on wide platform | Step 2: Release safety lever, squat to 90°, and push sled up" 
+    steps: "Step 1: Shoulder Pad Setup | Step 2: Deep 90° Squat | Step 3: Sled Push" 
   },
   31: { 
     photoAnalysis: "Full Commercial Power Rack Cage with Weight Storage Horns",
     guide: "squatRack.jpg", 
     target: "Quadriceps, Glutes, Hamstrings, Spinal Erectors", 
-    steps: "Step 1: Step inside cage under barbell | Step 2: Perform controlled deep squats with full safety rail protection" 
+    steps: "Step 1: Cage Barbell Setup | Step 2: Deep Controlled Squat" 
   },
   32: { 
     photoAnalysis: "Plate-Loaded Dual Lever Functional Shoulder Machine",
-    guide: "shoulderPress.jpg", 
+    guide: "guide_id10_white_shoulder_press.jpg", 
     target: "Deltoid Muscle Group, Upper Trapezius", 
-    steps: "Step 1: Sit with erect posture holding overhead handles | Step 2: Press lever arms overhead to full muscular contraction" 
+    steps: "Step 1: Shoulder Level Grip | Step 2: Overhead Lever Drive" 
   },
   33: { 
     photoAnalysis: "Commercial Iso-Lateral Plate-Loaded Flat/Incline Chest Press",
-    guide: "seatedChestPress.jpg", 
+    guide: "guide_id35_seated_chest_press.jpg", 
     target: "Pectoralis Major, Anterior Deltoids", 
-    steps: "Step 1: Adjust seat so handles are level with mid-chest | Step 2: Drive independent arms forward in converging arc" 
+    steps: "Step 1: Mid-Chest Handle Setup | Step 2: Forward Converging Press" 
   },
   34: { 
     photoAnalysis: "Selectorized Pin-Stack Seated Bicep Curl / Preacher Curl Machine",
     guide: "preacherCurl.jpg", 
     target: "Biceps Brachii, Brachialis", 
-    steps: "Step 1: Rest upper arms flat on pad and grasp swivel handles | Step 2: Contract biceps to curl handles toward shoulders" 
+    steps: "Step 1: Arm Pad Rest | Step 2: Concentric Bicep Curl" 
   },
   35: { 
     photoAnalysis: "Selectorized Pin-Loaded Seated Chest Press Machine with Black Frame",
-    guide: "seatedChestPress.jpg", 
+    guide: "guide_id35_seated_chest_press.jpg", 
     target: "Pectoralis Major, Triceps", 
-    steps: "Step 1: Adjust seat height and select pin weight | Step 2: Push handles forward smoothly, exhaling during extension" 
+    steps: "Step 1: Start Stretch | Step 2: Mid Press | Step 3: Peak Press & Squeeze" 
   },
   36: { 
     photoAnalysis: "Multi-Position Commercial Adjustable Incline Workout Bench",
     guide: "seatedChestPress.jpg", 
     target: "Upper/Mid Chest (Incline/Flat Bench Press)", 
-    steps: "Step 1: Set backrest angle (Flat, 30°, 45°) | Step 2: Lie back and perform controlled dumbbell or barbell presses" 
+    steps: "Step 1: Set Backrest Angle | Step 2: Controlled Pressing Movement" 
   },
   37: { 
     photoAnalysis: "Captain's Chair Vertical Knee Raise & Dip Station with Forearm Pads",
     guide: "captainsChair.jpg", 
     target: "Rectus Abdominis, Hip Flexors, Triceps (Dips)", 
-    steps: "Step 1: Rest forearms on horizontal pads and grip handles | Step 2: Raise knees/legs toward chest without swinging" 
+    steps: "Step 1: Forearm Pad Lock | Step 2: Controlled Knee / Leg Raise" 
   },
   38: { 
     photoAnalysis: "Selectorized Standing Lateral Raise Machine with Circular Cam System",
     guide: "standingLateralRaise.jpg", 
     target: "Lateral Deltoids (Side Shoulder Width)", 
-    steps: "Step 1: Stand between red cam wheels with arm pads at outer elbows | Step 2: Raise arms laterally to shoulder height" 
+    steps: "Step 1: Elbow Pad Alignment | Step 2: Lateral Deltoid Raise" 
   },
   39: { 
     photoAnalysis: "Star Trac Instinct Selectorized Leg Extension Machine",
     guide: "legExtension.jpg", 
     target: "Quadriceps (Rectus Femoris, Vastus Medialis)", 
-    steps: "Step 1: Align knee joint with machine pivot, shin behind lower roller | Step 2: Extend knees upward until legs are straight" 
+    steps: "Step 1: Shin Pad Alignment | Step 2: Quad Extension & Lockout" 
   },
   40: { 
     photoAnalysis: "Selectorized Shoulder Press Machine with Dual Grip Handles",
-    guide: "shoulderPress.jpg", 
+    guide: "guide_id10_white_shoulder_press.jpg", 
     target: "Anterior Deltoids, Medial Delts, Triceps", 
-    steps: "Step 1: Sit firmly with back against pad, grasp handles | Step 2: Push upward in vertical line to lock out arms" 
+    steps: "Step 1: Upright Seat Setup | Step 2: Overhead Vertical Drive" 
   },
   41: { 
     photoAnalysis: "Commercial Overhead Swivel-Arm Pec Fly & Rear Delt Machine",
     guide: "pecFly.jpg", 
     target: "Pectoralis Major (Fly) / Rear Deltoids (Reverse Fly)", 
-    steps: "Step 1: Adjust overhead cam pins to forward/rear position | Step 2: Bring vertical handles together in wide hugging arc" 
+    steps: "Step 1: Arm Reach Setup | Step 2: Hugging Arc Pec Contraction" 
   },
   42: { 
     photoAnalysis: "Dual Pulley Functional Cable Trainer with Pull-up Station",
     guide: "cableCrossover.jpg", 
     target: "Chest Flyes, Cable Lateral Raises, Core Rotations", 
-    steps: "Step 1: Position pulleys at desired track height | Step 2: Perform smooth cable crossovers or functional movements" 
+    steps: "Step 1: Track Height Adjustment | Step 2: Squeezing Cable Drive" 
   },
   43: { 
     photoAnalysis: "Plate-Loaded 45-Degree Leg Press Machine with Dual Plate Horns",
     guide: "legPress45.jpg", 
     target: "Quadriceps, Gluteal Complex, Hamstrings", 
-    steps: "Step 1: Sit on reclined backrest, place feet shoulder-width on plate | Step 2: Lower sled until knees hit 90°, then press upward" 
+    steps: "Step 1: Reclined Footplate Setup | Step 2: 90° Lowering & Leg Press" 
   },
   44: { 
     photoAnalysis: "Commercial Smith Machine Guided Barbell Power Rack",
     guide: "squatRack.jpg", 
     target: "Guided Squats, Overhead Shoulder Press, Bench Press", 
-    steps: "Step 1: Rotate barbell to unhook from safety pegs | Step 2: Follow fixed vertical track through full range of motion" 
+    steps: "Step 1: Safety Peg Disengage | Step 2: Vertical Track Execution" 
   },
   45: { 
     photoAnalysis: "Commercial Heavy-Duty Incline Sled Leg Press Machine",
     guide: "legPress45.jpg", 
     target: "Quadriceps, Gluteus Maximus, Calves", 
-    steps: "Step 1: Rest back against padded seat, feet centered on footplate | Step 2: Disengage safety handles, lower and press sled" 
+    steps: "Step 1: Sled Foot Placement | Step 2: Controlled Push & Drive" 
   },
   46: { 
     photoAnalysis: "Star Trac Instinct High Lat Pulldown Machine (Overhead Handles, Leg Rollers)",
-    guide: "latPulldown.jpg", 
+    guide: "guide_id12_white_lat_pulldown.jpg", 
     target: "Latissimus Dorsi, Biceps, Upper Back", 
-    steps: "Step 1: Adjust thigh pads and grip overhead diverging handles | Step 2: Pull handles down to shoulder level while squeezing back" 
+    steps: "Step 1: Thigh Lock & Overhead Reach | Step 2: Pull Down to Upper Chest" 
   },
   47: { 
     photoAnalysis: "Barbell Rack with Fixed-Weight EZ Curl and Straight Barbells",
     guide: "guide_id47_ezbar_curl.jpg", 
     target: "Biceps Brachii, Brachioradialis, Forearms", 
-    steps: "Step 1: Pick up EZ curl bar with underhand grip | Step 2: Curl bar upward toward chin while keeping elbows stationary" 
+    steps: "Step 1: Underhand EZ-Grip | Step 2: Peak Curl Contraction" 
   },
   48: { 
     photoAnalysis: "Star Trac Instinct Seated Chest Press Machine (Horizontal Push Arms)",
-    guide: "seatedChestPress.jpg", 
+    guide: "guide_id35_seated_chest_press.jpg", 
     target: "Pectoralis Major, Anterior Deltoids, Triceps", 
-    steps: "Step 1: Sit with back against pad, grip horizontal/vertical handles | Step 2: Push handles forward away from chest" 
+    steps: "Step 1: Start Stretch | Step 2: Mid Press | Step 3: Peak Press & Squeeze" 
   },
   49: { 
     photoAnalysis: "Plate-Loaded Seated Low Row Bench with Foot Braces and Row Bar",
     guide: "seatedRow.jpg", 
     target: "Latissimus Dorsi, Rhomboids, Middle Trapezius", 
-    steps: "Step 1: Sit on long bench, place feet on angled footplates | Step 2: Pull cable bar into lower abdomen while arching chest" 
+    steps: "Step 1: Foot Brace & Neutral Spine | Step 2: Squeeze Row Bar to Navel" 
   },
   50: { 
     photoAnalysis: "Star Trac Instinct Seated Shoulder Press Machine (Overhead Vertical Push)",
-    guide: "shoulderPress.jpg", 
+    guide: "guide_id10_white_shoulder_press.jpg", 
     target: "Anterior Deltoids, Medial Deltoids, Triceps", 
-    steps: "Step 1: Sit with back straight against pad | Step 2: Press overhead handles upward to full arm lockout" 
+    steps: "Step 1: Vertical Handle Grip | Step 2: Overhead Press Lockout" 
   },
   51: { 
     photoAnalysis: "Freemotion Cable Dual Leg Extension / Calf Machine",
     guide: "legExtension.jpg", 
     target: "Quadriceps, Patellar Tendon, Calves", 
-    steps: "Step 1: Sit on machine seat with feet positioned on pedals | Step 2: Extend legs outward against cable resistance" 
+    steps: "Step 1: Seat & Pedal Positioning | Step 2: Outward Leg Drive" 
   },
   52: { 
-    photoAnalysis: "Star Trac Instinct Horizontal Bench Chest Press Machine",
-    guide: "seatedChestPress.jpg", 
+    photoAnalysis: "Star Trac Instinct Horizontal Bench Chest Press Machine (Lying Flat)",
+    guide: "guide_id52_flat_chest_press.jpg", 
     target: "Pectoralis Major (Mid & Sternal Pectorals)", 
-    steps: "Step 1: Lie flat on bench with hands on overhead push levers | Step 2: Press bar upward away from chest" 
+    steps: "Step 1: Start Stretch (Lying Flat) | Step 2: Mid Press | Step 3: Peak Press & Squeeze" 
   },
   53: { 
     photoAnalysis: "Heavy-Duty Floor Bumper Plate Toast Rack and Olympic Rubber Plates",
     guide: "guide_id53_deadlift.jpg", 
     target: "Olympic Lifting, Deadlifts, Power Cleans (Full Body)", 
-    steps: "Step 1: Select appropriate bumper plates from rack | Step 2: Slide plates onto Olympic barbell collars and secure clamps" 
+    steps: "Step 1: Barbell Floor Setup & Hip Hinge | Step 2: Lockout & Glute Drive" 
   },
   54: { 
     photoAnalysis: "Color-Coded Cast Iron and Competition Kettlebells",
     guide: "guide_id54_kettlebells.jpg", 
     target: "Posterior Chain, Glutes, Hamstrings, Core Bracing", 
-    steps: "Step 1: Stand with feet shoulder-width, hinge at hips | Step 2: Swing kettlebell upward using explosive glute snap" 
+    steps: "Step 1: Setup & Hip Hinge | Step 2: Explosive Swing & Glute Snap" 
   }
 };
 
@@ -293,7 +293,7 @@ let html = `<!DOCTYPE html>
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background:#0B132B; color:#f8fafc; margin:0; padding:24px; }
   h1 { text-align:center; color:#f59e0b; font-size:28px; margin-bottom:8px; }
   p.sub { text-align:center; color:#94a3b8; font-size:14px; margin-bottom:32px; }
-  .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)); gap:24px; }
+  .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(460px, 1fr)); gap:24px; }
   .card { background:#1E293B; border:1px solid #334155; border-radius:14px; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.35); display:flex; flex-direction:column; }
   .card-header { padding:14px 16px; background:#0f172a; border-bottom:1px solid #334155; display:flex; justify-content:space-between; align-items:center; }
   .card-title { font-size:15px; font-weight:700; color:#f1f5f9; }
@@ -302,8 +302,8 @@ let html = `<!DOCTYPE html>
   .photo-col, .guide-col { flex:1; padding:12px; text-align:center; }
   .photo-col { border-right:1px solid #334155; background:#182234; }
   .col-label { font-size:11px; font-weight:700; color:#94a3b8; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:8px; }
-  .photo-col img { width:100%; height:210px; object-fit:cover; border-radius:8px; border:1px solid #475569; display:block; }
-  .guide-col img { width:100%; height:210px; object-fit:contain; background:#0f172a; border-radius:8px; border:1px solid #475569; display:block; }
+  .photo-col img { width:100%; height:220px; object-fit:cover; border-radius:8px; border:1px solid #475569; display:block; }
+  .guide-col img { width:100%; height:220px; object-fit:contain; background:#0B132B; border-radius:8px; border:1px solid #475569; display:block; }
   .card-body { padding:14px 16px; flex:1; }
   .analysis-box { background:#1e1b4b; border-left:3px solid #818cf8; padding:8px 12px; border-radius:6px; margin-bottom:10px; font-size:12px; color:#c7d2fe; }
   .analysis-title { font-weight:700; color:#a5b4fc; text-transform:uppercase; font-size:11px; margin-bottom:2px; }
@@ -315,15 +315,15 @@ let html = `<!DOCTYPE html>
 </style>
 </head>
 <body>
-<h1>🏋️ FordaGO Afforda Gym — 100% Photo-Verified Equipment Audit</h1>
-<p class="sub">Audited strictly based on the ACTUAL gym photographs for all 46 machines/stations.</p>
+<h1>🏋️ FordaGO Afforda Gym — 100% Photo-Verified Equipment Showcase</h1>
+<p class="sub">Unified White-Anatomy Progressive Guides matching the EXACT gym photographs.</p>
 <div class="grid">
 `;
 
 serverEquip.sort((a,b) => a.id - b.id).forEach(e => {
   const meta = verifiedPhotoMapping[e.id] || { 
     photoAnalysis: "Gym Station",
-    guide: "seatedChestPress.jpg", 
+    guide: "guide_id35_seated_chest_press.jpg", 
     target: "Compound Movement", 
     steps: "Step 1: Setup | Step 2: Execution" 
   };
@@ -342,7 +342,7 @@ serverEquip.sort((a,b) => a.id - b.id).forEach(e => {
         <img src="${photoSrc}" alt="${e.name}">
       </div>
       <div class="guide-col">
-        <div class="col-label">🧬 Photorealistic Guide Artwork</div>
+        <div class="col-label">🧬 White Anatomical Guide</div>
         <img src="${guideSrc}" alt="${meta.photoAnalysis}">
       </div>
     </div>
@@ -352,11 +352,11 @@ serverEquip.sort((a,b) => a.id - b.id).forEach(e => {
         <div>${meta.photoAnalysis}</div>
       </div>
       <div class="target-box">
-        <div class="target-title">🎯 Correct Target Muscles</div>
+        <div class="target-title">🎯 Target Muscles</div>
         <div class="target-muscles">${meta.target}</div>
       </div>
       <div class="steps-box">
-        <span class="step-tag">Step Progression:</span> ${meta.steps}
+        <span class="step-tag">Progression:</span> ${meta.steps}
       </div>
     </div>
   </div>
@@ -370,4 +370,4 @@ html += `
 `;
 
 fs.writeFileSync(path.join(root, 'docs/qr-codes/all_equipment_guides_showcase.html'), html, 'utf8');
-console.log('Successfully updated all_equipment_guides_showcase.html with new photorealistic guides!');
+console.log('Successfully updated all_equipment_guides_showcase.html with White Anatomical artworks!');

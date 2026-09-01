@@ -65,7 +65,7 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
     muscles: ["Quadriceps", "Gluteus Maximus"],
     warning: 'Maintain neutral spine alignment and controlled tempo.',
     overview: "Pin-loaded lever V-squat with angled footplate and shoulder pads.",
-    primaryIllustration: "assets/guides/guide_id9_vsquat.jpg",
+    primaryIllustration: "assets/guides/guide_id9_white_vsquat.jpg",
     machineAdjustments: [
       'Adjust seat height or platform so pivot points align with your joint axis.',
       'Select a manageable working resistance to ensure strict movement form.'
@@ -85,8 +85,8 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
         primaryMuscles: ["Quadriceps"],
         secondaryMuscles: ["Gluteus Maximus"],
         difficulty: 'Beginner',
-        illustration: "assets/guides/guide_id9_vsquat.jpg",
-        illustrationUrl: "assets/guides/guide_id9_vsquat.jpg",
+        illustration: "assets/guides/guide_id9_white_vsquat.jpg",
+        illustrationUrl: "assets/guides/guide_id9_white_vsquat.jpg",
         recommendedSetsReps: '3-4 sets of 8-12 reps',
         setupInstructions: [
           'Position your body firmly against support pads with neutral spinal alignment.',
@@ -140,7 +140,7 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
     muscles: ["Anterior & Medial Deltoids", "Triceps"],
     warning: 'Maintain neutral spine alignment and controlled tempo.',
     overview: "Star Trac overhead seated shoulder press machine.",
-    primaryIllustration: "assets/guides/shoulderPress.jpg",
+    primaryIllustration: "assets/guides/guide_id10_white_shoulder_press.jpg",
     machineAdjustments: [
       'Adjust seat height or platform so pivot points align with your joint axis.',
       'Select a manageable working resistance to ensure strict movement form.'
@@ -160,8 +160,8 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
         primaryMuscles: ["Anterior & Medial Deltoids"],
         secondaryMuscles: ["Triceps"],
         difficulty: 'Beginner',
-        illustration: "assets/guides/shoulderPress.jpg",
-        illustrationUrl: "assets/guides/shoulderPress.jpg",
+        illustration: "assets/guides/guide_id10_white_shoulder_press.jpg",
+        illustrationUrl: "assets/guides/guide_id10_white_shoulder_press.jpg",
         recommendedSetsReps: '3-4 sets of 8-12 reps',
         setupInstructions: [
           'Position your body firmly against support pads with neutral spinal alignment.',
@@ -215,7 +215,7 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
     muscles: ["Gluteus Medius", "Outer Thighs"],
     warning: 'Maintain neutral spine alignment and controlled tempo.',
     overview: "Selectorized hip abductor & adductor swivel thigh machine.",
-    primaryIllustration: "assets/guides/hipAbductor.jpg",
+    primaryIllustration: "assets/guides/guide_id11_white_hip_abductor.jpg",
     machineAdjustments: [
       'Adjust seat height or platform so pivot points align with your joint axis.',
       'Select a manageable working resistance to ensure strict movement form.'
@@ -235,8 +235,8 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
         primaryMuscles: ["Gluteus Medius"],
         secondaryMuscles: ["Outer Thighs"],
         difficulty: 'Beginner',
-        illustration: "assets/guides/hipAbductor.jpg",
-        illustrationUrl: "assets/guides/hipAbductor.jpg",
+        illustration: "assets/guides/guide_id11_white_hip_abductor.jpg",
+        illustrationUrl: "assets/guides/guide_id11_white_hip_abductor.jpg",
         recommendedSetsReps: '3-4 sets of 8-12 reps',
         setupInstructions: [
           'Position your body firmly against support pads with neutral spinal alignment.',
@@ -290,7 +290,7 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
     muscles: ["Latissimus Dorsi", "Biceps"],
     warning: 'Maintain neutral spine alignment and controlled tempo.',
     overview: "Freemotion overhead wide grip lat pulldown station.",
-    primaryIllustration: "assets/guides/latPulldown.jpg",
+    primaryIllustration: "assets/guides/guide_id12_white_lat_pulldown.jpg",
     machineAdjustments: [
       'Adjust seat height or platform so pivot points align with your joint axis.',
       'Select a manageable working resistance to ensure strict movement form.'
@@ -310,8 +310,8 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
         primaryMuscles: ["Latissimus Dorsi"],
         secondaryMuscles: ["Biceps"],
         difficulty: 'Beginner',
-        illustration: "assets/guides/latPulldown.jpg",
-        illustrationUrl: "assets/guides/latPulldown.jpg",
+        illustration: "assets/guides/guide_id12_white_lat_pulldown.jpg",
+        illustrationUrl: "assets/guides/guide_id12_white_lat_pulldown.jpg",
         recommendedSetsReps: '3-4 sets of 8-12 reps',
         setupInstructions: [
           'Position your body firmly against support pads with neutral spinal alignment.',
@@ -365,7 +365,7 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
     muscles: ["Pectoralis Major", "Front Delts"],
     warning: 'Maintain neutral spine alignment and controlled tempo.',
     overview: "Selectorized seated horizontal chest press machine.",
-    primaryIllustration: "assets/guides/seatedChestPress.jpg",
+    primaryIllustration: "assets/guides/guide_id35_seated_chest_press.jpg",
     machineAdjustments: [
       'Adjust seat height or platform so pivot points align with your joint axis.',
       'Select a manageable working resistance to ensure strict movement form.'
@@ -385,8 +385,8 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
         primaryMuscles: ["Pectoralis Major"],
         secondaryMuscles: ["Front Delts"],
         difficulty: 'Beginner',
-        illustration: "assets/guides/seatedChestPress.jpg",
-        illustrationUrl: "assets/guides/seatedChestPress.jpg",
+        illustration: "assets/guides/guide_id35_seated_chest_press.jpg",
+        illustrationUrl: "assets/guides/guide_id35_seated_chest_press.jpg",
         recommendedSetsReps: '3-4 sets of 8-12 reps',
         setupInstructions: [
           'Position your body firmly against support pads with neutral spinal alignment.',
@@ -515,7 +515,7 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
     muscles: ["Upper Pectoralis", "Anterior Delts"],
     warning: 'Maintain neutral spine alignment and controlled tempo.',
     overview: "Precor plate-loaded incline chest press machine.",
-    primaryIllustration: "assets/guides/seatedChestPress.jpg",
+    primaryIllustration: "assets/guides/guide_id35_seated_chest_press.jpg",
     machineAdjustments: [
       'Adjust seat height or platform so pivot points align with your joint axis.',
       'Select a manageable working resistance to ensure strict movement form.'
@@ -535,8 +535,8 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
         primaryMuscles: ["Upper Pectoralis"],
         secondaryMuscles: ["Anterior Delts"],
         difficulty: 'Beginner',
-        illustration: "assets/guides/seatedChestPress.jpg",
-        illustrationUrl: "assets/guides/seatedChestPress.jpg",
+        illustration: "assets/guides/guide_id35_seated_chest_press.jpg",
+        illustrationUrl: "assets/guides/guide_id35_seated_chest_press.jpg",
         recommendedSetsReps: '3-4 sets of 8-12 reps',
         setupInstructions: [
           'Position your body firmly against support pads with neutral spinal alignment.',
@@ -1340,7 +1340,7 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
     muscles: ["Latissimus Dorsi", "Rhomboids"],
     warning: 'Maintain neutral spine alignment and controlled tempo.',
     overview: "Commercial plate-loaded iso-lateral lat pulldown machine.",
-    primaryIllustration: "assets/guides/latPulldown.jpg",
+    primaryIllustration: "assets/guides/guide_id12_white_lat_pulldown.jpg",
     machineAdjustments: [
       'Adjust seat height or platform so pivot points align with your joint axis.',
       'Select a manageable working resistance to ensure strict movement form.'
@@ -1360,8 +1360,8 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
         primaryMuscles: ["Latissimus Dorsi"],
         secondaryMuscles: ["Rhomboids"],
         difficulty: 'Beginner',
-        illustration: "assets/guides/latPulldown.jpg",
-        illustrationUrl: "assets/guides/latPulldown.jpg",
+        illustration: "assets/guides/guide_id12_white_lat_pulldown.jpg",
+        illustrationUrl: "assets/guides/guide_id12_white_lat_pulldown.jpg",
         recommendedSetsReps: '3-4 sets of 8-12 reps',
         setupInstructions: [
           'Position your body firmly against support pads with neutral spinal alignment.',
@@ -1415,7 +1415,7 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
     muscles: ["Latissimus Dorsi", "Upper Back"],
     warning: 'Maintain neutral spine alignment and controlled tempo.',
     overview: "Plate-loaded iso-lateral high pulldown station.",
-    primaryIllustration: "assets/guides/latPulldown.jpg",
+    primaryIllustration: "assets/guides/guide_id12_white_lat_pulldown.jpg",
     machineAdjustments: [
       'Adjust seat height or platform so pivot points align with your joint axis.',
       'Select a manageable working resistance to ensure strict movement form.'
@@ -1435,8 +1435,8 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
         primaryMuscles: ["Latissimus Dorsi"],
         secondaryMuscles: ["Upper Back"],
         difficulty: 'Beginner',
-        illustration: "assets/guides/latPulldown.jpg",
-        illustrationUrl: "assets/guides/latPulldown.jpg",
+        illustration: "assets/guides/guide_id12_white_lat_pulldown.jpg",
+        illustrationUrl: "assets/guides/guide_id12_white_lat_pulldown.jpg",
         recommendedSetsReps: '3-4 sets of 8-12 reps',
         setupInstructions: [
           'Position your body firmly against support pads with neutral spinal alignment.',
@@ -1790,7 +1790,7 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
     muscles: ["Deltoid Group", "Upper Trapezius"],
     warning: 'Maintain neutral spine alignment and controlled tempo.',
     overview: "Plate-loaded dual lever functional shoulder machine.",
-    primaryIllustration: "assets/guides/shoulderPress.jpg",
+    primaryIllustration: "assets/guides/guide_id10_white_shoulder_press.jpg",
     machineAdjustments: [
       'Adjust seat height or platform so pivot points align with your joint axis.',
       'Select a manageable working resistance to ensure strict movement form.'
@@ -1810,8 +1810,8 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
         primaryMuscles: ["Deltoid Group"],
         secondaryMuscles: ["Upper Trapezius"],
         difficulty: 'Beginner',
-        illustration: "assets/guides/shoulderPress.jpg",
-        illustrationUrl: "assets/guides/shoulderPress.jpg",
+        illustration: "assets/guides/guide_id10_white_shoulder_press.jpg",
+        illustrationUrl: "assets/guides/guide_id10_white_shoulder_press.jpg",
         recommendedSetsReps: '3-4 sets of 8-12 reps',
         setupInstructions: [
           'Position your body firmly against support pads with neutral spinal alignment.',
@@ -1865,7 +1865,7 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
     muscles: ["Pectoralis Major", "Anterior Delts"],
     warning: 'Maintain neutral spine alignment and controlled tempo.',
     overview: "Commercial iso-lateral plate-loaded flat/incline chest press.",
-    primaryIllustration: "assets/guides/seatedChestPress.jpg",
+    primaryIllustration: "assets/guides/guide_id35_seated_chest_press.jpg",
     machineAdjustments: [
       'Adjust seat height or platform so pivot points align with your joint axis.',
       'Select a manageable working resistance to ensure strict movement form.'
@@ -1885,8 +1885,8 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
         primaryMuscles: ["Pectoralis Major"],
         secondaryMuscles: ["Anterior Delts"],
         difficulty: 'Beginner',
-        illustration: "assets/guides/seatedChestPress.jpg",
-        illustrationUrl: "assets/guides/seatedChestPress.jpg",
+        illustration: "assets/guides/guide_id35_seated_chest_press.jpg",
+        illustrationUrl: "assets/guides/guide_id35_seated_chest_press.jpg",
         recommendedSetsReps: '3-4 sets of 8-12 reps',
         setupInstructions: [
           'Position your body firmly against support pads with neutral spinal alignment.',
@@ -2015,7 +2015,7 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
     muscles: ["Pectoralis Major", "Triceps"],
     warning: 'Maintain neutral spine alignment and controlled tempo.',
     overview: "Selectorized pin-loaded seated chest press machine.",
-    primaryIllustration: "assets/guides/seatedChestPress.jpg",
+    primaryIllustration: "assets/guides/guide_id35_seated_chest_press.jpg",
     machineAdjustments: [
       'Adjust seat height or platform so pivot points align with your joint axis.',
       'Select a manageable working resistance to ensure strict movement form.'
@@ -2035,8 +2035,8 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
         primaryMuscles: ["Pectoralis Major"],
         secondaryMuscles: ["Triceps"],
         difficulty: 'Beginner',
-        illustration: "assets/guides/seatedChestPress.jpg",
-        illustrationUrl: "assets/guides/seatedChestPress.jpg",
+        illustration: "assets/guides/guide_id35_seated_chest_press.jpg",
+        illustrationUrl: "assets/guides/guide_id35_seated_chest_press.jpg",
         recommendedSetsReps: '3-4 sets of 8-12 reps',
         setupInstructions: [
           'Position your body firmly against support pads with neutral spinal alignment.',
@@ -2090,7 +2090,7 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
     muscles: ["Upper & Mid Pectorals", ],
     warning: 'Maintain neutral spine alignment and controlled tempo.',
     overview: "Multi-position commercial adjustable workout bench.",
-    primaryIllustration: "assets/guides/seatedChestPress.jpg",
+    primaryIllustration: "assets/guides/guide_id35_seated_chest_press.jpg",
     machineAdjustments: [
       'Adjust seat height or platform so pivot points align with your joint axis.',
       'Select a manageable working resistance to ensure strict movement form.'
@@ -2110,8 +2110,8 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
         primaryMuscles: ["Upper & Mid Pectorals"],
         secondaryMuscles: [],
         difficulty: 'Beginner',
-        illustration: "assets/guides/seatedChestPress.jpg",
-        illustrationUrl: "assets/guides/seatedChestPress.jpg",
+        illustration: "assets/guides/guide_id35_seated_chest_press.jpg",
+        illustrationUrl: "assets/guides/guide_id35_seated_chest_press.jpg",
         recommendedSetsReps: '3-4 sets of 8-12 reps',
         setupInstructions: [
           'Position your body firmly against support pads with neutral spinal alignment.',
@@ -2390,7 +2390,7 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
     muscles: ["Anterior & Medial Deltoids", ],
     warning: 'Maintain neutral spine alignment and controlled tempo.',
     overview: "Selectorized shoulder press machine with dual grip handles.",
-    primaryIllustration: "assets/guides/shoulderPress.jpg",
+    primaryIllustration: "assets/guides/guide_id10_white_shoulder_press.jpg",
     machineAdjustments: [
       'Adjust seat height or platform so pivot points align with your joint axis.',
       'Select a manageable working resistance to ensure strict movement form.'
@@ -2410,8 +2410,8 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
         primaryMuscles: ["Anterior & Medial Deltoids"],
         secondaryMuscles: [],
         difficulty: 'Beginner',
-        illustration: "assets/guides/shoulderPress.jpg",
-        illustrationUrl: "assets/guides/shoulderPress.jpg",
+        illustration: "assets/guides/guide_id10_white_shoulder_press.jpg",
+        illustrationUrl: "assets/guides/guide_id10_white_shoulder_press.jpg",
         recommendedSetsReps: '3-4 sets of 8-12 reps',
         setupInstructions: [
           'Position your body firmly against support pads with neutral spinal alignment.',
@@ -2840,7 +2840,7 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
     muscles: ["Latissimus Dorsi", "Biceps"],
     warning: 'Maintain neutral spine alignment and controlled tempo.',
     overview: "Star Trac Instinct high lat pulldown machine.",
-    primaryIllustration: "assets/guides/latPulldown.jpg",
+    primaryIllustration: "assets/guides/guide_id12_white_lat_pulldown.jpg",
     machineAdjustments: [
       'Adjust seat height or platform so pivot points align with your joint axis.',
       'Select a manageable working resistance to ensure strict movement form.'
@@ -2860,8 +2860,8 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
         primaryMuscles: ["Latissimus Dorsi"],
         secondaryMuscles: ["Biceps"],
         difficulty: 'Beginner',
-        illustration: "assets/guides/latPulldown.jpg",
-        illustrationUrl: "assets/guides/latPulldown.jpg",
+        illustration: "assets/guides/guide_id12_white_lat_pulldown.jpg",
+        illustrationUrl: "assets/guides/guide_id12_white_lat_pulldown.jpg",
         recommendedSetsReps: '3-4 sets of 8-12 reps',
         setupInstructions: [
           'Position your body firmly against support pads with neutral spinal alignment.',
@@ -2990,7 +2990,7 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
     muscles: ["Pectoralis Major", "Anterior Deltoids"],
     warning: 'Maintain neutral spine alignment and controlled tempo.',
     overview: "Star Trac Instinct seated chest press machine.",
-    primaryIllustration: "assets/guides/seatedChestPress.jpg",
+    primaryIllustration: "assets/guides/guide_id35_seated_chest_press.jpg",
     machineAdjustments: [
       'Adjust seat height or platform so pivot points align with your joint axis.',
       'Select a manageable working resistance to ensure strict movement form.'
@@ -3010,8 +3010,8 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
         primaryMuscles: ["Pectoralis Major"],
         secondaryMuscles: ["Anterior Deltoids"],
         difficulty: 'Beginner',
-        illustration: "assets/guides/seatedChestPress.jpg",
-        illustrationUrl: "assets/guides/seatedChestPress.jpg",
+        illustration: "assets/guides/guide_id35_seated_chest_press.jpg",
+        illustrationUrl: "assets/guides/guide_id35_seated_chest_press.jpg",
         recommendedSetsReps: '3-4 sets of 8-12 reps',
         setupInstructions: [
           'Position your body firmly against support pads with neutral spinal alignment.',
@@ -3140,7 +3140,7 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
     muscles: ["Anterior & Medial Deltoids", "Triceps"],
     warning: 'Maintain neutral spine alignment and controlled tempo.',
     overview: "Star Trac Instinct seated shoulder press machine.",
-    primaryIllustration: "assets/guides/shoulderPress.jpg",
+    primaryIllustration: "assets/guides/guide_id10_white_shoulder_press.jpg",
     machineAdjustments: [
       'Adjust seat height or platform so pivot points align with your joint axis.',
       'Select a manageable working resistance to ensure strict movement form.'
@@ -3160,8 +3160,8 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
         primaryMuscles: ["Anterior & Medial Deltoids"],
         secondaryMuscles: ["Triceps"],
         difficulty: 'Beginner',
-        illustration: "assets/guides/shoulderPress.jpg",
-        illustrationUrl: "assets/guides/shoulderPress.jpg",
+        illustration: "assets/guides/guide_id10_white_shoulder_press.jpg",
+        illustrationUrl: "assets/guides/guide_id10_white_shoulder_press.jpg",
         recommendedSetsReps: '3-4 sets of 8-12 reps',
         setupInstructions: [
           'Position your body firmly against support pads with neutral spinal alignment.',
@@ -3290,7 +3290,7 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
     muscles: ["Pectoralis Major", ],
     warning: 'Maintain neutral spine alignment and controlled tempo.',
     overview: "Star Trac Instinct horizontal bench chest press machine.",
-    primaryIllustration: "assets/guides/seatedChestPress.jpg",
+    primaryIllustration: "assets/guides/guide_id52_flat_chest_press.jpg",
     machineAdjustments: [
       'Adjust seat height or platform so pivot points align with your joint axis.',
       'Select a manageable working resistance to ensure strict movement form.'
@@ -3310,8 +3310,8 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
         primaryMuscles: ["Pectoralis Major"],
         secondaryMuscles: [],
         difficulty: 'Beginner',
-        illustration: "assets/guides/seatedChestPress.jpg",
-        illustrationUrl: "assets/guides/seatedChestPress.jpg",
+        illustration: "assets/guides/guide_id52_flat_chest_press.jpg",
+        illustrationUrl: "assets/guides/guide_id52_flat_chest_press.jpg",
         recommendedSetsReps: '3-4 sets of 8-12 reps',
         setupInstructions: [
           'Position your body firmly against support pads with neutral spinal alignment.',
@@ -3517,7 +3517,7 @@ for (const g of ALL_EQUIPMENT_GUIDES) {
     primaryMuscles: g.variations[0]?.primaryMuscles || ['Target Muscles'],
     secondaryMuscles: g.variations[0]?.secondaryMuscles || [],
     description: g.overview,
-    guideImage: g.primaryIllustration || 'assets/guides/seatedChestPress.jpg',
+    guideImage: g.primaryIllustration || 'assets/guides/guide_id35_seated_chest_press.jpg',
     steps: (g.variations[0]?.executionSteps || []).map(s => ({
       stepNumber: s.stepNumber,
       title: s.title,
