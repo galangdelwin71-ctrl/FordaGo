@@ -1462,69 +1462,98 @@ ion-modal.bottom-sheet-modal {
 
   // ── YouTube Video Tutorial Box ──
   .youtube-guide-box {
-    padding: 10px 12px;
+    padding: 12px 14px;
     background: #0b1120;
     border-bottom: 1px solid #1e293b;
 
-    .youtube-tutorial-btn {
+    .yt-header-row {
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 12px;
-      padding: 10px 14px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(185, 28, 28, 0.06) 100%);
-      border: 1.5px solid rgba(239, 68, 68, 0.35);
-      text-decoration: none;
-      transition: all 0.2s ease;
-      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.12);
+    }
 
-      &:active {
-        transform: scale(0.98);
-        background: rgba(239, 68, 68, 0.2);
-      }
+    .yt-brand-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
 
-      .yt-icon-wrap {
-        width: 38px;
-        height: 38px;
-        border-radius: 10px;
-        background: #ef4444;
-        display: grid;
-        place-items: center;
+      .yt-logo-svg {
         flex-shrink: 0;
-        box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4);
-
-        .yt-icon {
-          font-size: 24px;
-          color: #ffffff;
-        }
+        filter: drop-shadow(0 2px 8px rgba(255, 0, 0, 0.45));
       }
 
       .yt-text-wrap {
         display: flex;
         flex-direction: column;
-        gap: 2px;
-        min-width: 0;
+        gap: 1px;
 
         .yt-badge {
-          font-size: 8.5px;
+          font-size: 8px;
           font-weight: 800;
-          color: #f87171;
-          letter-spacing: 0.6px;
+          color: #ef4444;
+          letter-spacing: 0.8px;
           text-transform: uppercase;
         }
 
         .yt-main-text {
-          font-size: 13px;
+          font-size: 12.5px;
           font-weight: 800;
           color: #ffffff;
           line-height: 1.2;
         }
 
         .yt-sub-text {
-          font-size: 10.5px;
-          color: #cbd5e1;
-          font-weight: 500;
+          font-size: 10px;
+          color: #94a3b8;
         }
+      }
+    }
+
+    .yt-action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 13px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      font-size: 11.5px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+
+      ion-icon {
+        font-size: 16px;
+      }
+
+      &:active {
+        transform: scale(0.96);
+        opacity: 0.9;
+      }
+    }
+
+    .yt-inapp-player-wrap {
+      margin-top: 12px;
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%; /* 16:9 Aspect Ratio */
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1.5px solid #334155;
+      background: #000000;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+
+      .yt-inapp-iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
       }
     }
   }

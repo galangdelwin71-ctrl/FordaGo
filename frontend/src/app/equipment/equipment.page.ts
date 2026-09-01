@@ -1,7 +1,7 @@
 // equipment.page.ts
 
 import { Component, OnInit } from '@angular/core';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -102,6 +102,7 @@ export class EquipmentPage implements OnInit {
 
   selectedGuide: EquipmentFullGuide | null = null;
   activeVariationIndex = 0;
+  isVideoPlaying = false;
 
   get activeVariation(): ExerciseVariation | null {
     if (!this.selectedGuide || !this.selectedGuide.variations?.length) return null;
@@ -110,14 +111,24 @@ export class EquipmentPage implements OnInit {
 
   selectVariation(idx: number): void {
     this.activeVariationIndex = idx;
+    this.isVideoPlaying = false;
   }
 
-  logWorkoutFromGuide(): void {
-    const equipName = this.selectedGuide?.name || this.selectedItem?.name || 'Workout';
-    this.closeModal();
-    this.router.navigate(['/profile'], {
-      queryParams: { tab: 'records', log: equipName }
-    });
+  toggleVideoPlayer(): void {
+    this.isVideoPlaying = !this.isVideoPlaying;
+  }
+
+  getYoutubeEmbedUrl(videoIdOrUrl: string | undefined | null): SafeResourceUrl {
+    if (!videoIdOrUrl) return this.sanitizer.bypassSecurityTrustResourceUrl('');
+    let videoId = videoIdOrUrl;
+    if (videoIdOrUrl.includes('v=')) {
+      videoId = videoIdOrUrl.split('v=')[1].split('&')[0];
+    } else if (videoIdOrUrl.includes('youtu.be/')) {
+      videoId = videoIdOrUrl.split('youtu.be/')[1].split('?')[0];
+    } else if (videoIdOrUrl.includes('embed/')) {
+      videoId = videoIdOrUrl.split('embed/')[1].split('?')[0];
+    }
+    return this.sanitizer.bypassSecurityTrustResourceUrl(`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`);
   }
 
   /** Returns sanitized SVG HTML for native vector rendering. */
@@ -407,6 +418,7 @@ export class EquipmentPage implements OnInit {
     this.selectedItem = item;
     this.selectedGuide = this.guideService.getGuideById(item.id) || this.guideService.getGuideByName(item.name);
     this.activeVariationIndex = 0;
+    this.isVideoPlaying = false;
     this.modalOpen    = true;
   }
 
@@ -415,6 +427,7 @@ export class EquipmentPage implements OnInit {
     this.selectedItem = null;
     this.selectedGuide = null;
     this.activeVariationIndex = 0;
+    this.isVideoPlaying = false;
   }
 
   // ── User Info ─────────────────────────────────────────

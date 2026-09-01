@@ -1,6 +1,6 @@
 // qr-scanner.page.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { getExerciseSvgHtml } from '../data/exercise-svgs.data';
 import { CommonModule } from '@angular/common';
@@ -189,6 +189,7 @@ export class QrScannerPage implements OnInit, OnDestroy {
   activeEquipment:   EquipmentTutorial | null = null;
   activeFullGuide:   EquipmentFullGuide | null = null;
   activeVariationIndex = 0;
+  isVideoPlaying = false;
 
   get activeVariation(): ExerciseVariation | null {
     if (!this.activeFullGuide || !this.activeFullGuide.variations?.length) return null;
@@ -197,6 +198,24 @@ export class QrScannerPage implements OnInit, OnDestroy {
 
   selectVariation(index: number): void {
     this.activeVariationIndex = index;
+    this.isVideoPlaying = false;
+  }
+
+  toggleVideoPlayer(): void {
+    this.isVideoPlaying = !this.isVideoPlaying;
+  }
+
+  getYoutubeEmbedUrl(videoIdOrUrl: string | undefined | null): SafeResourceUrl {
+    if (!videoIdOrUrl) return this.sanitizer.bypassSecurityTrustResourceUrl('');
+    let videoId = videoIdOrUrl;
+    if (videoIdOrUrl.includes('v=')) {
+      videoId = videoIdOrUrl.split('v=')[1].split('&')[0];
+    } else if (videoIdOrUrl.includes('youtu.be/')) {
+      videoId = videoIdOrUrl.split('youtu.be/')[1].split('?')[0];
+    } else if (videoIdOrUrl.includes('embed/')) {
+      videoId = videoIdOrUrl.split('embed/')[1].split('?')[0];
+    }
+    return this.sanitizer.bypassSecurityTrustResourceUrl(`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`);
   }
 
   /** Resolves relative /storage/... paths to full backend URL. */
@@ -209,14 +228,6 @@ export class QrScannerPage implements OnInit, OnDestroy {
     if (!variation) return '';
     const raw = getExerciseSvgHtml(variation.illustrationUrl || variation.id || variation.title);
     return this.sanitizer.bypassSecurityTrustHtml(raw);
-  }
-
-  logWorkoutFromGuide(): void {
-    const equipName = this.activeFullGuide?.name || this.activeEquipment?.name || 'Workout';
-    this.closeTutorialModal();
-    this.router.navigate(['/profile'], {
-      queryParams: { tab: 'records', log: equipName }
-    });
   }
 
   private html5QrCode: Html5Qrcode | null = null;
@@ -891,6 +902,7 @@ export class QrScannerPage implements OnInit, OnDestroy {
   closeTutorialModal(): void {
     this.tutorialModalOpen = false;
     this.activeEquipment   = null;
+    this.isVideoPlaying    = false;
   }
 
   // ── Coaching screen ────────────────────────────────────────
