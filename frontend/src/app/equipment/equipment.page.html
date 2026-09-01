@@ -231,6 +231,20 @@
             ></div>
           </div>
 
+          <!-- ── Prominent YouTube Video Tutorial Link ── -->
+          <div class="youtube-guide-box" *ngIf="curVar.youtubeUrl || selectedGuide?.youtubeUrl">
+            <a [href]="curVar.youtubeUrl || selectedGuide?.youtubeUrl" target="_blank" rel="noopener noreferrer" class="youtube-tutorial-btn">
+              <div class="yt-icon-wrap">
+                <ion-icon name="logo-youtube" class="yt-icon"></ion-icon>
+              </div>
+              <div class="yt-text-wrap">
+                <span class="yt-badge">VIDEO DEMONSTRATION</span>
+                <span class="yt-main-text">Watch How to Use on YouTube</span>
+                <span class="yt-sub-text">Panoorin ang tamang form at step-by-step tutorial &rarr;</span>
+              </div>
+            </a>
+          </div>
+
           <!-- Target Muscles Badges -->
           <div class="target-muscles-box">
             <div class="muscle-line primary">
@@ -265,14 +279,25 @@
           </div>
         </div>
 
-        <!-- Safety Tips -->
-        <div class="safety-card" *ngIf="curVar.safetyWarnings && curVar.safetyWarnings.length">
-          <div class="safety-card-header">
-            <ion-icon name="shield-checkmark-outline"></ion-icon>
-            <span>Safety Tips &amp; Injury Prevention</span>
+        <!-- ── Mga Kailangang Gawin (Dos & Proper Technique) ── -->
+        <div class="dos-card" *ngIf="curVar.dos && curVar.dos.length">
+          <div class="dos-card-header">
+            <ion-icon name="checkmark-circle"></ion-icon>
+            <span>Mga Kailangang Gawin (Form Cues &amp; Dos)</span>
           </div>
-          <ul class="safety-list">
-            <li *ngFor="let warn of curVar.safetyWarnings">{{ warn }}</li>
+          <ul class="dos-list">
+            <li *ngFor="let doItem of curVar.dos">{{ doItem }}</li>
+          </ul>
+        </div>
+
+        <!-- ── Mga Hindi Dapat Gawin (Don'ts & Safety Warnings) ── -->
+        <div class="donts-card" *ngIf="(curVar.donts && curVar.donts.length) || (curVar.safetyWarnings && curVar.safetyWarnings.length)">
+          <div class="donts-card-header">
+            <ion-icon name="close-circle"></ion-icon>
+            <span>Mga Hindi Dapat Gawin (Common Mistakes &amp; Don'ts)</span>
+          </div>
+          <ul class="donts-list">
+            <li *ngFor="let dontItem of (curVar.donts || curVar.safetyWarnings)">{{ dontItem }}</li>
           </ul>
         </div>
       </ng-container>
@@ -286,10 +311,6 @@
     </div>
 
     <div class="modal-actions-row">
-      <button type="button" class="btn-log-workout-gold" (click)="logWorkoutFromGuide()">
-        <ion-icon name="add-circle-outline"></ion-icon>
-        <span>Log to Workout Tracker</span>
-      </button>
       <button class="close-modal-btn" (click)="closeModal()" type="button">Close Guide</button>
     </div>
 

@@ -486,6 +486,75 @@ ion-content {
     }
   }
 
+  // ── YouTube Video Tutorial Box ──
+  .youtube-guide-box {
+    padding: 10px 12px;
+    background: #0b1120;
+    border-bottom: 1px solid #1e293b;
+
+    .youtube-tutorial-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(185, 28, 28, 0.06) 100%);
+      border: 1.5px solid rgba(239, 68, 68, 0.35);
+      text-decoration: none;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.12);
+
+      &:active {
+        transform: scale(0.98);
+        background: rgba(239, 68, 68, 0.2);
+      }
+
+      .yt-icon-wrap {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: #ef4444;
+        display: grid;
+        place-items: center;
+        flex-shrink: 0;
+        box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4);
+
+        .yt-icon {
+          font-size: 24px;
+          color: #ffffff;
+        }
+      }
+
+      .yt-text-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+
+        .yt-badge {
+          font-size: 8.5px;
+          font-weight: 800;
+          color: #f87171;
+          letter-spacing: 0.6px;
+          text-transform: uppercase;
+        }
+
+        .yt-main-text {
+          font-size: 13px;
+          font-weight: 800;
+          color: #ffffff;
+          line-height: 1.2;
+        }
+
+        .yt-sub-text {
+          font-size: 10.5px;
+          color: #cbd5e1;
+          font-weight: 500;
+        }
+      }
+    }
+  }
+
   .target-muscles-box {
     padding: 12px 14px; background: #111827;
     .muscle-line {
@@ -537,18 +606,79 @@ ion-content {
   }
 }
 
-.safety-card {
-  background: rgba(239, 68, 68, 0.07);
-  border: 1px solid rgba(239, 68, 68, 0.22);
-  border-radius: 12px; padding: 10px 12px;
-  .safety-card-header {
-    display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 800;
-    color: #f87171; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
-    ion-icon { font-size: 14px; }
+// ── Mga Kailangang Gawin (Dos) ──
+.dos-card {
+  background: rgba(34, 197, 94, 0.08);
+  border: 1.5px solid rgba(34, 197, 94, 0.3);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 14px rgba(34, 197, 94, 0.08);
+
+  .dos-card-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    font-weight: 800;
+    color: #4ade80;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    ion-icon { font-size: 16px; color: #22c55e; }
   }
-  .safety-list {
-    margin: 0; padding-left: 16px; font-size: 11px; color: #cbd5e1; line-height: 1.5;
-    li { margin-bottom: 4px; &:last-child { margin-bottom: 0; } }
+
+  .dos-list {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 11.5px;
+    color: #e2e8f0;
+    line-height: 1.6;
+    li {
+      margin-bottom: 6px;
+      &:last-child { margin-bottom: 0; }
+    }
+  }
+}
+
+// ── Mga Hindi Dapat Gawin (Don'ts) ──
+.donts-card {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1.5px solid rgba(239, 68, 68, 0.3);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.08);
+
+  .donts-card-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    font-weight: 800;
+    color: #f87171;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    ion-icon { font-size: 16px; color: #ef4444; }
+  }
+
+  .donts-list {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 11.5px;
+    color: #cbd5e1;
+    line-height: 1.6;
+    li {
+      margin-bottom: 6px;
+      &:last-child { margin-bottom: 0; }
+    }
+  }
+
+  .donts-text {
+    font-size: 11.5px;
+    color: #cbd5e1;
+    line-height: 1.6;
   }
 }
 
