@@ -252,15 +252,23 @@
             </div>
 
             <!-- Embedded In-App YouTube Player -->
-            <div class="yt-inapp-player-wrap" *ngIf="isVideoPlaying">
+            <div class="yt-inapp-player-wrap" *ngIf="isVideoPlaying && currentEmbedUrl">
               <iframe
-                [src]="getYoutubeEmbedUrl(curVar.youtubeVideoId || selectedGuide?.youtubeVideoId)"
+                [src]="currentEmbedUrl"
                 title="YouTube Video Guide"
                 frameborder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
                 allowfullscreen
                 class="yt-inapp-iframe"
               ></iframe>
+            </div>
+
+            <!-- Direct YouTube App / Web Fallback Link -->
+            <div class="yt-fallback-row" *ngIf="isVideoPlaying && currentVideoUrl">
+              <a [href]="currentVideoUrl" target="_blank" rel="noopener noreferrer" class="yt-fallback-btn">
+                <ion-icon name="open-outline"></ion-icon>
+                <span>Open in YouTube App / Full Screen</span>
+              </a>
             </div>
           </div>
 

@@ -582,6 +582,36 @@ ion-content {
         border: none;
       }
     }
+
+    .yt-fallback-row {
+      margin-top: 8px;
+      display: flex;
+      justify-content: flex-end;
+
+      .yt-fallback-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #94a3b8;
+        font-size: 11px;
+        font-weight: 600;
+        text-decoration: none;
+        padding: 4px 8px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.05);
+        transition: all 0.2s ease;
+
+        ion-icon {
+          font-size: 13px;
+          color: #ef4444;
+        }
+
+        &:active {
+          color: #ffffff;
+          background: rgba(239, 68, 68, 0.2);
+        }
+      }
+    }
   }
 
   .target-muscles-box {

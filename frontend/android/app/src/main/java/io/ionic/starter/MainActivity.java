@@ -15,6 +15,9 @@ public class MainActivity extends BridgeActivity {
             settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
             settings.setDomStorageEnabled(true);
             settings.setLoadsImagesAutomatically(true);
+            settings.setMediaPlaybackRequiresUserGesture(false);
+            settings.setJavaScriptCanOpenWindowsAutomatically(true);
+            settings.setAllowFileAccess(true);
         }
     }
 }

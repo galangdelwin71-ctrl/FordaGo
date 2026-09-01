@@ -103,6 +103,8 @@ export class EquipmentPage implements OnInit {
   selectedGuide: EquipmentFullGuide | null = null;
   activeVariationIndex = 0;
   isVideoPlaying = false;
+  currentEmbedUrl: SafeResourceUrl | null = null;
+  currentVideoUrl = '';
 
   get activeVariation(): ExerciseVariation | null {
     if (!this.selectedGuide || !this.selectedGuide.variations?.length) return null;
@@ -112,14 +114,28 @@ export class EquipmentPage implements OnInit {
   selectVariation(idx: number): void {
     this.activeVariationIndex = idx;
     this.isVideoPlaying = false;
+    this.currentEmbedUrl = null;
+    this.currentVideoUrl = '';
   }
 
   toggleVideoPlayer(): void {
     this.isVideoPlaying = !this.isVideoPlaying;
+    if (this.isVideoPlaying) {
+      const curVar = this.activeVariation;
+      const vid = curVar?.youtubeVideoId || curVar?.youtubeUrl || this.selectedGuide?.youtubeVideoId || this.selectedGuide?.youtubeUrl;
+      this.updateEmbedUrl(vid);
+    } else {
+      this.currentEmbedUrl = null;
+      this.currentVideoUrl = '';
+    }
   }
 
-  getYoutubeEmbedUrl(videoIdOrUrl: string | undefined | null): SafeResourceUrl {
-    if (!videoIdOrUrl) return this.sanitizer.bypassSecurityTrustResourceUrl('');
+  updateEmbedUrl(videoIdOrUrl: string | undefined | null): void {
+    if (!videoIdOrUrl) {
+      this.currentEmbedUrl = null;
+      this.currentVideoUrl = '';
+      return;
+    }
     let videoId = videoIdOrUrl;
     if (videoIdOrUrl.includes('v=')) {
       videoId = videoIdOrUrl.split('v=')[1].split('&')[0];
@@ -128,7 +144,10 @@ export class EquipmentPage implements OnInit {
     } else if (videoIdOrUrl.includes('embed/')) {
       videoId = videoIdOrUrl.split('embed/')[1].split('?')[0];
     }
-    return this.sanitizer.bypassSecurityTrustResourceUrl(`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`);
+    this.currentVideoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    this.currentEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+      `https://www.youtube.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1`
+    );
   }
 
   /** Returns sanitized SVG HTML for native vector rendering. */
@@ -419,6 +438,8 @@ export class EquipmentPage implements OnInit {
     this.selectedGuide = this.guideService.getGuideById(item.id) || this.guideService.getGuideByName(item.name);
     this.activeVariationIndex = 0;
     this.isVideoPlaying = false;
+    this.currentEmbedUrl = null;
+    this.currentVideoUrl = '';
     this.modalOpen    = true;
   }
 
@@ -428,6 +449,8 @@ export class EquipmentPage implements OnInit {
     this.selectedGuide = null;
     this.activeVariationIndex = 0;
     this.isVideoPlaying = false;
+    this.currentEmbedUrl = null;
+    this.currentVideoUrl = '';
   }
 
   // ── User Info ─────────────────────────────────────────

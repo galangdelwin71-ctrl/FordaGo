@@ -190,6 +190,8 @@ export class QrScannerPage implements OnInit, OnDestroy {
   activeFullGuide:   EquipmentFullGuide | null = null;
   activeVariationIndex = 0;
   isVideoPlaying = false;
+  currentEmbedUrl: SafeResourceUrl | null = null;
+  currentVideoUrl = '';
 
   get activeVariation(): ExerciseVariation | null {
     if (!this.activeFullGuide || !this.activeFullGuide.variations?.length) return null;
@@ -199,14 +201,28 @@ export class QrScannerPage implements OnInit, OnDestroy {
   selectVariation(index: number): void {
     this.activeVariationIndex = index;
     this.isVideoPlaying = false;
+    this.currentEmbedUrl = null;
+    this.currentVideoUrl = '';
   }
 
   toggleVideoPlayer(): void {
     this.isVideoPlaying = !this.isVideoPlaying;
+    if (this.isVideoPlaying) {
+      const curVar = this.activeVariation;
+      const vid = curVar?.youtubeVideoId || curVar?.youtubeUrl || this.activeFullGuide?.youtubeVideoId || this.activeFullGuide?.youtubeUrl;
+      this.updateEmbedUrl(vid);
+    } else {
+      this.currentEmbedUrl = null;
+      this.currentVideoUrl = '';
+    }
   }
 
-  getYoutubeEmbedUrl(videoIdOrUrl: string | undefined | null): SafeResourceUrl {
-    if (!videoIdOrUrl) return this.sanitizer.bypassSecurityTrustResourceUrl('');
+  updateEmbedUrl(videoIdOrUrl: string | undefined | null): void {
+    if (!videoIdOrUrl) {
+      this.currentEmbedUrl = null;
+      this.currentVideoUrl = '';
+      return;
+    }
     let videoId = videoIdOrUrl;
     if (videoIdOrUrl.includes('v=')) {
       videoId = videoIdOrUrl.split('v=')[1].split('&')[0];
@@ -215,7 +231,10 @@ export class QrScannerPage implements OnInit, OnDestroy {
     } else if (videoIdOrUrl.includes('embed/')) {
       videoId = videoIdOrUrl.split('embed/')[1].split('?')[0];
     }
-    return this.sanitizer.bypassSecurityTrustResourceUrl(`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`);
+    this.currentVideoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    this.currentEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+      `https://www.youtube.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1`
+    );
   }
 
   /** Resolves relative /storage/... paths to full backend URL. */
@@ -903,6 +922,8 @@ export class QrScannerPage implements OnInit, OnDestroy {
     this.tutorialModalOpen = false;
     this.activeEquipment   = null;
     this.isVideoPlaying    = false;
+    this.currentEmbedUrl   = null;
+    this.currentVideoUrl   = '';
   }
 
   // ── Coaching screen ────────────────────────────────────────
