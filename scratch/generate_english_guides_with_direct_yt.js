@@ -389,23 +389,27 @@ const englishGuidesDatabase = {
     ]
   },
   26: {
-    guide: 'guide_id12_white_lat_pulldown.jpg',
-    target: 'Latissimus Dorsi, Rhomboids, Middle Trapezius',
-    videoId: 'lueEJGjTuPQ',
-    desc: 'Commercial plate-loaded iso-lateral lat pulldown machine for independent left/right back strength and symmetrical development.',
+    guide: 'guide_id26_white_plate_loaded_lat_pulldown.jpg',
+    target: 'Latissimus Dorsi (Lats), Teres Major, Rhomboids (Mid-Back), Biceps',
+    videoId: 'GibwvzLfwK8',
+    desc: 'Commercial plate-loaded iso-lateral lat pulldown machine engineered with independent diverging lever arms for maximum lat width, scapular depression, and upper back thickness.',
     dos: [
-      'Adjust thigh hold-down rollers firmly against your thighs.',
-      'Reach up and grip independent handles, pulling down while driving elbows into your flanks.',
-      'Puff chest proud on every repetition.'
+      'Load equal weight plates securely onto both side horns before beginning your set.',
+      'Adjust the orange padded thigh rollers snugly over your quads to anchor your lower body.',
+      'Grip the overhead handles, sit down, and start with arms fully extended for a deep lat stretch.',
+      'Exhale, depress your shoulder blades, and pull the independent levers down toward your upper chest.',
+      'Drive your elbows down and slightly back, squeezing your lats hard at peak contraction.',
+      'Inhale and slowly let the levers rise back under control over a 2-3 second eccentric stretch.'
     ],
     donts: [
-      'DO NOT lean excessively backward while pulling.',
-      'DO NOT release handles abruptly at the top.'
+      'DO NOT lean excessively backward or swing your torso to yank the heavy plates down.',
+      'DO NOT pull the handles behind your neck; always pull down in front to upper chest.',
+      'DO NOT let the weight crash onto the mechanical bottom stops.'
     ],
     steps: [
-      'Step 1: Setup & Grip - Sit down, lock thighs, and grasp independent handles overhead.',
-      'Step 2: Symmetrical Pull - Exhale and pull both handles downward toward outer shoulders.',
-      'Step 3: Full Upward Stretch - Inhale and return handles smoothly upward for a deep lat stretch.'
+      'Step 1: Setup & Overhead Stretch - Lock thighs snugly under orange pads, reach overhead to grip handles, and stretch lats fully.',
+      'Step 2: Downward Lat Drive - Exhale, retract scapulae, and pull levers downward driving elbows to your ribs.',
+      'Step 3: Peak Contraction & Squeeze - Squeeze lats hard at collarbone height, then release upward smoothly over 3 seconds.'
     ]
   },
   27: {
