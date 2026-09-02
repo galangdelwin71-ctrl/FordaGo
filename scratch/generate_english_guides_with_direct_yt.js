@@ -215,24 +215,26 @@ const englishGuidesDatabase = {
     ]
   },
   18: {
-    guide: 'guide_id18_pickleball.jpg',
-    target: 'Cardiovascular Endurance, Dynamic Agility, Lateral Footwork, Core Power',
+    guide: 'guide_id18_white_pickleball.jpg',
+    target: 'Cardiovascular Endurance, Dynamic Agility, Lateral Footwork, Core Obliques',
     videoId: 'fTvPYdKdnpE',
-    desc: 'Regulation indoor pickleball and badminton court for high-intensity cardiovascular conditioning, athletic agility, and racket sport training.',
+    desc: 'Regulation indoor pickleball court engineered for cardiovascular endurance, lateral agility, hand-eye coordination, and fast-paced strategic racket play.',
     dos: [
-      'Wear proper non-marking court shoes with lateral support.',
-      'Perform a dynamic warm-up (shuffles, high knees, lunges) before playing.',
-      'Maintain an athletic ready stance with knees bent and paddle held chest-high.',
-      'Adhere to Non-Volley Zone (Kitchen) rules: do not volley while standing in the NVZ.'
+      'SERVE UNDERHAND: Hit the ball below waist level with paddle moving upward diagonally crosscourt past the opponent kitchen line.',
+      'TWO-BOUNCE RULE: The ball must bounce once on the serve and once on the return before either player is permitted to volley.',
+      'NON-VOLLEY ZONE (KITCHEN): Stay behind the 7-foot kitchen line when hitting volleys in the air; only step in after the ball bounces.',
+      'SCORING: Points are only scored by the serving team; games are typically played to 11 points (win by 2 margin).',
+      'COURT SAFETY: Always wear non-marking indoor court shoes with lateral support and perform dynamic warm-ups.'
     ],
     donts: [
-      'DO NOT play without warming up to avoid ankle sprains and calf strains.',
-      'DO NOT step onto or over the Non-Volley Zone line during airborne volleys.'
+      'DO NOT volley the ball (hit out of the air) while touching or stepping inside the Non-Volley Zone (Kitchen).',
+      'DO NOT hit an overhand or overhead tennis-style serve; the contact point must be below your navel.',
+      'DO NOT wear running shoes that lack lateral support to avoid ankle roll injuries during fast lateral cuts.'
     ],
     steps: [
-      'Step 1: Court Setup & Warm-up - Verify net height (34 inches at center) and warm up baseline strokes.',
-      'Step 2: Ready Stance & Split Step - Keep paddle elevated, feet shoulder-width, ready for lateral split-steps.',
-      'Step 3: Kinetic Drive & Groundstroke - Rotate hips and core smoothly to execute crisp forehand and backhand drives.'
+      'Step 1: Underhand Crosscourt Serve - Serve underhand diagonally crosscourt from behind the baseline, clearing the NVZ kitchen.',
+      'Step 2: Kitchen (NVZ) & Two-Bounce Rule - Allow the serve and return to bounce once before volleying; never volley inside the 7ft kitchen.',
+      'Step 3: Dynamic Forehand Drive & Agility - Maintain an athletic split-step ready stance, rotating core and hips to drive the ball deep.'
     ]
   },
   19: {
