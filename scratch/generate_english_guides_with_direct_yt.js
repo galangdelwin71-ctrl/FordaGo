@@ -437,23 +437,27 @@ const englishGuidesDatabase = {
     ]
   },
   28: {
-    guide: 'seatedRow.jpg',
-    target: 'Middle Trapezius, Rhomboids, Latissimus Dorsi',
-    videoId: 'GZbfZ033fBo',
-    desc: 'Precor iso-lateral plate-loaded seated low row machine with vertical chest support pad and multi-grip handles.',
+    guide: 'guide_id28_white_seated_row.jpg',
+    target: 'Latissimus Dorsi (Lats), Rhomboids, Middle Trapezius, Rear Deltoids, Biceps',
+    videoId: 'fJeB8qsJyh4',
+    desc: 'Precor plate-loaded iso-lateral chest-supported seated row machine engineered for independent back rowing, rhomboid retraction, and latissimus dorsi density.',
     dos: [
-      'Adjust chest pad so handles are easily reachable with chest resting flush against pad.',
-      'Plant feet firmly on textured footplates.',
-      'Pull handles backward while retracting and squeezing shoulder blades together.'
+      'Load equal weight plates securely onto both side horns before starting your set.',
+      'Adjust seat height so the top of the chest pad sits comfortably against your sternum.',
+      'Plant both feet flat on the forward footplates with knees slightly bent.',
+      'Start with chest firmly pressed against the support pad and arms extended forward for a full lat stretch.',
+      'Exhale, retract your shoulder blades, and pull the independent handles backward driving your elbows past your torso.',
+      'Squeeze your mid-back and lats tightly for 1-2 seconds at peak contraction before slowly extending arms over 3 seconds.'
     ],
     donts: [
-      'DO NOT pull chest away from the support pad during the row.',
-      'DO NOT shrug shoulders upward toward your ears.'
+      'DO NOT pull your chest away from the support pad or lean backward to heave heavy weight.',
+      'DO NOT shrug your shoulders upward toward your ears during the row.',
+      'DO NOT allow the weight plates to crash into the mechanical stops at the bottom.'
     ],
     steps: [
-      'Step 1: Chest Pad Contact - Rest chest against pad, grasp handles with a neutral spine.',
-      'Step 2: Retraction & Row - Exhale, pull handles back, and pinch shoulder blades together.',
-      'Step 3: Return Stretch - Inhale and extend arms forward with control for a full stretch.'
+      'Step 1: Setup & Forward Lat Stretch - Sit with chest against pad, feet on footplates, arms extended forward holding handles.',
+      'Step 2: Posterior Row Drive - Exhale, retract shoulder blades, and drive elbows back past your ribs.',
+      'Step 3: Peak Contraction & Scapular Squeeze - Squeeze lats and rhomboids hard at peak pull, then lower weight under 3-second control.'
     ]
   },
   29: {
