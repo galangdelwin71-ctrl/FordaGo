@@ -120,23 +120,27 @@ const englishGuidesDatabase = {
     ]
   },
   14: {
-    guide: 'seatedCalfRaise.jpg',
+    guide: 'guide_id14_white_seated_calf_raise.jpg',
     target: 'Soleus, Gastrocnemius (Calf Complex)',
-    videoId: 'JbyjNymZOt0',
-    desc: 'Warrior Fitness plate-loaded seated calf raise machine for isolated soleus hypertrophy and lower leg tendon strength.',
+    videoId: 'HSGjUouQZCQ',
+    desc: 'Warrior Fitness plate-loaded seated calf raise machine engineered for isolated soleus hypertrophy, Achilles tendon resilience, and lower leg strength.',
     dos: [
-      'Place the balls of your feet firmly on the edge of the foot block.',
-      'Lock the padded thigh lever securely over your lower quads before disengaging the safety latch.',
-      'Lower heels as far as possible for a full deep stretch, then elevate as high as possible on your toes.'
+      'Place the balls of your feet securely on the lower edge of the footplate with heels hanging off.',
+      'Lock the padded thigh lever securely over your lower quadriceps right above the knees.',
+      'Disengage the safety support latch before initiating your working repetitions.',
+      'Lower your heels as deep as comfortably possible to achieve a full, deep calf stretch.',
+      'Exhale and drive upward through the balls of your feet to maximum peak plantarflexion.',
+      'Pause and squeeze your calves at the top for 1-2 seconds on every repetition.'
     ],
     donts: [
-      'DO NOT bounce rapidly at the bottom without controlling the eccentric phase.',
-      'DO NOT use upper body leaning or lower back momentum to lift the knee lever.'
+      'DO NOT bounce or use rapid elastic recoil at the bottom of the stretch.',
+      'DO NOT lean your upper body backward or use torso momentum to lift the knee pad.',
+      'DO NOT place your arches or mid-foot on the foot block; use only the balls of your feet.'
     ],
     steps: [
-      'Step 1: Thigh Pad Lock & Deep Stretch - Secure knee pad, disengage safety bar, and lower heels fully below block.',
-      'Step 2: Plantarflexion Drive - Exhale and press onto the balls of your toes to maximum peak elevation.',
-      'Step 3: Peak Contraction Hold - Pause for 1-2 seconds at the apex before smoothly lowering heels.'
+      'Step 1: Setup & Deep Stretch - Lock knee pads snugly over lower quads, release safety bar, and drop heels fully below the footplate.',
+      'Step 2: Plantarflexion Drive - Exhale and push through the balls of your feet and toes, elevating the lever smoothly.',
+      'Step 3: Peak Contraction & Squeeze - Hold apex peak contraction for 1-2 seconds, then lower heels slowly under a 3-second negative.'
     ]
   },
   15: {
