@@ -168,23 +168,26 @@ const englishGuidesDatabase = {
     ]
   },
   16: {
-    guide: 'guide_id16_dumbbells.jpg',
+    guide: 'guide_id16_white_dumbbells.jpg',
     target: 'Biceps Brachii, Brachialis, Forearm Flexors',
     videoId: 'ykJmrZ5v0Oo',
-    desc: 'Commercial multi-tier dumbbell rack providing free weight versatility for unilateral and bilateral bicep curls and strength exercises.',
+    desc: 'Commercial multi-tier dumbbell rack offering versatile free weight loading for standing supinated bicep curls, hammer curls, and upper-body arm hypertrophy.',
     dos: [
-      'Stand tall with core braced and elbows pinned strictly to your torso sides.',
-      'Curl dumbbells upward while supinating wrists (turning palms toward ceiling).',
-      'Squeeze biceps forcefully at the top of each repetition.'
+      'Stand tall with shoulder-width stance, core braced, and shoulders retracted.',
+      'Keep elbows pinned closely to your torso sides throughout the entire curling range.',
+      'Supinate wrists (rotate palms upward towards the ceiling) as you curl the dumbbells.',
+      'Squeeze biceps forcefully at the top of the contraction for 1-2 seconds.',
+      'Lower the dumbbells under strict control over a 2-3 second eccentric cadence.'
     ],
     donts: [
-      'DO NOT swing your torso or use hip momentum to hoist dumbbells upward.',
-      'DO NOT drift your elbows forward during the curling motion.'
+      'DO NOT swing your torso or use hip momentum to heave the weights upward.',
+      'DO NOT let your elbows drift forward away from your ribs during the lift.',
+      'DO NOT drop the dumbbells rapidly; maintain active eccentric resistance.'
     ],
     steps: [
-      'Step 1: Neutral Stance - Hold a pair of dumbbells at sides with palms facing inward.',
-      'Step 2: Supinated Curl - Exhale and curl weights upward while rotating palms to face the ceiling.',
-      'Step 3: Peak Squeeze & Negative - Squeeze biceps at top and lower weights over 2-3 seconds.'
+      'Step 1: Neutral Stance & Grip - Stand upright holding dumbbells down at sides with palms facing inward.',
+      'Step 2: Supinating Curl Drive - Exhale and curl dumbbells upward while rotating wrists until palms face shoulders.',
+      'Step 3: Peak Contraction & Squeeze - Squeeze biceps at the apex, then lower weights slowly with a 3-second negative.'
     ]
   },
   17: {
