@@ -191,23 +191,27 @@ const englishGuidesDatabase = {
     ]
   },
   17: {
-    guide: 'hyperextension.jpg',
-    target: 'Erector Spinae (Lower Back), Multifidus',
-    videoId: 'b8bQ0y1L-dI',
-    desc: 'Commercial seated back extension machine for guided strengthening of the lumbar spinal erectors and posterior core stability.',
+    guide: 'guide_id17_white_seated_back_extension.jpg',
+    target: 'Erector Spinae (Lower Back), Multifidus, Gluteus Maximus',
+    videoId: 'HAS0dQ8O3-U',
+    desc: 'Selectorized seated back extension machine engineered for targeted strengthening of the lumbar spinal erectors, lower back musculature, and posterior core resilience.',
     dos: [
-      'Position back firmly against the cylindrical padded roller at scapular level.',
-      'Extend torso backward using controlled muscular force from your lower back.',
-      'Breathe rhythmically and keep hips securely grounded on the seat.'
+      'Adjust the seat and footplate so the cylindrical roller pad rests comfortably across your upper back (scapular region).',
+      'Plant both feet firmly against the angled footplate with knees slightly bent.',
+      'Cross your arms across your chest or lightly hold the side stabilizer handles.',
+      'Exhale and push your upper torso backward against the padded roller using your lower back muscles.',
+      'Pause at the point of upright lumbar extension and contract the spinal erectors for 1-2 seconds.',
+      'Inhale and slowly return forward under control over a 2-3 second cadence.'
     ],
     donts: [
-      'DO NOT hyperextend your spine beyond a natural, neutral alignment.',
-      'DO NOT jerk your neck or head backward during extension.'
+      'DO NOT forcefully hyperextend or jerk your lower spine backward past a neutral, safe alignment.',
+      'DO NOT let the weight stack slam together at the bottom of the movement.',
+      'DO NOT push with your legs or lift your hips off the seat cushion.'
     ],
     steps: [
-      'Step 1: Machine Setup - Adjust starting angle and rest upper back against cylindrical pad.',
-      'Step 2: Extension Drive - Exhale and push roller backward using spinal erectors.',
-      'Step 3: Controlled Return - Inhale and slowly return to starting position without letting plates slam.'
+      'Step 1: Seated Setup & Flexion - Sit back into the seat, place feet on platform, and align roller pad behind upper back.',
+      'Step 2: Posterior Extension Drive - Exhale and push torso backward against the roller pad smoothly.',
+      'Step 3: Peak Lumbar Contraction & Return - Pause at full spinal extension, squeeze lower back, and lower forward under control.'
     ]
   },
   18: {
