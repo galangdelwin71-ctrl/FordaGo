@@ -144,23 +144,27 @@ const englishGuidesDatabase = {
     ]
   },
   15: {
-    guide: 'guide_id35_seated_chest_press.jpg',
-    target: 'Upper Pectoralis Major (Clavicular Head), Anterior Deltoids',
-    videoId: '8iPEnn-ltC8',
-    desc: 'Precor plate-loaded incline chest press machine featuring converging arm geometry for upper pectoral thickness.',
+    guide: 'guide_id15_white_incline_chest_press.jpg',
+    target: 'Upper Pectoralis Major (Clavicular Head), Anterior Deltoids, Triceps',
+    videoId: 'VesHgJR14E8',
+    desc: 'Pure Strength plate-loaded incline chest press machine engineered with converging lever arms for isolated upper pectoral hypertrophy (clavicular head) and shoulder strength.',
     dos: [
-      'Set seat height so handles sit level with the upper third of your chest.',
-      'Press upward along the converging 30-45 degree diagonal path.',
-      'Keep shoulder blades packed and driven into the incline backrest.'
+      'Load equal weight plates securely onto both side horns before starting.',
+      'Adjust seat height so the press handles align directly across your upper chest (below collarbones).',
+      'Plant both feet firmly on the floor and maintain a natural arch in your upper back against the incline pad.',
+      'Exhale and push the plate-loaded levers upward and forward in a smooth converging arc.',
+      'Squeeze upper chest firmly at peak extension while maintaining a slight bend in your elbows.',
+      'Inhale and slowly lower the levers under control over a 2-3 second eccentric cadence.'
     ],
     donts: [
-      'DO NOT flare elbows straight out at 90 degrees; maintain a 45-60 degree tuck.',
-      'DO NOT arch your lower back off the pad to compensate for heavy weight.'
+      'DO NOT allow shoulders to shrug or roll forward off the incline back pad.',
+      'DO NOT bounce the weight or drop the levers harshly onto the bottom stops.',
+      'DO NOT aggressively snap or lockout elbow joints under heavy plate resistance.'
     ],
     steps: [
-      'Step 1: Setup & Grip - Sit into incline seat, firmly grip handles with neutral wrists.',
-      'Step 2: Diagonal Press - Exhale and push the converging independent arms upward and slightly inward.',
-      'Step 3: Controlled Descent - Inhale and lower handles slowly back to upper chest level.'
+      'Step 1: Incline Setup & Grip - Adjust seat height so handles sit at upper-chest level, grip firmly, and retract shoulder blades.',
+      'Step 2: Upward Incline Drive - Exhale and drive the plate-loaded levers upward and forward in a converging motion.',
+      'Step 3: Peak Contraction & Squeeze - Squeeze upper pectorals at the top, then lower levers back smoothly under control.'
     ]
   },
   16: {
