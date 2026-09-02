@@ -461,23 +461,27 @@ const englishGuidesDatabase = {
     ]
   },
   29: {
-    guide: 'cableCrossover.jpg',
-    target: 'Pectoralis Major, Sternal & Clavicular Heads',
+    guide: 'guide_id29_white_cable_crossover.jpg',
+    target: 'Pectoralis Major (Sternal & Clavicular Heads), Anterior Deltoids, Serratus Anterior',
     videoId: 'taI4XduLp4M',
-    desc: 'Dual stack adjustable cable crossover machine for dynamic chest isolation from high, middle, or low angles.',
+    desc: 'Commercial dual-column adjustable pulley cable crossover station engineered with independent dual weight stacks for multi-angle flys, isolations, and functional movements.',
     dos: [
-      'Select pulley height: High for lower chest, Middle for overall chest, Low for upper chest.',
-      'Stagger one foot forward for a stable foundation.',
-      'Maintain a slight, fixed bend in elbows throughout the crossover sweep.'
+      'Adjust the pulley sliders on both vertical columns to equal height (chest or shoulder level) and attach D-handles.',
+      'Grasp both D-handles, step out into the center between the columns, and assume a stable staggered split-stance.',
+      'Keep a slight, fixed bend in your elbows and a proud chest with core braced.',
+      'Exhale and sweep the cables forward across your body in a wide hugging arc until hands meet at chest center.',
+      'Squeeze your pectorals tightly for 1-2 seconds at peak contraction.',
+      'Inhale and slowly let the cables pull your arms back under strict 2-3 second control for a deep stretch.'
     ],
     donts: [
-      'DO NOT alter elbow angle during the movement (it is a fly, not a press).',
-      'DO NOT excessively lean forward.'
+      'DO NOT turn the cable fly into a press by repeatedly bending and extending your elbows during repetitions.',
+      'DO NOT swing your torso or heave your body forward to momentum-pull the weight stacks.',
+      'DO NOT let the weight plates slam onto the stack between reps.'
     ],
     steps: [
-      'Step 1: Height & Grip - Set pulley tracks and grip D-handles on both sides.',
-      'Step 2: Crossover Motion - Sweep handles toward center in a smooth hugging arc.',
-      'Step 3: Peak Contraction - Cross or touch hands at center and squeeze chest for 1 second.'
+      'Step 1: Open Cable Stretch & Stance - Step forward into center staggered stance, arms open wide holding D-handles at shoulder level.',
+      'Step 2: Sweeping Crossover Arc - Exhale and sweep handles forward and together in a wide arc with slight fixed elbow bend.',
+      'Step 3: Peak Contraction & Center Squeeze - Squeeze chest muscles hard as handles meet in center, then open slowly over 3 seconds.'
     ]
   },
   30: {
@@ -522,102 +526,120 @@ const englishGuidesDatabase = {
   },
   32: {
     guide: 'guide_id10_white_shoulder_press.jpg',
-    target: 'Deltoid Muscle Complex, Upper Trapezius',
-    videoId: 'qEwKCR5JCog',
-    desc: 'Plate-loaded dual lever functional shoulder press machine for overhead pressing power and shoulder mass.',
+    target: 'Anterior Deltoids, Lateral Deltoids, Triceps, Upper Trapezius, Core Stabilizers',
+    videoId: 'sO7u-1c-1k0',
+    desc: 'FreeMotion dual-cable column functional shoulder machine with independent articulating low pulley arms for multi-plane seated overhead pressing and rotational shoulder strength.',
     dos: [
-      'Adjust seat so handles start level with your ears.',
-      'Press independent levers upward smoothly in unison.',
-      'Squeeze deltoids at top of extension.'
+      'Sit upright on the central bench with your back firmly supported against the backrest pad.',
+      'Reach down and grasp both D-handles from the low rotating pulley arms, bringing them up to shoulder height.',
+      'Exhale and press the cable handles straight overhead in a natural, converging upward path.',
+      'Squeeze your deltoid shoulder muscles at peak extension while keeping a soft bend in your elbows.',
+      'Inhale and slowly lower the handles back to ear/shoulder level over a controlled 2-3 second descent.'
     ],
     donts: [
-      'DO NOT arch lower back away from backrest.',
-      'DO NOT lock elbows forcefully.'
+      'DO NOT arch your lower back excessively off the back pad to heave heavy weights.',
+      'DO NOT snap or hyperextend your elbow joints at the top of the press.',
+      'DO NOT let the weight stacks bang or crash down between repetitions.'
     ],
     steps: [
-      'Step 1: Position & Grip - Sit upright with back supported and grip overhead handles.',
-      'Step 2: Upward Press - Exhale and push handles upward until arms are almost straight.',
-      'Step 3: Slow Return - Inhale and lower handles slowly back to ear level.'
+      'Step 1: Seated Setup & Grip - Sit upright against backrest, grasp cable D-handles from low arms, and bring to shoulder height.',
+      'Step 2: Overhead Cable Press - Exhale and drive handles upward along a smooth converging vertical path.',
+      'Step 3: Peak Contraction & Return - Squeeze shoulders at peak extension, then lower handles under strict 3-second control.'
     ]
   },
   33: {
-    guide: 'guide_id35_seated_chest_press.jpg',
-    target: 'Pectoralis Major, Anterior Deltoids, Triceps',
-    videoId: '8iPEnn-ltC8',
-    desc: 'Commercial iso-lateral plate-loaded chest press with converging arm action for maximum pectoral contraction.',
+    guide: 'guide_id33_white_pec_fly.jpg',
+    target: 'Pectoralis Major (Sternal & Clavicular Heads), Anterior Deltoids',
+    videoId: 'v0yC53R954Q',
+    desc: 'Commercial plate-loaded seated pec fly / pec deck machine engineered with independent rotating lever arms for targeted pectoral isolation, chest fly sweeps, and outer-to-inner chest development.',
     dos: [
-      'Adjust seat so handles align with mid-chest level.',
-      'Press independent levers forward along their converging arc.',
-      'Keep back firmly planted against backrest.'
+      'Load equal weight plates securely onto the lower circular horns before starting.',
+      'Adjust seat height so the handles align directly with the middle of your chest.',
+      'Sit tall with your back and head pressed firmly flat against the orange backrest pad.',
+      'Grasp the vertical handles with a slight, fixed bend in your elbows and shoulders retracted.',
+      'Exhale and sweep the independent lever arms forward in a wide hugging arc until handles meet in front of your chest.',
+      'Squeeze your inner and outer pecs hard for 1-2 seconds, then slowly open arms over 3 seconds for a deep chest stretch.'
     ],
     donts: [
-      'DO NOT flare elbows excessively high.',
-      'DO NOT let shoulders roll forward off the pad.'
+      'DO NOT press or bend/extend your elbows during repetitions (this is a fly, not a chest press).',
+      'DO NOT let your shoulders roll forward or lift your upper back off the backrest.',
+      'DO NOT allow the weight plates to slam into the back stops between repetitions.'
     ],
     steps: [
-      'Step 1: Seat Setup - Set seat height, grip handles with a firm neutral wrist.',
-      'Step 2: Converging Push - Exhale and press forward and slightly inward, squeezing chest.',
-      'Step 3: Deep Stretch - Inhale and return handles under control for a complete chest stretch.'
+      'Step 1: Open Fly Stretch & Setup - Sit tall with back flat against pad, reach out and grasp handles with slight fixed elbow bend.',
+      'Step 2: Sweeping Fly Arc - Exhale and sweep both lever arms forward across your body in a wide hugging motion.',
+      'Step 3: Peak Pectoral Contraction - Squeeze chest muscles hard as handles meet at center, then slowly return over 3 seconds.'
     ]
   },
   34: {
-    guide: 'preacherCurl.jpg',
-    target: 'Biceps Brachii, Brachialis',
-    videoId: 'XkZgXW2aQ5k',
-    desc: 'Selectorized pin-stack seated bicep curl machine with rotating cam handles for continuous bicep tension.',
+    guide: 'guide_id34_white_machine_bicep_curl.jpg',
+    target: 'Biceps Brachii (Short & Long Heads), Brachialis, Forearm Flexors',
+    videoId: 'Ja6ZlIDONac',
+    desc: 'Commercial selectorized seated bicep preacher curl machine featuring an angled upper-arm support pad, rotating cam axis, and ergonomic swivel handles for strict bicep isolation without shoulder momentum.',
     dos: [
-      'Adjust seat height so elbow joints align exactly with the machine pivot axis.',
-      'Rest full triceps flat on the padded arm support.',
-      'Curl handles upward using pure bicep contraction.'
+      'Adjust seat height so your armpits rest comfortably at the top edge of the preacher pad and your elbows align directly with the machine pivot cam.',
+      'Rest the entire back of your upper arms (triceps) flat against the slanted pad.',
+      'Grasp the rotating lever handles with an underhand supinated or neutral grip.',
+      'Exhale and curl the handles upward toward your shoulders, squeezing your biceps hard at peak contraction.',
+      'Inhale and slowly lower the handles over 3 seconds until arms are almost fully extended, keeping tension on the muscle.'
     ],
     donts: [
-      'DO NOT lift elbows off the pad during the curl.',
-      'DO NOT lean back to assist the lift.'
+      'DO NOT lift your elbows or triceps off the slanted pad to heave the weight up.',
+      'DO NOT hyperextend or snap your elbow joints at the bottom of the movement.',
+      'DO NOT let the weight stack plates crash together between reps.'
     ],
     steps: [
-      'Step 1: Pivot Alignment - Align elbows with machine axis and grip swivel handles.',
-      'Step 2: Concentric Curl - Exhale and curl handles upward toward shoulders.',
-      'Step 3: Slow Negative - Inhale and lower handles over 2-3 seconds with full control.'
+      'Step 1: Arm & Cam Alignment - Sit with triceps flush on angled pad, align elbows with circular cam, and grip handles.',
+      'Step 2: Strict Machine Curl - Exhale and curl handles upward toward shoulders using pure bicep flexion.',
+      'Step 3: Slow 3-Second Descent - Lower handles under strict control to full stretch without locking out elbows.'
     ]
   },
   35: {
     guide: 'guide_id35_seated_chest_press.jpg',
-    target: 'Pectoralis Major, Front Deltoids, Triceps',
+    target: 'Pectoralis Major (Mid & Lower Chest), Anterior Deltoids, Triceps Brachii',
     videoId: 'sqOw2Y68ecY',
-    desc: 'Selectorized pin-loaded seated chest press machine with black frame for safe, guided horizontal chest pressing.',
+    desc: 'Commercial selectorized multi-functional seated chest press machine with dual articulating cable/lever arms and pin-select weight stack for guided horizontal pressing and pectoral hypertrophy.',
     dos: [
-      'Adjust seat height so handles sit level with mid-chest.',
-      'Press handles forward while exhaling and contracting chest.',
-      'Keep back flat against the vertical back pad.'
+      'Select appropriate weight on the right side stack by inserting the selector pin securely.',
+      'Adjust seat height so the handles align directly with mid-chest/nipple line.',
+      'Plant both feet flat on the ground and press your head, upper back, and hips firmly against the back pad.',
+      'Grasp the dual handles with a full grip, retract and depress your shoulder blades.',
+      'Exhale and push the handles smoothly forward along their natural converging pressing path.',
+      'Squeeze your chest muscles tightly at peak extension while keeping a soft bend in your elbows.',
+      'Inhale and slowly lower the weight back over 3 seconds until feeling a deep stretch across the chest.'
     ],
     donts: [
-      'DO NOT lockout elbows at the end of each rep.',
-      'DO NOT allow weight stack plates to slam together.'
+      'DO NOT hyperextend or harshly lock out your elbow joints at the end of the press.',
+      'DO NOT lift your shoulder blades or upper back off the backrest pad.',
+      'DO NOT let the weight plates slam or crash onto the stack between reps.'
     ],
     steps: [
-      'Step 1: Start Stretch - Sit with back flat against pad, grasp horizontal handles.',
-      'Step 2: Mid Press - Drive handles forward with controlled pushing power.',
-      'Step 3: Peak Press & Squeeze - Squeeze chest at peak extension and return with control.'
+      'Step 1: Setup & Grip - Sit with back flat against pad, feet planted, and grasp handles at mid-chest level.',
+      'Step 2: Forward Pectoral Drive - Exhale, retract shoulder blades, and press handles forward with control.',
+      'Step 3: Full Extension & Squeeze - Squeeze chest hard at full extension, then return under 3-second control.'
     ]
   },
   36: {
-    guide: 'guide_id35_seated_chest_press.jpg',
-    target: 'Upper & Mid Pectorals, Anterior Deltoids',
-    videoId: 'VmB1G1K7v94',
-    desc: 'Multi-position commercial adjustable workout bench (Flat, Incline, Decline) for dumbbell and barbell training.',
+    guide: 'guide_id36_white_adjustable_incline_bench.svg',
+    target: 'Full Pectorals (Upper/Mid/Lower Chest), Anterior Deltoids, Triceps, Lats (Rows)',
+    videoId: '8iPEnn-ltC8',
+    desc: 'Commercial multi-angle adjustable incline weight bench with ladder-rung backrest adjustments (0° Flat, 30°-45° Incline, 85° Upright) and tilting seat for versatile free-weight dumbbell and barbell training.',
     dos: [
-      'Verify angle adjustment pin is fully locked before lying on bench.',
-      'Maintain 3 points of contact: head, upper back, and glutes flat on bench.',
-      'Plant both feet flat on the floor for a sturdy foundation.'
+      'Select desired angle: 0° Flat for mid-chest/rows, 30°-45° Incline for upper chest, 80°-85° Upright for shoulder presses.',
+      'Ensure the ladder adjustment strut is fully and securely seated into the steel angle notch before sitting down.',
+      'Tilt the bottom seat pad upward on incline angles to anchor your hips and prevent sliding forward.',
+      'Maintain stable 3-point contact (head, upper back, glutes) flat on the pads with feet planted on the floor.',
+      'Use the transport handle and wheels to move the bench safely around the gym floor.'
     ],
     donts: [
-      'DO NOT use bench if the angle pin is not completely engaged.',
-      'DO NOT lift feet off the floor while pressing.'
+      'DO NOT sit or load weights onto the bench if the ladder angle strut is not fully locked into a notch.',
+      'DO NOT leave the seat pad flat during steep incline presses, which causes your hips to slip forward.',
+      'DO NOT drop heavy dumbbells directly onto the bench upholstery pads.'
     ],
     steps: [
-      'Step 1: Angle Selection - Set backrest to desired angle (Flat 0°, Incline 30°-45°).',
-      'Step 2: Body Positioning - Lie down with neutral spine and firmly planted feet.',
-      'Step 3: Exercise Execution - Perform dumbbell presses, flyes, or curls with strict form.'
+      'Step 1: Ladder Angle Selection - Lift backrest and securely lock the strut into your chosen angle notch (Flat, Incline, Upright).',
+      'Step 2: Seat Tilt Adjustment - Angle the seat pad upward for incline settings to lock your lower body in place.',
+      'Step 3: Stable Seating - Plant feet flat on the floor, maintain head and back contact on pads, and execute your lift.'
     ]
   },
   37: {
@@ -841,43 +863,50 @@ const englishGuidesDatabase = {
     ]
   },
   48: {
-    guide: 'guide_id35_seated_chest_press.jpg',
-    target: 'Pectoralis Major, Anterior Deltoids, Triceps',
-    videoId: 'sqOw2Y68ecY',
-    desc: 'Star Trac Instinct selectorized seated chest press machine with horizontal push arms for strict pectoral development.',
+    guide: 'guide_id48_white_chest_supported_row.jpg',
+    target: 'Latissimus Dorsi, Rhomboids, Middle Trapezius, Posterior Deltoids, Biceps',
+    videoId: 'GZbfZ033fBo',
+    desc: 'Star Trac Instinct selectorized dual-action machine featuring an adjustable chest/back support pad and multi-grip lever arms for seated back rows and chest pressing.',
     dos: [
-      'Adjust seat height so horizontal handles align with mid-chest.',
-      'Press handles forward while exhaling and contracting pectorals.',
-      'Keep back flat against the back pad throughout.'
+      'Adjust the central pad depth so your chest is firmly supported when reaching the handles.',
+      'Select appropriate weight on the stack with the selector pin.',
+      'Grasp the vertical or horizontal handles with a flat spine and engaged core.',
+      'Exhale, retract your shoulder blades, and pull the lever arms backward driving your elbows past your ribs.',
+      'Squeeze your mid-back and lats hard at peak contraction, then return over 3 seconds under control.'
     ],
     donts: [
-      'DO NOT lockout elbows at the top.',
-      'DO NOT roll shoulders forward off the pad.'
+      'DO NOT pull your chest away from the support pad to jerk the weight.',
+      'DO NOT shrug shoulders toward your ears during the row.',
+      'DO NOT allow the weight stack plates to slam down.'
     ],
     steps: [
-      'Step 1: Start Stretch - Sit upright, grasp handles with neutral wrists.',
-      'Step 2: Mid Press - Drive handles forward with controlled force.',
-      'Step 3: Peak Press & Squeeze - Squeeze chest at peak extension and return with control.'
+      'Step 1: Setup & Grip - Sit with chest flush against pad, grasp handles with neutral wrists.',
+      'Step 2: Scapular Row Drive - Exhale, retract shoulder blades, and drive elbows backward.',
+      'Step 3: Peak Squeeze & Return - Squeeze back muscles firmly, then return under 3-second control.'
     ]
   },
   49: {
-    guide: 'seatedRow.jpg',
-    target: 'Latissimus Dorsi, Rhomboids, Middle Trapezius',
-    videoId: 'GZbfZ033fBo',
-    desc: 'Plate-loaded seated low row bench with angled foot braces and wide row bar for lower and mid back thickness.',
+    guide: 'guide_id49_white_low_cable_row.jpg',
+    target: 'Latissimus Dorsi (Lats), Rhomboids, Middle & Lower Trapezius, Posterior Deltoids, Biceps',
+    videoId: 'NYok5zjbDcw',
+    desc: 'Commercial seated cable low row station featuring a long padded bench, textured foot braces, and low pulley system for deep horizontal back rowing, lat thickness, and scapular retraction.',
     dos: [
-      'Sit on bench, placing feet on angled footplates with slight knee bend.',
-      'Grip row bar with a flat spine and engaged core.',
-      'Pull bar smoothly into your navel while pinching shoulder blades together.'
+      'Sit down on the bench and place your feet securely against the angled footrests with a slight bend in your knees.',
+      'Reach forward with a flat neutral spine to grasp the low row V-handle or close-grip attachment.',
+      'Sit upright with your chest lifted, shoulders down and back, and core braced.',
+      'Exhale, initiate the pull by retracting your shoulder blades, and drive your elbows back into your ribs.',
+      'Pull the handle into your lower abdomen/navel, squeezing your mid-back and lats tightly for 1-2 seconds.',
+      'Inhale and slowly return the weight forward over 3 seconds to achieve a full lat stretch without rounding your lower back.'
     ],
     donts: [
-      'DO NOT round your lower back forward when reaching for the bar.',
-      'DO NOT lean excessively backward during the pull.'
+      'DO NOT lean excessively backward or swing your torso back and forth to heave the weight.',
+      'DO NOT round your lower back forward when reaching for the handle at full stretch.',
+      'DO NOT shrug your shoulders up toward your ears during the row.'
     ],
     steps: [
-      'Step 1: Foot Placement & Reach - Place feet, grasp bar with a neutral flat spine.',
-      'Step 2: Scapular Retraction & Row - Exhale, pull bar to navel, squeezing mid back.',
-      'Step 3: Controlled Extension - Inhale and extend arms forward for a full lat stretch.'
+      'Step 1: Stance & Stretch - Sit on bench, place feet on footrests with soft knees, grasp handle with flat back, and stretch lats.',
+      'Step 2: Scapular Row Pull - Exhale, retract shoulder blades, and pull handle smoothly toward your lower abdomen.',
+      'Step 3: Peak Contraction & Return - Squeeze back muscles tightly for 2 seconds, then slowly return under 3-second control.'
     ]
   },
   50: {
