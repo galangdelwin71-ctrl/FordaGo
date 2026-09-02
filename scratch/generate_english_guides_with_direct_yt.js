@@ -413,23 +413,27 @@ const englishGuidesDatabase = {
     ]
   },
   27: {
-    guide: 'guide_id12_white_lat_pulldown.jpg',
-    target: 'Latissimus Dorsi, Upper Back, Biceps',
-    videoId: '_aGgBvhz4n4',
-    desc: 'Plate-loaded iso-lateral high pulldown station with diverging handles for targeted upper lat and lower trapezius activation.',
+    guide: 'guide_id27_white_roclat_pulldown.jpg',
+    target: 'Latissimus Dorsi (Lats), Teres Major, Rhomboids, Biceps Brachii',
+    videoId: 'XeCgK1Beq-8',
+    desc: 'Commercial plate-loaded curved-arm lat pulldown machine featuring an ergonomic natural arc motion for deep lat stretch, scapular retraction, and upper back density.',
     dos: [
-      'Secure thighs beneath foam support pads.',
-      'Pull diverging handles downward and slightly outward toward collarbones.',
-      'Squeeze back musculature at bottom for 1 second.'
+      'Load equal weight plates securely onto both side horns before sitting down.',
+      'Adjust the padded thigh hold-down roller snugly over your lower thighs to keep your hips locked in place.',
+      'Reach up and grasp the curved overhead handles with a firm overhand or neutral grip.',
+      'Inhale and allow your arms to stretch fully overhead with chest lifted and slight torso lean.',
+      'Exhale, depress your shoulder blades, and pull the curved lever down toward your collarbones.',
+      'Squeeze your lats hard at peak contraction for 1-2 seconds, then slowly return upward over 3 seconds.'
     ],
     donts: [
-      'DO NOT pull solely with arm strength; initiate movement with scapular depression.',
-      'DO NOT drop weight plates.'
+      'DO NOT swing your torso backward to yank the weight down with body momentum.',
+      'DO NOT pull the handles behind your neck; always pull down in front of your chest.',
+      'DO NOT let the weight plates slam down abruptly at the top of the stretch.'
     ],
     steps: [
-      'Step 1: Grip Setup - Reach high handles overhead and lock thighs under rollers.',
-      'Step 2: High Row Drive - Exhale and pull handles down, squeezing lats firmly.',
-      'Step 3: Controlled Release - Return upward slowly under tension.'
+      'Step 1: Setup & High Overhead Stretch - Anchor thighs under roller pad, reach high overhead to grip handles, and stretch lats fully.',
+      'Step 2: Downward Lat Drive - Exhale and pull the curved lever downward, driving your elbows down toward your hips.',
+      'Step 3: Peak Contraction & Squeeze - Squeeze lats firmly at collarbone height, then let the lever rise slowly under 3-second control.'
     ]
   },
   28: {
