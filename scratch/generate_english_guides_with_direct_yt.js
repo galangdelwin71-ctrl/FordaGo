@@ -96,23 +96,27 @@ const englishGuidesDatabase = {
     ]
   },
   13: {
-    guide: 'guide_id35_seated_chest_press.jpg',
+    guide: 'guide_id13_white_chest_press.jpg',
     target: 'Pectoralis Major (Mid/Lower Chest), Anterior Deltoids, Triceps',
-    videoId: 'sqOw2Y68ecY',
-    desc: 'Selectorized horizontal seated chest press machine providing balanced, guided pectoral isolation and upper body pushing strength.',
+    videoId: '4YpxZXFADmc',
+    desc: 'Selectorized horizontal seated chest press machine with dual-grip levers for strict pectoral hypertrophy, front shoulder development, and triceps pressing strength.',
     dos: [
-      'Adjust seat height so horizontal handles align directly with the center of your chest (nipple line).',
-      'Keep back flat against the backrest and plant both feet firmly on the floor.',
-      'Press handles forward in unison while squeezing pectorals at peak contraction.'
+      'Adjust seat height so horizontal handles align directly with your mid-chest (nipple line).',
+      'Keep back and head firmly supported against the backrest pad with feet flat on the floor.',
+      'Exhale and push the handles straight forward away from your chest in a strong, controlled press.',
+      'Squeeze your chest muscles at full extension while keeping a soft bend in your elbows.',
+      'Inhale and slowly lower handles back under control until you feel a gentle, safe chest stretch.'
     ],
     donts: [
-      'DO NOT allow shoulders to roll or hunch forward; maintain retracted scapulae.',
-      'DO NOT abruptly lockout elbow joints at the end of the press.'
+      'DO NOT allow your shoulders to roll forward or lift away from the back pad during the press.',
+      'DO NOT forcefully lockout or hyperextend your elbow joints at the end of the push.',
+      'DO NOT let the weight stack crash down between reps; maintain continuous muscular tension.',
+      'DO NOT arch your lower back excessively to heave heavy weight.'
     ],
     steps: [
-      'Step 1: Seat Alignment - Adjust seat height and grip handles with a 45-degree elbow angle.',
-      'Step 2: Forward Push - Exhale and drive handles forward forcefully while contracting chest muscles.',
-      'Step 3: Eccentric Return - Inhale and return handles with control until a comfortable chest stretch is felt.'
+      'Step 1: Seat & Grip Setup - Adjust seat height so handles sit at mid-chest level, grip handles firmly, and plant feet.',
+      'Step 2: Forward Push - Exhale and drive handles forward horizontally away from chest with controlled power.',
+      'Step 3: Full Extension & Return - Squeeze pectorals at full extension, then slowly lower back under a 2-3 second cadence.'
     ]
   },
   14: {
