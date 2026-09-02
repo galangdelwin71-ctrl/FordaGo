@@ -283,43 +283,49 @@ const englishGuidesDatabase = {
     ]
   },
   21: {
-    guide: 'hyperextension.jpg',
-    target: 'Erector Spinae, Gluteus Maximus, Hamstrings',
+    guide: 'guide_id21_white_hyperextension_bench.jpg',
+    target: 'Erector Spinae (Lower Back), Gluteus Maximus, Biceps Femoris (Hamstrings)',
     videoId: 'ph3pddpKzzw',
-    desc: 'Adjustable back extension and glute-ham bench with ankle roller lock for posterior chain strength and spinal health.',
+    desc: 'Commercial 45-degree hyperextension and back extension bench engineered with dual thigh support pads and padded ankle rollers for posterior chain hypertrophy and spinal erector resilience.',
     dos: [
-      'Lock ankles securely behind lower roller pads.',
-      'Hinge strictly at the hips while maintaining a rigid, flat spine.',
-      'Elevate torso until body forms a straight line from heels to crown.'
+      'Adjust the thigh support pads so the top edge rests right below your hip crease, allowing full hip flexion.',
+      'Lock your Achilles tendons and calves snugly under the lower padded ankle rollers with feet flat on the footplate.',
+      'Cross your arms over your chest or place fingertips lightly behind your ears.',
+      'Inhale and hinge forward at the hips, lowering your torso toward the floor for a deep hamstring and lower back stretch.',
+      'Exhale and drive your hips into the pad, raising your torso until your body forms a straight 45-degree line with your legs.',
+      'Squeeze your glutes, hamstrings, and lower back firmly at peak extension for 1-2 seconds.'
     ],
     donts: [
-      'DO NOT hyperextend backward beyond a straight neutral line.',
-      'DO NOT yank with your neck or head.'
+      'DO NOT forcefully hyperextend or arch your spine backward past a straight 45-degree neutral line.',
+      'DO NOT use fast bouncing or swinging momentum from the bottom of the stretch.',
+      'DO NOT pull on your neck or jerk your head upward during the ascent.'
     ],
     steps: [
-      'Step 1: Ankle Lock Setup - Secure legs behind rollers, rest pelvic area flat on support pad.',
-      'Step 2: Forward Hinge - Inhale and slowly lower torso toward the floor with a straight spine.',
-      'Step 3: Extension & Glute Squeeze - Exhale and lift torso back to neutral, squeezing glutes and lower back.'
+      'Step 1: Setup & Lowering Stretch - Lock ankles under rollers, align hip pads below crease, and hinge forward smoothly.',
+      'Step 2: Posterior Extension Drive - Exhale and drive hips into pad, raising torso smoothly along the 45-degree plane.',
+      'Step 3: Peak Contraction & Alignment - Squeeze glutes and lower back in straight alignment, then lower over 3 seconds.'
     ]
   },
   22: {
-    guide: 'hyperextension.jpg',
-    target: 'Lower Back Musculature, Gluteals, Hamstring Origin',
-    videoId: '5_auchHwW0I',
-    desc: '45-degree Roman chair hyperextension bench for lower back endurance and posterior chain conditioning.',
+    guide: 'guide_id21_white_hyperextension_bench.jpg',
+    target: 'Erector Spinae (Lower Back), Gluteus Maximus, Hamstring Complex',
+    videoId: 'ph3pddpKzzw',
+    desc: 'Heavy-duty 45-degree hyperextension Roman chair bench for posterior chain strengthening, glute-ham isolation, and lumbar spine conditioning.',
     dos: [
-      'Adjust hip pad just below hip crease to allow full hip flexion.',
-      'Cross arms across chest or place fingertips behind ears.',
-      'Engage glutes as you ascend to the 45-degree neutral line.'
+      'Position hip pads just beneath the pelvic crease to ensure unrestricted hip hinging.',
+      'Maintain a neutral spine throughout both the lowering stretch and upward drive.',
+      'Contract glutes and hamstrings to initiate the upward ascent.',
+      'Pause for 1-2 seconds at the top of each rep in full linear alignment.'
     ],
     donts: [
-      'DO NOT use ballistic or jerking motions.',
-      'DO NOT round upper shoulders forward into a hunch.'
+      'DO NOT hyperextend your lumbar spine beyond parallel alignment with your legs.',
+      'DO NOT bounce out of the bottom stretch position.',
+      'DO NOT round upper shoulders excessively.'
     ],
     steps: [
-      'Step 1: Pelvic Rest - Anchor ankles and rest hips on the 45-degree angled pad.',
-      'Step 2: Lower Torso - Inhale and bend at hips, lowering upper body with control.',
-      'Step 3: Raise & Align - Exhale, elevate torso back to 45-degree alignment, and hold 1 second.'
+      'Step 1: Setup & Lowering Stretch - Lock ankles under rollers, align hip pads below crease, and hinge forward smoothly.',
+      'Step 2: Posterior Extension Drive - Exhale and drive hips into pad, raising torso smoothly along the 45-degree plane.',
+      'Step 3: Peak Contraction & Alignment - Squeeze glutes and lower back in straight alignment, then lower over 3 seconds.'
     ]
   },
   23: {
