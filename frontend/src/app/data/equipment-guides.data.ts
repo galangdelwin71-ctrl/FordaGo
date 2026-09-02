@@ -984,20 +984,20 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
     weightScale: 'Pin / Plate Loaded Weight Stack',
     muscles: ["Erector Spinae (Lower Back)", "Multifidus", "Gluteus Maximus"],
     warning: 'Maintain neutral spine alignment and controlled movement cadence at all times.',
-    overview: "Selectorized seated back extension machine engineered for targeted strengthening of the lumbar spinal erectors, lower back musculature, and posterior core resilience.",
+    overview: "Selectorized seated back extension machine engineered for safe, isolated strengthening of the lumbar spinal erectors and posterior chain through guided seated hip-back articulation.",
     primaryIllustration: "assets/guides/guide_id17_white_seated_back_extension.jpg",
     dos: [
-      "Adjust the seat and footplate so the cylindrical roller pad rests comfortably across your upper back (scapular region).",
-      "Plant both feet firmly against the angled footplate with knees slightly bent.",
-      "Cross your arms across your chest or lightly hold the side stabilizer handles.",
-      "Exhale and push your upper torso backward against the padded roller using your lower back muscles.",
-      "Pause at the point of upright lumbar extension and contract the spinal erectors for 1-2 seconds.",
-      "Inhale and slowly return forward under control over a 2-3 second cadence."
+      "Place your feet firmly on the forward footplate with legs extended and knees slightly soft.",
+      "Grip the metal side handles firmly down beside the seat cushion to stabilize your pelvis.",
+      "Position the revolving cylindrical pad against your upper back (scapular region).",
+      "Start hinged forward from the hips for a comfortable spinal stretch.",
+      "Exhale and push your upper torso backward against the roller pad into full extension.",
+      "Squeeze your lower back and glutes at peak extension, then return slowly under control over 2-3 seconds."
 ],
     donts: [
-      "DO NOT forcefully hyperextend or jerk your lower spine backward past a neutral, safe alignment.",
-      "DO NOT let the weight stack slam together at the bottom of the movement.",
-      "DO NOT push with your legs or lift your hips off the seat cushion."
+      "DO NOT let your hands leave the side seat handles; holding them prevents hip shifting.",
+      "DO NOT bend your knees excessively or try to kick the footplate.",
+      "DO NOT let the weight stack slam on the eccentric return."
 ],
     machineAdjustments: [
       'Adjust seat height or platform so the machine pivot aligns with your anatomical joint axis.',
@@ -1028,58 +1028,58 @@ export const EQUIPMENT_GUIDES_MAP: Record<number, EquipmentFullGuide> = {
           'Secure grips or foot placement shoulder-width apart.'
         ],
         steps: [
-        "Step 1: Seated Setup & Flexion - Sit back into the seat, place feet on platform, and align roller pad behind upper back.",
-        "Step 2: Posterior Extension Drive - Exhale and push torso backward against the roller pad smoothly.",
-        "Step 3: Peak Lumbar Contraction & Return - Pause at full spinal extension, squeeze lower back, and lower forward under control."
+        "Step 1: Setup & Forward Flexion - Extend legs on footplate, grip side handles firmly, and hinge forward with pad behind upper back.",
+        "Step 2: Posterior Extension Drive - Exhale and drive upper torso backward against the roller pad smoothly.",
+        "Step 3: Full Extension & Peak Squeeze - Push all the way back into full extension, contract spinal erectors, and lower slowly."
 ],
         dos: [
-        "Adjust the seat and footplate so the cylindrical roller pad rests comfortably across your upper back (scapular region).",
-        "Plant both feet firmly against the angled footplate with knees slightly bent.",
-        "Cross your arms across your chest or lightly hold the side stabilizer handles.",
-        "Exhale and push your upper torso backward against the padded roller using your lower back muscles.",
-        "Pause at the point of upright lumbar extension and contract the spinal erectors for 1-2 seconds.",
-        "Inhale and slowly return forward under control over a 2-3 second cadence."
+        "Place your feet firmly on the forward footplate with legs extended and knees slightly soft.",
+        "Grip the metal side handles firmly down beside the seat cushion to stabilize your pelvis.",
+        "Position the revolving cylindrical pad against your upper back (scapular region).",
+        "Start hinged forward from the hips for a comfortable spinal stretch.",
+        "Exhale and push your upper torso backward against the roller pad into full extension.",
+        "Squeeze your lower back and glutes at peak extension, then return slowly under control over 2-3 seconds."
 ],
         donts: [
-        "DO NOT forcefully hyperextend or jerk your lower spine backward past a neutral, safe alignment.",
-        "DO NOT let the weight stack slam together at the bottom of the movement.",
-        "DO NOT push with your legs or lift your hips off the seat cushion."
+        "DO NOT let your hands leave the side seat handles; holding them prevents hip shifting.",
+        "DO NOT bend your knees excessively or try to kick the footplate.",
+        "DO NOT let the weight stack slam on the eccentric return."
 ],
         executionSteps: [
         {
                 "stepNumber": 1,
-                "title": "Step 1: Seated Setup & Flexion",
-                "description": "Sit back into the seat, place feet on platform, and align roller pad behind upper back.",
+                "title": "Step 1: Setup & Forward Flexion",
+                "description": "Extend legs on footplate, grip side handles firmly, and hinge forward with pad behind upper back.",
                 "breathing": "Inhale deeply and stabilize your torso.",
                 "formCue": "Keep shoulder blades retracted and joints aligned."
         },
         {
                 "stepNumber": 2,
                 "title": "Step 2: Posterior Extension Drive",
-                "description": "Exhale and push torso backward against the roller pad smoothly.",
+                "description": "Exhale and drive upper torso backward against the roller pad smoothly.",
                 "breathing": "Exhale forcefully as you contract the target muscle.",
                 "formCue": "Keep shoulder blades retracted and joints aligned."
         },
         {
                 "stepNumber": 3,
-                "title": "Step 3: Peak Lumbar Contraction & Return",
-                "description": "Pause at full spinal extension, squeeze lower back, and lower forward under control.",
+                "title": "Step 3: Full Extension & Peak Squeeze",
+                "description": "Push all the way back into full extension, contract spinal erectors, and lower slowly.",
                 "breathing": "Exhale forcefully as you contract the target muscle.",
                 "formCue": "Keep shoulder blades retracted and joints aligned."
         }
 ],
         commonMistakes: [
-        "DO NOT forcefully hyperextend or jerk your lower spine backward past a neutral, safe alignment.",
-        "DO NOT let the weight stack slam together at the bottom of the movement.",
-        "DO NOT push with your legs or lift your hips off the seat cushion."
+        "DO NOT let your hands leave the side seat handles; holding them prevents hip shifting.",
+        "DO NOT bend your knees excessively or try to kick the footplate.",
+        "DO NOT let the weight stack slam on the eccentric return."
 ],
         safetyTips: [
           'Ensure safety collars, pins, or catchers are securely engaged before lifting.'
         ],
         safetyWarnings: [
-        "DO NOT forcefully hyperextend or jerk your lower spine backward past a neutral, safe alignment.",
-        "DO NOT let the weight stack slam together at the bottom of the movement.",
-        "DO NOT push with your legs or lift your hips off the seat cushion."
+        "DO NOT let your hands leave the side seat handles; holding them prevents hip shifting.",
+        "DO NOT bend your knees excessively or try to kick the footplate.",
+        "DO NOT let the weight stack slam on the eccentric return."
 ],
         proTips: [
           'Focus on a 2-second eccentric lowering phase for maximum muscle hypertrophy.'
