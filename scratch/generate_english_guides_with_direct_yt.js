@@ -259,23 +259,27 @@ const englishGuidesDatabase = {
     ]
   },
   20: {
-    guide: 'cableCrossover.jpg',
-    target: 'Pectoralis Major, Sternal Head, Anterior Deltoids',
-    videoId: 'taI4XduLp4M',
-    desc: 'Freemotion dual cable column with rotating swivel arms providing constant rotational tension for chest flyes.',
+    guide: 'guide_id20_white_functional_trainer.jpg',
+    target: 'Pectoralis Major (Mid & Sternal Head), Anterior Deltoids, Core Obliques',
+    videoId: 'XKuB2QS_lBo',
+    desc: 'Dual-arm multi-functional cable trainer engineered with independently rotating articulating arms for standing cable chest flys, functional strength, and multi-angle hypertrophy.',
     dos: [
-      'Set pulleys at shoulder height and take a staggered stance for stability.',
-      'Maintain a slight, fixed bend in elbows as hands sweep forward in a wide hugging arc.',
-      'Squeeze chest muscles hard at peak crossover.'
+      'Adjust both rotating cable arms to chest/shoulder height and attach standard D-handles.',
+      'Take a forward staggered split-stance for maximal balance and core stabilization.',
+      'Maintain a slight, fixed bend in your elbows throughout the entire fly movement.',
+      'Sweep the D-handles forward in a wide hugging arc until your hands meet directly in front of your chest.',
+      'Squeeze your pectorals tightly for 1-2 seconds at peak contraction.',
+      'Inhale and slowly open your arms back under strict 2-3 second eccentric control to stretch the chest.'
     ],
     donts: [
-      'DO NOT turn the fly into a press by changing elbow angle during the motion.',
-      'DO NOT use heavy torso swinging to pull cables together.'
+      'DO NOT turn the fly into a chest press by bending and extending your elbows during the movement.',
+      'DO NOT swing your torso or use excessive body momentum to bring the handles together.',
+      'DO NOT let the weight stack crash on the return; maintain continuous cable tension.'
     ],
     steps: [
-      'Step 1: Grip & Stance - Grasp D-handles, step forward one stride into a stable staggered stance.',
-      'Step 2: Hugging Arc Motion - Exhale and sweep handles forward in a wide arc as if hugging a large tree.',
-      'Step 3: Controlled Negative - Inhale and slowly open arms back to a full, controlled pectoral stretch.'
+      'Step 1: Open Fly Stretch & Stance - Adopt a forward split-stance, holding D-handles with arms extended wide and chest stretched open.',
+      'Step 2: Sweeping Fly Arc Drive - Exhale and bring handles forward in a wide hugging arc with a slight fixed elbow bend.',
+      'Step 3: Peak Pectoral Contraction & Squeeze - Squeeze chest muscles firmly as hands meet in front, then slowly open arms back.'
     ]
   },
   21: {
