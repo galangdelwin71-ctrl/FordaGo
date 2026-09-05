@@ -47,7 +47,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // 2. Secondary Admin Account
+        // 3. Secondary Admin Account
         User::updateOrCreate(
             ['email' => 'admin@fordago.com'],
             [
@@ -59,6 +59,23 @@ class DatabaseSeeder extends Seeder
                 'phone'             => '09181234567',
                 'gender'            => 'male',
                 'membership_type'   => 'premium',
+                'membership_status' => 'active',
+                'payment_method'    => 'cash',
+            ]
+        );
+
+        // 4. Default Front-Desk Employee Account
+        User::updateOrCreate(
+            ['email' => 'employee1@fordago.com'],
+            [
+                'username'          => 'employee1',
+                'first_name'        => 'Staff',
+                'last_name'         => 'FrontDesk',
+                'password'          => Hash::make('Employee@1'),
+                'role'              => 'employee',
+                'phone'             => '09161234567',
+                'gender'            => 'female',
+                'membership_type'   => 'daily',
                 'membership_status' => 'active',
                 'payment_method'    => 'cash',
             ]

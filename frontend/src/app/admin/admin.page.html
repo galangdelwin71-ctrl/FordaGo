@@ -149,7 +149,7 @@
       <button class="tab-btn feedback-tab-btn" *ngIf="!isEmployee" [class.active]="activeTab==='feedback'" (click)="activeTab='feedback'">
         <ion-icon name="star-outline"></ion-icon> Feedback
       </button>
-      <button class="tab-btn reports-btn" (click)="router.navigate(['/admin-reports'])">
+      <button class="tab-btn reports-btn" *ngIf="!isEmployee" (click)="router.navigate(['/admin-reports'])">
         <ion-icon name="bar-chart-outline"></ion-icon> Reports
       </button>
     </div>
@@ -201,7 +201,7 @@
       <!-- Expiring memberships -->
       <div class="section-label-row">
         <div class="section-label plain">Expiring Soon (Within 7 days)</div>
-        <button class="view-reports-link" (click)="router.navigate(['/admin-reports'])" *ngIf="expiringMembers.length > 0">
+        <button class="view-reports-link" (click)="router.navigate(['/admin-reports'])" *ngIf="!isEmployee && expiringMembers.length > 0">
           View in Reports <ion-icon name="arrow-forward-outline"></ion-icon>
         </button>
       </div>
@@ -429,7 +429,7 @@
           <button class="act-btn edit" (click)="editMember(m)">
             <ion-icon name="create-outline"></ion-icon> Edit
           </button>
-          <button class="act-btn del"  (click)="deleteMember(m)">
+          <button class="act-btn del" *ngIf="canDeleteMember(m)" (click)="deleteMember(m)">
             <ion-icon name="trash-outline"></ion-icon> Delete
           </button>
         </div>

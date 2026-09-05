@@ -408,10 +408,24 @@ class UserController extends Controller
             return response()->json(['message' => 'User not found'], 404);
         }
 
-        // Employees cannot delete admin/super_admin accounts
-        if ($request->user()->role === 'employee'
-            && in_array($user->role, ['admin', 'super_admin'], true)) {
-            return response()->json(['message' => 'Employees cannot delete admin accounts.'], 403);
+        // Prevent deleting own account
+        if ($request->user()->id === $user->id) {
+            return response()->json(['message' => 'You cannot delete your own account.'], 400);
+        }
+
+        // Role-based deletion authorization:
+        // - employee can only delete regular member accounts (user)
+        // - admin can delete employees and members, but cannot delete other admins or super admins
+        // - super_admin can delete any account
+        $callerRole = $request->user()->role;
+        if ($callerRole === 'employee') {
+            if ($user->role !== 'user') {
+                return response()->json(['message' => 'Employees can only delete regular member accounts.'], 403);
+            }
+        } elseif ($callerRole === 'admin') {
+            if (in_array($user->role, ['admin', 'super_admin'], true)) {
+                return response()->json(['message' => 'Admins cannot delete other admin or super admin accounts.'], 403);
+            }
         }
 
         $user->delete();
@@ -430,7 +444,16 @@ class UserController extends Controller
             'fcm_token' => 'required|string|max:512',
         ]);
 
-        $request->user()->update(['fcm_token' => $request->input('fcm_token')]);
+        $token = $request->input('fcm_token');
+
+        // CRITICAL: A device token uniquely identifies a single physical phone.
+        // Detach this token from any other accounts previously logged in on this phone
+        // so push notifications are only ever routed to the active signed-in user.
+        User::where('fcm_token', $token)
+            ->where('id', '!=', $request->user()->id)
+            ->update(['fcm_token' => null]);
+
+        $request->user()->update(['fcm_token' => $token]);
 
         return response()->json(['message' => 'FCM token updated.']);
     }

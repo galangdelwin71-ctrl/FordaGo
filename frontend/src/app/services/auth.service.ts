@@ -57,6 +57,14 @@ export class AuthService {
   }
 
   logout() {
+    const currentToken = this.token;
+    if (currentToken) {
+      // Tell backend to remove FCM device token so this phone stops receiving pushes for this account
+      this.http.delete(`${API_URL}/users/fcm-token`, {
+        headers: { Authorization: `Bearer ${currentToken}` }
+      }).subscribe({ error: () => {} });
+    }
+
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     void Preferences.remove({ key: 'token' });

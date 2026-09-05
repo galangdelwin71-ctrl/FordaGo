@@ -113,6 +113,11 @@ export class WorkoutTrackerService {
       return;
     }
 
+    // CRITICAL: Staff accounts (admin, super_admin, employee) do not participate in member workout tracking
+    if (['admin', 'super_admin', 'employee'].includes(this.auth.user.role)) {
+      return;
+    }
+
     // Seed BEFORE syncing statuses so a freshly-seeded month's sessions get
     // their status computed immediately, and so any caller reading the
     // store right after this returns (e.g. Dashboard's stat cards) sees
@@ -827,6 +832,11 @@ export class WorkoutTrackerService {
   }
 
   syncStoreStatuses(): Record<string, StoredWorkoutSession[]> {
+    // Staff accounts do not have personal workout schedules
+    if (this.auth.user && ['admin', 'super_admin', 'employee'].includes(this.auth.user.role)) {
+      return this.readStore();
+    }
+
     const store = this.readStore();
     let changed = false;
 

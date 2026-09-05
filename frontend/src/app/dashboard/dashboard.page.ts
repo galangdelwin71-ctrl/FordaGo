@@ -1523,6 +1523,12 @@ export class DashboardPage implements OnInit, OnDestroy {
       return;
     }
 
+    // Staff accounts (super_admin, admin, employee) belong in the admin control center, not the member dashboard
+    if (['admin', 'super_admin', 'employee'].includes(this.auth.user.role)) {
+      this.router.navigate(['/admin'], { replaceUrl: true });
+      return;
+    }
+
     this.applyPendingCoachingReopen();
 
     this.workoutTracker.startAutoSync();
@@ -1558,6 +1564,12 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   ionViewWillEnter(): void {
     if (!this.auth.user) {
+      return;
+    }
+
+    // Staff accounts always belong in /admin
+    if (['admin', 'super_admin', 'employee'].includes(this.auth.user.role)) {
+      this.router.navigate(['/admin'], { replaceUrl: true });
       return;
     }
 

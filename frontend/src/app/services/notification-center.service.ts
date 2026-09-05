@@ -337,6 +337,11 @@ export class NotificationCenterService {
       return;
     }
 
+    // CRITICAL: Staff accounts (admin, super_admin, employee) do not have member workout schedules
+    if (['admin', 'super_admin', 'employee'].includes(this.auth.user.role)) {
+      return;
+    }
+
     const notified = this.readNotifiedMissed();
     if (notified.includes(uniqueKey)) {
       return;
@@ -845,6 +850,11 @@ export class NotificationCenterService {
    * that rings at the EXACT start time of the workout (e.g. 9:25 PM).
    */
   public async scheduleNativeWorkoutStartAlert(sessionTitle: string, uniqueKey: string, startDate: Date): Promise<void> {
+    // If the user is staff (admin, super_admin, employee), do not schedule workout alerts
+    if (this.auth.user && ['admin', 'super_admin', 'employee'].includes(this.auth.user.role)) {
+      return;
+    }
+
     // If the scheduled start time is in the past, skip
     if (startDate.getTime() <= Date.now()) {
       return;
@@ -893,6 +903,11 @@ export class NotificationCenterService {
     missedDate: Date,
     homeExercises?: string[]
   ): Promise<void> {
+    // If the user is staff (admin, super_admin, employee), do not schedule workout alerts
+    if (this.auth.user && ['admin', 'super_admin', 'employee'].includes(this.auth.user.role)) {
+      return;
+    }
+
     if (missedDate.getTime() <= Date.now()) {
       return;
     }

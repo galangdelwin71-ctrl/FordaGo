@@ -147,6 +147,31 @@ export class AdminPage implements OnInit, OnDestroy {
     return this.defaultAssignableRoles;
   }
 
+  /**
+   * Role-based authorization check for deleting member/user accounts.
+   * - Never allow deleting yourself
+   * - super_admin can delete anyone
+   * - admin can delete employee and user accounts, but not admins/super_admins
+   * - employee can only delete regular member (user) accounts
+   */
+  canDeleteMember(m: any): boolean {
+    if (!m) return false;
+    const currentUserId = this.auth.user?.id;
+    if (currentUserId && Number(m.id) === Number(currentUserId)) return false;
+
+    if (this.isSuperAdmin) return true;
+
+    if (this.currentRole === 'admin') {
+      return m.role !== 'admin' && m.role !== 'super_admin';
+    }
+
+    if (this.isEmployee) {
+      return m.role === 'user';
+    }
+
+    return false;
+  }
+
   // ── Confirm Dialog ───────────────────────────────────
   confirmDialog: {
     show: boolean;

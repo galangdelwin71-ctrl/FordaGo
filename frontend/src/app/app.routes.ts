@@ -13,6 +13,39 @@ const adminGuard: CanActivateFn = () => {
   }
 };
 
+// Guard: allow admin and super_admin only (excluding employees) into management reports
+const managerGuard: CanActivateFn = () => {
+  const user = localStorage.getItem('user');
+  if (!user) return false;
+  try {
+    const parsed = JSON.parse(user);
+    return ['admin', 'super_admin'].includes(parsed.role);
+  } catch {
+    return false;
+  }
+};
+
+// Guard: only regular members and coaches can enter the member dashboard.
+// Staff accounts (admin, super_admin, employee) are bounced directly to /admin.
+const memberGuard: CanActivateFn = () => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    const router = inject(Router);
+    router.navigate(['/login'], { replaceUrl: true });
+    return false;
+  }
+  try {
+    const user = localStorage.getItem('user');
+    const parsed = user ? JSON.parse(user) : null;
+    if (['admin', 'super_admin', 'employee'].includes(parsed?.role)) {
+      const router = inject(Router);
+      router.navigate(['/admin'], { replaceUrl: true });
+      return false;
+    }
+  } catch {}
+  return true;
+};
+
 // Guard (Stage 5): blocks unauthenticated access to member-facing pages by
 // checking for a stored token, redirecting to /login when absent. Paired
 // with guestGuard below (on the login route itself) so a logged-in member
@@ -84,7 +117,7 @@ export const routes: Routes = [
     path: 'dashboard',
     loadComponent: () =>
       import('./dashboard/dashboard.page').then(m => m.DashboardPage),
-    canActivate: [authGuard],
+    canActivate: [memberGuard],
   },
   {
     path: 'admin',
@@ -139,6 +172,6 @@ export const routes: Routes = [
   {
     path: 'admin-reports',
     loadComponent: () => import('./admin-reports/admin-reports.page').then(m => m.AdminReportsPage),
-    canActivate: [adminGuard],
+    canActivate: [managerGuard],
   },
 ];

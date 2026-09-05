@@ -81,4 +81,7 @@ _archive/
 
 # Scratch & local developer test scripts / files
 scratch/
-docs/*.docx
+# Documents and Backups
+**/*.docx
+*.docx
+backups/

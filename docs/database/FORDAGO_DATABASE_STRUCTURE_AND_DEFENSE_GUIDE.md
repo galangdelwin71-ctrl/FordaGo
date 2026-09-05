@@ -28,7 +28,7 @@ The FordaGO database is designed with an enterprise-grade, highly normalized rel
 ### ⏱️ Module 2: Attendance & Gym Sessions
 | Table Name | Primary Key | Key Foreign Keys | Key Columns / Content | Description & Role |
 | :--- | :--- | :--- | :--- | :--- |
-| **`attendance`** | `id` | `user_id` -> `users(id)` | `user_id`, `check_in`, `check_out`, `status`, `created_at` | Logs daily gym attendance generated via member QR code scanning or RFID badge tapping at the gym entrance. |
+| **`attendance`** | `id` | `user_id` -> `users(id)` | `user_id`, `check_in`, `check_out`, `status`, `created_at` | Logs daily gym attendance generated via member QR code scanning at the gym entrance. |
 | **`sessions`** | `id` | `user_id` -> `users(id)` | `title`, `description`, `duration`, `status` | General scheduled gym training sessions and classes available for members. |
 | **`workout_sessions`** | `id` | `user_id`, `coach_id`, `proposal_id`, `booking_id` | `duration`, `status`, `notes` | High-granularity log of individual workout sessions completed by members, linked to coach proposals or bookings. |
 
@@ -128,7 +128,7 @@ The FordaGO database is designed with an enterprise-grade, highly normalized rel
 
 ### Q3: "Bakit umabot sa 29 ang tables ng system ninyo?"
 > **Sagot:**  
-> *"Ang 29 tables po ay sumasalamin sa **9 na modular domains** ng aming full-stack gym system: Users & Authentication, Attendance RFID/QR, Workouts & PRs, Equipment Tutorials, Coaching & Bookings, Live Chat, Shop POS, Feedback, at Queue Infrastructure. Ang modularity na ito ang dahilan kung bakit scalable at madaling palawakin ang system nang hindi nasisira ang lumang data."*
+> *"Ang 29 tables po ay sumasalamin sa **9 na modular domains** ng aming full-stack gym system: Users & Authentication, QR-based Attendance, Workouts & PRs, Equipment Tutorials, Coaching & Bookings, Live Chat, Shop POS, Feedback, at Queue Infrastructure. Ang modularity na ito ang dahilan kung bakit scalable at madaling palawakin ang system nang hindi nasisira ang lumang data."*
 
 ---
 
@@ -137,6 +137,6 @@ The FordaGO database is designed with an enterprise-grade, highly normalized rel
 * **Web Browser GUI (Adminer):** `http://168.144.141.27:8085`  
   - **Server:** `127.0.0.1`  
   - **Username:** `FordaGo`  
-  - **Password:** `winMay2626#`  
+  - **Password:** *(see .env file)*  
   - **Database:** `fordago`  
-* **Terminal CLI:** `mysql -u FordaGo -p'winMay2626#' fordago`
+* **Terminal CLI:** Access via SSH to the VPS server.

@@ -339,6 +339,12 @@ export class AppComponent implements OnDestroy {
         }
       } else {
         this.notificationCenter.stopPolling();
+        void this.notificationCenter.cancelAllPendingWorkoutAlarms();
+        if (Capacitor.isNativePlatform()) {
+          import('@capacitor/local-notifications').then(({ LocalNotifications }) => {
+            LocalNotifications.removeAllDeliveredNotifications().catch(() => {});
+          }).catch(() => {});
+        }
       }
     });
   }
