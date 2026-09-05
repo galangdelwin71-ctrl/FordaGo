@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FordaGO — Database Architecture & Defense Reviewer</title>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-light: #3b82f6;
+            --emerald: #059669;
+            --indigo: #4f46e5;
+            --amber: #b45309;
+            --dark: #0f172a;
+            --body: #334155;
+            --bg-light: #f8fafc;
+            --card-border: #e2e8f0;
+            --table-header: #f1f5f9;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--body);
+            line-height: 1.65;
+            margin: 0;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 50px 60px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            border: 1px solid var(--card-border);
+        }
+        .header-title {
+            text-align: center;
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 25px;
+            margin-bottom: 35px;
+        }
+        .header-title h1 {
+            color: var(--primary);
+            font-size: 2.3rem;
+            margin: 0 0 10px 0;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+        .header-title h2 {
+            color: var(--emerald);
+            font-size: 1.25rem;
+            margin: 0 0 15px 0;
+            font-weight: 600;
+        }
+        .badge-bar {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .badge {
+            background: #e0e7ff;
+            color: #3730a3;
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            display: inline-block;
+        }
+        .badge.green { background: #dcfce7; color: #166534; }
+        .badge.amber { background: #fef3c7; color: #92400e; }
+        
+        h3.module-title {
+            color: var(--primary);
+            font-size: 1.35rem;
+            border-left: 5px solid var(--primary-light);
+            padding-left: 12px;
+            margin-top: 40px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+            font-size: 0.92rem;
+            background: #ffffff;
+        }
+        th, td {
+            padding: 12px 14px;
+            text-align: left;
+            border: 1px solid var(--card-border);
+            vertical-align: top;
+        }
+        th {
+            background-color: var(--table-header);
+            color: var(--dark);
+            font-weight: 700;
+            font-size: 0.88rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        tr:nth-child(even) { background-color: #fafbfd; }
+        tr:hover { background-color: #f1f5f9; }
+        
+        .code-pill {
+            background-color: #f1f5f9;
+            color: #0f172a;
+            font-family: Consolas, 'Courier New', Courier, monospace;
+            font-size: 0.85rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+            font-weight: 600;
+        }
+        
+        .card-box {
+            background: #f8fafc;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 22px 25px;
+            margin: 25px 0;
+        }
+        .card-box.defense {
+            background: #f0fdf4;
+            border-color: #86efac;
+        }
+        .card-box.defense h4 {
+            color: #166534;
+            margin: 0 0 10px 0;
+            font-size: 1.15rem;
+        }
+        
+        .qa-item {
+            margin-bottom: 20px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 18px 20px;
+        }
+        .qa-q {
+            font-weight: 700;
+            color: #1e3a8a;
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+        .qa-a {
+            color: #334155;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        
+        .footer-note {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid var(--card-border);
+            color: #64748b;
+            font-size: 0.88rem;
+        }
+        @media print {
+            body { padding: 0; background: #fff; }
+            .container { box-shadow: none; border: none; padding: 0; max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-title">
+        <h1>FordaGO Database Architecture</h1>
+        <h2>Complete Table Directory & Defense Reviewer Guide</h2>
+        <p><strong>System Engine:</strong> MariaDB 10.11 / MySQL 8.0 (InnoDB) &bull; <strong>Cloud VPS:</strong> <code>168.144.141.27:3306</code></p>
+        <div class="badge-bar">
+            <span class="badge green">29 Normalized Tables</span>
+            <span class="badge">Third Normal Form (3NF)</span>
+            <span class="badge amber">Referential Integrity & Cascades</span>
+            <span class="badge green">Web GUI: Adminer (Port 8085)</span>
+        </div>
+    </div>
+
+    <!-- MODULE 1 -->
+    <h3 class="module-title">👤 Module 1: User Accounts & Authentication</h3>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 20%;">Table Name</th>
+                <th style="width: 15%;">Keys</th>
+                <th style="width: 35%;">Key Columns</th>
+                <th style="width: 30%;">Description & Functional Role</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="code-pill">users</span></td>
+                <td>PK: <code>id</code></td>
+                <td><code>name</code>, <code>email</code>, <code>password</code>, <code>role</code>, <code>membership_type</code>, <code>membership_expiry</code>, <code>fcm_token</code>, <code>avatar</code></td>
+                <td>Pangunahing talaan ng lahat ng gumagamit ng system (Members, Coaches, Employees, Admins). Dito chine-check ang validity ng gym membership at Firebase push notification tokens.</td>
+            </tr>
+            <tr>
+                <td><span class="code-pill">personal_access_tokens</span></td>
+                <td>PK: <code>id</code></td>
+                <td><code>tokenable_id</code>, <code>name</code>, <code>token</code>, <code>abilities</code>, <code>last_used_at</code></td>
+                <td>Pinamamahalaan ng <strong>Laravel Sanctum</strong> para sa ligtas at mabilis na API authentication sa Mobile App at Web nang hindi paulit-ulit na humihingi ng password.</td>
+            </tr>
+            <tr>
+                <td><span class="code-pill">password_resets</span></td>
+                <td>Index: <code>email</code></td>
+                <td><code>email</code>, <code>token</code>, <code>created_at</code></td>
+                <td>Pansamantalang nag-iimbak ng password reset tokens at OTP verification codes kapag nag-request ang user ng Forgot Password.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- MODULE 2 -->
+    <h3 class="module-title">⏱️ Module 2: Gym Attendance & Sessions</h3>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 20%;">Table Name</th>
+                <th style="width: 15%;">Keys</th>
+                <th style="width: 35%;">Key Columns</th>
+                <th style="width: 30%;">Description & Functional Role</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="code-pill">attendance</span></td>
+                <td>PK: <code>id</code><br>FK: <code>user_id</code></td>
+                <td><code>user_id</code>, <code>check_in</code>, <code>check_out</code>, <code>status</code>, <code>created_at</code></td>
+                <td>Araw-araw na talaan ng pagpasok at paglabas ng gym members via QR code scanning o RFID card tapping sa pintuan ng gym.</td>
+            </tr>
+            <tr>
+                <td><span class="code-pill">sessions</span></td>
+                <td>PK: <code>id</code><br>FK: <code>user_id</code></td>
+                <td><code>title</code>, <code>description</code>, <code>duration</code>, <code>status</code></td>
+                <td>Nagtatala ng pangkalahatang training sessions at group classes na nilalahukan ng mga gym members.</td>
+            </tr>
+            <tr>
+                <td><span class="code-pill">workout_sessions</span></td>
+                <td>PK: <code>id</code><br>FK: <code>user_id</code>, <code>coach_id</code></td>
+                <td><code>duration</code>, <code>status</code>, <code>proposal_id</code>, <code>booking_id</code></td>
+                <td>Detalyadong sesyon ng pag-eehersisyo ng isang member na may kaakibat na coach guidance o training program.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- MODULE 3 -->
+    <h3 class="module-title">🏋️ Module 3: Workouts, Plans & Personal Records (PR)</h3>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 20%;">Table Name</th>
+                <th style="width: 15%;">Keys</th>
+                <th style="width: 35%;">Key Columns</th>
+                <th style="width: 30%;">Description & Functional Role</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="code-pill">workouts</span></td>
+                <td>PK: <code>id</code><br>FK: <code>user_id</code></td>
+                <td><code>name</code>, <code>description</code>, <code>date</code>, <code>created_at</code></td>
+                <td>Talaan ng custom o daily workout activities na ini-log ng member upang subaybayan ang kanilang consistency sa gym.</td>
+            </tr>
+            <tr>
+                <td><span class="code-pill">workout_plan_proposals</span></td>
+                <td>PK: <code>id</code><br>FK: <code>coach_id</code>, <code>user_id</code></td>
+                <td><code>title</code>, <code>notes</code>, <code>status</code> (pending, approved, rejected)</td>
+                <td>Customized workout plan na iminumungkahi ng Coach para sa kanyang estudyante. May approval workflow bago maipatupad.</td>
+            </tr>
+            <tr>
+                <td><span class="code-pill">workout_plan_items</span></td>
+                <td>PK: <code>id</code><br>FK: <code>proposal_id</code></td>
+                <td><code>exercise_name</code>, <code>sets</code>, <code>reps</code>, <code>target_weight</code>, <code>notes</code></td>
+                <td>Bawat specific exercise, bilang ng sets, reps, at buhat sa loob ng inaprubahang training plan.</td>
+            </tr>
+            <tr>
+                <td><span class="code-pill">personal_records</span></td>
+                <td>PK: <code>id</code><br>FK: <code>user_id</code></td>
+                <td><code>exercise_name</code>, <code>weight</code>, <code>reps</code>, <code>date_achieved</code></td>
+                <td>Ang <strong>Personal Records (PR)</strong> o pinakamabigat na nabuhat ng member (Bench Press, Squat, Deadlift) para sa statistical charts.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- MODULE 4 -->
+    <h3 class="module-title">📷 Module 4: Gym Equipment & QR Tracking</h3>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 20%;">Table Name</th>
+                <th style="width: 15%;">Keys</th>
+                <th style="width: 35%;">Key Columns</th>
+                <th style="width: 30%;">Description & Functional Role</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="code-pill">equipment</span></td>
+                <td>PK: <code>id</code></td>
+                <td><code>name</code>, <code>category</code>, <code>description</code>, <code>thumbnail_url</code>, <code>youtube_url</code>, <code>status</code></td>
+                <td>Master catalog ng lahat ng makina at gamit sa gym, kumpleto sa step-by-step instructions, Dos & Don'ts, at video tutorials.</td>
+            </tr>
+            <tr>
+                <td><span class="code-pill">equipment_scan_logs</span></td>
+                <td>PK: <code>id</code><br>FK: <code>user_id</code>, <code>equipment_id</code></td>
+                <td><code>scanned_at</code></td>
+                <td>Audit trail tuwing ini-scan ng member ang QR code sa makina. Ginagamit para sa equipment utilization analytics ng gym.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- MODULE 5 -->
+    <h3 class="module-title">🤝 Module 5: Coach Programs & Bookings</h3>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 20%;">Table Name</th>
+                <th style="width: 15%;">Keys</th>
+                <th style="width: 35%;">Key Columns</th>
+                <th style="width: 30%;">Description & Functional Role</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="code-pill">coach_profiles</span></td>
+                <td>PK: <code>id</code><br>FK: <code>user_id</code></td>
+                <td><code>specialization</code>, <code>bio</code>, <code>rate</code>, <code>photo_url</code>, <code>contract_expiry</code>, <code>is_active</code></td>
+                <td>Karagdagang profile ng mga gym trainers na naglalaman ng kanilang bio, specialties (bodybuilding, weight loss), at hourly rates.</td>
+            </tr>
+            <tr>
+                <td><span class="code-pill">coach_availability</span></td>
+                <td>PK: <code>id</code><br>FK: <code>coach_id</code></td>
+                <td><code>day_of_week</code>, <code>start_time</code>, <code>end_time</code></td>
+                <td>Working hours at available days ng coach kung kailan sila pwedeng i-book ng gym members.</td>
+            </tr>
+            <tr>
+                <td><span class="code-pill">coach_programs</span></td>
+                <td>PK: <code>id</code><br>FK: <code>coach_id</code></td>
+                <td><code>title</code>, <code>description</code>, <code>price</code>, <code>is_public</code></td>
+                <td>Training programs at exclusive fitness classes na inaalok ng mga coaches sa loob ng gym.</td>
+            </tr>
+            <tr>
+                <td><span class="code-pill">coach_program_items</span></td>
+                <td>PK: <code>id</code><br>FK: <code>program_id</code></td>
+                <td><code>day_number</code>, <code>exercise_name</code>, <code>details</code></td>
+                <td>Bawat routine at ehersisyo kada araw sa loob ng inaalok na coaching package.</td>
+            </tr>
+            <tr>
+                <td><span class="code-pill">program_bookings</span></td>
+                <td>PK: <code>id</code><br>FK: <code>user_id</code>, <code>program_id</code></td>
+                <td><code>status</code>, <code>payment_status</code>, <code>created_at</code></td>
+                <td>Talaan ng pag-enroll at pag-book ng gym members sa programa ng isang coach kasama ang payment validation status.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- MODULE 6 -->
+    <h3 class="module-title">💬 Module 6: Real-Time Messaging & Notifications</h3>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 20%;">Table Name</th>
+                <th style="width: 15%;">Keys</th>
+                <th style="width: 35%;">Key Columns</th>
+                <th style="width: 30%;">Description & Functional Role</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="code-pill">conversations</span></td>
+                <td>PK: <code>id</code><br>FK: <code>user1_id</code>, <code>user2_id</code></td>
+                <td><code>status</code>, <code>last_message_at</code></td>
+                <td>Chat thread sa pagitan ng dalawang users (Member at Coach, o Member at Staff).</td>
+            </tr>
+            <tr>
+                <td><span class="code-pill">messages</span></td>
+                <td>PK: <code>id</code><br>FK: <code>conversation_id</code></td>
+                <td><code>sender_id</code>, <code>message</code>, <code>is_read</code>, <code>created_at</code></td>
+                <td>Bawat mensahe sa loob ng chat na ibinobrodkas gamit ang real-time WebSockets (Laravel Reverb).</td>
+            </tr>
+            <tr>
+                <td><span class="code-pill">notifications</span></td>
+                <td>PK: <code>id</code><br>FK: <code>user_id</code></td>
+                <td><code>title</code>, <code>body</code>, <code>type</code>, <code>is_read</code>, <code>created_at</code></td>
+                <td>In-app push notifications para sa membership expiry warnings, order updates, at booking approvals.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- MODULE 7 -->
+    <h3 class="module-title">🛒 Module 7: Gym Shop, POS & Inventory</h3>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 20%;">Table Name</th>
+                <th style="width: 15%;">Keys</th>
+                <th style="width: 35%;">Key Columns</th>
+                <th style="width: 30%;">Description & Functional Role</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="code-pill">products</span></td>
+                <td>PK: <code>id</code></td>
+                <td><code>name</code>, <code>price</code>, <code>stock</code>, <code>category</code>, <code>thumbnail_url</code>, <code>is_active</code></td>
+                <td>Katalogo ng mga paninda sa gym shop tulad ng whey protein, water, gym straps, at fitness apparel.</td>
+            </tr>
+            <tr>
+                <td><span class="code-pill">orders</span></td>
+                <td>PK: <code>id</code><br>FK: <code>user_id</code>, <code>product_id</code></td>
+                <td><code>quantity</code>, <code>total_amount</code>, <code>status</code>, <code>receipt_url</code>, <code>created_at</code></td>
+                <td>Talaan ng mga biniling item ng members sa shop, kasama ang uploaded receipt image at cashier confirmation.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- MODULE 8 & 9 -->
+    <h3 class="module-title">⭐ Module 8 & 9: Feedback & System Engine</h3>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 25%;">Table Name</th>
+                <th style="width: 20%;">Category</th>
+                <th style="width: 55%;">Description & Functional Role</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="code-pill">feedbacks</span></td>
+                <td>Customer Satisfaction</td>
+                <td>Talaan ng ratings (1-5 stars) at reviews ng members ukol sa linis ng gym, kagamitan, at serbisyo ng trainers.</td>
+            </tr>
+            <tr>
+                <td><span class="code-pill">jobs</span></td>
+                <td>Asynchronous Queue</td>
+                <td>Pila ng mabibigat na background tasks tulad ng PhilSMS text delivery at push notifications para hindi mag-hang ang app.</td>
+            </tr>
+            <tr>
+                <td><span class="code-pill">job_batches</span></td>
+                <td>Queue Management</td>
+                <td>Talaan ng grouped background tasks para sa sabayang pagpapadala ng bulk notifications.</td>
+            </tr>
+            <tr>
+                <td><span class="code-pill">failed_jobs</span></td>
+                <td>Error Diagnostics</td>
+                <td>Listahan ng pumalyang background tasks na naglalaman ng kumpletong error stack trace para sa mabilisang troubleshooting.</td>
+            </tr>
+            <tr>
+                <td><span class="code-pill">cache</span> & <span class="code-pill">cache_locks</span></td>
+                <td>Performance Optimization</td>
+                <td>Mabilisang in-memory data caching at atomic locks upang maiwasan ang race conditions sa sabayang pag-access.</td>
+            </tr>
+            <tr>
+                <td><span class="code-pill">migrations</span></td>
+                <td>Database Versioning</td>
+                <td>Kronolohikal na talaan ng bawat schema update na inilapat sa database gamit ang Laravel Migration Engine.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- DEFENSE BOX -->
+    <div class="card-box defense">
+        <h4>🏆 Bakit Papasang-Papasa ang Database na ito sa mga Panelist?</h4>
+        <ul>
+            <li><strong>3NF Normalization:</strong> Walang redundant multi-value columns (1NF), walang partial dependencies (2NF), at walang transitive dependencies (3NF). Bawat entity ay atomized.</li>
+            <li><strong>Enforced Referential Integrity:</strong> Gumagamit ng <code>FOREIGN KEY ... ON DELETE CASCADE</code> sa mismong InnoDB engine upang maiwasan ang orphan records kapag nabura ang user.</li>
+            <li><strong>B-Tree Indexing:</strong> Ang lahat ng foreign keys at search columns ay may explicit index para sa $O(\log N)$ fast query execution.</li>
+            <li><strong>Audit Trails:</strong> Bawat core table ay may <code>created_at</code> at <code>updated_at</code> para sa mahigpit na compliance at data accountability.</li>
+        </ul>
+    </div>
+
+    <!-- DEFENSE Q&A -->
+    <h3 class="module-title">🎯 Master Defense Q&A Script (Pang-sagot sa Panel)</h3>
+    <div class="qa-item">
+        <div class="qa-q">Panelist: "Naka-normalize ba ang database ninyo? Paano niyo mapapatunayan na 3NF ito?"</div>
+        <div class="qa-a"><strong>Sagot mo:</strong> <em>"Opo, Sir/Ma'am. Ang aming database ay mahigpit na sumusunod sa <strong>Third Normal Form (3NF)</strong>. Una, sa 1NF, bawat column ay atomic at walang multi-value attributes. Pangalawa, sa 2NF, lahat ng non-key attributes ay fully functionally dependent sa Primary Key. At pangatlo, sa 3NF, tinanggal po namin ang anumang transitive dependency tulad ng paghihiwalay ng coach credentials sa <code>coach_profiles</code> mula sa <code>users</code> table."</em></div>
+    </div>
+
+    <div class="qa-item">
+        <div class="qa-q">Panelist: "Paano ninyo pinipigilan ang pagkakaroon ng orphan records kapag may naburang user?"</div>
+        <div class="qa-a"><strong>Sagot mo:</strong> <em>"In-enforce po namin ang <strong>Referential Integrity gamit ang Foreign Keys na may `ON DELETE CASCADE`</strong> sa mismong MySQL InnoDB engine. Halimbawa po sa aming <code>workouts</code> table, kapag nabura ang user account, kusa at ligtas na lilinisin ng database ang kaugnay nitong records upang mapanatiling malinis ang storage."</em></div>
+    </div>
+
+    <div class="qa-item">
+        <div class="qa-q">Panelist: "Bakit umabot sa 29 ang tables ng system ninyo?"</div>
+        <div class="qa-a"><strong>Sagot mo:</strong> <em>"Ang 29 tables po ay sumasalamin sa <strong>9 na modular subsystems</strong> ng FordaGO: Accounts, Attendance RFID/QR, Workouts & PRs, Equipment Tutorials, Coaching & Bookings, Live Chat, Shop POS, Feedback, at Queue Infrastructure. Ang modular design na ito ang dahilan kung bakit scalable at madaling palawakin ang system nang walang data corruption."</em></div>
+    </div>
+
+    <div class="footer-note">
+        <p>FordaGO System Documentation &bull; Generated & Synchronized on Cloud VPS (168.144.141.27)</p>
+    </div>
+</div>
+
+</body>
+</html>
