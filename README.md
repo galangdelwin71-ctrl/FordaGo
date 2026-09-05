@@ -146,15 +146,20 @@ Access the app in your browser at: `http://localhost:4200`
 
 ---
 
-### 🚀 3. One-Click 1-LAN Launcher (Windows)
+### 🚀 3. Automated Local & LAN Launchers (Windows)
 
-To launch all servers simultaneously and test the app on your mobile phone over local Wi-Fi:
+To launch all servers simultaneously and test the app on your physical mobile phone over local Wi-Fi:
 
 ```cmd
-# Double click the batch runner in the root folder:
-start-dev-lan.bat
+# Double-click or execute the batch runner inside the scripts directory:
+scripts\start-dev-lan.bat
 ```
-*Auto-detects your local IP address and boots Backend, Reverb, Queue Worker, and Frontend in separate windows.*
+*Auto-detects your local Wi-Fi IP address and boots Backend, Reverb, Queue Worker, and Frontend in dedicated windows for zero-latency testing.*
+
+Or for local desktop development with automated XAMPP and tunnel detection:
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\start-auto.ps1
+```
 
 ---
 
@@ -178,7 +183,7 @@ start-dev-lan.bat
 * 🛡️ **[System Defense Reviewer](./docs/FORDAGO_SYSTEM_DEFENSE_REVIEWER.md)** — Master technical manual, full tech stack matrix, and panel defense Q&A.
 * 📁 **[Codebase File Map](./docs/FORDAGO_CODEBASE_FILE_MAP.html)** — Directory architecture guide and codebase navigation manual.
 * 📊 **[System Architecture & ERD Figures](./docs/figures/)** — Research figures, Gantt charts, 3NF normalization, ERD diagrams, and data dictionary.
-* 🐳 **[Podman & Docker Deployment Guide](./DEPLOYMENT_GUIDE_PODMAN.md)** — Containerized VPS deployment manual.
+* 🐳 **[Podman & Docker Deployment Guide](./docs/DEPLOYMENT_GUIDE_PODMAN.md)** — Containerized VPS deployment manual.
 
 ---
 

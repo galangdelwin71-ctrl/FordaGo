@@ -10,7 +10,8 @@ echo   All services start in separate windows.
 echo  =========================================================
 echo.
 
-set "ROOT=%~dp0"
+set "SCRIPT_DIR=%~dp0"
+set "ROOT=%SCRIPT_DIR%..\"
 set "BACKEND=%ROOT%backend"
 set "FRONTEND=%ROOT%frontend"
 
