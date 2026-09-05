@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FordaGO — Codebase File Map &amp; Navigation Guide</title>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --emerald: #059669;
+            --indigo: #4f46e5;
+            --amber: #b45309;
+            --dark: #0f172a;
+            --body: #334155;
+            --bg-light: #f8fafc;
+            --card-border: #e2e8f0;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--body);
+            line-height: 1.6;
+            margin: 0;
+            padding: 30px 15px;
+        }
+        .container {
+            max-width: 1050px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 40px 50px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            border: 1px solid var(--card-border);
+        }
+        .header-title {
+            text-align: center;
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .header-title h1 {
+            color: var(--primary);
+            font-size: 2.2rem;
+            margin: 0 0 8px 0;
+            font-weight: 800;
+        }
+        .header-title h2 {
+            color: var(--emerald);
+            font-size: 1.15rem;
+            margin: 0 0 12px 0;
+            font-weight: 600;
+        }
+        .header-title p {
+            color: #64748b;
+            font-size: 0.92rem;
+            margin: 4px 0;
+        }
+        h2.section-title {
+            color: var(--primary);
+            font-size: 1.35rem;
+            border-bottom: 2px solid #cbd5e1;
+            padding-bottom: 6px;
+            margin-top: 35px;
+            margin-bottom: 18px;
+        }
+        .callout {
+            padding: 16px 20px;
+            border-radius: 10px;
+            margin: 18px 0;
+            border-left: 5px solid;
+            font-size: 0.95rem;
+        }
+        .callout-info { background-color: #f0f9ff; border-color: #0284c7; color: #0369a1; }
+        .callout-success { background-color: #f0fdf4; border-color: #16a34a; color: #15803d; }
+        .callout strong { display: block; margin-bottom: 6px; font-size: 1rem; }
+        
+        .file-card {
+            background: #f8fafc;
+            border: 1px solid var(--card-border);
+            border-left: 5px solid #3b82f6;
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 16px;
+        }
+        .file-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+        }
+        .file-path {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 1.05rem;
+            font-family: 'Consolas', monospace;
+        }
+        .file-badge {
+            color: var(--indigo);
+            font-weight: 600;
+            font-size: 0.82rem;
+            background: #ede9fe;
+            padding: 3px 8px;
+            border-radius: 6px;
+        }
+        .file-body p { margin: 6px 0; font-size: 0.95rem; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0 24px 0;
+            font-size: 0.92rem;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--card-border);
+        }
+        th {
+            background-color: var(--primary);
+            color: #ffffff;
+            text-align: left;
+            padding: 10px 14px;
+            font-weight: 600;
+        }
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid #f1f5f9;
+            color: var(--dark);
+        }
+        tr:nth-child(even) { background-color: #f8fafc; }
+        .print-btn {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 20px;
+            cursor: pointer;
+            border: none;
+        }
+        .print-btn:hover { background: #1d4ed8; }
+        @media print {
+            body { padding: 0; background: #fff; }
+            .container { box-shadow: none; border: none; padding: 15px; }
+            .print-btn { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF (Ctrl + P)</button>
+        
+        <div class="header-title">
+            <h1>📁 FordaGO Codebase File Map</h1>
+            <h2>Comprehensive Architecture Directory Guide &amp; Codebase Navigator</h2>
+            <p><strong>AFFORDA Gym – Cabiao Branch | NEUST San Isidro Campus (BSIT 2026)</strong></p>
+            <p><em>Proponents: Carl Andrew Bernaldo | Delwin Galang | Jaylee Javier | Ethan Jerome Medina | Ryza Mae Pongco</em></p>
+        </div>
+
+        <div class="callout callout-info">
+            <strong>🎯 Purpose of This Document</strong>
+            This technical directory guide maps every core component, service, controller, and configuration file across the entire FordaGO repository. Use this reference to instantly locate source files, understand architectural responsibilities, and modify system features such as pricing, brand assets, camera scanning logic, and database transactions.
+        </div>
+
+        <h2 class="section-title">1. Quick Reference: "Where Do I Make Changes?"</h2>
+        <table>
+            <thead>
+                <tr><th>Target Feature / Modification</th><th>Exact File Path</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>Update Logo or Brand Colors</strong></td><td><code>frontend/src/theme/variables.scss</code> and <code>frontend/src/app/logo/</code></td></tr>
+                <tr><td><strong>Update Membership Pass Pricing &amp; Duration</strong></td><td><code>backend/app/Http/Controllers/Api/UserController.php</code></td></tr>
+                <tr><td><strong>Manage Gym Equipment &amp; QR Placards</strong></td><td><code>backend/app/Http/Controllers/Api/EquipmentController.php</code></td></tr>
+                <tr><td><strong>Modify Inventory &amp; Stock Deduction Logic</strong></td><td><code>backend/app/Http/Controllers/Api/InventoryController.php</code></td></tr>
+                <tr><td><strong>Configure Camera QR Scanner Engine</strong></td><td><code>frontend/src/app/qr-scanner/qr-scanner.page.ts</code></td></tr>
+                <tr><td><strong>Register New REST API Routes</strong></td><td><code>backend/routes/api.php</code></td></tr>
+                <tr><td><strong>Define New Database Tables &amp; Migrations</strong></td><td><code>backend/database/migrations/</code> and <code>backend/app/Models/</code></td></tr>
+                <tr><td><strong>Update Server Host IP or WebSocket Port</strong></td><td><code>backend/.env</code> (Port 8080) and <code>frontend/src/environments/</code></td></tr>
+                <tr><td><strong>Deploy Updates to Cloud VPS</strong></td><td>Execute <code>./deploy.sh</code> in the server terminal</td></tr>
+            </tbody>
+        </table>
+
+        <h2 class="section-title">2. Frontend Codebase Architecture (Views &amp; UI Logic)</h2>
+        
+        <div class="file-card">
+            <div class="file-header">
+                <span class="file-path">📁 frontend/src/app/app.routes.ts</span>
+                <span class="file-badge">Angular Routing &amp; Guards</span>
+            </div>
+            <div class="file-body">
+                <p><strong>• Responsibility:</strong> Central registry of all client-side application routes (/dashboard, /admin, /qr-scanner, /inventory) with Route Guards (authGuard, adminGuard) to protect restricted endpoints from unauthenticated access.</p>
+                <p><strong style="color: #b45309;">• Maintenance Target:</strong> Modify this file when creating new application pages or enforcing role-based route permissions.</p>
+            </div>
+        </div>
+
+        <div class="file-card">
+            <div class="file-header">
+                <span class="file-path">📁 frontend/src/app/qr-scanner/qr-scanner.page.ts</span>
+                <span class="file-badge">Capacitor Camera Scanner</span>
+            </div>
+            <div class="file-body">
+                <p><strong>• Responsibility:</strong> Orchestrates device camera hardware through Capacitor Barcode Scanner to read optical QR placards on gym machines.</p>
+                <p><strong style="color: #b45309;">• Maintenance Target:</strong> Modify this file to adjust scanner sensitivity, camera focus parameters, or tutorial modal display behavior upon scanning.</p>
+            </div>
+        </div>
+
+        <div class="file-card">
+            <div class="file-header">
+                <span class="file-path">📁 frontend/src/app/inventory/inventory.page.ts</span>
+                <span class="file-badge">Shop Cart &amp; POS</span>
+            </div>
+            <div class="file-body">
+                <p><strong>• Responsibility:</strong> Supplement shop interface where lifters browse products, manage cart quantities, and initiate checkout via Cash or GCash reference verification.</p>
+                <p><strong style="color: #b45309;">• Maintenance Target:</strong> Modify this file to update cart pricing calculations or the GCash transaction reference modal.</p>
+            </div>
+        </div>
+
+        <div class="file-card">
+            <div class="file-header">
+                <span class="file-path">📁 frontend/src/app/coaching/chat/chat.page.ts</span>
+                <span class="file-badge">Laravel Echo WebSockets</span>
+            </div>
+            <div class="file-body">
+                <p><strong>• Responsibility:</strong> Real-time bi-directional messaging interface between coaches and trainees, featuring in-chat workout proposal cards with 1-tap client acceptance.</p>
+                <p><strong style="color: #b45309;">• Maintenance Target:</strong> Modify this file to customize chat bubble layouts, proposal action triggers, or real-time typing indicators.</p>
+            </div>
+        </div>
+
+        <div class="file-card">
+            <div class="file-header">
+                <span class="file-path">📁 frontend/src/app/admin/admin.page.ts</span>
+                <span class="file-badge">HTML5-QRCode &amp; Admin POS</span>
+            </div>
+            <div class="file-body">
+                <p><strong>• Responsibility:</strong> Administrative command terminal housing the optical webcam turnstile scanner, pass renewal interface, and shop order approval dashboard.</p>
+                <p><strong style="color: #b45309;">• Maintenance Target:</strong> Modify this file to adjust webcam barcode frame rates or order approval modals.</p>
+            </div>
+        </div>
+
+        <div class="file-card">
+            <div class="file-header">
+                <span class="file-path">📁 frontend/src/app/admin-reports/admin-reports.page.ts</span>
+                <span class="file-badge">jsPDF &amp; AutoTable Engine</span>
+            </div>
+            <div class="file-body">
+                <p><strong>• Responsibility:</strong> Dedicated reporting center allowing administrators to select date filters and export vector PDF documents and spreadsheets for Attendance, Sales, and Inventory.</p>
+                <p><strong style="color: #b45309;">• Maintenance Target:</strong> Modify this file to adjust tabular report layouts, column headers, or export formatting.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">3. Backend Codebase Architecture (Server Business Logic &amp; Database)</h2>
+
+        <div class="file-card">
+            <div class="file-header">
+                <span class="file-path">📁 backend/routes/api.php</span>
+                <span class="file-badge">REST API Routing Registry</span>
+            </div>
+            <div class="file-body">
+                <p><strong>• Responsibility:</strong> Registers over 120+ RESTful API endpoints secured by Laravel Sanctum token authentication and custom Role-Based Access Control middleware.</p>
+                <p><strong style="color: #b45309;">• Maintenance Target:</strong> Modify this file when exposing new API resources or adjusting URL path conventions.</p>
+            </div>
+        </div>
+
+        <div class="file-card">
+            <div class="file-header">
+                <span class="file-path">📁 backend/app/Http/Controllers/Api/AttendanceController.php</span>
+                <span class="file-badge">Turnstile &amp; Anti-Pass-Sharing</span>
+            </div>
+            <div class="file-body">
+                <p><strong>• Responsibility:</strong> Ingests optical QR scan payloads, validates pass subscription status, records daily entry logs, and executes anti-pass-sharing timestamp validation.</p>
+                <p><strong style="color: #b45309;">• Maintenance Target:</strong> Modify this file to adjust turnstile anti-pass-sharing lockout durations or attendance query algorithms.</p>
+            </div>
+        </div>
+
+        <div class="file-card">
+            <div class="file-header">
+                <span class="file-path">📁 backend/app/Http/Controllers/Api/InventoryController.php</span>
+                <span class="file-badge">ACID Row-Level Locking Checkout</span>
+            </div>
+            <div class="file-body">
+                <p><strong>• Responsibility:</strong> Executes cart checkout procedures wrapped in ACID database transactions using pessimistic row locking (<code>lockForUpdate()</code>) to guarantee zero negative inventory anomalies.</p>
+                <p><strong style="color: #b45309;">• Maintenance Target:</strong> Modify this file to update order payment verification workflows or warehouse replenishment routines.</p>
+            </div>
+        </div>
+
+        <div class="file-card">
+            <div class="file-header">
+                <span class="file-path">📁 backend/app/Http/Controllers/Api/ProposalController.php</span>
+                <span class="file-badge">In-Chat Coaching Proposals</span>
+            </div>
+            <div class="file-body">
+                <p><strong>• Responsibility:</strong> Governs creation, dispatch, and client acceptance of structured workout training proposals with custom pricing within the chat stream.</p>
+                <p><strong style="color: #b45309;">• Maintenance Target:</strong> Modify this file to adjust training session auto-scheduling or coach fee accounting upon client acceptance.</p>
+            </div>
+        </div>
+
+        <div class="file-card">
+            <div class="file-header">
+                <span class="file-path">📁 backend/database/migrations/</span>
+                <span class="file-badge">42 MySQL Schema Migrations</span>
+            </div>
+            <div class="file-body">
+                <p><strong>• Responsibility:</strong> Sequential database migration definitions constructing 21 normalized relational tables, foreign key constraints, column data types, and composite B-tree performance indexes.</p>
+                <p><strong style="color: #b45309;">• Maintenance Target:</strong> Create new migrations here via <code>php artisan make:migration</code> when adding tables or altering database schemas.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">4. DevOps, Containers &amp; Deployment Architecture</h2>
+
+        <div class="file-card">
+            <div class="file-header">
+                <span class="file-path">📁 docker-compose.prod.yml</span>
+                <span class="file-badge">6-Container Micro-Services</span>
+            </div>
+            <div class="file-body">
+                <p><strong>• Responsibility:</strong> Orchestration configuration defining 6 production containers: MySQL database, Laravel API backend, Reverb WebSocket engine, background queue worker, Ionic/Angular frontend, and Nginx edge gateway.</p>
+                <p><strong style="color: #b45309;">• Maintenance Target:</strong> Modify this file to adjust network ports, container environment variables, or resource allocation limits.</p>
+            </div>
+        </div>
+
+        <div class="file-card">
+            <div class="file-header">
+                <span class="file-path">📁 deploy.sh</span>
+                <span class="file-badge">1-Click VPS Deploy Script</span>
+            </div>
+            <div class="file-body">
+                <p><strong>• Responsibility:</strong> Automated continuous deployment bash script that pulls the latest source code from GitHub, compiles container images, runs database migrations, and restarts services safely.</p>
+                <p><strong style="color: #b45309;">• Maintenance Target:</strong> Modify this file when adding build steps or post-deployment cache optimization commands on the live Cloud VPS.</p>
+            </div>
+        </div>
+
+        <p style="text-align: center; color: #94a3b8; font-size: 0.9rem; margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+            © 2026 FordaGO Capstone Team — NEUST San Isidro Campus. All Rights Reserved.
+        </p>
+    </div>
+</body>
+</html>

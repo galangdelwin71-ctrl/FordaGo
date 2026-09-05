@@ -78,3 +78,7 @@ desktop.ini
 
 # Old backup/archive
 _archive/
+
+# Scratch & local developer test scripts / files
+scratch/
+docs/*.docx

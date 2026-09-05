@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #ffffff;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    color: #000000;
+    padding: 25px;
+    width: 2000px;
+    height: 1300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .title { font-size: 26px; font-weight: bold; text-align: center; margin-bottom: 4px; }
+  .subtitle { font-size: 14px; color: #444444; text-align: center; margin-bottom: 18px; }
+  .norm-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    width: 1900px;
+  }
+  .norm-card {
+    border: 2px solid #000000;
+    border-radius: 6px;
+    padding: 12px;
+    background: #ffffff;
+  }
+  .norm-header {
+    font-size: 14.5px;
+    font-weight: bold;
+    border-bottom: 2px solid #000000;
+    padding-bottom: 5px;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .norm-desc { font-size: 11.5px; color: #444444; margin-bottom: 6px; line-height: 1.3; }
+  .table-box {
+    border: 1px solid #000000;
+    font-size: 10.5px;
+    margin-bottom: 4px;
+    border-collapse: collapse;
+    width: 100%;
+  }
+  .table-box th, .table-box td { border: 1px solid #000000; padding: 4px 6px; text-align: left; }
+  .table-box th { background: #f0f0f0; font-weight: bold; }
+  .unf-text {
+    font-family: 'Consolas', monospace;
+    font-size: 10px;
+    background: #f5f5f5;
+    padding: 8px;
+    border: 1px solid #000000;
+    line-height: 1.45;
+    border-radius: 4px;
+  }
+  .desc-box {
+    margin-top: 14px;
+    width: 1900px;
+    border: 1.5px solid #000000;
+    border-radius: 6px;
+    background: #fafafa;
+    padding: 12px 16px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: #222222;
+  }
+  .desc-title { font-weight: bold; font-size: 13px; margin-bottom: 4px; color: #000000; }
+</style>
+</head>
+<body>
+  <div class="title">Figure 3. Database Normalization Progression (UNF &rarr; 1NF &rarr; 2NF &rarr; 3NF) for FordaGO</div>
+  <div class="subtitle">Systematic Elimination of Data Redundancy, Repeating Groups, and Partial/Transitive Dependencies</div>
+
+  <div class="norm-grid">
+    <!-- 1. UNF -->
+    <div class="norm-card">
+      <div class="norm-header">
+        <span>1. Unnormalized Form (UNF)</span>
+        <span>Flat Redundant Data Pool with Repeating Groups</span>
+      </div>
+      <div class="norm-desc">All attributes across user profiles, attendance check-ins, coach programs, workout splits, POS orders, and real-time chat stored in a single flat structure.</div>
+      <div class="unf-text">
+        <strong>UNF ATTRIBUTE POOL:</strong><br>
+        [user_id, username, first_name, last_name, email, password, role, phone, gender, profile_image, membership_type, membership_status, payment_method, membership_expiry, attendance_id, check_in_time, att_payment_status, confirmed_by, coach_profile_id, coach_specialty, coach_rate, coach_bio, is_active, coach_day_of_week, start_time, end_time, program_id, program_title, program_desc, program_price, duration_weeks, sessions_per_week, booking_id, booking_amount, booking_status, pr_id, exercise_name, max_weight, reps, workout_session_id, session_date, split_day, exercises_json, conversation_id, message_id, message_body, proposal_id, proposal_title, proposal_price, product_id, product_name, brand, product_price, stock, order_id, order_group_id, quantity, order_total, gcash_reference, order_status, notification_id, feedback_id, rating]
+      </div>
+    </div>
+
+    <!-- 2. 1NF -->
+    <div class="norm-card">
+      <div class="norm-header">
+        <span>2. First Normal Form (1NF)</span>
+        <span>Enforce Attribute Atomicity & Primary Keys</span>
+      </div>
+      <div class="norm-desc">Repeating groups are segregated into dedicated relational tables. All attributes are strictly atomic, and unique primary keys (PK) are assigned.</div>
+      <table class="table-box">
+        <tr><th>Table Entity</th><th>Primary Key</th><th>1NF Atomic Schema Attributes</th></tr>
+        <tr><td><strong>users</strong></td><td>id (PK)</td><td>username, first_name, last_name, email, password, role, phone, gender, profile_image</td></tr>
+        <tr><td><strong>attendance</strong></td><td>id (PK)</td><td>user_id, check_in_time, membership_type, payment_status, confirmed_by</td></tr>
+        <tr><td><strong>equipment</strong></td><td>id (PK)</td><td>name, category, muscle_group, qr_code, description</td></tr>
+        <tr><td><strong>personal_records</strong></td><td>id (PK)</td><td>user_id, exercise_name, max_weight, reps, achieved_at</td></tr>
+        <tr><td><strong>workout_sessions</strong></td><td>id (PK)</td><td>user_id, client_session_id, coach_id, proposal_id, session_date, split_day, exercises</td></tr>
+        <tr><td><strong>products</strong></td><td>id (PK)</td><td>name, brand, price, stock, image_url</td></tr>
+      </table>
+    </div>
+
+    <!-- 3. 2NF -->
+    <div class="norm-card">
+      <div class="norm-header">
+        <span>3. Second Normal Form (2NF)</span>
+        <span>Eliminate Partial Functional Dependencies</span>
+      </div>
+      <div class="norm-desc">All non-key attributes are made fully functionally dependent on the primary key, isolating composite dependencies into distinct specialized entities.</div>
+      <table class="table-box">
+        <tr><th>Entity / Relation</th><th>Primary Key</th><th>Full Functional Dependency (2NF)</th></tr>
+        <tr><td><strong>coach_profiles</strong></td><td>id (PK)</td><td>user_id (FK), bio, specialty, photo_url, rate, is_active, contract_expiry</td></tr>
+        <tr><td><strong>coach_availability</strong></td><td>id (PK)</td><td>coach_id (FK), day_of_week, start_time, end_time, is_active</td></tr>
+        <tr><td><strong>coach_programs</strong></td><td>id (PK)</td><td>coach_id (FK), title, description, price, duration_weeks, sessions_per_week</td></tr>
+        <tr><td><strong>program_bookings</strong></td><td>id (PK)</td><td>user_id (FK), program_id (FK), status, payment_method, amount_paid</td></tr>
+        <tr><td><strong>conversations</strong></td><td>id (PK)</td><td>coach_id (FK), client_id (FK), status, created_at</td></tr>
+        <tr><td><strong>messages</strong></td><td>id (PK)</td><td>conversation_id (FK), sender_id (FK), body, type, proposal_id (FK), read_at</td></tr>
+        <tr><td><strong>workout_plan_proposals</strong></td><td>id (PK)</td><td>conversation_id (FK), coach_id (FK), client_id (FK), title, price, scheduled_date</td></tr>
+      </table>
+    </div>
+
+    <!-- 4. 3NF -->
+    <div class="norm-card">
+      <div class="norm-header">
+        <span>4. Third Normal Form (3NF)</span>
+        <span>Eliminate Transitive Dependencies & Enforce Referential Integrity</span>
+      </div>
+      <div class="norm-desc">All non-key attributes depend solely and directly on the primary key (No non-key &rarr; non-key dependencies). Ensures zero update/deletion anomalies.</div>
+      <table class="table-box">
+        <tr><th>Final 3NF Table</th><th>PK / FK</th><th>Directly Dependent Attributes (Zero Redundancy)</th></tr>
+        <tr><td><strong>orders</strong></td><td>id (PK)</td><td>user_id (FK), product_id (FK), quantity, total, status, order_group_id, payment_method, gcash_reference_number</td></tr>
+        <tr><td><strong>equipment_scan_logs</strong></td><td>id (PK)</td><td>user_id (FK), equipment_id (FK), scanned_at</td></tr>
+        <tr><td><strong>notifications</strong></td><td>id (PK)</td><td>user_id (FK), title, message, is_read, created_at</td></tr>
+        <tr><td><strong>feedbacks</strong></td><td>id (PK)</td><td>user_id (FK), rating, comments, created_at</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="desc-box">
+    <div class="desc-title">Relational Database Normalization Rationale:</div>
+    Database normalization was systematically executed from <strong>Unnormalized Form (UNF) through Third Normal Form (3NF)</strong> to guarantee relational integrity, optimal query performance, and the total prevention of insertion, update, and deletion anomalies. In <strong>1NF</strong>, repeating multi-valued arrays were dismantled into atomic attributes. In <strong>2NF</strong>, partial functional dependencies were resolved by creating dedicated relational entities for coaching packages, chat channels, and program bookings. In <strong>3NF</strong>, transitive dependencies were fully decoupled (e.g., separating product catalogue prices from POS order audit logs and segregating QR scan telemetry). As a result, the FordaGO relational schema operates in complete 3NF compliance.
+  </div>
+</body>
+</html>

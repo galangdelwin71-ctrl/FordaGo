@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #ffffff;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    color: #000000;
+    padding: 25px;
+    width: 2160px;
+    height: 1220px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .title { font-size: 27px; font-weight: bold; text-align: center; margin-bottom: 4px; }
+  .subtitle { font-size: 14px; color: #444444; text-align: center; margin-bottom: 20px; }
+  .table-container { width: 2060px; border: 2px solid #000000; border-collapse: collapse; }
+  th, td { border: 1.5px solid #000000; padding: 8px 10px; font-size: 12.5px; text-align: left; }
+  th { background: #f0f0f0; font-weight: bold; text-align: center; font-size: 13.5px; }
+  .th-activity { width: 440px; text-align: left; }
+  .col-month { width: 180px; text-align: center; }
+  .sub-header { background: #fafafa; font-size: 10.5px; font-weight: 600; text-align: center; }
+  .bar-cell { padding: 2px; vertical-align: middle; }
+  .bar {
+    background: #111111;
+    color: #ffffff;
+    height: 26px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .bar-active {
+    background: #222222;
+    color: #ffffff;
+    height: 26px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10.5px;
+    font-weight: 600;
+  }
+  .bar-striped {
+    background: repeating-linear-gradient(45deg, #222, #222 10px, #444 10px, #444 20px);
+    color: #ffffff;
+    height: 26px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10.5px;
+    font-weight: 600;
+  }
+  .desc-box {
+    margin-top: 18px;
+    width: 2060px;
+    border: 1.5px solid #000000;
+    border-radius: 6px;
+    background: #fafafa;
+    padding: 14px 18px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #222222;
+  }
+  .desc-title { font-weight: bold; font-size: 13px; margin-bottom: 4px; color: #000000; }
+</style>
+</head>
+<body>
+  <div class="title">Figure 1. Gantt Chart of Activities for FordaGO System Development (January – September)</div>
+  <div class="subtitle">9-Month Iterative Agile Development Life Cycle (SDLC) &middot; AFFORDA Gym – Cabiao Branch &middot; NEUST San Isidro Campus</div>
+
+  <table class="table-container">
+    <thead>
+      <tr>
+        <th rowspan="2" class="th-activity">SDLC Phases & Project Milestones</th>
+        <th colspan="2" class="col-month">Jan</th>
+        <th colspan="2" class="col-month">Feb</th>
+        <th colspan="2" class="col-month">Mar</th>
+        <th colspan="2" class="col-month">Apr</th>
+        <th colspan="2" class="col-month">May</th>
+        <th colspan="2" class="col-month">Jun</th>
+        <th colspan="2" class="col-month">Jul</th>
+        <th colspan="2" class="col-month">Aug</th>
+        <th colspan="2" class="col-month">Sep</th>
+      </tr>
+      <tr class="sub-header">
+        <th>W1-2</th><th>W3-4</th><th>W1-2</th><th>W3-4</th>
+        <th>W1-2</th><th>W3-4</th><th>W1-2</th><th>W3-4</th>
+        <th>W1-2</th><th>W3-4</th><th>W1-2</th><th>W3-4</th>
+        <th>W1-2</th><th>W3-4</th><th>W1-2</th><th>W3-4</th>
+        <th>W1-2</th><th>W3-4</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>1. Project Inception & Proposal Defense</strong></td>
+        <td colspan="2" class="bar-cell"><div class="bar">Problem Identification & Title Proposal</div></td>
+        <td colspan="16"></td>
+      </tr>
+      <tr>
+        <td><strong>2. Requirements Gathering & Stakeholder Interviews</strong></td>
+        <td colspan="2"></td>
+        <td colspan="2" class="bar-cell"><div class="bar">AFFORDA Gym On-Site Assessment</div></td>
+        <td colspan="14"></td>
+      </tr>
+      <tr>
+        <td><strong>3. System Architecture & Database Design (3NF/ERD)</strong></td>
+        <td colspan="4"></td>
+        <td colspan="2" class="bar-cell"><div class="bar">3NF Schema, DFDs, & Wireframing</div></td>
+        <td colspan="12"></td>
+      </tr>
+      <tr>
+        <td><strong>4. Backend REST API & Auth Implementation</strong></td>
+        <td colspan="6"></td>
+        <td colspan="2" class="bar-cell"><div class="bar">Laravel 11 REST API & Sanctum Auth</div></td>
+        <td colspan="10"></td>
+      </tr>
+      <tr>
+        <td><strong>5. Hybrid Mobile Client & UI Engineering</strong></td>
+        <td colspan="8"></td>
+        <td colspan="2" class="bar-cell"><div class="bar">Ionic 8 & Angular 18 Client Modules</div></td>
+        <td colspan="8"></td>
+      </tr>
+      <tr>
+        <td><strong>6. WebSockets & Hardware QR Turnstile Integration</strong></td>
+        <td colspan="10"></td>
+        <td colspan="2" class="bar-cell"><div class="bar">Laravel Reverb (:8080) & Camera Scanner</div></td>
+        <td colspan="6"></td>
+      </tr>
+      <tr>
+        <td><strong>7. Full System Testing, Bug Fixes & Integration</strong></td>
+        <td colspan="12"></td>
+        <td colspan="3" class="bar-cell"><div class="bar">Comprehensive Integration & Regression Testing</div></td>
+        <td colspan="3"></td>
+      </tr>
+      <tr>
+        <td><strong>8. Pilot Deployment & ISO/IEC 25010 System Evaluation</strong></td>
+        <td colspan="14"></td>
+        <td colspan="3" class="bar-cell"><div class="bar-active">On-Site UAT & 15-Evaluator ISO 25010 Survey</div></td>
+        <td colspan="1"></td>
+      </tr>
+      <tr>
+        <td><strong>9. Statistical Data Analysis & Final Oral Defense</strong></td>
+        <td colspan="16"></td>
+        <td colspan="2" class="bar-cell"><div class="bar-striped">Statistical Analysis, Binding & Final Defense</div></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="desc-box">
+    <div class="desc-title">Methodological Explanation of the Project Development Schedule:</div>
+    The project development timeline spans nine (9) academic months (January through September). The conceptualization, requirements gathering, and architectural modeling phases were executed in Q1 (January–March). System construction, encompassing the Laravel 11 backend, Ionic 8/Angular 18 mobile frontend, and real-time Reverb WebSocket subsystems, was completed from April to July. During <strong>August and September</strong>, developmental focus transitions strictly to <strong>Full System Testing, On-Site Pilot Deployment at AFFORDA Gym (Cabiao Branch), and Software Quality Evaluation under the ISO/IEC 25010 standard</strong> involving 15 purposively sampled IT experts, gym administrators, coaches, and members. The final weeks of September are reserved for statistical data aggregation (weighted mean analysis) and the culminating Capstone Oral Defense.
+  </div>
+</body>
+</html>

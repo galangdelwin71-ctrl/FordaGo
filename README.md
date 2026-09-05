@@ -175,8 +175,9 @@ start-dev-lan.bat
 * 📊 **[Chapter 3: Results and Discussions](./docs/chapters/chapter-3.md)** — System implementation, ISO/IEC 25010 evaluation results (IT Experts: 3.75, Staff/Coaches: 3.84, Members: 3.82), and synthesis of findings.
 * 📋 **[Survey Questionnaire Instrument](./docs/SURVEY_QUESTIONNAIRE.md)** — Official 20-item ISO/IEC 25010 software quality evaluation survey.
 * 📑 **[Capstone Defense Practical Guide](./docs/CAPSTONE_DEFENSE_PRACTICAL_GUIDE.md)** — Presentation talking points and live demo checklist.
-* 🛡️ **[Defense Strategy](./docs/DEFENSE_STRATEGY.md)** — Panel Q&A strategy and system architecture defense.
-* 🎬 **[Demo Script Quick Ref](./docs/DEMO_SCRIPT_QUICK_REF.md)** — Step-by-step role-by-role live presentation guide.
+* 🛡️ **[System Defense Reviewer](./docs/FORDAGO_SYSTEM_DEFENSE_REVIEWER.md)** — Master technical manual, full tech stack matrix, and panel defense Q&A.
+* 📁 **[Codebase File Map](./docs/FORDAGO_CODEBASE_FILE_MAP.html)** — Directory architecture guide and codebase navigation manual.
+* 📊 **[System Architecture & ERD Figures](./docs/figures/)** — Research figures, Gantt charts, 3NF normalization, ERD diagrams, and data dictionary.
 * 🐳 **[Podman & Docker Deployment Guide](./DEPLOYMENT_GUIDE_PODMAN.md)** — Containerized VPS deployment manual.
 
 ---

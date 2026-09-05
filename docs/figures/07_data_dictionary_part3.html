@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #ffffff;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    color: #000000;
+    padding: 25px;
+    width: 2000px;
+    height: 1300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .title { font-size: 26px; font-weight: bold; text-align: center; margin-bottom: 4px; }
+  .subtitle { font-size: 14px; color: #444444; text-align: center; margin-bottom: 18px; }
+  .dd-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    width: 1900px;
+  }
+  .table-card { border: 2px solid #000000; border-radius: 6px; padding: 12px; background: #ffffff; }
+  .table-title { font-size: 14px; font-weight: bold; border-bottom: 1.5px solid #000000; padding-bottom: 4px; margin-bottom: 6px; display: flex; justify-content: space-between; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  th, td { border: 1px solid #000000; padding: 4px 6px; text-align: left; }
+  th { background: #f0f0f0; font-weight: bold; }
+  .desc-box {
+    margin-top: 14px;
+    width: 1900px;
+    border: 1.5px solid #000000;
+    border-radius: 6px;
+    background: #fafafa;
+    padding: 12px 16px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: #222222;
+  }
+  .desc-title { font-weight: bold; font-size: 13px; margin-bottom: 4px; color: #000000; }
+</style>
+</head>
+<body>
+  <div class="title">Figure 5C. Data Dictionary (Part 3: Shop POS Inventory, Equipment QR, Notifications, & Feedback)</div>
+  <div class="subtitle">Physical Database Schema & Constraints &middot; FordaGO &middot; AFFORDA Gym – Cabiao Branch</div>
+
+  <div class="dd-grid">
+    <!-- Table 9: products -->
+    <div class="table-card">
+      <div class="table-title"><span>Table 9: products</span><span>Gym Supplement & Merch Inventory</span></div>
+      <table>
+        <tr><th>Field Name</th><th>Data Type</th><th>Key / Constraint</th><th>Description</th></tr>
+        <tr><td>id</td><td>INT(11)</td><td>PK, Auto Increment</td><td>Unique product item SKU identifier</td></tr>
+        <tr><td>name</td><td>VARCHAR(150)</td><td>NOT NULL</td><td>Product name (e.g. Whey Protein Isolate)</td></tr>
+        <tr><td>brand</td><td>VARCHAR(100)</td><td>NULLABLE</td><td>Manufacturer / Supplement brand name</td></tr>
+        <tr><td>price</td><td>DECIMAL(10,2)</td><td>NOT NULL</td><td>Unit selling price in Philippine Pesos (₱)</td></tr>
+        <tr><td>stock</td><td>INT(11)</td><td>NOT NULL DEFAULT 0</td><td>Physical warehouse inventory stock balance</td></tr>
+        <tr><td>image_url</td><td>VARCHAR(255)</td><td>NULLABLE</td><td>Storage asset path for product image</td></tr>
+      </table>
+    </div>
+
+    <!-- Table 10: orders -->
+    <div class="table-card">
+      <div class="table-title"><span>Table 10: orders</span><span>Shop POS & GCash Transactions</span></div>
+      <table>
+        <tr><th>Field Name</th><th>Data Type</th><th>Key / Constraint</th><th>Description</th></tr>
+        <tr><td>id</td><td>INT(11)</td><td>PK, Auto Increment</td><td>Order line item transaction ID</td></tr>
+        <tr><td>user_id</td><td>INT(11)</td><td>FK (users.id), NOT NULL</td><td>Customer account making purchase</td></tr>
+        <tr><td>product_id</td><td>INT(11)</td><td>FK (products.id), NOT NULL</td><td>Ordered supplement SKU</td></tr>
+        <tr><td>quantity</td><td>INT(11)</td><td>NOT NULL DEFAULT 1</td><td>Quantity purchased (atomic stock deduction)</td></tr>
+        <tr><td>total</td><td>DECIMAL(10,2)</td><td>NOT NULL</td><td>Line item total amount in Pesos (₱)</td></tr>
+        <tr><td>status</td><td>ENUM</td><td>NOT NULL DEFAULT 'pending'</td><td>'pending', 'approved', 'rejected', 'cancelled'</td></tr>
+        <tr><td>order_group_id</td><td>VARCHAR(100)</td><td>NOT NULL</td><td>UUID grouping multi-item cart checkouts</td></tr>
+        <tr><td>payment_method</td><td>ENUM</td><td>NOT NULL DEFAULT 'cash'</td><td>'cash' (Counter POS) or 'gcash' (GCash Audit)</td></tr>
+        <tr><td>gcash_reference_number</td><td>VARCHAR(100)</td><td>NULLABLE</td><td>13-digit GCash transaction reference</td></tr>
+      </table>
+    </div>
+
+    <!-- Table 11: equipment & scan logs -->
+    <div class="table-card">
+      <div class="table-title"><span>Table 11: equipment & equipment_scan_logs</span><span>Machine QR Placards</span></div>
+      <table>
+        <tr><th>Table / Field</th><th>Data Type</th><th>Key / Constraint</th><th>Description</th></tr>
+        <tr><td><strong>equipment.id</strong></td><td>INT(11)</td><td>PK, Auto Increment</td><td>Gym machine identifier</td></tr>
+        <tr><td>name</td><td>VARCHAR(150)</td><td>NOT NULL</td><td>Equipment machine name (e.g. Incline Bench)</td></tr>
+        <tr><td>category</td><td>VARCHAR(100)</td><td>NOT NULL</td><td>Category ('Machine', 'Free Weights', 'Cardio')</td></tr>
+        <tr><td>muscle_group</td><td>VARCHAR(100)</td><td>NOT NULL</td><td>Target muscle (Chest, Quadriceps, Back)</td></tr>
+        <tr><td>qr_code</td><td>VARCHAR(100)</td><td>UNIQUE, NOT NULL</td><td>Alphanumeric encoded string on physical placard</td></tr>
+        <tr><td>description</td><td>TEXT</td><td>NULLABLE</td><td>Step-by-step exercise tutorial guide</td></tr>
+        <tr><td><strong>equipment_scan_logs.id</strong></td><td>INT(11)</td><td>PK, Auto Increment</td><td>QR scan analytics record ID</td></tr>
+        <tr><td>user_id / equipment_id</td><td>INT(11)</td><td>FKs</td><td>Member scanning machine placard</td></tr>
+        <tr><td>scanned_at</td><td>DATETIME</td><td>DEFAULT CURRENT_TIMESTAMP</td><td>Time of camera QR scan</td></tr>
+      </table>
+    </div>
+
+    <!-- Table 12: notifications & feedbacks -->
+    <div class="table-card">
+      <div class="table-title"><span>Table 12: notifications & feedbacks</span><span>Alerts & System Ratings</span></div>
+      <table>
+        <tr><th>Table / Field</th><th>Data Type</th><th>Key / Constraint</th><th>Description</th></tr>
+        <tr><td><strong>notifications.id</strong></td><td>INT(11)</td><td>PK, Auto Increment</td><td>Notification alert record ID</td></tr>
+        <tr><td>user_id</td><td>INT(11)</td><td>FK (users.id)</td><td>Recipient of system push alert</td></tr>
+        <tr><td>title / message</td><td>VARCHAR / TEXT</td><td>NOT NULL</td><td>Notification headline & message content</td></tr>
+        <tr><td>is_read</td><td>TINYINT(1)</td><td>NOT NULL DEFAULT 0</td><td>Read / Unread status flag</td></tr>
+        <tr><td><strong>feedbacks.id</strong></td><td>INT(11)</td><td>PK, Auto Increment</td><td>Member feedback record ID</td></tr>
+        <tr><td>user_id</td><td>INT(11)</td><td>FK (users.id)</td><td>Member submitting review</td></tr>
+        <tr><td>rating</td><td>INT(11)</td><td>NOT NULL</td><td>1 to 5 star customer satisfaction rating</td></tr>
+        <tr><td>comments</td><td>TEXT</td><td>NULLABLE</td><td>Qualitative comments and feedback</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="desc-box">
+    <div class="desc-title">Data Schema & Integrity Constraints Narrative (Part 3):</div>
+    Part 3 outlines the e-commerce inventory, QR equipment guide telemetry, and feedback mechanisms. The <code>products</code> and <code>orders</code> tables enforce atomic inventory deductions using database row-level locking (<code>lockForUpdate()</code>) during checkout to prevent race conditions. The <code>equipment</code> and <code>equipment_scan_logs</code> tables link physical QR placards on gym machines with digital tutorial instructions and track scan analytics. Finally, <code>notifications</code> and <code>feedbacks</code> deliver automated administrative alerts and user satisfaction metrics.
+  </div>
+</body>
+</html>

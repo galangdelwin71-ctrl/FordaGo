@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #ffffff;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    color: #000000;
+    padding: 25px;
+    width: 2000px;
+    height: 1300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .title { font-size: 26px; font-weight: bold; text-align: center; margin-bottom: 4px; }
+  .subtitle { font-size: 14px; color: #444444; text-align: center; margin-bottom: 18px; }
+  .dd-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    width: 1900px;
+  }
+  .table-card { border: 2px solid #000000; border-radius: 6px; padding: 12px; background: #ffffff; }
+  .table-title { font-size: 14px; font-weight: bold; border-bottom: 1.5px solid #000000; padding-bottom: 4px; margin-bottom: 6px; display: flex; justify-content: space-between; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  th, td { border: 1px solid #000000; padding: 4px 6px; text-align: left; }
+  th { background: #f0f0f0; font-weight: bold; }
+  .desc-box {
+    margin-top: 14px;
+    width: 1900px;
+    border: 1.5px solid #000000;
+    border-radius: 6px;
+    background: #fafafa;
+    padding: 12px 16px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: #222222;
+  }
+  .desc-title { font-weight: bold; font-size: 13px; margin-bottom: 4px; color: #000000; }
+</style>
+</head>
+<body>
+  <div class="title">Figure 5B. Data Dictionary (Part 2: Real-Time Chat, Proposals, & Workout Tracking)</div>
+  <div class="subtitle">Physical Database Schema & Constraints &middot; FordaGO &middot; AFFORDA Gym – Cabiao Branch</div>
+
+  <div class="dd-grid">
+    <!-- Table 5: conversations -->
+    <div class="table-card">
+      <div class="table-title"><span>Table 5: conversations</span><span>1-on-1 Real-Time Chat Channels</span></div>
+      <table>
+        <tr><th>Field Name</th><th>Data Type</th><th>Key / Constraint</th><th>Description</th></tr>
+        <tr><td>id</td><td>INT(10) UNSIGNED</td><td>PK, Auto Increment</td><td>Conversation channel identifier</td></tr>
+        <tr><td>coach_id</td><td>INT(11)</td><td>FK (users.id), NOT NULL</td><td>Assigned coach user ID</td></tr>
+        <tr><td>client_id</td><td>INT(11)</td><td>FK (users.id), NOT NULL</td><td>Client member user ID</td></tr>
+        <tr><td>status</td><td>ENUM</td><td>NOT NULL DEFAULT 'active'</td><td>Channel state ('active','archived','closed')</td></tr>
+        <tr><td>created_at / updated_at</td><td>TIMESTAMP</td><td>NULLABLE</td><td>Channel creation and activity timestamps</td></tr>
+      </table>
+    </div>
+
+    <!-- Table 6: messages -->
+    <div class="table-card">
+      <div class="table-title"><span>Table 6: messages</span><span>Live Reverb WebSocket Messages</span></div>
+      <table>
+        <tr><th>Field Name</th><th>Data Type</th><th>Key / Constraint</th><th>Description</th></tr>
+        <tr><td>id</td><td>INT(10) UNSIGNED</td><td>PK, Auto Increment</td><td>Message record identifier</td></tr>
+        <tr><td>conversation_id</td><td>INT(10) UNSIGNED</td><td>FK (conversations.id)</td><td>Associated chat channel</td></tr>
+        <tr><td>sender_id</td><td>INT(11)</td><td>FK (users.id), NOT NULL</td><td>Message author (Coach or Client)</td></tr>
+        <tr><td>body</td><td>TEXT</td><td>NOT NULL</td><td>Message content text or proposal payload</td></tr>
+        <tr><td>type</td><td>ENUM</td><td>NOT NULL DEFAULT 'text'</td><td>Message payload type ('text' or 'proposal')</td></tr>
+        <tr><td>proposal_id</td><td>INT(10) UNSIGNED</td><td>FK (proposals.id), NULL</td><td>Direct link to structured workout proposal</td></tr>
+        <tr><td>read_at</td><td>DATETIME</td><td>NULLABLE</td><td>Timestamp when recipient read message</td></tr>
+      </table>
+    </div>
+
+    <!-- Table 7: workout_plan_proposals -->
+    <div class="table-card">
+      <div class="table-title"><span>Table 7: workout_plan_proposals</span><span>Structured Coach Workout Offers</span></div>
+      <table>
+        <tr><th>Field Name</th><th>Data Type</th><th>Key / Constraint</th><th>Description</th></tr>
+        <tr><td>id</td><td>INT(10) UNSIGNED</td><td>PK, Auto Increment</td><td>Unique proposal offer identifier</td></tr>
+        <tr><td>conversation_id</td><td>INT(10) UNSIGNED</td><td>FK (conversations.id)</td><td>Originating chat channel</td></tr>
+        <tr><td>coach_id</td><td>INT(11)</td><td>FK (users.id), NOT NULL</td><td>Coach creating the proposal</td></tr>
+        <tr><td>client_id</td><td>INT(11)</td><td>FK (users.id), NOT NULL</td><td>Target client receiving proposal</td></tr>
+        <tr><td>title</td><td>VARCHAR(255)</td><td>NOT NULL</td><td>Workout routine title</td></tr>
+        <tr><td>price</td><td>DECIMAL(10,2)</td><td>NOT NULL DEFAULT 0.00</td><td>Proposal session price in Pesos (₱)</td></tr>
+        <tr><td>exercises</td><td>LONGTEXT / JSON</td><td>NOT NULL</td><td>Structured exercise sets, reps, and weights</td></tr>
+        <tr><td>scheduled_date</td><td>DATE</td><td>NULLABLE</td><td>Target workout execution date</td></tr>
+        <tr><td>status</td><td>ENUM</td><td>NOT NULL DEFAULT 'pending'</td><td>'pending', 'accepted', 'rejected', 'completed'</td></tr>
+      </table>
+    </div>
+
+    <!-- Table 8: workout_sessions & personal_records -->
+    <div class="table-card">
+      <div class="table-title"><span>Table 8: workout_sessions & personal_records</span><span>Daily Log & PR Tracker</span></div>
+      <table>
+        <tr><th>Table / Field</th><th>Data Type</th><th>Key / Constraint</th><th>Description</th></tr>
+        <tr><td><strong>workout_sessions.id</strong></td><td>INT(10) UNSIGNED</td><td>PK, Auto Increment</td><td>Logged workout split session ID</td></tr>
+        <tr><td>user_id</td><td>INT(11)</td><td>FK (users.id)</td><td>Member who completed the workout</td></tr>
+        <tr><td>split_day</td><td>VARCHAR(50)</td><td>NOT NULL</td><td>Workout category (e.g. 'Push Day', 'Legs')</td></tr>
+        <tr><td>exercises</td><td>LONGTEXT / JSON</td><td>NOT NULL</td><td>Completed set, rep, and weight logs</td></tr>
+        <tr><td>completed_at</td><td>DATETIME</td><td>NULLABLE</td><td>Workout completion timestamp</td></tr>
+        <tr><td><strong>personal_records.id</strong></td><td>INT(10) UNSIGNED</td><td>PK, Auto Increment</td><td>Strength milestone record ID</td></tr>
+        <tr><td>exercise_name</td><td>VARCHAR(100)</td><td>NOT NULL</td><td>Exercise name (e.g. 'Barbell Bench Press')</td></tr>
+        <tr><td>max_weight / reps</td><td>DECIMAL(8,2) / INT</td><td>NOT NULL</td><td>Peak 1-rep or max weight lifted (kg)</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="desc-box">
+    <div class="desc-title">Data Schema & Integrity Constraints Narrative (Part 2):</div>
+    Part 2 details the interactive communication, workout proposal, and personal performance tracking entities. The <code>conversations</code> and <code>messages</code> tables underpin the real-time chat architecture powered by Laravel Reverb WebSockets. Custom workout offers created by certified coaches are codified in <code>workout_plan_proposals</code> with JSON exercise structures. Upon client acceptance, proposals instantiate executable workout logs in <code>workout_sessions</code>, linking directly to member strength progressions recorded in <code>personal_records</code>.
+  </div>
+</body>
+</html>

@@ -1309,7 +1309,7 @@ ion-content {
   // defaults from the :host block above -- so every icon/value/badge/
   // border that referenced var(--dash-yellow) etc. (several with
   // !important) stayed bright yellow-on-white in light mode, which is
-  // exactly the low-contrast "hindi masyadong kita" issue reported.
+  // exactly the low-contrast legibility issue reported.
   // Redefining the variables here fixes every usage in one place instead
   // of chasing each selector individually.
   --dash-yellow: #d97706;

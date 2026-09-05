@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #ffffff;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    color: #000000;
+    padding: 25px;
+    width: 2000px;
+    height: 1300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .title { font-size: 26px; font-weight: bold; text-align: center; margin-bottom: 4px; }
+  .subtitle { font-size: 14px; color: #444444; text-align: center; margin-bottom: 18px; }
+  .dd-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    width: 1900px;
+  }
+  .table-card { border: 2px solid #000000; border-radius: 6px; padding: 12px; background: #ffffff; }
+  .table-title { font-size: 14px; font-weight: bold; border-bottom: 1.5px solid #000000; padding-bottom: 4px; margin-bottom: 6px; display: flex; justify-content: space-between; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  th, td { border: 1px solid #000000; padding: 4px 6px; text-align: left; }
+  th { background: #f0f0f0; font-weight: bold; }
+  .desc-box {
+    margin-top: 14px;
+    width: 1900px;
+    border: 1.5px solid #000000;
+    border-radius: 6px;
+    background: #fafafa;
+    padding: 12px 16px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: #222222;
+  }
+  .desc-title { font-weight: bold; font-size: 13px; margin-bottom: 4px; color: #000000; }
+</style>
+</head>
+<body>
+  <div class="title">Figure 5A. Data Dictionary (Part 1: User Identity, Attendance, & Coaching Management)</div>
+  <div class="subtitle">Physical Database Schema & Constraints &middot; FordaGO &middot; AFFORDA Gym – Cabiao Branch</div>
+
+  <div class="dd-grid">
+    <!-- Table 1: users -->
+    <div class="table-card">
+      <div class="table-title"><span>Table 1: users</span><span>Core User & Staff Identity</span></div>
+      <table>
+        <tr><th>Field Name</th><th>Data Type</th><th>Key / Constraint</th><th>Description</th></tr>
+        <tr><td>id</td><td>INT(11)</td><td>PK, Auto Increment</td><td>Unique user account identifier</td></tr>
+        <tr><td>username</td><td>VARCHAR(100)</td><td>UNIQUE, NOT NULL</td><td>Unique user login handle</td></tr>
+        <tr><td>first_name</td><td>VARCHAR(100)</td><td>NOT NULL</td><td>Member/Staff given first name</td></tr>
+        <tr><td>last_name</td><td>VARCHAR(100)</td><td>NOT NULL</td><td>Member/Staff family surname</td></tr>
+        <tr><td>email</td><td>VARCHAR(150)</td><td>UNIQUE, NOT NULL</td><td>Account authentication email</td></tr>
+        <tr><td>password</td><td>VARCHAR(255)</td><td>NOT NULL</td><td>Bcrypt hashed security password</td></tr>
+        <tr><td>role</td><td>ENUM</td><td>NOT NULL</td><td>'member','coach','admin','employee','super_admin'</td></tr>
+        <tr><td>phone</td><td>VARCHAR(20)</td><td>NULLABLE</td><td>11-digit mobile contact number</td></tr>
+        <tr><td>gender</td><td>ENUM</td><td>NULLABLE</td><td>'male','female','other'</td></tr>
+        <tr><td>profile_image</td><td>LONGTEXT</td><td>NULLABLE</td><td>Base64 encoded or asset avatar URL</td></tr>
+        <tr><td>membership_type</td><td>ENUM</td><td>NOT NULL</td><td>'daily' (₱100 pass) or 'premium' (₱500 monthly)</td></tr>
+        <tr><td>membership_status</td><td>ENUM</td><td>NOT NULL</td><td>'active' or 'pending' payment</td></tr>
+        <tr><td>payment_method</td><td>ENUM</td><td>NULLABLE</td><td>'cash' (Counter) or 'gcash' (Online Audit)</td></tr>
+        <tr><td>membership_expiry</td><td>DATE</td><td>NULLABLE</td><td>30-day expiration date for premium members</td></tr>
+      </table>
+    </div>
+
+    <!-- Table 2: attendance -->
+    <div class="table-card">
+      <div class="table-title"><span>Table 2: attendance</span><span>QR Turnstile Check-In Logs</span></div>
+      <table>
+        <tr><th>Field Name</th><th>Data Type</th><th>Key / Constraint</th><th>Description</th></tr>
+        <tr><td>id</td><td>INT(11)</td><td>PK, Auto Increment</td><td>Unique attendance record identifier</td></tr>
+        <tr><td>user_id</td><td>INT(11)</td><td>FK (users.id)</td><td>Reference to attending member</td></tr>
+        <tr><td>check_in_time</td><td>DATETIME</td><td>DEFAULT CURRENT_TIMESTAMP</td><td>Exact timestamp of turnstile check-in</td></tr>
+        <tr><td>membership_type</td><td>ENUM</td><td>NOT NULL DEFAULT 'premium'</td><td>Pass category ('daily' or 'premium')</td></tr>
+        <tr><td>payment_status</td><td>ENUM</td><td>NOT NULL DEFAULT 'paid'</td><td>Payment state ('pending' or 'paid')</td></tr>
+        <tr><td>confirmed_by</td><td>INT(11)</td><td>FK (users.id), NULLABLE</td><td>Staff member verifying walk-in fee</td></tr>
+        <tr><td>confirmed_at</td><td>DATETIME</td><td>NULLABLE</td><td>Timestamp of fee confirmation</td></tr>
+        <tr><td>notes</td><td>TEXT</td><td>NULLABLE</td><td>Optional desk staff remarks</td></tr>
+      </table>
+    </div>
+
+    <!-- Table 3: coach_profiles -->
+    <div class="table-card">
+      <div class="table-title"><span>Table 3: coach_profiles</span><span>Trainer Professional Roster</span></div>
+      <table>
+        <tr><th>Field Name</th><th>Data Type</th><th>Key / Constraint</th><th>Description</th></tr>
+        <tr><td>id</td><td>INT(10) UNSIGNED</td><td>PK, Auto Increment</td><td>Unique coach profile ID</td></tr>
+        <tr><td>user_id</td><td>INT(11)</td><td>FK (users.id), NOT NULL</td><td>Associated coach user account</td></tr>
+        <tr><td>bio</td><td>TEXT</td><td>NULLABLE</td><td>Professional background & biography</td></tr>
+        <tr><td>specialty</td><td>VARCHAR(255)</td><td>NULLABLE</td><td>Fitness certifications (e.g. Bodybuilding, HIIT)</td></tr>
+        <tr><td>photo_url</td><td>LONGTEXT</td><td>NULLABLE</td><td>Coach profile showcase image</td></tr>
+        <tr><td>rate</td><td>DECIMAL(10,2)</td><td>NOT NULL DEFAULT 0.00</td><td>Hourly consultation coaching fee (₱)</td></tr>
+        <tr><td>is_active</td><td>TINYINT(1)</td><td>NOT NULL DEFAULT 1</td><td>Coach active availability switch</td></tr>
+        <tr><td>contract_expiry</td><td>DATE</td><td>NULLABLE</td><td>Gym employment contract end date</td></tr>
+      </table>
+    </div>
+
+    <!-- Table 4: coach_availability & programs -->
+    <div class="table-card">
+      <div class="table-title"><span>Table 4: coach_availability & coach_programs</span><span>Scheduling & Packages</span></div>
+      <table>
+        <tr><th>Table / Field</th><th>Data Type</th><th>Key / Constraint</th><th>Description</th></tr>
+        <tr><td><strong>coach_availability.id</strong></td><td>INT(10) UNSIGNED</td><td>PK, Auto Increment</td><td>Availability slot identifier</td></tr>
+        <tr><td>coach_id</td><td>INT(11)</td><td>FK (users.id)</td><td>Coach offering the time slot</td></tr>
+        <tr><td>day_of_week</td><td>TINYINT(3) UNSIGNED</td><td>NOT NULL</td><td>0 (Sun) to 6 (Sat) day index</td></tr>
+        <tr><td>start_time / end_time</td><td>TIME</td><td>NOT NULL</td><td>Duty working hours window</td></tr>
+        <tr><td><strong>coach_programs.id</strong></td><td>INT(10) UNSIGNED</td><td>PK, Auto Increment</td><td>Training program package ID</td></tr>
+        <tr><td>title / description</td><td>VARCHAR / TEXT</td><td>NOT NULL / NULLABLE</td><td>Program title (e.g. 12-Week Hypertrophy)</td></tr>
+        <tr><td>price</td><td>DECIMAL(10,2)</td><td>NOT NULL</td><td>Package price in Philippine Pesos (₱)</td></tr>
+        <tr><td>duration_weeks</td><td>INT(11)</td><td>NOT NULL</td><td>Total program duration in weeks</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="desc-box">
+    <div class="desc-title">Data Schema & Integrity Constraints Narrative (Part 1):</div>
+    Part 1 of the Data Dictionary defines the foundational user, attendance, and fitness trainer tables. The <code>users</code> table establishes role-based identity across five distinct system roles (<code>member</code>, <code>coach</code>, <code>employee</code>, <code>admin</code>, <code>super_admin</code>) and manages pass lifecycle states. The <code>attendance</code> entity logs real-time turnstile check-in timestamps, pass types, and staff confirmations with foreign key linkage to <code>users.id</code>. Trainer profiles, duty availability schedules, and packaged training programs are modeled across <code>coach_profiles</code>, <code>coach_availability</code>, and <code>coach_programs</code> to maintain referential integrity and support on-demand booking.
+  </div>
+</body>
+</html>

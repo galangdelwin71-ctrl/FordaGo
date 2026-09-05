@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FordaGO — Capstone Defense Master Reviewer</title>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-light: #3b82f6;
+            --emerald: #059669;
+            --indigo: #4f46e5;
+            --amber: #b45309;
+            --dark: #0f172a;
+            --body: #334155;
+            --bg-light: #f8fafc;
+            --card-border: #e2e8f0;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--body);
+            line-height: 1.65;
+            margin: 0;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 50px 60px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            border: 1px solid var(--card-border);
+        }
+        .header-title {
+            text-align: center;
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 25px;
+            margin-bottom: 35px;
+        }
+        .header-title h1 {
+            color: var(--primary);
+            font-size: 2.5rem;
+            margin: 0 0 10px 0;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+        .header-title h2 {
+            color: var(--emerald);
+            font-size: 1.3rem;
+            margin: 0 0 15px 0;
+            font-weight: 600;
+        }
+        .header-title p {
+            color: #64748b;
+            font-size: 0.95rem;
+            margin: 5px 0;
+        }
+        h2.section-title {
+            color: var(--primary);
+            font-size: 1.5rem;
+            border-bottom: 2px solid #cbd5e1;
+            padding-bottom: 8px;
+            margin-top: 40px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        h3.sub-title {
+            color: var(--emerald);
+            font-size: 1.2rem;
+            margin-top: 25px;
+            margin-bottom: 12px;
+        }
+        .callout {
+            padding: 18px 22px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid;
+            font-size: 0.98rem;
+        }
+        .callout-info {
+            background-color: #f0f9ff;
+            border-color: #0284c7;
+            color: #0369a1;
+        }
+        .callout-success {
+            background-color: #f0fdf4;
+            border-color: #16a34a;
+            color: #15803d;
+        }
+        .callout-warning {
+            background-color: #fffbeb;
+            border-color: #d97706;
+            color: #b45309;
+        }
+        .callout strong {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 1.05rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0 30px 0;
+            font-size: 0.95rem;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--card-border);
+        }
+        th {
+            background-color: var(--primary);
+            color: #ffffff;
+            text-align: left;
+            padding: 12px 16px;
+            font-weight: 600;
+        }
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            color: var(--dark);
+        }
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+        tr:hover {
+            background-color: #f1f5f9;
+        }
+        .qa-card {
+            background: #ffffff;
+            border: 1px solid var(--card-border);
+            border-left: 4px solid var(--indigo);
+            padding: 18px 22px;
+            border-radius: 8px;
+            margin-bottom: 18px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .qa-card .question {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 1.05rem;
+            margin-bottom: 8px;
+        }
+        .qa-card .answer {
+            color: var(--body);
+            font-size: 0.98rem;
+            line-height: 1.6;
+        }
+        .bullet-item {
+            margin-bottom: 10px;
+            padding-left: 5px;
+        }
+        .bullet-item strong {
+            color: var(--dark);
+        }
+        .print-btn {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 20px;
+            cursor: pointer;
+            border: none;
+        }
+        .print-btn:hover {
+            background: #1d4ed8;
+        }
+        @media print {
+            body { padding: 0; background: #fff; }
+            .container { box-shadow: none; border: none; padding: 20px; }
+            .print-btn { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF (Ctrl + P)</button>
+        
+        <div class="header-title">
+            <h1>🏋️ FordaGO</h1>
+            <h2>Smart Gym Management &amp; Interactive Fitness Platform</h2>
+            <p><strong>Capstone Defense Study Guide &amp; Master System Reviewer (Executive Edition)</strong></p>
+            <p>AFFORDA Gym – Cabiao Branch | NEUST San Isidro Campus (BSIT 2026)</p>
+            <p><em>Proponents: Carl Andrew Bernaldo | Delwin Galang | Jaylee Javier | Ethan Jerome Medina | Ryza Mae Pongco</em></p>
+        </div>
+
+        <div class="callout callout-info">
+            <strong>🎯 Document Goal &amp; Overview</strong>
+            This executive study guide provides a complete, easy-to-digest review of the entire FordaGO platform for your upcoming Capstone Defense. Every feature, database table, security layer, and technical decision is explained cleanly with high readability and structured tables.
+        </div>
+
+        <h2 class="section-title">1. Core System Overview</h2>
+        <p><strong>FordaGO</strong> is an automated gym management, real-time coaching, and optical turnstile QR access platform built specifically for AFFORDA Gym in Cabiao, Nueva Ecija. It eliminates paper-based attendance, prevents lost revenue from uncollected dues, provides interactive exercise guidance, and connects members directly with coaches.</p>
+
+        <div class="callout callout-success">
+            <strong>⚡ Before vs. After FordaGO</strong>
+            • <strong>Before:</strong> Manual paper logbooks, unverified pass sharing, informal unorganized coaching, manual headcount inventory, and error-prone paper calculations.<br>
+            • <strong>After:</strong> Sub-second QR turnstile check-ins, in-chat structured workout proposals, automatic inventory synchronization during checkout, and 1-click vector PDF financial reports.
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Portal</th>
+                    <th>Target Users</th>
+                    <th>Access Method</th>
+                    <th>Core Features</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Member App</strong></td>
+                    <td>Gym Members &amp; Lifters</td>
+                    <td>Android APK &amp; Mobile Web</td>
+                    <td>QR Check-in, PR Tracker, Equipment Tutorials, Chat, Shop</td>
+                </tr>
+                <tr>
+                    <td><strong>Coach Studio</strong></td>
+                    <td>Certified Trainers</td>
+                    <td>Coach Shell inside App</td>
+                    <td>Client Management, In-Chat Proposals, Group Classes</td>
+                </tr>
+                <tr>
+                    <td><strong>Admin Center</strong></td>
+                    <td>Gym Owner &amp; Staff</td>
+                    <td>Desktop Browser Terminal</td>
+                    <td>Turnstile Scanner, Pass Renewals, POS Shop, PDF Reports</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2 class="section-title">2. The Problems FordaGO Solved</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Legacy Problem</th>
+                    <th>Operational Impact on Gym</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Paper Attendance Logbooks</strong></td>
+                    <td>Queue congestion during peak hours; vulnerable to fake signatures and damaged logs.</td>
+                </tr>
+                <tr>
+                    <td><strong>Manual Pass Tracking</strong></td>
+                    <td>Staff had to memorize or manually calculate pass expirations, leading to uncollected dues.</td>
+                </tr>
+                <tr>
+                    <td><strong>Improper Machine Execution</strong></td>
+                    <td>Novice members risked muscle injuries due to absence of immediate machine tutorials.</td>
+                </tr>
+                <tr>
+                    <td><strong>Informal Coaching</strong></td>
+                    <td>Coaches had no formal system to monetize and track client workout routines.</td>
+                </tr>
+                <tr>
+                    <td><strong>Supplement Stock Losses</strong></td>
+                    <td>Counter sales suffered from unaccounted stock losses and cash reconciliation mismatches.</td>
+                </tr>
+                <tr>
+                    <td><strong>Manual Financial Reports</strong></td>
+                    <td>Monthly reports required tedious manual computation subject to human math errors.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2 class="section-title">3. User Roles &amp; Permissions</h2>
+        <div class="bullet-item"><strong>• Member:</strong> Regular client. Generates QR entry pass, tracks PRs, views equipment tutorials, chats with coaches, and orders supplements.</div>
+        <div class="bullet-item"><strong>• Coach:</strong> Accredited trainer. Manages clients, sends workout proposals with fees in chat, creates group classes, and tracks monthly earnings.</div>
+        <div class="bullet-item"><strong>• Employee:</strong> Front-desk staff. Scans member QR passes, confirms/rejects check-ins, and verifies GCash/Cash orders.</div>
+        <div class="bullet-item"><strong>• Super Admin:</strong> Owner &amp; Lead Administrator. Full authority over coach accounts, equipment tutorials, membership fees, and financial PDF analytics.</div>
+
+        <h2 class="section-title">4. Complete Technology Stack Matrix</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Technology</th>
+                    <th>Domain</th>
+                    <th>Exact Purpose in FordaGO</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>Ionic 8</strong></td><td>Frontend UI</td><td>Mobile components (tabs, modals, buttons) for cross-platform app.</td></tr>
+                <tr><td><strong>Angular 18</strong></td><td>Frontend Engine</td><td>Single Page App (SPA) routing, state management, and Route Guards.</td></tr>
+                <tr><td><strong>TypeScript</strong></td><td>Language</td><td>Compile-time type checking to prevent runtime errors (82.8% of repo).</td></tr>
+                <tr><td><strong>Capacitor Core</strong></td><td>Native Bridge</td><td>Wraps the web app into an installable Android APK.</td></tr>
+                <tr><td><strong>Barcode Scanner</strong></td><td>Hardware Camera</td><td>Activates native Android camera for instant equipment QR scanning.</td></tr>
+                <tr><td><strong>HTML5-QRCode</strong></td><td>Webcam Scanner</td><td>Powers the desktop front-desk turnstile webcam scanner.</td></tr>
+                <tr><td><strong>angularx-qrcode</strong></td><td>QR Generator</td><td>Renders 2D encrypted QR membership passes on member phone screens.</td></tr>
+                <tr><td><strong>jsPDF &amp; AutoTable</strong></td><td>PDF Reports</td><td>Generates attendance, sales, and inventory PDF reports in browser.</td></tr>
+                <tr><td><strong>Laravel Echo &amp; Pusher</strong></td><td>WebSockets Client</td><td>Listens for incoming real-time chat messages and notifications.</td></tr>
+                <tr><td><strong>Firebase FCM</strong></td><td>Push Alerts</td><td>Sends background push notifications to Android phones when app is closed.</td></tr>
+                <tr><td><strong>SCSS (Sass)</strong></td><td>Design System</td><td>Custom dark fitness mode styling, glassmorphism, and responsive layout.</td></tr>
+                <tr><td><strong>RxJS</strong></td><td>Async Streams</td><td>Manages non-blocking HTTP API requests and live event subscriptions.</td></tr>
+                <tr><td><strong>Laravel 11</strong></td><td>Backend REST API</td><td>Processes 120+ REST API endpoints, business logic, and security rules.</td></tr>
+                <tr><td><strong>PHP 8.2+</strong></td><td>Server Language</td><td>Executes backend logic with fast execution speed and strong typing.</td></tr>
+                <tr><td><strong>Laravel Sanctum</strong></td><td>Authentication</td><td>Issues encrypted SHA-256 Bearer Tokens for secure mobile API requests.</td></tr>
+                <tr><td><strong>Bcrypt</strong></td><td>Password Security</td><td>One-way salted password hashing to protect member credentials.</td></tr>
+                <tr><td><strong>Laravel Reverb (:8080)</strong></td><td>WebSockets Server</td><td>Native server handling sub-50ms live chat and turnstile signaling.</td></tr>
+                <tr><td><strong>ACID Transactions</strong></td><td>Data Integrity</td><td>All-or-Nothing execution for shop checkouts to prevent data corruption.</td></tr>
+                <tr><td><strong>Row-Level Locking</strong></td><td>Concurrency Shield</td><td>Locks product stock during checkout to prevent duplicate inventory buying.</td></tr>
+                <tr><td><strong>MySQL 8.0 (3NF)</strong></td><td>Database</td><td>21 normalized tables with foreign keys eliminating data redundancy.</td></tr>
+                <tr><td><strong>Linux Cloud VPS</strong></td><td>Server Host</td><td>24/7 dedicated online cloud host with Static Public IPv4 address.</td></tr>
+                <tr><td><strong>Docker &amp; Podman</strong></td><td>Containers</td><td>Isolates 6 micro-services (db, backend, reverb, queue, frontend, gateway).</td></tr>
+                <tr><td><strong>Nginx</strong></td><td>Reverse Proxy</td><td>Routes web traffic on port 80/443 with SSL and Gzip compression.</td></tr>
+                <tr><td><strong>deploy.sh</strong></td><td>DevOps Script</td><td>1-Click automated deployment script on the production server.</td></tr>
+            </tbody>
+        </table>
+
+        <h2 class="section-title">5. Relational Database Design (21 Tables)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Table Name</th>
+                    <th>Entity Description &amp; Data Stored</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><code>users</code></td><td>All user accounts (members, coaches, staff, admin) with roles and pass info.</td></tr>
+                <tr><td><code>personal_access_tokens</code></td><td>Sanctum Bearer authentication tokens per active device session.</td></tr>
+                <tr><td><code>attendance</code></td><td>QR check-in logs with member IDs, timestamps, and pass verification status.</td></tr>
+                <tr><td><code>products</code></td><td>Supplement shop catalog with prices, stock count, and images.</td></tr>
+                <tr><td><code>orders</code></td><td>Purchase records with payment methods (Cash/GCash) and approval flags.</td></tr>
+                <tr><td><code>equipment</code></td><td>Gym machines with muscle group tags, tutorial instructions, and photos.</td></tr>
+                <tr><td><code>equipment_scan_logs</code></td><td>Usage logs recording which member scanned which machine at what time.</td></tr>
+                <tr><td><code>sessions</code></td><td>Gym group fitness schedule with time, location, and capacity.</td></tr>
+                <tr><td><code>notifications</code></td><td>Broadcast and direct notifications with read/unread flags.</td></tr>
+                <tr><td><code>workouts</code></td><td>Weekly routine split plans configured by members (Monday-Sunday).</td></tr>
+                <tr><td><code>workout_sessions</code></td><td>Recorded workout exercise logs tracking sets and reps completed.</td></tr>
+                <tr><td><code>personal_records</code></td><td>Lifter Personal Records (PRs) tracking maximum weight achievements.</td></tr>
+                <tr><td><code>conversations</code></td><td>Coaching chat threads between members and certified coaches.</td></tr>
+                <tr><td><code>messages</code></td><td>Individual chat messages with sender ID, text payload, and timestamp.</td></tr>
+                <tr><td><code>workout_plan_proposals</code></td><td>Custom training proposals sent by coaches with fees and target dates.</td></tr>
+                <tr><td><code>workout_plan_items</code></td><td>Individual exercise items and sets inside a workout proposal.</td></tr>
+                <tr><td><code>coach_profiles</code></td><td>Coach biographical info, fitness specialization, and contract expiry.</td></tr>
+                <tr><td><code>coach_availability</code></td><td>Recurring weekly working hours defined by coaches.</td></tr>
+                <tr><td><code>coach_programs</code></td><td>Reusable workout templates created by coaches for public booking.</td></tr>
+                <tr><td><code>coach_program_items</code></td><td>Exercise routines nested inside coach workout templates.</td></tr>
+                <tr><td><code>program_bookings</code></td><td>Member reservations for public group classes.</td></tr>
+                <tr><td><code>feedbacks</code></td><td>System rating scores collected from the ISO 25010 evaluation.</td></tr>
+                <tr><td><code>password_resets</code></td><td>Time-limited 6-digit OTP codes for account password recovery.</td></tr>
+            </tbody>
+        </table>
+
+        <h2 class="section-title">6. ISO/IEC 25010 Software Quality Results</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Evaluator Category</th>
+                    <th>Mean Score (out of 4.00)</th>
+                    <th>Verbal Interpretation</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>IT Experts (Technical Panelists)</strong></td><td><strong>3.75</strong></td><td>Strongly Agree (Highly Acceptable)</td></tr>
+                <tr><td><strong>Gym Staff &amp; Accredited Coaches</strong></td><td><strong>3.84</strong></td><td>Strongly Agree (Highly Acceptable)</td></tr>
+                <tr><td><strong>Gym Members &amp; Lifters</strong></td><td><strong>3.82</strong></td><td>Strongly Agree (Highly Acceptable)</td></tr>
+                <tr style="background-color: #e0f2fe; font-weight: bold;">
+                    <td>Overall Grand Mean</td><td>3.80</td><td>Strongly Agree (Highly Acceptable)</td></tr>
+            </tbody>
+        </table>
+
+        <h2 class="section-title">7. High-Yield Defense Q&amp;A Master Script</h2>
+
+        <div class="qa-card">
+            <div class="question">Q1: What is the main objective of FordaGO?</div>
+            <div class="answer"><strong>Answer:</strong> FordaGO was developed to completely modernize and digitize the manual operations of AFFORDA Gym in Cabiao, Nueva Ecija. It eliminates paper logbooks, automates QR turnstile access, provides on-demand equipment tutorials, empowers coaches to monetize workout plans, and automates supplement inventory and financial reporting.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="question">Q2: Why did you choose Ionic 8 and Angular 18 for the frontend?</div>
+            <div class="answer"><strong>Answer:</strong> Ionic 8 combined with Angular 18 allowed our team to maintain a single unified codebase that compiles simultaneously into a high-performance native Android APK (via Capacitor) and a responsive desktop web application. Angular provides enterprise-grade structure with strong TypeScript typing and modular Route Guards, while Ionic delivers pre-built mobile UI components with native swipe gestures.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="question">Q3: How does the system prevent race conditions when two members buy the last supplement item at the same time?</div>
+            <div class="answer"><strong>Answer:</strong> The system utilizes ACID Database Transactions paired with Pessimistic Row-Level Locking (<code>lockForUpdate()</code> in Laravel). When a checkout begins, the database locks that specific product row. The second checkout waits until the first finishes. Once stock reaches zero, the second checkout cleanly returns an "Out of Stock" error, preventing negative inventory.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="question">Q4: How does the Turnstile Scanner prevent members from sharing their QR pass with friends?</div>
+            <div class="answer"><strong>Answer:</strong> The system implements a server-side Anti-Pass-Sharing algorithm. When a QR code is scanned, the server checks both membership expiry and the timestamp of the last check-in. If the same QR code is presented again within a lockout window, the scanner flags it as a duplicate access violation and alerts staff.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="question">Q5: Why does GitHub display 82.8% TypeScript and only 4.2% PHP?</div>
+            <div class="answer"><strong>Answer:</strong> GitHub Linguist analyzes only custom tracked source code in the repository. In Angular 18, every screen requires separate TypeScript files for components, services, route guards, and data models across 30+ pages. In contrast, the vast codebase of Laravel Framework and Reverb resides inside the <code>vendor/</code> directory (which is excluded via <code>.gitignore</code>). The 4.2% PHP represents our custom business logic, 21 controllers, and 120+ REST endpoints written with high expressiveness.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="question">Q6: How does real-time communication work in FordaGO?</div>
+            <div class="answer"><strong>Answer:</strong> FordaGO runs a dedicated WebSocket server using Laravel Reverb on port 8080. When a user sends a chat message or creates a workout proposal, Laravel broadcasts an event to private, authorized WebSocket channels. Connected clients running Laravel Echo receive and render the payload in under 50 milliseconds without polling or manual page refreshing.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="question">Q7: What is the purpose of Docker in your deployment strategy?</div>
+            <div class="answer"><strong>Answer:</strong> Docker containerization packages the entire application ecosystem (MySQL, PHP-FPM API, Reverb WebSocket, Queue Worker, Frontend SPA, and Nginx Gateway) into isolated, portable environments. This eliminates the "it works on my machine" problem, ensuring identical behavior across local development laptops, testing environments, and the cloud production VPS.</div>
+        </div>
+
+        <div class="qa-card">
+            <div class="question">Q8: What statistical results did FordaGO achieve during the ISO/IEC 25010 evaluation?</div>
+            <div class="answer"><strong>Answer:</strong> FordaGO attained an overall grand mean of 3.80 out of 4.00, interpreted as "Strongly Agree / Highly Acceptable." IT Experts rated the system at 3.75, Gym Staff and Coaches rated it at 3.84, and Gym Members rated it at 3.82, confirming that the system excels in functional suitability, performance, compatibility, usability, and security.</div>
+        </div>
+
+        <p style="text-align: center; color: #94a3b8; font-size: 0.9rem; margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+            © 2026 FordaGO Capstone Team — NEUST San Isidro Campus. All Rights Reserved.
+        </p>
+    </div>
+</body>
+</html>

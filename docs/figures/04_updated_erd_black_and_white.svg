@@ -1,0 +1,332 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2560 1440" width="2560" height="1440" style="background-color: #ffffff; font-family: 'Segoe UI', Arial, sans-serif;">
+  <defs>
+    <style>
+      .erd-title { font-size: 30px; font-weight: bold; fill: #000000; text-anchor: middle; }
+      .erd-sub { font-size: 15px; fill: #444444; text-anchor: middle; }
+      .table-box { fill: #ffffff; stroke: #000000; stroke-width: 2px; rx: 4px; }
+      .th-box { fill: #f0f0f0; stroke: #000000; stroke-width: 2px; }
+      .th-txt { font-size: 13px; font-weight: bold; fill: #000000; }
+      .th-sub { font-size: 10px; fill: #555555; text-anchor: end; font-style: italic; }
+      .f-type { font-size: 11px; fill: #444444; font-family: 'Consolas', monospace; }
+      .f-name { font-size: 11.5px; fill: #000000; font-family: 'Consolas', monospace; font-weight: bold; }
+      .pk-txt { fill: #000000; font-size: 9.5px; font-weight: bold; font-family: sans-serif; }
+      .fk-txt { fill: #000000; font-size: 9.5px; font-weight: bold; font-family: sans-serif; }
+      .rel-line { stroke: #000000; stroke-width: 1.8; fill: none; }
+      .rel-dash { stroke: #000000; stroke-width: 1.8; fill: none; stroke-dasharray: 5,5; }
+    </style>
+    
+    <marker id="cf" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 6 L 0 11 M 10 0 L 10 12" stroke="#000000" stroke-width="1.8" fill="none" />
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="1280" y="55" class="erd-title">Figure 4. Updated Entity-Relationship Diagram (ERD) of FordaGO</text>
+  <text x="1280" y="85" class="erd-sub">Complete 3NF Normalized Relational Database Schema &middot; AFFORDA Gym – Cabiao Branch</text>
+
+  <!-- Outer Border -->
+  <rect x="40" y="110" width="2480" height="1280" rx="8" fill="#ffffff" stroke="#000000" stroke-width="2" />
+
+  <!-- ==================== RELATIONSHIP LINES (100% Connected) ==================== -->
+  <!-- 1. USERS -> ATTENDANCE -->
+  <path d="M 1240 480 L 1240 600" class="rel-line" marker-end="url(#cf)" />
+  
+  <!-- 2. USERS -> NOTIFICATIONS -->
+  <path d="M 1390 200 L 1620 200" class="rel-line" marker-end="url(#cf)" />
+  
+  <!-- 3. USERS -> COACH_PROFILES -->
+  <path d="M 1090 200 L 880 200" class="rel-line" marker-end="url(#cf)" />
+  
+  <!-- 4. USERS -> PERSONAL_RECORDS -->
+  <path d="M 1090 350 L 650 350 L 650 480" class="rel-line" marker-end="url(#cf)" />
+  
+  <!-- 5. USERS -> WORKOUT_SESSIONS -->
+  <path d="M 1090 420 L 950 420 L 950 580" class="rel-line" marker-end="url(#cf)" />
+  
+  <!-- 6. USERS -> ORDERS -->
+  <path d="M 1390 420 L 1600 420 L 1600 680" class="rel-line" marker-end="url(#cf)" />
+  
+  <!-- 7. PRODUCTS -> ORDERS -->
+  <path d="M 1860 780 L 1740 780" class="rel-line" marker-end="url(#cf)" />
+  
+  <!-- 8. COACH_PROFILES -> CONVERSATIONS (coach_id) -->
+  <path d="M 740 360 L 740 420 L 310 420 L 310 480" class="rel-line" marker-end="url(#cf)" />
+  
+  <!-- 9. USERS -> CONVERSATIONS (client_id) -->
+  <path d="M 1090 270 L 450 270 L 450 540" class="rel-dash" marker-end="url(#cf)" />
+  
+  <!-- 10. CONVERSATIONS -> MESSAGES -->
+  <path d="M 270 660 L 270 780" class="rel-line" marker-end="url(#cf)" />
+  
+  <!-- 11. CONVERSATIONS -> WORKOUT_PLAN_PROPOSALS -->
+  <path d="M 400 660 L 400 720 L 600 720 L 600 780" class="rel-line" marker-end="url(#cf)" />
+  
+  <!-- 12. WORKOUT_PLAN_PROPOSALS -> MESSAGES (proposal_id) -->
+  <path d="M 460 890 L 410 890" class="rel-dash" marker-end="url(#cf)" />
+  
+  <!-- 13. WORKOUT_PLAN_PROPOSALS -> WORKOUT_SESSIONS (proposal_id) -->
+  <path d="M 750 860 L 820 860 L 820 800" class="rel-dash" marker-end="url(#cf)" />
+
+  <!-- 14. USERS -> FEEDBACKS -->
+  <path d="M 1390 350 L 1625 350 L 1625 420" class="rel-line" marker-end="url(#cf)" />
+  
+  <!-- 15. EQUIPMENT -> EQUIPMENT_SCAN_LOGS -->
+  <path d="M 2250 370 L 2250 480" class="rel-line" marker-end="url(#cf)" />
+  
+  <!-- 16. USERS -> EQUIPMENT_SCAN_LOGS -->
+  <path d="M 1390 270 L 2020 270 L 2020 560 L 2120 560" class="rel-dash" marker-end="url(#cf)" />
+
+
+  <!-- ==================== TABLES ==================== -->
+
+  <!-- 1. CENTRAL TABLE: USERS -->
+  <g transform="translate(1090, 140)">
+    <rect width="300" height="340" class="table-box" />
+    <rect width="300" height="34" class="th-box" />
+    <text x="14" y="22" class="th-txt">users</text>
+    <text x="286" y="22" class="th-sub">Core User Account</text>
+    <g transform="translate(14, 52)">
+      <text y="0" class="f-type">INT</text><text x="105" y="0" class="f-name">id</text><text x="250" y="0" class="pk-txt">[PK]</text>
+      <text y="18" class="f-type">VARCHAR(100)</text><text x="105" y="18" class="f-name">username</text>
+      <text y="36" class="f-type">VARCHAR(100)</text><text x="105" y="36" class="f-name">first_name</text>
+      <text y="54" class="f-type">VARCHAR(100)</text><text x="105" y="54" class="f-name">last_name</text>
+      <text y="72" class="f-type">VARCHAR(150)</text><text x="105" y="72" class="f-name">email</text>
+      <text y="90" class="f-type">VARCHAR(255)</text><text x="105" y="90" class="f-name">password</text>
+      <text y="108" class="f-type">ENUM</text><text x="105" y="108" class="f-name">role</text>
+      <text y="126" class="f-type">VARCHAR(20)</text><text x="105" y="126" class="f-name">phone</text>
+      <text y="144" class="f-type">ENUM</text><text x="105" y="144" class="f-name">gender</text>
+      <text y="162" class="f-type">LONGTEXT</text><text x="105" y="162" class="f-name">profile_image</text>
+      <text y="180" class="f-type">ENUM</text><text x="105" y="180" class="f-name">membership_type</text>
+      <text y="198" class="f-type">ENUM</text><text x="105" y="198" class="f-name">membership_status</text>
+      <text y="216" class="f-type">ENUM</text><text x="105" y="216" class="f-name">payment_method</text>
+      <text y="234" class="f-type">DATE</text><text x="105" y="234" class="f-name">membership_expiry</text>
+      <text y="252" class="f-type">TIMESTAMP</text><text x="105" y="252" class="f-name">created_at</text>
+    </g>
+  </g>
+
+  <!-- 2. ATTENDANCE -->
+  <g transform="translate(1100, 600)">
+    <rect width="280" height="210" class="table-box" />
+    <rect width="280" height="34" class="th-box" />
+    <text x="14" y="22" class="th-txt">attendance</text>
+    <text x="266" y="22" class="th-sub">Turnstile Check-In</text>
+    <g transform="translate(14, 52)">
+      <text y="0" class="f-type">INT</text><text x="95" y="0" class="f-name">id</text><text x="235" y="0" class="pk-txt">[PK]</text>
+      <text y="18" class="f-type">INT</text><text x="95" y="18" class="f-name">user_id</text><text x="235" y="18" class="fk-txt">[FK]</text>
+      <text y="36" class="f-type">DATETIME</text><text x="95" y="36" class="f-name">check_in_time</text>
+      <text y="54" class="f-type">ENUM</text><text x="95" y="54" class="f-name">membership_type</text>
+      <text y="72" class="f-type">ENUM</text><text x="95" y="72" class="f-name">payment_status</text>
+      <text y="90" class="f-type">INT</text><text x="95" y="90" class="f-name">confirmed_by</text><text x="235" y="90" class="fk-txt">[FK]</text>
+      <text y="108" class="f-type">DATETIME</text><text x="95" y="108" class="f-name">confirmed_at</text>
+      <text y="126" class="f-type">TEXT</text><text x="95" y="126" class="f-name">notes</text>
+    </g>
+  </g>
+
+  <!-- 3. COACH_PROFILES -->
+  <g transform="translate(600, 130)">
+    <rect width="280" height="230" class="table-box" />
+    <rect width="280" height="34" class="th-box" />
+    <text x="14" y="22" class="th-txt">coach_profiles</text>
+    <text x="266" y="22" class="th-sub">Trainer Credentials</text>
+    <g transform="translate(14, 52)">
+      <text y="0" class="f-type">INT</text><text x="100" y="0" class="f-name">id</text><text x="235" y="0" class="pk-txt">[PK]</text>
+      <text y="18" class="f-type">INT</text><text x="100" y="18" class="f-name">user_id</text><text x="235" y="18" class="fk-txt">[FK]</text>
+      <text y="36" class="f-type">TEXT</text><text x="100" y="36" class="f-name">specialties</text>
+      <text y="54" class="f-type">DECIMAL(10,2)</text><text x="100" y="54" class="f-name">rate_per_session</text>
+      <text y="72" class="f-type">TEXT</text><text x="100" y="72" class="f-name">bio</text>
+      <text y="90" class="f-type">LONGTEXT</text><text x="100" y="90" class="f-name">photo_url</text>
+      <text y="108" class="f-type">BOOLEAN</text><text x="100" y="108" class="f-name">is_active</text>
+      <text y="126" class="f-type">DATE</text><text x="100" y="126" class="f-name">contract_expiry</text>
+    </g>
+  </g>
+
+  <!-- 4. CONVERSATIONS -->
+  <g transform="translate(180, 480)">
+    <rect width="260" height="180" class="table-box" />
+    <rect width="260" height="34" class="th-box" />
+    <text x="14" y="22" class="th-txt">conversations</text>
+    <text x="246" y="22" class="th-sub">1-on-1 Chat Rooms</text>
+    <g transform="translate(14, 52)">
+      <text y="0" class="f-type">INT</text><text x="85" y="0" class="f-name">id</text><text x="215" y="0" class="pk-txt">[PK]</text>
+      <text y="20" class="f-type">INT</text><text x="85" y="20" class="f-name">coach_id</text><text x="215" y="20" class="fk-txt">[FK]</text>
+      <text y="40" class="f-type">INT</text><text x="85" y="40" class="f-name">client_id</text><text x="215" y="40" class="fk-txt">[FK]</text>
+      <text y="60" class="f-type">ENUM</text><text x="85" y="60" class="f-name">status</text>
+      <text y="80" class="f-type">TIMESTAMP</text><text x="85" y="80" class="f-name">created_at</text>
+    </g>
+  </g>
+
+  <!-- 5. MESSAGES -->
+  <g transform="translate(140, 780)">
+    <rect width="270" height="230" class="table-box" />
+    <rect width="270" height="34" class="th-box" />
+    <text x="14" y="22" class="th-txt">messages</text>
+    <text x="256" y="22" class="th-sub">Live Chat History</text>
+    <g transform="translate(14, 52)">
+      <text y="0" class="f-type">INT</text><text x="100" y="0" class="f-name">id</text><text x="225" y="0" class="pk-txt">[PK]</text>
+      <text y="18" class="f-type">INT</text><text x="100" y="18" class="f-name">conversation_id</text><text x="225" y="18" class="fk-txt">[FK]</text>
+      <text y="36" class="f-type">INT</text><text x="100" y="36" class="f-name">sender_id</text><text x="225" y="36" class="fk-txt">[FK]</text>
+      <text y="54" class="f-type">TEXT</text><text x="100" y="54" class="f-name">body</text>
+      <text y="72" class="f-type">ENUM</text><text x="100" y="72" class="f-name">type</text>
+      <text y="90" class="f-type">INT</text><text x="100" y="90" class="f-name">proposal_id</text><text x="225" y="90" class="fk-txt">[FK]</text>
+      <text y="108" class="f-type">DATETIME</text><text x="100" y="108" class="f-name">read_at</text>
+      <text y="126" class="f-type">TIMESTAMP</text><text x="100" y="126" class="f-name">created_at</text>
+    </g>
+  </g>
+
+  <!-- 6. WORKOUT_PLAN_PROPOSALS -->
+  <g transform="translate(460, 780)">
+    <rect width="290" height="240" class="table-box" />
+    <rect width="290" height="34" class="th-box" />
+    <text x="14" y="22" class="th-txt">workout_plan_proposals</text>
+    <text x="276" y="22" class="th-sub">Coach Proposals</text>
+    <g transform="translate(14, 52)">
+      <text y="0" class="f-type">INT</text><text x="105" y="0" class="f-name">id</text><text x="245" y="0" class="pk-txt">[PK]</text>
+      <text y="18" class="f-type">INT</text><text x="105" y="18" class="f-name">conversation_id</text><text x="245" y="18" class="fk-txt">[FK]</text>
+      <text y="36" class="f-type">INT</text><text x="105" y="36" class="f-name">coach_id</text><text x="245" y="36" class="fk-txt">[FK]</text>
+      <text y="54" class="f-type">INT</text><text x="105" y="54" class="f-name">client_id</text><text x="245" y="54" class="fk-txt">[FK]</text>
+      <text y="72" class="f-type">VARCHAR(150)</text><text x="105" y="72" class="f-name">title</text>
+      <text y="90" class="f-type">DECIMAL(10,2)</text><text x="105" y="90" class="f-name">price</text>
+      <text y="108" class="f-type">DATE</text><text x="105" y="108" class="f-name">scheduled_date</text>
+      <text y="126" class="f-type">ENUM</text><text x="105" y="126" class="f-name">status</text>
+    </g>
+  </g>
+
+  <!-- 7. PERSONAL_RECORDS -->
+  <g transform="translate(520, 480)">
+    <rect width="260" height="180" class="table-box" />
+    <rect width="260" height="34" class="th-box" />
+    <text x="14" y="22" class="th-txt">personal_records</text>
+    <text x="246" y="22" class="th-sub">PR Milestones</text>
+    <g transform="translate(14, 52)">
+      <text y="0" class="f-type">INT</text><text x="95" y="0" class="f-name">id</text><text x="215" y="0" class="pk-txt">[PK]</text>
+      <text y="20" class="f-type">INT</text><text x="95" y="20" class="f-name">user_id</text><text x="215" y="20" class="fk-txt">[FK]</text>
+      <text y="40" class="f-type">VARCHAR(100)</text><text x="95" y="40" class="f-name">exercise_name</text>
+      <text y="60" class="f-type">DECIMAL(8,2)</text><text x="95" y="60" class="f-name">max_weight</text>
+      <text y="80" class="f-type">INT</text><text x="95" y="80" class="f-name">reps</text>
+      <text y="100" class="f-type">DATE</text><text x="95" y="100" class="f-name">achieved_at</text>
+    </g>
+  </g>
+
+  <!-- 8. WORKOUT_SESSIONS -->
+  <g transform="translate(820, 580)">
+    <rect width="270" height="250" class="table-box" />
+    <rect width="270" height="34" class="th-box" />
+    <text x="14" y="22" class="th-txt">workout_sessions</text>
+    <text x="256" y="22" class="th-sub">Daily Split Planner</text>
+    <g transform="translate(14, 52)">
+      <text y="0" class="f-type">INT</text><text x="100" y="0" class="f-name">id</text><text x="225" y="0" class="pk-txt">[PK]</text>
+      <text y="18" class="f-type">INT</text><text x="100" y="18" class="f-name">user_id</text><text x="225" y="18" class="fk-txt">[FK]</text>
+      <text y="36" class="f-type">VARCHAR(100)</text><text x="100" y="36" class="f-name">client_session_id</text>
+      <text y="54" class="f-type">INT</text><text x="100" y="54" class="f-name">coach_id</text><text x="225" y="54" class="fk-txt">[FK]</text>
+      <text y="72" class="f-type">INT</text><text x="100" y="72" class="f-name">proposal_id</text><text x="225" y="72" class="fk-txt">[FK]</text>
+      <text y="90" class="f-type">DATE</text><text x="100" y="90" class="f-name">session_date</text>
+      <text y="108" class="f-type">VARCHAR(50)</text><text x="100" y="108" class="f-name">split_day</text>
+      <text y="126" class="f-type">JSON</text><text x="100" y="126" class="f-name">exercises</text>
+      <text y="144" class="f-type">DATETIME</text><text x="100" y="144" class="f-name">completed_at</text>
+    </g>
+  </g>
+
+  <!-- 9. ORDERS -->
+  <g transform="translate(1470, 680)">
+    <rect width="270" height="240" class="table-box" />
+    <rect width="270" height="34" class="th-box" />
+    <text x="14" y="22" class="th-txt">orders</text>
+    <text x="256" y="22" class="th-sub">Shop POS Orders</text>
+    <g transform="translate(14, 52)">
+      <text y="0" class="f-type">INT</text><text x="100" y="0" class="f-name">id</text><text x="225" y="0" class="pk-txt">[PK]</text>
+      <text y="18" class="f-type">INT</text><text x="100" y="18" class="f-name">user_id</text><text x="225" y="18" class="fk-txt">[FK]</text>
+      <text y="36" class="f-type">INT</text><text x="100" y="36" class="f-name">product_id</text><text x="225" y="36" class="fk-txt">[FK]</text>
+      <text y="54" class="f-type">INT</text><text x="100" y="54" class="f-name">quantity</text>
+      <text y="72" class="f-type">DECIMAL(10,2)</text><text x="100" y="72" class="f-name">total</text>
+      <text y="90" class="f-type">ENUM</text><text x="100" y="90" class="f-name">status</text>
+      <text y="108" class="f-type">VARCHAR(100)</text><text x="100" y="108" class="f-name">order_group_id</text>
+      <text y="126" class="f-type">ENUM</text><text x="100" y="126" class="f-name">payment_method</text>
+    </g>
+  </g>
+
+  <!-- 10. PRODUCTS -->
+  <g transform="translate(1860, 680)">
+    <rect width="260" height="210" class="table-box" />
+    <rect width="260" height="34" class="th-box" />
+    <text x="14" y="22" class="th-txt">products</text>
+    <text x="246" y="22" class="th-sub">Supplement Inventory</text>
+    <g transform="translate(14, 52)">
+      <text y="0" class="f-type">INT</text><text x="95" y="0" class="f-name">id</text><text x="215" y="0" class="pk-txt">[PK]</text>
+      <text y="18" class="f-type">VARCHAR(150)</text><text x="95" y="18" class="f-name">name</text>
+      <text y="36" class="f-type">VARCHAR(100)</text><text x="95" y="36" class="f-name">brand</text>
+      <text y="54" class="f-type">DECIMAL(10,2)</text><text x="95" y="54" class="f-name">price</text>
+      <text y="72" class="f-type">INT</text><text x="95" y="72" class="f-name">stock</text>
+      <text y="90" class="f-type">VARCHAR(255)</text><text x="95" y="90" class="f-name">image_url</text>
+    </g>
+  </g>
+
+  <!-- 11. NOTIFICATIONS -->
+  <g transform="translate(1620, 120)">
+    <rect width="260" height="200" class="table-box" />
+    <rect width="260" height="34" class="th-box" />
+    <text x="14" y="22" class="th-txt">notifications</text>
+    <text x="246" y="22" class="th-sub">Push Alerts</text>
+    <g transform="translate(14, 52)">
+      <text y="0" class="f-type">INT</text><text x="95" y="0" class="f-name">id</text><text x="215" y="0" class="pk-txt">[PK]</text>
+      <text y="20" class="f-type">INT</text><text x="95" y="20" class="f-name">user_id</text><text x="215" y="20" class="fk-txt">[FK]</text>
+      <text y="40" class="f-type">VARCHAR(150)</text><text x="95" y="40" class="f-name">title</text>
+      <text y="60" class="f-type">TEXT</text><text x="95" y="60" class="f-name">message</text>
+      <text y="80" class="f-type">BOOLEAN</text><text x="95" y="80" class="f-name">is_read</text>
+    </g>
+  </g>
+
+  <!-- 12. FEEDBACKS -->
+  <g transform="translate(1500, 420)">
+    <rect width="250" height="160" class="table-box" />
+    <rect width="250" height="34" class="th-box" />
+    <text x="14" y="22" class="th-txt">feedbacks</text>
+    <text x="236" y="22" class="th-sub">Member Ratings</text>
+    <g transform="translate(14, 52)">
+      <text y="0" class="f-type">INT</text><text x="85" y="0" class="f-name">id</text><text x="205" y="0" class="pk-txt">[PK]</text>
+      <text y="20" class="f-type">INT</text><text x="85" y="20" class="f-name">user_id</text><text x="205" y="20" class="fk-txt">[FK]</text>
+      <text y="40" class="f-type">INT</text><text x="85" y="40" class="f-name">rating</text>
+      <text y="60" class="f-type">TEXT</text><text x="85" y="60" class="f-name">comments</text>
+    </g>
+  </g>
+
+  <!-- 13. EQUIPMENT -->
+  <g transform="translate(2120, 160)">
+    <rect width="260" height="210" class="table-box" />
+    <rect width="260" height="34" class="th-box" />
+    <text x="14" y="22" class="th-txt">equipment</text>
+    <text x="246" y="22" class="th-sub">Machine Placards</text>
+    <g transform="translate(14, 52)">
+      <text y="0" class="f-type">INT</text><text x="95" y="0" class="f-name">id</text><text x="215" y="0" class="pk-txt">[PK]</text>
+      <text y="18" class="f-type">VARCHAR(150)</text><text x="95" y="18" class="f-name">name</text>
+      <text y="36" class="f-type">VARCHAR(100)</text><text x="95" y="36" class="f-name">category</text>
+      <text y="54" class="f-type">VARCHAR(100)</text><text x="95" y="54" class="f-name">muscle_group</text>
+      <text y="72" class="f-type">VARCHAR(100)</text><text x="95" y="72" class="f-name">qr_code</text>
+      <text y="90" class="f-type">TEXT</text><text x="95" y="90" class="f-name">description</text>
+    </g>
+  </g>
+
+  <!-- 14. EQUIPMENT_SCAN_LOGS -->
+  <g transform="translate(2120, 480)">
+    <rect width="260" height="180" class="table-box" />
+    <rect width="260" height="34" class="th-box" />
+    <text x="14" y="22" class="th-txt">equipment_scan_logs</text>
+    <text x="246" y="22" class="th-sub">QR Analytics</text>
+    <g transform="translate(14, 52)">
+      <text y="0" class="f-type">INT</text><text x="95" y="0" class="f-name">id</text><text x="215" y="0" class="pk-txt">[PK]</text>
+      <text y="20" class="f-type">INT</text><text x="95" y="20" class="f-name">user_id</text><text x="215" y="20" class="fk-txt">[FK]</text>
+      <text y="40" class="f-type">INT</text><text x="95" y="40" class="f-name">equipment_id</text><text x="215" y="40" class="fk-txt">[FK]</text>
+      <text y="60" class="f-type">DATETIME</text><text x="95" y="60" class="f-name">scanned_at</text>
+    </g>
+  </g>
+
+  <!-- Legend -->
+  <g transform="translate(70, 1310)">
+    <rect width="650" height="48" rx="6" fill="#f8fafc" stroke="#000000" stroke-width="1.5" />
+    <text x="20" y="29" font-size="13" font-weight="bold">Legend / Notation:</text>
+    <text x="170" y="29" font-size="12" font-weight="bold">[PK]</text><text x="200" y="29" font-size="12">Primary Key</text>
+    <text x="290" y="29" font-size="12" font-weight="bold">[FK]</text><text x="320" y="29" font-size="12">Foreign Key</text>
+    <line x1="410" y1="25" x2="445" y2="25" stroke="#000000" stroke-width="2" /><text x="455" y="29" font-size="12">1-to-Many (1:N)</text>
+    <line x1="555" y1="25" x2="590" y2="25" stroke="#000000" stroke-width="2" stroke-dasharray="4,4" /><text x="600" y="29" font-size="12">Direct Foreign Ref</text>
+  </g>
+
+</svg>
