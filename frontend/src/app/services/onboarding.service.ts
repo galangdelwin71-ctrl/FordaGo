@@ -36,6 +36,10 @@ export class OnboardingService {
     return this.activeTourSubject.value ? this.activeTourSubject.value.length : 0;
   }
 
+  get activeTourId(): string | null {
+    return this.currentTourId;
+  }
+
   get currentStep(): TourStep | null {
     const tour = this.activeTourSubject.value;
     if (!tour || this.currentStepIndex < 0 || this.currentStepIndex >= tour.length) {
@@ -49,9 +53,18 @@ export class OnboardingService {
    */
   hasUserSeenTour(tourId: string, userId?: string | number): boolean {
     try {
+      if (localStorage.getItem(`${this.tourKeyPrefix}global_all`) === 'true') {
+        return true;
+      }
       const uId = userId || this.getCurrentUserId() || 'guest';
+      if (localStorage.getItem(`${this.tourKeyPrefix}global_all_${uId}`) === 'true') {
+        return true;
+      }
       const key = `${this.tourKeyPrefix}${tourId}_${uId}`;
-      return localStorage.getItem(key) === 'true';
+      return (
+        localStorage.getItem(key) === 'true' ||
+        localStorage.getItem(`${this.tourKeyPrefix}${tourId}`) === 'true'
+      );
     } catch {
       return false;
     }
@@ -65,19 +78,56 @@ export class OnboardingService {
       const uId = userId || this.getCurrentUserId() || 'guest';
       const key = `${this.tourKeyPrefix}${tourId}_${uId}`;
       localStorage.setItem(key, 'true');
+      localStorage.setItem(`${this.tourKeyPrefix}${tourId}`, 'true');
     } catch {
       // Ignore storage write errors
     }
   }
 
   /**
+   * Skips and cancels all guides across all panels permanently for the user.
+   */
+  skipAllTours(userId?: string | number): void {
+    try {
+      localStorage.setItem(`${this.tourKeyPrefix}global_all`, 'true');
+      const uId = userId || this.getCurrentUserId() || 'guest';
+      localStorage.setItem(`${this.tourKeyPrefix}global_all_${uId}`, 'true');
+
+      const allKnownTours = [
+        'dashboard_main',
+        'schedule_main',
+        'schedule_add_modal',
+        'schedule_week_plan_modal',
+        'scanner_main',
+        'shop_main',
+        'equipment_main',
+        'profile_main',
+        'coach_studio_main',
+        'coaching_member_main',
+        'chat_main',
+      ];
+      allKnownTours.forEach((tid) => {
+        localStorage.setItem(`${this.tourKeyPrefix}${tid}_${uId}`, 'true');
+        localStorage.setItem(`${this.tourKeyPrefix}${tid}`, 'true');
+      });
+    } catch {
+      // Ignore storage write errors
+    }
+    this.finishTour();
+  }
+
+  /**
    * Resets tour progress so user can replay the tutorial.
    */
-  resetTour(tourId: string, userId?: string | number): void {
+  resetTour(tourId?: string, userId?: string | number): void {
     try {
+      localStorage.removeItem(`${this.tourKeyPrefix}global_all`);
       const uId = userId || this.getCurrentUserId() || 'guest';
-      const key = `${this.tourKeyPrefix}${tourId}_${uId}`;
-      localStorage.removeItem(key);
+      localStorage.removeItem(`${this.tourKeyPrefix}global_all_${uId}`);
+      if (tourId) {
+        localStorage.removeItem(`${this.tourKeyPrefix}${tourId}_${uId}`);
+        localStorage.removeItem(`${this.tourKeyPrefix}${tourId}`);
+      }
     } catch {
       // Ignore storage errors
     }

@@ -2121,40 +2121,65 @@ ion-content.fordago-page-content {
   font-weight: 700 !important;
 }
 
-/* Seven days fit the phone width; no broken horizontal strip. */
+/* Horizontally scrollable week strip for smooth touch swiping & comfortable touch targets */
 .week-strip {
   width: 100% !important;
-  display: grid !important;
-  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
-  gap: 5px !important;
-  overflow: visible !important;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: stretch !important;
+  gap: 8px !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  scroll-behavior: smooth !important;
+  scroll-snap-type: x proximity !important;
   margin: 0 0 18px !important;
-  padding: 0 !important;
+  padding: 4px 4px 8px 4px !important;
+  scrollbar-width: none !important;
+
+  &::-webkit-scrollbar {
+    display: none !important;
+  }
 }
 
 .day-pill {
-  min-width: 0 !important;
-  width: 100% !important;
-  min-height: 72px !important;
-  padding: 10px 3px 9px !important;
+  flex: 0 0 auto !important;
+  min-width: 62px !important;
+  width: auto !important;
+  min-height: 74px !important;
+  padding: 10px 12px 9px !important;
   gap: 4px !important;
   border: 1px solid var(--schedule-border) !important;
-  border-radius: 13px !important;
+  border-radius: 14px !important;
   background: var(--schedule-panel) !important;
   box-sizing: border-box !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  scroll-snap-align: center !important;
+  transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease !important;
+
+  &:hover {
+    border-color: rgba(255, 214, 0, 0.4) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+  }
+
+  &:active {
+    transform: scale(0.95) !important;
+  }
 }
 
 .day-pill .day-name {
   color: var(--schedule-muted) !important;
-  font-size: clamp(9px, 2.4vw, 11px) !important;
+  font-size: 10px !important;
   font-weight: 700 !important;
-  letter-spacing: 0.4px !important;
+  letter-spacing: 0.5px !important;
   text-transform: uppercase !important;
 }
 
 .day-pill .day-num {
   color: var(--schedule-text) !important;
-  font-size: clamp(15px, 4.5vw, 18px) !important;
+  font-size: 17px !important;
   font-weight: 800 !important;
 }
 
@@ -2849,7 +2874,8 @@ ion-content.fordago-page-content {
 
 // ── Ensure dark mode day-pills are same size as light mode ────────────────────
 .day-pill {
-  min-height: 72px !important;
-  padding: 10px 3px 9px !important;
+  min-height: 74px !important;
+  min-width: 62px !important;
+  padding: 10px 12px 9px !important;
   box-sizing: border-box !important;
 }

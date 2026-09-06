@@ -37,7 +37,7 @@ import { API_URL, resolveImageUrl } from '../config/api.config';
 // Represents one exercise inside a scheduled workout
 export interface WorkoutExercise {
   name: string;
-  sets: number;
+  sets: number | null;
   reps: number | string; // can be "12" or "30 sec"
   color: string;
   done: boolean;         // toggled manually by the member on dashboard
@@ -59,7 +59,7 @@ export interface TodayWorkout {
 
 export interface PersistedScheduleExercise {
   name: string;
-  sets: number;
+  sets: number | null;
   reps: string | number;
   done?: boolean;
 }
@@ -663,7 +663,13 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   private durationToMinutes(duration: string): number {
-    const match = duration.match(/(\d+)/);
+    if (!duration) return 0;
+    const text = duration.toLowerCase();
+    if (text.includes('hr') || text.includes('hour')) {
+      const match = text.match(/([\d.]+)/);
+      return match ? Math.round(parseFloat(match[1]) * 60) : 60;
+    }
+    const match = text.match(/(\d+)/);
     return match ? Number(match[1]) : 0;
   }
 
@@ -756,11 +762,19 @@ export class DashboardPage implements OnInit, OnDestroy {
 
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
-    const completedThisMonth = allSessions.filter((item: { sessionDate: Date; session: PersistedScheduleSession }) =>
-      item.session.status === 'done' &&
-      item.sessionDate.getMonth() === currentMonth &&
-      item.sessionDate.getFullYear() === currentYear
-    );
+    const seenCompletedIds = new Set<string>();
+    const completedThisMonth = allSessions.filter((item: { sessionDate: Date; session: PersistedScheduleSession }) => {
+      if (item.session.status !== 'done') return false;
+      if (item.sessionDate.getMonth() !== currentMonth || item.sessionDate.getFullYear() !== currentYear) return false;
+      const sId = (item.session as any).id;
+      if (sId) {
+        if (seenCompletedIds.has(sId)) {
+          return false;
+        }
+        seenCompletedIds.add(sId);
+      }
+      return true;
+    });
 
     this.sessionsThisMonth = completedThisMonth.length;
     const completedMinutes = completedThisMonth.reduce((total: number, item: { sessionDate: Date; session: PersistedScheduleSession }) => total + this.sessionMinutes(item.session), 0);

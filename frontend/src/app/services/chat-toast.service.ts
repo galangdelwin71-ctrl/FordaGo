@@ -204,7 +204,7 @@ export class ChatToastService {
             smallIcon: 'ic_stat_icon',
             iconColor: '#FFD700',
             actionTypeId: 'CHAT_MESSAGE',
-            schedule: { at: new Date(Date.now() + 50) },
+            schedule: { at: new Date(Date.now() + 50), allowWhileIdle: true },
             extra: {
               type: 'chat',
               conversationId: convo.id,

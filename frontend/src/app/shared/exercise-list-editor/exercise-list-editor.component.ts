@@ -16,7 +16,7 @@ import { NoNegativeDirective } from '../../directives/no-negative.directive';
  */
 export interface EditableExercise {
   name: string;
-  sets: number;
+  sets: number | null;
   reps: string;
   done?: boolean;
 }
@@ -65,7 +65,7 @@ export class ExerciseListEditorComponent {
   }
 
   addExercise(): void {
-    const next: EditableExercise[] = [...this.exercises, { name: '', sets: 3, reps: '10' }];
+    const next: EditableExercise[] = [...this.exercises, { name: '', sets: null, reps: '' }];
     this.exercises = next;
     this.exercisesChange.emit(next);
   }

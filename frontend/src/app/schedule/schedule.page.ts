@@ -44,7 +44,7 @@ export type SessionStatus = 'upcoming' | 'optional' | 'missed' | 'done';
 
 export interface Exercise {
   name: string;
-  sets: number;
+  sets: number | null;
   reps: string; // e.g. "12", "12-15", "failure", "30s"
   done?: boolean;
 }
@@ -161,6 +161,7 @@ export class SchedulePage implements OnInit, OnDestroy {
   readonly coaches   = ['Coach Ethan', 'Coach Ryza', 'Coach Marco'];
   readonly locations = ['Gym Floor B','Cardio Area','Weights Area','Functional Zone','Home'];
   readonly durationOptions = ['30 min','45 min','60 min','75 min','90 min'];
+  readonly durationPresetOptions = ['30 min', '45 min', '60 min', '75 min', '90 min', '1 hr', '1.5 hrs', '2 hrs'];
 
   // ── Suggested targets per workout type ───────────────────
   // getSuggestedTargets()/getTargetPlaceholder() below delegate directly to
@@ -326,6 +327,8 @@ export class SchedulePage implements OnInit, OnDestroy {
   weekPlanDays: WeekPlanDay[] = this.buildDefaultWeekPlanDays();
   weekPlanActiveDay = 0;
   weekPlanSaved = false;
+  weekPlanDurationUnit: 'min' | 'hrs' = 'min';
+  weekPlanDurationInputValue: number | null = 60;
 
   // ── Lifecycle ────────────────────────────────────────────
 
@@ -845,6 +848,16 @@ export class SchedulePage implements OnInit, OnDestroy {
     }
     this.weekDays = days;
     this.updateMonthLabel();
+    this.scrollToActiveDay();
+  }
+
+  scrollToActiveDay(): void {
+    setTimeout(() => {
+      const activeEl = document.querySelector('.week-strip .day-pill.active') as HTMLElement | null;
+      if (activeEl) {
+        activeEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+    }, 60);
   }
 
   private updateMonthLabel(): void {
@@ -862,6 +875,7 @@ export class SchedulePage implements OnInit, OnDestroy {
     this.expandedCard     = null;
     this.showAllSessions  = false;
     this.renderSessions();
+    this.scrollToActiveDay();
   }
 
   prevWeek(): void {
@@ -1471,6 +1485,7 @@ export class SchedulePage implements OnInit, OnDestroy {
     const saved = this.loadWeekPlanTemplate();
     this.weekPlanDays = saved ?? this.buildDefaultWeekPlanDays();
     this.weekPlanActiveDay = 0;
+    this.syncWeekPlanDurationForActiveDay();
     this.weekPlanSaved = false;
     this.weekPlanModalOpen = true;
     this.checkAndStartWeekPlanTour();
@@ -1478,6 +1493,88 @@ export class SchedulePage implements OnInit, OnDestroy {
 
   closeWeekPlanModal(): void {
     this.weekPlanModalOpen = false;
+  }
+
+  setWeekPlanActiveDay(dayIndex: number): void {
+    this.weekPlanActiveDay = dayIndex;
+    this.syncWeekPlanDurationForActiveDay();
+  }
+
+  syncWeekPlanDurationForActiveDay(): void {
+    const day = this.weekPlanDays[this.weekPlanActiveDay];
+    if (!day) return;
+    const dur = (day.duration || '60 min').toLowerCase();
+    if (dur.includes('hr') || dur.includes('hour')) {
+      this.weekPlanDurationUnit = 'hrs';
+      const match = dur.match(/([\d.]+)/);
+      this.weekPlanDurationInputValue = match ? parseFloat(match[1]) : 1;
+    } else {
+      this.weekPlanDurationUnit = 'min';
+      const match = dur.match(/(\d+)/);
+      this.weekPlanDurationInputValue = match ? parseInt(match[1], 10) : 60;
+    }
+  }
+
+  onWeekPlanDurationInputChange(value: number | string | null): void {
+    const day = this.weekPlanDays[this.weekPlanActiveDay];
+    if (!day) return;
+    if (value === null || value === '') {
+      this.weekPlanDurationInputValue = null;
+      return;
+    }
+    const numeric = Number(value);
+    if (Number.isNaN(numeric)) return;
+    this.weekPlanDurationInputValue = numeric;
+    if (numeric <= 0) return;
+
+    if (this.weekPlanDurationUnit === 'hrs') {
+      day.duration = `${numeric} ${numeric === 1 ? 'hr' : 'hrs'}`;
+    } else {
+      const clamped = this.clampDurationMinutes(numeric);
+      day.duration = `${clamped} min`;
+    }
+  }
+
+  onWeekPlanDurationUnitChange(unit: 'min' | 'hrs'): void {
+    if (this.weekPlanDurationUnit === unit) return;
+    this.weekPlanDurationUnit = unit;
+    const day = this.weekPlanDays[this.weekPlanActiveDay];
+    if (!day) return;
+
+    let minutes = 60;
+    const dur = (day.duration || '60 min').toLowerCase();
+    if (dur.includes('hr') || dur.includes('hour')) {
+      const match = dur.match(/([\d.]+)/);
+      minutes = match ? Math.round(parseFloat(match[1]) * 60) : 60;
+    } else {
+      const match = dur.match(/(\d+)/);
+      minutes = match ? parseInt(match[1], 10) : 60;
+    }
+
+    if (unit === 'hrs') {
+      const hrs = Math.round((minutes / 60) * 100) / 100;
+      this.weekPlanDurationInputValue = hrs;
+      day.duration = `${hrs} ${hrs === 1 ? 'hr' : 'hrs'}`;
+    } else {
+      this.weekPlanDurationInputValue = minutes;
+      day.duration = `${minutes} min`;
+    }
+  }
+
+  selectWeekPlanDurationPreset(preset: string): void {
+    const day = this.weekPlanDays[this.weekPlanActiveDay];
+    if (!day) return;
+    day.duration = preset;
+    const dur = preset.toLowerCase();
+    if (dur.includes('hr') || dur.includes('hour')) {
+      this.weekPlanDurationUnit = 'hrs';
+      const match = dur.match(/([\d.]+)/);
+      this.weekPlanDurationInputValue = match ? parseFloat(match[1]) : 1;
+    } else {
+      this.weekPlanDurationUnit = 'min';
+      const match = dur.match(/(\d+)/);
+      this.weekPlanDurationInputValue = match ? parseInt(match[1], 10) : 60;
+    }
   }
 
   toggleWeekPlanRest(dayIndex: number): void {
@@ -1492,6 +1589,7 @@ export class SchedulePage implements OnInit, OnDestroy {
     }
     // If this is the active day, switch to it to show the updated editor
     this.weekPlanActiveDay = dayIndex;
+    this.syncWeekPlanDurationForActiveDay();
   }
 
   onWeekPlanTypeChange(dayIndex: number): void {

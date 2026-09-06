@@ -32,7 +32,7 @@ class WorkoutSession extends Model
     protected function casts(): array
     {
         return [
-            'session_date'   => 'date',
+            'session_date'   => 'date:Y-m-d',
             'is_rest_day'    => 'boolean',
             'exercises'      => 'array',
             'actual_minutes' => 'integer',

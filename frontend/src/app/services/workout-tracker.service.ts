@@ -4,7 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { AuthService } from './auth.service';
 import { NotificationCenterService } from './notification-center.service';
 import { API_URL } from '../config/api.config';
-import { defaultSessionsByDayIdx, buildExercisesFromTemplate } from '../data/workout-templates';
+import { defaultSessionsByDayIdx, buildExercisesFromTemplate, buildGoalWeekPlan } from '../data/workout-templates';
 
 export type SessionStatus = 'upcoming' | 'optional' | 'missed' | 'done';
 
@@ -17,12 +17,12 @@ export interface WeekPlanTemplateDay {
   location: string;
   time: string; // 24h "HH:MM"
   isRest: boolean;
-  exercises: Array<{ name: string; sets: number; reps: string }>;
+  exercises: Array<{ name: string; sets: number | null; reps: string }>;
 }
 
 export interface StoredExercise {
   name: string;
-  sets: number;
+  sets: number | null;
   reps: string | number;
   done?: boolean;
 }
@@ -75,6 +75,8 @@ export class WorkoutTrackerService {
   // to send the upcoming-workout reminder notification — mirrors the exact
   // same design as missedCheckTimers above.
   private upcomingReminderTimers: ReturnType<typeof setTimeout>[] = [];
+  private alarmSchedulingInProgress = false;
+  private alarmScheduleQueued = false;
   private updatesSubject = new BehaviorSubject<number>(Date.now());
 
 
@@ -314,9 +316,26 @@ export class WorkoutTrackerService {
   private loadWeekPlanTemplate(): WeekPlanTemplateDay[] | null {
     try {
       const raw = localStorage.getItem(this.weekPlanStorageKey);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? (parsed as WeekPlanTemplateDay[]) : null;
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length === 7) {
+          return parsed as WeekPlanTemplateDay[];
+        }
+      }
+      // If no custom plan saved yet, check if logged-in user has a fitness goal
+      const currentUser = this.auth.user;
+      if (currentUser?.fitness_goal) {
+        const goalPlan = buildGoalWeekPlan(
+          currentUser.fitness_goal,
+          currentUser.bmi,
+          currentUser.preferred_workout_time || '17:00'
+        );
+        try {
+          localStorage.setItem(this.weekPlanStorageKey, JSON.stringify(goalPlan));
+        } catch {}
+        return goalPlan;
+      }
+      return null;
     } catch {
       return null;
     }
@@ -362,7 +381,13 @@ export class WorkoutTrackerService {
       const scopedKey = this.getScopedStorageKey();
       const raw = localStorage.getItem(scopedKey);
       if (raw) {
-        return this.normalizeStore(JSON.parse(raw));
+        const parsed = JSON.parse(raw);
+        const normalized = this.normalizeStore(parsed);
+        const rawAfter = JSON.stringify(normalized);
+        if (rawAfter !== raw) {
+          localStorage.setItem(scopedKey, rawAfter);
+        }
+        return normalized;
       }
 
       const legacyRaw = localStorage.getItem(this.legacyStorageKey);
@@ -426,12 +451,33 @@ export class WorkoutTrackerService {
       const store = this.readStore();
       const replacedThisPass = new Set<string>();
 
+      const serverSessionIdToKey = new Map<string, string>();
+
       rows.forEach((row) => {
-        const isoDate = String(row.session_date || '').slice(0, 10);
-        const [y, m, d] = isoDate.split('-').map(Number);
+        let y: number, m: number, d: number;
+        const rawDateStr = String(row.session_date || '');
+        if (rawDateStr.includes('T') || rawDateStr.includes('Z')) {
+          const parsed = new Date(rawDateStr);
+          if (!Number.isNaN(parsed.getTime())) {
+            y = parsed.getFullYear();
+            m = parsed.getMonth() + 1;
+            d = parsed.getDate();
+          } else {
+            const parts = rawDateStr.slice(0, 10).split('-').map(Number);
+            [y, m, d] = parts;
+          }
+        } else {
+          const parts = rawDateStr.slice(0, 10).split('-').map(Number);
+          [y, m, d] = parts;
+        }
+
         if (!y || !m || !d) return;
         const key = `${y}-${m - 1}-${d}`;
         const sessionDate = new Date(y, m - 1, d);
+
+        if (row.client_session_id && !String(row.client_session_id).startsWith('admin_class_')) {
+          serverSessionIdToKey.set(row.client_session_id, key);
+        }
 
         if (this.pendingServerReconcileKeys.has(key) && !replacedThisPass.has(key)) {
           store[key] = [];
@@ -476,18 +522,10 @@ export class WorkoutTrackerService {
 
         if (idx === -1) {
           if (merged.isRestDay) {
-            // Only replace the local day with the server rest-day placeholder if
-            // the local store currently has NO real (non-rest) workouts for this
-            // day. If the member added a workout locally after marking the day a
-            // rest day, that real workout is NOT yet on the server (or has a
-            // different id) — replacing the whole day here would silently revert
-            // their change every time ionViewWillEnter() calls pullFromServer().
             const localNonRest = daySessions.filter((s) => !s.isRestDay);
             if (localNonRest.length === 0) {
               store[key] = [merged];
             }
-            // else: local store already has real sessions → server's stale
-            // rest-day row is outdated; leave local sessions untouched.
           } else {
             const nonRest = daySessions.filter((s) => !s.isRestDay);
             if (this.pendingServerReconcileKeys.has(key)) {
@@ -502,6 +540,19 @@ export class WorkoutTrackerService {
           daySessions[idx] = merged;
           store[key] = daySessions;
         }
+      });
+
+      // Cross-date deduplication: ensure a user workout session only exists on its authoritative server session_date
+      serverSessionIdToKey.forEach((correctKey, sessionId) => {
+        Object.keys(store).forEach((k) => {
+          if (k !== correctKey && Array.isArray(store[k])) {
+            const beforeLen = store[k].length;
+            store[k] = store[k].filter((s) => s.id !== sessionId);
+            if (store[k].length !== beforeLen && store[k].length === 0) {
+              store[k] = [this.buildRestDaySession()];
+            }
+          }
+        });
       });
 
       // Clean up any mixed days: if a day has real workouts, discard rest-day placeholders
@@ -929,159 +980,164 @@ export class WorkoutTrackerService {
    * every mutation) — the number of sessions in a single day is always
    * small, so this is cheap.
    */
-  async scheduleMissedChecks(): Promise<void> {
-    this.clearMissedCheckTimers();
+  /**
+   * Unified and thread-safe workout alarm scheduler.
+   * Cancels stale alarms once, then schedules native AlarmManager alarms (and foreground timers)
+   * for today and all upcoming dates across the next 14 days.
+   * Prevents race conditions where concurrent calls wipe out each other's alarms.
+   */
+  async scheduleAllWorkoutAlarms(): Promise<void> {
+    if (this.alarmSchedulingInProgress) {
+      this.alarmScheduleQueued = true;
+      return;
+    }
+    this.alarmSchedulingInProgress = true;
+    this.alarmScheduleQueued = false;
 
-    // Cancel all stale pending workout alarms first so modified/deleted/replaced sessions won't trigger ghost alarms
-    await this.notificationCenter.cancelAllPendingWorkoutAlarms();
+    try {
+      this.clearMissedCheckTimers();
+      this.clearUpcomingReminderTimers();
 
-    const store = this.readStore();
-    const now = new Date();
-    const todayKey = this.getDateKey(now);
-    const todaySessions = store[todayKey] ?? [];
+      // Cancel all stale pending workout alarms once cleanly
+      await this.notificationCenter.cancelAllPendingWorkoutAlarms();
 
-    todaySessions.forEach((session) => {
-      const titleLower = (session.title || '').toLowerCase();
-      // Done sessions, rest days, optional sessions, or sessions with active timer never need missed check
-      if (
-        session.status === 'done' ||
-        session.status === 'optional' ||
-        session.isRestDay ||
-        titleLower.includes('rest') ||
-        session.startedAt
-      ) {
-        return;
+      const store = this.readStore();
+      const now = new Date();
+      const todayKey = this.getDateKey(now);
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+      const maxHorizon = new Date(todayStart.getTime() + 14 * 24 * 60 * 60 * 1000);
+
+      // Collect all date keys to process: today plus any stored date up to 14 days ahead
+      const dateKeysToProcess = new Set<string>();
+      dateKeysToProcess.add(todayKey);
+      for (let i = 1; i <= 7; i++) {
+        const nextDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+        dateKeysToProcess.add(this.getDateKey(nextDay));
       }
+      Object.keys(store).forEach((key) => {
+        const parts = key.split('-').map(Number);
+        if (parts.length === 3 && !parts.some(Number.isNaN)) {
+          const d = new Date(parts[0], parts[1] - 1, parts[2]);
+          if (d >= todayStart && d <= maxHorizon) {
+            dateKeysToProcess.add(key);
+          }
+        }
+      });
 
-      const [hours, minutes] = this.to24(session.timeVal, session.timeAmpm).split(':').map(Number);
-      if (Number.isNaN(hours) || Number.isNaN(minutes)) {
-        return; // malformed time on this session — nothing precise to schedule, periodic poll still covers it
+      dateKeysToProcess.forEach((dateKey) => {
+        const sessions = store[dateKey] ?? [];
+        const parts = dateKey.split('-').map(Number);
+        if (parts.length !== 3 || parts.some(Number.isNaN)) return;
+        const [year, month, day] = parts;
+
+        sessions.forEach((session) => {
+          const titleLower = (session.title || '').toLowerCase();
+          if (
+            session.status === 'done' ||
+            session.status === 'missed' ||
+            session.status === 'optional' ||
+            session.isRestDay ||
+            titleLower.includes('rest') ||
+            session.startedAt
+          ) {
+            return;
+          }
+
+          const [hours, minutes] = this.to24(session.timeVal, session.timeAmpm).split(':').map(Number);
+          if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+            return;
+          }
+
+          const scheduledAt = new Date(year, month - 1, day, hours, minutes, 0, 0);
+          const msUntilScheduled = scheduledAt.getTime() - now.getTime();
+
+          // If scheduled time has already passed by more than 1 minute, skip
+          if (msUntilScheduled <= -60000) {
+            return;
+          }
+
+          const sessionTime = `${session.timeVal} ${session.timeAmpm}`;
+          const uniqueKey = `${dateKey}-${session.id ?? session.title}-${session.timeVal}-${session.timeAmpm}`;
+          const missedDedupeKey = `${dateKey}-${session.id || session.title}`;
+          const homeAlternatives = this.homeWorkoutMap[session.title] || this.homeWorkoutMap['Full Body'];
+
+          // 1. 30-MINUTE UPCOMING REMINDER
+          const THIRTY_MIN_MS = 30 * 60 * 1000;
+          const reminderDate = new Date(scheduledAt.getTime() - THIRTY_MIN_MS);
+          const msUntilReminder = reminderDate.getTime() - now.getTime();
+
+          if (msUntilReminder > 0) {
+            void this.notificationCenter.scheduleNativeUpcomingReminder(
+              session.title,
+              sessionTime,
+              uniqueKey,
+              reminderDate
+            );
+
+            if (dateKey === todayKey) {
+              const timer = setTimeout(() => {
+                void this.notificationCenter.notifyUpcomingWorkout(session.title, sessionTime, uniqueKey);
+              }, msUntilReminder);
+              this.upcomingReminderTimers.push(timer);
+            }
+          } else if (msUntilScheduled > 0 && msUntilScheduled <= THIRTY_MIN_MS) {
+            // Scheduled session is within 30 minutes (e.g. 15 mins away) and hasn't been notified yet
+            const minsRemaining = Math.max(1, Math.round(msUntilScheduled / 60000));
+            void this.notificationCenter.notifyUpcomingWorkoutSoon(
+              session.title,
+              sessionTime,
+              uniqueKey,
+              minsRemaining
+            );
+          }
+
+          // 2. WORKOUT START ALERT AT EXACT SCHEDULED TIME
+          if (msUntilScheduled > 0) {
+            void this.notificationCenter.scheduleNativeWorkoutStartAlert(
+              session.title,
+              uniqueKey,
+              scheduledAt
+            );
+
+            if (dateKey === todayKey) {
+              const timer = setTimeout(() => {
+                this.syncStoreStatuses();
+              }, msUntilScheduled + 500);
+              this.missedCheckTimers.push(timer);
+            }
+          }
+
+          // 3. MISSED WORKOUT ALERT (1 MINUTE AFTER SCHEDULED TIME)
+          const missedAt = new Date(scheduledAt.getTime() + 60 * 1000);
+          if (missedAt.getTime() > now.getTime()) {
+            void this.notificationCenter.scheduleNativeMissedAlert(
+              session.title,
+              missedDedupeKey,
+              missedAt,
+              homeAlternatives
+            );
+          }
+        });
+      });
+    } catch (err) {
+      console.warn('Error in scheduleAllWorkoutAlarms:', err);
+    } finally {
+      this.alarmSchedulingInProgress = false;
+      if (this.alarmScheduleQueued) {
+        this.alarmScheduleQueued = false;
+        void this.scheduleAllWorkoutAlarms();
       }
-
-      const scheduledAt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0, 0);
-      const msUntilScheduled = scheduledAt.getTime() - now.getTime();
-
-      // Only schedule alarms for sessions whose scheduled time is in the FUTURE (or within next 1 min)
-      if (msUntilScheduled <= -60000) {
-        return;
-      }
-
-      const uniqueKey = `${todayKey}-${session.id ?? session.title}-${session.timeVal}-${session.timeAmpm}`;
-      // Same equipment-free rule as syncStoreStatuses() above — never echo
-      // the session's own (possibly gym-equipment) exercises back as the
-      // "home alternative" suggestion.
-      const homeAlternatives = this.homeWorkoutMap[session.title] || this.homeWorkoutMap['Full Body'];
-      // Dedupe key for the MISSED alert specifically: must match the exact
-      // format notifyMissedWorkout() builds in syncStoreStatuses() above
-      // (`${dateKey}-${id || title}`, no time suffix) so both code paths
-      // resolve to the same Android notification ID (see
-      // NotificationCenterService.hashNotificationId()) and whichever fires
-      // second overwrites the first instead of stacking a duplicate banner.
-      const missedDedupeKey = `${todayKey}-${session.id || session.title}`;
-
-      // 1. Schedule Workout START alert at the exact scheduled time (e.g. 9:25:00 PM)
-      if (msUntilScheduled > 0) {
-        void this.notificationCenter.scheduleNativeWorkoutStartAlert(
-          session.title,
-          uniqueKey,
-          scheduledAt
-        );
-      }
-
-      // 2. Schedule MISSED alert 1 minute after scheduled time (e.g. 9:26:00 PM)
-      const missedAt = new Date(scheduledAt.getTime() + 60 * 1000);
-      if (missedAt.getTime() > now.getTime()) {
-        void this.notificationCenter.scheduleNativeMissedAlert(
-          session.title,
-          missedDedupeKey,
-          missedAt,
-          homeAlternatives
-        );
-      }
-
-      // 3. Foreground JS timer fallback while app is actively viewed.
-      if (msUntilScheduled > 0) {
-        const timer = setTimeout(() => {
-          this.syncStoreStatuses();
-        }, msUntilScheduled + 500);
-        this.missedCheckTimers.push(timer);
-      }
-    });
+    }
   }
 
-  /**
-   * Schedules one precise setTimeout per still-upcoming session TODAY,
-   * firing exactly 30 minutes before that session's scheduled time to send
-   * a reminder notification — "Your <title> session starts in 30 minutes".
-   * Mirrors scheduleMissedChecks() in design: clears and rebuilds its own
-   * timer set on every call so edits to a session's time (or a session
-   * flipping to 'done') are always reflected immediately without stale
-   * timers from old data ever firing.
-   *
-   * Exemptions (same rules as scheduleMissedChecks()):
-   *  - Session is already 'done' or 'missed' → no reminder needed.
-   *  - Rest day or optional schedule → skip (no workout to prepare for).
-   *  - Session timer already running (startedAt set) → member already working out.
-   *  - Reminder time is in the past (session is < 30 min away or already started) → skip.
-   */
+  /** Alias for backwards compatibility with existing callers. */
+  async scheduleMissedChecks(): Promise<void> {
+    return this.scheduleAllWorkoutAlarms();
+  }
+
+  /** Alias for backwards compatibility with existing callers. */
   async scheduleUpcomingReminders(): Promise<void> {
-    this.clearUpcomingReminderTimers();
-    await this.notificationCenter.cancelAllPendingWorkoutAlarms();
-
-    const store = this.readStore();
-    const now = new Date();
-    const todayKey = this.getDateKey(now);
-    const todaySessions = store[todayKey] ?? [];
-
-    todaySessions.forEach((session) => {
-      const titleLower = (session.title || '').toLowerCase();
-      // Same exemptions as scheduleMissedChecks()
-      if (
-        session.status === 'done' ||
-        session.status === 'missed' ||
-        session.status === 'optional' ||
-        session.isRestDay ||
-        titleLower.includes('rest') ||
-        session.startedAt
-      ) {
-        return;
-      }
-
-      const [hours, minutes] = this.to24(session.timeVal, session.timeAmpm).split(':').map(Number);
-      if (Number.isNaN(hours) || Number.isNaN(minutes)) {
-        return;
-      }
-
-      const scheduledAt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0, 0);
-      const THIRTY_MIN_MS = 30 * 60 * 1000;
-      const msUntilReminder = scheduledAt.getTime() - THIRTY_MIN_MS - now.getTime();
-
-      // Reminder window already passed (session is less than 30 min away,
-      // or already started) — skip. The periodic syncStoreStatuses() poll
-      // still covers edge cases where this was missed.
-      if (msUntilReminder <= 0) {
-        return;
-      }
-
-      // Build a dedupe key that encodes both session id AND scheduled time,
-      // so editing the session time cancels the old dedupe record and the
-      // rescheduled timer can fire a fresh notification.
-      const uniqueKey = `${todayKey}-${session.id ?? session.title}-${session.timeVal}-${session.timeAmpm}`;
-
-      // Human-readable session time for the notification body.
-      const sessionTime = `${session.timeVal} ${session.timeAmpm}`;
-
-      // 1. Schedule Native AlarmManager notification so it triggers even when the app is closed
-      const reminderDate = new Date(scheduledAt.getTime() - THIRTY_MIN_MS);
-      void this.notificationCenter.scheduleNativeUpcomingReminder(session.title, sessionTime, uniqueKey, reminderDate);
-
-      // 2. Foreground JS timer fallback while app is actively viewed
-      const timer = setTimeout(() => {
-        void this.notificationCenter.notifyUpcomingWorkout(session.title, sessionTime, uniqueKey);
-      }, msUntilReminder);
-
-      this.upcomingReminderTimers.push(timer);
-    });
+    return this.scheduleAllWorkoutAlarms();
   }
 
   private getScopedStorageKey(): string {
@@ -1090,10 +1146,56 @@ export class WorkoutTrackerService {
   }
 
   private normalizeStore(store: Record<string, StoredWorkoutSession[]>): Record<string, StoredWorkoutSession[]> {
-    return Object.keys(store ?? {}).reduce<Record<string, StoredWorkoutSession[]>>((accumulator, key) => {
+    const rawNormalized = Object.keys(store ?? {}).reduce<Record<string, StoredWorkoutSession[]>>((accumulator, key) => {
       accumulator[key] = (store[key] ?? []).map((session) => this.normalizeSession(session));
       return accumulator;
     }, {});
+
+    return this.deduplicateStoreKeys(rawNormalized);
+  }
+
+  /**
+   * Automatically detects and removes phantom duplicate sessions across date keys
+   * (e.g. from previous UTC-to-local timezone shifts).
+   */
+  private deduplicateStoreKeys(store: Record<string, StoredWorkoutSession[]>): Record<string, StoredWorkoutSession[]> {
+    const sessionKeyMap = new Map<string, string[]>();
+
+    Object.keys(store).forEach((key) => {
+      (store[key] ?? []).forEach((s) => {
+        if (s.id && !s.isRestDay && !s.id.startsWith('admin_class_')) {
+          const list = sessionKeyMap.get(s.id) ?? [];
+          list.push(key);
+          sessionKeyMap.set(s.id, list);
+        }
+      });
+    });
+
+    sessionKeyMap.forEach((keys, sessionId) => {
+      if (keys.length > 1) {
+        // ID format: ${Date.now()}-${random}
+        const ts = Number(sessionId.split('-')[0]);
+        let targetKey: string | null = null;
+        if (!Number.isNaN(ts) && ts > 1000000000000) {
+          targetKey = this.getDateKey(new Date(ts));
+        }
+
+        const keepKey = (targetKey && keys.includes(targetKey))
+          ? targetKey
+          : [...keys].sort().reverse()[0];
+
+        keys.forEach((k) => {
+          if (k !== keepKey) {
+            store[k] = (store[k] ?? []).filter((s) => s.id !== sessionId);
+            if (store[k].length === 0) {
+              store[k] = [this.buildRestDaySession()];
+            }
+          }
+        });
+      }
+    });
+
+    return store;
   }
 
   private normalizeSession(session: StoredWorkoutSession): StoredWorkoutSession {

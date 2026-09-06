@@ -431,6 +431,124 @@ body.light-theme {
 
     .form-label { color: rgba(15,23,42,0.5) !important; }
 
+    /* Time & Date native controls in light mode */
+    input[type="time"],
+    input[type="date"] {
+      color-scheme: light !important;
+      color: #0f172a !important;
+    }
+
+    /* Profile Edit Modal (portaled ion-modal) */
+    .photo-btn {
+      background: #f1f5f9 !important;
+      color: #0f172a !important;
+      border: 1px solid rgba(15, 23, 42, 0.15) !important;
+      font-weight: 700 !important;
+      &:hover { background: #e2e8f0 !important; }
+    }
+    .photo-remove-btn {
+      background: rgba(239, 68, 68, 0.08) !important;
+      color: #ef4444 !important;
+      border: 1px solid rgba(239, 68, 68, 0.2) !important;
+      &:hover { background: rgba(239, 68, 68, 0.15) !important; }
+    }
+    .edit-bmi-card {
+      background: rgba(234, 179, 8, 0.08) !important;
+      border: 1px solid rgba(234, 179, 8, 0.25) !important;
+    }
+    .edit-bmi-label {
+      color: #0f172a !important;
+      strong { color: #b45309 !important; }
+    }
+    .edit-select-custom {
+      background: #f8fafc !important;
+      color: #0f172a !important;
+      border: 1px solid rgba(15, 23, 42, 0.12) !important;
+      option { background: #ffffff !important; color: #0f172a !important; }
+      &:focus { border-color: #0f172a !important; }
+    }
+    .edit-select-arrow { color: #64748b !important; }
+    .edit-field-helper { color: #64748b !important; }
+
+    /* Profile Renew Plan Modal (portaled ion-modal) */
+    .payment-method-title { color: #0f172a !important; font-weight: 800 !important; }
+    .pay-desk-title       { color: #0f172a !important; font-weight: 700 !important; }
+    .pay-desk-sub         { color: #64748b !important; }
+    .pay-method-card {
+      background: #f8fafc !important;
+      border: 1px solid rgba(15, 23, 42, 0.12) !important;
+      &.is-selected {
+        border-color: #ffd600 !important;
+        background: #ffffff !important;
+        box-shadow: 0 4px 14px rgba(255, 214, 0, 0.15) !important;
+      }
+    }
+    .plan-single-card {
+      background: #f8fafc !important;
+      border: 1px solid rgba(15, 23, 42, 0.12) !important;
+      .plan-single-title { color: #0f172a !important; }
+      .plan-single-sub   { color: #64748b !important; }
+      .price-unit        { color: #64748b !important; }
+      .perk-row          { color: #334155 !important; }
+    }
+
+    /* Chat Partner Info & Mute Controls Modal (portaled ion-modal) */
+    .partner-info-modal {
+      --background: #ffffff !important;
+      .partner-info-wrapper { background: #ffffff !important; color: #0f172a !important; }
+      .partner-info-handle  { background: rgba(15, 23, 42, 0.15) !important; }
+      .partner-info-name    { color: #0f172a !important; font-weight: 850 !important; }
+      .partner-info-username { color: #64748b !important; }
+      .partner-info-role-tag {
+        background: #f1f5f9 !important;
+        border: 1px solid rgba(15, 23, 42, 0.1) !important;
+        color: #0f172a !important;
+        font-weight: 750 !important;
+      }
+      .partner-info-status-tag {
+        background: rgba(5, 150, 105, 0.12) !important;
+        border-color: rgba(5, 150, 105, 0.28) !important;
+        color: #047857 !important;
+        .status-dot { background: #047857 !important; }
+        &.offline {
+          background: rgba(100, 116, 139, 0.12) !important;
+          border-color: rgba(100, 116, 139, 0.28) !important;
+          color: #64748b !important;
+          .status-dot { background: #64748b !important; }
+        }
+      }
+      .partner-info-close-btn {
+        background: #f1f5f9 !important;
+        color: #475569 !important;
+        border: 1px solid rgba(15, 23, 42, 0.12) !important;
+        font-weight: 750 !important;
+      }
+    }
+    .mute-controls-card {
+      background: #f8fafc !important;
+      border: 1px solid rgba(15, 23, 42, 0.1) !important;
+      .mute-status-header .status-left {
+        ion-icon:not(.is-muted) { color: #0f172a !important; }
+        .status-text {
+          .status-title { color: #0f172a !important; font-weight: 800 !important; }
+          .status-subtitle:not(.muted-label) { color: #64748b !important; }
+        }
+      }
+      .snooze-options-grid .snooze-btn {
+        background: #ffffff !important;
+        border: 1px solid rgba(15, 23, 42, 0.12) !important;
+        color: #475569 !important;
+        ion-icon { color: #ca8a04 !important; }
+        span { color: #334155 !important; font-weight: 750 !important; }
+        &.active {
+          background: #fef08a !important;
+          border-color: #eab308 !important;
+          color: #000000 !important;
+          span { color: #000000 !important; }
+        }
+      }
+    }
+
     /* Coach Dashboard modals (Manage Profile / Set Availability / Create
        Program / Roster / Clients / Requests / Messages / Earnings — see
        coaching-panel.component.html's `.cd-modal-*`, `.cd-sheet-*`, `.cd-form-*` classes).

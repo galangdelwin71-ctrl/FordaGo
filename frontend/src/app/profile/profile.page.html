@@ -37,7 +37,10 @@
         <div class="badge premium">
           <span class="badge-dot"></span> {{ profile.membershipPlan }} Member
         </div>
-        <div class="badge active">Active</div>
+        <div class="badge" [ngClass]="isActiveStatus ? 'active' : 'offline'">
+          <span class="badge-dot" [class.offline]="!isActiveStatus"></span>
+          {{ isActiveStatus ? 'Active' : 'Offline' }}
+        </div>
       </div>
     </div>
 
@@ -55,7 +58,7 @@
         <span class="info-icon"><ion-icon name="gift-outline"></ion-icon></span>
         <div class="info-content">
           <div class="info-label">Date of Birth</div>
-          <div class="info-value">{{ profile.dateOfBirth }}</div>
+          <div class="info-value">{{ profile.dateOfBirth || 'Not set' }}</div>
         </div>
       </div>
       <div class="info-row">
@@ -63,6 +66,30 @@
         <div class="info-content">
           <div class="info-label">Gender</div>
           <div class="info-value">{{ profile.gender }}</div>
+        </div>
+      </div>
+      <div class="info-row" *ngIf="profile.height || profile.weight">
+        <span class="info-icon"><ion-icon name="fitness-outline"></ion-icon></span>
+        <div class="info-content">
+          <div class="info-label">Body Stats &amp; BMI</div>
+          <div class="info-value" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span>{{ profile.height ? profile.height + ' cm' : '--' }} · {{ profile.weight ? profile.weight + ' kg' : '--' }}</span>
+            <span *ngIf="profile.bmi" class="badge" [ngClass]="currentBmiCategory.color" style="font-size:11px;padding:3px 8px;">
+              BMI {{ profile.bmi }} ({{ currentBmiCategory.label }})
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="info-row" *ngIf="profile.fitnessGoal">
+        <span class="info-icon"><ion-icon name="trophy-outline"></ion-icon></span>
+        <div class="info-content">
+          <div class="info-label">Target Body Goal</div>
+          <div class="info-value" style="color:#FFD600;font-weight:700;">
+            {{ currentGoalDetails?.title || profile.fitnessGoal }}
+          </div>
+          <div class="goal-suggested-time">
+            Suggested workout: {{ profile.preferredWorkoutTime ? profile.preferredWorkoutTime : '5:00 PM' }} (Afternoon)
+          </div>
         </div>
       </div>
       <div class="info-row" id="tour-profile-membership">
@@ -112,6 +139,15 @@
         <div class="menu-sub">Manage alerts & reminders</div>
       </div>
       <span class="menu-arrow">›</span>
+    </div>
+
+    <div class="menu-item fade-up" id="tour-profile-active-status">
+      <span class="menu-icon"><ion-icon [name]="isActiveStatus ? 'radio-button-on-outline' : 'radio-button-off-outline'"></ion-icon></span>
+      <div class="menu-content">
+        <div class="menu-label">Active Status</div>
+        <div class="menu-sub">{{ isActiveStatus ? 'Visible to coaches and members' : 'Appear offline' }}</div>
+      </div>
+      <ion-toggle [checked]="isActiveStatus" (ionChange)="onActiveStatusToggle($event)" class="theme-toggle"></ion-toggle>
     </div>
 
     <div class="menu-item fade-up" id="tour-profile-theme">
@@ -258,6 +294,90 @@
         </ion-input>
         <div *ngIf="phoneInvalid" style="margin-top:6px;color:#ff6b6b;font-size:12px;">
           Invalid input: numbers only, exactly 11 digits (e.g. 09171234567).
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Date of Birth</label>
+        <ion-input
+          type="date"
+          [(ngModel)]="editForm.dateOfBirth"
+          [max]="maxDobDate"
+          min="1920-01-01"
+          class="form-input">
+        </ion-input>
+      </div>
+
+      <!-- Physical Stats & BMI -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="form-group">
+          <label class="form-label">Height (cm)</label>
+          <ion-input
+            type="number"
+            appNoNegative
+            min="50"
+            max="260"
+            [(ngModel)]="editForm.height"
+            (ionInput)="onEditStatsChange()"
+            placeholder="e.g. 175"
+            class="form-input">
+          </ion-input>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Weight (kg)</label>
+          <ion-input
+            type="number"
+            appNoNegative
+            min="25"
+            max="300"
+            [(ngModel)]="editForm.weight"
+            (ionInput)="onEditStatsChange()"
+            placeholder="e.g. 70"
+            class="form-input">
+          </ion-input>
+        </div>
+      </div>
+
+      <!-- Live BMI Preview in Edit Modal -->
+      <div *ngIf="editBmi" class="edit-bmi-card">
+        <div class="edit-bmi-label">
+          Calculated BMI: <strong>{{ editBmi }}</strong>
+        </div>
+        <span class="badge" [ngClass]="editBmiCategory.color">
+          {{ editBmiCategory.label }}
+        </span>
+      </div>
+
+      <!-- Target Body Goal Selection -->
+      <div class="form-group">
+        <label class="form-label">Target Body Goal</label>
+        <div class="edit-select-wrap">
+          <select
+            [(ngModel)]="editForm.fitnessGoal"
+            class="edit-select-custom">
+            <option *ngFor="let g of fitnessGoalOptions" [value]="g.id">
+              {{ g.title }} ({{ g.badge }})
+            </option>
+          </select>
+          <span class="edit-select-arrow">▼</span>
+        </div>
+      </div>
+
+      <!-- Preferred Gym Workout Time -->
+      <div class="form-group">
+        <label class="form-label">Preferred Gym Workout Time (9:00 AM - 9:00 PM)</label>
+        <div class="edit-select-wrap">
+          <select
+            [(ngModel)]="editForm.preferredWorkoutTime"
+            class="edit-select-custom">
+            <option *ngFor="let opt of afternoonTimeOptions" [value]="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+          <span class="edit-select-arrow">▼</span>
+        </div>
+        <div class="edit-field-helper">
+          Afforda Gym is open daily from 9:00 AM to 9:00 PM. Your personalized schedule will automatically be set for your selected time.
         </div>
       </div>
 
@@ -444,11 +564,11 @@
       <!-- Payment Method Selection -->
       <div class="payment-method-wrap">
         <div class="payment-method-title">Payment Details</div>
-        <div class="pay-method-card is-selected" style="cursor: default; width: 100%; display: flex; align-items: center; gap: 12px;">
-          <ion-icon name="cash-outline" style="font-size: 24px; color: #FFD700;"></ion-icon>
+        <div class="pay-method-card is-selected pay-desk-card">
+          <ion-icon name="cash-outline" class="pay-desk-icon"></ion-icon>
           <div>
-            <div style="font-weight: 700; color: #FFFFFF;">Pay at Front Desk Counter</div>
-            <div style="font-size: 11px; color: rgba(255,255,255,0.65); margin-top: 2px;">Cash or Online Payment at desk (₱500)</div>
+            <div class="pay-desk-title">Pay at Front Desk Counter</div>
+            <div class="pay-desk-sub">Cash or Online Payment at desk (₱500)</div>
           </div>
         </div>
       </div>

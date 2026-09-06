@@ -31,7 +31,7 @@ class CoachProgram extends Model
             'price'            => 'decimal:2',
             'is_public'        => 'boolean',
             'capacity'         => 'integer',
-            'session_date'     => 'date',
+            'session_date'     => 'date:Y-m-d',
         ];
     }
 

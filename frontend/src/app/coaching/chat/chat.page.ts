@@ -50,6 +50,7 @@ import { EchoService } from '../../services/echo.service';
 import { ChatToastService } from '../../services/chat-toast.service';
 import { FcmService } from '../../services/fcm.service';
 import { ChatMuteService, ConvoMuteInfo } from '../../services/chat-mute.service';
+import { UserStatusService } from '../../services/user-status.service';
 import { OnboardingService, TourStep } from '../../services/onboarding.service';
 import { getCachedData, setCachedData } from '../../utils/local-cache.util';
 import { resolveImageUrl } from '../../config/api.config';
@@ -102,6 +103,9 @@ export class ChatPage implements OnInit, OnDestroy {
   isPartnerTyping = false;
   private typingTimer: any = null;
   private lastTypingSent = 0;
+
+  // ── Active / Online Status ────────────────────────────
+  isPartnerActive = true;
 
   /** Active live sync timer (polls every 2s while chat screen is open) */
   private pollTimer: any = null;
@@ -179,6 +183,7 @@ export class ChatPage implements OnInit, OnDestroy {
     private chatToastService: ChatToastService,
     private fcmService: FcmService,
     private chatMuteService: ChatMuteService,
+    private userStatusService: UserStatusService,
     private zone: NgZone,
     private modalCtrl: ModalController,
     public onboardingService: OnboardingService,
@@ -675,9 +680,22 @@ export class ChatPage implements OnInit, OnDestroy {
         reader_id: this.currentUserId,
         read_at: new Date().toISOString(),
       });
+      // Broadcast our own active status to the partner
+      channel.whisper('user_status', {
+        userId: this.currentUserId,
+        isActive: this.userStatusService.isActive,
+      });
     } catch (e) {
       // ignore
     }
+
+    // ── Active status whisper (online/offline) ──────────────────────────────
+    channel.listenForWhisper('user_status', (data: { userId?: number; isActive?: boolean }) => {
+      if (Number(data?.userId) === Number(this.currentUserId)) return;
+      this.zone.run(() => {
+        this.isPartnerActive = data?.isActive !== false;
+      });
+    });
 
     // ── Instant whisper read receipt (0ms client-to-client) ────────────────
     channel.listenForWhisper('read', (data: { conversation_id?: number; reader_id?: number; read_at?: string }) => {

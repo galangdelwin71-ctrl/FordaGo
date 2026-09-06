@@ -134,6 +134,11 @@
       background: #00d68f;
       border-radius: 50%;
       border: 2px solid #06080f;
+      transition: background 0.2s ease, border-color 0.2s ease;
+
+      &.offline {
+        background: #94a3b8;
+      }
     }
   }
 
@@ -1347,11 +1352,42 @@
     font-weight: 700;
     padding: 6px 14px;
     border-radius: 16px;
-    margin-bottom: 24px;
+    margin-bottom: 8px;
     white-space: nowrap;
 
     ion-icon {
       font-size: 14px;
+    }
+  }
+
+  .partner-info-status-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0, 214, 143, 0.12);
+    border: 1px solid rgba(0, 214, 143, 0.3);
+    color: #00d68f;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 14px;
+    margin-bottom: 20px;
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #00d68f;
+    }
+
+    &.offline {
+      background: rgba(148, 163, 184, 0.12);
+      border-color: rgba(148, 163, 184, 0.28);
+      color: #94a3b8;
+
+      .status-dot {
+        background: #94a3b8;
+      }
     }
   }
 
@@ -1540,7 +1576,10 @@
         color: #0f172a;
         border: 1px solid rgba(15, 23, 42, 0.1);
       }
-      .online-indicator { border-color: #ffffff; }
+      .online-indicator {
+        border-color: #ffffff;
+        &.offline { background: #94a3b8; }
+      }
     }
 
     .chat-partner-meta {
@@ -1662,6 +1701,64 @@
 
       &::placeholder { color: #94a3b8; }
       &:focus { border-color: #0f172a; background: #ffffff; }
+    }
+  }
+
+  // ── Partner Info & Mute Controls Modal ──
+  .partner-info-modal {
+    --background: #ffffff;
+    .partner-info-wrapper { background: #ffffff; color: #0f172a; }
+    .partner-info-handle  { background: rgba(15, 23, 42, 0.15); }
+    .partner-info-name    { color: #0f172a; font-weight: 850; }
+    .partner-info-username { color: #64748b; }
+    .partner-info-role-tag {
+      background: #f1f5f9;
+      border: 1px solid rgba(15, 23, 42, 0.1);
+      color: #0f172a;
+      font-weight: 750;
+    }
+    .partner-info-status-tag {
+      background: rgba(5, 150, 105, 0.12);
+      border-color: rgba(5, 150, 105, 0.28);
+      color: #047857;
+      .status-dot { background: #047857; }
+      &.offline {
+        background: rgba(100, 116, 139, 0.12);
+        border-color: rgba(100, 116, 139, 0.28);
+        color: #64748b;
+        .status-dot { background: #64748b; }
+      }
+    }
+    .partner-info-close-btn {
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid rgba(15, 23, 42, 0.12);
+      font-weight: 750;
+    }
+  }
+
+  .mute-controls-card {
+    background: #f8fafc;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    .mute-status-header .status-left {
+      ion-icon:not(.is-muted) { color: #0f172a !important; }
+      .status-text {
+        .status-title { color: #0f172a !important; font-weight: 850; }
+        .status-subtitle:not(.muted-label) { color: #64748b !important; }
+      }
+    }
+    .snooze-options-grid .snooze-btn {
+      background: #ffffff;
+      border: 1px solid rgba(15, 23, 42, 0.12);
+      color: #475569;
+      ion-icon { color: #ca8a04; }
+      span { color: #334155; font-weight: 750; }
+      &.active {
+        background: #fef08a;
+        border-color: #eab308;
+        color: #000000;
+        span { color: #000000; }
+      }
     }
   }
 }

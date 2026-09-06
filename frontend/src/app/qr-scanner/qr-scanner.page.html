@@ -27,33 +27,15 @@
   <app-pull-to-refresh (refresh)="handleRefresh($event)"></app-pull-to-refresh>
   <div class="scroll-wrap">
 
-    <!-- Scan Mode -->
-    <div class="section-label">Scan Mode</div>
-    <div class="mode-row" id="tour-scanner-modes">
-      <div
-        class="mode-card"
-        [class.active]="scanMode === 'attendance'"
-        (click)="setMode('attendance')"
-      >
-        <div class="mode-icon-wrap">
-          <ion-icon class="mode-emoji" name="person-outline"></ion-icon>
-        </div>
-        <div class="mode-name">Attendance</div>
-      </div>
-      <div
-        class="mode-card"
-        [class.active]="scanMode === 'equipment'"
-        (click)="setMode('equipment')"
-      >
-        <div class="mode-icon-wrap">
-          <ion-icon class="mode-emoji" name="barbell-outline"></ion-icon>
-        </div>
-        <div class="mode-name">Equipment</div>
-      </div>
-    </div>
-
-    <!-- Scanner Frame -->
+    <!-- Scanner Frame (Smart Universal Detection) -->
     <div class="scanner-wrap" id="tour-scanner-frame">
+      <div class="scanner-hero-badge">
+        <span class="hero-chip">
+          <ion-icon name="scan-circle-outline" aria-hidden="true"></ion-icon>
+          Official Gym QR Scanner
+        </span>
+      </div>
+
       <div class="qr-frame">
         <div class="qr-corner tl"></div>
         <div class="qr-corner tr"></div>
@@ -64,7 +46,7 @@
         </div>
         <div [id]="'fordago-qr-reader'" class="camera-reader" [class.live]="isScanning"></div>
       </div>
-      <div class="scan-label">{{ isScanning ? 'Scanning…' : 'Point camera at QR code' }}</div>
+      <div class="scan-label">{{ isScanning ? 'Scanning in Progress…' : 'Point Camera at QR Code' }}</div>
       <div class="scan-sub">{{ scanStatusMessage }}</div>
     </div>
 

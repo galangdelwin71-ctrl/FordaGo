@@ -357,8 +357,16 @@ export class OnboardingGuideComponent implements OnInit, OnDestroy {
     this.onboardingService.prevStep();
   }
 
+  get isDashboardTour(): boolean {
+    return this.onboardingService.activeTourId === 'dashboard_main';
+  }
+
   onSkip(): void {
     this.onboardingService.skipTour();
+  }
+
+  onSkipAll(): void {
+    this.onboardingService.skipAllTours();
   }
 
   isLastStep(): boolean {

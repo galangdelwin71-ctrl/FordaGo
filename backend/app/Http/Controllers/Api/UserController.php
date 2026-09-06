@@ -36,7 +36,7 @@ class UserController extends Controller
     {
         $users = User::select([
             'id', 'username', 'first_name', 'last_name', 'email', 'role',
-            'phone', 'gender', 'profile_image', 'membership_type',
+            'phone', 'gender', 'date_of_birth', 'profile_image', 'membership_type',
             'membership_status', 'payment_method', 'membership_expiry',
         ])->get();
 
@@ -60,8 +60,9 @@ class UserController extends Controller
     {
         $user = User::select([
             'id', 'username', 'first_name', 'last_name', 'email', 'role',
-            'phone', 'gender', 'profile_image', 'membership_type',
+            'phone', 'gender', 'date_of_birth', 'profile_image', 'membership_type',
             'membership_status', 'payment_method', 'membership_expiry',
+            'height', 'weight', 'bmi', 'fitness_goal', 'preferred_workout_time',
         ])->find($request->user()->id);
 
         if (! $user) {
@@ -74,8 +75,9 @@ class UserController extends Controller
         // Reload fresh user state
         $user = User::select([
             'id', 'username', 'first_name', 'last_name', 'email', 'role',
-            'phone', 'gender', 'profile_image', 'membership_type',
+            'phone', 'gender', 'date_of_birth', 'profile_image', 'membership_type',
             'membership_status', 'payment_method', 'membership_expiry',
+            'height', 'weight', 'bmi', 'fitness_goal', 'preferred_workout_time',
         ])->find($request->user()->id);
 
         $payload = $user->toArray();
@@ -294,9 +296,45 @@ class UserController extends Controller
             $processedAvatar = $m[0];
         }
 
+        // Fitness profile fields
+        $fitnessFields = [];
+        if ($request->has('height')) {
+            $rawH = $request->input('height');
+            $fitnessFields['height'] = (is_numeric($rawH) && (float) $rawH > 0) ? round((float) $rawH, 2) : null;
+        }
+        if ($request->has('weight')) {
+            $rawW = $request->input('weight');
+            $fitnessFields['weight'] = (is_numeric($rawW) && (float) $rawW > 0) ? round((float) $rawW, 2) : null;
+        }
+        if ($request->has('bmi')) {
+            $rawBmi = $request->input('bmi');
+            $fitnessFields['bmi'] = (is_numeric($rawBmi) && (float) $rawBmi > 0) ? round((float) $rawBmi, 1) : null;
+        } elseif (isset($fitnessFields['height']) || isset($fitnessFields['weight'])) {
+            $calcH = $fitnessFields['height'] ?? $user->height;
+            $calcW = $fitnessFields['weight'] ?? $user->weight;
+            if ($calcH > 0 && $calcW > 0) {
+                $fitnessFields['bmi'] = round($calcW / (($calcH / 100) ** 2), 1);
+            }
+        }
+        if ($request->has('fitness_goal') || $request->has('goal')) {
+            $g = strtolower(trim((string) ($request->input('fitness_goal') ?? $request->input('goal'))));
+            $validGoals = ['weight_loss', 'muscle_gain', 'strength', 'tone_endurance'];
+            $fitnessFields['fitness_goal'] = in_array($g, $validGoals, true) ? $g : ($g ?: null);
+        }
+        if ($request->has('preferred_workout_time')) {
+            $fitnessFields['preferred_workout_time'] = trim((string) $request->input('preferred_workout_time')) ?: '17:00';
+        }
+
+        $dobField = [];
+        if ($request->has('date_of_birth') || $request->has('dateOfBirth')) {
+            $rawDob = trim((string) ($request->input('date_of_birth') ?? $request->input('dateOfBirth') ?? ''));
+            $parsedDate = $rawDob !== '' ? date_create($rawDob) : null;
+            $dobField['date_of_birth'] = $parsedDate ? date_format($parsedDate, 'Y-m-d') : null;
+        }
+
         try {
             if ($isAdmin) {
-                $dataToUpdate = [
+                $dataToUpdate = array_merge([
                     'username'          => $username ?: $user->username,
                     'first_name'        => $firstName ?: $user->first_name,
                     'last_name'         => $lastName  ?: $user->last_name,
@@ -308,7 +346,7 @@ class UserController extends Controller
                     'membership_type'   => $request->input('membership_type', $user->membership_type),
                     'payment_method'    => $request->input('payment_method', $user->payment_method),
                     'membership_expiry' => $request->input('membership_expiry') ?: null,
-                ];
+                ], $fitnessFields, $dobField);
 
                 $password = $request->input('password');
                 if (is_string($password) && trim($password) !== '') {
@@ -321,7 +359,7 @@ class UserController extends Controller
 
                 $user->fill($dataToUpdate)->save();
             } else {
-                $user->fill([
+                $user->fill(array_merge([
                     'username'      => $username ?: $user->username,
                     'first_name'    => $firstName ?: $user->first_name,
                     'last_name'     => $lastName  ?: $user->last_name,
@@ -329,7 +367,7 @@ class UserController extends Controller
                     'phone'         => $normalizedPhone,
                     'gender'        => $gender,
                     'profile_image' => $processedAvatar,
-                ])->save();
+                ], $fitnessFields, $dobField))->save();
             }
 
             // Keep Coach Profile photo in sync if user is a coach

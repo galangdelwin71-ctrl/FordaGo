@@ -18,6 +18,7 @@ use Laravel\Sanctum\HasApiTokens;
     'role',
     'phone',
     'gender',
+    'date_of_birth',
     'membership_type',
     'payment_method',
     'membership_expiry',
@@ -26,6 +27,11 @@ use Laravel\Sanctum\HasApiTokens;
     'first_name',
     'last_name',
     'fcm_token',
+    'height',
+    'weight',
+    'bmi',
+    'fitness_goal',
+    'preferred_workout_time',
 ])]
 #[Hidden(['password'])]
 class User extends Authenticatable
@@ -49,7 +55,11 @@ class User extends Authenticatable
         return [
             'password' => 'hashed',
             'membership_expiry' => 'date',
+            'date_of_birth' => 'date',
             'created_at' => 'datetime',
+            'height'   => 'float',
+            'weight'   => 'float',
+            'bmi'      => 'float',
         ];
     }
 

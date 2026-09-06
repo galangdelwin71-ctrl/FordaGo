@@ -12,6 +12,7 @@ import {
   arrowBackOutline,
   arrowForwardOutline,
   barbellOutline,
+  bodyOutline,
   calendarOutline,
   callOutline,
   cardOutline,
@@ -27,6 +28,9 @@ import {
   diamondOutline,
   eyeOffOutline,
   eyeOutline,
+  fitnessOutline,
+  flameOutline,
+  flashOutline,
   informationCircleOutline,
   keyOutline,
   keypadOutline,
@@ -37,11 +41,24 @@ import {
   personOutline,
   phonePortraitOutline,
   refreshOutline,
+  scaleOutline,
   searchOutline,
   sendOutline,
   shieldCheckmarkOutline,
+  sparklesOutline,
+  speedometerOutline,
   timeOutline,
+  timerOutline,
 } from 'ionicons/icons';
+import {
+  FITNESS_GOAL_OPTIONS,
+  FitnessGoalOption,
+  FitnessGoalKey,
+  buildGoalWeekPlan,
+  computeBmi,
+  getBmiCategory,
+  formatTime24to12,
+} from '../data/workout-templates';
 
 @Component({
   selector: 'app-login',
@@ -73,6 +90,38 @@ export class LoginPage implements OnDestroy {
   error = '';
   loading = false;
 
+  readonly goalOptions = FITNESS_GOAL_OPTIONS;
+  readonly afternoonTimeOptions = [
+    { value: '09:00', label: '9:00 AM (Gym Opening)' },
+    { value: '09:30', label: '9:30 AM (Morning Session)' },
+    { value: '10:00', label: '10:00 AM (Mid-Morning)' },
+    { value: '10:30', label: '10:30 AM (Morning Routine)' },
+    { value: '11:00', label: '11:00 AM (Pre-Noon Session)' },
+    { value: '11:30', label: '11:30 AM (Midday Session)' },
+    { value: '12:00', label: '12:00 PM (Noon Hours)' },
+    { value: '12:30', label: '12:30 PM (Early Afternoon)' },
+    { value: '13:00', label: '1:00 PM (Afternoon Session)' },
+    { value: '13:30', label: '1:30 PM (Afternoon Session)' },
+    { value: '14:00', label: '2:00 PM (Mid-Afternoon)' },
+    { value: '14:30', label: '2:30 PM (Mid-Afternoon)' },
+    { value: '15:00', label: '3:00 PM (Afternoon Hours)' },
+    { value: '15:30', label: '3:30 PM (Mid-Afternoon)' },
+    { value: '16:00', label: '4:00 PM (Afternoon Session)' },
+    { value: '16:30', label: '4:30 PM (Late Afternoon)' },
+    { value: '17:00', label: '5:00 PM (Popular Peak Hours)' },
+    { value: '17:30', label: '5:30 PM (Sunset Session)' },
+    { value: '18:00', label: '6:00 PM (Evening Routine)' },
+    { value: '18:30', label: '6:30 PM (Evening Hours)' },
+    { value: '19:00', label: '7:00 PM (Night Routine)' },
+    { value: '19:30', label: '7:30 PM (Night Session)' },
+    { value: '20:00', label: '8:00 PM (Late Evening)' },
+    { value: '20:30', label: '8:30 PM (Closing Hour Routine)' },
+    { value: '21:00', label: '9:00 PM (Gym Closing)' },
+  ];
+
+  timeDropdownOpen = false;
+  userHasManuallySelectedGoal = false;
+
   // Registration fields
   reg = {
     firstName: '',
@@ -80,8 +129,14 @@ export class LoginPage implements OnDestroy {
     email: '',
     phone: '',
     gender: '',
+    dateOfBirth: '',
     password: '',
     confirm: '',
+    height: null as number | null,
+    weight: null as number | null,
+    bmi: null as number | null,
+    fitness_goal: 'muscle_gain' as FitnessGoalKey,
+    preferred_workout_time: '17:00',
     membership_type: 'premium' as 'daily' | 'premium',
     payment_method: 'cash' as '' | 'cash' | 'gcash',
   };
@@ -163,10 +218,18 @@ export class LoginPage implements OnDestroy {
       'person-outline': personOutline,
       'phone-portrait-outline': phonePortraitOutline,
       'refresh-outline': refreshOutline,
+      'scale-outline': scaleOutline,
       'search-outline': searchOutline,
       'send-outline': sendOutline,
       'shield-checkmark-outline': shieldCheckmarkOutline,
+      'sparkles-outline': sparklesOutline,
+      'speedometer-outline': speedometerOutline,
       'time-outline': timeOutline,
+      'timer-outline': timerOutline,
+      'flame-outline': flameOutline,
+      'flash-outline': flashOutline,
+      'body-outline': bodyOutline,
+      'fitness-outline': fitnessOutline,
     });
   }
 
@@ -175,18 +238,77 @@ export class LoginPage implements OnDestroy {
   }
 
   @HostListener('document:click')
-  closeGenderDropdown(): void {
+  closeDropdowns(): void {
     this.genderOpen = false;
+    this.timeDropdownOpen = false;
   }
 
   toggleGenderDropdown(event?: Event): void {
     event?.stopPropagation();
+    this.timeDropdownOpen = false;
     this.genderOpen = !this.genderOpen;
   }
 
   selectGender(value: string): void {
     this.reg.gender = value;
     this.genderOpen = false;
+  }
+
+  toggleTimeDropdown(event?: Event): void {
+    event?.stopPropagation();
+    this.genderOpen = false;
+    this.timeDropdownOpen = !this.timeDropdownOpen;
+  }
+
+  selectWorkoutTime(time: string): void {
+    this.reg.preferred_workout_time = time;
+    this.timeDropdownOpen = false;
+  }
+
+  get preferredTimeLabel(): string {
+    return (
+      this.afternoonTimeOptions.find((t) => t.value === this.reg.preferred_workout_time)?.label ||
+      '5:00 PM (Popular Peak Hours)'
+    );
+  }
+
+  onHeightOrWeightChange(): void {
+    const h = Number(this.reg.height);
+    const w = Number(this.reg.weight);
+    if (h > 0 && w > 0) {
+      this.reg.bmi = computeBmi(h, w);
+    } else {
+      this.reg.bmi = null;
+    }
+  }
+
+  get recommendedGoalForBmi(): FitnessGoalKey {
+    const bmi = this.reg.bmi;
+    if (!bmi) return 'muscle_gain';
+    if (bmi >= 25) {
+      return 'weight_loss';
+    } else if (bmi < 18.5) {
+      return 'muscle_gain';
+    } else {
+      return 'tone_endurance';
+    }
+  }
+
+  get currentBmiCategory() {
+    return getBmiCategory(this.reg.bmi);
+  }
+
+  get selectedGoalDetails(): FitnessGoalOption {
+    return this.goalOptions.find((g) => g.id === this.reg.fitness_goal) || this.goalOptions[1];
+  }
+
+  get previewGoalPlan() {
+    return buildGoalWeekPlan(this.reg.fitness_goal, this.reg.bmi, this.reg.preferred_workout_time);
+  }
+
+  selectGoal(goalId: FitnessGoalKey): void {
+    this.userHasManuallySelectedGoal = true;
+    this.reg.fitness_goal = goalId;
   }
 
   ionViewWillEnter(): void {
@@ -211,11 +333,23 @@ export class LoginPage implements OnDestroy {
       email: '',
       phone: '',
       gender: '',
+      dateOfBirth: '',
       password: '',
       confirm: '',
+      height: null as number | null,
+      weight: null as number | null,
+      bmi: null as number | null,
+      fitness_goal: 'muscle_gain' as FitnessGoalKey,
+      preferred_workout_time: '17:00',
       membership_type: 'premium' as 'daily' | 'premium',
       payment_method: 'cash' as '' | 'cash' | 'gcash',
     };
+  }
+
+  get maxDobDate(): string {
+    const today = new Date();
+    const tenYearsAgo = new Date(today.getFullYear() - 10, today.getMonth(), today.getDate());
+    return tenYearsAgo.toISOString().split('T')[0];
   }
 
   private resetRegistrationInputs(): void {
@@ -632,6 +766,17 @@ export class LoginPage implements OnDestroy {
 
       this.reg.phone = phoneDigits;
 
+      if (!this.reg.dateOfBirth) {
+        this.regError = 'Date of birth is required.';
+        return;
+      }
+
+      const birthDate = new Date(this.reg.dateOfBirth);
+      if (isNaN(birthDate.getTime()) || birthDate > new Date()) {
+        this.regError = 'Please enter a valid date of birth.';
+        return;
+      }
+
       if (!this.isStrongPassword(this.reg.password)) {
         this.regError = 'Password must be 8+ chars and include uppercase, lowercase, number, and special character.';
         return;
@@ -647,6 +792,43 @@ export class LoginPage implements OnDestroy {
     }
 
     if (this.regStep === 2) {
+      const h = Number(this.reg.height);
+      const w = Number(this.reg.weight);
+
+      if (!h || h <= 0 || h > 260) {
+        this.regError = 'Please enter a valid height in centimeters (e.g. 170 cm).';
+        return;
+      }
+
+      if (!w || w <= 0 || w > 350) {
+        this.regError = 'Please enter a valid weight in kilograms (e.g. 68 kg).';
+        return;
+      }
+
+      this.onHeightOrWeightChange();
+      if (!this.userHasManuallySelectedGoal) {
+        this.reg.fitness_goal = this.recommendedGoalForBmi;
+      }
+
+      this.regStep = 3;
+      return;
+    }
+
+    if (this.regStep === 3) {
+      if (!this.reg.fitness_goal) {
+        this.regError = 'Please choose your target fitness goal.';
+        return;
+      }
+
+      if (!this.reg.preferred_workout_time) {
+        this.reg.preferred_workout_time = '17:00';
+      }
+
+      this.regStep = 4;
+      return;
+    }
+
+    if (this.regStep === 4) {
       if (!this.reg.membership_type) {
         this.regError = 'Please select a membership plan.';
         return;
@@ -657,7 +839,8 @@ export class LoginPage implements OnDestroy {
         return;
       }
 
-      this.regStep = 3;
+      this.regStep = 5;
+      return;
     }
   }
 
@@ -755,6 +938,26 @@ export class LoginPage implements OnDestroy {
     this.regError = '';
     this.regLoading = true;
 
+    const fitnessProfile = {
+      height: this.reg.height ? Number(this.reg.height) : null,
+      weight: this.reg.weight ? Number(this.reg.weight) : null,
+      bmi: this.reg.bmi,
+      fitness_goal: this.reg.fitness_goal,
+      preferred_workout_time: this.reg.preferred_workout_time || '17:00',
+    };
+
+    // Pre-cache tailored goal week plan in local storage
+    try {
+      const tailoredPlan = buildGoalWeekPlan(
+        this.reg.fitness_goal,
+        this.reg.bmi,
+        this.reg.preferred_workout_time
+      );
+      localStorage.setItem('fordago_week_plan_v1', JSON.stringify(tailoredPlan));
+    } catch {
+      // Storage unavailable or quota exceeded
+    }
+
     this.auth
       .register(
         this.reg.firstName,
@@ -764,7 +967,9 @@ export class LoginPage implements OnDestroy {
         this.reg.phone,
         this.reg.gender,
         this.reg.membership_type,
-        this.reg.payment_method
+        this.reg.payment_method,
+        fitnessProfile,
+        this.reg.dateOfBirth
       )
       .subscribe({
         next: (res: any) => {

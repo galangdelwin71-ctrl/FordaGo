@@ -207,6 +207,29 @@ export class NotificationCenterService {
    * those preferences take priority (this is correct Android behaviour).
    */
   private channelsInitialized = false;
+
+  /**
+   * Ensures native notification permissions are granted on Android (including Android 13+ POST_NOTIFICATIONS).
+   * Prompts user if not yet granted, and initializes all required notification channels.
+   */
+  public async ensureNativeNotificationsReady(): Promise<boolean> {
+    if (!Capacitor.isNativePlatform()) {
+      return true;
+    }
+    try {
+      const { LocalNotifications } = await import('@capacitor/local-notifications');
+      await this.initNativeNotificationChannels();
+      let permissions = await LocalNotifications.checkPermissions();
+      if (permissions.display !== 'granted') {
+        permissions = await LocalNotifications.requestPermissions();
+      }
+      return permissions.display === 'granted';
+    } catch (err) {
+      console.warn('Failed to ensure native notification permissions:', err);
+      return false;
+    }
+  }
+
   public async initNativeNotificationChannels(): Promise<void> {
     if (!Capacitor.isNativePlatform() || this.channelsInitialized) {
       return;
@@ -216,7 +239,9 @@ export class NotificationCenterService {
       const { LocalNotifications } = await import('@capacitor/local-notifications');
 
       // Request permission on init if needed
-      await LocalNotifications.requestPermissions();
+      try {
+        await LocalNotifications.requestPermissions();
+      } catch {}
 
       // Delete legacy channels if existing to avoid stale sound config
       try {
@@ -236,10 +261,35 @@ export class NotificationCenterService {
         lightColor: '#FFD700',
       });
 
+      // fordago-alerts-v3: Used by native FCM background push messaging
+      await LocalNotifications.createChannel({
+        id: 'fordago-alerts-v3',
+        name: 'FordaGO Alerts & Messages',
+        description: 'Real-time push notifications for chat messages, gym announcements, and updates',
+        importance: 5,
+        visibility: 1,
+        vibration: true,
+        lights: true,
+        lightColor: '#FFD700',
+      });
+
+      // fordago-alerts-v2: General in-app and device alerts
       await LocalNotifications.createChannel({
         id: 'fordago-alerts-v2',
         name: 'FordaGO Alerts & Announcements',
         description: 'Admin announcements, check-in confirmations, and gym notifications',
+        importance: 5,
+        visibility: 1,
+        vibration: true,
+        lights: true,
+        lightColor: '#FFD700',
+      });
+
+      // fordago-reminders-v2: Fallback duration reminders
+      await LocalNotifications.createChannel({
+        id: 'fordago-reminders-v2',
+        name: 'FordaGO Workout Duration Alarms',
+        description: 'Alerts when your workout duration goal is reached',
         importance: 5,
         visibility: 1,
         vibration: true,
@@ -488,9 +538,50 @@ export class NotificationCenterService {
     this.writeLocalNotifications([localNotification, ...this.readLocalNotifications()]);
 
     // Send device notification with targetRoute so tapping it opens /schedule
-    await this.sendDeviceNotification(localNotification, '/schedule');
+    await this.sendDeviceNotification(localNotification, '/schedule', 'fordago-alarms-v3');
 
     // Publish immediately so the badge and panel reflect it in real-time
+    this.publishNotifications(
+      this.sortNotifications([localNotification, ...this.notificationsSubject.value])
+    );
+  }
+
+  /**
+   * Fires an immediate "Starting Soon" reminder for a workout that is scheduled
+   * within the next 30 minutes (e.g. 15 or 20 minutes away) when the 30-minute advance mark has passed.
+   */
+  async notifyUpcomingWorkoutSoon(
+    sessionTitle: string,
+    sessionTime: string,
+    uniqueKey: string,
+    minsRemaining: number
+  ): Promise<void> {
+    const notified = this.readNotifiedUpcoming();
+    if (notified.includes(uniqueKey)) {
+      return;
+    }
+
+    const createdAt = new Date().toISOString();
+    const title = `⏰ Starting Soon: ${sessionTitle}`;
+    const timeText = minsRemaining <= 1 ? 'starts in 1 minute' : `starts in ${minsRemaining} minutes`;
+    const message = `Your ${sessionTitle} session ${timeText} (${sessionTime}). Get ready!`;
+    const localNotification: StoredNotificationItem = {
+      id: `upcoming-${uniqueKey}`,
+      key: uniqueKey,
+      title,
+      message,
+      createdAt,
+      unread: true,
+      source: 'local',
+    };
+
+    notified.push(uniqueKey);
+    this.writeNotifiedUpcoming(notified);
+    this.writeLocalNotifications([localNotification, ...this.readLocalNotifications()]);
+
+    // Send device notification with targetRoute so tapping it opens /schedule
+    await this.sendDeviceNotification(localNotification, '/schedule', 'fordago-alarms-v3');
+
     this.publishNotifications(
       this.sortNotifications([localNotification, ...this.notificationsSubject.value])
     );
@@ -808,7 +899,16 @@ export class NotificationCenterService {
    * so it rings and displays on the phone 30 minutes before workout EVEN IF THE APP IS CLOSED.
    */
   public async scheduleNativeUpcomingReminder(sessionTitle: string, sessionTime: string, uniqueKey: string, reminderDate: Date): Promise<void> {
+    if (this.auth.user && ['admin', 'super_admin', 'employee'].includes(this.auth.user.role)) {
+      return;
+    }
+
     if (reminderDate.getTime() <= Date.now()) {
+      return;
+    }
+
+    const ready = await this.ensureNativeNotificationsReady();
+    if (!ready) {
       return;
     }
 
@@ -819,7 +919,6 @@ export class NotificationCenterService {
     if (Capacitor.isNativePlatform()) {
       try {
         const { LocalNotifications } = await import('@capacitor/local-notifications');
-        await this.initNativeNotificationChannels();
         await LocalNotifications.schedule({
           notifications: [{
             id: notifId,
@@ -860,6 +959,11 @@ export class NotificationCenterService {
       return;
     }
 
+    const ready = await this.ensureNativeNotificationsReady();
+    if (!ready) {
+      return;
+    }
+
     const title = `🏋️ Workout Time: ${sessionTitle}`;
     const body = `It's time for your scheduled ${sessionTitle} session! Open FordaGO to track your workout.`;
     const notifId = this.hashNotificationId(`start-${uniqueKey}`);
@@ -867,7 +971,6 @@ export class NotificationCenterService {
     if (Capacitor.isNativePlatform()) {
       try {
         const { LocalNotifications } = await import('@capacitor/local-notifications');
-        await this.initNativeNotificationChannels();
         await LocalNotifications.schedule({
           notifications: [{
             id: notifId,
@@ -912,6 +1015,11 @@ export class NotificationCenterService {
       return;
     }
 
+    const ready = await this.ensureNativeNotificationsReady();
+    if (!ready) {
+      return;
+    }
+
     const title = `⚠️ Missed Workout: ${sessionTitle}`;
     const normalizedExercises = (homeExercises || []).slice(0, 6);
     const body = normalizedExercises.length
@@ -923,7 +1031,6 @@ export class NotificationCenterService {
     if (Capacitor.isNativePlatform()) {
       try {
         const { LocalNotifications } = await import('@capacitor/local-notifications');
-        await this.initNativeNotificationChannels();
         await LocalNotifications.schedule({
           notifications: [{
             id: notifId,
@@ -981,11 +1088,12 @@ export class NotificationCenterService {
             title.includes('Upcoming Workout') ||
             title.includes('Workout Time') ||
             title.includes('Missed Workout') ||
+            title.includes('Starting Soon') ||
             title.includes('Workout:')
           ) {
             return true;
           }
-          return true; // Cancel any non-duration alarm to prevent ghost alerts
+          return false;
         });
 
         if (workoutAlarms.length > 0) {
@@ -1038,6 +1146,11 @@ export class NotificationCenterService {
       return;
     }
 
+    const ready = await this.ensureNativeNotificationsReady();
+    if (!ready) {
+      return;
+    }
+
     const triggerAt = new Date(Date.now() + durationMinutes * 60 * 1000);
     const title = `⏰ Workout Duration Reached: ${sessionTitle}`;
     const message = `You've reached your scheduled ${durationMinutes} min workout. Tap to complete or view your session.`;
@@ -1046,13 +1159,12 @@ export class NotificationCenterService {
     if (Capacitor.isNativePlatform()) {
       try {
         const { LocalNotifications } = await import('@capacitor/local-notifications');
-        await this.initNativeNotificationChannels();
         await LocalNotifications.schedule({
           notifications: [{
             id: notifId,
             title,
             body: message,
-            channelId: 'fordago-reminders-v2',
+            channelId: 'fordago-alarms-v3',
             smallIcon: 'ic_stat_icon',
             iconColor: '#FFD700',
             schedule: {

@@ -17,6 +17,7 @@ import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
 import { ProfileService, UserProfile } from '../services/profile.service';
 import { ThemeService } from '../services/theme.service';
+import { UserStatusService } from '../services/user-status.service';
 import { CoachingNavService, CoachingPanelTab } from '../services/coaching-nav.service';
 import { CoachingService } from '../services/coaching.service';
 import { NoNegativeDirective } from '../directives/no-negative.directive';
@@ -29,19 +30,32 @@ import { OnboardingService, TourStep } from '../services/onboarding.service';
 import { FeedbackService } from '../services/feedback.service';
 import { FcmService } from '../services/fcm.service';
 import { API_URL, resolveImageUrl } from '../config/api.config';
+import {
+  FITNESS_GOAL_OPTIONS,
+  FitnessGoalOption,
+  computeBmi,
+  getBmiCategory,
+  buildGoalWeekPlan,
+} from '../data/workout-templates';
 
 // ── Interfaces ────────────────────────────────────────
 export interface MemberProfile {
-  firstName:      string;
-  lastName:       string;
-  email:          string;
-  phone:          string;
-  dateOfBirth:    string;
-  gender:         string;
-  profileImage:   string;
-  membershipPlan: string;
-  expiryDate:     string;
-  initials:       string;
+  firstName:            string;
+  lastName:             string;
+  email:                string;
+  phone:                string;
+  dateOfBirth:          string;
+  dateOfBirthRaw?:      string;
+  gender:               string;
+  profileImage:         string;
+  membershipPlan:       string;
+  expiryDate:           string;
+  initials:             string;
+  height?:              number | null;
+  weight?:              number | null;
+  bmi?:                 number | null;
+  fitnessGoal?:         string | null;
+  preferredWorkoutTime?: string | null;
 }
 
 export interface NotificationSetting {
@@ -97,26 +111,87 @@ export class ProfilePage implements OnInit {
 
   // ── Member Profile ────────────────────────────────────
   profile: MemberProfile = {
-    firstName:      'Carl Andrew',
-    lastName:       'Bernaldo',
-    email:          'carl.bernaldo@email.com',
-    phone:          '0912 345 6789',
-    dateOfBirth:    'March 12, 2000',
-    gender:         'Male',
-    profileImage:   '',
-    membershipPlan: 'Premium',
-    expiryDate:     'July 14, 2025',
-    initials:       'CB',
+    firstName:            '',
+    lastName:             '',
+    email:                '',
+    phone:                '',
+    dateOfBirth:          'Not set',
+    dateOfBirthRaw:       '',
+    gender:               '',
+    profileImage:         '',
+    membershipPlan:       'Daily Pass',
+    expiryDate:           'N/A',
+    initials:             '',
+    height:               null,
+    weight:               null,
+    bmi:                  null,
+    fitnessGoal:          'muscle_gain',
+    preferredWorkoutTime: '17:00',
   };
+
+  get maxDobDate(): string {
+    const today = new Date();
+    const tenYearsAgo = new Date(today.getFullYear() - 10, today.getMonth(), today.getDate());
+    return tenYearsAgo.toISOString().split('T')[0];
+  }
+
+  fitnessGoalOptions = FITNESS_GOAL_OPTIONS;
+  afternoonTimeOptions = [
+    { value: '09:00', label: '9:00 AM (Gym Opening)' },
+    { value: '09:30', label: '9:30 AM (Morning Session)' },
+    { value: '10:00', label: '10:00 AM (Mid-Morning)' },
+    { value: '10:30', label: '10:30 AM (Morning Routine)' },
+    { value: '11:00', label: '11:00 AM (Pre-Noon Session)' },
+    { value: '11:30', label: '11:30 AM (Midday Session)' },
+    { value: '12:00', label: '12:00 PM (Noon Hours)' },
+    { value: '12:30', label: '12:30 PM (Early Afternoon)' },
+    { value: '13:00', label: '1:00 PM (Afternoon Session)' },
+    { value: '13:30', label: '1:30 PM (Afternoon Session)' },
+    { value: '14:00', label: '2:00 PM (Mid-Afternoon)' },
+    { value: '14:30', label: '2:30 PM (Mid-Afternoon)' },
+    { value: '15:00', label: '3:00 PM (Afternoon Hours)' },
+    { value: '15:30', label: '3:30 PM (Mid-Afternoon)' },
+    { value: '16:00', label: '4:00 PM (Afternoon Session)' },
+    { value: '16:30', label: '4:30 PM (Late Afternoon)' },
+    { value: '17:00', label: '5:00 PM (Popular Peak Hours)' },
+    { value: '17:30', label: '5:30 PM (Sunset Session)' },
+    { value: '18:00', label: '6:00 PM (Evening Routine)' },
+    { value: '18:30', label: '6:30 PM (Evening Hours)' },
+    { value: '19:00', label: '7:00 PM (Night Routine)' },
+    { value: '19:30', label: '7:30 PM (Night Session)' },
+    { value: '20:00', label: '8:00 PM (Late Evening)' },
+    { value: '20:30', label: '8:30 PM (Closing Hour Routine)' },
+    { value: '21:00', label: '9:00 PM (Gym Closing)' },
+  ];
 
   // Edit form (bound to form inputs)
   editForm: Partial<MemberProfile> = {};
+  editBmi: number | null = null;
   phoneInvalid = false;
   savingProfile = false;
   profileImageFailed = false;
 
   onProfileImageError(): void {
     this.profileImageFailed = true;
+  }
+
+  get currentGoalDetails(): FitnessGoalOption | undefined {
+    const goal = this.profile.fitnessGoal || 'muscle_gain';
+    return this.fitnessGoalOptions.find((g) => g.id === goal);
+  }
+
+  get currentBmiCategory() {
+    return getBmiCategory(this.profile.bmi);
+  }
+
+  get editBmiCategory() {
+    return getBmiCategory(this.editBmi);
+  }
+
+  onEditStatsChange(): void {
+    const h = Number(this.editForm.height);
+    const w = Number(this.editForm.weight);
+    this.editBmi = computeBmi(h > 0 ? h : null, w > 0 ? w : null);
   }
 
   // ── Password Form ─────────────────────────────────────
@@ -165,6 +240,7 @@ export class ProfilePage implements OnInit {
   renewalModalOpen           = false;
   logoutModalOpen            = false;
   isDarkMode                 = true;
+  isActiveStatus             = true;
 
   /** Coach icon badge — kept in sync via CoachingService.unreadCount$ across all pages. */
   coachUnreadCount = 0;
@@ -176,6 +252,7 @@ export class ProfilePage implements OnInit {
     private auth: AuthService,
     private http: HttpClient,
     private themeService: ThemeService,
+    private userStatusService: UserStatusService,
     private coachingNav: CoachingNavService,
     private feedbackService: FeedbackService,
     private coachingService: CoachingService,
@@ -196,6 +273,7 @@ export class ProfilePage implements OnInit {
     this.applyPendingCoachingReopen();
     this.loadProfile();
     this.isDarkMode = this.themeService.isDarkMode();
+    this.isActiveStatus = this.userStatusService.isActive;
     // Keep coach badge in sync on this page
     this.coachingService.unreadCount$.subscribe((count) => { this.coachUnreadCount = count; });
   }
@@ -204,6 +282,7 @@ export class ProfilePage implements OnInit {
     if (!this.auth.user) return;
     this.applyPendingCoachingReopen();
     this.loadProfile();
+    this.isActiveStatus = this.userStatusService.isActive;
     this.checkAndStartProfileTour();
   }
 
@@ -297,18 +376,36 @@ export class ProfilePage implements OnInit {
       expiryDate = exp.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     }
 
+    const rawDob = (user as any).date_of_birth || (user as any).dateOfBirth || null;
+    let formattedDob = 'Not set';
+    let dobRaw = '';
+    if (rawDob) {
+      const d = new Date(rawDob);
+      if (!isNaN(d.getTime())) {
+        formattedDob = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        dobRaw = rawDob.includes('T') ? rawDob.split('T')[0] : rawDob;
+      }
+    }
+
     const safePhone = this.normalizePhone((user as any).phone || '');
     this.profile = {
       ...this.profile,
-      firstName:      first,
-      lastName:       last,
-      email:          user.email || '',
-      phone:          safePhone,
-      gender:         (user as any).gender || '',
-      profileImage:   resolveImageUrl((user as any).profile_image),
-      membershipPlan: membershipType === 'premium' ? 'Premium' : 'Daily Pass',
+      firstName:            first,
+      lastName:             last,
+      email:                user.email || '',
+      phone:                safePhone,
+      dateOfBirth:          formattedDob,
+      dateOfBirthRaw:       dobRaw,
+      gender:               (user as any).gender || '',
+      profileImage:         resolveImageUrl((user as any).profile_image),
+      membershipPlan:       membershipType === 'premium' ? 'Premium' : 'Daily Pass',
       expiryDate,
-      initials:       this.buildInitials(first, last || first),
+      initials:             this.buildInitials(first, last || first),
+      height:               user.height != null ? Number(user.height) : null,
+      weight:               user.weight != null ? Number(user.weight) : null,
+      bmi:                  user.bmi != null ? Number(user.bmi) : null,
+      fitnessGoal:          user.fitness_goal || 'muscle_gain',
+      preferredWorkoutTime: user.preferred_workout_time || '17:00',
     };
 
     // Also fetch fresh state from server in background
@@ -324,17 +421,36 @@ export class ProfilePage implements OnInit {
           const fExp = new Date(freshUser.membership_expiry);
           fExpDate = fExp.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
         }
+
+        const fRawDob = (freshUser as any).date_of_birth || (freshUser as any).dateOfBirth || null;
+        let fFormattedDob = this.profile.dateOfBirth;
+        let fDobRaw = this.profile.dateOfBirthRaw || '';
+        if (fRawDob) {
+          const fd = new Date(fRawDob);
+          if (!isNaN(fd.getTime())) {
+            fFormattedDob = fd.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+            fDobRaw = fRawDob.includes('T') ? fRawDob.split('T')[0] : fRawDob;
+          }
+        }
+
         this.profile = {
           ...this.profile,
-          firstName:      fFirst,
-          lastName:       fLast,
-          email:          freshUser.email || '',
-          phone:          this.normalizePhone(freshUser.phone || ''),
-          gender:         freshUser.gender || '',
-          profileImage:   resolveImageUrl(freshUser.profile_image),
-          membershipPlan: fMemType === 'premium' ? 'Premium' : 'Daily Pass',
-          expiryDate:     fExpDate,
-          initials:       this.buildInitials(fFirst, fLast || fFirst),
+          firstName:            fFirst,
+          lastName:             fLast,
+          email:                freshUser.email || '',
+          phone:                this.normalizePhone(freshUser.phone || ''),
+          dateOfBirth:          fFormattedDob,
+          dateOfBirthRaw:       fDobRaw,
+          gender:               freshUser.gender || '',
+          profileImage:         resolveImageUrl(freshUser.profile_image),
+          membershipPlan:       fMemType === 'premium' ? 'Premium' : 'Daily Pass',
+          expiryDate:           fExpDate,
+          initials:             this.buildInitials(fFirst, fLast || fFirst),
+          height:               freshUser.height != null ? Number(freshUser.height) : null,
+          weight:               freshUser.weight != null ? Number(freshUser.weight) : null,
+          bmi:                  freshUser.bmi != null ? Number(freshUser.bmi) : null,
+          fitnessGoal:          freshUser.fitness_goal || 'muscle_gain',
+          preferredWorkoutTime: freshUser.preferred_workout_time || '17:00',
         };
       },
       error: () => {}
@@ -343,12 +459,18 @@ export class ProfilePage implements OnInit {
 
   openEdit(): void {
     this.editForm = {
-      firstName: this.profile.firstName,
-      lastName:  this.profile.lastName,
-      email:     this.profile.email,
-      phone:     this.normalizePhone(this.profile.phone),
-      profileImage: this.profile.profileImage,
+      firstName:            this.profile.firstName,
+      lastName:             this.profile.lastName,
+      email:                this.profile.email,
+      phone:                this.normalizePhone(this.profile.phone),
+      dateOfBirth:          this.profile.dateOfBirthRaw || '',
+      profileImage:         this.profile.profileImage,
+      height:               this.profile.height,
+      weight:               this.profile.weight,
+      fitnessGoal:          this.profile.fitnessGoal || 'muscle_gain',
+      preferredWorkoutTime: this.profile.preferredWorkoutTime || '17:00',
     };
+    this.editBmi = this.profile.bmi ?? computeBmi(this.profile.height, this.profile.weight);
     this.phoneInvalid = false;
     this.editModalOpen = true;
   }
@@ -356,6 +478,7 @@ export class ProfilePage implements OnInit {
   closeEdit(): void {
     this.editModalOpen = false;
     this.editForm = {};
+    this.editBmi = null;
     this.phoneInvalid = false;
   }
 
@@ -383,14 +506,35 @@ export class ProfilePage implements OnInit {
     const nextEmail     = this.editForm.email     ?? this.profile.email;
     const nextImage     = this.editForm.profileImage ?? this.profile.profileImage;
 
-    const payload = {
-      username:      `${nextFirstName} ${nextLastName}`.trim(),
-      first_name:    nextFirstName,
-      last_name:     nextLastName,
-      email:         nextEmail,
-      phone:         safePhone,
-      gender:        (this.profile.gender || '').toLowerCase() || null,
-      profile_image: nextImage || null,
+    const parsedHeight = this.editForm.height ? Number(this.editForm.height) : null;
+    const parsedWeight = this.editForm.weight ? Number(this.editForm.weight) : null;
+    const computedBmiVal = computeBmi(parsedHeight, parsedWeight);
+    const nextGoal = this.editForm.fitnessGoal || this.profile.fitnessGoal || 'muscle_gain';
+    const nextTime = this.editForm.preferredWorkoutTime || this.profile.preferredWorkoutTime || '17:00';
+
+    const nextDob = this.editForm.dateOfBirth || this.profile.dateOfBirthRaw || null;
+    let nextFormattedDob = this.profile.dateOfBirth;
+    if (nextDob) {
+      const d = new Date(nextDob);
+      if (!isNaN(d.getTime())) {
+        nextFormattedDob = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      }
+    }
+
+    const payload: Record<string, any> = {
+      username:               `${nextFirstName} ${nextLastName}`.trim(),
+      first_name:             nextFirstName,
+      last_name:              nextLastName,
+      email:                  nextEmail,
+      phone:                  safePhone,
+      gender:                 (this.profile.gender || '').toLowerCase() || null,
+      date_of_birth:          nextDob,
+      profile_image:          nextImage || null,
+      height:                 parsedHeight,
+      weight:                 parsedWeight,
+      bmi:                    computedBmiVal,
+      fitness_goal:           nextGoal,
+      preferred_workout_time: nextTime,
     };
 
     const headers = { Authorization: `Bearer ${this.auth.token}` };
@@ -401,19 +545,40 @@ export class ProfilePage implements OnInit {
         this.savingProfile = false;
         const returnedAvatar = res?.profile_image ?? nextImage;
         const resolved = resolveImageUrl(returnedAvatar);
+        const finalBmi = res?.bmi != null ? Number(res.bmi) : computedBmiVal;
+
         this.profile = {
           ...this.profile,
-          firstName:    nextFirstName,
-          lastName:     nextLastName,
-          email:        nextEmail,
-          phone:        safePhone,
-          profileImage: resolved,
-          initials:     this.buildInitials(nextFirstName, nextLastName),
+          firstName:            nextFirstName,
+          lastName:             nextLastName,
+          email:                nextEmail,
+          phone:                safePhone,
+          dateOfBirth:          nextFormattedDob,
+          dateOfBirthRaw:       nextDob || '',
+          profileImage:         resolved,
+          initials:             this.buildInitials(nextFirstName, nextLastName),
+          height:               parsedHeight,
+          weight:               parsedWeight,
+          bmi:                  finalBmi,
+          fitnessGoal:          nextGoal,
+          preferredWorkoutTime: nextTime,
         };
         this.profileImageFailed = false;
-        this.auth.updateCurrentUser({ ...payload, profile_image: returnedAvatar });
+        this.auth.updateCurrentUser({
+          ...payload,
+          profile_image: returnedAvatar,
+          date_of_birth: nextDob,
+          bmi: finalBmi,
+        });
+
+        // Re-generate suggested workout plan with the updated target goal, BMI adaptation, and afternoon time
+        try {
+          const updatedPlan = buildGoalWeekPlan(nextGoal, finalBmi, nextTime);
+          localStorage.setItem('fordago_week_plan_v1', JSON.stringify(updatedPlan));
+        } catch {}
+
         this.closeEdit();
-        void this.showMobileToast('Profile updated successfully!');
+        void this.showMobileToast('Profile & body goal updated successfully!');
       },
       error: (err: any) => {
         this.savingProfile = false;
@@ -571,6 +736,16 @@ export class ProfilePage implements OnInit {
   onThemeToggle(event: CustomEvent): void {
     this.isDarkMode = !!event.detail?.checked;
     this.themeService.setTheme(this.isDarkMode ? 'dark' : 'light');
+  }
+
+  onActiveStatusToggle(event: CustomEvent): void {
+    this.isActiveStatus = !!event.detail?.checked;
+    this.userStatusService.setActiveStatus(this.isActiveStatus);
+    if (this.isActiveStatus) {
+      void this.showMobileToast('Active status turned ON (Visible to members)');
+    } else {
+      void this.showMobileToast('Active status turned OFF (Appearing offline)');
+    }
   }
 
   // ── Progress History ──────────────────────────────────

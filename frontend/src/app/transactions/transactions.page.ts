@@ -62,6 +62,15 @@ export class TransactionsPage implements OnInit {
     this.load();
   }
 
+  private get currentUser(): any {
+    if (this.auth.user) return this.auth.user;
+    try {
+      return JSON.parse(localStorage.getItem('user') || '{}');
+    } catch {
+      return {};
+    }
+  }
+
   load() {
     const token = this.auth.token;
     if (!token) return;
@@ -71,18 +80,96 @@ export class TransactionsPage implements OnInit {
         headers: { Authorization: `Bearer ${token}` },
       })
       .subscribe({
-        next: data => { this.transactions = data; this.isLoading = false; },
-        error: ()  => { this.isLoading = false; },
+        next: data => {
+          this.transactions = this.enrichWithMembership(data || []);
+          this.isLoading = false;
+        },
+        error: () => {
+          this.transactions = this.enrichWithMembership([]);
+          this.isLoading = false;
+        },
       });
+  }
+
+  private matchesPeriod(d: Date, period: string): boolean {
+    if (period === 'all') return true;
+    const now = new Date();
+    if (period === 'daily') {
+      return (
+        d.getFullYear() === now.getFullYear() &&
+        d.getMonth() === now.getMonth() &&
+        d.getDate() === now.getDate()
+      );
+    }
+    if (period === 'weekly') {
+      const startOfWeek = new Date(now);
+      const day = startOfWeek.getDay() || 7;
+      startOfWeek.setHours(0, 0, 0, 0);
+      startOfWeek.setDate(startOfWeek.getDate() - day + 1);
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(endOfWeek.getDate() + 7);
+      return d >= startOfWeek && d < endOfWeek;
+    }
+    if (period === 'monthly') {
+      return (
+        d.getFullYear() === now.getFullYear() &&
+        d.getMonth() === now.getMonth()
+      );
+    }
+    return true;
+  }
+
+  private enrichWithMembership(list: any[]): any[] {
+    const user = this.currentUser;
+    const isPremium = (user?.membership_type || '').toLowerCase() === 'premium';
+    const hasMembershipTx = list.some(
+      t =>
+        t.source === 'membership' ||
+        (t.type_label || '').toLowerCase().includes('premium membership')
+    );
+
+    if (isPremium && !hasMembershipTx) {
+      const txDate = user.created_at ? new Date(user.created_at) : new Date();
+      if (this.matchesPeriod(txDate, this.period)) {
+        list = [
+          ...list,
+          {
+            id: `membership_${user.id || 'me'}`,
+            source: 'membership',
+            transaction_date: txDate.toISOString(),
+            sub_type: 'premium',
+            payment_status: 'paid',
+            amount: 500.0,
+            type_label: 'Premium Membership Plan',
+            product_name: '1-Month Premium Access',
+            quantity: 1,
+            payment_method: user.payment_method || 'cash',
+          },
+        ];
+      }
+    }
+
+    return list
+      .map(row => ({
+        ...row,
+        amount: Number(row.amount || 0),
+      }))
+      .sort(
+        (a, b) =>
+          new Date(b.transaction_date).getTime() -
+          new Date(a.transaction_date).getTime()
+      );
   }
 
   getIcon(tx: any): string {
     if (tx.source === 'order') return 'cart-outline';
+    if (tx.source === 'membership') return 'ribbon-outline';
     return tx.sub_type === 'daily' ? 'walk-outline' : 'star-outline';
   }
 
   getIconClass(tx: any): string {
     if (tx.source === 'order') return 'icon-shop';
+    if (tx.source === 'membership') return 'icon-premium';
     return tx.sub_type === 'daily' ? 'icon-daily' : 'icon-premium';
   }
 
@@ -124,7 +211,7 @@ export class TransactionsPage implements OnInit {
     const rows = this.transactions.map(tx => [
       this.datePipe.transform(tx.transaction_date, 'MMM d, yyyy HH:mm') ?? '',
       tx.type_label,
-      tx.product_name || (tx.source === 'attendance' ? 'Gym Check-in' : '—'),
+      tx.product_name || (tx.source === 'attendance' ? 'Gym Check-in' : (tx.source === 'membership' ? '1-Month Premium Pass' : '—')),
       tx.amount > 0 ? `₱${this.decimalPipe.transform(tx.amount, '1.2-2')}` : 'Included',
       this.getStatusLabel(tx),
     ]);

@@ -26,7 +26,7 @@ class WorkoutPlanProposal extends Model
     protected function casts(): array
     {
         return [
-            'session_date'     => 'date',
+            'session_date'     => 'date:Y-m-d',
             'duration_minutes' => 'integer',
             'price'            => 'decimal:2',
             'accepted_at'      => 'datetime',

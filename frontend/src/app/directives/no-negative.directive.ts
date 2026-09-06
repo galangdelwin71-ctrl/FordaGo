@@ -6,7 +6,20 @@ import { NgControl } from '@angular/forms';
   standalone: true
 })
 export class NoNegativeDirective {
-  @Input() min: number = 0;
+  private _min: number = 0;
+
+  @Input()
+  set min(value: number | string | undefined | null) {
+    if (value != null && value !== '') {
+      const parsed = Number(value);
+      this._min = isNaN(parsed) ? 0 : parsed;
+    } else {
+      this._min = 0;
+    }
+  }
+  get min(): number {
+    return this._min;
+  }
   constructor(
     private elementRef: ElementRef,
     @Optional() @Self() private control?: NgControl
@@ -32,10 +45,11 @@ export class NoNegativeDirective {
     }
   }
 
-  private applyValue(raw: unknown): void {
-    const next = this.enforceMin(this.sanitize(raw));
-    if (this.control?.control) {
-      this.control.control.setValue(next, { emitEvent: false });
+  private applyValue(raw: unknown, enforceMinimum = false): void {
+    const sanitized = this.sanitize(raw);
+    const next = enforceMinimum ? this.enforceMin(sanitized) : sanitized;
+    if (this.control?.control && this.control.control.value !== next) {
+      this.control.control.setValue(next === '' ? null : (isNaN(Number(next)) ? next : Number(next)), { emitEvent: false });
     }
     this.syncHostValue(next);
   }
@@ -56,18 +70,18 @@ export class NoNegativeDirective {
 
   @HostListener('ionInput', ['$event'])
   onIonInput(event: any): void {
-    this.applyValue(event?.detail?.value ?? '');
+    this.applyValue(event?.detail?.value ?? '', false);
   }
 
   @HostListener('input', ['$event'])
   onInput(event: Event): void {
     const target = event.target as HTMLInputElement;
-    this.applyValue(target?.value ?? '');
+    this.applyValue(target?.value ?? '', false);
   }
 
   @HostListener('blur')
   onBlur(): void {
     const current = this.control?.control?.value ?? (this.elementRef.nativeElement as any)?.value ?? '';
-    this.applyValue(current);
+    this.applyValue(current, true);
   }
 }

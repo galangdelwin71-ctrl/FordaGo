@@ -30,12 +30,17 @@
       [style.left.px]="tooltipPos.arrowOffset">
     </div>
 
-    <!-- Card Header with Plain "Skip" Text -->
+    <!-- Card Header with Plain Skip Action -->
     <div class="tooltip-header">
       <div class="header-icon-wrap" *ngIf="currentStep.icon">
         <ion-icon [name]="currentStep.icon" class="header-icon"></ion-icon>
       </div>
-      <button type="button" class="skip-btn" (click)="onSkip()" title="Skip guide" aria-label="Skip guide">
+      <button
+        type="button"
+        class="skip-btn"
+        (click)="onSkip()"
+        title="Skip guide"
+        aria-label="Skip guide">
         Skip
       </button>
     </div>
@@ -48,24 +53,38 @@
 
     <!-- Card Footer / Actions -->
     <div class="tooltip-footer">
+      <!-- Cancel All Guides: ONLY visible on Dashboard -->
       <button
         type="button"
-        class="btn-nav btn-back"
-        *ngIf="stepIndex > 0"
-        (click)="onPrev()"
-        aria-label="Previous step">
-        Back
+        class="btn-cancel-all-footer"
+        *ngIf="isDashboardTour"
+        (click)="onSkipAll()"
+        title="Cancel and dismiss all guides permanently"
+        aria-label="Cancel all guides">
+        <ion-icon name="close-circle-outline"></ion-icon>
+        <span>Cancel All Guides</span>
       </button>
 
-      <button
-        type="button"
-        class="btn-nav btn-next"
-        (click)="onNext()"
-        [class.btn-finish]="isLastStep()">
-        <span *ngIf="!isLastStep()">Next</span>
-        <span *ngIf="isLastStep()">Got It!</span>
-        <ion-icon [name]="isLastStep() ? 'checkmark-outline' : 'arrow-forward-outline'"></ion-icon>
-      </button>
+      <div class="nav-buttons">
+        <button
+          type="button"
+          class="btn-nav btn-back"
+          *ngIf="stepIndex > 0"
+          (click)="onPrev()"
+          aria-label="Previous step">
+          Back
+        </button>
+
+        <button
+          type="button"
+          class="btn-nav btn-next"
+          (click)="onNext()"
+          [class.btn-finish]="isLastStep()">
+          <span *ngIf="!isLastStep()">Next</span>
+          <span *ngIf="isLastStep()">Got It!</span>
+          <ion-icon [name]="isLastStep() ? 'checkmark-outline' : 'arrow-forward-outline'"></ion-icon>
+        </button>
+      </div>
     </div>
 
     <!-- Bottom Arrow (points down to element) -->

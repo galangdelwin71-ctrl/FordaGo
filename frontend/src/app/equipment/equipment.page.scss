@@ -977,6 +977,42 @@ ion-content {
     &.muted { color: #64748b; }
   }
 
+  .dos-card {
+    background: rgba(5, 150, 105, 0.08);
+    border-color: rgba(5, 150, 105, 0.28);
+    box-shadow: 0 4px 14px rgba(5, 150, 105, 0.06);
+
+    .dos-card-header {
+      color: #059669;
+      ion-icon { color: #059669; }
+    }
+
+    .dos-list {
+      color: #0f172a;
+      li { color: #0f172a; }
+    }
+  }
+
+  .donts-card {
+    background: rgba(220, 38, 38, 0.07);
+    border-color: rgba(220, 38, 38, 0.25);
+    box-shadow: 0 4px 14px rgba(220, 38, 38, 0.06);
+
+    .donts-card-header {
+      color: #dc2626;
+      ion-icon { color: #dc2626; }
+    }
+
+    .donts-list {
+      color: #0f172a;
+      li { color: #0f172a; }
+    }
+
+    .donts-text {
+      color: #0f172a;
+    }
+  }
+
   .close-modal-btn {
     background: linear-gradient(135deg, #ffd600 0%, #eab308 100%);
     color: #000000;

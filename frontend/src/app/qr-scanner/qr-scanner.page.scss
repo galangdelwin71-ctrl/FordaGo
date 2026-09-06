@@ -83,99 +83,68 @@ ion-content::part(scroll) {
   display: block;
 }
 
-// ── Mode Row ─────────────────────────────────────────────
-.mode-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-bottom: 18px;
-}
+// ── Scanner Hero Badge ─────────────────────────────────────
+.scanner-hero-badge {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
 
-.mode-card {
-  background: var(--overlay-light);
-  border: 1px solid var(--border-secondary);
-  border-radius: var(--radius-md);
-  padding: 14px 10px;
-  text-align: center;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-
-  &:active { background: var(--overlay-medium); }
-
-  &.active {
-    border-color: var(--accent-border);
-    background: var(--accent-dim);
-    box-shadow: 0 0 0 1px var(--accent-border) inset;
-
-    .mode-icon-wrap {
-      background: var(--accent-dim);
-      border-color: var(--accent-border);
-      color: var(--accent-lime);
-    }
-
-    .mode-name { color: var(--accent-lime); }
-  }
-
-  .mode-icon-wrap {
-    width: 38px;
-    height: 38px;
-    border-radius: 11px;
-    background: var(--overlay-medium);
-    border: 1px solid var(--border-secondary);
-    display: flex;
+  .hero-chip {
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    margin: 0 auto 8px;
-    color: var(--text-secondary);
-    transition: all var(--transition-fast);
-  }
-
-  .mode-emoji { font-size: 18px; line-height: 1; }
-
-  .mode-name {
+    gap: 7px;
+    padding: 6px 14px;
+    background: rgba(255, 214, 0, 0.08);
+    border: 1px solid rgba(255, 214, 0, 0.35);
+    border-radius: 999px;
     font-size: 11px;
     font-weight: 700;
-    color: var(--text-muted);
-    text-transform: uppercase;
     letter-spacing: 0.5px;
-    transition: color var(--transition-fast);
+    text-transform: uppercase;
+    color: var(--accent-lime);
+
+    ion-icon {
+      font-size: 15px;
+      color: var(--accent-lime);
+    }
   }
 }
 
 // ── Scanner Card ───────────────────────────────────────────
 .scanner-wrap {
-  background: linear-gradient(160deg, var(--bg-tertiary) 0%, var(--bg-secondary) 70%);
+  background: var(--bg-secondary);
   border: 1px solid var(--border-secondary);
   border-radius: var(--radius-xl);
-  padding: 22px 20px 24px;
+  padding: 24px 20px 24px;
   text-align: center;
   margin-bottom: 16px;
   box-shadow: var(--shadow-card);
+  position: relative;
 }
 
 .qr-frame {
-  width: min(72vw, 260px);
-  height: min(72vw, 260px);
+  width: min(74vw, 270px);
+  height: min(74vw, 270px);
   margin: 0 auto 18px;
   border-radius: var(--radius-lg);
-  background: #000;
+  background: #050711;
   position: relative;
   overflow: hidden;
-  border: 2px solid var(--accent-lime);
-  box-shadow: var(--shadow-glow), inset 0 0 30px rgba(0,0,0,0.5);
+  border: 2px solid rgba(255, 214, 0, 0.85);
+  box-shadow: 0 0 24px rgba(255, 214, 0, 0.18), inset 0 0 40px rgba(0, 0, 0, 0.7);
 
   .qr-corner {
     position: absolute;
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
     border-color: var(--accent-lime);
     border-style: solid;
     z-index: 2;
 
-    &.tl { top: 12px; left: 12px; border-width: 3px 0 0 3px; border-radius: 6px 0 0 0; }
-    &.tr { top: 12px; right: 12px; border-width: 3px 3px 0 0; border-radius: 0 6px 0 0; }
-    &.bl { bottom: 12px; left: 12px; border-width: 0 0 3px 3px; border-radius: 0 0 0 6px; }
-    &.br { bottom: 12px; right: 12px; border-width: 0 3px 3px 0; border-radius: 0 0 6px 0; }
+    &.tl { top: 10px; left: 10px; border-width: 3.5px 0 0 3.5px; border-radius: 8px 0 0 0; }
+    &.tr { top: 10px; right: 10px; border-width: 3.5px 3.5px 0 0; border-radius: 0 8px 0 0; }
+    &.bl { bottom: 10px; left: 10px; border-width: 0 0 3.5px 3.5px; border-radius: 0 0 0 8px; }
+    &.br { bottom: 10px; right: 10px; border-width: 0 3.5px 3.5px 0; border-radius: 0 0 8px 0; }
   }
 
   .camera-center {
@@ -183,10 +152,14 @@ ion-content::part(scroll) {
     align-items: center;
     justify-content: center;
     height: 100%;
-    opacity: 0.25;
+    opacity: 0.32;
     color: var(--accent-lime);
+    transition: opacity var(--transition-smooth);
 
-    .camera-emoji { font-size: 54px; }
+    .camera-emoji {
+      font-size: 58px;
+      filter: drop-shadow(0 2px 10px rgba(255, 214, 0, 0.35));
+    }
   }
 }
 
@@ -646,6 +619,19 @@ ion-content::part(scroll) {
       .mode-name {
         color: #0f172a;
         font-weight: 850;
+      }
+    }
+  }
+
+  .scanner-hero-badge {
+    .hero-chip {
+      background: #f1f5f9;
+      border: 1.5px solid #0f172a;
+      color: #0f172a;
+      box-shadow: none;
+
+      ion-icon {
+        color: #0f172a;
       }
     }
   }
@@ -1777,6 +1763,19 @@ ion-modal.bottom-sheet-modal {
       .mode-name {
         color: #0f172a;
         font-weight: 850;
+      }
+    }
+  }
+
+  .scanner-hero-badge {
+    .hero-chip {
+      background: #f1f5f9;
+      border: 1.5px solid #0f172a;
+      color: #0f172a;
+      box-shadow: none;
+
+      ion-icon {
+        color: #0f172a;
       }
     }
   }

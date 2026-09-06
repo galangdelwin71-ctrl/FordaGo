@@ -36,6 +36,7 @@ class ReportsController extends Controller
 
         $attWhere  = $period !== 'all' ? 'AND ' . $this->periodWhere($period, 'a.check_in_time') : '';
         $ordWhere  = $period !== 'all' ? 'AND ' . $this->periodWhere($period, 'o.created_at')    : '';
+        $usrWhere  = $period !== 'all' ? 'AND ' . $this->periodWhere($period, 'COALESCE(u.created_at, NOW())') : '';
 
         $attendance = DB::select("
             SELECT
@@ -72,7 +73,24 @@ class ReportsController extends Controller
             ORDER BY o.created_at DESC
         ", [$userId]);
 
-        $combined = collect(array_merge($attendance, $orders))
+        $memberships = DB::select("
+            SELECT
+                u.id,
+                'membership' AS source,
+                COALESCE(u.created_at, NOW()) AS transaction_date,
+                u.membership_type AS sub_type,
+                CASE WHEN u.membership_status = 'rejected' THEN 'rejected' ELSE 'paid' END AS payment_status,
+                500.00 AS amount,
+                'Premium Membership Plan' AS type_label,
+                NULL AS confirmed_at,
+                '1-Month Premium Access' AS product_name,
+                1 AS quantity
+            FROM users u
+            WHERE u.id = ? AND u.membership_type = 'premium' {$usrWhere}
+            ORDER BY u.created_at DESC
+        ", [$userId]);
+
+        $combined = collect(array_merge($attendance, $orders, $memberships))
             ->map(function ($row) {
                 $row->amount = (float) $row->amount;
                 return $row;

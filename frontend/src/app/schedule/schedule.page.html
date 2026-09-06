@@ -121,7 +121,7 @@
           <div class="session-coach">
             <span class="coach-icon"><ion-icon name="person-outline"></ion-icon></span>
             <span *ngIf="s.coach">{{ s.coach }}</span>
-            <span *ngIf="!s.coach">Home workout</span>
+            <span *ngIf="!s.coach">Self-guided</span>
             <span class="coach-dot" *ngIf="s.coach && s.membersCount > 0"></span>
             <span *ngIf="s.coach && s.membersCount > 0">{{ s.membersCount }} joining</span>
           </div>
@@ -592,7 +592,7 @@
             class="wplan-day-tab"
             [class.active]="weekPlanActiveDay === di"
             [class.rest]="weekPlanDays[di]?.isRest"
-            (click)="weekPlanActiveDay = di">
+            (click)="setWeekPlanActiveDay(di)">
             {{ label.slice(0,3) }}
           </button>
         </div>
@@ -638,22 +638,52 @@
               </div>
             </div>
 
-            <div class="two-col" id="tour-week-plan-time">
-              <div class="field-group">
-                <label class="field-label">Time</label>
-                <div class="field-wrap">
-                  <span class="field-icon">⏰</span>
-                  <input type="time" [(ngModel)]="day.time" />
+            <div class="field-group" id="tour-week-plan-time">
+              <label class="field-label">Time</label>
+              <div class="field-wrap">
+                <span class="field-icon">⏰</span>
+                <input type="time" [(ngModel)]="day.time" />
+              </div>
+            </div>
+
+            <div class="field-group" id="tour-week-plan-duration">
+              <label class="field-label">Duration</label>
+              <div class="duration-input-row">
+                <div class="field-wrap duration-field-wrap">
+                  <span class="field-icon">⏱</span>
+                  <input
+                    type="number"
+                    inputmode="decimal"
+                    appNoNegative
+                    [min]="weekPlanDurationUnit === 'hrs' ? 0.25 : 1"
+                    [max]="weekPlanDurationUnit === 'hrs' ? 8 : 480"
+                    [step]="weekPlanDurationUnit === 'hrs' ? 0.25 : 1"
+                    pattern="[0-9]*\.?[0-9]*"
+                    [placeholder]="weekPlanDurationUnit === 'hrs' ? 'e.g. 1.5' : 'e.g. 45'"
+                    [ngModel]="weekPlanDurationInputValue"
+                    (ngModelChange)="onWeekPlanDurationInputChange($event)" />
+                </div>
+                <div class="duration-unit-toggle">
+                  <button
+                    type="button"
+                    class="duration-unit-btn"
+                    [class.active]="weekPlanDurationUnit === 'min'"
+                    (click)="onWeekPlanDurationUnitChange('min')">Min</button>
+                  <button
+                    type="button"
+                    class="duration-unit-btn"
+                    [class.active]="weekPlanDurationUnit === 'hrs'"
+                    (click)="onWeekPlanDurationUnitChange('hrs')">Hrs</button>
                 </div>
               </div>
-              <div class="field-group">
-                <label class="field-label">Duration</label>
-                <div class="field-wrap">
-                  <span class="field-icon">⏱</span>
-                  <select [(ngModel)]="day.duration">
-                    <option *ngFor="let d of durationOptions" [value]="d">{{ d }}</option>
-                  </select>
-                </div>
+              <div class="target-suggestions">
+                <span
+                  *ngFor="let d of durationPresetOptions"
+                  class="target-chip"
+                  [class.selected]="day.duration === d"
+                  (click)="selectWeekPlanDurationPreset(d)">
+                  {{ d }}
+                </span>
               </div>
             </div>
 

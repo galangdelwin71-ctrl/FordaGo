@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Figure 3. Use Case Diagram of FordaGO</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #ffffff;
+    font-family: 'Times New Roman', Times, serif;
+    color: #000000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 15px 20px 10px;
+    width: 1640px;
+    height: 1250px;
+  }
+  .title {
+    font-size: 25px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+  .subtitle {
+    font-size: 16px;
+    font-style: italic;
+    color: #222222;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .diagram-container {
+    position: relative;
+    width: 1600px;
+    height: 1160px;
+  }
+  svg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+  }
+  .actor-label {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 16.5px;
+    font-weight: bold;
+    text-anchor: middle;
+    fill: #000000;
+  }
+  .actor-sub {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 14px;
+    font-style: italic;
+    text-anchor: middle;
+    fill: #444444;
+  }
+  .system-box { 
+    fill: #ffffff; 
+    stroke: #000000; 
+    stroke-width: 2.5; 
+  }
+  .system-title {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 19px; 
+    font-weight: bold; 
+    text-anchor: middle;
+    fill: #000000;
+  }
+  .system-sub {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 14.5px; 
+    font-style: italic; 
+    text-anchor: middle;
+    fill: #444444;
+  }
+  .col-header {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 15px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-anchor: middle;
+    fill: #333333;
+  }
+  .use-case-ellipse { 
+    fill: #ffffff; 
+    stroke: #000000; 
+    stroke-width: 2; 
+  }
+  .use-case-shared {
+    fill: #f4f4f4;
+    stroke: #000000;
+    stroke-width: 2.2;
+  }
+  .use-case-text {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 14.5px; 
+    font-weight: bold;
+    text-anchor: middle; 
+    dominant-baseline: central; 
+    fill: #000000;
+  }
+  .assoc-line { 
+    stroke: #000000; 
+    stroke-width: 1.6; 
+  }
+</style>
+</head>
+<body>
+
+  <div class="title">Figure 3. Use Case Diagram of FordaGO System</div>
+  <div class="subtitle">Role-Based Functional Decomposition &amp; Actor Associations &middot; AFFORDA Gym – Cabiao Branch</div>
+
+  <div class="diagram-container">
+    <svg viewBox="0 0 1600 1160" xmlns="http://www.w3.org/2000/svg">
+
+      <!-- ================= SYSTEM BOUNDARY ================= -->
+      <rect x="235" y="15" width="1130" height="1130" class="system-box" rx="8" />
+      
+      <!-- System Header inside Box -->
+      <text x="800" y="45" class="system-title">FordaGO: Mobile-Based Gym Database Management System</text>
+      <text x="800" y="65" class="system-sub">Decoupled Tri-Tier Services Boundary &middot; Laravel 11 REST API / Ionic 8 Client / MySQL 8.0</text>
+
+      <!-- Column Labels -->
+      <text x="495" y="88" class="col-header">&mdash; ADMINISTRATIVE &amp; OPERATIONS MODULES &mdash;</text>
+      <text x="1100" y="88" class="col-header">&mdash; MEMBER &amp; COACHING MOBILE MODULES &mdash;</text>
+
+      <!-- ===================================================
+           ACTORS - LEFT SIDE (Administrative & Operations)
+           =================================================== -->
+
+      <!-- ACTOR 1: Super Admin (top-left, y=210) -->
+      <g transform="translate(115, 200)">
+        <circle cx="0" cy="-40" r="18" fill="#ffffff" stroke="#000000" stroke-width="2.2" />
+        <line x1="0" y1="-22" x2="0" y2="24" stroke="#000000" stroke-width="2.5" />
+        <line x1="-26" y1="-6" x2="26" y2="-6" stroke="#000000" stroke-width="2.5" />
+        <line x1="0" y1="24" x2="-22" y2="68" stroke="#000000" stroke-width="2.5" />
+        <line x1="0" y1="24" x2="22" y2="68" stroke="#000000" stroke-width="2.5" />
+        <text x="0" y="94" class="actor-label">Super Admin</text>
+        <text x="0" y="112" class="actor-sub">(Root Owner)</text>
+      </g>
+
+      <!-- ACTOR 2: Gym Admin (mid-left, y=470) -->
+      <g transform="translate(115, 460)">
+        <circle cx="0" cy="-40" r="18" fill="#ffffff" stroke="#000000" stroke-width="2.2" />
+        <line x1="0" y1="-22" x2="0" y2="24" stroke="#000000" stroke-width="2.5" />
+        <line x1="-26" y1="-6" x2="26" y2="-6" stroke="#000000" stroke-width="2.5" />
+        <line x1="0" y1="24" x2="-22" y2="68" stroke="#000000" stroke-width="2.5" />
+        <line x1="0" y1="24" x2="22" y2="68" stroke="#000000" stroke-width="2.5" />
+        <text x="0" y="94" class="actor-label">Gym Admin</text>
+        <text x="0" y="112" class="actor-sub">(Branch Manager)</text>
+      </g>
+
+      <!-- ACTOR 3: Employee / Front-Desk (bottom-left, y=830) -->
+      <g transform="translate(115, 820)">
+        <circle cx="0" cy="-40" r="18" fill="#ffffff" stroke="#000000" stroke-width="2.2" />
+        <line x1="0" y1="-22" x2="0" y2="24" stroke="#000000" stroke-width="2.5" />
+        <line x1="-26" y1="-6" x2="26" y2="-6" stroke="#000000" stroke-width="2.5" />
+        <line x1="0" y1="24" x2="-22" y2="68" stroke="#000000" stroke-width="2.5" />
+        <line x1="0" y1="24" x2="22" y2="68" stroke="#000000" stroke-width="2.5" />
+        <text x="0" y="94" class="actor-label">Employee /</text>
+        <text x="0" y="112" class="actor-label">Front-Desk</text>
+        <text x="0" y="130" class="actor-sub">(Operations Staff)</text>
+      </g>
+
+      <!-- ===================================================
+           ACTORS - RIGHT SIDE (Member & Coach)
+           =================================================== -->
+
+      <!-- ACTOR 4: Gym Member (top-right, y=410) -->
+      <g transform="translate(1485, 400)">
+        <circle cx="0" cy="-40" r="18" fill="#ffffff" stroke="#000000" stroke-width="2.2" />
+        <line x1="0" y1="-22" x2="0" y2="24" stroke="#000000" stroke-width="2.5" />
+        <line x1="-26" y1="-6" x2="26" y2="-6" stroke="#000000" stroke-width="2.5" />
+        <line x1="0" y1="24" x2="-22" y2="68" stroke="#000000" stroke-width="2.5" />
+        <line x1="0" y1="24" x2="22" y2="68" stroke="#000000" stroke-width="2.5" />
+        <text x="0" y="94" class="actor-label">Gym Member</text>
+        <text x="0" y="112" class="actor-sub">(Mobile Client)</text>
+      </g>
+
+      <!-- ACTOR 5: Gym Coach (bottom-right, y=940) -->
+      <g transform="translate(1485, 930)">
+        <circle cx="0" cy="-40" r="18" fill="#ffffff" stroke="#000000" stroke-width="2.2" />
+        <line x1="0" y1="-22" x2="0" y2="24" stroke="#000000" stroke-width="2.5" />
+        <line x1="-26" y1="-6" x2="26" y2="-6" stroke="#000000" stroke-width="2.5" />
+        <line x1="0" y1="24" x2="-22" y2="68" stroke="#000000" stroke-width="2.5" />
+        <line x1="0" y1="24" x2="22" y2="68" stroke="#000000" stroke-width="2.5" />
+        <text x="0" y="94" class="actor-label">Gym Coach</text>
+        <text x="0" y="112" class="actor-sub">(Fitness Trainer)</text>
+      </g>
+
+      <!-- ===================================================
+           LEFT COLUMN USE CASES (cx=495, rx=195, ry=31)
+           =================================================== -->
+
+      <!-- Left 1: Staff Authentication (cy=125) -->
+      <g id="uc_l1">
+        <ellipse cx="495" cy="125" rx="195" ry="30" class="use-case-ellipse" />
+        <text x="495" y="115" class="use-case-text">Staff Authentication &amp;</text>
+        <text x="495" y="135" class="use-case-text">Role-Based Session Control</text>
+      </g>
+
+      <!-- Left 2: System Config & Roles (cy=210) -->
+      <g id="uc_l2">
+        <ellipse cx="495" cy="210" rx="195" ry="30" class="use-case-ellipse" />
+        <text x="495" y="200" class="use-case-text">System Configuration &amp;</text>
+        <text x="495" y="220" class="use-case-text">Global Role Management</text>
+      </g>
+
+      <!-- Left 3: Full Audit Logs & Governance (cy=295) -->
+      <g id="uc_l3">
+        <ellipse cx="495" cy="295" rx="195" ry="30" class="use-case-ellipse" />
+        <text x="495" y="285" class="use-case-text">Inspect System Audit Logs &amp;</text>
+        <text x="495" y="305" class="use-case-text">Security Governance</text>
+      </g>
+
+      <!-- Left 4: Manage Passes & RBAC (cy=385) -->
+      <g id="uc_l4">
+        <ellipse cx="495" cy="385" rx="195" ry="30" class="use-case-ellipse" />
+        <text x="495" y="375" class="use-case-text">Manage Member Passes &amp;</text>
+        <text x="495" y="395" class="use-case-text">Staff Accounts (5-Tier RBAC)</text>
+      </g>
+
+      <!-- Left 5: Reports (cy=470) -->
+      <g id="uc_l5">
+        <ellipse cx="495" cy="470" rx="195" ry="30" class="use-case-ellipse" />
+        <text x="495" y="460" class="use-case-text">Generate Vector PDF &amp;</text>
+        <text x="495" y="480" class="use-case-text">Excel Analytical Reports</text>
+      </g>
+
+      <!-- Left 6: DB Backups (cy=555) -->
+      <g id="uc_l6">
+        <ellipse cx="495" cy="555" rx="195" ry="30" class="use-case-ellipse" />
+        <text x="495" y="545" class="use-case-text">Automated Database Backups &amp;</text>
+        <text x="495" y="565" class="use-case-text">Disaster Recovery Maintenance</text>
+      </g>
+
+      <!-- Left 7: Register Walk-In (cy=660) -->
+      <g id="uc_l7">
+        <ellipse cx="495" cy="660" rx="195" ry="30" class="use-case-ellipse" />
+        <text x="495" y="650" class="use-case-text">Register Walk-In Members &amp;</text>
+        <text x="495" y="670" class="use-case-text">Process Plan Renewals</text>
+      </g>
+
+      <!-- Left 8: Scan QR Attendance (cy=750) -->
+      <g id="uc_l8">
+        <ellipse cx="495" cy="750" rx="195" ry="30" class="use-case-ellipse" />
+        <text x="495" y="740" class="use-case-text">Scan &amp; Verify Turnstile</text>
+        <text x="495" y="760" class="use-case-text">Entrance QR Code Attendance</text>
+      </g>
+
+      <!-- Left 9: POS Sales & GCash (cy=840) -->
+      <g id="uc_l9">
+        <ellipse cx="495" cy="840" rx="195" ry="30" class="use-case-ellipse" />
+        <text x="495" y="830" class="use-case-text">POS Counter Cash Sales &amp;</text>
+        <text x="495" y="850" class="use-case-text">GCash Order Verification</text>
+      </g>
+
+      <!-- Left 10: Inventory Catalog (cy=930) -->
+      <g id="uc_l10">
+        <ellipse cx="495" cy="930" rx="195" ry="30" class="use-case-ellipse" />
+        <text x="495" y="920" class="use-case-text">Manage Supplement Inventory</text>
+        <text x="495" y="940" class="use-case-text">&amp; POS Product Catalog</text>
+      </g>
+
+      <!-- ===================================================
+           RIGHT COLUMN USE CASES (cx=1100, rx=195, ry=28)
+           =================================================== -->
+
+      <!-- Right 1: Member Authentication (cy=125) -->
+      <g id="uc_r1">
+        <ellipse cx="1100" cy="125" rx="195" ry="28" class="use-case-ellipse" />
+        <text x="1100" y="115" class="use-case-text">Member Authentication &amp;</text>
+        <text x="1100" y="135" class="use-case-text">Sanctum Token Management</text>
+      </g>
+
+      <!-- Right 2: Register Online Account (cy=200) -->
+      <g id="uc_r2">
+        <ellipse cx="1100" cy="200" rx="195" ry="28" class="use-case-ellipse" />
+        <text x="1100" y="190" class="use-case-text">Register Online Account &amp;</text>
+        <text x="1100" y="210" class="use-case-text">View Membership History</text>
+      </g>
+
+      <!-- Right 3: Present Dynamic QR Pass (cy=275) -->
+      <g id="uc_r3">
+        <ellipse cx="1100" cy="275" rx="195" ry="28" class="use-case-ellipse" />
+        <text x="1100" y="265" class="use-case-text">Present Dynamic QR Pass</text>
+        <text x="1100" y="285" class="use-case-text">for Turnstile Entry</text>
+      </g>
+
+      <!-- Right 4: Scan Equipment QR Video Tutorial (cy=350) -->
+      <g id="uc_r4">
+        <ellipse cx="1100" cy="350" rx="195" ry="28" class="use-case-ellipse" />
+        <text x="1100" y="340" class="use-case-text">Scan Equipment QR Codes</text>
+        <text x="1100" y="360" class="use-case-text">for Video Tutorials</text>
+      </g>
+
+      <!-- Right 5: Log Workouts & PRs (cy=425) -->
+      <g id="uc_r5">
+        <ellipse cx="1100" cy="425" rx="195" ry="28" class="use-case-ellipse" />
+        <text x="1100" y="415" class="use-case-text">Log Completed Workouts &amp;</text>
+        <text x="1100" y="435" class="use-case-text">Track Personal Records (PR)</text>
+      </g>
+
+      <!-- Right 6: Browse Store & GCash (cy=500) -->
+      <g id="uc_r6">
+        <ellipse cx="1100" cy="500" rx="195" ry="28" class="use-case-ellipse" />
+        <text x="1100" y="490" class="use-case-text">Browse Supplement Store &amp;</text>
+        <text x="1100" y="510" class="use-case-text">Submit GCash Orders</text>
+      </g>
+
+      <!-- Right 7: Ratings & Feedback (cy=575) -->
+      <g id="uc_r7">
+        <ellipse cx="1100" cy="575" rx="195" ry="28" class="use-case-ellipse" />
+        <text x="1100" y="565" class="use-case-text">Submit Ratings &amp;</text>
+        <text x="1100" y="585" class="use-case-text">Staff / Service Feedback</text>
+      </g>
+
+      <!-- Right 8: Propose & Approve Workout Plans (cy=665) -->
+      <g id="uc_r8">
+        <ellipse cx="1100" cy="665" rx="195" ry="30" class="use-case-shared" />
+        <text x="1100" y="655" class="use-case-text">Propose &amp; Approve</text>
+        <text x="1100" y="675" class="use-case-text">Custom Workout Plans</text>
+      </g>
+
+      <!-- Right 9: Real-Time Consultation Chat (cy=755) -->
+      <g id="uc_r9">
+        <ellipse cx="1100" cy="755" rx="195" ry="30" class="use-case-shared" />
+        <text x="1100" y="745" class="use-case-text">Real-Time Chat &amp;</text>
+        <text x="1100" y="765" class="use-case-text">Direct Client Consultation</text>
+      </g>
+
+      <!-- Right 10: Manage Trainee Client Roster (cy=845) -->
+      <g id="uc_r10">
+        <ellipse cx="1100" cy="845" rx="195" ry="28" class="use-case-ellipse" />
+        <text x="1100" y="835" class="use-case-text">Manage Trainee Roster &amp;</text>
+        <text x="1100" y="855" class="use-case-text">Monitor Client Progress</text>
+      </g>
+
+      <!-- Right 11: Schedule Group Fitness Classes (cy=925) -->
+      <g id="uc_r11">
+        <ellipse cx="1100" cy="925" rx="195" ry="28" class="use-case-ellipse" />
+        <text x="1100" y="915" class="use-case-text">Schedule &amp; Coordinate</text>
+        <text x="1100" y="935" class="use-case-text">Group Fitness Classes</text>
+      </g>
+
+      <!-- Right 12: Configure Coach Working Hours (cy=1005) -->
+      <g id="uc_r12">
+        <ellipse cx="1100" cy="1005" rx="195" ry="28" class="use-case-ellipse" />
+        <text x="1100" y="1005" class="use-case-text">Configure Coach Working Hours</text>
+      </g>
+
+      <!-- ===================================================
+           ASSOCIATION LINES
+           Guaranteed ZERO Crossing Lines
+           =================================================== -->
+
+      <!-- --- SUPER ADMIN ASSOCIATIONS (fan out cleanly from y=200) --- -->
+      <line x1="145" y1="165" x2="300" y2="125" class="assoc-line" />    <!-- to Staff Auth -->
+      <line x1="145" y1="190" x2="300" y2="210" class="assoc-line" />    <!-- to Config & Roles -->
+      <line x1="145" y1="215" x2="300" y2="295" class="assoc-line" />    <!-- to Audit Logs -->
+
+      <!-- --- GYM ADMIN ASSOCIATIONS (fan out cleanly from y=460) --- -->
+      <line x1="145" y1="435" x2="300" y2="385" class="assoc-line" />    <!-- to Manage Passes -->
+      <line x1="145" y1="460" x2="300" y2="470" class="assoc-line" />    <!-- to Reports -->
+      <line x1="145" y1="485" x2="300" y2="555" class="assoc-line" />    <!-- to DB Backups -->
+
+      <!-- --- EMPLOYEE ASSOCIATIONS (fan out cleanly from y=820) --- -->
+      <line x1="145" y1="775" x2="300" y2="660" class="assoc-line" />    <!-- to Register Walk-In -->
+      <line x1="145" y1="805" x2="300" y2="750" class="assoc-line" />    <!-- to Scan Turnstile QR -->
+      <line x1="145" y1="835" x2="300" y2="840" class="assoc-line" />    <!-- to POS Sales -->
+      <line x1="145" y1="865" x2="300" y2="930" class="assoc-line" />    <!-- to Inventory -->
+
+      <!-- --- GYM MEMBER ASSOCIATIONS (fan out cleanly from y=400) --- -->
+      <line x1="1455" y1="310" x2="1295" y2="125" class="assoc-line" />  <!-- to Member Auth -->
+      <line x1="1455" y1="330" x2="1295" y2="200" class="assoc-line" />  <!-- to Register / History -->
+      <line x1="1455" y1="350" x2="1295" y2="275" class="assoc-line" />  <!-- to Present QR -->
+      <line x1="1455" y1="370" x2="1295" y2="350" class="assoc-line" />  <!-- to Scan Equip QR -->
+      <line x1="1455" y1="390" x2="1295" y2="425" class="assoc-line" />  <!-- to Track Workouts -->
+      <line x1="1455" y1="410" x2="1295" y2="500" class="assoc-line" />  <!-- to Shop Supplements -->
+      <line x1="1455" y1="430" x2="1295" y2="575" class="assoc-line" />  <!-- to Feedback -->
+      <line x1="1455" y1="450" x2="1295" y2="665" class="assoc-line" />  <!-- to Workout Plans -->
+      <line x1="1455" y1="470" x2="1295" y2="755" class="assoc-line" />  <!-- to Real-Time Chat -->
+
+      <!-- --- GYM COACH ASSOCIATIONS (fan out cleanly from y=930) --- -->
+      <line x1="1455" y1="880" x2="1295" y2="665" class="assoc-line" />  <!-- to Workout Plans -->
+      <line x1="1455" y1="905" x2="1295" y2="755" class="assoc-line" />  <!-- to Real-Time Chat -->
+      <line x1="1455" y1="930" x2="1295" y2="845" class="assoc-line" />  <!-- to Trainee Roster -->
+      <line x1="1455" y1="955" x2="1295" y2="925" class="assoc-line" />  <!-- to Schedule Classes -->
+      <line x1="1455" y1="980" x2="1295" y2="1005" class="assoc-line" /> <!-- to Working Hours -->
+
+    </svg>
+  </div>
+
+</body>
+</html>

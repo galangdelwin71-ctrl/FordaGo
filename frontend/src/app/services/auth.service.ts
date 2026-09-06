@@ -33,10 +33,43 @@ export class AuthService {
     }
   }
 
-  register(firstName: string, lastName: string, email: string, password: string, phone = '', gender = '', membership_type = 'premium', payment_method = 'cash') {
-    return this.http.post<any>(`${this.apiUrl}/register`, {
-      firstName, lastName, email, password, phone, gender, membership_type, payment_method
-    }).pipe(
+  register(
+    firstName: string,
+    lastName: string,
+    email: string,
+    password: string,
+    phone = '',
+    gender = '',
+    membership_type = 'premium',
+    payment_method = 'cash',
+    fitnessProfile?: {
+      height?: number | null;
+      weight?: number | null;
+      bmi?: number | null;
+      fitness_goal?: string | null;
+      preferred_workout_time?: string | null;
+    },
+    dateOfBirth?: string
+  ) {
+    const payload: Record<string, any> = {
+      firstName,
+      lastName,
+      email,
+      password,
+      phone,
+      gender,
+      date_of_birth: dateOfBirth || null,
+      membership_type,
+      payment_method,
+    };
+    if (fitnessProfile) {
+      if (fitnessProfile.height != null) payload['height'] = fitnessProfile.height;
+      if (fitnessProfile.weight != null) payload['weight'] = fitnessProfile.weight;
+      if (fitnessProfile.bmi != null) payload['bmi'] = fitnessProfile.bmi;
+      if (fitnessProfile.fitness_goal) payload['fitness_goal'] = fitnessProfile.fitness_goal;
+      if (fitnessProfile.preferred_workout_time) payload['preferred_workout_time'] = fitnessProfile.preferred_workout_time;
+    }
+    return this.http.post<any>(`${this.apiUrl}/register`, payload).pipe(
       catchError((err: HttpErrorResponse) => this.handleError(err))
     );
   }

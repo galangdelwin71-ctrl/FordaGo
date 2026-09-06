@@ -285,6 +285,7 @@ class AuthController extends Controller
                 'role'               => $user->role,
                 'phone'              => $user->phone,
                 'gender'             => $user->gender,
+                'date_of_birth'      => $user->date_of_birth ? ($user->date_of_birth instanceof \Carbon\CarbonInterface ? $user->date_of_birth->format('Y-m-d') : (string) $user->date_of_birth) : null,
                 'profile_image'      => $user->profile_image,
                 'membership_type'    => $user->membership_type,
                 'membership_status'  => $user->membership_status,
@@ -334,19 +335,47 @@ class AuthController extends Controller
         $normalizedMembershipType = $membershipType === 'daily' ? 'daily' : 'premium';
         $normalizedPaymentMethod  = $paymentMethod  === 'gcash' ? 'gcash' : 'cash';
 
+        $rawHeight = $request->input('height');
+        $rawWeight = $request->input('weight');
+        $height = is_numeric($rawHeight) && (float) $rawHeight > 0 ? round((float) $rawHeight, 2) : null;
+        $weight = is_numeric($rawWeight) && (float) $rawWeight > 0 ? round((float) $rawWeight, 2) : null;
+        $rawBmi = $request->input('bmi');
+        $bmi = is_numeric($rawBmi) && (float) $rawBmi > 0
+            ? round((float) $rawBmi, 1)
+            : ($height && $weight ? round($weight / (($height / 100) ** 2), 1) : null);
+        $rawGoal = strtolower(trim((string) ($request->input('fitness_goal') ?? $request->input('goal') ?? '')));
+        $validGoals = ['weight_loss', 'muscle_gain', 'strength', 'tone_endurance'];
+        $fitnessGoal = in_array($rawGoal, $validGoals, true) ? $rawGoal : ($rawGoal !== '' ? $rawGoal : null);
+        $preferredTime = trim((string) $request->input('preferred_workout_time', '17:00')) ?: '17:00';
+
+        $rawDob = trim((string) ($request->input('date_of_birth') ?? $request->input('dateOfBirth') ?? ''));
+        $dateOfBirth = null;
+        if ($rawDob !== '') {
+            $parsedDate = date_create($rawDob);
+            if ($parsedDate) {
+                $dateOfBirth = date_format($parsedDate, 'Y-m-d');
+            }
+        }
+
         $user = User::create([
-            'username'          => $username,
-            'first_name'        => $firstName,
-            'last_name'         => $lastName,
-            'email'             => $email,
-            'password'          => Hash::make($password),
-            'role'              => 'user',
-            'phone'             => $phone !== '' ? $phone : null,
-            'gender'            => $gender !== '' ? $gender : null,
-            'membership_type'   => $normalizedMembershipType,
-            'membership_status' => 'pending',
-            'payment_method'    => $normalizedPaymentMethod,
-            'membership_expiry' => null,
+            'username'               => $username,
+            'first_name'             => $firstName,
+            'last_name'              => $lastName,
+            'email'                  => $email,
+            'password'               => Hash::make($password),
+            'role'                   => 'user',
+            'phone'                  => $phone !== '' ? $phone : null,
+            'gender'                 => $gender !== '' ? $gender : null,
+            'date_of_birth'          => $dateOfBirth,
+            'height'                 => $height,
+            'weight'                 => $weight,
+            'bmi'                    => $bmi,
+            'fitness_goal'           => $fitnessGoal,
+            'preferred_workout_time' => $preferredTime,
+            'membership_type'        => $normalizedMembershipType,
+            'membership_status'      => 'pending',
+            'payment_method'         => $normalizedPaymentMethod,
+            'membership_expiry'      => null,
         ]);
 
         // Notify all staff (admin, super_admin, employee) via in-app & FCM Push

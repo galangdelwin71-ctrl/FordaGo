@@ -81,7 +81,7 @@
           <div class="tx-amount" [class.free]="tx.amount == 0">
             {{ tx.amount > 0 ? ('₱' + (tx.amount | number:'1.2-2')) : 'Included' }}
           </div>
-          <div class="tx-source-badge">{{ tx.source === 'attendance' ? 'Gym' : 'Shop' }}</div>
+          <div class="tx-source-badge">{{ tx.source === 'attendance' ? 'Gym' : (tx.source === 'membership' ? 'Plan' : 'Shop') }}</div>
         </div>
       </div>
     </div>

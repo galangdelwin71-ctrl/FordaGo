@@ -167,7 +167,7 @@ export class QrScannerPage implements OnInit, OnDestroy {
   currentFilter: ScanFilter = 'all';
   isScanning                = false;
   isProcessingScan          = false;
-  scanStatusMessage         = 'Use your camera to scan the official gym QR code.';
+  scanStatusMessage         = 'Use your camera to scan official gym attendance or equipment QR codes.';
   cameraPermissionState: CameraPermissionState = 'unknown';
 
   myLogs: ScanLogEntry[] = [];
@@ -373,17 +373,10 @@ export class QrScannerPage implements OnInit, OnDestroy {
 
       const steps: TourStep[] = [
         {
-          targetId: '#tour-scanner-modes',
-          title: 'Scan Mode Selection',
-          description: 'Toggle between Attendance (checking into the gym) and Equipment (scanning machine QR codes for tutorials).',
-          icon: 'scan-outline',
-          position: 'bottom',
-        },
-        {
           targetId: '#tour-scanner-frame',
-          title: 'Camera Viewfinder',
-          description: 'Point your camera directly at the gym entrance QR code or machine label to automatically scan.',
-          icon: 'camera-outline',
+          title: 'Universal QR Scanner',
+          description: 'Point your camera directly at the gym entrance QR code or any machine label — it automatically detects attendance or tutorials.',
+          icon: 'scan-outline',
           position: 'bottom',
         },
         {
@@ -592,9 +585,7 @@ export class QrScannerPage implements OnInit, OnDestroy {
         () => {}
       );
 
-      this.scanStatusMessage = this.scanMode === 'attendance'
-        ? 'Camera is live. Scan the admin attendance QR now.'
-        : 'Camera is live. Scan an equipment QR now.';
+      this.scanStatusMessage = 'Camera is live. Point at the official gym QR code or equipment label.';
       this.cameraPermissionState = 'granted';
     } catch (error) {
       this.isScanning = false;
@@ -644,9 +635,7 @@ export class QrScannerPage implements OnInit, OnDestroy {
     await this.stopCameraScan();
     this.isScanning = false;
     this.isProcessingScan = false;
-    this.scanStatusMessage = this.scanMode === 'attendance'
-      ? 'Use your camera to scan the official gym attendance QR code.'
-      : 'Use your camera to scan an equipment QR code to open its guide.';
+    this.scanStatusMessage = 'Use your camera to scan official gym attendance or equipment QR codes.';
   }
 
   private async handleDecodedQr(decodedText: string): Promise<void> {

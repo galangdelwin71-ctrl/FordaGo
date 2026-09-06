@@ -937,13 +937,24 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
   }
 
   private todayDateKey(): string {
-    return this.toDateKey(new Date().toISOString());
+    const d = new Date();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${d.getFullYear()}-${mm}-${dd}`;
   }
 
   private toDateKey(value: string): string {
-    // session_date comes back as 'YYYY-MM-DD' or an ISO timestamp — either
-    // way the first 10 chars are the date key we need for same-day matching.
-    return String(value).slice(0, 10);
+    if (!value) return '';
+    const str = String(value);
+    if (str.includes('T') || str.includes('Z')) {
+      const d = new Date(str);
+      if (!Number.isNaN(d.getTime())) {
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${d.getFullYear()}-${mm}-${dd}`;
+      }
+    }
+    return str.slice(0, 10);
   }
 
   private compareTimeAsc(a: WorkoutPlanProposal, b: WorkoutPlanProposal): number {

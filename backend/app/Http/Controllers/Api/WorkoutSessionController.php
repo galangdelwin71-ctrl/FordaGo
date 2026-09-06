@@ -108,20 +108,52 @@ class WorkoutSessionController extends Controller
         // being re-fetched on every page open when multiple components load.
         $rangeCacheKey = "workout_sessions.{$userId}." . ($from ?? 'all') . '.' . ($to ?? 'all');
         $rows = Cache::remember($rangeCacheKey, 30, function () use ($query) {
-            $sessions = $query->orderBy('session_date')->get();
-            $grouped = $sessions->groupBy(fn ($s) => substr((string) $s->session_date, 0, 10));
+            $sessions = $query->orderByDesc('session_date')->get();
+
+            // Self-heal: detect and prune any phantom duplicates where a client_session_id
+            // was erroneously saved on both date X and date X-1 due to previous timezone shift.
+            $seenClientIds = [];
+            $duplicateIdsToDelete = [];
+            $filteredSessions = collect();
+
+            foreach ($sessions as $s) {
+                $cid = $s->client_session_id;
+                if (! empty($cid) && ! str_starts_with($cid, 'admin_class_')) {
+                    if (isset($seenClientIds[$cid])) {
+                        $duplicateIdsToDelete[] = $s->id;
+                        continue;
+                    }
+                    $seenClientIds[$cid] = true;
+                }
+                $filteredSessions->push($s);
+            }
+
+            if (! empty($duplicateIdsToDelete)) {
+                WorkoutSession::whereIn('id', $duplicateIdsToDelete)->delete();
+            }
+
+            $sortedSessions = $filteredSessions->sortBy('session_date');
+            $grouped = $sortedSessions->groupBy(function ($s) {
+                $raw = $s->getRawOriginal('session_date') ?: (string) $s->session_date;
+                return substr($raw, 0, 10);
+            });
+
             $cleaned = [];
             foreach ($grouped as $date => $dateSessions) {
                 $hasNonRest = $dateSessions->contains(fn ($s) => ! $s->is_rest_day);
                 if ($hasNonRest) {
                     foreach ($dateSessions as $s) {
                         if (! $s->is_rest_day) {
-                            $cleaned[] = $s->toArray();
+                            $item = $s->toArray();
+                            $item['session_date'] = substr($s->getRawOriginal('session_date') ?: (string) $s->session_date, 0, 10);
+                            $cleaned[] = $item;
                         }
                     }
                 } else {
                     foreach ($dateSessions as $s) {
-                        $cleaned[] = $s->toArray();
+                        $item = $s->toArray();
+                        $item['session_date'] = substr($s->getRawOriginal('session_date') ?: (string) $s->session_date, 0, 10);
+                        $cleaned[] = $item;
                     }
                 }
             }
