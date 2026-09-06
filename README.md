@@ -19,6 +19,11 @@
     <a href="#-license"><img src="https://img.shields.io/badge/License-Proprietary-EAB308?style=flat-square" alt="License" /></a>
   </p>
 
+  <p align="center">
+    <a href="http://168.144.141.27/"><b>🌐 Live Web App (iOS / Safari / Chrome)</b></a> &nbsp;•&nbsp; 
+    <a href="https://github.com/galangdelwin71-ctrl/FordaGo/raw/main/apk/fordago_latest.apk"><b>📲 Download Android APK (.apk)</b></a>
+  </p>
+
   <sub>Bachelor of Science in Information Technology — Capstone Project<br><b>Nueva Ecija University of Science and Technology (NEUST)</b>, San Isidro Campus</sub>
 
 </div>

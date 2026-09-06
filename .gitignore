@@ -75,6 +75,7 @@ typings/
 Thumbs.db
 desktop.ini
 *.apk
+!apk/*.apk
 
 # Old backup/archive
 _archive/
