@@ -1036,6 +1036,7 @@ export class SchedulePage implements OnInit, OnDestroy {
     s.coach       = this.editBuffer.coach;
     s.location    = this.editBuffer.location;
     s.customTarget = this.editBuffer.customTarget.trim() || undefined;
+    s.isCustom    = true;
 
     // Use exercises from buffer (custom edits) if any are non-empty, else rebuild from type/target
     const validExercises = this.editBuffer.exercises.filter(ex => ex.name.trim() !== '');

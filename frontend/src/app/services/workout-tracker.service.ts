@@ -232,6 +232,10 @@ export class WorkoutTrackerService {
         ? customExercises
         : buildExercisesFromTemplate(templateDay.title, templateDay.customTarget);
 
+      const stableId = sessionDate
+        ? `plan_${this.getDateKey(sessionDate)}_${dayIdx}`
+        : `plan_tpl_${dayIdx}`;
+
       const session = this.buildSeededSession({
         timeVal: time,
         timeAmpm: ampm,
@@ -244,7 +248,7 @@ export class WorkoutTrackerService {
         customTarget: templateDay.customTarget || undefined,
         isCustom: false,
         exercises,
-      });
+      }, stableId);
 
       // Compute accurate status based on the actual calendar date so that
       // a past day shows 'missed' immediately instead of flip-flopping
@@ -258,10 +262,13 @@ export class WorkoutTrackerService {
 
     const defaultDaySessions = defaultSessionsByDayIdx[dayIdx] ?? [];
     if (defaultDaySessions.length === 0) {
-      return [this.buildRestDaySession()];
+      return [this.buildRestDaySession(sessionDate)];
     }
 
-    return defaultDaySessions.map((day) => {
+    return defaultDaySessions.map((day, dIdx) => {
+      const stableId = sessionDate
+        ? `plan_def_${this.getDateKey(sessionDate)}_${dayIdx}_${dIdx}`
+        : `plan_def_${dayIdx}_${dIdx}`;
       const s = this.buildSeededSession({
         timeVal: day.timeVal,
         timeAmpm: day.timeAmpm,
@@ -274,7 +281,7 @@ export class WorkoutTrackerService {
         customTarget: day.customTarget,
         isCustom: false,
         exercises: buildExercisesFromTemplate(day.title, day.customTarget),
-      });
+      }, stableId);
       if (sessionDate) {
         s.status = this.autoComputeStatus(s, sessionDate);
       }
@@ -283,10 +290,10 @@ export class WorkoutTrackerService {
   }
 
   /** Builds a fully-formed, uniquely-id'd session ready to write into the store. */
-  private buildSeededSession(base: Omit<StoredWorkoutSession, 'id'>): StoredWorkoutSession {
+  private buildSeededSession(base: Omit<StoredWorkoutSession, 'id'>, explicitId?: string): StoredWorkoutSession {
     return this.normalizeSession({
       ...base,
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      id: explicitId || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     });
   }
 
@@ -297,7 +304,8 @@ export class WorkoutTrackerService {
    * the day's session array empty, which was indistinguishable from a
    * blank/unseeded day and broke streak counting (Stage 3 fix).
    */
-  private buildRestDaySession(): StoredWorkoutSession {
+  private buildRestDaySession(sessionDate?: Date): StoredWorkoutSession {
+    const stableId = sessionDate ? `rest_${this.getDateKey(sessionDate)}` : undefined;
     return this.buildSeededSession({
       timeVal: '12:00',
       timeAmpm: 'AM',
@@ -310,7 +318,7 @@ export class WorkoutTrackerService {
       isCustom: false,
       isRestDay: true,
       exercises: buildExercisesFromTemplate('Rest Day'),
-    });
+    }, stableId);
   }
 
   private loadWeekPlanTemplate(): WeekPlanTemplateDay[] | null {
@@ -891,9 +899,14 @@ export class WorkoutTrackerService {
     const store = this.readStore();
     let changed = false;
 
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
     Object.keys(store).forEach((key) => {
       const [year, month, day] = key.split('-').map(Number);
       const sessionDate = new Date(year, month, day);
+      const sessionDay = new Date(sessionDate.getFullYear(), sessionDate.getMonth(), sessionDate.getDate());
+
       store[key] = (store[key] ?? []).map((session) => {
         const normalizedSession = this.normalizeSession(session);
         const computedStatus = this.autoComputeStatus(normalizedSession, sessionDate);
@@ -902,16 +915,9 @@ export class WorkoutTrackerService {
           changed = true;
           const updated = { ...normalizedSession, status: 'missed' as SessionStatus };
 
-          // Only alert and push to server if this session was scheduled for TODAY or RECENT (within 2 days),
-          // preventing a cascade of 20+ historical missed requests on initial app launch.
-          const now = new Date();
-          const diffDays = Math.abs((now.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24));
-          if (diffDays <= 2) {
-            // Always suggest equipment-free bodyweight moves for a missed
-            // session's home alternative — echoing the session's own logged
-            // exercises here previously caused gym-equipment moves (e.g.
-            // "Bench Press", "Deadlift") to appear as a "home workout"
-            // whenever the session already had exercises logged.
+          // STRICTLY ONLY alert and push to server if this session was scheduled for TODAY
+          // Never fire notifications for past days (e.g. yesterday or earlier)
+          if (sessionDay.getTime() === today.getTime()) {
             const homeAlternatives = this.homeWorkoutMap[normalizedSession.title] || this.homeWorkoutMap['Full Body'];
             void this.notificationCenter.notifyMissedWorkout(
               normalizedSession.title,
@@ -927,9 +933,7 @@ export class WorkoutTrackerService {
         if (normalizedSession.status !== 'done' && normalizedSession.status !== computedStatus) {
           changed = true;
           const updated = { ...normalizedSession, status: computedStatus };
-          const now = new Date();
-          const diffDays = Math.abs((now.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24));
-          if (diffDays <= 2) {
+          if (sessionDay.getTime() === today.getTime()) {
             this.pushSession(sessionDate, updated);
           }
           return updated;
@@ -1017,7 +1021,8 @@ export class WorkoutTrackerService {
       Object.keys(store).forEach((key) => {
         const parts = key.split('-').map(Number);
         if (parts.length === 3 && !parts.some(Number.isNaN)) {
-          const d = new Date(parts[0], parts[1] - 1, parts[2]);
+          // parts[1] is already monthIndex (0-11) from getDateKey
+          const d = new Date(parts[0], parts[1], parts[2]);
           if (d >= todayStart && d <= maxHorizon) {
             dateKeysToProcess.add(key);
           }
@@ -1028,7 +1033,7 @@ export class WorkoutTrackerService {
         const sessions = store[dateKey] ?? [];
         const parts = dateKey.split('-').map(Number);
         if (parts.length !== 3 || parts.some(Number.isNaN)) return;
-        const [year, month, day] = parts;
+        const [year, monthIndex, day] = parts;
 
         sessions.forEach((session) => {
           const titleLower = (session.title || '').toLowerCase();
@@ -1048,7 +1053,8 @@ export class WorkoutTrackerService {
             return;
           }
 
-          const scheduledAt = new Date(year, month - 1, day, hours, minutes, 0, 0);
+          // monthIndex is already 0-indexed from dateKey
+          const scheduledAt = new Date(year, monthIndex, day, hours, minutes, 0, 0);
           const msUntilScheduled = scheduledAt.getTime() - now.getTime();
 
           // If scheduled time has already passed by more than 1 minute, skip
@@ -1061,7 +1067,7 @@ export class WorkoutTrackerService {
           const missedDedupeKey = `${dateKey}-${session.id || session.title}`;
           const homeAlternatives = this.homeWorkoutMap[session.title] || this.homeWorkoutMap['Full Body'];
 
-          // 1. 30-MINUTE UPCOMING REMINDER
+          // 1. 30-MINUTE UPCOMING REMINDER (Native AlarmManager + Foreground timer)
           const THIRTY_MIN_MS = 30 * 60 * 1000;
           const reminderDate = new Date(scheduledAt.getTime() - THIRTY_MIN_MS);
           const msUntilReminder = reminderDate.getTime() - now.getTime();
@@ -1080,34 +1086,10 @@ export class WorkoutTrackerService {
               }, msUntilReminder);
               this.upcomingReminderTimers.push(timer);
             }
-          } else if (msUntilScheduled > 0 && msUntilScheduled <= THIRTY_MIN_MS) {
-            // Scheduled session is within 30 minutes (e.g. 15 mins away) and hasn't been notified yet
-            const minsRemaining = Math.max(1, Math.round(msUntilScheduled / 60000));
-            void this.notificationCenter.notifyUpcomingWorkoutSoon(
-              session.title,
-              sessionTime,
-              uniqueKey,
-              minsRemaining
-            );
           }
 
-          // 2. WORKOUT START ALERT AT EXACT SCHEDULED TIME
-          if (msUntilScheduled > 0) {
-            void this.notificationCenter.scheduleNativeWorkoutStartAlert(
-              session.title,
-              uniqueKey,
-              scheduledAt
-            );
-
-            if (dateKey === todayKey) {
-              const timer = setTimeout(() => {
-                this.syncStoreStatuses();
-              }, msUntilScheduled + 500);
-              this.missedCheckTimers.push(timer);
-            }
-          }
-
-          // 3. MISSED WORKOUT ALERT (1 MINUTE AFTER SCHEDULED TIME)
+          // 2. MISSED WORKOUT ALERT (1 MINUTE AFTER SCHEDULED TIME)
+          // Fires exactly 1 minute after start time if member has not started the workout
           const missedAt = new Date(scheduledAt.getTime() + 60 * 1000);
           if (missedAt.getTime() > now.getTime()) {
             void this.notificationCenter.scheduleNativeMissedAlert(
@@ -1116,6 +1098,14 @@ export class WorkoutTrackerService {
               missedAt,
               homeAlternatives
             );
+
+            if (dateKey === todayKey) {
+              const msUntilMissed = missedAt.getTime() - now.getTime();
+              const timer = setTimeout(() => {
+                this.syncStoreStatuses();
+              }, msUntilMissed + 500);
+              this.missedCheckTimers.push(timer);
+            }
           }
         });
       });

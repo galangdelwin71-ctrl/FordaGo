@@ -330,8 +330,11 @@ export class NotificationCenterService {
         const deduped = [item, ...current.filter((n) => n.id !== item.id)];
         this.publishNotifications(this.sortNotifications(deduped));
 
-        // Send a native device notification banner with High Importance
-        void this.sendDeviceNotification({ ...item, key: undefined }, undefined, 'fordago-alerts-v3');
+        // Send a native device notification banner with High Importance only if not recently delivered
+        if (!this.wasRecentlyDelivered(item.title)) {
+          this.markTitleDelivered(item.title);
+          void this.sendDeviceNotification({ ...item, key: undefined }, undefined, 'fordago-alerts-v3');
+        }
       });
     };
 
