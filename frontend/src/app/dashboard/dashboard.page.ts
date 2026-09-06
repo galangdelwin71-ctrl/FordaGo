@@ -29,6 +29,7 @@ import { FeedbackService } from '../services/feedback.service';
 import { OnboardingService, TourStep } from '../services/onboarding.service';
 import { ToastService } from '../services/toast.service';
 import { API_URL, resolveImageUrl } from '../config/api.config';
+import { buildExercisesFromTemplate } from '../data/workout-templates';
 
 // ─────────────────────────────────────────────────────
 // INTERFACES
@@ -89,6 +90,10 @@ export interface CompletedSessionItem {
   date: string;
   time: string;
   duration: string;
+  target?: string;
+  coach?: string;
+  location?: string;
+  exercises?: Array<{ name: string; sets?: number | null; reps?: string | number; done?: boolean }>;
 }
 
 // Summary of a single upcoming session, shown in the "Upcoming Schedules" detail panel
@@ -98,6 +103,22 @@ export interface UpcomingScheduleItem {
   date: string;
   time: string;
   status: PersistedScheduleSession['status'];
+  coach?: string;
+  location?: string;
+  duration?: string;
+  exercises?: Array<{ name: string; sets?: number | null; reps?: string | number; done?: boolean }>;
+}
+
+export interface WorkoutDrilldownDetail {
+  title: string;
+  target?: string;
+  date: string;
+  time: string;
+  duration?: string;
+  coach?: string;
+  location?: string;
+  isDone: boolean;
+  exercises: Array<{ name: string; sets?: number | null; reps?: string | number; done?: boolean }>;
 }
 
 // One cell in the activity heatmap
@@ -230,6 +251,40 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   closeStatDetail(): void {
     this.statDetailOpen = null;
+  }
+
+  selectedWorkoutDetail: WorkoutDrilldownDetail | null = null;
+
+  openCompletedSessionWorkout(item: CompletedSessionItem): void {
+    this.selectedWorkoutDetail = {
+      title: item.title,
+      target: item.target,
+      date: item.date,
+      time: item.time,
+      duration: item.duration,
+      coach: item.coach,
+      location: item.location,
+      isDone: true,
+      exercises: item.exercises || [],
+    };
+  }
+
+  openUpcomingSessionWorkout(item: UpcomingScheduleItem): void {
+    this.selectedWorkoutDetail = {
+      title: item.title,
+      target: item.type,
+      date: item.date,
+      time: item.time,
+      duration: item.duration,
+      coach: item.coach,
+      location: item.location,
+      isDone: false,
+      exercises: item.exercises || [],
+    };
+  }
+
+  closeSessionWorkoutDetail(): void {
+    this.selectedWorkoutDetail = null;
   }
 
   // Motivational copy shown inside the Day Streak detail panel.
@@ -784,14 +839,31 @@ export class DashboardPage implements OnInit, OnDestroy {
     // Most recent completed session first, for the "Sessions This Month" detail panel.
     this.completedSessionsList = [...completedThisMonth]
       .sort((a, b) => b.sessionDate.getTime() - a.sessionDate.getTime())
-      .map((item) => ({
-        title: item.session.title,
-        date: item.sessionDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        time: `${item.session.timeVal} ${item.session.timeAmpm}`,
-        duration: typeof item.session.actualMinutes === 'number' && item.session.actualMinutes > 0
-          ? `${item.session.actualMinutes} min`
-          : item.session.duration,
-      }));
+      .map((item) => {
+        const rawExercises = item.session.exercises && item.session.exercises.length > 0
+          ? item.session.exercises
+          : buildExercisesFromTemplate(item.session.title, item.session.customTarget);
+
+        const exercises = (rawExercises || []).map(ex => ({
+          name: ex.name,
+          sets: ex.sets,
+          reps: ex.reps,
+          done: true,
+        }));
+
+        return {
+          title: item.session.title,
+          date: item.sessionDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          time: `${item.session.timeVal} ${item.session.timeAmpm}`,
+          duration: typeof item.session.actualMinutes === 'number' && item.session.actualMinutes > 0
+            ? `${item.session.actualMinutes} min`
+            : (item.session.duration || '45 min'),
+          target: item.session.customTarget || item.session.title,
+          coach: item.session.coach,
+          location: item.session.location,
+          exercises,
+        };
+      });
 
     // Streak counts backward from today. A day with a completed session
     // extends the streak; an explicit rest day (isRestDay) is skipped
@@ -1782,6 +1854,17 @@ export class DashboardPage implements OnInit, OnDestroy {
       upcoming += daySessions.length;
 
       daySessions.forEach((session) => {
+        const rawExercises = session.exercises && session.exercises.length > 0
+          ? session.exercises
+          : buildExercisesFromTemplate(session.title, session.customTarget);
+
+        const exercises = (rawExercises || []).map(ex => ({
+          name: ex.name,
+          sets: ex.sets,
+          reps: ex.reps,
+          done: false,
+        }));
+
         upcomingEntries.push({
           sortDate: this.sessionScheduledAt(session, d),
           entry: {
@@ -1790,6 +1873,10 @@ export class DashboardPage implements OnInit, OnDestroy {
             date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
             time: `${session.timeVal} ${session.timeAmpm}`,
             status: session.status,
+            coach: session.coach,
+            location: session.location,
+            duration: session.duration || '45 min',
+            exercises,
           },
         });
       });

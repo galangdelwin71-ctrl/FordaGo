@@ -85,12 +85,18 @@ import {
   stopOutline,
   time,
   timeOutline,
+  timerOutline,
   todayOutline,
   trashOutline,
   trendingUpOutline,
   trophyOutline,
   walkOutline,
   warningOutline,
+  radioButtonOnOutline,
+  radioButtonOffOutline,
+  radioButtonOn,
+  radioOutline,
+  ellipse,
 } from 'ionicons/icons';
 
 import { WorkoutTrackerService } from './services/workout-tracker.service';
@@ -277,6 +283,12 @@ export class AppComponent implements OnDestroy {
       trophyOutline,
       walkOutline,
       warningOutline,
+      radioButtonOnOutline,
+      radioButtonOffOutline,
+      radioButtonOn,
+      radioOutline,
+      ellipse,
+      timerOutline,
     });
 
     this.themeService.initTheme();

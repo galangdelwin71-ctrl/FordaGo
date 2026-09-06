@@ -367,13 +367,14 @@
           <strong>No completed sessions yet</strong>
           <span>Finish a scheduled workout and mark it done to see it here.</span>
         </div>
-        <div class="stat-detail-list-item" *ngFor="let s of completedSessionsList">
+        <div class="stat-detail-list-item is-clickable" *ngFor="let s of completedSessionsList" (click)="openCompletedSessionWorkout(s)">
           <div class="stat-detail-dot"></div>
           <div class="stat-detail-info">
             <div class="stat-detail-name">{{ s.title }}</div>
             <div class="stat-detail-meta">{{ s.date }} · {{ s.time }}</div>
           </div>
           <div class="stat-detail-badge">{{ s.duration }}</div>
+          <ion-icon name="chevron-forward-outline" class="item-tap-arrow"></ion-icon>
         </div>
       </ng-container>
 
@@ -420,16 +421,98 @@
           <strong>No upcoming schedules</strong>
           <span>Book a session to see it listed here.</span>
         </div>
-        <div class="stat-detail-list-item" *ngFor="let u of upcomingSessionsList">
+        <div class="stat-detail-list-item is-clickable" *ngFor="let u of upcomingSessionsList" (click)="openUpcomingSessionWorkout(u)">
           <div class="stat-detail-dot"></div>
           <div class="stat-detail-info">
             <div class="stat-detail-name">{{ u.title }}</div>
             <div class="stat-detail-meta">{{ u.date }} · {{ u.time }}</div>
           </div>
           <div class="stat-detail-badge" *ngIf="u.type">{{ u.type }}</div>
+          <ion-icon name="chevron-forward-outline" class="item-tap-arrow"></ion-icon>
         </div>
       </ng-container>
 
+        </div>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<!-- Workout Routine Drilldown Modal (Completed or Upcoming) -->
+<ion-modal
+  [isOpen]="!!selectedWorkoutDetail"
+  (didDismiss)="closeSessionWorkoutDetail()"
+  [initialBreakpoint]="0.8"
+  [breakpoints]="[0, 0.5, 0.8, 1]"
+  class="workout-drilldown-modal">
+  <ng-template>
+    <ion-content class="notif-panel-content">
+      <div class="stat-detail-sheet" [class.theme-sessions]="selectedWorkoutDetail?.isDone" [class.theme-upcoming]="!selectedWorkoutDetail?.isDone">
+        <div class="modal-handle"></div>
+
+        <div class="notif-panel-header" *ngIf="selectedWorkoutDetail as detail">
+          <div class="notif-header-left">
+            <div class="stat-detail-icon-wrap">
+              <ion-icon [name]="detail.isDone ? 'checkmark-circle' : 'calendar-outline'"></ion-icon>
+            </div>
+            <div>
+              <div class="drilldown-kicker-row">
+                <span class="drilldown-badge" [class.is-done]="detail.isDone">
+                  {{ detail.isDone ? 'Completed Workout' : 'Upcoming Workout' }}
+                </span>
+                <span class="drilldown-target" *ngIf="detail.target">{{ detail.target }}</span>
+              </div>
+              <div class="notif-header-title">{{ detail.title }}</div>
+              <div class="notif-header-sub">
+                {{ detail.date }} · {{ detail.time }}
+                <span *ngIf="detail.duration"> · {{ detail.duration }}</span>
+                <span *ngIf="detail.coach"> · Coach {{ detail.coach }}</span>
+              </div>
+            </div>
+          </div>
+          <button type="button" class="btn-drilldown-close" (click)="closeSessionWorkoutDetail()" aria-label="Close">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+        </div>
+
+        <div class="notif-divider"></div>
+
+        <div class="notif-scroll-wrap">
+          <div class="drilldown-subtitle-row">
+            <span class="drilldown-subtitle">
+              {{ selectedWorkoutDetail?.isDone ? 'Exercises Executed' : 'Planned Exercises' }}
+            </span>
+            <span class="drilldown-count">{{ selectedWorkoutDetail?.exercises?.length || 0 }} exercises</span>
+          </div>
+
+          <div class="drilldown-exercises-list">
+            <div class="drilldown-exercise-card" *ngFor="let ex of selectedWorkoutDetail?.exercises; let i = index">
+              <div class="ex-index">{{ i + 1 }}</div>
+              <div class="ex-details">
+                <div class="drilldown-ex-name">{{ ex.name }}</div>
+                <div class="drilldown-ex-tags">
+                  <span class="ex-tag" *ngIf="ex.sets">{{ ex.sets }} sets</span>
+                  <span class="ex-tag" *ngIf="ex.reps">{{ ex.reps }} reps</span>
+                </div>
+              </div>
+              <div class="drilldown-status-tag" [class.done]="selectedWorkoutDetail?.isDone">
+                <ion-icon [name]="selectedWorkoutDetail?.isDone ? 'checkmark-circle' : 'barbell-outline'"></ion-icon>
+                <span>{{ selectedWorkoutDetail?.isDone ? 'Done' : 'Target' }}</span>
+              </div>
+            </div>
+
+            <div class="stat-detail-empty" *ngIf="!selectedWorkoutDetail?.exercises?.length">
+              <ion-icon name="barbell-outline"></ion-icon>
+              <strong>No exercises listed</strong>
+              <span>No exercises recorded for this session.</span>
+            </div>
+          </div>
+
+          <div class="drilldown-footer-btn-wrap">
+            <button type="button" class="drilldown-close-btn" (click)="closeSessionWorkoutDetail()">
+              Back to List
+            </button>
+          </div>
         </div>
       </div>
     </ion-content>

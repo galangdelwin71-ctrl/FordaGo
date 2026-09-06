@@ -142,7 +142,9 @@
     </div>
 
     <div class="menu-item fade-up" id="tour-profile-active-status">
-      <span class="menu-icon"><ion-icon [name]="isActiveStatus ? 'radio-button-on-outline' : 'radio-button-off-outline'"></ion-icon></span>
+      <span class="menu-icon status-menu-icon" [class.is-online]="isActiveStatus" [class.is-offline]="!isActiveStatus">
+        <ion-icon [name]="isActiveStatus ? 'radio-button-on-outline' : 'radio-button-off-outline'"></ion-icon>
+      </span>
       <div class="menu-content">
         <div class="menu-label">Active Status</div>
         <div class="menu-sub">{{ isActiveStatus ? 'Visible to coaches and members' : 'Appear offline' }}</div>

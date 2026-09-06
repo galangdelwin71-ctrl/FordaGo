@@ -233,3 +233,93 @@
   color: #000000;
   font-weight: 800;
 }
+
+/* ══════════════════════════════════════════════════════════
+   LIGHT THEME SUPPORT
+   ══════════════════════════════════════════════════════════ */
+:host-context(body.light-theme),
+:host-context(html.light-theme) {
+  .fallback-dim {
+    background: rgba(15, 23, 42, 0.45);
+  }
+
+  .spotlight-ring {
+    box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.45),
+                0 0 0 2px rgba(217, 119, 6, 0.45);
+    border: 2.5px solid #d97706;
+  }
+
+  .tooltip-card {
+    background: #ffffff;
+    border: 1.5px solid rgba(217, 119, 6, 0.35);
+    color: #0f172a;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.16),
+                0 0 0 1px rgba(0, 0, 0, 0.04) inset;
+  }
+
+  .tooltip-arrow {
+    background: #ffffff;
+    border: 1.5px solid rgba(217, 119, 6, 0.35);
+  }
+
+  .header-icon-wrap {
+    background: rgba(245, 158, 11, 0.14);
+    border-color: rgba(217, 119, 6, 0.3);
+
+    .header-icon {
+      color: #b45309;
+    }
+  }
+
+  .skip-btn {
+    color: #64748b;
+
+    &:hover {
+      color: #0f172a;
+    }
+  }
+
+  .tooltip-title {
+    color: #0f172a;
+  }
+
+  .tooltip-desc {
+    color: #475569;
+  }
+
+  .tooltip-footer {
+    border-top: 1px solid rgba(15, 23, 42, 0.08);
+  }
+
+  .btn-cancel-all-footer {
+    background: rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.25);
+    color: #dc2626;
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.16);
+      border-color: rgba(239, 68, 68, 0.45);
+      color: #b91c1c;
+    }
+  }
+
+  .btn-back {
+    background: #f1f5f9;
+    color: #334155;
+
+    &:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+  }
+
+  .btn-next {
+    background: #ffd600;
+    color: #000000;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+
+    &:hover {
+      background: #ffdb1a;
+    }
+  }
+}

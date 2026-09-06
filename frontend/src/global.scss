@@ -1365,6 +1365,74 @@ body.light-theme {
       ion-icon { color: rgba(15,23,42,0.5) !important; }
     }
 
+    .stat-detail-list-item.is-clickable {
+      background: #ffffff !important;
+      border-color: rgba(15, 23, 42, 0.08) !important;
+
+      &:hover {
+        background: #f8fafc !important;
+        border-color: rgba(15, 23, 42, 0.18) !important;
+      }
+
+      .item-tap-arrow {
+        color: rgba(15, 23, 42, 0.4) !important;
+      }
+    }
+
+    /* Drilldown Modal Light Theme Overrides */
+    .drilldown-target {
+      color: #334155 !important;
+      background: rgba(15, 23, 42, 0.06) !important;
+    }
+    .btn-drilldown-close {
+      background: rgba(15, 23, 42, 0.06) !important;
+      border-color: rgba(15, 23, 42, 0.12) !important;
+      color: #0f172a !important;
+
+      &:hover { background: rgba(15, 23, 42, 0.12) !important; }
+    }
+    .drilldown-subtitle {
+      color: #334155 !important;
+    }
+    .drilldown-count {
+      color: #64748b !important;
+    }
+    .drilldown-exercise-card {
+      background: #ffffff !important;
+      border-color: rgba(15, 23, 42, 0.08) !important;
+      box-shadow: 0 1px 4px rgba(15, 23, 42, 0.03) !important;
+
+      &:hover { background: #f8fafc !important; }
+
+      .ex-index {
+        background: #f1f5f9 !important;
+        color: #0f172a !important;
+      }
+      .drilldown-ex-name {
+        color: #0f172a !important;
+      }
+      .ex-tag {
+        background: #f1f5f9 !important;
+        color: #475569 !important;
+      }
+      .drilldown-status-tag {
+        background: #f1f5f9 !important;
+        color: #64748b !important;
+
+        &.done {
+          background: rgba(16, 185, 129, 0.14) !important;
+          color: #059669 !important;
+        }
+      }
+    }
+    .drilldown-close-btn {
+      background: #f1f5f9 !important;
+      border-color: rgba(15, 23, 42, 0.12) !important;
+      color: #0f172a !important;
+
+      &:hover { background: #e2e8f0 !important; }
+    }
+
     /* Product detail / order modals (inventory) — !important on every
        declaration in this whole ion-modal block is intentional and load-
        bearing, not decoration: ion-modal content is portaled by Ionic to
@@ -2713,5 +2781,75 @@ html.light-theme {
     }
   }
 }
+
+/* Onboarding Guide Light Theme Global Overrides */
+body.light-theme,
+html.light-theme {
+  app-onboarding-guide {
+    .spotlight-ring {
+      box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.45),
+                  0 0 0 2px rgba(217, 119, 6, 0.45) !important;
+      border-color: #d97706 !important;
+    }
+
+    .fallback-dim {
+      background: rgba(15, 23, 42, 0.45) !important;
+    }
+
+    .tooltip-card {
+      background: #ffffff !important;
+      border-color: rgba(217, 119, 6, 0.35) !important;
+      color: #0f172a !important;
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.16),
+                  0 0 0 1px rgba(0, 0, 0, 0.04) inset !important;
+    }
+
+    .tooltip-arrow {
+      background: #ffffff !important;
+      border-color: rgba(217, 119, 6, 0.35) !important;
+    }
+
+    .tooltip-title {
+      color: #0f172a !important;
+    }
+
+    .tooltip-desc {
+      color: #475569 !important;
+    }
+
+    .skip-btn {
+      color: #64748b !important;
+
+      &:hover {
+        color: #0f172a !important;
+      }
+    }
+
+    .header-icon-wrap {
+      background: rgba(245, 158, 11, 0.14) !important;
+      border-color: rgba(217, 119, 6, 0.3) !important;
+
+      .header-icon {
+        color: #b45309 !important;
+      }
+    }
+
+    .tooltip-footer {
+      border-top-color: rgba(15, 23, 42, 0.08) !important;
+    }
+
+    .btn-back {
+      background: #f1f5f9 !important;
+      color: #334155 !important;
+    }
+
+    .btn-next {
+      background: #ffd600 !important;
+      color: #000000 !important;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25) !important;
+    }
+  }
+}
+
 
 
