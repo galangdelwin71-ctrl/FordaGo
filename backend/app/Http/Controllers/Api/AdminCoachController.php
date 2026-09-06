@@ -15,6 +15,11 @@ use Illuminate\Support\Facades\Hash;
  * All routes here are locked to role:admin,super_admin (see routes/api.php).
  * There is intentionally no self-service "become a coach" path anywhere
  * in the app — a coach profile can only ever be created from here.
+ *
+ * Role hierarchy (5-Tier RBAC):
+ *   super_admin → admin → employee → coach → user (member)
+ * Coaches are stored with role = 'coach' (not 'user') as of the
+ * 2026_09_06_000000_add_coach_role_to_users_table migration.
  */
 class AdminCoachController extends Controller
 {
@@ -114,6 +119,8 @@ class AdminCoachController extends Controller
                     if ($user->coachProfile()->exists()) {
                         abort(409, 'This user already has a coach profile.');
                     }
+                    // Elevate role to 'coach' for 5-Tier RBAC consistency.
+                    $user->update(['role' => 'coach']);
                 } else {
                     // ── Create a brand-new account ────────────────────────
                     $username = trim((string) $request->input('username', ''));
@@ -151,7 +158,7 @@ class AdminCoachController extends Controller
                         'username'          => $username,
                         'email'             => $rawEmail,
                         'password'          => Hash::make($password),
-                        'role'              => 'user',
+                        'role'              => 'coach', // 5-Tier RBAC: coaches are distinct from regular members
                         'phone'             => $phone !== '' ? $phone : null,
                         'gender'            => $gender,
                         'first_name'        => $firstName,

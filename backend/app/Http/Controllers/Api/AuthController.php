@@ -291,8 +291,7 @@ class AuthController extends Controller
                 'payment_method'     => $user->payment_method,
                 'membership_expiry'  => $user->membership_expiry,
                 'created_at'         => $user->created_at,
-                // Coach accounts keep role = 'user' (see AdminCoachController)
-                // and are distinguished only by owning a coach_profiles row.
+                // Coach accounts now have role = 'coach' (5-Tier RBAC).
                 // Exposed here so the frontend can route/guard coach-only
                 // pages right after login without an extra round trip.
                 'has_coach_profile'  => $user->isCoach(),
