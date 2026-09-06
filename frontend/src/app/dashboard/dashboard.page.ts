@@ -23,7 +23,6 @@ import { HeaderComponent } from '../shared/header/header.component';
 import { NotificationPanelComponent } from '../shared/notification-panel/notification-panel.component';
 import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.component';
 import { FeedbackModalComponent } from '../shared/feedback-modal/feedback-modal.component';
-import { ChatToastComponent } from '../shared/chat-toast/chat-toast.component';
 import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refresh.component';
 import { FeedbackService } from '../services/feedback.service';
 import { OnboardingService, TourStep } from '../services/onboarding.service';
@@ -181,7 +180,6 @@ export interface PrForm {
     NotificationPanelComponent,
     CoachingPanelComponent,
     FeedbackModalComponent,
-    ChatToastComponent,
     PullToRefreshComponent,
   ],
 })

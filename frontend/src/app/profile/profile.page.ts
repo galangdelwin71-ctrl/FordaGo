@@ -742,9 +742,9 @@ export class ProfilePage implements OnInit {
     this.isActiveStatus = !!event.detail?.checked;
     this.userStatusService.setActiveStatus(this.isActiveStatus);
     if (this.isActiveStatus) {
-      void this.showMobileToast('Active status turned ON (Visible to members)');
+      void this.showMobileToast('Active status turned ON (Visible to coaches & members)');
     } else {
-      void this.showMobileToast('Active status turned OFF (Appearing offline)');
+      void this.showMobileToast('Active status turned OFF (You appear offline; others will not see you active)');
     }
   }
 

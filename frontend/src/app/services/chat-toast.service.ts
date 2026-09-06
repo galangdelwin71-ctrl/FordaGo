@@ -193,6 +193,21 @@ export class ChatToastService {
 
         await this.ensureActionTypesRegistered();
 
+        try {
+          await LocalNotifications.createChannel({
+            id: 'fordago-alerts-v3',
+            name: 'FordaGO Alerts & Messages',
+            description: 'Real-time push notifications for chat messages, gym announcements, and updates',
+            importance: 5,
+            visibility: 1,
+            vibration: true,
+            lights: true,
+            lightColor: '#FFD700',
+          });
+        } catch {
+          // Channel already created or non-fatal
+        }
+
         const notifId = Number(convo.id) * 100000 + (messageId ? Number(messageId) % 100000 : Math.floor(Math.random() * 1000));
 
         await LocalNotifications.schedule({
@@ -200,11 +215,10 @@ export class ChatToastService {
             id: notifId,
             title: convo.partnerName,
             body: body || 'Sent you a message',
-            channelId: 'fordago-alerts-v2',
+            channelId: 'fordago-alerts-v3',
             smallIcon: 'ic_stat_icon',
             iconColor: '#FFD700',
             actionTypeId: 'CHAT_MESSAGE',
-            schedule: { at: new Date(Date.now() + 50), allowWhileIdle: true },
             extra: {
               type: 'chat',
               conversationId: convo.id,

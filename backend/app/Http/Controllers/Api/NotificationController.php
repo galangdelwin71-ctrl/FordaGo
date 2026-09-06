@@ -191,6 +191,18 @@ class NotificationController extends Controller
             \Log::warning('Broadcasting NotificationSent failed: ' . $e->getMessage());
         }
 
+        // Push FCM notification to user's device so phone displays system tray/lockscreen alert
+        try {
+            $fcmService = app(\App\Services\FcmService::class);
+            $fcmService->sendToUser($recipientId, $title, $body, [
+                'type'        => 'missed_workout',
+                'targetRoute' => '/schedule',
+                'channel_id'  => 'fordago-alarms-v3',
+            ]);
+        } catch (\Throwable $e) {
+            \Log::warning('FCM push for missed workout failed: ' . $e->getMessage());
+        }
+
         return response()->json([
             'message' => 'Missed workout alert delivered.',
         ], 201);

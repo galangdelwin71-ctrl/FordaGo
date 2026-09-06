@@ -19,7 +19,6 @@ import { AuthService } from '../services/auth.service';
 import { HeaderComponent } from '../shared/header/header.component';
 import { NotificationPanelComponent } from '../shared/notification-panel/notification-panel.component';
 import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.component';
-import { ChatToastComponent } from '../shared/chat-toast/chat-toast.component';
 import { CoachingNavService, CoachingPanelTab } from '../services/coaching-nav.service';
 import { CoachingService } from '../services/coaching.service';
 
@@ -38,7 +37,6 @@ import { CoachingService } from '../services/coaching.service';
     HeaderComponent,
     NotificationPanelComponent,
     CoachingPanelComponent,
-    ChatToastComponent,
   ],
 })
 export class CoachingPage implements OnInit {

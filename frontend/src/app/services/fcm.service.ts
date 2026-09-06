@@ -59,11 +59,28 @@ export class FcmService {
     try {
       const { FirebaseMessaging } = await import('@capacitor-firebase/messaging');
 
-      // Request permission (Android 13+ requires explicit permission)
-      const permResult = await FirebaseMessaging.requestPermissions();
-      if (permResult.receive !== 'granted') {
+      // Request permission (Android 13+ requires explicit POST_NOTIFICATIONS permission)
+      let permGranted = true;
+      try {
+        const permResult = await FirebaseMessaging.requestPermissions();
+        if (permResult && permResult.receive === 'denied') {
+          permGranted = false;
+        }
+      } catch {
+        // Permission check non-fatal on older Android versions
+      }
+
+      if (!permGranted) {
         console.warn('FCM: Push notification permission denied.');
         return;
+      }
+
+      // Ensure local notifications permission is also requested
+      try {
+        const { LocalNotifications } = await import('@capacitor/local-notifications');
+        await LocalNotifications.requestPermissions();
+      } catch {
+        // ignore
       }
 
       // Get the FCM token for this device

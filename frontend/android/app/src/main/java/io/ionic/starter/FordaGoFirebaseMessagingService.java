@@ -43,8 +43,24 @@ public class FordaGoFirebaseMessagingService extends FirebaseMessagingService {
     public static final String KEY_TEXT_REPLY = "key_text_reply";
 
     @Override
+    public void onNewToken(@NonNull String token) {
+        super.onNewToken(token);
+        try {
+            io.capawesome.capacitorjs.plugins.firebase.messaging.FirebaseMessagingPlugin.onNewToken(token);
+        } catch (Throwable t) {
+            Log.w(TAG, "Failed forwarding onNewToken to plugin", t);
+        }
+    }
+
+    @Override
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
+
+        try {
+            io.capawesome.capacitorjs.plugins.firebase.messaging.FirebaseMessagingPlugin.onMessageReceived(remoteMessage);
+        } catch (Throwable t) {
+            Log.w(TAG, "Failed forwarding onMessageReceived to plugin", t);
+        }
 
         Map<String, String> data = remoteMessage.getData();
         String title = data.get("title");
@@ -146,6 +162,10 @@ public class FordaGoFirebaseMessagingService extends FirebaseMessagingService {
             intent.putExtra("targetRoute", "/chat/" + conversationIdStr);
         }
 
+        String targetChannel = data.containsKey("channel_id") && data.get("channel_id") != null && !data.get("channel_id").trim().isEmpty()
+            ? data.get("channel_id").trim()
+            : CHANNEL_ID;
+
         PendingIntent pendingIntent = PendingIntent.getActivity(
             this,
             notifId,
@@ -153,15 +173,25 @@ public class FordaGoFirebaseMessagingService extends FirebaseMessagingService {
             PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
         );
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher)
+        int smallIcon = getResources().getIdentifier("ic_stat_icon", "drawable", getPackageName());
+        if (smallIcon == 0) {
+            smallIcon = R.mipmap.ic_launcher;
+        }
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, targetChannel)
+            .setSmallIcon(smallIcon)
             .setContentTitle(title)
             .setContentText(body)
             .setAutoCancel(true)
             .setColor(Color.parseColor("#FFD700"))
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setContentIntent(pendingIntent);
+
+        if (body != null && (body.contains("\n") || body.length() > 50)) {
+            builder.setStyle(new NotificationCompat.BigTextStyle().bigText(body));
+        }
 
         // If chat message, format with Messenger-style MessagingStyle + Sender Avatar + Direct Reply
         if ("chat".equals(type) && conversationIdStr != null) {
@@ -337,20 +367,41 @@ public class FordaGoFirebaseMessagingService extends FirebaseMessagingService {
 
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            if (manager == null) return;
+
+            android.media.AudioAttributes audioAttributes = new android.media.AudioAttributes.Builder()
+                .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .setUsage(android.media.AudioAttributes.USAGE_NOTIFICATION)
+                .build();
+
+            // Alerts channel (Chat, Announcements, System messages)
+            NotificationChannel alertsChannel = new NotificationChannel(
                 CHANNEL_ID,
                 CHANNEL_NAME,
                 NotificationManager.IMPORTANCE_HIGH
             );
-            channel.setDescription("Notifications for chat messages and workouts");
-            channel.enableLights(true);
-            channel.setLightColor(Color.YELLOW);
-            channel.enableVibration(true);
+            alertsChannel.setDescription("Notifications for chat messages and announcements");
+            alertsChannel.enableLights(true);
+            alertsChannel.setLightColor(Color.YELLOW);
+            alertsChannel.enableVibration(true);
+            alertsChannel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC);
+            alertsChannel.setSound(android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_NOTIFICATION), audioAttributes);
+            manager.createNotificationChannel(alertsChannel);
 
-            NotificationManager manager = getSystemService(NotificationManager.class);
-            if (manager != null) {
-                manager.createNotificationChannel(channel);
-            }
+            // Alarms & Workouts channel (Missed workouts, start alerts, schedule reminders)
+            NotificationChannel alarmsChannel = new NotificationChannel(
+                "fordago-alarms-v3",
+                "FordaGO Workout Alarms & Reminders",
+                NotificationManager.IMPORTANCE_HIGH
+            );
+            alarmsChannel.setDescription("Instant alerts for scheduled workouts, reminders, and gym updates");
+            alarmsChannel.enableLights(true);
+            alarmsChannel.setLightColor(Color.YELLOW);
+            alarmsChannel.enableVibration(true);
+            alarmsChannel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC);
+            alarmsChannel.setSound(android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_NOTIFICATION), audioAttributes);
+            manager.createNotificationChannel(alarmsChannel);
         }
     }
 }

@@ -105,9 +105,23 @@ export class ChatPage implements OnInit, OnDestroy {
   private lastTypingSent = 0;
 
   // ── Active / Online Status ────────────────────────────
-  isPartnerActive = true;
+  isPartnerActive = false;
+  private lastPartnerActiveAt = 0;
 
-  /** Active live sync timer (polls every 2s while chat screen is open) */
+  /**
+   * Effective active status for display.
+   * Vice-versa rule: if current user has turned active status OFF,
+   * they cannot see when their partner is active either.
+   */
+  get effectivePartnerActive(): boolean {
+    if (!this.userStatusService.isActive) {
+      return false;
+    }
+    if (this.isPartnerActive && Date.now() - this.lastPartnerActiveAt < 25000) {
+      return true;
+    }
+    return false;
+  }
   private pollTimer: any = null;
   /** Cleanup function for native FCM foreground message listener */
   private fcmCleanup: (() => void) | null = null;
@@ -342,6 +356,7 @@ export class ChatPage implements OnInit, OnDestroy {
     if (this.activeChannel) {
       try {
         this.activeChannel.whisper('typing', { userId: this.currentUserId, isTyping: false });
+        this.activeChannel.whisper('user_status', { userId: this.currentUserId, isActive: false });
       } catch { /* ignore */ }
     }
 
@@ -350,6 +365,22 @@ export class ChatPage implements OnInit, OnDestroy {
     }
     this.activeChannel = null;
     this.isPartnerTyping = false;
+    this.isPartnerActive = false;
+    this.lastPartnerActiveAt = 0;
+  }
+
+  /** Broadcast our current active status to the partner in the chat room */
+  private broadcastOwnStatus(forceActive?: boolean): void {
+    if (!this.activeChannel) return;
+    const isActive = forceActive !== undefined ? forceActive : this.userStatusService.isActive;
+    try {
+      this.activeChannel.whisper('user_status', {
+        userId: this.currentUserId,
+        isActive: isActive,
+      });
+    } catch {
+      // ignore
+    }
   }
 
   /**
@@ -368,14 +399,23 @@ export class ChatPage implements OnInit, OnDestroy {
     });
   }
 
+  private broadcastCounter = 0;
+
   /**
    * Starts 1.5-second polling interval while sitting on the active chat view.
    */
   private startActivePolling(): void {
     this.stopActivePolling();
+    this.broadcastCounter = 0;
     this.zone.runOutsideAngular(() => {
       this.pollTimer = setInterval(() => {
         this.loadMessagesSilently();
+        this.broadcastCounter++;
+        if (this.broadcastCounter % 3 === 0) {
+          this.zone.run(() => {
+            this.broadcastOwnStatus();
+          });
+        }
       }, 1500);
     });
   }
@@ -681,10 +721,7 @@ export class ChatPage implements OnInit, OnDestroy {
         read_at: new Date().toISOString(),
       });
       // Broadcast our own active status to the partner
-      channel.whisper('user_status', {
-        userId: this.currentUserId,
-        isActive: this.userStatusService.isActive,
-      });
+      this.broadcastOwnStatus();
     } catch (e) {
       // ignore
     }
@@ -693,7 +730,18 @@ export class ChatPage implements OnInit, OnDestroy {
     channel.listenForWhisper('user_status', (data: { userId?: number; isActive?: boolean }) => {
       if (Number(data?.userId) === Number(this.currentUserId)) return;
       this.zone.run(() => {
-        this.isPartnerActive = data?.isActive !== false;
+        const partnerIsActive = Boolean(data?.isActive);
+        if (partnerIsActive) {
+          this.lastPartnerActiveAt = Date.now();
+          this.isPartnerActive = true;
+          // If we are active, whisper back so the partner knows we are online too
+          if (this.userStatusService.isActive) {
+            this.broadcastOwnStatus();
+          }
+        } else {
+          this.isPartnerActive = false;
+          this.lastPartnerActiveAt = 0;
+        }
       });
     });
 

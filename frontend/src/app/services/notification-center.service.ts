@@ -331,7 +331,7 @@ export class NotificationCenterService {
         this.publishNotifications(this.sortNotifications(deduped));
 
         // Send a native device notification banner with High Importance
-        void this.sendDeviceNotification({ ...item, key: undefined }, undefined, 'fordago-alerts');
+        void this.sendDeviceNotification({ ...item, key: undefined }, undefined, 'fordago-alerts-v3');
       });
     };
 
@@ -678,7 +678,7 @@ export class NotificationCenterService {
           // is never retried, just not re-shown as a second banner.
           if (!this.wasRecentlyDelivered(appItem.title)) {
             // Trigger native notification with sound & vibration
-            void this.sendDeviceNotification(appItem, defaultTargetRoute, 'fordago-alerts');
+            void this.sendDeviceNotification(appItem, defaultTargetRoute, 'fordago-alerts-v3');
           }
         }
 
@@ -1210,7 +1210,7 @@ export class NotificationCenterService {
   private async sendDeviceNotification(
     notification: StoredNotificationItem,
     targetRoute?: string,
-    channelId: string = 'fordago-alerts-v2'
+    channelId: string = 'fordago-alarms-v3'
   ): Promise<void> {
     if (Capacitor.isNativePlatform()) {
       // Wrapped in try/catch: every caller in this file invokes
@@ -1246,7 +1246,6 @@ export class NotificationCenterService {
             channelId: channelId,
             smallIcon: 'ic_stat_icon',
             iconColor: '#FFD700',
-            schedule: { at: new Date(Date.now() + 500), allowWhileIdle: true },
             extra: {
               notificationId: notification.id,
               targetRoute: targetRoute ?? null,

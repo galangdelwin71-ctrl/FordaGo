@@ -18,7 +18,7 @@
           <div *ngIf="!partner.profile_image" class="avatar-placeholder">
             {{ (partner.first_name || partner.username || 'U').charAt(0) }}
           </div>
-          <span class="online-indicator" [class.offline]="!isPartnerActive" [attr.title]="isPartnerActive ? 'Online' : 'Offline'"></span>
+          <span class="online-indicator" [class.offline]="!effectivePartnerActive" [attr.title]="effectivePartnerActive ? 'Online' : 'Offline'"></span>
         </div>
 
         <div class="chat-partner-meta">
@@ -283,9 +283,9 @@
         {{ conversation?.partner_role === 'coach' ? 'Personal Coach' : 'Client' }}
       </span>
 
-      <span class="partner-info-status-tag" [class.offline]="!isPartnerActive">
+      <span class="partner-info-status-tag" [class.offline]="!effectivePartnerActive">
         <span class="status-dot"></span>
-        {{ isPartnerActive ? 'Active Now' : 'Offline' }}
+        {{ effectivePartnerActive ? 'Active Now' : 'Offline' }}
       </span>
 
       <!-- ── NOTIFICATIONS & MUTE / SNOOZE CONTROLS ──────── -->

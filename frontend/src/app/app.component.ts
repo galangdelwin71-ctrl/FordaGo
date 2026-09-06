@@ -162,13 +162,14 @@ const TAB_NAVIGATION_PATHS = new Set([
 // toast and arm the timer. 2s matches the platform-typical Android pattern.
 import { OnboardingGuideComponent } from './shared/onboarding-guide/onboarding-guide.component';
 import { OnboardingService } from './services/onboarding.service';
+import { ChatToastComponent } from './shared/chat-toast/chat-toast.component';
 
 const EXIT_CONFIRM_WINDOW_MS = 2000;
 
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
-  imports: [IonApp, IonRouterOutlet, OnboardingGuideComponent],
+  imports: [IonApp, IonRouterOutlet, ChatToastComponent, OnboardingGuideComponent],
 })
 export class AppComponent implements OnDestroy {
   // Populated once Capacitor resolves the listener registration (see

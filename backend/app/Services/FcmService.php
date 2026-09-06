@@ -25,7 +25,7 @@ class FcmService
 
     public function __construct()
     {
-        $this->projectId = config('services.firebase.project_id', 'fordago-18588');
+        $this->projectId = (string) config('services.firebase.project_id', '');
         
         $serviceAccountJson = config('services.firebase.service_account_json', '');
         if (is_array($serviceAccountJson)) {
@@ -39,6 +39,13 @@ class FcmService
             } else {
                 $this->serviceAccount = null;
             }
+        }
+
+        if (empty($this->projectId) && ! empty($this->serviceAccount['project_id'])) {
+            $this->projectId = $this->serviceAccount['project_id'];
+        }
+        if (empty($this->projectId)) {
+            $this->projectId = 'fordago-18588';
         }
     }
 
@@ -63,45 +70,33 @@ class FcmService
                 return false;
             }
 
-            $isChat = ($data['type'] ?? '') === 'chat';
-
-            if ($isChat) {
-                // High-priority DATA message for Chat:
-                // Android delivers this to FordaGoFirebaseMessagingService.java onMessageReceived,
-                // which creates the Messenger-style notification with Circular Avatar,
-                // small FordaGO badge, inline Direct Reply textfield, and checks isConversationMuted.
-                $messagePayload = [
-                    'token' => $fcmToken,
-                    'data'  => array_merge([
-                        'title' => (string) $title,
-                        'body'  => (string) $body,
-                    ], array_map('strval', $data)),
-                    'android' => [
-                        'priority' => 'high',
-                    ],
-                ];
-            } else {
-                $messagePayload = [
-                    'token' => $fcmToken,
+            // Both notification & data are provided.
+            // On Android:
+            // - Background/Closed: Google Play Services displays the notification on device tray instantly.
+            // - Foreground: FordaGoFirebaseMessagingService / app receives the data payload for in-app toast & sound.
+            $messagePayload = [
+                'token' => $fcmToken,
+                'notification' => [
+                    'title' => (string) $title,
+                    'body'  => (string) $body,
+                ],
+                'data'  => array_merge([
+                    'title' => (string) $title,
+                    'body'  => (string) $body,
+                ], array_map('strval', $data)),
+                'android' => [
+                    'priority' => 'high',
                     'notification' => [
-                        'title' => (string) $title,
-                        'body'  => (string) $body,
+                        'channel_id'              => $data['channel_id'] ?? 'fordago-alerts-v3',
+                        'icon'                    => 'ic_stat_icon',
+                        'color'                   => '#FFD700',
+                        'sound'                   => 'default',
+                        'default_sound'           => true,
+                        'default_vibrate_timings' => true,
+                        'notification_priority'   => 'PRIORITY_MAX',
                     ],
-                    'data'  => array_merge([
-                        'title' => (string) $title,
-                        'body'  => (string) $body,
-                    ], array_map('strval', $data)),
-                    'android' => [
-                        'priority' => 'high',
-                        'notification' => [
-                            'channel_id'   => 'fordago-alerts-v3',
-                            'icon'         => 'ic_stat_icon',
-                            'color'        => '#FFD700',
-                            'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
-                        ],
-                    ],
-                ];
-            }
+                ],
+            ];
 
             $payload = ['message' => $messagePayload];
 
