@@ -2444,123 +2444,139 @@
         </button>
       </div>
 
-      <!-- Active Filter Strip (Clean Dark Slate & Amber Palette, NO BLUE) -->
-      <div class="active-filter-strip" *ngIf="activityLogCategoryFilter !== 'all'">
-        <div class="strip-info">
-          <ion-icon name="funnel-outline"></ion-icon>
-          <span>Filtered by: <strong>{{ getCategoryFilterLabel() }}</strong> ({{ filteredActivityLogs.length }} event{{ filteredActivityLogs.length === 1 ? '' : 's' }})</span>
+      <!-- Audit Center Hub Card (Clean, Modern, Uncluttered Dashboard) -->
+      <div class="logs-hub-card">
+        <div class="logs-hub-header">
+          <div class="hub-title-group">
+            <div class="hub-icon-badge">
+              <ion-icon name="shield-checkmark"></ion-icon>
+            </div>
+            <div>
+              <h3 class="hub-title">Audit Trail &amp; Activity Explorer</h3>
+              <p class="hub-sub">Select any category box above or click the button below to inspect activity records in the dedicated modal explorer.</p>
+            </div>
+          </div>
+          <button type="button" class="btn-refresh-logs-hub" (click)="loadActivityLogs()" [disabled]="activityLogsLoading" title="Refresh activity logs">
+            <ion-icon name="reload-outline" [class.spinning]="activityLogsLoading"></ion-icon>
+            <span>Refresh Records</span>
+          </button>
         </div>
-        <button type="button" class="btn-clear-filter-strip" (click)="filterLogsByKpi('all')" title="Reset to all events">
-          <ion-icon name="close-circle-outline"></ion-icon> Show All
+
+        <div class="logs-hub-actions">
+          <button type="button" class="btn-primary-hub" (click)="openActivityLogsModal('all')">
+            <ion-icon name="albums-outline"></ion-icon>
+            <span>Browse All Activity Records ({{ activityLogs.length }})</span>
+          </button>
+          <div class="logs-quick-shortcuts">
+            <button type="button" class="btn-shortcut" (click)="openActivityLogsModal('login')">
+              <ion-icon name="log-in-outline"></ion-icon>
+              <span>Logins ({{ activityLogStats.logins_today || 0 }})</span>
+            </button>
+            <button type="button" class="btn-shortcut" (click)="openActivityLogsModal('logout')">
+              <ion-icon name="log-out-outline"></ion-icon>
+              <span>Logouts ({{ activityLogStats.logouts_today || 0 }})</span>
+            </button>
+            <button type="button" class="btn-shortcut" (click)="openActivityLogsModal('modifications')">
+              <ion-icon name="create-outline"></ion-icon>
+              <span>Modifications ({{ activityLogStats.modifications_today || 0 }})</span>
+            </button>
+            <button type="button" class="btn-shortcut" (click)="openActivityLogsModal('active_sessions')">
+              <ion-icon name="radio-outline"></ion-icon>
+              <span>Active Sessions ({{ activityLogStats.active_sessions || 0 }})</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Latest Event Highlight Preview (Single item, compact & clean) -->
+        <div class="latest-event-banner" *ngIf="activityLogs.length > 0">
+          <div class="leb-badge">LATEST RECORD</div>
+          <div class="leb-content">
+            <div class="leb-actor">
+              <span class="leb-name">{{ getLogActorName(activityLogs[0]) }}</span>
+              <span class="leb-role">{{ getLogRoleLabel(activityLogs[0]) }}</span>
+              <span class="leb-time">{{ formatNotifDate(activityLogs[0].created_at) }}</span>
+            </div>
+            <div class="leb-title">{{ cleanLogTitle(activityLogs[0]) }}</div>
+          </div>
+          <button type="button" class="btn-inspect-latest" (click)="viewActivityPayload(activityLogs[0])" title="View details">
+            <ion-icon name="open-outline"></ion-icon>
+            <span>Inspect</span>
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /logs panel -->
+
+  </div>
+</ion-content>
+
+<!-- Activity Records Explorer Modal (Clean, organized modal popup) -->
+<div class="logs-modal-overlay" *ngIf="showActivityLogsModal" (click)="closeActivityLogsModal()">
+  <div class="logs-modal-card" (click)="$event.stopPropagation()">
+
+    <!-- Modal Header -->
+    <div class="logs-modal-header">
+      <div class="lm-header-title">
+        <div class="lm-icon-badge" [ngClass]="getKpiIconClass(activityLogCategoryFilter)">
+          <ion-icon [name]="getKpiIconName(activityLogCategoryFilter)"></ion-icon>
+        </div>
+        <div class="lm-title-col">
+          <h3 class="lm-title-text">Activity Records: {{ getCategoryFilterLabel() }}</h3>
+          <span class="lm-title-sub">{{ filteredActivityLogs.length }} record{{ filteredActivityLogs.length === 1 ? '' : 's' }} found</span>
+        </div>
+      </div>
+      <div class="lm-header-actions">
+        <button type="button" class="btn-modal-refresh" (click)="loadActivityLogs()" [disabled]="activityLogsLoading" title="Refresh">
+          <ion-icon name="reload-outline" [class.spinning]="activityLogsLoading"></ion-icon>
+        </button>
+        <button type="button" class="btn-close-logs-modal" (click)="closeActivityLogsModal()" title="Close explorer">
+          <ion-icon name="close-outline"></ion-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal Filter & Search Controls -->
+    <div class="logs-modal-controls">
+      <div class="logs-search-box">
+        <ion-icon name="search-outline"></ion-icon>
+        <input
+          type="text"
+          placeholder="Search action, user name, username, IP, details..."
+          [(ngModel)]="activityLogSearch"
+        />
+        <button *ngIf="activityLogSearch" class="btn-clear-search" (click)="activityLogSearch=''">
+          <ion-icon name="close-circle-outline"></ion-icon>
         </button>
       </div>
 
-      <!-- Filter & Search Toolbar -->
-      <div class="logs-toolbar">
-        <div class="logs-search-box">
-          <ion-icon name="search-outline"></ion-icon>
-          <input
-            type="text"
-            placeholder="Search action, user name, username, IP, details..."
-            [(ngModel)]="activityLogSearch"
-          />
-          <button *ngIf="activityLogSearch" class="btn-clear-search" (click)="activityLogSearch=''">
-            <ion-icon name="close-circle-outline"></ion-icon>
-          </button>
-          <button type="button" class="btn-inline-refresh" (click)="loadActivityLogs()" [disabled]="activityLogsLoading" [title]="activityLogsLoading ? 'Refreshing...' : 'Refresh Activity Logs'">
-            <ion-icon name="reload-outline" [class.spinning]="activityLogsLoading"></ion-icon>
-          </button>
-        </div>
-
-        <div class="logs-filter-group">
-          <!-- Category Pills -->
-          <div class="category-pills">
-            <button
-              class="pill-btn"
-              [class.active]="activityLogCategoryFilter==='all'"
-              (click)="filterLogsByKpi('all')"
-            >
-              All Events
-            </button>
-            <button
-              class="pill-btn"
-              [class.active]="activityLogCategoryFilter==='login'"
-              (click)="filterLogsByKpi('login')"
-            >
-              Logins
-            </button>
-            <button
-              class="pill-btn"
-              [class.active]="activityLogCategoryFilter==='logout'"
-              (click)="filterLogsByKpi('logout')"
-            >
-              Logouts
-            </button>
-            <button
-              class="pill-btn"
-              [class.active]="activityLogCategoryFilter==='auth'"
-              (click)="filterLogsByKpi('auth')"
-            >
-              Logins &amp; Logouts
-            </button>
-            <button
-              class="pill-btn"
-              [class.active]="activityLogCategoryFilter==='modifications'"
-              (click)="filterLogsByKpi('modifications')"
-            >
-              Modifications
-            </button>
-            <button
-              class="pill-btn"
-              [class.active]="activityLogCategoryFilter==='active_sessions'"
-              (click)="filterLogsByKpi('active_sessions')"
-            >
-              Active Sessions
-            </button>
-            <button
-              class="pill-btn"
-              [class.active]="activityLogCategoryFilter==='members'"
-              (click)="filterLogsByKpi('members')"
-            >
-              Members
-            </button>
-            <button
-              class="pill-btn"
-              [class.active]="activityLogCategoryFilter==='inventory'"
-              (click)="filterLogsByKpi('inventory')"
-            >
-              Inventory / Orders
-            </button>
-
-            <button
-              class="pill-btn"
-              [class.active]="activityLogCategoryFilter==='equipment'"
-              (click)="activityLogCategoryFilter='equipment'"
-            >
-              Equipment
-            </button>
-            <button
-              class="pill-btn"
-              [class.active]="activityLogCategoryFilter==='attendance'"
-              (click)="activityLogCategoryFilter='attendance'"
-            >
-              Attendance
-            </button>
-          </div>
-
-          <!-- Staff Selector -->
-          <div class="staff-selector-wrap" *ngIf="activityLogStaffList.length > 0">
-            <label class="staff-select-label">User / Staff:</label>
-            <select class="staff-select" [(ngModel)]="activityLogStaffFilter">
-              <option value="all">All Users &amp; Staff</option>
-              <option *ngFor="let s of activityLogStaffList" [value]="s.id">
-                {{ s.first_name ? s.first_name + ' ' + s.last_name : (s.name || s.username) }} ({{ s.role }})
-              </option>
-            </select>
-          </div>
-        </div>
+      <!-- Category Pills inside Modal -->
+      <div class="logs-modal-pills">
+        <button class="pill-btn" [class.active]="activityLogCategoryFilter==='all'" (click)="activityLogCategoryFilter='all'">All Events</button>
+        <button class="pill-btn" [class.active]="activityLogCategoryFilter==='login'" (click)="activityLogCategoryFilter='login'">Logins</button>
+        <button class="pill-btn" [class.active]="activityLogCategoryFilter==='logout'" (click)="activityLogCategoryFilter='logout'">Logouts</button>
+        <button class="pill-btn" [class.active]="activityLogCategoryFilter==='auth'" (click)="activityLogCategoryFilter='auth'">Logins &amp; Logouts</button>
+        <button class="pill-btn" [class.active]="activityLogCategoryFilter==='modifications'" (click)="activityLogCategoryFilter='modifications'">Modifications</button>
+        <button class="pill-btn" [class.active]="activityLogCategoryFilter==='active_sessions'" (click)="activityLogCategoryFilter='active_sessions'">Active Sessions</button>
+        <button class="pill-btn" [class.active]="activityLogCategoryFilter==='members'" (click)="activityLogCategoryFilter='members'">Members</button>
+        <button class="pill-btn" [class.active]="activityLogCategoryFilter==='inventory'" (click)="activityLogCategoryFilter='inventory'">Inventory</button>
+        <button class="pill-btn" [class.active]="activityLogCategoryFilter==='equipment'" (click)="activityLogCategoryFilter='equipment'">Equipment</button>
+        <button class="pill-btn" [class.active]="activityLogCategoryFilter==='attendance'" (click)="activityLogCategoryFilter='attendance'">Attendance</button>
       </div>
 
+      <!-- Staff Selector -->
+      <div class="staff-selector-wrap" *ngIf="activityLogStaffList.length > 0">
+        <label class="staff-select-label">User / Staff:</label>
+        <select class="staff-select" [(ngModel)]="activityLogStaffFilter">
+          <option value="all">All Users &amp; Staff</option>
+          <option *ngFor="let s of activityLogStaffList" [value]="s.id">
+            {{ s.first_name ? s.first_name + ' ' + s.last_name : (s.name || s.username) }} ({{ s.role }})
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Modal Body: Scrollable Log Cards -->
+    <div class="logs-modal-body">
       <!-- Loading state -->
       <div class="logs-loading" *ngIf="activityLogsLoading">
         <ion-spinner name="crescent"></ion-spinner>
@@ -2575,17 +2591,17 @@
       <!-- Empty state -->
       <div class="empty-state" *ngIf="!activityLogsLoading && !activityLogsError && filteredActivityLogs.length === 0">
         <ion-icon name="shield-checkmark-outline" class="empty-icon"></ion-icon>
-        <p>No activity logs found.</p>
+        <p>No activity records found.</p>
         <small *ngIf="activityLogSearch || activityLogCategoryFilter !== 'all' || activityLogStaffFilter !== 'all'">
-          Try resetting your search query or category filters.
+          Try resetting your search query or selecting a different category pill.
         </small>
         <small *ngIf="!activityLogSearch && activityLogCategoryFilter === 'all' && activityLogStaffFilter === 'all'">
           Staff and user activities will be recorded here automatically.
         </small>
       </div>
 
-      <!-- Activity Timeline List -->
-      <div id="activityLogsTimeline" class="activity-timeline-list" *ngIf="!activityLogsLoading && !activityLogsError && filteredActivityLogs.length > 0">
+      <!-- Activity Timeline List inside Modal -->
+      <div class="activity-timeline-list" *ngIf="!activityLogsLoading && !activityLogsError && filteredActivityLogs.length > 0">
         <div
           class="activity-log-card clickable"
           *ngFor="let log of filteredActivityLogs"
@@ -2649,7 +2665,7 @@
               </div>
             </div>
 
-            <!-- Footer: Meta & Payload Trigger -->
+            <!-- Footer: Meta & Details button -->
             <div class="log-footer-row">
               <div class="log-meta-tags">
                 <span class="meta-tag" *ngIf="log.ip_address">
@@ -2670,11 +2686,15 @@
           </div>
         </div>
       </div>
+    </div>
 
-    </div><!-- /logs panel -->
+    <!-- Modal Footer -->
+    <div class="logs-modal-footer">
+      <button type="button" class="btn-modal-close" (click)="closeActivityLogsModal()">Close</button>
+    </div>
 
   </div>
-</ion-content>
+</div>
 
 <!-- Activity Details Modal (Fixed to Viewport Center, Zero Raw Code) -->
 <div class="payload-modal-overlay" *ngIf="selectedActivityLog" (click)="closeActivityPayload()">
@@ -2769,7 +2789,7 @@
         </div>
       </div>
 
-      <!-- Human-Readable Before & After Changes Comparison (Sino o Ano ang Binago) -->
+      <!-- Human-Readable Before & After Changes Comparison -->
       <div class="modal-changes-card" *ngIf="getLogChanges(selectedActivityLog).length > 0">
         <div class="mcc-title">
           <ion-icon name="git-compare-outline"></ion-icon>
@@ -2783,14 +2803,14 @@
             </div>
             <div class="mcc-diff-row">
               <div class="mcc-diff-box before">
-                <span class="diff-tag">BEFORE (Dati)</span>
+                <span class="diff-tag">BEFORE</span>
                 <span class="diff-value">{{ change.before }}</span>
               </div>
               <div class="mcc-arrow">
                 <ion-icon name="arrow-forward-outline"></ion-icon>
               </div>
               <div class="mcc-diff-box after">
-                <span class="diff-tag">AFTER (Bago)</span>
+                <span class="diff-tag">AFTER</span>
                 <span class="diff-value">{{ change.after }}</span>
               </div>
             </div>

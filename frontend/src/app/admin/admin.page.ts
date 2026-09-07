@@ -2599,6 +2599,7 @@ export class AdminPage implements OnInit, OnDestroy {
   activityLogCategoryFilter: 'all' | 'auth' | 'login' | 'logout' | 'modifications' | 'active_sessions' | 'members' | 'inventory' | 'equipment' | 'attendance' = 'all';
   activityLogStaffFilter: string = 'all';
   selectedActivityLog: any = null;
+  showActivityLogsModal = false;
 
   get filteredActivityLogs(): any[] {
     const q = (this.activityLogSearch || '').trim().toLowerCase();
@@ -2649,18 +2650,39 @@ export class AdminPage implements OnInit, OnDestroy {
   }
 
   filterLogsByKpi(category: 'all' | 'auth' | 'login' | 'logout' | 'modifications' | 'active_sessions' | 'members' | 'inventory' | 'equipment' | 'attendance'): void {
-    if (this.activityLogCategoryFilter === category && category !== 'all') {
-      this.activityLogCategoryFilter = 'all';
-    } else {
-      this.activityLogCategoryFilter = category;
+    this.activityLogCategoryFilter = category;
+    this.showActivityLogsModal = true;
+  }
+
+  openActivityLogsModal(category: 'all' | 'auth' | 'login' | 'logout' | 'modifications' | 'active_sessions' | 'members' | 'inventory' | 'equipment' | 'attendance' = 'all'): void {
+    this.activityLogCategoryFilter = category;
+    this.showActivityLogsModal = true;
+  }
+
+  closeActivityLogsModal(): void {
+    this.showActivityLogsModal = false;
+  }
+
+  getKpiIconClass(category: string): string {
+    switch (category) {
+      case 'login': return 'icon-login';
+      case 'logout': return 'icon-logout';
+      case 'auth': return 'icon-auth';
+      case 'modifications': return 'icon-mod';
+      case 'active_sessions': return 'icon-active';
+      default: return 'icon-total';
     }
-    // Smoothly scroll down to timeline list for immediate visual confirmation
-    setTimeout(() => {
-      const el = document.getElementById('activityLogsTimeline');
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
-    }, 40);
+  }
+
+  getKpiIconName(category: string): string {
+    switch (category) {
+      case 'login': return 'log-in-outline';
+      case 'logout': return 'log-out-outline';
+      case 'auth': return 'swap-horizontal-outline';
+      case 'modifications': return 'create-outline';
+      case 'active_sessions': return 'radio-outline';
+      default: return 'layers-outline';
+    }
   }
 
   getCategoryFilterLabel(): string {
