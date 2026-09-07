@@ -232,19 +232,50 @@ class AdminCoachController extends Controller
 
     /**
      * DELETE /api/admin/coaches/{userId}
-     * Deactivate a coach (soft — sets is_active=false). We intentionally do
-     * NOT hard-delete the coach_profiles row: that would sever the audit
-     * trail (created_by) and any historical conversations/proposals still
-     * reference the user_id directly, so deactivating is the safe default.
+     * - Deactivate a coach: default when permanent is false.
+     * - Delete a coach permanently: when ?permanent=true is passed.
      */
-    public function destroy(int $userId)
+    public function destroy(Request $request, int $userId)
     {
         $profile = CoachProfile::where('user_id', $userId)->first();
         if (! $profile) {
             return response()->json(['message' => 'Coach profile not found.'], 404);
         }
 
+        if ($request->boolean('permanent') || $request->input('action') === 'delete') {
+            $user = User::find($userId);
+            $coachName = $user ? trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')) : "Coach #{$userId}";
+            if (!$coachName && $user) $coachName = $user->username;
+
+            $profile->delete();
+            if ($user && $user->role === 'coach') {
+                $user->delete();
+            }
+
+            \App\Services\ActivityLogger::log(
+                $request->user(),
+                'coach_delete',
+                "Deleted Coach Account: {$coachName}",
+                "Permanently removed coach {$coachName} (User ID: {$userId}) from system.",
+                'danger',
+                'CoachProfile',
+                $userId
+            );
+
+            return response()->json(['message' => 'Coach account deleted permanently.']);
+        }
+
         $profile->update(['is_active' => false]);
+
+        \App\Services\ActivityLogger::log(
+            $request->user(),
+            'coach_deactivate',
+            "Deactivated Coach Account",
+            "Deactivated coach profile for user ID {$userId}.",
+            'warning',
+            'CoachProfile',
+            $userId
+        );
 
         return response()->json(['message' => 'Coach deactivated.']);
     }

@@ -227,14 +227,18 @@ class UserController extends Controller
 
         try {
             if ($request->user() && in_array($request->user()->role, ['admin', 'super_admin', 'employee'], true)) {
+                $personName = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
+                $displayName = $personName ?: $username;
+                $displayWithHandle = ($personName && $personName !== $username) ? "{$personName} (@{$username})" : "@{$username}";
+
                 ActivityLogger::log(
                     $request->user(),
                     'user_create',
-                    "Created {$roleLabel} Account",
-                    "Created account for @{$username} ({$rawEmail}) with role '{$assignedRole}' and plan '{$membershipType}'.",
+                    "Created {$roleLabel}: {$displayName}",
+                    "Created account for {$displayWithHandle} with role '{$assignedRole}' and plan '{$membershipType}'.",
                     'user',
                     $user->id,
-                    ['role' => $assignedRole, 'membership_type' => $membershipType, 'payment_method' => $paymentMethod]
+                    ['role' => $assignedRole, 'membership_type' => $membershipType, 'payment_method' => $paymentMethod, 'target_name' => $displayName]
                 );
             }
         } catch (\Throwable) {}
@@ -372,7 +376,14 @@ class UserController extends Controller
                     $dataToUpdate['password'] = Hash::make($password);
                 }
 
-                $user->fill($dataToUpdate)->save();
+                $user->fill($dataToUpdate);
+                $dirtyFields = $user->getDirty();
+                $originalRole = $user->getOriginal('role');
+                $originals = [];
+                foreach (array_keys($dirtyFields) as $dk) {
+                    $originals[$dk] = $user->getOriginal($dk);
+                }
+                $user->save();
             } else {
                 $user->fill(array_merge([
                     'username'      => $username ?: $user->username,
@@ -382,7 +393,14 @@ class UserController extends Controller
                     'phone'         => $normalizedPhone,
                     'gender'        => $gender,
                     'profile_image' => $processedAvatar,
-                ], $fitnessFields, $dobField))->save();
+                ], $fitnessFields, $dobField));
+                $dirtyFields = $user->getDirty();
+                $originalRole = $user->getOriginal('role');
+                $originals = [];
+                foreach (array_keys($dirtyFields) as $dk) {
+                    $originals[$dk] = $user->getOriginal($dk);
+                }
+                $user->save();
             }
 
             // Keep Coach Profile photo in sync if user is a coach
@@ -392,17 +410,103 @@ class UserController extends Controller
                 } catch (\Throwable) {}
             }
 
-            if ($isAdmin && $request->user()->id !== $user->id) {
+            // Audit Log: Only log if there were actual attribute changes!
+            if ($request->user() && in_array($request->user()->role, ['admin', 'super_admin', 'employee'], true)) {
                 try {
-                    ActivityLogger::log(
-                        $request->user(),
-                        'user_update',
-                        "Updated User @{$user->username}",
-                        "Modified profile/account details for user #{$user->id} (@{$user->username}).",
-                        'user',
-                        $user->id,
-                        ['updated_fields' => array_keys($dataToUpdate)]
-                    );
+                    // Remove password hash from field names for clean reporting
+                    $changedKeys = array_values(array_diff(array_keys($dirtyFields), ['updated_at']));
+
+                    // Only generate a log if real fields actually changed
+                    if (!empty($changedKeys)) {
+                        $targetRole = ucfirst($user->role ?: 'User');
+                        $personName = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
+                        $displayName = $personName ?: $user->username;
+                        $displayWithHandle = ($personName && $personName !== $user->username) ? "{$personName} (@{$user->username})" : "@{$user->username}";
+
+                        $userChanges = [];
+                        foreach ($changedKeys as $k) {
+                            $readableName = match ($k) {
+                                'first_name' => 'First Name',
+                                'last_name'  => 'Last Name',
+                                'email'      => 'Email Address',
+                                'phone'      => 'Phone Number',
+                                'gender'     => 'Gender',
+                                'role'       => 'Account Role',
+                                'membership_type' => 'Membership Plan',
+                                'payment_method'  => 'Payment Method',
+                                'membership_expiry' => 'Expiry Date',
+                                'fitness_goal' => 'Fitness Goal',
+                                'password'   => 'Password',
+                                default      => ucwords(str_replace('_', ' ', $k)),
+                            };
+
+                            if ($k === 'password') {
+                                $userChanges[$k] = [
+                                    'field'  => $readableName,
+                                    'before' => '••••••••',
+                                    'after'  => '(Updated / Reset)',
+                                ];
+                            } else {
+                                $bVal = $originals[$k] ?? null;
+                                $aVal = $user->$k;
+                                $userChanges[$k] = [
+                                    'field'  => $readableName,
+                                    'before' => ($bVal !== null && $bVal !== '') ? (string)$bVal : '(None)',
+                                    'after'  => ($aVal !== null && $aVal !== '') ? (string)$aVal : '(None)',
+                                ];
+                            }
+                        }
+
+                        // Generate precise natural language description based on what actually changed
+                        if (count($changedKeys) === 1 && $changedKeys[0] === 'role') {
+                            $oldRoleName = ucfirst(str_replace('_', ' ', $originalRole ?: 'member'));
+                            $newRoleName = ucfirst(str_replace('_', ' ', $user->role ?: 'member'));
+                            $actionTitle = "Changed Role: {$displayName}";
+                            $actionDesc = "Changed account role from '{$oldRoleName}' to '{$newRoleName}' for {$displayWithHandle}.";
+                        } elseif (count($changedKeys) === 1 && $changedKeys[0] === 'password') {
+                            $actionTitle = "Reset Password: {$displayName}";
+                            $actionDesc = "Updated login credentials (password reset) for {$displayWithHandle}.";
+                        } elseif (count($changedKeys) === 1 && in_array($changedKeys[0], ['membership_type', 'membership_expiry'])) {
+                            $actionTitle = "Updated Plan: {$displayName}";
+                            $actionDesc = "Updated membership details ({$user->membership_type}) for {$displayWithHandle}.";
+                        } else {
+                            $readableFields = array_map(function ($k) {
+                                return match ($k) {
+                                    'first_name' => 'First Name',
+                                    'last_name'  => 'Last Name',
+                                    'email'      => 'Email Address',
+                                    'phone'      => 'Phone Number',
+                                    'gender'     => 'Gender',
+                                    'profile_image' => 'Profile Picture',
+                                    'role'       => 'User Role',
+                                    'membership_type' => 'Membership Plan',
+                                    'payment_method'  => 'Payment Method',
+                                    'membership_expiry' => 'Expiry Date',
+                                    'fitness_goal' => 'Fitness Goal',
+                                    'password'   => 'Password',
+                                    default      => ucwords(str_replace('_', ' ', $k)),
+                                };
+                            }, $changedKeys);
+
+                            $actionTitle = "Updated {$targetRole}: {$displayName}";
+                            $actionDesc = "Updated " . implode(', ', $readableFields) . " for {$displayWithHandle}.";
+                        }
+
+                        ActivityLogger::log(
+                            $request->user(),
+                            'user_update',
+                            $actionTitle,
+                            $actionDesc,
+                            'user',
+                            $user->id,
+                            [
+                                'changes'        => $userChanges,
+                                'updated_fields' => $changedKeys,
+                                'target_role'    => $user->role,
+                                'target_name'    => $displayName
+                            ]
+                        );
+                    }
                 } catch (\Throwable) {}
             }
 
@@ -462,14 +566,18 @@ class UserController extends Controller
         }
 
         try {
+            $personName = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
+            $displayName = $personName ?: $user->username;
+            $displayWithHandle = ($personName && $personName !== $user->username) ? "{$personName} (@{$user->username})" : "@{$user->username}";
+
             ActivityLogger::log(
                 $request->user(),
                 'membership_update',
-                "Approved Membership for @{$user->username}",
-                "Set {$membershipType} membership as active. Expiry: " . ($membershipExpiry ?: 'Daily/N/A'),
+                "Approved Membership: {$displayName}",
+                "Set {$membershipType} membership as active for {$displayWithHandle}. Expiry: " . ($membershipExpiry ?: 'Daily/N/A'),
                 'user',
                 $user->id,
-                ['membership_type' => $membershipType, 'expiry' => $membershipExpiry]
+                ['membership_type' => $membershipType, 'expiry' => $membershipExpiry, 'target_name' => $displayName]
             );
         } catch (\Throwable) {}
 
@@ -507,17 +615,21 @@ class UserController extends Controller
             }
         }
 
+        $personName = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
+        $displayName = $personName ?: $user->username;
+        $displayWithHandle = ($personName && $personName !== $user->username) ? "{$personName} (@{$user->username})" : "@{$user->username}";
+
         $user->delete();
 
         try {
             ActivityLogger::log(
                 $request->user(),
                 'user_delete',
-                "Deleted User @{$user->username}",
-                "Permanently deleted account @{$user->username} ({$user->email}, role: {$user->role}).",
+                "Deleted User: {$displayName}",
+                "Permanently deleted account for {$displayWithHandle} ({$user->email}, role: {$user->role}).",
                 'user',
                 $user->id,
-                ['role' => $user->role, 'email' => $user->email]
+                ['role' => $user->role, 'email' => $user->email, 'target_name' => $displayName]
             );
         } catch (\Throwable) {}
 

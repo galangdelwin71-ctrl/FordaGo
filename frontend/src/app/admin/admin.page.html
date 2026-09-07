@@ -31,48 +31,63 @@
 
 <!-- ── Quick Restock Dialog ──────────────────────────── -->
 <div class="confirm-overlay" *ngIf="quickRestockModal.show && quickRestockModal.product" (click)="closeQuickRestock()">
-  <div class="confirm-box restock-box" (click)="$event.stopPropagation()">
-    <div class="restock-modal-top">
+  <div class="restock-modal-card" (click)="$event.stopPropagation()">
+    <!-- Header: Badge & Close Button -->
+    <div class="restock-card-header">
       <div class="restock-badge-pill">
         <ion-icon name="flash-outline"></ion-icon>
         <span>Quick Restock</span>
       </div>
-      <button class="notif-modal-close" (click)="closeQuickRestock()" aria-label="Close">✕</button>
+      <button class="restock-close-btn" (click)="closeQuickRestock()" aria-label="Close">✕</button>
     </div>
 
-    <div class="restock-title">{{ quickRestockModal.product?.name }}</div>
-    <div class="restock-sub">
-      Current Stock: <strong>{{ quickRestockModal.currentStock }} units</strong>
-      <span *ngIf="quickRestockModal.currentStock <= 0" class="badge-out">Out of Stock</span>
-      <span *ngIf="quickRestockModal.currentStock > 0 && quickRestockModal.currentStock <= 5" class="badge-low">Low Stock</span>
+    <!-- Product Title & Stock Status -->
+    <div class="restock-product-info">
+      <h3 class="restock-product-name">{{ quickRestockModal.product?.name }}</h3>
+      <div class="restock-stock-row">
+        <span class="stock-current-label">Current Stock:</span>
+        <strong class="stock-current-val">{{ quickRestockModal.currentStock }} units</strong>
+        <span *ngIf="quickRestockModal.currentStock <= 0" class="stock-pill pill-out">Out of Stock</span>
+        <span *ngIf="quickRestockModal.currentStock > 0 && quickRestockModal.currentStock <= 5" class="stock-pill pill-low">Low Stock</span>
+        <span *ngIf="quickRestockModal.currentStock > 5" class="stock-pill pill-ok">In Stock</span>
+      </div>
     </div>
 
-    <div class="restock-input-group">
-      <label class="restock-label">New Total Stock Quantity</label>
-      <div class="restock-input-row">
-        <button class="qty-btn" type="button" (click)="applyStockIncrement(-1)">-1</button>
+    <!-- Restock Quantity Input Section -->
+    <div class="restock-input-box">
+      <label class="restock-input-label">Enter New Stock Quantity</label>
+      <div class="restock-input-wrapper">
         <input
           type="number"
-          class="restock-num-input"
+          class="restock-input-field"
           [(ngModel)]="quickRestockModal.newStock"
           min="0"
           placeholder="0"
+          autofocus
         />
-        <button class="qty-btn" type="button" (click)="applyStockIncrement(1)">+1</button>
       </div>
-      <div class="quick-add-chips">
-        <button type="button" class="add-chip" (click)="applyStockIncrement(5)">+5</button>
-        <button type="button" class="add-chip" (click)="applyStockIncrement(10)">+10</button>
-        <button type="button" class="add-chip" (click)="applyStockIncrement(24)">+24 (Case)</button>
-        <button type="button" class="add-chip" (click)="applyStockIncrement(50)">+50</button>
+
+      <!-- Quick adjustment chips -->
+      <div class="restock-chips-row">
+        <span class="chips-hint">Quick add:</span>
+        <button type="button" class="restock-chip" (click)="applyStockIncrement(5)">+5</button>
+        <button type="button" class="restock-chip" (click)="applyStockIncrement(10)">+10</button>
+        <button type="button" class="restock-chip" (click)="applyStockIncrement(24)">+24 (Case)</button>
+        <button type="button" class="restock-chip" (click)="applyStockIncrement(50)">+50</button>
+        <button type="button" class="restock-chip chip-clear" *ngIf="quickRestockModal.newStock !== null" (click)="quickRestockModal.newStock = null">Clear</button>
       </div>
     </div>
 
-    <div class="confirm-actions">
-      <button class="confirm-cancel" (click)="closeQuickRestock()" [disabled]="quickRestockModal.isSaving">Cancel</button>
-      <button class="confirm-save-restock" (click)="saveQuickRestock()" [disabled]="quickRestockModal.isSaving || quickRestockModal.newStock < 0">
+    <!-- Footer Action Buttons -->
+    <div class="restock-footer-actions">
+      <button class="restock-cancel-btn" (click)="closeQuickRestock()" [disabled]="quickRestockModal.isSaving">
+        Cancel
+      </button>
+      <button class="restock-save-btn" (click)="saveQuickRestock()" [disabled]="quickRestockModal.isSaving || quickRestockModal.newStock === null || quickRestockModal.newStock < 0">
         <ion-spinner *ngIf="quickRestockModal.isSaving" name="crescent" style="width: 16px; height: 16px;"></ion-spinner>
-        <span *ngIf="!quickRestockModal.isSaving">Update Stock to {{ quickRestockModal.newStock }}</span>
+        <span *ngIf="!quickRestockModal.isSaving">
+          {{ quickRestockModal.newStock !== null ? ('Update Stock to ' + quickRestockModal.newStock) : 'Update Stock' }}
+        </span>
       </button>
     </div>
   </div>
@@ -129,16 +144,97 @@
     </div>
   </div>
 </div>
+<!-- ── Feedback Detail Modal ────────────────────────── -->
+<div class="confirm-overlay" *ngIf="showFeedbackModal && selectedFeedback" (click)="closeFeedbackDetail()">
+  <div class="confirm-box feedback-modal-box" (click)="$event.stopPropagation()">
+    <div class="restock-modal-top">
+      <div class="feedback-badge-pill" [ngClass]="getFeedbackSentiment(selectedFeedback.rating).cls">
+        <span>{{ getFeedbackSentiment(selectedFeedback.rating).emoji }} {{ getFeedbackSentiment(selectedFeedback.rating).label }}</span>
+      </div>
+      <button class="notif-modal-close" (click)="closeFeedbackDetail()" aria-label="Close">✕</button>
+    </div>
+
+    <div class="fb-modal-reviewer-row">
+      <div class="fb-modal-avatar">
+        <img *ngIf="selectedFeedback.user?.profile_image" [src]="resolveImg(selectedFeedback.user.profile_image)" alt="Reviewer" (error)="selectedFeedback.user.profile_image = null" />
+        <span *ngIf="!selectedFeedback.user?.profile_image">{{ getInitials(getFeedbackUserName(selectedFeedback)) }}</span>
+      </div>
+      <div class="fb-modal-reviewer-meta">
+        <div class="fb-modal-name">{{ getFeedbackUserName(selectedFeedback) }}</div>
+        <div class="fb-modal-sub">@{{ selectedFeedback.user?.username }} · {{ formatNotifDate(selectedFeedback.created_at) }}</div>
+      </div>
+    </div>
+
+    <div class="fb-modal-score-box">
+      <div class="fb-score-large">{{ selectedFeedback.rating }}<span class="fb-score-denom">/10</span></div>
+      <div class="fb-stars-list">
+        <span *ngFor="let s of getFeedbackStars(selectedFeedback.rating)" class="fb-star" [class.filled]="s <= selectedFeedback.rating">★</span>
+      </div>
+    </div>
+
+    <div class="fb-modal-comment-card">
+      <div class="fb-comment-title"><ion-icon name="chatbubble-ellipses-outline"></ion-icon> Member Review & Comments</div>
+      <p class="fb-comment-body">{{ selectedFeedback.reason || 'No specific comment provided by this member.' }}</p>
+    </div>
+
+    <div class="confirm-actions">
+      <button class="confirm-cancel" (click)="closeFeedbackDetail()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Feedback Executive Summary Modal ─────────────── -->
+<div class="confirm-overlay" *ngIf="feedbackSummaryModal.show" (click)="closeFeedbackSummary()">
+  <div class="confirm-box feedback-summary-box" (click)="$event.stopPropagation()">
+    <div class="restock-modal-top">
+      <div class="restock-badge-pill summary-gold-pill">
+        <ion-icon name="sparkles-outline"></ion-icon>
+        <span>Executive Feedback Insights</span>
+      </div>
+      <button class="notif-modal-close" (click)="closeFeedbackSummary()" aria-label="Close">✕</button>
+    </div>
+
+    <div class="summary-headline-title">Overall Member Sentiment</div>
+    <div class="summary-metrics-row">
+      <div class="summary-metric-card">
+        <span class="sm-val">{{ feedbackSummaryModal.avgRating }}<small>/10</small></span>
+        <span class="sm-lbl">Avg Rating</span>
+      </div>
+      <div class="summary-metric-card">
+        <span class="sm-val" [class.green]="feedbackSummaryModal.nps >= 50" [class.amber]="feedbackSummaryModal.nps >= 0 && feedbackSummaryModal.nps < 50" [class.red]="feedbackSummaryModal.nps < 0">{{ feedbackSummaryModal.nps }}</span>
+        <span class="sm-lbl">NPS Score</span>
+      </div>
+      <div class="summary-metric-card">
+        <span class="sm-val green">{{ feedbackSummaryModal.positiveRate }}%</span>
+        <span class="sm-lbl">Satisfaction</span>
+      </div>
+    </div>
+
+    <div class="summary-text-box">
+      <p>{{ feedbackSummaryModal.summaryText }}</p>
+    </div>
+
+    <div class="summary-themes-section">
+      <div class="themes-header">Identified Community Themes:</div>
+      <div class="themes-pill-wrap">
+        <span *ngFor="let t of feedbackSummaryModal.keyThemes" class="theme-pill">
+          ● {{ t }}
+        </span>
+      </div>
+    </div>
+
+    <div class="confirm-actions">
+      <button class="confirm-save-restock" (click)="closeFeedbackSummary()">Done &amp; Close</button>
+    </div>
+  </div>
+</div>
 
 <!-- ── Admin Dashboard ───────────────────────────────── -->
 <ion-header [translucent]="false" class="ion-no-border">
   <ion-toolbar class="admin-toolbar">
     <div class="toolbar-left" slot="start">
-      <div class="brand-avatar">{{ panelInitials }}</div>
-      <div class="toolbar-text">
-        <span class="toolbar-logo">FordaGO</span>
-        <span class="toolbar-role">{{ panelLabel }}</span>
-      </div>
+      <img src="assets/icon/logo.png" class="brand-logo" alt="FordaGO" />
+      <span class="toolbar-logo">FordaGO</span>
     </div>
 
     <div class="toolbar-right" slot="end">
@@ -158,52 +254,96 @@
   <app-pull-to-refresh (refresh)="handleRefresh($event)"></app-pull-to-refresh>
   <div class="admin-wrap">
 
-    <!-- ── Tab Nav ───────────────────────────────────── -->
-    <div class="admin-hero">
-      <div class="admin-hero-copy">
-        <div class="admin-heading">Control Center</div>
-        <div class="admin-subtext">Manage members, schedules, orders, and attendance in one place.</div>
+    <!-- ── Static Compact Admin Profile Header ────────────────────────── -->
+    <div class="admin-profile-header-area">
+      <div class="compact-profile-strip">
+        <div class="compact-left">
+          <div class="compact-avatar-ring">
+            <img *ngIf="auth.user?.profile_image" [src]="resolveImg(auth.user?.profile_image)" alt="Admin" />
+            <span *ngIf="!auth.user?.profile_image">{{ panelInitials }}</span>
+          </div>
+          <div class="compact-meta">
+            <div class="compact-name-row">
+              <span class="compact-name">{{ auth.user?.first_name ? (auth.user?.first_name + ' ' + (auth.user?.last_name || '')) : (auth.user?.username || 'Administrator') }}</span>
+              <span class="compact-role-pill" [ngClass]="currentRole">{{ panelLabel }}</span>
+            </div>
+            <span class="compact-sub-hint">FordaGO Control Hub</span>
+          </div>
+        </div>
+
+        <div class="compact-right">
+          <div class="compact-datetime-stacked">
+            <!-- Top: Date (Black) -->
+            <div class="stacked-datetime-row date-row">
+              <span class="row-icon-slot">
+                <svg class="date-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+              </span>
+              <span class="date-text">{{ todayFormattedShort }}</span>
+            </div>
+            <!-- Bottom: Live Clock (with Seconds) -->
+            <div class="stacked-datetime-row clock-row">
+              <span class="row-icon-slot">
+                <svg class="clock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+              </span>
+              <div class="clock-val-wrap">
+                <span class="clock-digits">{{ liveClockDigits }}</span>
+                <span class="clock-period">{{ liveClockPeriod }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="tab-row">
-      <button class="tab-btn" [class.active]="activeTab==='overview'"    (click)="activeTab='overview'">
-        <ion-icon name="stats-chart-outline"></ion-icon> Overview
-      </button>
-      <button class="tab-btn" [class.active]="activeTab==='members'"     (click)="activeTab='members'">
-        <ion-icon name="people-outline"></ion-icon> Members
-        <span class="tab-badge-pill" *ngIf="pendingMembers.length > 0">{{ pendingMembers.length }}</span>
-      </button>
-      <button class="tab-btn" [class.active]="activeTab==='schedule'"    (click)="activeTab='schedule'">
-        <ion-icon name="calendar-outline"></ion-icon> Schedule
-      </button>
-      <button class="tab-btn" [class.active]="activeTab==='inventory'"   (click)="activeTab='inventory'">
-        <ion-icon name="cart-outline"></ion-icon> Shop
-        <span class="tab-badge-pill" *ngIf="pendingOrders > 0">{{ pendingOrders }}</span>
-      </button>
-      <button class="tab-btn" [class.active]="activeTab==='equipment'"   (click)="activeTab='equipment'">
-        <ion-icon name="barbell-outline"></ion-icon> Equipment
-      </button>
-      <button class="tab-btn" [class.active]="activeTab==='notifs'"      (click)="activeTab='notifs'">
-        <ion-icon name="notifications-outline"></ion-icon> Notifs
-        <span class="tab-badge-pill" *ngIf="unreadAdminNotifsCount > 0">{{ unreadAdminNotifsCount }}</span>
-      </button>
-      <button class="tab-btn" [class.active]="activeTab==='attendance'" (click)="activeTab='attendance'">
-        <ion-icon name="clipboard-outline"></ion-icon> Attendance
-        <span class="tab-badge-pill" *ngIf="attendancePending.length > 0">{{ attendancePending.length }}</span>
-      </button>
-      <button class="tab-btn" *ngIf="canManageCoaches" [class.active]="activeTab==='coaches'" (click)="activeTab='coaches'">
-        <ion-icon name="fitness-outline"></ion-icon> Coaches
-      </button>
-      <button class="tab-btn feedback-tab-btn" *ngIf="!isEmployee" [class.active]="activeTab==='feedback'" (click)="activeTab='feedback'">
-        <ion-icon name="star-outline"></ion-icon> Feedback
-      </button>
-      <button class="tab-btn logs-tab-btn" *ngIf="!isEmployee" [class.active]="activeTab==='logs'" (click)="activeTab='logs'; loadActivityLogs()">
-        <ion-icon name="shield-checkmark-outline"></ion-icon> Logs
-      </button>
-      <button class="tab-btn reports-btn" *ngIf="!isEmployee" (click)="router.navigate(['/admin-reports'])">
-        <ion-icon name="bar-chart-outline"></ion-icon> Reports
-      </button>
+    <!-- ── Tab Navigation Bar (Underneath Admin Profile / Greeting) ────────── -->
+    <div class="tab-scroller">
+      <div class="tab-row">
+        <button class="tab-btn tab-overview" [class.active]="activeTab==='overview'" (click)="activeTab='overview'">
+          <ion-icon name="stats-chart-outline"></ion-icon> <span>Overview</span>
+        </button>
+        <button class="tab-btn tab-members" [class.active]="activeTab==='members'" (click)="activeTab='members'">
+          <ion-icon name="people-outline"></ion-icon> <span>Members</span>
+          <span class="tab-badge-pill" *ngIf="pendingMembers.length > 0">{{ pendingMembers.length }}</span>
+        </button>
+        <button class="tab-btn tab-schedule" [class.active]="activeTab==='schedule'" (click)="activeTab='schedule'">
+          <ion-icon name="calendar-outline"></ion-icon> <span>Schedule</span>
+        </button>
+        <button class="tab-btn tab-inventory" [class.active]="activeTab==='inventory'" (click)="activeTab='inventory'">
+          <ion-icon name="cart-outline"></ion-icon> <span>Shop</span>
+          <span class="tab-badge-pill" *ngIf="pendingOrders > 0">{{ pendingOrders }}</span>
+        </button>
+        <button class="tab-btn tab-equipment" [class.active]="activeTab==='equipment'" (click)="activeTab='equipment'">
+          <ion-icon name="barbell-outline"></ion-icon> <span>Equipment</span>
+        </button>
+        <button class="tab-btn tab-notifs" [class.active]="activeTab==='notifs'" (click)="activeTab='notifs'">
+          <ion-icon name="notifications-outline"></ion-icon> <span>Notifs</span>
+          <span class="tab-badge-pill" *ngIf="unreadAdminNotifsCount > 0">{{ unreadAdminNotifsCount }}</span>
+        </button>
+        <button class="tab-btn tab-attendance" [class.active]="activeTab==='attendance'" (click)="activeTab='attendance'">
+          <ion-icon name="clipboard-outline"></ion-icon> <span>Attendance</span>
+          <span class="tab-badge-pill" *ngIf="attendancePending.length > 0">{{ attendancePending.length }}</span>
+        </button>
+        <button class="tab-btn tab-coaches" *ngIf="canManageCoaches" [class.active]="activeTab==='coaches'" (click)="activeTab='coaches'">
+          <ion-icon name="fitness-outline"></ion-icon> <span>Coaches</span>
+        </button>
+        <button class="tab-btn tab-feedback feedback-tab-btn" *ngIf="!isEmployee" [class.active]="activeTab==='feedback'" (click)="activeTab='feedback'">
+          <ion-icon name="star-outline"></ion-icon> <span>Feedback</span>
+        </button>
+        <button class="tab-btn tab-logs logs-tab-btn" *ngIf="!isEmployee" [class.active]="activeTab==='logs'" (click)="activeTab='logs'; loadActivityLogs()">
+          <ion-icon name="shield-checkmark-outline"></ion-icon> <span>Logs</span>
+        </button>
+        <button class="tab-btn tab-reports reports-btn" *ngIf="!isEmployee" (click)="router.navigate(['/admin-reports'])">
+          <ion-icon name="bar-chart-outline"></ion-icon> <span>Reports</span>
+        </button>
+      </div>
     </div>
 
     <!-- ══════════════════════════════════════════════ -->
@@ -212,71 +352,32 @@
     <!-- ══════════════════════════════════════════════ -->
     <div *ngIf="activeTab==='overview'" class="overview-dashboard">
 
-      <!-- Executive Overview Banner -->
-      <div class="overview-hero-card">
-        <div class="hero-left">
-          <div class="hero-greeting">{{ greetingTime }}, Administrator! 👋</div>
-          <div class="hero-subtext">Here is your facility's operational pulse and real-time alerts for today.</div>
-          <div class="hero-date-chip">
-            <ion-icon name="calendar-outline"></ion-icon>
-            <span>{{ todayFormatted }}</span>
-          </div>
-        </div>
-        <div class="hero-right">
-          <button class="hero-refresh-btn" (click)="loadAll()" title="Refresh Dashboard" [disabled]="membersLoading">
-            <ion-icon name="refresh-outline" [class.spinning]="membersLoading"></ion-icon>
-            <span>{{ membersLoading ? 'Syncing...' : 'Sync Data' }}</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Quick Actions Hub -->
+      <!-- Quick Actions Hub (Single Horizontal Row) -->
       <div class="overview-section-header">
         <div class="section-title-wrap">
-          <span class="section-tag-pill">COMMAND HUB</span>
           <h3 class="section-main-title">Quick Actions</h3>
         </div>
       </div>
 
-      <div class="quick-actions-bar">
-        <button class="quick-action-card" (click)="quickAddMember()">
+      <div class="quick-actions-bar single-row-qa">
+        <button class="quick-action-card compact" (click)="quickAddMember()" title="Add New Member">
           <div class="qa-icon-wrap amber"><ion-icon name="person-add-outline"></ion-icon></div>
-          <div class="qa-text">
-            <span class="qa-label">New Member</span>
-            <span class="qa-hint">Add account</span>
-          </div>
+          <span class="qa-label">+ Member</span>
         </button>
 
-        <button class="quick-action-card" (click)="quickCheckIn()">
-          <div class="qa-icon-wrap green"><ion-icon name="clipboard-outline"></ion-icon></div>
-          <div class="qa-text">
-            <span class="qa-label">Attendance</span>
-            <span class="qa-hint">Record check-in</span>
-          </div>
-        </button>
-
-        <button class="quick-action-card" (click)="quickAddProduct()">
+        <button class="quick-action-card compact" (click)="quickAddProduct()" title="Add New Product">
           <div class="qa-icon-wrap blue"><ion-icon name="cart-outline"></ion-icon></div>
-          <div class="qa-text">
-            <span class="qa-label">New Product</span>
-            <span class="qa-hint">Add store item</span>
-          </div>
+          <span class="qa-label">+ Product</span>
         </button>
 
-        <button class="quick-action-card" (click)="quickOpenReports()" *ngIf="!isEmployee">
-          <div class="qa-icon-wrap purple"><ion-icon name="bar-chart-outline"></ion-icon></div>
-          <div class="qa-text">
-            <span class="qa-label">Analytics</span>
-            <span class="qa-hint">Revenue & NPS</span>
-          </div>
+        <button class="quick-action-card compact" (click)="quickAddCoach()" *ngIf="canManageCoaches" title="Add New Coach">
+          <div class="qa-icon-wrap green"><ion-icon name="fitness-outline"></ion-icon></div>
+          <span class="qa-label">+ Coach</span>
         </button>
 
-        <button class="quick-action-card" (click)="quickOpenLogs()" *ngIf="!isEmployee">
-          <div class="qa-icon-wrap cyan"><ion-icon name="shield-checkmark-outline"></ion-icon></div>
-          <div class="qa-text">
-            <span class="qa-label">Audit Logs</span>
-            <span class="qa-hint">Security trail</span>
-          </div>
+        <button class="quick-action-card compact" (click)="quickAddScheduleSession()" title="Add Schedule Session">
+          <div class="qa-icon-wrap purple"><ion-icon name="calendar-outline"></ion-icon></div>
+          <span class="qa-label">+ Schedule Session</span>
         </button>
       </div>
 
@@ -355,7 +456,7 @@
       </div>
 
       <!-- ── NEW: INVENTORY LOW-STOCK ATTENTION CENTER ────────────── -->
-      <div class="overview-card-panel inventory-alert-panel">
+      <div class="overview-card-panel inventory-alert-panel" *ngIf="allLowStockAlerts.length > 0">
         <div class="panel-header-row">
           <div class="panel-title-group">
             <div class="panel-icon-badge amber">
@@ -367,7 +468,7 @@
             </div>
           </div>
           <div class="panel-header-right">
-            <span class="panel-counter-badge" [ngClass]="outOfStockProducts.length > 0 ? 'red' : (lowStockProducts.length > 0 ? 'amber' : 'green')">
+            <span class="panel-counter-badge" [ngClass]="outOfStockProducts.length > 0 ? 'red' : 'amber'">
               {{ allLowStockAlerts.length }} {{ allLowStockAlerts.length === 1 ? 'Product' : 'Products' }}
             </span>
             <button class="panel-pill-action" (click)="navigateToLowStock()">
@@ -377,7 +478,7 @@
         </div>
 
         <!-- If low stock products exist -->
-        <div class="stock-alerts-list" *ngIf="allLowStockAlerts.length > 0">
+        <div class="stock-alerts-list">
           <div *ngFor="let p of allLowStockAlerts" class="stock-alert-item" [class.out-of-stock]="p.stock <= 0">
             <div class="stock-item-left">
               <div class="stock-item-thumb">
@@ -412,19 +513,10 @@
             </div>
           </div>
         </div>
-
-        <!-- If no low stock items -->
-        <div class="panel-empty-state green" *ngIf="allLowStockAlerts.length === 0">
-          <div class="empty-state-icon-wrap green">
-            <ion-icon name="shield-checkmark-outline"></ion-icon>
-          </div>
-          <div class="empty-state-title">Inventory is Healthy</div>
-          <div class="empty-state-desc">All products have sufficient stock levels (more than 5 units remaining).</div>
-        </div>
       </div>
 
       <!-- ── EXPIRING MEMBERSHIPS (WITHIN 7 DAYS) ────────────── -->
-      <div class="overview-card-panel expiring-panel">
+      <div class="overview-card-panel expiring-panel" *ngIf="expiringMembers.length > 0">
         <div class="panel-header-row">
           <div class="panel-title-group">
             <div class="panel-icon-badge blue">
@@ -436,7 +528,7 @@
             </div>
           </div>
           <div class="panel-header-right">
-            <span class="panel-counter-badge" [ngClass]="expiringMembers.length > 0 ? 'amber' : 'gray'">
+            <span class="panel-counter-badge amber">
               {{ expiringMembers.length }} {{ expiringMembers.length === 1 ? 'Member' : 'Members' }}
             </span>
             <button class="panel-pill-action" (click)="router.navigate(['/admin-reports'])" *ngIf="!isEmployee">
@@ -446,7 +538,7 @@
         </div>
 
         <!-- When members expiring -->
-        <div class="expiring-members-list" *ngIf="expiringMembers.length > 0">
+        <div class="expiring-members-list">
           <div *ngFor="let m of expiringMembers" class="expiring-member-card clickable" (click)="viewExpiringMember(m)" role="button" tabindex="0" (keydown.enter)="viewExpiringMember(m)">
             <div class="exp-card-left">
               <div class="exp-member-avatar">
@@ -469,19 +561,10 @@
             </div>
           </div>
         </div>
-
-        <!-- When no members expiring -->
-        <div class="panel-empty-state" *ngIf="expiringMembers.length === 0">
-          <div class="empty-state-icon-wrap blue">
-            <ion-icon name="checkmark-circle-outline"></ion-icon>
-          </div>
-          <div class="empty-state-title">No Immediate Expirations</div>
-          <div class="empty-state-desc">No member plans are expiring within the next 7 days.</div>
-        </div>
       </div>
 
       <!-- ── TODAY'S GYM ATTENDANCE PULSE ────────────────────────── -->
-      <div class="overview-card-panel attendance-pulse-panel">
+      <div class="overview-card-panel attendance-pulse-panel" *ngIf="attendanceToday.length > 0">
         <div class="panel-header-row">
           <div class="panel-title-group">
             <div class="panel-icon-badge green">
@@ -503,7 +586,7 @@
         </div>
 
         <!-- When there are check-ins today -->
-        <div class="attendance-today-list" *ngIf="attendanceToday.length > 0">
+        <div class="attendance-today-list">
           <div *ngFor="let a of attendanceToday.slice(0, 5)" class="attendance-today-item">
             <div class="att-item-left">
               <div class="att-avatar">
@@ -525,19 +608,6 @@
             </div>
           </div>
         </div>
-
-        <!-- When no check-ins yet today -->
-        <div class="panel-empty-state" *ngIf="attendanceToday.length === 0">
-          <div class="empty-state-icon-wrap gray">
-            <ion-icon name="walk-outline"></ion-icon>
-          </div>
-          <div class="empty-state-title">No Check-ins Recorded Yet Today</div>
-          <div class="empty-state-desc">Members who check in via QR code or front-desk counter will appear here in real-time.</div>
-          <button class="empty-state-action-btn" (click)="navigateToAttendance()">
-            <ion-icon name="scan-outline"></ion-icon>
-            <span>Go to Attendance Terminal</span>
-          </button>
-        </div>
       </div>
 
     </div>
@@ -550,10 +620,6 @@
       <div class="section-header-row">
         <span class="section-tag-chip">ALL MEMBERS</span>
         <div class="header-actions">
-          <button class="refresh-btn" (click)="loadAll()" title="Refresh list">
-            <ion-icon name="refresh-outline"></ion-icon>
-            Refresh
-          </button>
           <button class="add-btn" (click)="toggleAddMember()">{{ showAddMember ? '✕ Cancel' : '+ Add Member' }}</button>
         </div>
       </div>
@@ -772,9 +838,6 @@
       <div class="section-header-row">
         <span class="section-tag-chip">GYM SESSIONS</span>
         <div class="header-actions">
-          <button class="refresh-btn" (click)="loadAll()" title="Refresh schedule">
-            <ion-icon name="refresh-outline"></ion-icon> Refresh
-          </button>
           <button class="add-btn" (click)="toggleAddSession()">{{ showAddSession ? '✕ Cancel' : '+ Add Session' }}</button>
         </div>
       </div>
@@ -1112,8 +1175,8 @@
 
       <div class="empty-state" *ngIf="products.length === 0">No products.</div>
 
-      <!-- Product Cards (matching reference design) -->
-      <div *ngFor="let p of displayedProducts" class="member-card product-card">
+      <!-- Product Cards (matching user-side light mode design) -->
+      <div *ngFor="let p of displayedProducts" class="member-card product-card" [class.healthy-stock]="p.stock > 5" [class.low-stock]="p.stock > 0 && p.stock <= 5" [class.out-of-stock]="p.stock <= 0">
         <div class="product-card-main">
           <img *ngIf="p.image_url" [src]="resolveImg(p.thumbnail_url || p.image_url)" class="product-card-thumb" alt="{{ p.name }}" />
           <div *ngIf="!p.image_url" class="product-card-thumb fallback">{{ p.icon || '🛍️' }}</div>
@@ -1124,12 +1187,18 @@
             <div class="product-card-price-row">
               <span class="product-card-price">₱{{ p.price | number:'1.2-2' }}</span>
               <span class="product-card-sep">|</span>
-              <span class="product-card-stock">Stock: {{ p.stock }}</span>
+              <span class="stock-pill" [ngClass]="getStockBadge(p.stock).cls">
+                <ion-icon [name]="getStockBadge(p.stock).icon"></ion-icon>
+                <span>{{ getStockBadge(p.stock).label }}</span>
+              </span>
             </div>
           </div>
         </div>
 
-        <div class="card-actions-row dual">
+        <div class="card-actions-row">
+          <button class="act-btn approve-btn" (click)="openQuickRestock(p, $event)" title="Quick Restock">
+            <ion-icon name="flash-outline"></ion-icon> Restock
+          </button>
           <button class="act-btn edit" (click)="editProduct(p)">
             <ion-icon name="create-outline"></ion-icon> Edit
           </button>
@@ -1686,10 +1755,6 @@
       <div class="section-header-row">
         <span class="section-tag-chip">ALL ATTENDANCE</span>
         <div class="header-actions">
-          <button class="refresh-btn" (click)="loadDailyReports()" title="Refresh attendance list">
-            <ion-icon name="refresh-outline"></ion-icon>
-            <span>Refresh</span>
-          </button>
           <button class="export-btn" (click)="exportAttendancePdf()" title="Export Attendance PDF">
             <ion-icon name="download-outline"></ion-icon>
             <span>Export PDF</span>
@@ -1957,10 +2022,6 @@
       <div class="section-header-row">
         <span class="section-tag-chip">COACH ACCOUNTS</span>
         <div class="header-actions">
-          <button class="refresh-btn" (click)="loadCoaches()" title="Refresh list">
-            <ion-icon name="refresh-outline"></ion-icon>
-            <span>Refresh</span>
-          </button>
           <button class="add-btn" (click)="toggleAddCoach()">
             <ion-icon [name]="showAddCoach ? 'close-outline' : 'add-outline'"></ion-icon>
             <span>{{ showAddCoach ? 'Cancel' : '+ Add Coach' }}</span>
@@ -2106,15 +2167,18 @@
             <div class="coach-bio-snippet" *ngIf="c.bio">{{ c.bio }}</div>
           </div>
         </div>
-        <div class="card-actions-row dual">
+        <div class="card-actions-row">
           <button class="act-btn edit" (click)="editCoach(c)">
             <ion-icon name="create-outline"></ion-icon> Edit
           </button>
           <button class="act-btn del" *ngIf="c.is_active" (click)="deactivateCoach(c)">
-            <ion-icon name="power-outline"></ion-icon> Deactivate
+            <ion-icon name="pause-circle-outline"></ion-icon> Deactivate
           </button>
           <button class="act-btn approve-btn" *ngIf="!c.is_active" (click)="reactivateCoach(c)">
             <ion-icon name="checkmark-circle-outline"></ion-icon> Reactivate
+          </button>
+          <button class="act-btn del" (click)="deleteCoach(c)" title="Permanently delete coach">
+            <ion-icon name="trash-outline"></ion-icon> Delete
           </button>
         </div>
       </div>
@@ -2150,6 +2214,16 @@
     <!-- TAB: FEEDBACK                                  -->
     <!-- ══════════════════════════════════════════════ -->
     <div *ngIf="activeTab==='feedback'" class="feedback-panel">
+
+      <div class="section-header-row">
+        <span class="section-tag-chip">MEMBER REVIEWS</span>
+        <div class="header-actions">
+          <button class="feedback-insight-btn" (click)="generateFeedbackSummary()" title="Generate Executive Feedback Insights">
+            <ion-icon name="sparkles-outline"></ion-icon>
+            <span>Executive Insights</span>
+          </button>
+        </div>
+      </div>
 
       <!-- NPS Summary Cards -->
       <div class="fb-summary-row">
@@ -2216,9 +2290,12 @@
 
       <!-- Feedback Cards -->
       <div class="fb-cards-list" *ngIf="!feedbacksLoading && !feedbacksError">
-        <div class="fb-card" *ngFor="let f of filteredFeedbacks">
+        <div class="fb-card clickable" *ngFor="let f of filteredFeedbacks" (click)="openFeedbackDetail(f)" title="Tap to view review detail">
           <div class="fb-card-header">
-            <div class="fb-user-avatar">{{ getInitials(getFeedbackUserName(f)) }}</div>
+            <div class="fb-user-avatar">
+              <img *ngIf="f.user?.profile_image" [src]="resolveImg(f.user.profile_image)" alt="Reviewer" (error)="f.user.profile_image = null" />
+              <span *ngIf="!f.user?.profile_image">{{ getInitials(getFeedbackUserName(f)) }}</span>
+            </div>
             <div class="fb-user-info">
               <div class="fb-user-name">{{ getFeedbackUserName(f) }}</div>
               <div class="fb-user-meta">@{{ f.user?.username }} · {{ formatNotifDate(f.created_at) }}</div>
@@ -2263,50 +2340,96 @@
             Real-time audit trail of staff logins, logouts, session durations, and system data modifications.
           </p>
         </div>
-        <button class="btn-refresh" (click)="loadActivityLogs()" [disabled]="activityLogsLoading" title="Refresh logs">
-          <ion-icon name="refresh-outline" [class.spinning]="activityLogsLoading"></ion-icon>
-          <span>Refresh</span>
-        </button>
       </div>
 
       <!-- KPI Summary Cards -->
       <div class="logs-kpi-grid">
-        <div class="log-kpi-card">
-          <div class="log-kpi-icon icon-total">
-            <ion-icon name="document-text-outline"></ion-icon>
+        <button
+          type="button"
+          class="log-kpi-card"
+          [class.active-kpi]="activityLogCategoryFilter === 'all'"
+          (click)="filterLogsByKpi('all')"
+          title="Show All Events"
+        >
+          <div class="kpi-card-head">
+            <div class="kpi-icon-wrap icon-total">
+              <ion-icon name="layers-outline"></ion-icon>
+            </div>
+            <span class="kpi-badge" *ngIf="activityLogCategoryFilter === 'all'">Active</span>
           </div>
-          <div class="log-kpi-data">
-            <span class="log-kpi-val">{{ activityLogStats.total_today }}</span>
-            <span class="log-kpi-lbl">Total Events Today</span>
+          <div class="kpi-card-body">
+            <div class="kpi-val">{{ activityLogStats.total_today }}</div>
+            <div class="kpi-label">Total Events</div>
           </div>
+        </button>
+
+        <button
+          type="button"
+          class="log-kpi-card"
+          [class.active-kpi]="activityLogCategoryFilter === 'auth'"
+          (click)="filterLogsByKpi('auth')"
+          title="Filter by Logins & Logouts"
+        >
+          <div class="kpi-card-head">
+            <div class="kpi-icon-wrap icon-login">
+              <ion-icon name="log-in-outline"></ion-icon>
+            </div>
+            <span class="kpi-badge" *ngIf="activityLogCategoryFilter === 'auth'">Active</span>
+          </div>
+          <div class="kpi-card-body">
+            <div class="kpi-val">{{ activityLogStats.logins_today }}</div>
+            <div class="kpi-label">Staff Logins</div>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          class="log-kpi-card"
+          [class.active-kpi]="activityLogCategoryFilter === 'modifications'"
+          (click)="filterLogsByKpi('modifications')"
+          title="Filter by System Modifications"
+        >
+          <div class="kpi-card-head">
+            <div class="kpi-icon-wrap icon-mod">
+              <ion-icon name="create-outline"></ion-icon>
+            </div>
+            <span class="kpi-badge" *ngIf="activityLogCategoryFilter === 'modifications'">Active</span>
+          </div>
+          <div class="kpi-card-body">
+            <div class="kpi-val">{{ activityLogStats.modifications_today }}</div>
+            <div class="kpi-label">Modifications</div>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          class="log-kpi-card"
+          [class.active-kpi]="activityLogCategoryFilter === 'active_sessions'"
+          (click)="filterLogsByKpi('active_sessions')"
+          title="Filter by Active Sessions"
+        >
+          <div class="kpi-card-head">
+            <div class="kpi-icon-wrap icon-active">
+              <ion-icon name="radio-outline"></ion-icon>
+            </div>
+            <span class="kpi-badge" *ngIf="activityLogCategoryFilter === 'active_sessions'">Active</span>
+          </div>
+          <div class="kpi-card-body">
+            <div class="kpi-val">{{ activityLogStats.active_sessions }}</div>
+            <div class="kpi-label">Active Sessions</div>
+          </div>
+        </button>
+      </div>
+
+      <!-- Active Filter Strip (Clean Dark Slate & Amber Palette, NO BLUE) -->
+      <div class="active-filter-strip" *ngIf="activityLogCategoryFilter !== 'all'">
+        <div class="strip-info">
+          <ion-icon name="funnel-outline"></ion-icon>
+          <span>Filtered by: <strong>{{ getCategoryFilterLabel() }}</strong> ({{ filteredActivityLogs.length }} event{{ filteredActivityLogs.length === 1 ? '' : 's' }})</span>
         </div>
-        <div class="log-kpi-card">
-          <div class="log-kpi-icon icon-login">
-            <ion-icon name="log-in-outline"></ion-icon>
-          </div>
-          <div class="log-kpi-data">
-            <span class="log-kpi-val">{{ activityLogStats.logins_today }}</span>
-            <span class="log-kpi-lbl">Staff Logins Today</span>
-          </div>
-        </div>
-        <div class="log-kpi-card">
-          <div class="log-kpi-icon icon-mod">
-            <ion-icon name="create-outline"></ion-icon>
-          </div>
-          <div class="log-kpi-data">
-            <span class="log-kpi-val">{{ activityLogStats.modifications_today }}</span>
-            <span class="log-kpi-lbl">System Modifications</span>
-          </div>
-        </div>
-        <div class="log-kpi-card">
-          <div class="log-kpi-icon icon-active">
-            <ion-icon name="finger-print-outline"></ion-icon>
-          </div>
-          <div class="log-kpi-data">
-            <span class="log-kpi-val">{{ activityLogStats.active_sessions }}</span>
-            <span class="log-kpi-lbl">Active Staff Sessions</span>
-          </div>
-        </div>
+        <button type="button" class="btn-clear-filter-strip" (click)="filterLogsByKpi('all')" title="Reset to all events">
+          <ion-icon name="close-circle-outline"></ion-icon> Show All
+        </button>
       </div>
 
       <!-- Filter & Search Toolbar -->
@@ -2321,6 +2444,9 @@
           <button *ngIf="activityLogSearch" class="btn-clear-search" (click)="activityLogSearch=''">
             <ion-icon name="close-circle-outline"></ion-icon>
           </button>
+          <button type="button" class="btn-inline-refresh" (click)="loadActivityLogs()" [disabled]="activityLogsLoading" [title]="activityLogsLoading ? 'Refreshing...' : 'Refresh Activity Logs'">
+            <ion-icon name="reload-outline" [class.spinning]="activityLogsLoading"></ion-icon>
+          </button>
         </div>
 
         <div class="logs-filter-group">
@@ -2329,31 +2455,46 @@
             <button
               class="pill-btn"
               [class.active]="activityLogCategoryFilter==='all'"
-              (click)="activityLogCategoryFilter='all'"
+              (click)="filterLogsByKpi('all')"
             >
               All Events
             </button>
             <button
               class="pill-btn"
               [class.active]="activityLogCategoryFilter==='auth'"
-              (click)="activityLogCategoryFilter='auth'"
+              (click)="filterLogsByKpi('auth')"
             >
               Logins &amp; Logouts
             </button>
             <button
               class="pill-btn"
+              [class.active]="activityLogCategoryFilter==='modifications'"
+              (click)="filterLogsByKpi('modifications')"
+            >
+              Modifications
+            </button>
+            <button
+              class="pill-btn"
+              [class.active]="activityLogCategoryFilter==='active_sessions'"
+              (click)="filterLogsByKpi('active_sessions')"
+            >
+              Active Sessions
+            </button>
+            <button
+              class="pill-btn"
               [class.active]="activityLogCategoryFilter==='members'"
-              (click)="activityLogCategoryFilter='members'"
+              (click)="filterLogsByKpi('members')"
             >
               Members
             </button>
             <button
               class="pill-btn"
               [class.active]="activityLogCategoryFilter==='inventory'"
-              (click)="activityLogCategoryFilter='inventory'"
+              (click)="filterLogsByKpi('inventory')"
             >
               Inventory / Orders
             </button>
+
             <button
               class="pill-btn"
               [class.active]="activityLogCategoryFilter==='equipment'"
@@ -2407,11 +2548,16 @@
       </div>
 
       <!-- Activity Timeline List -->
-      <div class="activity-timeline-list" *ngIf="!activityLogsLoading && !activityLogsError && filteredActivityLogs.length > 0">
+      <div id="activityLogsTimeline" class="activity-timeline-list" *ngIf="!activityLogsLoading && !activityLogsError && filteredActivityLogs.length > 0">
         <div
-          class="activity-log-card"
+          class="activity-log-card clickable"
           *ngFor="let log of filteredActivityLogs"
           [ngClass]="getActivityActionClass(log.action)"
+          (click)="viewActivityPayload(log)"
+          role="button"
+          tabindex="0"
+          (keydown.enter)="viewActivityPayload(log)"
+          title="Click to view complete audit details"
         >
           <!-- Left: Action Icon -->
           <div class="log-action-badge" [ngClass]="getActivityActionClass(log.action)">
@@ -2422,15 +2568,15 @@
           <div class="log-main-body">
             <div class="log-header-row">
               <div class="log-user-meta">
-                <div class="log-avatar">{{ getInitials(log.user?.first_name ? log.user?.first_name + ' ' + log.user?.last_name : (log.user?.username || 'Staff')) }}</div>
+                <div class="log-avatar">{{ getInitials(log.full_name || (log.user?.first_name ? log.user?.first_name + ' ' + log.user?.last_name : (log.username || log.user?.username || 'Staff'))) }}</div>
                 <div class="log-user-info">
                   <span class="log-user-name">
-                    {{ log.user?.first_name ? log.user?.first_name + ' ' + log.user?.last_name : (log.user?.username || 'Staff User') }}
+                    {{ log.full_name || (log.user?.first_name ? log.user?.first_name + ' ' + log.user?.last_name : (log.username || log.user?.username || 'Staff User')) }}
                   </span>
-                  <span class="log-role-badge" [ngClass]="'role-' + (log.user?.role || 'staff')">
-                    {{ (log.user?.role || 'staff') | uppercase }}
+                  <span class="log-role-badge" [ngClass]="'role-' + (log.role || log.user?.role || 'staff')">
+                    {{ (log.role || log.user?.role || 'staff') | uppercase }}
                   </span>
-                  <span class="log-username-handle" *ngIf="log.user?.username">@{{ log.user?.username }}</span>
+                  <span class="log-username-handle" *ngIf="log.username || log.user?.username">@{{ log.username || log.user?.username }}</span>
                 </div>
               </div>
               <div class="log-time-col">
@@ -2440,12 +2586,12 @@
 
             <!-- Title & Description -->
             <div class="log-content-row">
-              <div class="log-action-title">{{ log.action_title }}</div>
-              <div class="log-action-desc" *ngIf="log.action_description">{{ log.action_description }}</div>
+              <div class="log-action-title">{{ cleanLogTitle(log) }}</div>
+              <div class="log-action-desc" *ngIf="log.description || log.action_description">{{ cleanLogText(log.description || log.action_description, log) }}</div>
             </div>
 
             <!-- Session Details (for login / logout actions) -->
-            <div class="log-session-box" *ngIf="log.action === 'login' || log.action === 'logout'">
+            <div class="log-session-box" *ngIf="log.action === 'login' || log.action === 'logout' || log.action_type === 'login' || log.action_type === 'logout'">
               <div class="session-item" *ngIf="log.login_at">
                 <ion-icon name="log-in-outline"></ion-icon>
                 <span class="session-label">Login:</span>
@@ -2460,7 +2606,7 @@
                 <ion-icon name="time-outline"></ion-icon>
                 <span>Duration: {{ formatSessionDuration(log.session_duration_minutes) }}</span>
               </div>
-              <div class="session-active-tag" *ngIf="!log.logout_at && log.action === 'login'">
+              <div class="session-active-tag" *ngIf="!log.logout_at && (log.action === 'login' || log.action_type === 'login')">
                 <span class="live-pulse"></span>
                 <span>Active Session</span>
               </div>
@@ -2473,65 +2619,17 @@
                   <ion-icon name="information-circle-outline"></ion-icon> {{ log.ip_address }}
                 </span>
                 <span class="meta-tag tag-category">
-                  {{ log.category | uppercase }}
+                  {{ (log.category || log.entity_type || log.action_type || 'activity') | uppercase }}
                 </span>
               </div>
               <button
                 class="btn-view-payload"
-                *ngIf="log.payload && (log.payload | json) !== '{}'"
-                (click)="viewActivityPayload(log)"
+                (click)="viewActivityPayload(log); $event.stopPropagation()"
+                title="Inspect audit details and system payload"
               >
-                <ion-icon name="eye-outline"></ion-icon> Details / Payload
+                <ion-icon name="open-outline"></ion-icon> Details / Inspect
               </button>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Payload Inspector Modal -->
-      <div class="payload-modal-overlay" *ngIf="selectedActivityLog" (click)="closeActivityPayload()">
-        <div class="payload-modal-card" (click)="$event.stopPropagation()">
-          <div class="payload-modal-header">
-            <div class="payload-header-title">
-              <ion-icon [name]="getActivityActionIcon(selectedActivityLog.action)"></ion-icon>
-              <span>{{ selectedActivityLog.action_title }}</span>
-            </div>
-            <button class="btn-close-modal" (click)="closeActivityPayload()">
-              <ion-icon name="close-outline"></ion-icon>
-            </button>
-          </div>
-          <div class="payload-modal-body">
-            <div class="payload-meta-summary">
-              <div class="pms-row">
-                <span class="pms-lbl">Performed By:</span>
-                <span class="pms-val">
-                  {{ selectedActivityLog.user?.first_name ? selectedActivityLog.user?.first_name + ' ' + selectedActivityLog.user?.last_name : (selectedActivityLog.user?.username || 'Staff User') }}
-                  ({{ selectedActivityLog.user?.role }})
-                </span>
-              </div>
-              <div class="pms-row">
-                <span class="pms-lbl">Action Code:</span>
-                <span class="pms-val"><code>{{ selectedActivityLog.action }}</code></span>
-              </div>
-              <div class="pms-row" *ngIf="selectedActivityLog.target_type">
-                <span class="pms-lbl">Target:</span>
-                <span class="pms-val">{{ selectedActivityLog.target_type }} #{{ selectedActivityLog.target_id }}</span>
-              </div>
-              <div class="pms-row">
-                <span class="pms-lbl">Date / Time:</span>
-                <span class="pms-val">{{ formatNotifDate(selectedActivityLog.created_at) }}</span>
-              </div>
-              <div class="pms-row" *ngIf="selectedActivityLog.ip_address">
-                <span class="pms-lbl">IP Address:</span>
-                <span class="pms-val">{{ selectedActivityLog.ip_address }}</span>
-              </div>
-            </div>
-
-            <div class="payload-json-heading">Modification Payload / Attributes:</div>
-            <pre class="payload-json-view">{{ selectedActivityLog.payload | json }}</pre>
-          </div>
-          <div class="payload-modal-footer">
-            <button class="btn-modal-close" (click)="closeActivityPayload()">Close</button>
           </div>
         </div>
       </div>
@@ -2540,4 +2638,149 @@
 
   </div>
 </ion-content>
+
+<!-- Activity Details Modal (Fixed to Viewport Center, Zero Raw Code) -->
+<div class="payload-modal-overlay" *ngIf="selectedActivityLog" (click)="closeActivityPayload()">
+  <div class="payload-modal-card" (click)="$event.stopPropagation()">
+
+    <div class="payload-modal-header">
+      <div class="payload-header-title">
+        <div class="modal-icon-badge" [ngClass]="getActivityActionClass(selectedActivityLog.action)">
+          <ion-icon [name]="getActivityActionIcon(selectedActivityLog.action)"></ion-icon>
+        </div>
+        <div class="modal-title-col">
+          <h3 class="modal-title-text">{{ cleanLogTitle(selectedActivityLog) }}</h3>
+          <span class="modal-action-sub">{{ selectedActivityLog.action_title || selectedActivityLog.action }}</span>
+        </div>
+      </div>
+      <button class="btn-close-modal" (click)="closeActivityPayload()" title="Close details">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+
+    <div class="payload-modal-body">
+
+      <!-- Action Summary Banner -->
+      <div class="modal-summary-banner">
+        <div class="msb-label">
+          <ion-icon name="information-circle"></ion-icon>
+          <span>Summary of Action:</span>
+        </div>
+        <div class="msb-text">
+          {{ cleanLogText(selectedActivityLog.description || selectedActivityLog.action_description, selectedActivityLog) }}
+        </div>
+      </div>
+
+      <!-- Key Audit Details Grid -->
+      <div class="modal-audit-grid">
+        <div class="mag-item">
+          <span class="mag-label">Performed By:</span>
+          <div class="mag-person-row">
+            <span class="mag-person-name">
+              {{ getLogActorName(selectedActivityLog) }}
+            </span>
+            <span class="mag-role-badge" [ngClass]="'role-' + (selectedActivityLog.role || selectedActivityLog.user?.role || 'staff')">
+              {{ getLogRoleLabel(selectedActivityLog) }}
+            </span>
+            <span class="mag-handle" *ngIf="shouldShowActorHandle(selectedActivityLog)">
+              @{{ selectedActivityLog.username || selectedActivityLog.user?.username }}
+            </span>
+          </div>
+        </div>
+
+        <div class="mag-item" *ngIf="(selectedActivityLog.target_name || selectedActivityLog.payload?.target_name || (selectedActivityLog.entity_type && selectedActivityLog.entity_type !== 'auth')) && selectedActivityLog.action_type !== 'login' && selectedActivityLog.action_type !== 'logout' && selectedActivityLog.action !== 'login' && selectedActivityLog.action !== 'logout'">
+          <span class="mag-label">Affected Target:</span>
+          <span class="mag-target-name">
+            {{ selectedActivityLog.target_name || selectedActivityLog.payload?.target_name || (selectedActivityLog.entity_type ? (selectedActivityLog.entity_type | uppercase) : 'N/A') }}
+          </span>
+        </div>
+
+        <div class="mag-item">
+          <span class="mag-label">Recorded At:</span>
+          <span class="mag-val">{{ formatNotifDate(selectedActivityLog.created_at) }}</span>
+        </div>
+
+        <div class="mag-item" *ngIf="selectedActivityLog.ip_address">
+          <span class="mag-label">IP / Network:</span>
+          <span class="mag-val"><code>{{ selectedActivityLog.ip_address }}</code></span>
+        </div>
+      </div>
+
+      <!-- Accurate Session Times (If Login / Logout) -->
+      <div class="modal-session-card" *ngIf="selectedActivityLog.action === 'login' || selectedActivityLog.action === 'logout' || selectedActivityLog.action_type === 'login' || selectedActivityLog.action_type === 'logout'">
+        <div class="msc-title">
+          <ion-icon name="time-outline"></ion-icon>
+          <span>Session &amp; Timing Details</span>
+        </div>
+        <div class="msc-grid">
+          <div class="msc-field" *ngIf="selectedActivityLog.login_at">
+            <span class="msc-lbl">Sign-in Time:</span>
+            <span class="msc-val">{{ formatNotifDate(selectedActivityLog.login_at) }}</span>
+          </div>
+          <div class="msc-field" *ngIf="selectedActivityLog.logout_at">
+            <span class="msc-lbl">Sign-out Time:</span>
+            <span class="msc-val">{{ formatNotifDate(selectedActivityLog.logout_at) }}</span>
+          </div>
+          <div class="msc-field" *ngIf="selectedActivityLog.session_duration_minutes !== null && selectedActivityLog.session_duration_minutes !== undefined">
+            <span class="msc-lbl">Duration:</span>
+            <span class="msc-val font-bold">{{ formatSessionDuration(selectedActivityLog.session_duration_minutes) }}</span>
+          </div>
+          <div class="msc-live" *ngIf="!selectedActivityLog.logout_at && (selectedActivityLog.action === 'login' || selectedActivityLog.action_type === 'login')">
+            <span class="live-pulse"></span>
+            <strong>Active Session in Progress</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Human-Readable Before & After Changes Comparison (Sino o Ano ang Binago) -->
+      <div class="modal-changes-card" *ngIf="getLogChanges(selectedActivityLog).length > 0">
+        <div class="mcc-title">
+          <ion-icon name="git-compare-outline"></ion-icon>
+          <span>What Was Changed (Before &amp; After)</span>
+        </div>
+        <div class="mcc-list">
+          <div class="mcc-item" *ngFor="let change of getLogChanges(selectedActivityLog)">
+            <div class="mcc-field-header">
+              <ion-icon name="caret-forward-circle-outline"></ion-icon>
+              <span class="mcc-field-name">{{ change.field }}</span>
+            </div>
+            <div class="mcc-diff-row">
+              <div class="mcc-diff-box before">
+                <span class="diff-tag">BEFORE (Dati)</span>
+                <span class="diff-value">{{ change.before }}</span>
+              </div>
+              <div class="mcc-arrow">
+                <ion-icon name="arrow-forward-outline"></ion-icon>
+              </div>
+              <div class="mcc-diff-box after">
+                <span class="diff-tag">AFTER (Bago)</span>
+                <span class="diff-value">{{ change.after }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Human-Readable Modified Attributes (NO RAW JSON CODE!) -->
+      <div class="modal-attributes-card" *ngIf="getModalPayloadItems(selectedActivityLog).length > 0">
+        <div class="mac-title">
+          <ion-icon name="layers-outline"></ion-icon>
+          <span>{{ getLogChanges(selectedActivityLog).length > 0 ? 'Current Attributes &amp; Values' : 'Modified Attributes &amp; Values' }}</span>
+        </div>
+        <div class="mac-items-list">
+          <div class="mac-item-row" *ngFor="let item of getModalPayloadItems(selectedActivityLog)">
+            <span class="mac-item-label">{{ item.label }}:</span>
+            <span class="mac-item-value" [class.mac-pill]="item.isPill" [ngClass]="item.pillType">{{ item.value }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="payload-modal-footer">
+      <button type="button" class="btn-modal-close" (click)="closeActivityPayload()">Close</button>
+    </div>
+
+  </div>
+</div>
 

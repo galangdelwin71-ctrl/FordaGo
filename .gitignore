@@ -76,6 +76,8 @@ Thumbs.db
 desktop.ini
 *.apk
 !apk/*.apk
+apk/old apk*.apk
+backend/check_*.php
 
 # Old backup/archive
 _archive/

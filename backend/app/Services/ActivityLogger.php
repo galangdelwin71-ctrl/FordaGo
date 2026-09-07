@@ -13,17 +13,44 @@ class ActivityLogger
      * Log a general administrative or staff action.
      */
     public static function log(
-        ?Request $request,
+        $actorOrRequest,
         string $actionType,
         string $actionTitle,
         ?string $description = null,
         ?string $entityType = null,
         $entityId = null,
         ?array $details = null,
-        ?User $user = null
+        $extraActorOrRequest = null
     ): ?ActivityLog {
         try {
-            $actor = $user ?? ($request ? $request->user() : null);
+            $actor = null;
+            $request = null;
+
+            if ($actorOrRequest instanceof User) {
+                $actor = $actorOrRequest;
+            } elseif ($actorOrRequest instanceof Request) {
+                $request = $actorOrRequest;
+                $actor = $request->user();
+            }
+
+            if ($extraActorOrRequest instanceof User) {
+                $actor = $extraActorOrRequest;
+            } elseif ($extraActorOrRequest instanceof Request) {
+                $request = $extraActorOrRequest;
+                if (!$actor) {
+                    $actor = $request->user();
+                }
+            }
+
+            if (!$request) {
+                try {
+                    $request = request();
+                } catch (\Throwable) {}
+            }
+            if (!$actor && $request) {
+                $actor = $request->user();
+            }
+
             if (!$actor) {
                 return null;
             }
@@ -39,8 +66,8 @@ class ActivityLogger
                 $fullName = $actor->username ?? 'Administrator';
             }
 
-            $ipAddress = $request ? $request->ip() : null;
-            $userAgent = $request ? substr($request->header('User-Agent', ''), 0, 500) : null;
+            $ipAddress = ($request && method_exists($request, 'ip')) ? $request->ip() : null;
+            $userAgent = ($request && method_exists($request, 'header')) ? substr($request->header('User-Agent', ''), 0, 500) : null;
 
             return ActivityLog::create([
                 'user_id'      => $actor->id,
@@ -77,6 +104,13 @@ class ActivityLogger
                 $fullName = $user->username ?? 'Administrator';
             }
 
+            $roleLabel = match($user->role) {
+                'super_admin' => 'Super Admin',
+                'admin'       => 'Admin',
+                'employee'    => 'Employee',
+                default       => ucfirst($user->role ?? 'Staff'),
+            };
+
             $ipAddress = $request->ip();
             $userAgent = substr($request->header('User-Agent', ''), 0, 500);
 
@@ -86,8 +120,8 @@ class ActivityLogger
                 'full_name'    => $fullName,
                 'role'         => $user->role,
                 'action_type'  => 'login',
-                'action_title' => 'Administrator Logged In',
-                'description'  => "{$fullName} ({$user->role}) logged into the management control center.",
+                'action_title' => "{$roleLabel} Logged In",
+                'description'  => "{$fullName} ({$roleLabel}) logged into the management control center at " . now()->format('h:i A') . ".",
                 'entity_type'  => 'auth',
                 'entity_id'    => (string) $user->id,
                 'ip_address'   => $ipAddress,
@@ -115,6 +149,13 @@ class ActivityLogger
                 $fullName = $user->username ?? 'Administrator';
             }
 
+            $roleLabel = match($user->role) {
+                'super_admin' => 'Super Admin',
+                'admin'       => 'Admin',
+                'employee'    => 'Employee',
+                default       => ucfirst($user->role ?? 'Staff'),
+            };
+
             // Find recent login log within last 24 hours that does not have logout_at set
             $recentLogin = ActivityLog::where('user_id', $user->id)
                 ->where('action_type', 'login')
@@ -134,7 +175,7 @@ class ActivityLogger
             $ipAddress = $request ? $request->ip() : null;
             $userAgent = $request ? substr($request->header('User-Agent', ''), 0, 500) : null;
 
-            $desc = "{$fullName} ({$user->role}) logged out of the management system.";
+            $desc = "{$fullName} ({$roleLabel}) logged out of the management system.";
             if ($durationStr) {
                 $desc .= " (Session duration: {$durationStr})";
             }
@@ -145,7 +186,7 @@ class ActivityLogger
                 'full_name'    => $fullName,
                 'role'         => $user->role,
                 'action_type'  => 'logout',
-                'action_title' => 'Administrator Logged Out',
+                'action_title' => "{$roleLabel} Logged Out",
                 'description'  => $desc,
                 'entity_type'  => 'auth',
                 'entity_id'    => (string) $user->id,

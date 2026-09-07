@@ -56,6 +56,22 @@ import {
   barChartOutline,
   clipboardOutline,
   fingerPrintOutline,
+  arrowBackOutline,
+  calendarNumberOutline,
+  cameraOutline,
+  checkmarkDoneOutline,
+  chevronForwardOutline,
+  closeCircle,
+  cloudOfflineOutline,
+  locationOutline,
+  pauseCircleOutline,
+  personCircleOutline,
+  receiptOutline,
+  scanOutline,
+  sendOutline,
+  sparkles,
+  timerOutline,
+  todayOutline,
 } from 'ionicons/icons';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -230,11 +246,17 @@ export class AdminPage implements OnInit, OnDestroy {
   lowStockProducts: any[] = [];
   allLowStockAlerts: any[] = [];
 
-  quickRestockModal = {
+  quickRestockModal: {
+    show: boolean;
+    product: any;
+    currentStock: number;
+    newStock: number | null;
+    isSaving: boolean;
+  } = {
     show: false,
     product: null as any,
     currentStock: 0,
-    newStock: 0,
+    newStock: null,
     isSaving: false,
   };
 
@@ -244,6 +266,14 @@ export class AdminPage implements OnInit, OnDestroy {
       month: 'short',
       day: 'numeric',
       year: 'numeric'
+    });
+  }
+
+  get todayFormattedShort(): string {
+    return new Date().toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric'
     });
   }
 
@@ -283,7 +313,7 @@ export class AdminPage implements OnInit, OnDestroy {
       show: true,
       product: p,
       currentStock: current,
-      newStock: current <= 0 ? 10 : current + 10,
+      newStock: null,
       isSaving: false,
     };
   }
@@ -291,30 +321,40 @@ export class AdminPage implements OnInit, OnDestroy {
   closeQuickRestock(): void {
     this.quickRestockModal.show = false;
     this.quickRestockModal.product = null;
+    this.quickRestockModal.newStock = null;
     this.quickRestockModal.isSaving = false;
   }
 
   applyStockIncrement(qty: number): void {
-    const current = Number(this.quickRestockModal.newStock) || 0;
-    this.quickRestockModal.newStock = Math.max(0, current + qty);
+    const base = this.quickRestockModal.newStock !== null
+      ? Number(this.quickRestockModal.newStock)
+      : this.quickRestockModal.currentStock;
+    this.quickRestockModal.newStock = Math.max(0, base + qty);
   }
 
   saveQuickRestock(): void {
     const p = this.quickRestockModal.product;
-    if (!p || this.quickRestockModal.newStock < 0) return;
+    if (!p) return;
+    const qty = this.quickRestockModal.newStock !== null
+      ? Number(this.quickRestockModal.newStock)
+      : null;
+    if (qty === null || isNaN(qty) || qty < 0) {
+      this.toast.error('Please enter a valid stock quantity.');
+      return;
+    }
     this.quickRestockModal.isSaving = true;
     const headers = { Authorization: `Bearer ${this.auth.token}` };
     const payload = {
       ...p,
-      stock: Number(this.quickRestockModal.newStock)
+      stock: qty
     };
 
     this.http.put(`${this.api}/inventory/products/${p.id}`, payload, { headers }).subscribe({
       next: () => {
         this.quickRestockModal.isSaving = false;
-        p.stock = Number(this.quickRestockModal.newStock);
+        p.stock = qty;
         this.processInventoryData(this.products);
-        this.toast.success(`Restocked ${p.name} to ${p.stock} units!`);
+        this.toast.success(`Restocked ${p.name} to ${qty} units!`);
         this.closeQuickRestock();
       },
       error: () => {
@@ -335,11 +375,7 @@ export class AdminPage implements OnInit, OnDestroy {
   quickAddMember(): void {
     this.activeTab = 'members';
     this.showAddMember = true;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  quickCheckIn(): void {
-    this.activeTab = 'attendance';
+    this.editingMember = null;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -347,6 +383,29 @@ export class AdminPage implements OnInit, OnDestroy {
     this.activeTab = 'inventory';
     this.showAddProduct = true;
     this.editingProduct = null;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  quickAddCoach(): void {
+    this.activeTab = 'coaches';
+    this.showAddCoach = true;
+    this.editingCoach = null;
+    this.coachFormMode = 'new';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  quickAddScheduleSession(): void {
+    this.activeTab = 'schedule';
+    this.showAddSession = true;
+    this.editingSession = null;
+    if (!this.newSession.date) {
+      this.newSession.date = this.toIsoDate(new Date());
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  quickCheckIn(): void {
+    this.activeTab = 'attendance';
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -949,7 +1008,7 @@ export class AdminPage implements OnInit, OnDestroy {
   membershipForm = { membership_type: 'premium', membership_expiry: '' };
 
   constructor(
-    private auth: AuthService,
+    public auth: AuthService,
     public router: Router,
     private http: HttpClient,
     private coaching: CoachingService,
@@ -1011,6 +1070,22 @@ export class AdminPage implements OnInit, OnDestroy {
       barChartOutline,
       clipboardOutline,
       fingerPrintOutline,
+      arrowBackOutline,
+      calendarNumberOutline,
+      cameraOutline,
+      checkmarkDoneOutline,
+      chevronForwardOutline,
+      closeCircle,
+      cloudOfflineOutline,
+      locationOutline,
+      pauseCircleOutline,
+      personCircleOutline,
+      receiptOutline,
+      scanOutline,
+      sendOutline,
+      sparkles,
+      timerOutline,
+      todayOutline,
     });
   }
 
@@ -1018,8 +1093,43 @@ export class AdminPage implements OnInit, OnDestroy {
   membersLoading = false;
   membersError   = false;
 
+  // ── Live Clock ──────────────────────────────────────────
+  liveClock = '';
+  liveClockDigits = '';
+  liveClockPeriod = '';
+  private liveClockInterval: any = null;
+
   ngOnInit() {
     this.selectedReportDate = this.toIsoDate(new Date());
+    this.startLiveClock();
+  }
+
+  private startLiveClock() {
+    this.updateClock();
+    if (this.liveClockInterval) clearInterval(this.liveClockInterval);
+    this.liveClockInterval = setInterval(() => this.updateClock(), 1000);
+  }
+
+  private updateClock() {
+    const now = new Date();
+    let hours = now.getHours();
+    const period = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    if (hours === 0) hours = 12;
+    const hoursStr = String(hours).padStart(2, '0');
+    const minutesStr = String(now.getMinutes()).padStart(2, '0');
+    const secondsStr = String(now.getSeconds()).padStart(2, '0');
+
+    this.liveClockDigits = `${hoursStr}:${minutesStr}:${secondsStr}`;
+    this.liveClockPeriod = period;
+    this.liveClock = `${this.liveClockDigits} ${period}`;
+  }
+
+  private stopLiveClock() {
+    if (this.liveClockInterval) {
+      clearInterval(this.liveClockInterval);
+      this.liveClockInterval = null;
+    }
   }
 
   /** Interval ID for attendance auto-poll (every 15 s while tab is open). */
@@ -1029,6 +1139,7 @@ export class AdminPage implements OnInit, OnDestroy {
     this.stopAttendancePoll();
     this.notificationCenter.startPolling();
     this.loadAll();
+    this.startLiveClock();
     // Start auto-refresh for attendance every 15 seconds
     this.attendancePollInterval = setInterval(() => {
       this.loadDailyReports();
@@ -1044,10 +1155,12 @@ export class AdminPage implements OnInit, OnDestroy {
 
   ionViewWillLeave() {
     this.stopAttendancePoll();
+    this.stopLiveClock();
   }
 
   ngOnDestroy() {
     this.stopAttendancePoll();
+    this.stopLiveClock();
   }
 
   private stopAttendancePoll() {
@@ -1137,6 +1250,10 @@ export class AdminPage implements OnInit, OnDestroy {
       next: data => this.equipment = data,
       error: () => this.equipment = []
     });
+
+    if (!this.isEmployee) {
+      this.loadActivityLogs();
+    }
 
     // Notifications
     this.http.get<any[]>(`${this.api}/notifications`, { headers }).subscribe({
@@ -1579,10 +1696,12 @@ export class AdminPage implements OnInit, OnDestroy {
         this.newProduct = { name: '', brand: '', price: 0, stock: 0, image_url: '', thumbnail_url: '' };
         this.showAddProduct = false;
         this.toast.success('Product added successfully');
+        this.loadAll();
       },
       error: () => this.toast.error('Failed to add product')
     });
   }
+
 
   async onProductImageChange(event: Event, target: 'new' | 'edit'): Promise<void> {
     const file = (event.target as HTMLInputElement).files?.[0];
@@ -1710,7 +1829,9 @@ export class AdminPage implements OnInit, OnDestroy {
           this.products = this.products.filter(x => x.id !== p.id);
           this.processInventoryData(this.products);
           this.toast.success('Product deleted successfully');
+          this.loadAll();
         },
+
         error: () => this.toast.error('Failed to delete product')
       });
     });
@@ -1979,6 +2100,25 @@ export class AdminPage implements OnInit, OnDestroy {
         this.toast.success('Coach reactivated successfully');
       },
       error: (e) => this.toast.error(e?.error?.message || 'Failed to reactivate coach')
+    });
+  }
+
+  deleteCoach(c: any) {
+    const coachName = c.first_name ? `${c.first_name} ${c.last_name}` : (c.username || `Coach #${c.user_id}`);
+    this.askConfirm('Coach', coachName, () => {
+      const headers = { Authorization: `Bearer ${this.auth.token}` };
+      this.http.delete<any>(`${this.api}/admin/coaches/${c.user_id}?permanent=true`, { headers }).subscribe({
+        next: () => {
+          this.coaches = this.coaches.filter(x => x.user_id !== c.user_id);
+          this.toast.success(`Coach ${coachName} deleted permanently.`);
+        },
+        error: (e) => this.toast.error(e?.error?.message || 'Failed to delete coach account.')
+      });
+    }, {
+      title: `Permanently Delete Coach?`,
+      message: `Are you sure you want to delete ${coachName}? This removes their coach profile and credentials completely.`,
+      actionLabel: 'Delete Coach',
+      icon: 'trash-outline'
     });
   }
 
@@ -2339,7 +2479,7 @@ export class AdminPage implements OnInit, OnDestroy {
     const fn = f.user?.first_name || '';
     const ln = f.user?.last_name || '';
     const full = (fn + ' ' + ln).trim();
-    return full || f.user?.username || `User #${f.user_id}`;
+    return full || (f.user?.username ? `@${f.user.username}` : (f.user_id ? `Member (${f.user_id})` : 'Anonymous Member'));
   }
 
   loadFeedbacks() {
@@ -2363,6 +2503,92 @@ export class AdminPage implements OnInit, OnDestroy {
     });
   }
 
+  // ── Feedback Detail & Summary ───────────────────────────
+  selectedFeedback: any = null;
+  showFeedbackModal = false;
+  feedbackSummaryModal = {
+    show: false,
+    total: 0,
+    avgRating: 0,
+    nps: 0,
+    positiveRate: 0,
+    promoters: 0,
+    passives: 0,
+    detractors: 0,
+    keyThemes: [] as string[],
+    summaryText: ''
+  };
+
+  openFeedbackDetail(f: any) {
+    this.selectedFeedback = f;
+    this.showFeedbackModal = true;
+  }
+
+  closeFeedbackDetail() {
+    this.selectedFeedback = null;
+    this.showFeedbackModal = false;
+  }
+
+  generateFeedbackSummary() {
+    const list = this.feedbacks || [];
+    const total = list.length;
+    if (total === 0) {
+      this.toast.info('No feedback records to analyze yet.');
+      return;
+    }
+
+    const promoters = list.filter(f => f.rating >= 9).length;
+    const passives = list.filter(f => f.rating >= 7 && f.rating < 9).length;
+    const detractors = list.filter(f => f.rating < 7).length;
+    const sumRatings = list.reduce((acc, f) => acc + (Number(f.rating) || 0), 0);
+    const avgRating = Number((sumRatings / total).toFixed(1));
+    const nps = Math.round(((promoters - detractors) / total) * 100);
+    const positiveRate = Math.round(((promoters + passives) / total) * 100);
+
+    // Keyword & theme analysis from comments
+    const comments = list.map(f => (f.reason || '').toLowerCase()).join(' ');
+    const themes: string[] = [];
+    if (comments.includes('clean') || comments.includes('linis')) themes.push('Facility Cleanliness');
+    if (comments.includes('coach') || comments.includes('trainer')) themes.push('Coach & Trainer Guidance');
+    if (comments.includes('equipment') || comments.includes('machine') || comments.includes('gamit')) themes.push('Equipment Availability');
+    if (comments.includes('crowd') || comments.includes('siksikan') || comments.includes('busy')) themes.push('Peak Hour Capacity');
+    if (comments.includes('price') || comments.includes('mura') || comments.includes('worth')) themes.push('Membership Value');
+    if (themes.length === 0) themes.push('General Gym Experience', 'Staff Service Quality');
+
+    let summaryText = `Based on ${total} verified member reviews, FordaGO currently holds an Average Rating of ${avgRating}/10 with an NPS Score of ${nps}. `;
+    if (nps >= 50) {
+      summaryText += `Member sentiment is exceptionally positive (${positiveRate}% favorable). Members highly appreciate the workout environment and gym facility operations.`;
+    } else if (nps >= 0) {
+      summaryText += `Member sentiment is healthy and stable (${positiveRate}% favorable). Key operational attention should focus on equipment maintenance and evening peak traffic.`;
+    } else {
+      summaryText += `Attention is recommended: ${detractors} out of ${total} reviews expressed concerns. Review the feedback comments below to address specific member issues.`;
+    }
+
+    this.feedbackSummaryModal = {
+      show: true,
+      total,
+      avgRating,
+      nps,
+      positiveRate,
+      promoters,
+      passives,
+      detractors,
+      keyThemes: themes,
+      summaryText
+    };
+  }
+
+  closeFeedbackSummary() {
+    this.feedbackSummaryModal.show = false;
+  }
+
+  // ── Stock Badge Helper ──────────────────────────────────
+  getStockBadge(stock: number): { label: string; cls: string; icon: string } {
+    if (stock <= 0) return { label: 'Out of Stock', cls: 'stock-empty', icon: 'close-circle-outline' };
+    if (stock <= 5) return { label: `${stock} units left`, cls: 'stock-low', icon: 'warning-outline' };
+    return { label: `${stock} in stock`, cls: 'stock-healthy', icon: 'checkmark-circle-outline' };
+  }
+
   // ── Activity Logs (Audit Trail) ────────────────────────
   activityLogs: any[] = [];
   activityLogsLoading = false;
@@ -2370,7 +2596,7 @@ export class AdminPage implements OnInit, OnDestroy {
   activityLogStats = { total_today: 0, logins_today: 0, modifications_today: 0, active_sessions: 0 };
   activityLogStaffList: any[] = [];
   activityLogSearch = '';
-  activityLogCategoryFilter: 'all' | 'auth' | 'members' | 'inventory' | 'equipment' | 'attendance' = 'all';
+  activityLogCategoryFilter: 'all' | 'auth' | 'modifications' | 'active_sessions' | 'members' | 'inventory' | 'equipment' | 'attendance' = 'all';
   activityLogStaffFilter: string = 'all';
   selectedActivityLog: any = null;
 
@@ -2379,18 +2605,36 @@ export class AdminPage implements OnInit, OnDestroy {
     return this.activityLogs.filter(log => {
       const matchSearch = !q
         || (log.action_title || '').toLowerCase().includes(q)
+        || (log.description || '').toLowerCase().includes(q)
         || (log.action_description || '').toLowerCase().includes(q)
+        || (log.username || '').toLowerCase().includes(q)
+        || (log.full_name || '').toLowerCase().includes(q)
         || (log.user?.username || '').toLowerCase().includes(q)
         || (log.user?.first_name || '').toLowerCase().includes(q)
-        || (log.user?.last_name || '').toLowerCase().includes(q)
+        || (log.action_type || '').toLowerCase().includes(q)
         || (log.action || '').toLowerCase().includes(q)
         || (log.ip_address || '').toLowerCase().includes(q);
+
+      const action = (log.action_type || log.action || '').toLowerCase();
+      const entity = (log.entity_type || '').toLowerCase();
 
       const matchCategory = this.activityLogCategoryFilter === 'all'
         ? true
         : this.activityLogCategoryFilter === 'auth'
-          ? (log.action === 'login' || log.action === 'logout')
-          : log.category === this.activityLogCategoryFilter;
+          ? (action === 'login' || action === 'logout')
+          : this.activityLogCategoryFilter === 'modifications'
+            ? (action !== 'login' && action !== 'logout')
+            : this.activityLogCategoryFilter === 'active_sessions'
+              ? (action === 'login' && !log.logout_at)
+              : this.activityLogCategoryFilter === 'members'
+                ? (action.includes('member') || action.includes('user') || entity === 'user')
+                : this.activityLogCategoryFilter === 'inventory'
+                  ? (action.includes('inventory') || action.includes('product') || action.includes('order') || entity === 'product')
+                  : this.activityLogCategoryFilter === 'equipment'
+                    ? (action.includes('equipment') || entity === 'equipment')
+                    : this.activityLogCategoryFilter === 'attendance'
+                      ? (action.includes('attendance') || entity === 'attendance')
+                      : true;
 
       const matchStaff = this.activityLogStaffFilter === 'all'
         ? true
@@ -2400,21 +2644,50 @@ export class AdminPage implements OnInit, OnDestroy {
     });
   }
 
+  filterLogsByKpi(category: 'all' | 'auth' | 'modifications' | 'active_sessions' | 'members' | 'inventory' | 'equipment' | 'attendance'): void {
+    if (this.activityLogCategoryFilter === category && category !== 'all') {
+      this.activityLogCategoryFilter = 'all';
+    } else {
+      this.activityLogCategoryFilter = category;
+    }
+    // Smoothly scroll down to timeline list for immediate visual confirmation
+    setTimeout(() => {
+      const el = document.getElementById('activityLogsTimeline');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }, 40);
+  }
+
+  getCategoryFilterLabel(): string {
+    switch (this.activityLogCategoryFilter) {
+      case 'auth': return 'Staff Logins & Logouts';
+      case 'modifications': return 'System Modifications';
+      case 'active_sessions': return 'Active Staff Sessions';
+      case 'members': return 'Members & Users';
+      case 'inventory': return 'Inventory & Orders';
+      case 'equipment': return 'Equipment Management';
+      case 'attendance': return 'Attendance Records';
+      default: return 'All Events';
+    }
+  }
+
+
+
   loadActivityLogs() {
     if (this.isEmployee) return;
     const headers = { Authorization: `Bearer ${this.auth.token}` };
     this.activityLogsLoading = true;
     this.activityLogsError = false;
 
-    this.http.get<any>(`${this.api}/admin/activity-logs?per_page=60`, { headers }).subscribe({
+    this.http.get<any>(`${this.api}/admin/activity-logs?per_page=100`, { headers }).subscribe({
       next: res => {
         this.activityLogsLoading = false;
-        if (res && res.data) {
-          this.activityLogs = res.data.data || res.data;
-          this.activityLogStats = res.stats || this.activityLogStats;
+        if (res) {
+          const logList = res.logs?.data || res.logs || res.data?.data || res.data || (Array.isArray(res) ? res : []);
+          this.activityLogs = Array.isArray(logList) ? logList : [];
+          this.activityLogStats = res.stats || res.metrics || this.activityLogStats;
           this.activityLogStaffList = res.staff_list || [];
-        } else if (Array.isArray(res)) {
-          this.activityLogs = res;
         }
       },
       error: () => {
@@ -2426,21 +2699,31 @@ export class AdminPage implements OnInit, OnDestroy {
   }
 
   getActivityActionIcon(action: string): string {
-    switch (action) {
+    const a = (action || '').toLowerCase();
+    switch (a) {
       case 'login': return 'log-in-outline';
       case 'logout': return 'log-out-outline';
-      case 'create_member': return 'person-add-outline';
+      case 'create_member':
+      case 'member_add': return 'person-add-outline';
       case 'update_member':
+      case 'member_update':
       case 'update_membership': return 'create-outline';
-      case 'delete_member': return 'trash-outline';
-      case 'create_product': return 'add-outline';
-      case 'update_product': return 'create-outline';
-      case 'delete_product': return 'trash-outline';
+      case 'delete_member':
+      case 'member_delete':
+      case 'coach_delete': return 'trash-outline';
+      case 'create_product':
+      case 'inventory_add': return 'add-outline';
+      case 'update_product':
+      case 'inventory_update': return 'create-outline';
+      case 'delete_product':
+      case 'inventory_delete': return 'trash-outline';
       case 'approve_order': return 'checkmark-circle-outline';
       case 'create_equipment': return 'barbell-outline';
-      case 'update_equipment': return 'create-outline';
+      case 'update_equipment':
+      case 'equipment_update': return 'create-outline';
       case 'delete_equipment': return 'trash-outline';
-      case 'confirm_attendance': return 'checkmark-outline';
+      case 'confirm_attendance':
+      case 'attendance_checkin': return 'checkmark-outline';
       case 'reject_attendance': return 'close-outline';
       default: return 'document-text-outline';
     }
@@ -2463,12 +2746,241 @@ export class AdminPage implements OnInit, OnDestroy {
     return remMins > 0 ? `${hours}h ${remMins}m` : `${hours}h`;
   }
 
+  cleanLogText(text: string | null | undefined, log?: any): string {
+    if (!text) return '';
+    let result = String(text);
+    const targetName = log?.target_name || log?.payload?.target_name;
+    const targetRole = log?.payload?.target_role ? (log.payload.target_role.charAt(0).toUpperCase() + log.payload.target_role.slice(1)) : 'Staff User';
+
+    // Replace any "user #\d+ (@username)" or "user #\d+" with actual name
+    result = result.replace(/user\s*#(\d+)(?:\s*\(@?([a-zA-Z0-9_.\-]+)\))?/gi, (match, id, handle) => {
+      if (targetName) {
+        return handle && targetName !== handle ? `${targetName} (@${handle})` : targetName;
+      }
+      if (handle) {
+        return `@${handle}`;
+      }
+      return `${targetRole} (${id})`;
+    });
+
+    // Strip redundant parenthetical role tags right after user name, e.g. "Super Admin (super_admin)" -> "Super Admin"
+    result = result.replace(/\s*\((super_admin|admin|employee|member)\)/gi, '');
+
+    return result;
+  }
+
+  getLogActorName(log: any): string {
+    if (!log) return 'Staff User';
+    const fullName = (log.full_name || '').trim();
+    if (fullName) return fullName;
+    const userFirst = (log.user?.first_name || '').trim();
+    const userLast = (log.user?.last_name || '').trim();
+    if (userFirst || userLast) {
+      return `${userFirst} ${userLast}`.trim();
+    }
+    return log.username || log.user?.username || 'Staff User';
+  }
+
+  shouldShowActorHandle(log: any): boolean {
+    if (!log) return false;
+    const rawHandle = (log.username || log.user?.username || '').trim();
+    if (!rawHandle) return false;
+    const name = this.getLogActorName(log);
+    // If username is identical to the display name (e.g. "Super Admin" and "@Super Admin"), hide the redundant handle!
+    const cleanHandle = rawHandle.toLowerCase().replace(/[@\s_]/g, '');
+    const cleanName = name.toLowerCase().replace(/[@\s_]/g, '');
+    return cleanHandle !== cleanName;
+  }
+
+  getLogRoleLabel(log: any): string {
+    const rawRole = (log?.role || log?.user?.role || 'staff').toLowerCase();
+    switch (rawRole) {
+      case 'super_admin': return 'SUPER ADMIN';
+      case 'admin':       return 'ADMIN';
+      case 'employee':    return 'EMPLOYEE';
+      default:            return rawRole.replace(/_/g, ' ').toUpperCase();
+    }
+  }
+
+  cleanLogTitle(log: any): string {
+    if (!log) return 'Activity Record';
+    let title = log.action_title || log.title || 'Activity Record';
+    const targetName = log.target_name || log.payload?.target_name;
+    if (targetName) {
+      title = title.replace(/^(Updated|Created|Deleted|Approved Membership for)\s+([A-Za-z]+)\s+@([a-zA-Z0-9_.\-]+)$/i, (m: string, p1: string, p2: string, h: string) => {
+        return targetName !== h ? `${p1} ${p2}: ${targetName}` : m;
+      });
+    }
+    return this.cleanLogText(title, log);
+  }
+
   viewActivityPayload(log: any) {
     this.selectedActivityLog = log;
   }
 
   closeActivityPayload() {
     this.selectedActivityLog = null;
+  }
+
+  /**
+   * Extracts Before & After changes from activity log payload or description
+   */
+  getLogChanges(log: any): { field: string; before: string; after: string }[] {
+    if (!log) return [];
+    let payload = log.payload;
+    if (typeof payload === 'string') {
+      try {
+        payload = JSON.parse(payload);
+      } catch {
+        payload = null;
+      }
+    }
+
+    const changesList: { field: string; before: string; after: string }[] = [];
+
+    // Case 1: Structured 'changes' in payload (from our improved controllers)
+    if (payload && payload.changes) {
+      if (Array.isArray(payload.changes)) {
+        for (const ch of payload.changes) {
+          if (ch && (ch.before !== undefined || ch.after !== undefined)) {
+            changesList.push({
+              field: ch.field || 'Attribute',
+              before: String(ch.before !== undefined && ch.before !== null ? ch.before : '—'),
+              after: String(ch.after !== undefined && ch.after !== null ? ch.after : '—'),
+            });
+          }
+        }
+      } else if (typeof payload.changes === 'object') {
+        for (const [k, ch] of Object.entries(payload.changes as Record<string, any>)) {
+          if (ch && typeof ch === 'object' && ('before' in ch || 'after' in ch)) {
+            changesList.push({
+              field: ch.field || k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+              before: String(ch.before !== undefined && ch.before !== null ? ch.before : '—'),
+              after: String(ch.after !== undefined && ch.after !== null ? ch.after : '—'),
+            });
+          }
+        }
+      }
+    }
+
+    // Case 2: Natural language extraction from description if no structured changes found
+    if (changesList.length === 0 && log.description) {
+      const desc = String(log.description);
+
+      // Regex for: Renamed from 'A' to 'B'
+      const renameMatch = desc.match(/(?:renamed|changed name)\s+(?:from\s+)?['"]([^'"]+)['"]\s+to\s+['"]([^'"]+)['"]/i);
+      if (renameMatch) {
+        changesList.push({
+          field: 'Product Name',
+          before: renameMatch[1],
+          after: renameMatch[2],
+        });
+      }
+
+      // Regex for: role from 'A' to 'B'
+      const roleMatch = desc.match(/(?:role|plan)\s+(?:from\s+)?['"]?([a-zA-Z0-9_\s]+)['"]?\s+to\s+['"]?([a-zA-Z0-9_\s]+)['"]?/i);
+      if (roleMatch && !renameMatch) {
+        changesList.push({
+          field: 'Account Role',
+          before: roleMatch[1].trim(),
+          after: roleMatch[2].trim(),
+        });
+      }
+
+      // Regex for: Price changed from ₱A to ₱B
+      const priceMatch = desc.match(/Price\s+(?:changed\s+)?(?:from\s+)?(₱?[0-9,.]+)\s+to\s+(₱?[0-9,.]+)/i);
+      if (priceMatch) {
+        changesList.push({
+          field: 'Price',
+          before: priceMatch[1],
+          after: priceMatch[2],
+        });
+      }
+
+      // Regex for: Stock changed from A to B
+      const stockMatch = desc.match(/Stock\s+(?:changed\s+)?(?:from\s+)?([0-9]+)\s+to\s+([0-9]+)/i);
+      if (stockMatch) {
+        changesList.push({
+          field: 'Stock Quantity',
+          before: `${stockMatch[1]} units`,
+          after: `${stockMatch[2]} units`,
+        });
+      }
+    }
+
+    return changesList;
+  }
+
+  getModalPayloadItems(log: any): { label: string; value: string; isPill?: boolean; pillType?: string }[] {
+    if (!log) return [];
+    let payload = log.payload;
+    if (typeof payload === 'string') {
+      try {
+        payload = JSON.parse(payload);
+      } catch {
+        payload = null;
+      }
+    }
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return [];
+
+    const items: { label: string; value: string; isPill?: boolean; pillType?: string }[] = [];
+
+    const labelMap: Record<string, string> = {
+      price: 'Price',
+      stock: 'Stock Quantity',
+      current_price: 'Current Price',
+      current_stock: 'Current Stock',
+      brand: 'Brand',
+      category: 'Category',
+      role: 'Role Assigned',
+      membership_type: 'Membership Plan',
+      payment_method: 'Payment Method',
+      expiry: 'Membership Expiry',
+      updated_fields: 'Modified Attributes',
+      target_role: 'Target Role',
+      target_name: 'Target Name',
+      email: 'Email Address',
+      phone: 'Contact Number',
+      gender: 'Gender',
+      status: 'Status',
+      notes: 'Remarks',
+      quantity: 'Quantity',
+      duration: 'Duration',
+    };
+
+    for (const key of Object.keys(payload)) {
+      if (key === 'password' || key === 'target_name' || key === 'changes') continue;
+      const rawVal = payload[key];
+      if (rawVal === null || rawVal === undefined || rawVal === '') continue;
+
+      const label = labelMap[key] || key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      let value = String(rawVal);
+      let isPill = false;
+      let pillType = 'default';
+
+      if (key === 'price' || key === 'amount' || key === 'fee' || key === 'current_price') {
+        const num = parseFloat(rawVal);
+        value = !isNaN(num) ? `₱${num.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `₱${rawVal}`;
+      } else if (key === 'stock' || key === 'quantity' || key === 'current_stock') {
+        value = `${rawVal} units`;
+      } else if (key === 'updated_fields' && Array.isArray(rawVal)) {
+        value = rawVal.map((f: string) => f.replace(/_/g, ' ')).join(', ');
+        isPill = true;
+        pillType = 'info';
+      } else if (key === 'role' || key === 'target_role') {
+        value = rawVal.replace(/_/g, ' ').toUpperCase();
+        isPill = true;
+        pillType = 'role';
+      } else if (key === 'membership_type') {
+        value = rawVal.toUpperCase();
+        isPill = true;
+        pillType = 'plan';
+      }
+
+      items.push({ label, value, isPill, pillType });
+    }
+
+    return items;
   }
 
   // ── Logout ────────────────────────────────────────────

@@ -122,12 +122,19 @@ class InventoryController extends Controller
             return response()->json(['message' => 'Product not found'], 404);
         }
 
+        $oldName  = $product->name;
+        $oldBrand = $product->brand;
+        $oldPrice = (float) $product->price;
+        $oldStock = (int) $product->stock;
+
         $price = $this->toNonNegative($request->input('price'), 0);
         $stock = (int) $this->toNonNegative($request->input('stock'), 0);
+        $newName = trim((string) $request->input('name', $product->name));
+        $newBrand = $request->input('brand') ?: null;
 
         $product->update([
-            'name'          => $request->input('name', $product->name),
-            'brand'         => $request->input('brand') ?: null,
+            'name'          => $newName,
+            'brand'         => $newBrand,
             'price'         => $price,
             'stock'         => $stock,
             'image_url'     => $request->input('image_url') ?: null,
@@ -138,14 +145,64 @@ class InventoryController extends Controller
 
         try {
             if ($request->user()) {
+                $changes = [];
+                $summaryParts = [];
+
+                if ($oldName !== $product->name) {
+                    $changes['name'] = [
+                        'field'  => 'Product Name',
+                        'before' => $oldName,
+                        'after'  => $product->name,
+                    ];
+                    $summaryParts[] = "Renamed from '{$oldName}' to '{$product->name}'";
+                }
+
+                if (abs($oldPrice - (float)$price) > 0.001) {
+                    $changes['price'] = [
+                        'field'  => 'Price',
+                        'before' => '₱' . number_format($oldPrice, 2),
+                        'after'  => '₱' . number_format($price, 2),
+                    ];
+                    $summaryParts[] = "Price changed from ₱" . number_format($oldPrice, 2) . " to ₱" . number_format($price, 2);
+                }
+
+                if ($oldStock != $stock) {
+                    $changes['stock'] = [
+                        'field'  => 'Stock Quantity',
+                        'before' => "{$oldStock} units",
+                        'after'  => "{$stock} units",
+                    ];
+                    $summaryParts[] = "Stock changed from {$oldStock} to {$stock}";
+                }
+
+                if ($oldBrand !== $newBrand) {
+                    $changes['brand'] = [
+                        'field'  => 'Brand',
+                        'before' => $oldBrand ?: '(None)',
+                        'after'  => $newBrand ?: '(None)',
+                    ];
+                    $summaryParts[] = "Brand changed from '" . ($oldBrand ?: 'None') . "' to '" . ($newBrand ?: 'None') . "'";
+                }
+
+                if (empty($summaryParts)) {
+                    $actionDesc = "Saved details for product '{$product->name}' without value changes.";
+                } else {
+                    $actionDesc = "Modified product '{$product->name}': " . implode(', ', $summaryParts) . ".";
+                }
+
                 ActivityLogger::log(
                     $request->user(),
                     'inventory_update',
                     "Updated Product '{$product->name}'",
-                    "Modified product '{$product->name}'. Price: ₱{$price}, Stock: {$stock}.",
+                    $actionDesc,
                     'product',
                     $product->id,
-                    ['price' => $price, 'stock' => $stock]
+                    [
+                        'changes'       => $changes,
+                        'target_name'   => $product->name,
+                        'current_price' => $price,
+                        'current_stock' => $stock,
+                    ]
                 );
             }
         } catch (\Throwable) {}

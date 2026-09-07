@@ -234,7 +234,7 @@ class AttendanceController extends Controller
 
         try {
             $member = User::find($attendance->user_id);
-            $memberName = $member ? trim("{$member->first_name} {$member->last_name}") ?: $member->username : "User #{$attendance->user_id}";
+            $memberName = $member ? (trim("{$member->first_name} {$member->last_name}") ?: $member->username) : "Member (ID: {$attendance->user_id})";
             ActivityLogger::log(
                 $request->user(),
                 'attendance_confirm',
@@ -277,7 +277,7 @@ class AttendanceController extends Controller
 
         try {
             $member = User::find($userId);
-            $memberName = $member ? trim("{$member->first_name} {$member->last_name}") ?: $member->username : "User #{$userId}";
+            $memberName = $member ? (trim("{$member->first_name} {$member->last_name}") ?: $member->username) : "Member (ID: {$userId})";
             if ($request->user()) {
                 ActivityLogger::log(
                     $request->user(),

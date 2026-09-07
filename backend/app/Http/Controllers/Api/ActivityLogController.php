@@ -16,7 +16,7 @@ class ActivityLogController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = ActivityLog::query()->orderBy('created_at', 'desc');
+        $query = ActivityLog::query()->with('user')->orderBy('created_at', 'desc');
 
         // Filter: action_type
         $actionType = $request->input('action_type');
@@ -62,6 +62,99 @@ class ActivityLogController extends Controller
         $perPage = max(5, min(100, (int) $request->input('per_page', 25)));
         $logs = $query->paginate($perPage);
 
+        // Resolve target users for logs referencing users
+        $targetUserIds = [];
+        foreach ($logs->getCollection() as $l) {
+            if ($l->entity_type === 'user' && !empty($l->entity_id)) {
+                $targetUserIds[] = (int) $l->entity_id;
+            }
+            if (preg_match_all('/(?:user|member)\s*#(\d+)/i', ($l->description ?? '') . ' ' . ($l->action_title ?? ''), $matches)) {
+                foreach ($matches[1] as $uid) {
+                    $targetUserIds[] = (int) $uid;
+                }
+            }
+        }
+        $targetUserIds = array_unique(array_filter($targetUserIds));
+        $resolvedUsers = empty($targetUserIds) ? collect() : User::whereIn('id', $targetUserIds)->get()->keyBy('id');
+
+        $logs->getCollection()->transform(function ($log) use ($resolvedUsers) {
+            $log->action = $log->action_type;
+
+            $desc = $log->description ?? '';
+            $title = $log->action_title ?? '';
+            $targetName = null;
+
+            if ($log->entity_type === 'user' && !empty($log->entity_id)) {
+                $target = $resolvedUsers->get((int) $log->entity_id);
+                if ($target) {
+                    $name = trim(($target->first_name ?? '') . ' ' . ($target->last_name ?? ''));
+                    $targetName = $name ?: $target->username;
+                }
+            }
+
+            // Replace any "user #<id> (@username)" or "user #<id>" with real full name
+            $desc = preg_replace_callback('/(?:user|member)\s*#(\d+)(?:\s*\(@?([a-zA-Z0-9_.\-]+)\))?/i', function ($m) use ($resolvedUsers) {
+                $uid = (int) $m[1];
+                $target = $resolvedUsers->get($uid);
+                if ($target) {
+                    $name = trim(($target->first_name ?? '') . ' ' . ($target->last_name ?? ''));
+                    if ($name) {
+                        return "{$name} (@{$target->username})";
+                    }
+                    return "@{$target->username}";
+                }
+                if (!empty($m[2])) {
+                    return "@" . ltrim($m[2], '@');
+                }
+                return "Member (ID: {$uid})";
+            }, $desc);
+
+            $title = preg_replace_callback('/(?:user|member)\s*#(\d+)/i', function ($m) use ($resolvedUsers) {
+                $uid = (int) $m[1];
+                $target = $resolvedUsers->get($uid);
+                if ($target) {
+                    $name = trim(($target->first_name ?? '') . ' ' . ($target->last_name ?? ''));
+                    return $name ?: "@{$target->username}";
+                }
+                return "Member";
+            }, $title);
+
+            // Clean up titles like "Updated Employee @employee1" -> if target user has a real name
+            if ($targetName && preg_match('/^(Updated|Created|Deleted|Approved Membership for)\s+([A-Za-z]+)\s+@([a-zA-Z0-9_.\-]+)$/i', $title, $tm)) {
+                $prefix = $tm[1];
+                $roleWord = $tm[2];
+                $handle = $tm[3];
+                if ($targetName !== $handle) {
+                    $title = "{$prefix} {$roleWord}: {$targetName}";
+                }
+            }
+
+            $log->action_title = $title;
+            $log->description = $desc;
+            $log->action_description = $desc;
+            $log->target_name = $targetName;
+            $log->payload = $log->details;
+
+            if (!$log->user && $log->username) {
+                $log->user = [
+                    'username'   => $log->username,
+                    'first_name' => $log->full_name,
+                    'last_name'  => '',
+                    'role'       => $log->role,
+                ];
+            }
+            if ($log->login_at && $log->logout_at) {
+                try {
+                    $loginAt = $log->login_at instanceof \Carbon\Carbon ? $log->login_at : \Carbon\Carbon::parse($log->login_at);
+                    $logoutAt = $log->logout_at instanceof \Carbon\Carbon ? $log->logout_at : \Carbon\Carbon::parse($log->logout_at);
+                    $log->session_duration_minutes = round($loginAt->diffInMinutes($logoutAt));
+                } catch (\Throwable) {
+                    $log->session_duration_minutes = null;
+                }
+            }
+            return $log;
+        });
+
         // Calculate summary metrics for today
         $todayStart = now()->startOfDay();
         $todayEnd = now()->endOfDay();
@@ -95,13 +188,20 @@ class ActivityLogController extends Controller
                 ];
             });
 
+        $totalToday = $loginsToday + $modificationsToday;
+
+        $statsPayload = [
+            'total_today'         => $totalToday,
+            'logins_today'        => $loginsToday,
+            'modifications_today' => $modificationsToday,
+            'active_sessions'     => $activeStaffCount,
+        ];
+
         return response()->json([
-            'logs'    => $logs,
-            'metrics' => [
-                'logins_today'        => $loginsToday,
-                'modifications_today' => $modificationsToday,
-                'active_staff_now'    => $activeStaffCount,
-            ],
+            'logs'       => $logs,
+            'data'       => $logs,
+            'stats'      => $statsPayload,
+            'metrics'    => $statsPayload,
             'staff_list' => $staffUsers,
         ]);
     }

@@ -231,11 +231,18 @@ class EquipmentController extends Controller
             return response()->json(['message' => 'Equipment not found'], 404);
         }
 
+        $oldName     = $equipment->name;
+        $oldCategory = $equipment->category;
+        $oldStatus   = $equipment->status;
+
+        $newCategory = $this->normalizeText($request->input('category'));
+        $newStatus   = $this->normalizeStatus($request->input('status'));
+
         $equipment->update([
             'name'          => $name,
-            'category'      => $this->normalizeText($request->input('category')),
+            'category'      => $newCategory,
             'icon'          => $this->normalizeText($request->input('icon')),
-            'status'        => $this->normalizeStatus($request->input('status')),
+            'status'        => $newStatus,
             'image_url'     => $this->normalizeText($request->input('image_url')),
             'thumbnail_url' => $this->normalizeText($request->input('thumbnail_url')),
             'description'   => $this->normalizeText($request->input('description')),
@@ -246,19 +253,55 @@ class EquipmentController extends Controller
 
         try {
             if ($request->user()) {
+                $changes = [];
+                $summaryParts = [];
+
+                if ($oldName !== $name) {
+                    $changes['name'] = [
+                        'field'  => 'Equipment Name',
+                        'before' => $oldName,
+                        'after'  => $name,
+                    ];
+                    $summaryParts[] = "Renamed from '{$oldName}' to '{$name}'";
+                }
+                if ($oldStatus !== $newStatus) {
+                    $changes['status'] = [
+                        'field'  => 'Operational Status',
+                        'before' => ucfirst($oldStatus ?: 'Available'),
+                        'after'  => ucfirst($newStatus ?: 'Available'),
+                    ];
+                    $summaryParts[] = "Status changed from '{$oldStatus}' to '{$newStatus}'";
+                }
+                if ($oldCategory !== $newCategory) {
+                    $changes['category'] = [
+                        'field'  => 'Category',
+                        'before' => ucfirst($oldCategory ?: 'General'),
+                        'after'  => ucfirst($newCategory ?: 'General'),
+                    ];
+                    $summaryParts[] = "Category changed from '{$oldCategory}' to '{$newCategory}'";
+                }
+
+                $actionDesc = empty($summaryParts)
+                    ? "Saved details for equipment '{$name}' without value changes."
+                    : "Modified equipment '{$name}': " . implode(', ', $summaryParts) . ".";
+
                 ActivityLogger::log(
                     $request->user(),
                     'equipment_update',
                     "Updated Equipment '{$equipment->name}'",
-                    "Modified equipment details for '{$equipment->name}' (status: {$equipment->status}).",
+                    $actionDesc,
                     'equipment',
                     $equipment->id,
-                    ['category' => $equipment->category, 'status' => $equipment->status]
+                    [
+                        'changes'  => $changes,
+                        'category' => $equipment->category,
+                        'status'   => $equipment->status
+                    ]
                 );
             }
         } catch (\Throwable) {}
 
-        return response()->json($equipment);
+        return response()->json(['message' => 'Equipment updated']);
     }
 
     /**
