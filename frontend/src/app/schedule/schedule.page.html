@@ -178,12 +178,13 @@
                 </div>
               </div>
               <div class="field-group">
-                <label class="field-label">Location</label>
+                <label class="field-label">Location <span class="label-optional">(Optional)</span></label>
                 <div class="field-wrap">
                   <span class="field-icon">📍</span>
-                  <select [(ngModel)]="editBuffer.location">
-                    <option *ngFor="let l of locations" [value]="l">{{ l }}</option>
-                  </select>
+                  <input
+                    type="text"
+                    [(ngModel)]="editBuffer.location"
+                    placeholder="e.g. Gym Floor B, Home, Cardio Area..." />
                 </div>
               </div>
             </div>

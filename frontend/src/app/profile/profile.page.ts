@@ -20,6 +20,7 @@ import { ThemeService } from '../services/theme.service';
 import { UserStatusService } from '../services/user-status.service';
 import { CoachingNavService, CoachingPanelTab } from '../services/coaching-nav.service';
 import { CoachingService } from '../services/coaching.service';
+import { WorkoutTrackerService } from '../services/workout-tracker.service';
 import { NoNegativeDirective } from '../directives/no-negative.directive';
 import { HeaderComponent } from '../shared/header/header.component';
 import { NotificationPanelComponent } from '../shared/notification-panel/notification-panel.component';
@@ -259,6 +260,7 @@ export class ProfilePage implements OnInit {
     private toast: ToastService,
     public onboardingService: OnboardingService,
     private fcmService: FcmService,
+    private workoutTracker: WorkoutTrackerService,
   ) {}
 
   private showMobileToast(message: string, isError = false): Promise<void> {
@@ -575,6 +577,7 @@ export class ProfilePage implements OnInit {
         try {
           const updatedPlan = buildGoalWeekPlan(nextGoal, finalBmi, nextTime);
           localStorage.setItem('fordago_week_plan_v1', JSON.stringify(updatedPlan));
+          this.workoutTracker.reseedFutureDaysWithPlan(updatedPlan);
         } catch {}
 
         this.closeEdit();

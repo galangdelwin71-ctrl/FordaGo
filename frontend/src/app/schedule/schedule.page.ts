@@ -737,7 +737,18 @@ export class SchedulePage implements OnInit, OnDestroy {
       const d = new Date(this.baseDate);
       d.setDate(this.baseDate.getDate() + i);
       const key = this.dateKey(d);
-      if (store[key]) continue; // already seeded
+
+      const existing = store[key];
+      const isAccidentalRestDay =
+        Array.isArray(existing) &&
+        existing.length === 1 &&
+        (existing[0].isRestDay || existing[0].title === 'Rest Day') &&
+        existing[0].status !== 'done' &&
+        !existing[0].isCustom &&
+        template &&
+        !template[i]?.isRest;
+
+      if (existing && !isAccidentalRestDay) continue; // already seeded
 
       // Pass date so status is correct immediately (past days = missed)
       store[key] = this.buildDaySessionsFromTracker(i, template, d);
@@ -771,13 +782,24 @@ export class SchedulePage implements OnInit, OnDestroy {
     for (let day = 1; day <= daysInMonth; day++) {
       const d = new Date(year, month, day);
       const key = this.dateKey(d);
-      if (store[key]) continue; // already seeded (e.g. by seedWeekSessions or a prior visit)
 
       // Convert JS's Sunday-first getDay() (0=Sun..6=Sat) into the
       // Monday-first index (0=Mon..6=Sun) that defaultSessionsByDayIdx /
       // the saved week-plan template both use.
       const jsDay = d.getDay();
       const idx = jsDay === 0 ? 6 : jsDay - 1;
+
+      const existing = store[key];
+      const isAccidentalRestDay =
+        Array.isArray(existing) &&
+        existing.length === 1 &&
+        (existing[0].isRestDay || existing[0].title === 'Rest Day') &&
+        existing[0].status !== 'done' &&
+        !existing[0].isCustom &&
+        template &&
+        !template[idx]?.isRest;
+
+      if (existing && !isAccidentalRestDay) continue; // already seeded (e.g. by seedWeekSessions or a prior visit)
 
       // Pass date so status is correct immediately (past days = missed)
       store[key] = this.buildDaySessionsFromTracker(idx, template, d);
@@ -1468,6 +1490,10 @@ export class SchedulePage implements OnInit, OnDestroy {
 
   // ── Week Plan ─────────────────────────────────────────────
   private buildDefaultWeekPlanDays(): WeekPlanDay[] {
+    const trackerPlan = this.workoutTracker.loadWeekPlanTemplate();
+    if (trackerPlan && trackerPlan.length === 7) {
+      return trackerPlan as unknown as WeekPlanDay[];
+    }
     const defaults = ['Upper Body','Cardio & Core','Rest Day','Upper Body','Full Body','Lower Body / Leg Day','Rest Day'];
     const targets  = ['Back & Bicep','Core & Abs','','Chest & Tricep','Compound Lifts','Quads & Glutes',''];
     return defaults.map((title, i) => ({
@@ -1476,7 +1502,7 @@ export class SchedulePage implements OnInit, OnDestroy {
       duration: '60 min',
       coach: '',
       location: 'Gym Floor B',
-      time: '07:00',
+      time: '17:00',
       isRest: title === 'Rest Day',
       exercises: [],
     }));
@@ -1621,13 +1647,22 @@ export class SchedulePage implements OnInit, OnDestroy {
     this.weekPlanSaved = false;
     void this.workoutTracker.scheduleMissedChecks();
     this.workoutTracker.scheduleUpcomingReminders();
+    this.applyWeekPlanToCurrentWeek();
+    this.buildWeekStrip();
+    this.renderSessions();
+    this.toast.success('Reset to recommended workout plan');
   }
 
   private loadWeekPlanTemplate(): WeekPlanDay[] | null {
     try {
       const raw = localStorage.getItem(this.WEEK_PLAN_KEY);
-      if (!raw) return null;
-      return JSON.parse(raw) as WeekPlanDay[];
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length === 7) {
+          return parsed as WeekPlanDay[];
+        }
+      }
+      return this.workoutTracker.loadWeekPlanTemplate() as unknown as WeekPlanDay[];
     } catch {
       return null;
     }

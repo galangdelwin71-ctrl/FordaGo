@@ -4,7 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { AuthService } from './auth.service';
 import { NotificationCenterService } from './notification-center.service';
 import { API_URL } from '../config/api.config';
-import { defaultSessionsByDayIdx, buildExercisesFromTemplate, buildGoalWeekPlan } from '../data/workout-templates';
+import { defaultSessionsByDayIdx, buildExercisesFromTemplate, buildGoalWeekPlan, computeBmi } from '../data/workout-templates';
 
 export type SessionStatus = 'upcoming' | 'optional' | 'missed' | 'done';
 
@@ -175,7 +175,7 @@ export class WorkoutTrackerService {
    *
    * @returns true if any new day was written to storage.
    */
-  seedCurrentMonthIfNeeded(referenceDate: Date = new Date()): boolean {
+  seedCurrentMonthIfNeeded(referenceDate: Date = new Date(), forceReseedUncompleted: boolean = false): boolean {
     const store = this.readStore();
     const template = this.loadWeekPlanTemplate();
     let changed = false;
@@ -187,14 +187,32 @@ export class WorkoutTrackerService {
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
       const key = this.getDateKey(date);
-      if (store[key]) continue; // already seeded elsewhere, or has real data — never overwrite
 
       // Convert JS's Sunday-first getDay() (0=Sun..6=Sat) into the
       // Monday-first index (0=Mon..6=Sun) that the shared template data uses.
       const jsDay = date.getDay();
       const dayIdx = jsDay === 0 ? 6 : jsDay - 1;
 
-      store[key] = this.buildDaySessions(dayIdx, template);
+      const existing = store[key];
+      // Check if this day has a corrupted/accidental rest day that should have been a scheduled workout
+      const isAccidentalRestDay =
+        Array.isArray(existing) &&
+        existing.length === 1 &&
+        (existing[0].isRestDay || existing[0].title === 'Rest Day') &&
+        existing[0].status !== 'done' &&
+        !existing[0].isCustom &&
+        ((template && !template[dayIdx]?.isRest) || (!template && (defaultSessionsByDayIdx[dayIdx] ?? []).length > 0));
+
+      if (existing && !isAccidentalRestDay && !forceReseedUncompleted) {
+        continue; // already seeded elsewhere, or has real data — never overwrite
+      }
+
+      if (forceReseedUncompleted && existing) {
+        const hasCompleted = existing.some((s) => s.status === 'done');
+        if (hasCompleted) continue;
+      }
+
+      store[key] = this.buildDaySessions(dayIdx, template, date);
       changed = true;
       this.pendingServerReconcileKeys.add(key);
     }
@@ -218,13 +236,14 @@ export class WorkoutTrackerService {
    * happened to seed a given day first (Stage 3 follow-up fix).
    */
   buildDaySessions(dayIdx: number, template: WeekPlanTemplateDay[] | null, sessionDate?: Date): StoredWorkoutSession[] {
+    const dKey = sessionDate ? this.getDateKey(sessionDate) : `d${dayIdx}_${Date.now()}`;
     if (template) {
       const templateDay = template[dayIdx];
       if (!templateDay || templateDay.isRest) {
-        return [this.buildRestDaySession()];
+        return [this.buildRestDaySession(sessionDate)];
       }
 
-      const { time, ampm } = this.to12(templateDay.time || '07:00');
+      const { time, ampm } = this.to12(templateDay.time || '17:00');
       const customExercises = (templateDay.exercises ?? [])
         .filter((exercise) => exercise?.name?.trim())
         .map((exercise) => ({ ...exercise }));
@@ -232,17 +251,15 @@ export class WorkoutTrackerService {
         ? customExercises
         : buildExercisesFromTemplate(templateDay.title, templateDay.customTarget);
 
-      const stableId = sessionDate
-        ? `plan_${this.getDateKey(sessionDate)}_${dayIdx}`
-        : `plan_tpl_${dayIdx}`;
+      const stableId = `plan_${dKey}_${dayIdx}`;
 
       const session = this.buildSeededSession({
         timeVal: time,
         timeAmpm: ampm,
         title: templateDay.title,
-        duration: templateDay.duration,
-        location: templateDay.location,
-        coach: templateDay.coach,
+        duration: templateDay.duration || '60 min',
+        location: templateDay.location || 'Gym Floor B',
+        coach: templateDay.coach || '',
         membersCount: 0,
         status: 'upcoming',
         customTarget: templateDay.customTarget || undefined,
@@ -266,9 +283,7 @@ export class WorkoutTrackerService {
     }
 
     return defaultDaySessions.map((day, dIdx) => {
-      const stableId = sessionDate
-        ? `plan_def_${this.getDateKey(sessionDate)}_${dayIdx}_${dIdx}`
-        : `plan_def_${dayIdx}_${dIdx}`;
+      const stableId = `plan_def_${dKey}_${dayIdx}_${dIdx}`;
       const s = this.buildSeededSession({
         timeVal: day.timeVal,
         timeAmpm: day.timeAmpm,
@@ -321,7 +336,7 @@ export class WorkoutTrackerService {
     }, stableId);
   }
 
-  private loadWeekPlanTemplate(): WeekPlanTemplateDay[] | null {
+  public loadWeekPlanTemplate(): WeekPlanTemplateDay[] | null {
     try {
       const raw = localStorage.getItem(this.weekPlanStorageKey);
       if (raw) {
@@ -330,22 +345,63 @@ export class WorkoutTrackerService {
           return parsed as WeekPlanTemplateDay[];
         }
       }
-      // If no custom plan saved yet, check if logged-in user has a fitness goal
+      // If no custom plan saved yet, check logged-in user profile, BMI & fitness goal
       const currentUser = this.auth.user;
-      if (currentUser?.fitness_goal) {
-        const goalPlan = buildGoalWeekPlan(
-          currentUser.fitness_goal,
-          currentUser.bmi,
-          currentUser.preferred_workout_time || '17:00'
-        );
-        try {
-          localStorage.setItem(this.weekPlanStorageKey, JSON.stringify(goalPlan));
-        } catch {}
-        return goalPlan;
-      }
-      return null;
+      const height = currentUser?.height;
+      const weight = currentUser?.weight;
+      const computedBmi = computeBmi(height, weight);
+      const bmi = currentUser?.bmi ?? computedBmi;
+      const goal = currentUser?.fitness_goal || (typeof bmi === 'number' && bmi >= 25 ? 'weight_loss' : 'muscle_gain');
+      const time = currentUser?.preferred_workout_time || '17:00';
+
+      const goalPlan = buildGoalWeekPlan(goal, bmi, time);
+      try {
+        localStorage.setItem(this.weekPlanStorageKey, JSON.stringify(goalPlan));
+      } catch {}
+      return goalPlan;
     } catch {
       return null;
+    }
+  }
+
+  /**
+   * Reseeds upcoming days of the current month with an updated week plan
+   * (e.g. when user changes fitness goal or updates physical stats),
+   * while preserving all completed ('done') workout history.
+   */
+  public reseedFutureDaysWithPlan(plan: WeekPlanTemplateDay[]): void {
+    try {
+      localStorage.setItem(this.weekPlanStorageKey, JSON.stringify(plan));
+    } catch {}
+
+    const store = this.readStore();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    let changed = false;
+
+    for (let day = today.getDate(); day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      const key = this.getDateKey(date);
+      const existing = store[key] ?? [];
+      const hasCompleted = existing.some((s) => s.status === 'done');
+      if (hasCompleted) continue;
+
+      const jsDay = date.getDay();
+      const dayIdx = jsDay === 0 ? 6 : jsDay - 1;
+
+      store[key] = this.buildDaySessions(dayIdx, plan, date);
+      changed = true;
+      this.pendingServerReconcileKeys.add(key);
+    }
+
+    if (changed) {
+      this.writeStore(store);
+      this.syncStoreStatuses();
+      void this.scheduleMissedChecks();
+      this.scheduleUpcomingReminders();
     }
   }
 
@@ -552,6 +608,7 @@ export class WorkoutTrackerService {
 
       // Cross-date deduplication: ensure a user workout session only exists on its authoritative server session_date
       serverSessionIdToKey.forEach((correctKey, sessionId) => {
+        if (sessionId.startsWith('plan_')) return; // Never strip template-seeded sessions across dates
         Object.keys(store).forEach((k) => {
           if (k !== correctKey && Array.isArray(store[k])) {
             const beforeLen = store[k].length;
@@ -1153,7 +1210,7 @@ export class WorkoutTrackerService {
 
     Object.keys(store).forEach((key) => {
       (store[key] ?? []).forEach((s) => {
-        if (s.id && !s.isRestDay && !s.id.startsWith('admin_class_')) {
+        if (s.id && !s.isRestDay && !s.id.startsWith('admin_class_') && !s.id.startsWith('plan_')) {
           const list = sessionKeyMap.get(s.id) ?? [];
           list.push(key);
           sessionKeyMap.set(s.id, list);
