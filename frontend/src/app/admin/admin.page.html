@@ -2342,7 +2342,7 @@
         </div>
       </div>
 
-      <!-- Audience Filter Switcher (Admin / Staff vs End-User / Member vs All) -->
+      <!-- Audience Filter Switcher (Admin / Staff vs End-User / Member) -->
       <div class="logs-audience-bar">
         <div class="audience-toggle-group">
           <button
@@ -2368,31 +2368,17 @@
             <span class="btn-text">Member &amp; User Logs</span>
             <span class="audience-pill-count">{{ memberLogsCount }}</span>
           </button>
-
-          <button
-            type="button"
-            class="audience-toggle-btn"
-            [class.active]="activityLogAudience === 'all'"
-            (click)="setActivityAudience('all')"
-            title="Show All Activity Logs"
-          >
-            <ion-icon name="layers-outline"></ion-icon>
-            <span class="btn-text">All Activities</span>
-            <span class="audience-pill-count">{{ allLogsCount }}</span>
-          </button>
         </div>
 
         <div class="audience-active-caption">
           <div class="caption-left">
             <ion-icon name="information-circle-outline"></ion-icon>
-            <span *ngIf="activityLogAudience === 'staff'">Showing audit records of Super Admins, Admins, Employees, and Coaches.</span>
-            <span *ngIf="activityLogAudience === 'member'">Showing logins, logouts, and sessions of Members &amp; End Users.</span>
-            <span *ngIf="activityLogAudience === 'all'">Showing unified activity stream across all system users and roles.</span>
+            <span *ngIf="activityLogAudience === 'staff'">Viewing audit records of Super Admins, Admins, Employees, and Coaches.</span>
+            <span *ngIf="activityLogAudience === 'member'">Viewing logins, logouts, and sessions of Members &amp; End Users.</span>
           </div>
           <span class="caption-tag">
-            <span *ngIf="activityLogAudience === 'staff'">Admin &amp; Staff Filter</span>
-            <span *ngIf="activityLogAudience === 'member'">Member Filter</span>
-            <span *ngIf="activityLogAudience === 'all'">All Records</span>
+            <span *ngIf="activityLogAudience === 'staff'">Admin &amp; Staff Mode</span>
+            <span *ngIf="activityLogAudience === 'member'">Member Mode</span>
           </span>
         </div>
       </div>
@@ -2576,8 +2562,8 @@
           <ion-icon [name]="getKpiIconName(activityLogCategoryFilter)"></ion-icon>
         </div>
         <div class="lm-title-col">
-          <h3 class="lm-title-text">Activity Records: {{ getCategoryFilterLabel() }}</h3>
-          <span class="lm-title-sub">{{ filteredActivityLogs.length }} record{{ filteredActivityLogs.length === 1 ? '' : 's' }} found</span>
+          <h3 class="lm-title-text">{{ activityLogAudience === 'staff' ? 'Admin & Staff' : 'Member & User' }} Activity Records: {{ getCategoryFilterLabel() }}</h3>
+          <span class="lm-title-sub">{{ filteredActivityLogs.length }} {{ activityLogAudience === 'staff' ? 'staff record' : 'member record' }}{{ filteredActivityLogs.length === 1 ? '' : 's' }} found</span>
         </div>
       </div>
       <div class="lm-header-actions">
@@ -2590,43 +2576,13 @@
       </div>
     </div>
 
-    <!-- Modal Filter & Search Controls -->
+    <!-- Modal Filter & Search Controls (Spacious, Uncluttered, Pure Separation) -->
     <div class="logs-modal-controls">
-      <!-- Modal Audience Segment Switcher -->
-      <div class="logs-modal-audience-tabs">
-        <button
-          type="button"
-          class="m-audience-btn"
-          [class.active]="activityLogAudience === 'staff'"
-          (click)="setActivityAudience('staff')"
-        >
-          <ion-icon name="shield-checkmark-outline"></ion-icon>
-          <span>Admin &amp; Staff ({{ staffLogsCount }})</span>
-        </button>
-        <button
-          type="button"
-          class="m-audience-btn"
-          [class.active]="activityLogAudience === 'member'"
-          (click)="setActivityAudience('member')"
-        >
-          <ion-icon name="people-outline"></ion-icon>
-          <span>Members &amp; Users ({{ memberLogsCount }})</span>
-        </button>
-        <button
-          type="button"
-          class="m-audience-btn"
-          [class.active]="activityLogAudience === 'all'"
-          (click)="setActivityAudience('all')"
-        >
-          <ion-icon name="layers-outline"></ion-icon>
-          <span>All Activities ({{ allLogsCount }})</span>
-        </button>
-      </div>
       <div class="logs-search-box">
         <ion-icon name="search-outline"></ion-icon>
         <input
           type="text"
-          placeholder="Search action, user name, username, IP, details..."
+          [placeholder]="activityLogAudience === 'staff' ? 'Search staff by name, action, IP, username...' : 'Search member by name, action, IP, username...'"
           [(ngModel)]="activityLogSearch"
         />
         <button *ngIf="activityLogSearch" class="btn-clear-search" (click)="activityLogSearch=''">
@@ -2634,29 +2590,48 @@
         </button>
       </div>
 
-      <!-- Category Pills inside Modal -->
-      <div class="logs-modal-pills">
-        <button class="pill-btn" [class.active]="activityLogCategoryFilter==='all'" (click)="activityLogCategoryFilter='all'">All Events</button>
-        <button class="pill-btn" [class.active]="activityLogCategoryFilter==='login'" (click)="activityLogCategoryFilter='login'">Logins</button>
-        <button class="pill-btn" [class.active]="activityLogCategoryFilter==='logout'" (click)="activityLogCategoryFilter='logout'">Logouts</button>
-        <button class="pill-btn" [class.active]="activityLogCategoryFilter==='auth'" (click)="activityLogCategoryFilter='auth'">Logins &amp; Logouts</button>
-        <button class="pill-btn" [class.active]="activityLogCategoryFilter==='modifications'" (click)="activityLogCategoryFilter='modifications'">Modifications</button>
-        <button class="pill-btn" [class.active]="activityLogCategoryFilter==='active_sessions'" (click)="activityLogCategoryFilter='active_sessions'">Active Sessions</button>
-        <button class="pill-btn" [class.active]="activityLogCategoryFilter==='members'" (click)="activityLogCategoryFilter='members'">Members</button>
-        <button class="pill-btn" [class.active]="activityLogCategoryFilter==='inventory'" (click)="activityLogCategoryFilter='inventory'">Inventory</button>
-        <button class="pill-btn" [class.active]="activityLogCategoryFilter==='equipment'" (click)="activityLogCategoryFilter='equipment'">Equipment</button>
-        <button class="pill-btn" [class.active]="activityLogCategoryFilter==='attendance'" (click)="activityLogCategoryFilter='attendance'">Attendance</button>
+      <!-- Category Pills: Admin & Staff View -->
+      <div class="logs-modal-pills" *ngIf="activityLogAudience === 'staff'">
+        <button type="button" class="pill-btn" [class.active]="activityLogCategoryFilter==='all'" (click)="activityLogCategoryFilter='all'">
+          <ion-icon name="apps-outline"></ion-icon>
+          <span>All Events</span>
+        </button>
+        <button type="button" class="pill-btn" [class.active]="activityLogCategoryFilter==='login'" (click)="activityLogCategoryFilter='login'">
+          <ion-icon name="log-in-outline"></ion-icon>
+          <span>Logins</span>
+        </button>
+        <button type="button" class="pill-btn" [class.active]="activityLogCategoryFilter==='logout'" (click)="activityLogCategoryFilter='logout'">
+          <ion-icon name="log-out-outline"></ion-icon>
+          <span>Logouts</span>
+        </button>
+        <button type="button" class="pill-btn" [class.active]="activityLogCategoryFilter==='modifications'" (click)="activityLogCategoryFilter='modifications'">
+          <ion-icon name="create-outline"></ion-icon>
+          <span>Modifications</span>
+        </button>
+        <button type="button" class="pill-btn" [class.active]="activityLogCategoryFilter==='active_sessions'" (click)="activityLogCategoryFilter='active_sessions'">
+          <ion-icon name="pulse-outline"></ion-icon>
+          <span>Active Sessions</span>
+        </button>
       </div>
 
-      <!-- Staff Selector -->
-      <div class="staff-selector-wrap" *ngIf="activityLogStaffList.length > 0">
-        <label class="staff-select-label">User / Staff:</label>
-        <select class="staff-select" [(ngModel)]="activityLogStaffFilter">
-          <option value="all">All Users &amp; Staff</option>
-          <option *ngFor="let s of activityLogStaffList" [value]="s.id">
-            {{ s.first_name ? s.first_name + ' ' + s.last_name : (s.name || s.username) }} ({{ s.role }})
-          </option>
-        </select>
+      <!-- Category Pills: Member & User View -->
+      <div class="logs-modal-pills" *ngIf="activityLogAudience === 'member'">
+        <button type="button" class="pill-btn" [class.active]="activityLogCategoryFilter==='all'" (click)="activityLogCategoryFilter='all'">
+          <ion-icon name="apps-outline"></ion-icon>
+          <span>All Events</span>
+        </button>
+        <button type="button" class="pill-btn" [class.active]="activityLogCategoryFilter==='login'" (click)="activityLogCategoryFilter='login'">
+          <ion-icon name="log-in-outline"></ion-icon>
+          <span>Logins</span>
+        </button>
+        <button type="button" class="pill-btn" [class.active]="activityLogCategoryFilter==='logout'" (click)="activityLogCategoryFilter='logout'">
+          <ion-icon name="log-out-outline"></ion-icon>
+          <span>Logouts</span>
+        </button>
+        <button type="button" class="pill-btn" [class.active]="activityLogCategoryFilter==='active_sessions'" (click)="activityLogCategoryFilter='active_sessions'">
+          <ion-icon name="pulse-outline"></ion-icon>
+          <span>Active Sessions</span>
+        </button>
       </div>
     </div>
 

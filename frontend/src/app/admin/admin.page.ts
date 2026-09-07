@@ -2620,10 +2620,11 @@ export class AdminPage implements OnInit, OnDestroy {
   activityLogStaffFilter: string = 'all';
   selectedActivityLog: any = null;
   showActivityLogsModal = false;
-  activityLogAudience: 'staff' | 'member' | 'all' = 'staff';
+  activityLogAudience: 'staff' | 'member' = 'staff';
 
-  setActivityAudience(audience: 'staff' | 'member' | 'all'): void {
+  setActivityAudience(audience: 'staff' | 'member'): void {
     this.activityLogAudience = audience;
+    this.activityLogCategoryFilter = 'all';
   }
 
   isStaffRole(role: string): boolean {
@@ -2660,7 +2661,6 @@ export class AdminPage implements OnInit, OnDestroy {
   }
 
   get currentAudienceLogs(): any[] {
-    if (this.activityLogAudience === 'all') return this.activityLogs;
     if (this.activityLogAudience === 'staff') return this.activityLogs.filter(l => this.isStaffLog(l));
     return this.activityLogs.filter(l => this.isMemberLog(l));
   }
@@ -2704,16 +2704,6 @@ export class AdminPage implements OnInit, OnDestroy {
       } else {
         if (inToday) modificationsToday++;
       }
-    }
-
-    if (this.activityLogAudience === 'all') {
-      return {
-        total_today: Math.max(loginsToday + logoutsToday + modificationsToday, this.activityLogStats.total_today || 0),
-        logins_today: Math.max(loginsToday, this.activityLogStats.logins_today || 0),
-        logouts_today: Math.max(logoutsToday, this.activityLogStats.logouts_today || 0),
-        modifications_today: Math.max(modificationsToday, this.activityLogStats.modifications_today || 0),
-        active_sessions: Math.max(activeSessions, this.activityLogStats.active_sessions || 0)
-      };
     }
 
     return {
@@ -2774,11 +2764,9 @@ export class AdminPage implements OnInit, OnDestroy {
         ? true
         : String(log.user_id) === String(this.activityLogStaffFilter);
 
-      const matchAudience = this.activityLogAudience === 'all'
-        ? true
-        : this.activityLogAudience === 'staff'
-          ? this.isStaffLog(log)
-          : this.isMemberLog(log);
+      const matchAudience = this.activityLogAudience === 'staff'
+        ? this.isStaffLog(log)
+        : this.isMemberLog(log);
 
       return matchSearch && matchCategory && matchStaff && matchAudience;
     });

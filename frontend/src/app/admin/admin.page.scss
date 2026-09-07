@@ -5565,8 +5565,8 @@ input[type="time"],
 
   .audience-toggle-group {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
     background: #f1f5f9;
     border: 1.5px solid #e2e8f0;
     border-radius: 14px;
@@ -5716,63 +5716,6 @@ input[type="time"],
 
       .caption-tag {
         align-self: flex-start;
-      }
-    }
-  }
-}
-
-/* Modal Audience Tabs */
-.logs-modal-audience-tabs {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-  background: #f1f5f9;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 5px;
-  margin-bottom: 12px;
-  width: 100%;
-
-  @media (max-width: 640px) {
-    grid-template-columns: 1fr;
-  }
-
-  .m-audience-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 700;
-    background: transparent;
-    border: 1px solid transparent;
-    color: #475569;
-    cursor: pointer;
-    transition: all 0.18s ease;
-    width: 100%;
-
-    ion-icon {
-      font-size: 15px;
-      display: inline-block;
-      color: #64748b;
-    }
-
-    &:hover:not(.active) {
-      background: #ffffff;
-      color: #0f172a;
-      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
-    }
-
-    &.active {
-      background: #0f172a;
-      border-color: #0f172a;
-      color: #ffffff;
-      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.16);
-
-      ion-icon {
-        color: #fde047;
       }
     }
   }
@@ -6861,39 +6804,85 @@ input[type="time"],
   }
 
   .logs-modal-controls {
-    padding: 14px 22px;
+    padding: 16px 24px;
     background: #ffffff;
     border-bottom: 1px solid #e2e8f0;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     flex-shrink: 0;
+
+    .logs-search-box {
+      width: 100%;
+
+      input {
+        background: #f8fafc;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 11px 44px 11px 40px;
+        font-size: 13.5px;
+        color: #0f172a;
+        transition: all 0.18s ease;
+
+        &:focus {
+          background: #ffffff;
+          border-color: #0f172a;
+          box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+        }
+
+        &::placeholder {
+          color: #94a3b8;
+          font-weight: 500;
+        }
+      }
+    }
 
     .logs-modal-pills {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
+      align-items: center;
+      gap: 8px;
 
       .pill-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
         background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 20px;
-        padding: 5px 12px;
-        font-size: 12px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 7px 14px;
+        font-size: 12.5px;
         font-weight: 700;
         color: #475569;
         cursor: pointer;
-        transition: all 0.15s ease;
+        transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+
+        ion-icon {
+          font-size: 15px;
+          color: #64748b;
+          transition: color 0.18s ease;
+        }
 
         &:hover {
           background: #f1f5f9;
+          border-color: #cbd5e1;
           color: #0f172a;
+          transform: translateY(-1px);
+
+          ion-icon {
+            color: #0f172a;
+          }
         }
 
         &.active {
           background: #0f172a;
           color: #ffffff;
           border-color: #0f172a;
+          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
+
+          ion-icon {
+            color: #fde047;
+          }
         }
       }
     }
