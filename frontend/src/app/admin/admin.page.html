@@ -2334,11 +2334,59 @@
       <div class="panel-section-header">
         <div>
           <h2 class="panel-section-title">
-            <ion-icon name="shield-checkmark-outline"></ion-icon> Staff Activity Logs
+            <ion-icon name="shield-checkmark-outline"></ion-icon> Activity Logs
           </h2>
           <p class="panel-section-sub">
-            Real-time audit trail of staff logins, logouts, session durations, and system data modifications.
+            Comprehensive audit trail and activity monitoring across administrative staff and member accounts.
           </p>
+        </div>
+      </div>
+
+      <!-- Audience Filter Switcher (Admin / Staff vs End-User / Member vs All) -->
+      <div class="logs-audience-bar">
+        <div class="audience-toggle-group">
+          <button
+            type="button"
+            class="audience-toggle-btn"
+            [class.active]="activityLogAudience === 'staff'"
+            (click)="setActivityAudience('staff')"
+            title="Show Admin & Staff Activity Logs only"
+          >
+            <ion-icon name="shield-checkmark-outline"></ion-icon>
+            <span class="btn-text">Admin &amp; Staff Logs</span>
+            <span class="audience-pill-count">{{ staffLogsCount }}</span>
+          </button>
+
+          <button
+            type="button"
+            class="audience-toggle-btn"
+            [class.active]="activityLogAudience === 'member'"
+            (click)="setActivityAudience('member')"
+            title="Show Member & End-User Activity Logs only"
+          >
+            <ion-icon name="people-outline"></ion-icon>
+            <span class="btn-text">Member &amp; User Logs</span>
+            <span class="audience-pill-count">{{ memberLogsCount }}</span>
+          </button>
+
+          <button
+            type="button"
+            class="audience-toggle-btn"
+            [class.active]="activityLogAudience === 'all'"
+            (click)="setActivityAudience('all')"
+            title="Show All Activity Logs"
+          >
+            <ion-icon name="layers-outline"></ion-icon>
+            <span class="btn-text">All Activities</span>
+            <span class="audience-pill-count">{{ allLogsCount }}</span>
+          </button>
+        </div>
+
+        <div class="audience-active-caption">
+          <ion-icon name="information-circle-outline"></ion-icon>
+          <span *ngIf="activityLogAudience === 'staff'">Viewing audit logs for Super Admins, Admins, Employees, and Coaches.</span>
+          <span *ngIf="activityLogAudience === 'member'">Viewing activity logs for gym Members and End Users.</span>
+          <span *ngIf="activityLogAudience === 'all'">Viewing combined activity stream across all system users.</span>
         </div>
       </div>
 
@@ -2358,7 +2406,7 @@
             <span class="kpi-badge" *ngIf="activityLogCategoryFilter === 'all'">Active</span>
           </div>
           <div class="kpi-card-body">
-            <div class="kpi-val">{{ activityLogStats.total_today }}</div>
+            <div class="kpi-val">{{ currentAudienceStats.total_today }}</div>
             <div class="kpi-label">Total Events</div>
           </div>
         </button>
@@ -2378,7 +2426,7 @@
             <span class="kpi-badge" *ngIf="activityLogCategoryFilter === 'login'">Active</span>
           </div>
           <div class="kpi-card-body">
-            <div class="kpi-val">{{ activityLogStats.logins_today }}</div>
+            <div class="kpi-val">{{ currentAudienceStats.logins_today }}</div>
             <div class="kpi-label">Logins Today</div>
           </div>
         </button>
@@ -2398,7 +2446,7 @@
             <span class="kpi-badge" *ngIf="activityLogCategoryFilter === 'logout'">Active</span>
           </div>
           <div class="kpi-card-body">
-            <div class="kpi-val">{{ activityLogStats.logouts_today || 0 }}</div>
+            <div class="kpi-val">{{ currentAudienceStats.logouts_today || 0 }}</div>
             <div class="kpi-label">Logouts Today</div>
           </div>
         </button>
@@ -2418,7 +2466,7 @@
             <span class="kpi-badge" *ngIf="activityLogCategoryFilter === 'modifications'">Active</span>
           </div>
           <div class="kpi-card-body">
-            <div class="kpi-val">{{ activityLogStats.modifications_today }}</div>
+            <div class="kpi-val">{{ currentAudienceStats.modifications_today }}</div>
             <div class="kpi-label">Modifications</div>
           </div>
         </button>
@@ -2438,7 +2486,7 @@
             <span class="kpi-badge" *ngIf="activityLogCategoryFilter === 'active_sessions'">Active</span>
           </div>
           <div class="kpi-card-body">
-            <div class="kpi-val">{{ activityLogStats.active_sessions }}</div>
+            <div class="kpi-val">{{ currentAudienceStats.active_sessions }}</div>
             <div class="kpi-label">Active Sessions</div>
           </div>
         </button>
@@ -2449,7 +2497,7 @@
         <div class="logs-hub-header">
           <div class="hub-title-group">
             <div class="hub-icon-badge">
-              <ion-icon name="shield-checkmark"></ion-icon>
+              <ion-icon name="shield-checkmark-outline"></ion-icon>
             </div>
             <div>
               <h3 class="hub-title">Audit Trail &amp; Activity Explorer</h3>
@@ -2457,7 +2505,7 @@
             </div>
           </div>
           <button type="button" class="btn-refresh-logs-hub" (click)="loadActivityLogs()" [disabled]="activityLogsLoading" title="Refresh activity logs">
-            <ion-icon name="reload-outline" [class.spinning]="activityLogsLoading"></ion-icon>
+            <ion-icon name="refresh-outline" [class.spinning]="activityLogsLoading"></ion-icon>
             <span>Refresh Records</span>
           </button>
         </div>
@@ -2465,40 +2513,40 @@
         <div class="logs-hub-actions">
           <button type="button" class="btn-primary-hub" (click)="openActivityLogsModal('all')">
             <ion-icon name="albums-outline"></ion-icon>
-            <span>Browse All Activity Records ({{ activityLogs.length }})</span>
+            <span>Browse All Activity Records ({{ currentAudienceLogs.length }})</span>
           </button>
           <div class="logs-quick-shortcuts">
             <button type="button" class="btn-shortcut" (click)="openActivityLogsModal('login')">
               <ion-icon name="log-in-outline"></ion-icon>
-              <span>Logins ({{ activityLogStats.logins_today || 0 }})</span>
+              <span>Logins ({{ currentAudienceStats.logins_today || 0 }})</span>
             </button>
             <button type="button" class="btn-shortcut" (click)="openActivityLogsModal('logout')">
               <ion-icon name="log-out-outline"></ion-icon>
-              <span>Logouts ({{ activityLogStats.logouts_today || 0 }})</span>
+              <span>Logouts ({{ currentAudienceStats.logouts_today || 0 }})</span>
             </button>
             <button type="button" class="btn-shortcut" (click)="openActivityLogsModal('modifications')">
               <ion-icon name="create-outline"></ion-icon>
-              <span>Modifications ({{ activityLogStats.modifications_today || 0 }})</span>
+              <span>Modifications ({{ currentAudienceStats.modifications_today || 0 }})</span>
             </button>
             <button type="button" class="btn-shortcut" (click)="openActivityLogsModal('active_sessions')">
               <ion-icon name="radio-outline"></ion-icon>
-              <span>Active Sessions ({{ activityLogStats.active_sessions || 0 }})</span>
+              <span>Active Sessions ({{ currentAudienceStats.active_sessions || 0 }})</span>
             </button>
           </div>
         </div>
 
         <!-- Latest Event Highlight Preview (Single item, compact & clean) -->
-        <div class="latest-event-banner" *ngIf="activityLogs.length > 0">
+        <div class="latest-event-banner" *ngIf="latestAudienceLog">
           <div class="leb-badge">LATEST RECORD</div>
           <div class="leb-content">
             <div class="leb-actor">
-              <span class="leb-name">{{ getLogActorName(activityLogs[0]) }}</span>
-              <span class="leb-role">{{ getLogRoleLabel(activityLogs[0]) }}</span>
-              <span class="leb-time">{{ formatNotifDate(activityLogs[0].created_at) }}</span>
+              <span class="leb-name">{{ getLogActorName(latestAudienceLog) }}</span>
+              <span class="leb-role">{{ getLogRoleLabel(latestAudienceLog) }}</span>
+              <span class="leb-time">{{ formatNotifDate(latestAudienceLog.created_at) }}</span>
             </div>
-            <div class="leb-title">{{ cleanLogTitle(activityLogs[0]) }}</div>
+            <div class="leb-title">{{ cleanLogTitle(latestAudienceLog) }}</div>
           </div>
-          <button type="button" class="btn-inspect-latest" (click)="viewActivityPayload(activityLogs[0])" title="View details">
+          <button type="button" class="btn-inspect-latest" (click)="viewActivityPayload(latestAudienceLog)" title="View details">
             <ion-icon name="open-outline"></ion-icon>
             <span>Inspect</span>
           </button>
@@ -2527,7 +2575,7 @@
       </div>
       <div class="lm-header-actions">
         <button type="button" class="btn-modal-refresh" (click)="loadActivityLogs()" [disabled]="activityLogsLoading" title="Refresh">
-          <ion-icon name="reload-outline" [class.spinning]="activityLogsLoading"></ion-icon>
+          <ion-icon name="refresh-outline" [class.spinning]="activityLogsLoading"></ion-icon>
         </button>
         <button type="button" class="btn-close-logs-modal" (click)="closeActivityLogsModal()" title="Close explorer">
           <ion-icon name="close-outline"></ion-icon>
@@ -2537,6 +2585,36 @@
 
     <!-- Modal Filter & Search Controls -->
     <div class="logs-modal-controls">
+      <!-- Modal Audience Segment Switcher -->
+      <div class="logs-modal-audience-tabs">
+        <button
+          type="button"
+          class="m-audience-btn"
+          [class.active]="activityLogAudience === 'staff'"
+          (click)="setActivityAudience('staff')"
+        >
+          <ion-icon name="shield-checkmark-outline"></ion-icon>
+          <span>Admin &amp; Staff ({{ staffLogsCount }})</span>
+        </button>
+        <button
+          type="button"
+          class="m-audience-btn"
+          [class.active]="activityLogAudience === 'member'"
+          (click)="setActivityAudience('member')"
+        >
+          <ion-icon name="people-outline"></ion-icon>
+          <span>Members &amp; Users ({{ memberLogsCount }})</span>
+        </button>
+        <button
+          type="button"
+          class="m-audience-btn"
+          [class.active]="activityLogAudience === 'all'"
+          (click)="setActivityAudience('all')"
+        >
+          <ion-icon name="layers-outline"></ion-icon>
+          <span>All Activities ({{ allLogsCount }})</span>
+        </button>
+      </div>
       <div class="logs-search-box">
         <ion-icon name="search-outline"></ion-icon>
         <input

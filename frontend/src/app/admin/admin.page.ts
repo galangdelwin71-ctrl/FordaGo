@@ -43,6 +43,7 @@ import {
   starOutline,
   chatbubbleEllipsesOutline,
   shieldCheckmarkOutline,
+  shieldCheckmark,
   sparklesOutline,
   flashOutline,
   cashOutline,
@@ -72,6 +73,15 @@ import {
   sparkles,
   timerOutline,
   todayOutline,
+  shieldOutline,
+  reloadOutline,
+  albumsOutline,
+  radioOutline,
+  openOutline,
+  swapHorizontalOutline,
+  caretForwardCircleOutline,
+  arrowForwardOutline,
+  gitCompareOutline,
 } from 'ionicons/icons';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -1057,6 +1067,7 @@ export class AdminPage implements OnInit, OnDestroy {
       starOutline,
       chatbubbleEllipsesOutline,
       shieldCheckmarkOutline,
+      shieldCheckmark,
       sparklesOutline,
       flashOutline,
       cashOutline,
@@ -1086,6 +1097,15 @@ export class AdminPage implements OnInit, OnDestroy {
       sparkles,
       timerOutline,
       todayOutline,
+      shieldOutline,
+      reloadOutline,
+      albumsOutline,
+      radioOutline,
+      openOutline,
+      swapHorizontalOutline,
+      caretForwardCircleOutline,
+      arrowForwardOutline,
+      gitCompareOutline,
     });
   }
 
@@ -2600,6 +2620,115 @@ export class AdminPage implements OnInit, OnDestroy {
   activityLogStaffFilter: string = 'all';
   selectedActivityLog: any = null;
   showActivityLogsModal = false;
+  activityLogAudience: 'staff' | 'member' | 'all' = 'staff';
+
+  setActivityAudience(audience: 'staff' | 'member' | 'all'): void {
+    this.activityLogAudience = audience;
+  }
+
+  isStaffRole(role: string): boolean {
+    const r = (role || '').toLowerCase();
+    return ['super_admin', 'admin', 'employee', 'staff', 'coach'].includes(r);
+  }
+
+  isStaffLog(log: any): boolean {
+    if (!log) return false;
+    const role = (log.role || log.user?.role || '').toLowerCase();
+    if (this.isStaffRole(role)) return true;
+
+    const action = (log.action || log.action_type || '').toLowerCase();
+    if (
+      action.includes('inventory') ||
+      action.includes('equipment') ||
+      action.includes('product') ||
+      action.includes('member_approval') ||
+      action.includes('member_reject') ||
+      action.includes('member_update') ||
+      action.includes('create_member') ||
+      action.includes('delete_member') ||
+      action.includes('approve_order') ||
+      action.includes('coach')
+    ) {
+      return true;
+    }
+    return false;
+  }
+
+  isMemberLog(log: any): boolean {
+    if (!log) return false;
+    return !this.isStaffLog(log);
+  }
+
+  get currentAudienceLogs(): any[] {
+    if (this.activityLogAudience === 'all') return this.activityLogs;
+    if (this.activityLogAudience === 'staff') return this.activityLogs.filter(l => this.isStaffLog(l));
+    return this.activityLogs.filter(l => this.isMemberLog(l));
+  }
+
+  get staffLogsCount(): number {
+    return this.activityLogs.filter(l => this.isStaffLog(l)).length;
+  }
+
+  get memberLogsCount(): number {
+    return this.activityLogs.filter(l => this.isMemberLog(l)).length;
+  }
+
+  get allLogsCount(): number {
+    return this.activityLogs.length;
+  }
+
+  get currentAudienceStats(): { total_today: number; logins_today: number; logouts_today: number; modifications_today: number; active_sessions: number } {
+    const logs = this.currentAudienceLogs;
+    const now = new Date();
+    const todayStr = now.toISOString().slice(0, 10);
+
+    const isToday = (dateStr: string | null | undefined) => {
+      if (!dateStr) return false;
+      return String(dateStr).slice(0, 10) === todayStr;
+    };
+
+    let loginsToday = 0;
+    let logoutsToday = 0;
+    let modificationsToday = 0;
+    let activeSessions = 0;
+
+    for (const l of logs) {
+      const action = (l.action || l.action_type || '').toLowerCase();
+      const inToday = isToday(l.created_at) || isToday(l.login_at);
+
+      if (action === 'login') {
+        if (inToday) loginsToday++;
+        if (l.is_active_session) activeSessions++;
+      } else if (action === 'logout') {
+        if (inToday || isToday(l.logout_at)) logoutsToday++;
+      } else {
+        if (inToday) modificationsToday++;
+      }
+    }
+
+    if (this.activityLogAudience === 'all') {
+      return {
+        total_today: Math.max(loginsToday + logoutsToday + modificationsToday, this.activityLogStats.total_today || 0),
+        logins_today: Math.max(loginsToday, this.activityLogStats.logins_today || 0),
+        logouts_today: Math.max(logoutsToday, this.activityLogStats.logouts_today || 0),
+        modifications_today: Math.max(modificationsToday, this.activityLogStats.modifications_today || 0),
+        active_sessions: Math.max(activeSessions, this.activityLogStats.active_sessions || 0)
+      };
+    }
+
+    return {
+      total_today: loginsToday + logoutsToday + modificationsToday,
+      logins_today: loginsToday,
+      logouts_today: logoutsToday,
+      modifications_today: modificationsToday,
+      active_sessions: activeSessions
+    };
+  }
+
+  get latestAudienceLog(): any {
+    const logs = this.currentAudienceLogs;
+    return logs.length > 0 ? logs[0] : null;
+  }
 
   get filteredActivityLogs(): any[] {
     const q = (this.activityLogSearch || '').trim().toLowerCase();
@@ -2645,7 +2774,13 @@ export class AdminPage implements OnInit, OnDestroy {
         ? true
         : String(log.user_id) === String(this.activityLogStaffFilter);
 
-      return matchSearch && matchCategory && matchStaff;
+      const matchAudience = this.activityLogAudience === 'all'
+        ? true
+        : this.activityLogAudience === 'staff'
+          ? this.isStaffLog(log)
+          : this.isMemberLog(log);
+
+      return matchSearch && matchCategory && matchStaff && matchAudience;
     });
   }
 
