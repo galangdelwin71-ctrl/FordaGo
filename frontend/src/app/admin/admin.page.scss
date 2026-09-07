@@ -5561,8 +5561,19 @@ input[type="time"],
   gap: 10px;
   margin-bottom: 14px;
 
-  @media (min-width: 768px) {
-    grid-template-columns: repeat(4, 1fr);
+  @media (max-width: 575px) {
+    .log-kpi-card:last-child {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (min-width: 576px) and (max-width: 991px) {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  @media (min-width: 992px) {
+    grid-template-columns: repeat(5, 1fr);
     gap: 14px;
   }
 }
@@ -5655,6 +5666,10 @@ input[type="time"],
     &.icon-login {
       background: #f0fdf4;
       color: #16a34a;
+    }
+    &.icon-logout {
+      background: #faf5ff;
+      color: #7c3aed;
     }
     &.icon-mod {
       background: #fffbeb;

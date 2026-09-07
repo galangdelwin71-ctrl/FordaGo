@@ -2593,10 +2593,10 @@ export class AdminPage implements OnInit, OnDestroy {
   activityLogs: any[] = [];
   activityLogsLoading = false;
   activityLogsError = false;
-  activityLogStats = { total_today: 0, logins_today: 0, modifications_today: 0, active_sessions: 0 };
+  activityLogStats = { total_today: 0, logins_today: 0, logouts_today: 0, modifications_today: 0, active_sessions: 0 };
   activityLogStaffList: any[] = [];
   activityLogSearch = '';
-  activityLogCategoryFilter: 'all' | 'auth' | 'modifications' | 'active_sessions' | 'members' | 'inventory' | 'equipment' | 'attendance' = 'all';
+  activityLogCategoryFilter: 'all' | 'auth' | 'login' | 'logout' | 'modifications' | 'active_sessions' | 'members' | 'inventory' | 'equipment' | 'attendance' = 'all';
   activityLogStaffFilter: string = 'all';
   selectedActivityLog: any = null;
 
@@ -2622,19 +2622,23 @@ export class AdminPage implements OnInit, OnDestroy {
         ? true
         : this.activityLogCategoryFilter === 'auth'
           ? (action === 'login' || action === 'logout')
-          : this.activityLogCategoryFilter === 'modifications'
-            ? (action !== 'login' && action !== 'logout')
-            : this.activityLogCategoryFilter === 'active_sessions'
-              ? (log.is_active_session === true)
-              : this.activityLogCategoryFilter === 'members'
-                ? (action.includes('member') || action.includes('user') || entity === 'user')
-                : this.activityLogCategoryFilter === 'inventory'
-                  ? (action.includes('inventory') || action.includes('product') || action.includes('order') || entity === 'product')
-                  : this.activityLogCategoryFilter === 'equipment'
-                    ? (action.includes('equipment') || entity === 'equipment')
-                    : this.activityLogCategoryFilter === 'attendance'
-                      ? (action.includes('attendance') || entity === 'attendance')
-                      : true;
+          : this.activityLogCategoryFilter === 'login'
+            ? (action === 'login')
+            : this.activityLogCategoryFilter === 'logout'
+              ? (action === 'logout')
+              : this.activityLogCategoryFilter === 'modifications'
+                ? (action !== 'login' && action !== 'logout')
+                : this.activityLogCategoryFilter === 'active_sessions'
+                  ? (log.is_active_session === true)
+                  : this.activityLogCategoryFilter === 'members'
+                    ? (action.includes('member') || action.includes('user') || entity === 'user')
+                    : this.activityLogCategoryFilter === 'inventory'
+                      ? (action.includes('inventory') || action.includes('product') || action.includes('order') || entity === 'product')
+                      : this.activityLogCategoryFilter === 'equipment'
+                        ? (action.includes('equipment') || entity === 'equipment')
+                        : this.activityLogCategoryFilter === 'attendance'
+                          ? (action.includes('attendance') || entity === 'attendance')
+                          : true;
 
       const matchStaff = this.activityLogStaffFilter === 'all'
         ? true
@@ -2644,7 +2648,7 @@ export class AdminPage implements OnInit, OnDestroy {
     });
   }
 
-  filterLogsByKpi(category: 'all' | 'auth' | 'modifications' | 'active_sessions' | 'members' | 'inventory' | 'equipment' | 'attendance'): void {
+  filterLogsByKpi(category: 'all' | 'auth' | 'login' | 'logout' | 'modifications' | 'active_sessions' | 'members' | 'inventory' | 'equipment' | 'attendance'): void {
     if (this.activityLogCategoryFilter === category && category !== 'all') {
       this.activityLogCategoryFilter = 'all';
     } else {
@@ -2662,6 +2666,8 @@ export class AdminPage implements OnInit, OnDestroy {
   getCategoryFilterLabel(): string {
     switch (this.activityLogCategoryFilter) {
       case 'auth': return 'Logins & Logouts';
+      case 'login': return 'User Logins';
+      case 'logout': return 'Account Logouts';
       case 'modifications': return 'System Modifications';
       case 'active_sessions': return 'Active Sessions';
       case 'members': return 'Members & Users';

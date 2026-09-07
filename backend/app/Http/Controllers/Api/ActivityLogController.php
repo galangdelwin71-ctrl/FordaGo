@@ -45,6 +45,10 @@ class ActivityLogController extends Controller
                 $query->whereIn('id', !empty($activeLogIds) ? $activeLogIds : [0]);
             } elseif ($actionType === 'auth') {
                 $query->whereIn('action_type', ['login', 'logout']);
+            } elseif ($actionType === 'login') {
+                $query->where('action_type', 'login');
+            } elseif ($actionType === 'logout') {
+                $query->where('action_type', 'logout');
             } elseif ($actionType === 'member' || $actionType === 'members') {
                 $query->where(function($q) {
                     $q->whereIn('action_type', ['member_approval', 'member_reject', 'member_update', 'attendance_checkin'])
@@ -189,6 +193,10 @@ class ActivityLogController extends Controller
             ->whereBetween('created_at', [$todayStart, $todayEnd])
             ->count();
 
+        $logoutsToday = ActivityLog::where('action_type', 'logout')
+            ->whereBetween('created_at', [$todayStart, $todayEnd])
+            ->count();
+
         $modificationsToday = ActivityLog::whereNotIn('action_type', ['login', 'logout'])
             ->whereBetween('created_at', [$todayStart, $todayEnd])
             ->count();
@@ -211,11 +219,12 @@ class ActivityLogController extends Controller
                 ];
             });
 
-        $totalToday = $loginsToday + $modificationsToday;
+        $totalToday = $loginsToday + $logoutsToday + $modificationsToday;
 
         $statsPayload = [
             'total_today'         => $totalToday,
             'logins_today'        => $loginsToday,
+            'logouts_today'       => $logoutsToday,
             'modifications_today' => $modificationsToday,
             'active_sessions'     => $activeCount,
             'active_log_ids'      => $activeLogIds,

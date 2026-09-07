@@ -2363,18 +2363,19 @@
           </div>
         </button>
 
+        <!-- KPI Card 2: Logins Today -->
         <button
           type="button"
           class="log-kpi-card"
-          [class.active-kpi]="activityLogCategoryFilter === 'auth'"
-          (click)="filterLogsByKpi('auth')"
-          title="Filter by Logins & Logouts"
+          [class.active-kpi]="activityLogCategoryFilter === 'login'"
+          (click)="filterLogsByKpi('login')"
+          title="Filter by Logins Today"
         >
           <div class="kpi-card-head">
             <div class="kpi-icon-wrap icon-login">
               <ion-icon name="log-in-outline"></ion-icon>
             </div>
-            <span class="kpi-badge" *ngIf="activityLogCategoryFilter === 'auth'">Active</span>
+            <span class="kpi-badge" *ngIf="activityLogCategoryFilter === 'login'">Active</span>
           </div>
           <div class="kpi-card-body">
             <div class="kpi-val">{{ activityLogStats.logins_today }}</div>
@@ -2382,6 +2383,27 @@
           </div>
         </button>
 
+        <!-- KPI Card 3: Logouts Today -->
+        <button
+          type="button"
+          class="log-kpi-card"
+          [class.active-kpi]="activityLogCategoryFilter === 'logout'"
+          (click)="filterLogsByKpi('logout')"
+          title="Filter by Logouts Today"
+        >
+          <div class="kpi-card-head">
+            <div class="kpi-icon-wrap icon-logout">
+              <ion-icon name="log-out-outline"></ion-icon>
+            </div>
+            <span class="kpi-badge" *ngIf="activityLogCategoryFilter === 'logout'">Active</span>
+          </div>
+          <div class="kpi-card-body">
+            <div class="kpi-val">{{ activityLogStats.logouts_today || 0 }}</div>
+            <div class="kpi-label">Logouts Today</div>
+          </div>
+        </button>
+
+        <!-- KPI Card 4: Modifications -->
         <button
           type="button"
           class="log-kpi-card"
@@ -2401,6 +2423,7 @@
           </div>
         </button>
 
+        <!-- KPI Card 5: Active Sessions -->
         <button
           type="button"
           class="log-kpi-card"
@@ -2458,6 +2481,20 @@
               (click)="filterLogsByKpi('all')"
             >
               All Events
+            </button>
+            <button
+              class="pill-btn"
+              [class.active]="activityLogCategoryFilter==='login'"
+              (click)="filterLogsByKpi('login')"
+            >
+              Logins
+            </button>
+            <button
+              class="pill-btn"
+              [class.active]="activityLogCategoryFilter==='logout'"
+              (click)="filterLogsByKpi('logout')"
+            >
+              Logouts
             </button>
             <button
               class="pill-btn"
