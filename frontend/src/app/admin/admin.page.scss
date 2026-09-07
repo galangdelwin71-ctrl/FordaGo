@@ -6804,12 +6804,12 @@ input[type="time"],
   }
 
   .logs-modal-controls {
-    padding: 16px 24px;
+    padding: 12px 20px;
     background: #ffffff;
     border-bottom: 1px solid #e2e8f0;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 9px;
     flex-shrink: 0;
 
     .logs-search-box {
@@ -6818,9 +6818,9 @@ input[type="time"],
       input {
         background: #f8fafc;
         border: 1.5px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 11px 44px 11px 40px;
-        font-size: 13.5px;
+        border-radius: 10px;
+        padding: 9px 40px 9px 38px;
+        font-size: 13px;
         color: #0f172a;
         transition: all 0.18s ease;
 
@@ -6839,28 +6839,38 @@ input[type="time"],
 
     .logs-modal-pills {
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
+      padding: 2px 0 4px;
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
 
       .pill-btn {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
+        gap: 5px;
+        flex-shrink: 0;
+        white-space: nowrap;
         background: #f8fafc;
-        border: 1.5px solid #e2e8f0;
-        border-radius: 10px;
-        padding: 7px 14px;
-        font-size: 12.5px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 5px 11px;
+        font-size: 11.5px;
         font-weight: 700;
         color: #475569;
         cursor: pointer;
-        transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
 
         ion-icon {
-          font-size: 15px;
+          font-size: 13.5px;
           color: #64748b;
-          transition: color 0.18s ease;
+          transition: color 0.16s ease;
         }
 
         &:hover {
@@ -6878,7 +6888,7 @@ input[type="time"],
           background: #0f172a;
           color: #ffffff;
           border-color: #0f172a;
-          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
+          box-shadow: 0 3px 8px rgba(15, 23, 42, 0.16);
 
           ion-icon {
             color: #fde047;
