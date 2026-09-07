@@ -275,9 +275,7 @@ class AuthController extends Controller
 
         $token = $user->createToken('api')->plainTextToken;
 
-        if ($isStaffRole) {
-            ActivityLogger::logLogin($user, $request);
-        }
+        ActivityLogger::logLogin($user, $request);
 
         return response()->json([
             'token' => $token,
@@ -309,9 +307,7 @@ class AuthController extends Controller
     {
         $user = $request->user();
         if ($user) {
-            if (in_array($user->role, ['admin', 'super_admin', 'employee'], true)) {
-                ActivityLogger::logLogout($user, $request);
-            }
+            ActivityLogger::logLogout($user, $request);
             $user->currentAccessToken()?->delete();
         }
 

@@ -90,26 +90,34 @@ class ActivityLogger
     }
 
     /**
-     * Log staff login with timestamp and device details.
+     * Log user, coach, or staff login with timestamp and device details.
      */
     public static function logLogin(User $user, Request $request): ?ActivityLog
     {
         try {
-            if (!in_array($user->role, ['admin', 'super_admin', 'employee'])) {
-                return null;
-            }
-
             $fullName = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
             if (!$fullName) {
-                $fullName = $user->username ?? 'Administrator';
+                $fullName = $user->username ?? 'User';
             }
 
-            $roleLabel = match($user->role) {
-                'super_admin' => 'Super Admin',
-                'admin'       => 'Admin',
-                'employee'    => 'Employee',
-                default       => ucfirst($user->role ?? 'Staff'),
+            $role = $user->role ?? 'user';
+            $roleLabel = match($role) {
+                'super_admin'    => 'Super Admin',
+                'admin'          => 'Admin',
+                'employee'       => 'Staff FrontDesk',
+                'coach'          => 'Coach',
+                'user', 'member' => 'Member',
+                default          => ucfirst($role),
             };
+
+            $isStaff = in_array($role, ['admin', 'super_admin', 'employee'], true);
+            $portalLabel = $isStaff ? 'management control center' : 'FordaGo application';
+
+            // Auto-close any previous unclosed login sessions for this user so they don't pile up as active
+            ActivityLog::where('user_id', $user->id)
+                ->where('action_type', 'login')
+                ->whereNull('logout_at')
+                ->update(['logout_at' => now()]);
 
             $ipAddress = $request->ip();
             $userAgent = substr($request->header('User-Agent', ''), 0, 500);
@@ -118,10 +126,10 @@ class ActivityLogger
                 'user_id'      => $user->id,
                 'username'     => $user->username,
                 'full_name'    => $fullName,
-                'role'         => $user->role,
+                'role'         => $role,
                 'action_type'  => 'login',
                 'action_title' => "{$roleLabel} Logged In",
-                'description'  => "{$fullName} ({$roleLabel}) logged into the management control center at " . now()->format('h:i A') . ".",
+                'description'  => "{$fullName} ({$roleLabel}) logged into the {$portalLabel} at " . now()->format('h:i A') . ".",
                 'entity_type'  => 'auth',
                 'entity_id'    => (string) $user->id,
                 'ip_address'   => $ipAddress,
@@ -135,26 +143,28 @@ class ActivityLogger
     }
 
     /**
-     * Log staff logout.
+     * Log user, coach, or staff logout.
      */
     public static function logLogout(User $user, ?Request $request = null): ?ActivityLog
     {
         try {
-            if (!in_array($user->role, ['admin', 'super_admin', 'employee'])) {
-                return null;
-            }
-
             $fullName = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
             if (!$fullName) {
-                $fullName = $user->username ?? 'Administrator';
+                $fullName = $user->username ?? 'User';
             }
 
-            $roleLabel = match($user->role) {
-                'super_admin' => 'Super Admin',
-                'admin'       => 'Admin',
-                'employee'    => 'Employee',
-                default       => ucfirst($user->role ?? 'Staff'),
+            $role = $user->role ?? 'user';
+            $roleLabel = match($role) {
+                'super_admin'    => 'Super Admin',
+                'admin'          => 'Admin',
+                'employee'       => 'Staff FrontDesk',
+                'coach'          => 'Coach',
+                'user', 'member' => 'Member',
+                default          => ucfirst($role),
             };
+
+            $isStaff = in_array($role, ['admin', 'super_admin', 'employee'], true);
+            $portalLabel = $isStaff ? 'management control center' : 'FordaGo application';
 
             // Find recent login log within last 24 hours that does not have logout_at set
             $recentLogin = ActivityLog::where('user_id', $user->id)
@@ -170,12 +180,18 @@ class ActivityLogger
                 $durationStr = $mins >= 60
                     ? sprintf('%d hr %d min', intdiv($mins, 60), $mins % 60)
                     : sprintf('%d min', max(1, $mins));
+            } else {
+                // Also close any older unclosed logins for this user
+                ActivityLog::where('user_id', $user->id)
+                    ->where('action_type', 'login')
+                    ->whereNull('logout_at')
+                    ->update(['logout_at' => now()]);
             }
 
             $ipAddress = $request ? $request->ip() : null;
             $userAgent = $request ? substr($request->header('User-Agent', ''), 0, 500) : null;
 
-            $desc = "{$fullName} ({$roleLabel}) logged out of the management system.";
+            $desc = "{$fullName} ({$roleLabel}) logged out of the {$portalLabel}.";
             if ($durationStr) {
                 $desc .= " (Session duration: {$durationStr})";
             }
@@ -184,7 +200,7 @@ class ActivityLogger
                 'user_id'      => $user->id,
                 'username'     => $user->username,
                 'full_name'    => $fullName,
-                'role'         => $user->role,
+                'role'         => $role,
                 'action_type'  => 'logout',
                 'action_title' => "{$roleLabel} Logged Out",
                 'description'  => $desc,

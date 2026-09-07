@@ -16,17 +16,42 @@ class ActivityLogController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        // Auto-close stale login records older than 12 hours that were never marked as logged out
+        ActivityLog::where('action_type', 'login')
+            ->whereNull('logout_at')
+            ->where('created_at', '<', now()->subHours(12))
+            ->update(['logout_at' => now()]);
+
+        // Active sessions: single latest login per user within the active window (last 8 hours) with no logout_at
+        $activeSessionsQuery = ActivityLog::where('action_type', 'login')
+            ->where('created_at', '>=', now()->subHours(8))
+            ->whereNull('logout_at');
+
+        $activeLogIds = (clone $activeSessionsQuery)
+            ->selectRaw('MAX(id) as id')
+            ->groupBy('user_id')
+            ->pluck('id')
+            ->map(fn($id) => (int)$id)
+            ->toArray();
+
+        $activeCount = count($activeLogIds);
+
         $query = ActivityLog::query()->with('user')->orderBy('created_at', 'desc');
 
-        // Filter: action_type
-        $actionType = $request->input('action_type');
+        // Filter: action_type / category
+        $actionType = $request->input('action_type', $request->input('category'));
         if ($actionType && $actionType !== 'all') {
-            if ($actionType === 'auth') {
+            if ($actionType === 'active_sessions') {
+                $query->whereIn('id', !empty($activeLogIds) ? $activeLogIds : [0]);
+            } elseif ($actionType === 'auth') {
                 $query->whereIn('action_type', ['login', 'logout']);
-            } elseif ($actionType === 'member') {
-                $query->whereIn('action_type', ['member_approval', 'member_reject', 'member_update', 'attendance_checkin']);
+            } elseif ($actionType === 'member' || $actionType === 'members') {
+                $query->where(function($q) {
+                    $q->whereIn('action_type', ['member_approval', 'member_reject', 'member_update', 'attendance_checkin'])
+                      ->orWhere('entity_type', 'user');
+                });
             } elseif ($actionType === 'inventory') {
-                $query->whereIn('action_type', ['inventory_add', 'inventory_update', 'inventory_delete']);
+                $query->whereIn('action_type', ['inventory_add', 'inventory_update', 'inventory_delete', 'approve_order']);
             } elseif ($actionType === 'system') {
                 $query->whereIn('action_type', ['equipment_update', 'staff_update', 'system_setting', 'report_export']);
             } else {
@@ -77,8 +102,9 @@ class ActivityLogController extends Controller
         $targetUserIds = array_unique(array_filter($targetUserIds));
         $resolvedUsers = empty($targetUserIds) ? collect() : User::whereIn('id', $targetUserIds)->get()->keyBy('id');
 
-        $logs->getCollection()->transform(function ($log) use ($resolvedUsers) {
+        $logs->getCollection()->transform(function ($log) use ($resolvedUsers, $activeLogIds) {
             $log->action = $log->action_type;
+            $log->is_active_session = in_array((int) $log->id, $activeLogIds, true);
 
             $desc = $log->description ?? '';
             $title = $log->action_title ?? '';
@@ -167,14 +193,11 @@ class ActivityLogController extends Controller
             ->whereBetween('created_at', [$todayStart, $todayEnd])
             ->count();
 
-        $activeStaffCount = ActivityLog::where('action_type', 'login')
-            ->where('created_at', '>=', now()->subHours(8))
-            ->whereNull('logout_at')
-            ->distinct('user_id')
-            ->count('user_id');
-
-        // Staff list for filtering dropdown
-        $staffUsers = User::whereIn('role', ['admin', 'super_admin', 'employee'])
+        // Staff & users list for filtering dropdown
+        $staffUsers = User::whereIn('role', ['admin', 'super_admin', 'employee', 'coach'])
+            ->orWhereIn('id', function($q) {
+                $q->select('user_id')->from('activity_logs')->whereNotNull('user_id');
+            })
             ->select('id', 'username', 'first_name', 'last_name', 'role')
             ->orderBy('username')
             ->get()
@@ -194,7 +217,8 @@ class ActivityLogController extends Controller
             'total_today'         => $totalToday,
             'logins_today'        => $loginsToday,
             'modifications_today' => $modificationsToday,
-            'active_sessions'     => $activeStaffCount,
+            'active_sessions'     => $activeCount,
+            'active_log_ids'      => $activeLogIds,
         ];
 
         return response()->json([

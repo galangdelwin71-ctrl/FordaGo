@@ -2378,7 +2378,7 @@
           </div>
           <div class="kpi-card-body">
             <div class="kpi-val">{{ activityLogStats.logins_today }}</div>
-            <div class="kpi-label">Staff Logins</div>
+            <div class="kpi-label">Logins Today</div>
           </div>
         </button>
 
@@ -2438,7 +2438,7 @@
           <ion-icon name="search-outline"></ion-icon>
           <input
             type="text"
-            placeholder="Search action, staff name, username, IP, details..."
+            placeholder="Search action, user name, username, IP, details..."
             [(ngModel)]="activityLogSearch"
           />
           <button *ngIf="activityLogSearch" class="btn-clear-search" (click)="activityLogSearch=''">
@@ -2513,11 +2513,11 @@
 
           <!-- Staff Selector -->
           <div class="staff-selector-wrap" *ngIf="activityLogStaffList.length > 0">
-            <label class="staff-select-label">Staff:</label>
+            <label class="staff-select-label">User / Staff:</label>
             <select class="staff-select" [(ngModel)]="activityLogStaffFilter">
-              <option value="all">All Staff Members</option>
+              <option value="all">All Users &amp; Staff</option>
               <option *ngFor="let s of activityLogStaffList" [value]="s.id">
-                {{ s.first_name ? s.first_name + ' ' + s.last_name : s.username }} ({{ s.role }})
+                {{ s.first_name ? s.first_name + ' ' + s.last_name : (s.name || s.username) }} ({{ s.role }})
               </option>
             </select>
           </div>
@@ -2543,7 +2543,7 @@
           Try resetting your search query or category filters.
         </small>
         <small *ngIf="!activityLogSearch && activityLogCategoryFilter === 'all' && activityLogStaffFilter === 'all'">
-          Staff activities and modifications will be recorded here automatically.
+          Staff and user activities will be recorded here automatically.
         </small>
       </div>
 
@@ -2568,15 +2568,15 @@
           <div class="log-main-body">
             <div class="log-header-row">
               <div class="log-user-meta">
-                <div class="log-avatar">{{ getInitials(log.full_name || (log.user?.first_name ? log.user?.first_name + ' ' + log.user?.last_name : (log.username || log.user?.username || 'Staff'))) }}</div>
+                <div class="log-avatar">{{ getInitials(getLogActorName(log)) }}</div>
                 <div class="log-user-info">
                   <span class="log-user-name">
-                    {{ log.full_name || (log.user?.first_name ? log.user?.first_name + ' ' + log.user?.last_name : (log.username || log.user?.username || 'Staff User')) }}
+                    {{ getLogActorName(log) }}
                   </span>
                   <span class="log-role-badge" [ngClass]="'role-' + (log.role || log.user?.role || 'staff')">
-                    {{ (log.role || log.user?.role || 'staff') | uppercase }}
+                    {{ getLogRoleLabel(log) }}
                   </span>
-                  <span class="log-username-handle" *ngIf="log.username || log.user?.username">@{{ log.username || log.user?.username }}</span>
+                  <span class="log-username-handle" *ngIf="shouldShowActorHandle(log)">@{{ log.username || log.user?.username }}</span>
                 </div>
               </div>
               <div class="log-time-col">
@@ -2606,7 +2606,7 @@
                 <ion-icon name="time-outline"></ion-icon>
                 <span>Duration: {{ formatSessionDuration(log.session_duration_minutes) }}</span>
               </div>
-              <div class="session-active-tag" *ngIf="!log.logout_at && (log.action === 'login' || log.action_type === 'login')">
+              <div class="session-active-tag" *ngIf="log.is_active_session">
                 <span class="live-pulse"></span>
                 <span>Active Session</span>
               </div>

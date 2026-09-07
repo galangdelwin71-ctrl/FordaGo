@@ -2625,7 +2625,7 @@ export class AdminPage implements OnInit, OnDestroy {
           : this.activityLogCategoryFilter === 'modifications'
             ? (action !== 'login' && action !== 'logout')
             : this.activityLogCategoryFilter === 'active_sessions'
-              ? (action === 'login' && !log.logout_at)
+              ? (log.is_active_session === true)
               : this.activityLogCategoryFilter === 'members'
                 ? (action.includes('member') || action.includes('user') || entity === 'user')
                 : this.activityLogCategoryFilter === 'inventory'
@@ -2661,9 +2661,9 @@ export class AdminPage implements OnInit, OnDestroy {
 
   getCategoryFilterLabel(): string {
     switch (this.activityLogCategoryFilter) {
-      case 'auth': return 'Staff Logins & Logouts';
+      case 'auth': return 'Logins & Logouts';
       case 'modifications': return 'System Modifications';
-      case 'active_sessions': return 'Active Staff Sessions';
+      case 'active_sessions': return 'Active Sessions';
       case 'members': return 'Members & Users';
       case 'inventory': return 'Inventory & Orders';
       case 'equipment': return 'Equipment Management';
@@ -2688,6 +2688,27 @@ export class AdminPage implements OnInit, OnDestroy {
           this.activityLogs = Array.isArray(logList) ? logList : [];
           this.activityLogStats = res.stats || res.metrics || this.activityLogStats;
           this.activityLogStaffList = res.staff_list || [];
+
+          // Process active sessions: only the single latest login per user within 8 hours with no logout_at
+          const activeIds = new Set<number>((res.stats?.active_log_ids || []).map((x: any) => Number(x)));
+          if (activeIds.size === 0) {
+            const eightHoursAgo = Date.now() - 8 * 60 * 60 * 1000;
+            const seenUsers = new Set<string | number>();
+            for (const item of this.activityLogs) {
+              const a = (item.action_type || item.action || '').toLowerCase();
+              const time = new Date(item.login_at || item.created_at).getTime();
+              if (a === 'login' && !item.logout_at && time >= eightHoursAgo) {
+                const uid = item.user_id || item.username;
+                if (uid && !seenUsers.has(uid)) {
+                  seenUsers.add(uid);
+                  activeIds.add(Number(item.id));
+                }
+              }
+            }
+          }
+          this.activityLogs.forEach(l => {
+            l.is_active_session = activeIds.has(Number(l.id));
+          });
         }
       },
       error: () => {
