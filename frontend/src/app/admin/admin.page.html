@@ -2506,7 +2506,7 @@
         <div class="logs-hub-actions">
           <button type="button" class="btn-primary-hub" (click)="openActivityLogsModal('all')">
             <ion-icon name="albums-outline"></ion-icon>
-            <span>Browse All Activity Records ({{ currentAudienceLogs.length }})</span>
+            <span>Browse All Activity Records ({{ currentAudienceLogsCount }})</span>
           </button>
           <div class="logs-quick-shortcuts">
             <button type="button" class="btn-shortcut" (click)="openActivityLogsModal('login')">
@@ -2533,11 +2533,11 @@
           <div class="leb-badge">LATEST RECORD</div>
           <div class="leb-content">
             <div class="leb-actor">
-              <span class="leb-name">{{ getLogActorName(latestAudienceLog) }}</span>
-              <span class="leb-role">{{ getLogRoleLabel(latestAudienceLog) }}</span>
-              <span class="leb-time">{{ formatNotifDate(latestAudienceLog.created_at) }}</span>
+              <span class="leb-name">{{ latestAudienceLog._actorName || getLogActorName(latestAudienceLog) }}</span>
+              <span class="leb-role">{{ latestAudienceLog._roleLabel || getLogRoleLabel(latestAudienceLog) }}</span>
+              <span class="leb-time">{{ latestAudienceLog._formattedCreatedAt || formatNotifDate(latestAudienceLog.created_at) }}</span>
             </div>
-            <div class="leb-title">{{ cleanLogTitle(latestAudienceLog) }}</div>
+            <div class="leb-title">{{ latestAudienceLog._displayTitle || cleanLogTitle(latestAudienceLog) }}</div>
           </div>
           <button type="button" class="btn-inspect-latest" (click)="viewActivityPayload(latestAudienceLog)" title="View details">
             <ion-icon name="open-outline"></ion-icon>
@@ -2584,31 +2584,32 @@
           type="text"
           [placeholder]="activityLogAudience === 'staff' ? 'Search staff by name, action, IP, username...' : 'Search member by name, action, IP, username...'"
           [(ngModel)]="activityLogSearch"
+          (ngModelChange)="onActivityLogSearchChange()"
         />
-        <button *ngIf="activityLogSearch" class="btn-clear-search" (click)="activityLogSearch=''">
+        <button *ngIf="activityLogSearch" class="btn-clear-search" (click)="clearActivityLogSearch()">
           <ion-icon name="close-circle-outline"></ion-icon>
         </button>
       </div>
 
       <!-- Category Pills: Admin & Staff View -->
       <div class="logs-modal-pills" *ngIf="activityLogAudience === 'staff'">
-        <button type="button" class="pill-btn" [class.active]="activityLogCategoryFilter==='all'" (click)="activityLogCategoryFilter='all'">
+        <button type="button" class="pill-btn" [class.active]="activityLogCategoryFilter==='all'" (click)="setCategoryFilter('all')">
           <ion-icon name="apps-outline"></ion-icon>
           <span>All Events</span>
         </button>
-        <button type="button" class="pill-btn" [class.active]="activityLogCategoryFilter==='login'" (click)="activityLogCategoryFilter='login'">
+        <button type="button" class="pill-btn" [class.active]="activityLogCategoryFilter==='login'" (click)="setCategoryFilter('login')">
           <ion-icon name="log-in-outline"></ion-icon>
           <span>Logins</span>
         </button>
-        <button type="button" class="pill-btn" [class.active]="activityLogCategoryFilter==='logout'" (click)="activityLogCategoryFilter='logout'">
+        <button type="button" class="pill-btn" [class.active]="activityLogCategoryFilter==='logout'" (click)="setCategoryFilter('logout')">
           <ion-icon name="log-out-outline"></ion-icon>
           <span>Logouts</span>
         </button>
-        <button type="button" class="pill-btn" [class.active]="activityLogCategoryFilter==='modifications'" (click)="activityLogCategoryFilter='modifications'">
+        <button type="button" class="pill-btn" [class.active]="activityLogCategoryFilter==='modifications'" (click)="setCategoryFilter('modifications')">
           <ion-icon name="create-outline"></ion-icon>
           <span>Modifications</span>
         </button>
-        <button type="button" class="pill-btn" [class.active]="activityLogCategoryFilter==='active_sessions'" (click)="activityLogCategoryFilter='active_sessions'">
+        <button type="button" class="pill-btn" [class.active]="activityLogCategoryFilter==='active_sessions'" (click)="setCategoryFilter('active_sessions')">
           <ion-icon name="pulse-outline"></ion-icon>
           <span>Active Sessions</span>
         </button>
@@ -2616,19 +2617,19 @@
 
       <!-- Category Pills: Member & User View -->
       <div class="logs-modal-pills" *ngIf="activityLogAudience === 'member'">
-        <button type="button" class="pill-btn" [class.active]="activityLogCategoryFilter==='all'" (click)="activityLogCategoryFilter='all'">
+        <button type="button" class="pill-btn" [class.active]="activityLogCategoryFilter==='all'" (click)="setCategoryFilter('all')">
           <ion-icon name="apps-outline"></ion-icon>
           <span>All Events</span>
         </button>
-        <button type="button" class="pill-btn" [class.active]="activityLogCategoryFilter==='login'" (click)="activityLogCategoryFilter='login'">
+        <button type="button" class="pill-btn" [class.active]="activityLogCategoryFilter==='login'" (click)="setCategoryFilter('login')">
           <ion-icon name="log-in-outline"></ion-icon>
           <span>Logins</span>
         </button>
-        <button type="button" class="pill-btn" [class.active]="activityLogCategoryFilter==='logout'" (click)="activityLogCategoryFilter='logout'">
+        <button type="button" class="pill-btn" [class.active]="activityLogCategoryFilter==='logout'" (click)="setCategoryFilter('logout')">
           <ion-icon name="log-out-outline"></ion-icon>
           <span>Logouts</span>
         </button>
-        <button type="button" class="pill-btn" [class.active]="activityLogCategoryFilter==='active_sessions'" (click)="activityLogCategoryFilter='active_sessions'">
+        <button type="button" class="pill-btn" [class.active]="activityLogCategoryFilter==='active_sessions'" (click)="setCategoryFilter('active_sessions')">
           <ion-icon name="pulse-outline"></ion-icon>
           <span>Active Sessions</span>
         </button>
@@ -2660,12 +2661,12 @@
         </small>
       </div>
 
-      <!-- Activity Timeline List inside Modal -->
+      <!-- Activity Timeline List inside Modal (Optimized with trackBy and precomputed fields) -->
       <div class="activity-timeline-list" *ngIf="!activityLogsLoading && !activityLogsError && filteredActivityLogs.length > 0">
         <div
           class="activity-log-card clickable"
-          *ngFor="let log of filteredActivityLogs"
-          [ngClass]="getActivityActionClass(log.action)"
+          *ngFor="let log of filteredActivityLogs; trackBy: trackByLogId"
+          [ngClass]="log._actionClass"
           (click)="viewActivityPayload(log)"
           role="button"
           tabindex="0"
@@ -2673,34 +2674,34 @@
           title="Click to view complete audit details"
         >
           <!-- Left: Action Icon -->
-          <div class="log-action-badge" [ngClass]="getActivityActionClass(log.action)">
-            <ion-icon [name]="getActivityActionIcon(log.action)"></ion-icon>
+          <div class="log-action-badge" [ngClass]="log._actionClass">
+            <ion-icon [name]="log._actionIcon"></ion-icon>
           </div>
 
           <!-- Main Log Body -->
           <div class="log-main-body">
             <div class="log-header-row">
               <div class="log-user-meta">
-                <div class="log-avatar">{{ getInitials(getLogActorName(log)) }}</div>
+                <div class="log-avatar">{{ getInitials(log._actorName) }}</div>
                 <div class="log-user-info">
                   <span class="log-user-name">
-                    {{ getLogActorName(log) }}
+                    {{ log._actorName }}
                   </span>
                   <span class="log-role-badge" [ngClass]="'role-' + (log.role || log.user?.role || 'staff')">
-                    {{ getLogRoleLabel(log) }}
+                    {{ log._roleLabel }}
                   </span>
-                  <span class="log-username-handle" *ngIf="shouldShowActorHandle(log)">@{{ log.username || log.user?.username }}</span>
+                  <span class="log-username-handle" *ngIf="log._showActorHandle">@{{ log.username || log.user?.username }}</span>
                 </div>
               </div>
               <div class="log-time-col">
-                <span class="log-timestamp" [title]="log.created_at">{{ formatNotifDate(log.created_at) }}</span>
+                <span class="log-timestamp" [title]="log.created_at">{{ log._formattedCreatedAt }}</span>
               </div>
             </div>
 
             <!-- Title & Description -->
             <div class="log-content-row">
-              <div class="log-action-title">{{ cleanLogTitle(log) }}</div>
-              <div class="log-action-desc" *ngIf="log.description || log.action_description">{{ cleanLogText(log.description || log.action_description, log) }}</div>
+              <div class="log-action-title">{{ log._displayTitle }}</div>
+              <div class="log-action-desc" *ngIf="log._displayDesc">{{ log._displayDesc }}</div>
             </div>
 
             <!-- Session Details (for login / logout actions) -->
@@ -2708,16 +2709,16 @@
               <div class="session-item" *ngIf="log.login_at">
                 <ion-icon name="log-in-outline"></ion-icon>
                 <span class="session-label">Login:</span>
-                <span class="session-value">{{ formatNotifDate(log.login_at) }}</span>
+                <span class="session-value">{{ log._formattedLoginAt }}</span>
               </div>
               <div class="session-item" *ngIf="log.logout_at">
                 <ion-icon name="log-out-outline"></ion-icon>
                 <span class="session-label">Logout:</span>
-                <span class="session-value">{{ formatNotifDate(log.logout_at) }}</span>
+                <span class="session-value">{{ log._formattedLogoutAt }}</span>
               </div>
               <div class="session-duration-tag" *ngIf="log.session_duration_minutes !== null && log.session_duration_minutes !== undefined">
                 <ion-icon name="time-outline"></ion-icon>
-                <span>Duration: {{ formatSessionDuration(log.session_duration_minutes) }}</span>
+                <span>Duration: {{ log._formattedDuration }}</span>
               </div>
               <div class="session-active-tag" *ngIf="log.is_active_session">
                 <span class="live-pulse"></span>
@@ -2762,11 +2763,11 @@
 
     <div class="payload-modal-header">
       <div class="payload-header-title">
-        <div class="modal-icon-badge" [ngClass]="getActivityActionClass(selectedActivityLog.action)">
-          <ion-icon [name]="getActivityActionIcon(selectedActivityLog.action)"></ion-icon>
+        <div class="modal-icon-badge" [ngClass]="selectedActivityLog._actionClass || getActivityActionClass(selectedActivityLog.action)">
+          <ion-icon [name]="selectedActivityLog._actionIcon || getActivityActionIcon(selectedActivityLog.action)"></ion-icon>
         </div>
         <div class="modal-title-col">
-          <h3 class="modal-title-text">{{ cleanLogTitle(selectedActivityLog) }}</h3>
+          <h3 class="modal-title-text">{{ selectedActivityLog._displayTitle || cleanLogTitle(selectedActivityLog) }}</h3>
           <span class="modal-action-sub">{{ selectedActivityLog.action_title || selectedActivityLog.action }}</span>
         </div>
       </div>
@@ -2784,7 +2785,7 @@
           <span>Summary of Action:</span>
         </div>
         <div class="msb-text">
-          {{ cleanLogText(selectedActivityLog.description || selectedActivityLog.action_description, selectedActivityLog) }}
+          {{ selectedActivityLog._displayDesc || cleanLogText(selectedActivityLog.description || selectedActivityLog.action_description, selectedActivityLog) }}
         </div>
       </div>
 
@@ -2794,12 +2795,12 @@
           <span class="mag-label">Performed By:</span>
           <div class="mag-person-row">
             <span class="mag-person-name">
-              {{ getLogActorName(selectedActivityLog) }}
+              {{ selectedActivityLog._actorName || getLogActorName(selectedActivityLog) }}
             </span>
             <span class="mag-role-badge" [ngClass]="'role-' + (selectedActivityLog.role || selectedActivityLog.user?.role || 'staff')">
-              {{ getLogRoleLabel(selectedActivityLog) }}
+              {{ selectedActivityLog._roleLabel || getLogRoleLabel(selectedActivityLog) }}
             </span>
-            <span class="mag-handle" *ngIf="shouldShowActorHandle(selectedActivityLog)">
+            <span class="mag-handle" *ngIf="selectedActivityLog._showActorHandle">
               @{{ selectedActivityLog.username || selectedActivityLog.user?.username }}
             </span>
           </div>
@@ -2814,7 +2815,7 @@
 
         <div class="mag-item">
           <span class="mag-label">Recorded At:</span>
-          <span class="mag-val">{{ formatNotifDate(selectedActivityLog.created_at) }}</span>
+          <span class="mag-val">{{ selectedActivityLog._formattedCreatedAt || formatNotifDate(selectedActivityLog.created_at) }}</span>
         </div>
 
         <div class="mag-item" *ngIf="selectedActivityLog.ip_address">
@@ -2832,15 +2833,15 @@
         <div class="msc-grid">
           <div class="msc-field" *ngIf="selectedActivityLog.login_at">
             <span class="msc-lbl">Sign-in Time:</span>
-            <span class="msc-val">{{ formatNotifDate(selectedActivityLog.login_at) }}</span>
+            <span class="msc-val">{{ selectedActivityLog._formattedLoginAt || formatNotifDate(selectedActivityLog.login_at) }}</span>
           </div>
           <div class="msc-field" *ngIf="selectedActivityLog.logout_at">
             <span class="msc-lbl">Sign-out Time:</span>
-            <span class="msc-val">{{ formatNotifDate(selectedActivityLog.logout_at) }}</span>
+            <span class="msc-val">{{ selectedActivityLog._formattedLogoutAt || formatNotifDate(selectedActivityLog.logout_at) }}</span>
           </div>
           <div class="msc-field" *ngIf="selectedActivityLog.session_duration_minutes !== null && selectedActivityLog.session_duration_minutes !== undefined">
             <span class="msc-lbl">Duration:</span>
-            <span class="msc-val font-bold">{{ formatSessionDuration(selectedActivityLog.session_duration_minutes) }}</span>
+            <span class="msc-val font-bold">{{ selectedActivityLog._formattedDuration || formatSessionDuration(selectedActivityLog.session_duration_minutes) }}</span>
           </div>
           <div class="msc-live" *ngIf="!selectedActivityLog.logout_at && (selectedActivityLog.action === 'login' || selectedActivityLog.action_type === 'login')">
             <span class="live-pulse"></span>
@@ -2850,13 +2851,13 @@
       </div>
 
       <!-- Human-Readable Before & After Changes Comparison -->
-      <div class="modal-changes-card" *ngIf="getLogChanges(selectedActivityLog).length > 0">
+      <div class="modal-changes-card" *ngIf="selectedLogChanges.length > 0">
         <div class="mcc-title">
           <ion-icon name="git-compare-outline"></ion-icon>
           <span>What Was Changed (Before &amp; After)</span>
         </div>
         <div class="mcc-list">
-          <div class="mcc-item" *ngFor="let change of getLogChanges(selectedActivityLog)">
+          <div class="mcc-item" *ngFor="let change of selectedLogChanges; trackBy: trackByField">
             <div class="mcc-field-header">
               <ion-icon name="caret-forward-circle-outline"></ion-icon>
               <span class="mcc-field-name">{{ change.field }}</span>
@@ -2879,13 +2880,13 @@
       </div>
 
       <!-- Human-Readable Modified Attributes (NO RAW JSON CODE!) -->
-      <div class="modal-attributes-card" *ngIf="getModalPayloadItems(selectedActivityLog).length > 0">
+      <div class="modal-attributes-card" *ngIf="selectedLogPayloadItems.length > 0">
         <div class="mac-title">
           <ion-icon name="layers-outline"></ion-icon>
-          <span>{{ getLogChanges(selectedActivityLog).length > 0 ? 'Current Attributes &amp; Values' : 'Modified Attributes &amp; Values' }}</span>
+          <span>{{ selectedLogChanges.length > 0 ? 'Current Attributes &amp; Values' : 'Modified Attributes &amp; Values' }}</span>
         </div>
         <div class="mac-items-list">
-          <div class="mac-item-row" *ngFor="let item of getModalPayloadItems(selectedActivityLog)">
+          <div class="mac-item-row" *ngFor="let item of selectedLogPayloadItems; trackBy: trackByLabel">
             <span class="mac-item-label">{{ item.label }}:</span>
             <span class="mac-item-value" [class.mac-pill]="item.isPill" [ngClass]="item.pillType">{{ item.value }}</span>
           </div>

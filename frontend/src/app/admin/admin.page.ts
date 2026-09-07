@@ -2619,12 +2619,49 @@ export class AdminPage implements OnInit, OnDestroy {
   activityLogCategoryFilter: 'all' | 'auth' | 'login' | 'logout' | 'modifications' | 'active_sessions' | 'members' | 'inventory' | 'equipment' | 'attendance' = 'all';
   activityLogStaffFilter: string = 'all';
   selectedActivityLog: any = null;
+  selectedLogChanges: { field: string; before: string; after: string }[] = [];
+  selectedLogPayloadItems: { label: string; value: string; isPill?: boolean; pillType?: string }[] = [];
   showActivityLogsModal = false;
   activityLogAudience: 'staff' | 'member' = 'staff';
+
+  staffLogsCount: number = 0;
+  memberLogsCount: number = 0;
+  allLogsCount: number = 0;
+  currentAudienceLogsCount: number = 0;
+  currentAudienceStats = { total_today: 0, logins_today: 0, logouts_today: 0, modifications_today: 0, active_sessions: 0 };
+  latestAudienceLog: any = null;
+  filteredActivityLogs: any[] = [];
+
+  trackByLogId(index: number, item: any): any {
+    return item ? (item.id ?? index) : index;
+  }
+
+  trackByField(index: number, item: any): any {
+    return item?.field ?? index;
+  }
+
+  trackByLabel(index: number, item: any): any {
+    return item?.label ?? index;
+  }
 
   setActivityAudience(audience: 'staff' | 'member'): void {
     this.activityLogAudience = audience;
     this.activityLogCategoryFilter = 'all';
+    this.recomputeActivityState();
+  }
+
+  setCategoryFilter(category: 'all' | 'auth' | 'login' | 'logout' | 'modifications' | 'active_sessions' | 'members' | 'inventory' | 'equipment' | 'attendance'): void {
+    this.activityLogCategoryFilter = category;
+    this.recomputeActivityState();
+  }
+
+  onActivityLogSearchChange(): void {
+    this.recomputeActivityState();
+  }
+
+  clearActivityLogSearch(): void {
+    this.activityLogSearch = '';
+    this.recomputeActivityState();
   }
 
   isStaffRole(role: string): boolean {
@@ -2661,27 +2698,43 @@ export class AdminPage implements OnInit, OnDestroy {
   }
 
   get currentAudienceLogs(): any[] {
-    if (this.activityLogAudience === 'staff') return this.activityLogs.filter(l => this.isStaffLog(l));
-    return this.activityLogs.filter(l => this.isMemberLog(l));
+    const isStaff = this.activityLogAudience === 'staff';
+    return this.activityLogs.filter(l => isStaff ? (l._isStaff ?? this.isStaffLog(l)) : !(l._isStaff ?? this.isStaffLog(l)));
   }
 
-  get staffLogsCount(): number {
-    return this.activityLogs.filter(l => this.isStaffLog(l)).length;
+  decorateActivityLogs(): void {
+    for (const item of this.activityLogs) {
+      if (!item) continue;
+      item._isStaff = this.isStaffLog(item);
+      item._actorName = this.getLogActorName(item);
+      item._roleLabel = this.getLogRoleLabel(item);
+      item._actionClass = this.getActivityActionClass(item.action || item.action_type || '');
+      item._actionIcon = this.getActivityActionIcon(item.action || item.action_type || '');
+      item._displayTitle = this.cleanLogTitle(item);
+      item._displayDesc = this.cleanLogText(item.description || item.action_description, item);
+      item._formattedCreatedAt = this.formatNotifDate(item.created_at);
+      item._formattedLoginAt = item.login_at ? this.formatNotifDate(item.login_at) : '';
+      item._formattedLogoutAt = item.logout_at ? this.formatNotifDate(item.logout_at) : '';
+      item._formattedDuration = this.formatSessionDuration(item.session_duration_minutes);
+      item._showActorHandle = this.shouldShowActorHandle(item);
+      item._actionLower = (item.action_type || item.action || '').toLowerCase();
+      item._entityLower = (item.entity_type || '').toLowerCase();
+      item._searchStr = [
+        item.action_title, item.description, item.action_description,
+        item.username, item.full_name, item.user?.username, item.user?.first_name,
+        item.action_type, item.action, item.ip_address, item._actorName
+      ].filter(Boolean).join(' ').toLowerCase();
+    }
   }
 
-  get memberLogsCount(): number {
-    return this.activityLogs.filter(l => this.isMemberLog(l)).length;
-  }
+  recomputeActivityState(): void {
+    const isStaffMode = this.activityLogAudience === 'staff';
+    let staffCount = 0;
+    let memberCount = 0;
+    const audienceLogs: any[] = [];
 
-  get allLogsCount(): number {
-    return this.activityLogs.length;
-  }
-
-  get currentAudienceStats(): { total_today: number; logins_today: number; logouts_today: number; modifications_today: number; active_sessions: number } {
-    const logs = this.currentAudienceLogs;
     const now = new Date();
     const todayStr = now.toISOString().slice(0, 10);
-
     const isToday = (dateStr: string | null | undefined) => {
       if (!dateStr) return false;
       return String(dateStr).slice(0, 10) === todayStr;
@@ -2692,93 +2745,69 @@ export class AdminPage implements OnInit, OnDestroy {
     let modificationsToday = 0;
     let activeSessions = 0;
 
-    for (const l of logs) {
-      const action = (l.action || l.action_type || '').toLowerCase();
-      const inToday = isToday(l.created_at) || isToday(l.login_at);
-
-      if (action === 'login') {
-        if (inToday) loginsToday++;
-        if (l.is_active_session) activeSessions++;
-      } else if (action === 'logout') {
-        if (inToday || isToday(l.logout_at)) logoutsToday++;
+    for (const l of this.activityLogs) {
+      const isStaff = l._isStaff ?? this.isStaffLog(l);
+      if (isStaff) {
+        staffCount++;
+        if (isStaffMode) audienceLogs.push(l);
       } else {
-        if (inToday) modificationsToday++;
+        memberCount++;
+        if (!isStaffMode) audienceLogs.push(l);
+      }
+
+      if ((isStaffMode && isStaff) || (!isStaffMode && !isStaff)) {
+        const action = l._actionLower || (l.action || l.action_type || '').toLowerCase();
+        const inToday = isToday(l.created_at) || isToday(l.login_at);
+
+        if (action === 'login') {
+          if (inToday) loginsToday++;
+          if (l.is_active_session) activeSessions++;
+        } else if (action === 'logout') {
+          if (inToday || isToday(l.logout_at)) logoutsToday++;
+        } else {
+          if (inToday) modificationsToday++;
+        }
       }
     }
 
-    return {
+    this.staffLogsCount = staffCount;
+    this.memberLogsCount = memberCount;
+    this.allLogsCount = this.activityLogs.length;
+    this.currentAudienceLogsCount = audienceLogs.length;
+    this.latestAudienceLog = audienceLogs.length > 0 ? audienceLogs[0] : null;
+    this.currentAudienceStats = {
       total_today: loginsToday + logoutsToday + modificationsToday,
       logins_today: loginsToday,
       logouts_today: logoutsToday,
       modifications_today: modificationsToday,
       active_sessions: activeSessions
     };
-  }
 
-  get latestAudienceLog(): any {
-    const logs = this.currentAudienceLogs;
-    return logs.length > 0 ? logs[0] : null;
-  }
-
-  get filteredActivityLogs(): any[] {
     const q = (this.activityLogSearch || '').trim().toLowerCase();
-    return this.activityLogs.filter(log => {
-      const matchSearch = !q
-        || (log.action_title || '').toLowerCase().includes(q)
-        || (log.description || '').toLowerCase().includes(q)
-        || (log.action_description || '').toLowerCase().includes(q)
-        || (log.username || '').toLowerCase().includes(q)
-        || (log.full_name || '').toLowerCase().includes(q)
-        || (log.user?.username || '').toLowerCase().includes(q)
-        || (log.user?.first_name || '').toLowerCase().includes(q)
-        || (log.action_type || '').toLowerCase().includes(q)
-        || (log.action || '').toLowerCase().includes(q)
-        || (log.ip_address || '').toLowerCase().includes(q);
+    const cat = this.activityLogCategoryFilter;
+    const staffId = this.activityLogStaffFilter;
 
-      const action = (log.action_type || log.action || '').toLowerCase();
-      const entity = (log.entity_type || '').toLowerCase();
+    this.filteredActivityLogs = audienceLogs.filter(log => {
+      if (q && !(log._searchStr || '').includes(q)) return false;
+      if (staffId !== 'all' && String(log.user_id) !== String(staffId)) return false;
 
-      const matchCategory = this.activityLogCategoryFilter === 'all'
-        ? true
-        : this.activityLogCategoryFilter === 'auth'
-          ? (action === 'login' || action === 'logout')
-          : this.activityLogCategoryFilter === 'login'
-            ? (action === 'login')
-            : this.activityLogCategoryFilter === 'logout'
-              ? (action === 'logout')
-              : this.activityLogCategoryFilter === 'modifications'
-                ? (action !== 'login' && action !== 'logout')
-                : this.activityLogCategoryFilter === 'active_sessions'
-                  ? (log.is_active_session === true)
-                  : this.activityLogCategoryFilter === 'members'
-                    ? (action.includes('member') || action.includes('user') || entity === 'user')
-                    : this.activityLogCategoryFilter === 'inventory'
-                      ? (action.includes('inventory') || action.includes('product') || action.includes('order') || entity === 'product')
-                      : this.activityLogCategoryFilter === 'equipment'
-                        ? (action.includes('equipment') || entity === 'equipment')
-                        : this.activityLogCategoryFilter === 'attendance'
-                          ? (action.includes('attendance') || entity === 'attendance')
-                          : true;
-
-      const matchStaff = this.activityLogStaffFilter === 'all'
-        ? true
-        : String(log.user_id) === String(this.activityLogStaffFilter);
-
-      const matchAudience = this.activityLogAudience === 'staff'
-        ? this.isStaffLog(log)
-        : this.isMemberLog(log);
-
-      return matchSearch && matchCategory && matchStaff && matchAudience;
+      if (cat === 'all') return true;
+      const act = log._actionLower || (log.action || log.action_type || '').toLowerCase();
+      if (cat === 'login') return act === 'login';
+      if (cat === 'logout') return act === 'logout';
+      if (cat === 'modifications') return act !== 'login' && act !== 'logout';
+      if (cat === 'active_sessions') return log.is_active_session === true;
+      return true;
     });
   }
 
   filterLogsByKpi(category: 'all' | 'auth' | 'login' | 'logout' | 'modifications' | 'active_sessions' | 'members' | 'inventory' | 'equipment' | 'attendance'): void {
-    this.activityLogCategoryFilter = category;
+    this.setCategoryFilter(category);
     this.showActivityLogsModal = true;
   }
 
   openActivityLogsModal(category: 'all' | 'auth' | 'login' | 'logout' | 'modifications' | 'active_sessions' | 'members' | 'inventory' | 'equipment' | 'attendance' = 'all'): void {
-    this.activityLogCategoryFilter = category;
+    this.setCategoryFilter(category);
     this.showActivityLogsModal = true;
   }
 
@@ -2823,8 +2852,6 @@ export class AdminPage implements OnInit, OnDestroy {
     }
   }
 
-
-
   loadActivityLogs() {
     if (this.isEmployee) return;
     const headers = { Authorization: `Bearer ${this.auth.token}` };
@@ -2860,12 +2887,16 @@ export class AdminPage implements OnInit, OnDestroy {
           this.activityLogs.forEach(l => {
             l.is_active_session = activeIds.has(Number(l.id));
           });
+
+          this.decorateActivityLogs();
+          this.recomputeActivityState();
         }
       },
       error: () => {
         this.activityLogsLoading = false;
         this.activityLogsError = true;
         this.activityLogs = [];
+        this.recomputeActivityState();
       }
     });
   }
@@ -2988,10 +3019,14 @@ export class AdminPage implements OnInit, OnDestroy {
 
   viewActivityPayload(log: any) {
     this.selectedActivityLog = log;
+    this.selectedLogChanges = this.getLogChanges(log);
+    this.selectedLogPayloadItems = this.getModalPayloadItems(log);
   }
 
   closeActivityPayload() {
     this.selectedActivityLog = null;
+    this.selectedLogChanges = [];
+    this.selectedLogPayloadItems = [];
   }
 
   /**
