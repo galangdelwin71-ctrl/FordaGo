@@ -109,7 +109,7 @@ import { FcmService } from './services/fcm.service';
 import { ChatToastService } from './services/chat-toast.service';
 import { ChatMuteService } from './services/chat-mute.service';
 import { EchoService } from './services/echo.service';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, distinctUntilChanged } from 'rxjs';
 
 // Shape of the handle Capacitor's App.addListener() resolves to — declared
 // locally instead of importing PluginListenerHandle so this file doesn't
@@ -313,16 +313,17 @@ export class AppComponent implements OnDestroy {
       }
     });
 
+    // On cold boot, if already authenticated with a valid token, sync profile state once in background
+    if (this.auth.token && this.auth.user) {
+      this.auth.fetchCurrentUser().subscribe({ error: () => {} });
+    }
+
     // Automatically poll and listen for real-time notifications for any logged-in user.
     // Also register FCM token on login so backend can send background push notifications.
-    this.auth.user$.subscribe(user => {
+    this.auth.user$.pipe(
+      distinctUntilChanged((prev, curr) => prev?.id === curr?.id)
+    ).subscribe(user => {
       if (user && this.auth.token) {
-        // Fetch fresh profile state (including synced avatars) from server safely
-        this.auth.fetchCurrentUser().subscribe({
-          error: () => {
-            // Handled gracefully: if session is expired or 401, auth service clears state
-          }
-        });
 
         this.notificationCenter.startPolling();
         // Register FCM token with backend — runs async, non-blocking
