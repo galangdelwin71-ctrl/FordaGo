@@ -2383,10 +2383,17 @@
         </div>
 
         <div class="audience-active-caption">
-          <ion-icon name="information-circle-outline"></ion-icon>
-          <span *ngIf="activityLogAudience === 'staff'">Viewing audit logs for Super Admins, Admins, Employees, and Coaches.</span>
-          <span *ngIf="activityLogAudience === 'member'">Viewing activity logs for gym Members and End Users.</span>
-          <span *ngIf="activityLogAudience === 'all'">Viewing combined activity stream across all system users.</span>
+          <div class="caption-left">
+            <ion-icon name="information-circle-outline"></ion-icon>
+            <span *ngIf="activityLogAudience === 'staff'">Showing audit records of Super Admins, Admins, Employees, and Coaches.</span>
+            <span *ngIf="activityLogAudience === 'member'">Showing logins, logouts, and sessions of Members &amp; End Users.</span>
+            <span *ngIf="activityLogAudience === 'all'">Showing unified activity stream across all system users and roles.</span>
+          </div>
+          <span class="caption-tag">
+            <span *ngIf="activityLogAudience === 'staff'">Admin &amp; Staff Filter</span>
+            <span *ngIf="activityLogAudience === 'member'">Member Filter</span>
+            <span *ngIf="activityLogAudience === 'all'">All Records</span>
+          </span>
         </div>
       </div>
 
