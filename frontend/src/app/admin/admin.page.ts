@@ -44,6 +44,7 @@ import {
   chatbubbleEllipsesOutline,
   shieldCheckmarkOutline,
   sparklesOutline,
+  flashOutline,
   cashOutline,
   keyOutline,
   documentTextOutline,
@@ -224,6 +225,140 @@ export class AdminPage implements OnInit, OnDestroy {
   lowStockCount = 0;
   pendingOrders = 0;
   expiringMembers: any[] = [];
+  lowStockThreshold = 5;
+  outOfStockProducts: any[] = [];
+  lowStockProducts: any[] = [];
+  allLowStockAlerts: any[] = [];
+
+  quickRestockModal = {
+    show: false,
+    product: null as any,
+    currentStock: 0,
+    newStock: 0,
+    isSaving: false,
+  };
+
+  get todayFormatted(): string {
+    return new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  }
+
+  get greetingTime(): string {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  }
+
+  get activeMembersCount(): number {
+    return this.members.filter(m => m.membership_status === 'active').length;
+  }
+
+  calculateDaysLeft(expiryStr?: string | null): number | null {
+    if (!expiryStr) return null;
+    const expiry = new Date(expiryStr);
+    if (isNaN(expiry.getTime())) return null;
+    const now = new Date();
+    const expiryMidnight = new Date(expiry.getFullYear(), expiry.getMonth(), expiry.getDate()).getTime();
+    const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    return Math.round((expiryMidnight - todayMidnight) / (1000 * 60 * 60 * 24));
+  }
+
+  processInventoryData(data: any[]): void {
+    this.products = Array.isArray(data) ? data : [];
+    this.outOfStockProducts = this.products.filter(p => Number(p.stock) <= 0);
+    this.lowStockProducts = this.products.filter(p => Number(p.stock) > 0 && Number(p.stock) <= this.lowStockThreshold);
+    this.allLowStockAlerts = [...this.outOfStockProducts, ...this.lowStockProducts];
+    this.lowStockCount = this.allLowStockAlerts.length;
+  }
+
+  openQuickRestock(p: any, event?: Event): void {
+    if (event) event.stopPropagation();
+    const current = Number(p.stock) || 0;
+    this.quickRestockModal = {
+      show: true,
+      product: p,
+      currentStock: current,
+      newStock: current <= 0 ? 10 : current + 10,
+      isSaving: false,
+    };
+  }
+
+  closeQuickRestock(): void {
+    this.quickRestockModal.show = false;
+    this.quickRestockModal.product = null;
+    this.quickRestockModal.isSaving = false;
+  }
+
+  applyStockIncrement(qty: number): void {
+    const current = Number(this.quickRestockModal.newStock) || 0;
+    this.quickRestockModal.newStock = Math.max(0, current + qty);
+  }
+
+  saveQuickRestock(): void {
+    const p = this.quickRestockModal.product;
+    if (!p || this.quickRestockModal.newStock < 0) return;
+    this.quickRestockModal.isSaving = true;
+    const headers = { Authorization: `Bearer ${this.auth.token}` };
+    const payload = {
+      ...p,
+      stock: Number(this.quickRestockModal.newStock)
+    };
+
+    this.http.put(`${this.api}/inventory/products/${p.id}`, payload, { headers }).subscribe({
+      next: () => {
+        this.quickRestockModal.isSaving = false;
+        p.stock = Number(this.quickRestockModal.newStock);
+        this.processInventoryData(this.products);
+        this.toast.success(`Restocked ${p.name} to ${p.stock} units!`);
+        this.closeQuickRestock();
+      },
+      error: () => {
+        this.quickRestockModal.isSaving = false;
+        this.toast.error('Failed to restock product. Please try again.');
+      }
+    });
+  }
+
+  navigateToProduct(p: any, event?: Event): void {
+    if (event) event.stopPropagation();
+    this.activeTab = 'inventory';
+    this.showAllProducts = true;
+    this.productSearch = p.name;
+    this.editProduct(p);
+  }
+
+  quickAddMember(): void {
+    this.activeTab = 'members';
+    this.showAddMember = true;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  quickCheckIn(): void {
+    this.activeTab = 'attendance';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  quickAddProduct(): void {
+    this.activeTab = 'inventory';
+    this.showAddProduct = true;
+    this.editingProduct = null;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  quickOpenReports(): void {
+    this.router.navigate(['/admin-reports']);
+  }
+
+  quickOpenLogs(): void {
+    this.activeTab = 'logs';
+    this.loadActivityLogs();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
   navigateToMembers(filterStatus: 'all' | 'pending' | 'active' = 'all'): void {
     this.activeTab = 'members';
@@ -864,6 +999,7 @@ export class AdminPage implements OnInit, OnDestroy {
       chatbubbleEllipsesOutline,
       shieldCheckmarkOutline,
       sparklesOutline,
+      flashOutline,
       cashOutline,
       keyOutline,
       documentTextOutline,
@@ -938,16 +1074,27 @@ export class AdminPage implements OnInit, OnDestroy {
           }
           return (Number(b.id) || 0) - (Number(a.id) || 0);
         });
-        this.members = sorted.map(m => ({ ...m, initials: this.getInitials(m.username) }));
+        const membersWithDays = sorted.map(m => {
+          const daysLeft = this.calculateDaysLeft(m.membership_expiry);
+          const expiryDate = m.membership_expiry
+            ? new Date(m.membership_expiry).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+            : 'N/A';
+          return {
+            ...m,
+            daysLeft,
+            expiryDate,
+            initials: this.getInitials(m.username || `${m.first_name || ''} ${m.last_name || ''}`)
+          };
+        });
+        this.members = membersWithDays;
         this.totalMembers = data.length;
         if (sorted.length > 0) {
           this.latestMemberId = sorted[0].id;
         } else {
           this.latestMemberId = null;
         }
-        this.expiringMembers = data
-          .filter(m => m.daysLeft !== undefined && m.daysLeft <= 7 && m.daysLeft >= 0)
-          .map(m => ({ ...m, initials: this.getInitials(m.username) }));
+        this.expiringMembers = membersWithDays
+          .filter(m => m.membership_type === 'premium' && m.daysLeft !== null && m.daysLeft <= 7 && m.daysLeft >= 0);
       },
       error: () => {
         this.membersLoading = false;
@@ -955,6 +1102,7 @@ export class AdminPage implements OnInit, OnDestroy {
         this.members = [];
         this.totalMembers = 0;
         this.latestMemberId = null;
+        this.expiringMembers = [];
       }
     });
 
@@ -967,10 +1115,9 @@ export class AdminPage implements OnInit, OnDestroy {
     // Products
     this.http.get<any[]>(`${this.api}/inventory/products`, { headers }).subscribe({
       next: data => {
-        this.products = data;
-        this.lowStockCount = data.filter(p => p.stock < 3).length;
+        this.processInventoryData(data);
       },
-      error: () => this.products = []
+      error: () => this.processInventoryData([])
     });
 
     // Orders -- pendingOrders (overview stat) counts checkout groups, not
@@ -1428,6 +1575,7 @@ export class AdminPage implements OnInit, OnDestroy {
     this.http.post<any>(`${this.api}/inventory/products`, this.newProduct, { headers }).subscribe({
       next: (p) => {
         this.products.unshift(p);
+        this.processInventoryData(this.products);
         this.newProduct = { name: '', brand: '', price: 0, stock: 0, image_url: '', thumbnail_url: '' };
         this.showAddProduct = false;
         this.toast.success('Product added successfully');
@@ -1560,6 +1708,7 @@ export class AdminPage implements OnInit, OnDestroy {
       this.http.delete(`${this.api}/inventory/products/${p.id}`, { headers }).subscribe({
         next: () => {
           this.products = this.products.filter(x => x.id !== p.id);
+          this.processInventoryData(this.products);
           this.toast.success('Product deleted successfully');
         },
         error: () => this.toast.error('Failed to delete product')

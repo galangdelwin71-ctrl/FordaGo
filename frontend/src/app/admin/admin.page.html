@@ -27,6 +27,53 @@
       <button class="confirm-logout" (click)="confirmLogout()">Logout</button>
     </div>
   </div>
+<!-- ── Quick Restock Dialog ──────────────────────────── -->
+<div class="confirm-overlay" *ngIf="quickRestockModal.show && quickRestockModal.product" (click)="closeQuickRestock()">
+  <div class="confirm-box restock-box" (click)="$event.stopPropagation()">
+    <div class="restock-modal-top">
+      <div class="restock-badge-pill">
+        <ion-icon name="flash-outline"></ion-icon>
+        <span>Quick Restock</span>
+      </div>
+      <button class="notif-modal-close" (click)="closeQuickRestock()" aria-label="Close">✕</button>
+    </div>
+
+    <div class="restock-title">{{ quickRestockModal.product?.name }}</div>
+    <div class="restock-sub">
+      Current Stock: <strong>{{ quickRestockModal.currentStock }} units</strong>
+      <span *ngIf="quickRestockModal.currentStock <= 0" class="badge-out">Out of Stock</span>
+      <span *ngIf="quickRestockModal.currentStock > 0 && quickRestockModal.currentStock <= 5" class="badge-low">Low Stock</span>
+    </div>
+
+    <div class="restock-input-group">
+      <label class="restock-label">New Total Stock Quantity</label>
+      <div class="restock-input-row">
+        <button class="qty-btn" type="button" (click)="applyStockIncrement(-1)">-1</button>
+        <input
+          type="number"
+          class="restock-num-input"
+          [(ngModel)]="quickRestockModal.newStock"
+          min="0"
+          placeholder="0"
+        />
+        <button class="qty-btn" type="button" (click)="applyStockIncrement(1)">+1</button>
+      </div>
+      <div class="quick-add-chips">
+        <button type="button" class="add-chip" (click)="applyStockIncrement(5)">+5</button>
+        <button type="button" class="add-chip" (click)="applyStockIncrement(10)">+10</button>
+        <button type="button" class="add-chip" (click)="applyStockIncrement(24)">+24 (Case)</button>
+        <button type="button" class="add-chip" (click)="applyStockIncrement(50)">+50</button>
+      </div>
+    </div>
+
+    <div class="confirm-actions">
+      <button class="confirm-cancel" (click)="closeQuickRestock()" [disabled]="quickRestockModal.isSaving">Cancel</button>
+      <button class="confirm-save-restock" (click)="saveQuickRestock()" [disabled]="quickRestockModal.isSaving || quickRestockModal.newStock < 0">
+        <ion-spinner *ngIf="quickRestockModal.isSaving" name="crescent" style="width: 16px; height: 16px;"></ion-spinner>
+        <span *ngIf="!quickRestockModal.isSaving">Update Stock to {{ quickRestockModal.newStock }}</span>
+      </button>
+    </div>
+  </div>
 </div>
 
 <!-- ── Notification Action Detail Modal ─────────────── -->
@@ -161,72 +208,332 @@
     <!-- ══════════════════════════════════════════════ -->
     <!-- TAB: OVERVIEW                                  -->
     <!-- ══════════════════════════════════════════════ -->
-    <div *ngIf="activeTab==='overview'">
+    <div *ngIf="activeTab==='overview'" class="overview-dashboard">
 
-      <div class="stats-grid">
-        <div class="stat-card clickable" (click)="navigateToMembers()" role="button" tabindex="0" (keydown.enter)="navigateToMembers()" title="View Total Members">
-          <div class="stat-card-top">
-            <div class="stat-icon-box people"><ion-icon name="people-outline"></ion-icon></div>
-            <ion-icon name="arrow-forward-outline" class="card-arrow"></ion-icon>
+      <!-- Executive Overview Banner -->
+      <div class="overview-hero-card">
+        <div class="hero-left">
+          <div class="hero-greeting">{{ greetingTime }}, Administrator! 👋</div>
+          <div class="hero-subtext">Here is your facility's operational pulse and real-time alerts for today.</div>
+          <div class="hero-date-chip">
+            <ion-icon name="calendar-outline"></ion-icon>
+            <span>{{ todayFormatted }}</span>
           </div>
-          <div class="stat-value">{{ totalMembers }}</div>
-          <div class="stat-label">Total Members</div>
         </div>
-
-        <div class="stat-card clickable" (click)="navigateToAttendance()" role="button" tabindex="0" (keydown.enter)="navigateToAttendance()" title="View Check-ins & Attendance">
-          <div class="stat-card-top">
-            <div class="stat-icon-box checkins"><ion-icon name="checkmark-circle-outline"></ion-icon></div>
-            <ion-icon name="arrow-forward-outline" class="card-arrow"></ion-icon>
-          </div>
-          <div class="stat-value green">{{ activeToday }}</div>
-          <div class="stat-label">Check-ins Today</div>
-        </div>
-
-        <div class="stat-card clickable" (click)="navigateToLowStock()" role="button" tabindex="0" (keydown.enter)="navigateToLowStock()" title="View Low Stock Items in Shop">
-          <div class="stat-card-top">
-            <div class="stat-icon-box stock"><ion-icon name="cube-outline"></ion-icon></div>
-            <ion-icon name="arrow-forward-outline" class="card-arrow"></ion-icon>
-          </div>
-          <div class="stat-value amber">{{ lowStockCount }}</div>
-          <div class="stat-label">Low Stock Items</div>
-        </div>
-
-        <div class="stat-card clickable" (click)="navigateToPendingOrders()" role="button" tabindex="0" (keydown.enter)="navigateToPendingOrders()" title="View Pending Orders in Shop">
-          <div class="stat-card-top">
-            <div class="stat-icon-box orders"><ion-icon name="receipt-outline"></ion-icon></div>
-            <ion-icon name="arrow-forward-outline" class="card-arrow"></ion-icon>
-          </div>
-          <div class="stat-value red">{{ pendingOrders }}</div>
-          <div class="stat-label">Pending Orders</div>
+        <div class="hero-right">
+          <button class="hero-refresh-btn" (click)="loadAll()" title="Refresh Dashboard" [disabled]="membersLoading">
+            <ion-icon name="refresh-outline" [class.spinning]="membersLoading"></ion-icon>
+            <span>{{ membersLoading ? 'Syncing...' : 'Sync Data' }}</span>
+          </button>
         </div>
       </div>
 
-      <!-- Expiring memberships -->
-      <div class="section-label-row">
-        <div class="section-label plain">Expiring Soon (Within 7 days)</div>
-        <button class="view-reports-link" (click)="router.navigate(['/admin-reports'])" *ngIf="!isEmployee && expiringMembers.length > 0">
-          View in Reports <ion-icon name="arrow-forward-outline"></ion-icon>
+      <!-- Quick Actions Hub -->
+      <div class="overview-section-header">
+        <div class="section-title-wrap">
+          <span class="section-tag-pill">COMMAND HUB</span>
+          <h3 class="section-main-title">Quick Actions</h3>
+        </div>
+      </div>
+
+      <div class="quick-actions-bar">
+        <button class="quick-action-card" (click)="quickAddMember()">
+          <div class="qa-icon-wrap amber"><ion-icon name="person-add-outline"></ion-icon></div>
+          <div class="qa-text">
+            <span class="qa-label">New Member</span>
+            <span class="qa-hint">Add account</span>
+          </div>
+        </button>
+
+        <button class="quick-action-card" (click)="quickCheckIn()">
+          <div class="qa-icon-wrap green"><ion-icon name="clipboard-outline"></ion-icon></div>
+          <div class="qa-text">
+            <span class="qa-label">Attendance</span>
+            <span class="qa-hint">Record check-in</span>
+          </div>
+        </button>
+
+        <button class="quick-action-card" (click)="quickAddProduct()">
+          <div class="qa-icon-wrap blue"><ion-icon name="cart-outline"></ion-icon></div>
+          <div class="qa-text">
+            <span class="qa-label">New Product</span>
+            <span class="qa-hint">Add store item</span>
+          </div>
+        </button>
+
+        <button class="quick-action-card" (click)="quickOpenReports()" *ngIf="!isEmployee">
+          <div class="qa-icon-wrap purple"><ion-icon name="bar-chart-outline"></ion-icon></div>
+          <div class="qa-text">
+            <span class="qa-label">Analytics</span>
+            <span class="qa-hint">Revenue & NPS</span>
+          </div>
+        </button>
+
+        <button class="quick-action-card" (click)="quickOpenLogs()" *ngIf="!isEmployee">
+          <div class="qa-icon-wrap cyan"><ion-icon name="shield-checkmark-outline"></ion-icon></div>
+          <div class="qa-text">
+            <span class="qa-label">Audit Logs</span>
+            <span class="qa-hint">Security trail</span>
+          </div>
         </button>
       </div>
 
-      <div class="empty-card clickable" *ngIf="expiringMembers.length === 0" (click)="navigateToMembers()" role="button" tabindex="0" (keydown.enter)="navigateToMembers()" title="View Members">
-        <div class="empty-card-icon"><ion-icon name="time-outline"></ion-icon></div>
-        <div class="empty-card-text">No memberships expiring soon</div>
+      <!-- Core Performance Metrics Grid -->
+      <div class="overview-section-header">
+        <div class="section-title-wrap">
+          <span class="section-tag-pill">OPERATIONS</span>
+          <h3 class="section-main-title">Facility Highlights</h3>
+        </div>
       </div>
 
-      <div *ngFor="let m of expiringMembers" class="member-row warn clickable" (click)="viewExpiringMember(m)" role="button" tabindex="0" (keydown.enter)="viewExpiringMember(m)" title="View {{ m.username }} in Members">
-        <div class="member-row-content">
-          <div class="member-info">
-            <div class="member-avatar">{{ m.initials }}</div>
+      <div class="stats-grid modern-stats-grid">
+        <!-- Total Members -->
+        <div class="stat-card modern-stat clickable" (click)="navigateToMembers()" role="button" tabindex="0" (keydown.enter)="navigateToMembers()" title="View Total Members">
+          <div class="stat-card-top">
+            <div class="stat-icon-box people"><ion-icon name="people-outline"></ion-icon></div>
+            <span class="stat-status-pill green">{{ activeMembersCount }} Active</span>
+          </div>
+          <div class="stat-value">{{ totalMembers }}</div>
+          <div class="stat-label">Total Registered Members</div>
+          <div class="stat-footer-link">
+            <span>Manage Directory</span>
+            <ion-icon name="arrow-forward-outline"></ion-icon>
+          </div>
+        </div>
+
+        <!-- Check-ins Today -->
+        <div class="stat-card modern-stat clickable" (click)="navigateToAttendance()" role="button" tabindex="0" (keydown.enter)="navigateToAttendance()" title="View Check-ins & Attendance">
+          <div class="stat-card-top">
+            <div class="stat-icon-box checkins"><ion-icon name="checkmark-circle-outline"></ion-icon></div>
+            <span class="stat-status-pill" [ngClass]="activeToday > 0 ? 'green' : 'gray'">
+              {{ activeToday > 0 ? (activeToday + ' Checked In') : 'Awaiting Check-ins' }}
+            </span>
+          </div>
+          <div class="stat-value green">{{ activeToday }}</div>
+          <div class="stat-label">Check-ins Recorded Today</div>
+          <div class="stat-footer-link">
+            <span>View Attendance Log</span>
+            <ion-icon name="arrow-forward-outline"></ion-icon>
+          </div>
+        </div>
+
+        <!-- Low Stock Items Alert -->
+        <div class="stat-card modern-stat clickable" (click)="navigateToLowStock()" role="button" tabindex="0" (keydown.enter)="navigateToLowStock()" title="View Inventory Alerts">
+          <div class="stat-card-top">
+            <div class="stat-icon-box stock" [ngClass]="outOfStockProducts.length > 0 ? 'critical' : 'amber'">
+              <ion-icon name="cube-outline"></ion-icon>
+            </div>
+            <span class="stat-status-pill" [ngClass]="outOfStockProducts.length > 0 ? 'red' : (lowStockProducts.length > 0 ? 'amber' : 'green')">
+              <span *ngIf="outOfStockProducts.length > 0">{{ outOfStockProducts.length }} Out of Stock</span>
+              <span *ngIf="outOfStockProducts.length === 0 && lowStockProducts.length > 0">{{ lowStockProducts.length }} Low Stock</span>
+              <span *ngIf="outOfStockProducts.length === 0 && lowStockProducts.length === 0">Well Stocked</span>
+            </span>
+          </div>
+          <div class="stat-value" [ngClass]="outOfStockProducts.length > 0 ? 'red' : (lowStockProducts.length > 0 ? 'amber' : 'gray')">
+            {{ lowStockCount }}
+          </div>
+          <div class="stat-label">Stock Alert Items (≤5 units)</div>
+          <div class="stat-footer-link">
+            <span>Open Shop Inventory</span>
+            <ion-icon name="arrow-forward-outline"></ion-icon>
+          </div>
+        </div>
+
+        <!-- Pending Orders -->
+        <div class="stat-card modern-stat clickable" (click)="navigateToPendingOrders()" role="button" tabindex="0" (keydown.enter)="navigateToPendingOrders()" title="View Pending Orders in Shop">
+          <div class="stat-card-top">
+            <div class="stat-icon-box orders"><ion-icon name="receipt-outline"></ion-icon></div>
+            <span class="stat-status-pill" [ngClass]="pendingOrders > 0 ? 'amber' : 'gray'">
+              {{ pendingOrders > 0 ? 'Requires Action' : 'All Clear' }}
+            </span>
+          </div>
+          <div class="stat-value" [ngClass]="pendingOrders > 0 ? 'amber' : 'gray'">{{ pendingOrders }}</div>
+          <div class="stat-label">Pending Shop Orders</div>
+          <div class="stat-footer-link">
+            <span>Review Order Queue</span>
+            <ion-icon name="arrow-forward-outline"></ion-icon>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── NEW: INVENTORY LOW-STOCK ATTENTION CENTER ────────────── -->
+      <div class="overview-card-panel inventory-alert-panel">
+        <div class="panel-header-row">
+          <div class="panel-title-group">
+            <div class="panel-icon-badge amber">
+              <ion-icon name="cube-outline"></ion-icon>
+            </div>
             <div>
-              <div class="member-name">{{ m.username }}</div>
-              <div class="member-meta">Expires {{ m.expiryDate }} · {{ m.daysLeft }} days left</div>
+              <div class="panel-main-title">Inventory Stock Alerts</div>
+              <div class="panel-sub-title">Products running out of stock (≤5 units) that require immediate restock.</div>
             </div>
           </div>
-          <div class="member-row-right">
-            <span class="badge warn">Expiring</span>
-            <ion-icon name="chevron-forward-outline" class="row-arrow"></ion-icon>
+          <div class="panel-header-right">
+            <span class="panel-counter-badge" [ngClass]="outOfStockProducts.length > 0 ? 'red' : (lowStockProducts.length > 0 ? 'amber' : 'green')">
+              {{ allLowStockAlerts.length }} {{ allLowStockAlerts.length === 1 ? 'Product' : 'Products' }}
+            </span>
+            <button class="panel-action-link" (click)="navigateToLowStock()">
+              View Shop <ion-icon name="arrow-forward-outline"></ion-icon>
+            </button>
           </div>
+        </div>
+
+        <!-- If low stock products exist -->
+        <div class="stock-alerts-list" *ngIf="allLowStockAlerts.length > 0">
+          <div *ngFor="let p of allLowStockAlerts" class="stock-alert-item" [class.out-of-stock]="p.stock <= 0">
+            <div class="stock-item-left">
+              <div class="stock-item-thumb">
+                <img *ngIf="p.thumbnail_url || p.image_url" [src]="resolveImg(p.thumbnail_url || p.image_url)" [alt]="p.name" (error)="p.thumbnail_url = null; p.image_url = null" />
+                <div *ngIf="!p.thumbnail_url && !p.image_url" class="stock-thumb-fallback">
+                  <ion-icon name="cube-outline"></ion-icon>
+                </div>
+              </div>
+              <div class="stock-item-info">
+                <div class="stock-item-name-row">
+                  <span class="stock-item-name">{{ p.name }}</span>
+                  <span class="stock-item-brand" *ngIf="p.brand">({{ p.brand }})</span>
+                </div>
+                <div class="stock-item-meta-row">
+                  <span class="stock-item-price">₱{{ p.price | number:'1.2-2' }}</span>
+                  <span class="stock-status-chip" [ngClass]="p.stock <= 0 ? 'critical' : 'warning'">
+                    <ion-icon [name]="p.stock <= 0 ? 'alert-circle-outline' : 'warning-outline'"></ion-icon>
+                    {{ p.stock <= 0 ? 'Out of Stock (0 left)' : (p.stock + ' units remaining') }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="stock-item-actions">
+              <button class="stock-quick-restock-btn" (click)="openQuickRestock(p, $event)" title="Quickly add inventory stock">
+                <ion-icon name="flash-outline"></ion-icon>
+                <span>Restock</span>
+              </button>
+              <button class="stock-view-btn" (click)="navigateToProduct(p, $event)" title="View product details in shop">
+                <ion-icon name="create-outline"></ion-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- If no low stock items -->
+        <div class="panel-empty-state green" *ngIf="allLowStockAlerts.length === 0">
+          <div class="empty-state-icon-wrap green">
+            <ion-icon name="shield-checkmark-outline"></ion-icon>
+          </div>
+          <div class="empty-state-title">Inventory is Healthy</div>
+          <div class="empty-state-desc">All products have sufficient stock levels (more than 5 units remaining).</div>
+        </div>
+      </div>
+
+      <!-- ── EXPIRING MEMBERSHIPS (WITHIN 7 DAYS) ────────────── -->
+      <div class="overview-card-panel expiring-panel">
+        <div class="panel-header-row">
+          <div class="panel-title-group">
+            <div class="panel-icon-badge blue">
+              <ion-icon name="time-outline"></ion-icon>
+            </div>
+            <div>
+              <div class="panel-main-title">Expiring Memberships</div>
+              <div class="panel-sub-title">Active premium passes ending in the next 7 days.</div>
+            </div>
+          </div>
+          <div class="panel-header-right">
+            <span class="panel-counter-badge" [ngClass]="expiringMembers.length > 0 ? 'amber' : 'gray'">
+              {{ expiringMembers.length }} {{ expiringMembers.length === 1 ? 'Member' : 'Members' }}
+            </span>
+            <button class="panel-action-link" (click)="router.navigate(['/admin-reports'])" *ngIf="!isEmployee">
+              Reports <ion-icon name="arrow-forward-outline"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- When members expiring -->
+        <div class="expiring-members-list" *ngIf="expiringMembers.length > 0">
+          <div *ngFor="let m of expiringMembers" class="expiring-member-card clickable" (click)="viewExpiringMember(m)" role="button" tabindex="0" (keydown.enter)="viewExpiringMember(m)">
+            <div class="exp-card-left">
+              <div class="exp-member-avatar">{{ m.initials }}</div>
+              <div class="exp-member-details">
+                <div class="exp-member-name">{{ m.username }}</div>
+                <div class="exp-member-meta">
+                  <span class="exp-date">Expires {{ m.expiryDate }}</span>
+                  <span class="exp-dot">·</span>
+                  <span class="exp-days-tag" [ngClass]="m.daysLeft <= 2 ? 'urgent' : 'warning'">
+                    {{ m.daysLeft === 0 ? 'Expires Today!' : (m.daysLeft === 1 ? '1 day left' : m.daysLeft + ' days left') }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="exp-card-right">
+              <span class="badge warn">Expiring</span>
+              <ion-icon name="chevron-forward-outline" class="row-arrow"></ion-icon>
+            </div>
+          </div>
+        </div>
+
+        <!-- When no members expiring -->
+        <div class="panel-empty-state" *ngIf="expiringMembers.length === 0">
+          <div class="empty-state-icon-wrap blue">
+            <ion-icon name="checkmark-circle-outline"></ion-icon>
+          </div>
+          <div class="empty-state-title">No Immediate Expirations</div>
+          <div class="empty-state-desc">No member plans are expiring within the next 7 days.</div>
+        </div>
+      </div>
+
+      <!-- ── TODAY'S GYM ATTENDANCE PULSE ────────────────────────── -->
+      <div class="overview-card-panel attendance-pulse-panel">
+        <div class="panel-header-row">
+          <div class="panel-title-group">
+            <div class="panel-icon-badge green">
+              <ion-icon name="clipboard-outline"></ion-icon>
+            </div>
+            <div>
+              <div class="panel-main-title">Today's Foot Traffic & Check-ins</div>
+              <div class="panel-sub-title">Real-time attendance logs for {{ todayFormatted }}.</div>
+            </div>
+          </div>
+          <div class="panel-header-right">
+            <span class="panel-counter-badge green">
+              {{ attendanceToday.length }} Check-ins
+            </span>
+            <button class="panel-action-link" (click)="navigateToAttendance()">
+              Full Attendance <ion-icon name="arrow-forward-outline"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- When there are check-ins today -->
+        <div class="attendance-today-list" *ngIf="attendanceToday.length > 0">
+          <div *ngFor="let a of attendanceToday.slice(0, 5)" class="attendance-today-item">
+            <div class="att-item-left">
+              <div class="att-avatar">{{ a.initials }}</div>
+              <div class="att-info">
+                <div class="att-name">{{ a.username }}</div>
+                <div class="att-time">
+                  <ion-icon name="time-outline"></ion-icon>
+                  <span>{{ a.check_in_time || 'Checked In' }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="att-item-right">
+              <span class="att-type-pill" [ngClass]="a.membership_type === 'premium' ? 'premium' : 'daily'">
+                {{ a.membership_type === 'premium' ? 'Premium Member' : 'Daily Pass' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- When no check-ins yet today -->
+        <div class="panel-empty-state" *ngIf="attendanceToday.length === 0">
+          <div class="empty-state-icon-wrap gray">
+            <ion-icon name="walk-outline"></ion-icon>
+          </div>
+          <div class="empty-state-title">No Check-ins Recorded Yet Today</div>
+          <div class="empty-state-desc">Members who check in via QR code or front-desk counter will appear here in real-time.</div>
+          <button class="empty-state-action-btn" (click)="navigateToAttendance()">
+            <ion-icon name="scan-outline"></ion-icon>
+            <span>Go to Attendance Terminal</span>
+          </button>
         </div>
       </div>
 
