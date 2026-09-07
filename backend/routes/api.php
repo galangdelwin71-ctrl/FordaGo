@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\AdminCoachController;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AuthController;
@@ -47,6 +48,8 @@ Route::middleware('auth:sanctum')->get('/user', fn (\Illuminate\Http\Request $r)
 
 // ── All routes below require a valid Sanctum token ─────────────────────────
 Route::middleware('auth:sanctum')->group(function () {
+
+    Route::post('/auth/logout', [AuthController::class, 'logout']);
 
     // ── Users (server/routes/user.js) ─────────────────────────────────────
     Route::prefix('users')->group(function () {
@@ -164,7 +167,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/admin/sales',        [ReportsController::class, 'adminSales'])->middleware('role:admin,super_admin,employee');
         Route::get('/admin/inventory',    [ReportsController::class, 'adminInventory'])->middleware('role:admin,super_admin,employee');
         Route::get('/admin/memberships',  [ReportsController::class, 'adminMemberships'])->middleware('role:admin,super_admin,employee');
+        Route::get('/admin/feedback',     [ReportsController::class, 'adminFeedback'])->middleware('role:admin,super_admin,employee');
     });
+
+    // ── Activity Logs (Audit Trail) ────────────────────────────────────────
+    Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])->middleware('role:admin,super_admin,employee');
 
     // ── Coaching & Chat (Coaching feature) ─────────────────────────────────
     // Read-only for regular users: browsing active coaches, viewing your own

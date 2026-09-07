@@ -96,6 +96,11 @@ export class AuthService {
       this.http.delete(`${API_URL}/users/fcm-token`, {
         headers: { Authorization: `Bearer ${currentToken}` }
       }).subscribe({ error: () => {} });
+
+      // Notify backend of logout to record staff session duration and audit log
+      this.http.post(`${API_URL}/auth/logout`, {}, {
+        headers: { Authorization: `Bearer ${currentToken}` }
+      }).subscribe({ error: () => {} });
     }
 
     localStorage.removeItem('token');

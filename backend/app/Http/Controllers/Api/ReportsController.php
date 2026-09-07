@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Feedback;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -511,6 +512,75 @@ class ReportsController extends Controller
         return response()->json([
             'rows'    => $rows,
             'summary' => compact('totalStock', 'totalSold', 'totalRevenue', 'lowStockCount', 'outOfStockCount', 'inventoryValue'),
+        ]);
+    }
+
+    /**
+     * GET /api/reports/admin/feedback?period=daily|weekly|monthly|yearly|all
+     */
+    public function adminFeedback(Request $request)
+    {
+        $period = $request->query('period', 'all');
+        $query = Feedback::with('user:id,username,first_name,last_name,email,membership_type,role');
+
+        if ($period !== 'all') {
+            if ($period === 'daily') {
+                $query->whereDate('created_at', now()->toDateString());
+            } elseif ($period === 'weekly') {
+                $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+            } elseif ($period === 'monthly') {
+                $query->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year);
+            } elseif ($period === 'yearly') {
+                $query->whereYear('created_at', now()->year);
+            }
+        }
+
+        $feedbacks = $query->orderByDesc('created_at')->get();
+        $total = $feedbacks->count();
+        $avg = $total > 0 ? round($feedbacks->avg('rating'), 1) : 0;
+        $promoters  = $feedbacks->filter(fn($f) => $f->rating >= 9)->count();
+        $passives   = $feedbacks->filter(fn($f) => $f->rating >= 7 && $f->rating < 9)->count();
+        $detractors = $feedbacks->filter(fn($f) => $f->rating < 7)->count();
+        $nps = $total > 0 ? round((($promoters - $detractors) / $total) * 100) : 0;
+        $withComments = $feedbacks->filter(fn($f) => !empty($f->reason))->count();
+
+        // Rating distribution 1 to 10
+        $distribution = [];
+        for ($i = 1; $i <= 10; $i++) {
+            $distribution[$i] = $feedbacks->where('rating', $i)->count();
+        }
+
+        return response()->json([
+            'rows' => $feedbacks->map(function ($f) {
+                $sentiment = $f->rating >= 9 ? 'promoter' : ($f->rating >= 7 ? 'passive' : 'detractor');
+                return [
+                    'id'         => $f->id,
+                    'user_id'    => $f->user_id,
+                    'rating'     => (int) $f->rating,
+                    'reason'     => $f->reason,
+                    'sentiment'  => $sentiment,
+                    'created_at' => $f->created_at,
+                    'user'       => $f->user ? [
+                        'username'        => $f->user->username,
+                        'name'            => trim(($f->user->first_name ?? '') . ' ' . ($f->user->last_name ?? '')) ?: $f->user->username,
+                        'email'           => $f->user->email,
+                        'membership_type' => $f->user->membership_type,
+                    ] : null,
+                ];
+            }),
+            'summary' => [
+                'total'         => $total,
+                'avg_rating'    => $avg,
+                'nps'           => $nps,
+                'promoters'     => $promoters,
+                'passives'      => $passives,
+                'detractors'    => $detractors,
+                'promoter_pct'  => $total > 0 ? round(($promoters / $total) * 100) : 0,
+                'passive_pct'   => $total > 0 ? round(($passives / $total) * 100) : 0,
+                'detractor_pct' => $total > 0 ? round(($detractors / $total) * 100) : 0,
+                'with_comments' => $withComments,
+                'distribution'  => $distribution,
+            ],
         ]);
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Notification;
 use App\Models\PasswordReset;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use App\Services\MailService;
 use App\Services\SmsService;
 use Illuminate\Http\Request;
@@ -274,6 +275,10 @@ class AuthController extends Controller
 
         $token = $user->createToken('api')->plainTextToken;
 
+        if ($isStaffRole) {
+            ActivityLogger::logLogin($user, $request);
+        }
+
         return response()->json([
             'token' => $token,
             'user'  => [
@@ -298,6 +303,19 @@ class AuthController extends Controller
                 'has_coach_profile'  => $user->isCoach(),
             ],
         ]);
+    }
+
+    public function logout(Request $request)
+    {
+        $user = $request->user();
+        if ($user) {
+            if (in_array($user->role, ['admin', 'super_admin', 'employee'], true)) {
+                ActivityLogger::logLogout($user, $request);
+            }
+            $user->currentAccessToken()?->delete();
+        }
+
+        return response()->json(['message' => 'Logged out successfully.']);
     }
 
     public function register(Request $request)

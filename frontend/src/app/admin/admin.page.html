@@ -149,6 +149,9 @@
       <button class="tab-btn feedback-tab-btn" *ngIf="!isEmployee" [class.active]="activeTab==='feedback'" (click)="activeTab='feedback'">
         <ion-icon name="star-outline"></ion-icon> Feedback
       </button>
+      <button class="tab-btn logs-tab-btn" *ngIf="!isEmployee" [class.active]="activeTab==='logs'" (click)="activeTab='logs'; loadActivityLogs()">
+        <ion-icon name="shield-checkmark-outline"></ion-icon> Logs
+      </button>
       <button class="tab-btn reports-btn" *ngIf="!isEmployee" (click)="router.navigate(['/admin-reports'])">
         <ion-icon name="bar-chart-outline"></ion-icon> Reports
       </button>
@@ -1923,6 +1926,295 @@
       </div>
 
     </div><!-- /feedback panel -->
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- TAB: ACTIVITY LOGS (AUDIT TRAIL)              -->
+    <!-- ══════════════════════════════════════════════ -->
+    <div *ngIf="activeTab==='logs'" class="tab-panel logs-panel">
+      <!-- Section Header -->
+      <div class="panel-section-header">
+        <div>
+          <h2 class="panel-section-title">
+            <ion-icon name="shield-checkmark-outline"></ion-icon> Staff Activity Logs
+          </h2>
+          <p class="panel-section-sub">
+            Real-time audit trail of staff logins, logouts, session durations, and system data modifications.
+          </p>
+        </div>
+        <button class="btn-refresh" (click)="loadActivityLogs()" [disabled]="activityLogsLoading" title="Refresh logs">
+          <ion-icon name="refresh-outline" [class.spinning]="activityLogsLoading"></ion-icon>
+          <span>Refresh</span>
+        </button>
+      </div>
+
+      <!-- KPI Summary Cards -->
+      <div class="logs-kpi-grid">
+        <div class="log-kpi-card">
+          <div class="log-kpi-icon icon-total">
+            <ion-icon name="document-text-outline"></ion-icon>
+          </div>
+          <div class="log-kpi-data">
+            <span class="log-kpi-val">{{ activityLogStats.total_today }}</span>
+            <span class="log-kpi-lbl">Total Events Today</span>
+          </div>
+        </div>
+        <div class="log-kpi-card">
+          <div class="log-kpi-icon icon-login">
+            <ion-icon name="log-in-outline"></ion-icon>
+          </div>
+          <div class="log-kpi-data">
+            <span class="log-kpi-val">{{ activityLogStats.logins_today }}</span>
+            <span class="log-kpi-lbl">Staff Logins Today</span>
+          </div>
+        </div>
+        <div class="log-kpi-card">
+          <div class="log-kpi-icon icon-mod">
+            <ion-icon name="create-outline"></ion-icon>
+          </div>
+          <div class="log-kpi-data">
+            <span class="log-kpi-val">{{ activityLogStats.modifications_today }}</span>
+            <span class="log-kpi-lbl">System Modifications</span>
+          </div>
+        </div>
+        <div class="log-kpi-card">
+          <div class="log-kpi-icon icon-active">
+            <ion-icon name="finger-print-outline"></ion-icon>
+          </div>
+          <div class="log-kpi-data">
+            <span class="log-kpi-val">{{ activityLogStats.active_sessions }}</span>
+            <span class="log-kpi-lbl">Active Staff Sessions</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter & Search Toolbar -->
+      <div class="logs-toolbar">
+        <div class="logs-search-box">
+          <ion-icon name="search-outline"></ion-icon>
+          <input
+            type="text"
+            placeholder="Search action, staff name, username, IP, details..."
+            [(ngModel)]="activityLogSearch"
+          />
+          <button *ngIf="activityLogSearch" class="btn-clear-search" (click)="activityLogSearch=''">
+            <ion-icon name="close-circle-outline"></ion-icon>
+          </button>
+        </div>
+
+        <div class="logs-filter-group">
+          <!-- Category Pills -->
+          <div class="category-pills">
+            <button
+              class="pill-btn"
+              [class.active]="activityLogCategoryFilter==='all'"
+              (click)="activityLogCategoryFilter='all'"
+            >
+              All Events
+            </button>
+            <button
+              class="pill-btn"
+              [class.active]="activityLogCategoryFilter==='auth'"
+              (click)="activityLogCategoryFilter='auth'"
+            >
+              Logins &amp; Logouts
+            </button>
+            <button
+              class="pill-btn"
+              [class.active]="activityLogCategoryFilter==='members'"
+              (click)="activityLogCategoryFilter='members'"
+            >
+              Members
+            </button>
+            <button
+              class="pill-btn"
+              [class.active]="activityLogCategoryFilter==='inventory'"
+              (click)="activityLogCategoryFilter='inventory'"
+            >
+              Inventory / Orders
+            </button>
+            <button
+              class="pill-btn"
+              [class.active]="activityLogCategoryFilter==='equipment'"
+              (click)="activityLogCategoryFilter='equipment'"
+            >
+              Equipment
+            </button>
+            <button
+              class="pill-btn"
+              [class.active]="activityLogCategoryFilter==='attendance'"
+              (click)="activityLogCategoryFilter='attendance'"
+            >
+              Attendance
+            </button>
+          </div>
+
+          <!-- Staff Selector -->
+          <div class="staff-selector-wrap" *ngIf="activityLogStaffList.length > 0">
+            <label class="staff-select-label">Staff:</label>
+            <select class="staff-select" [(ngModel)]="activityLogStaffFilter">
+              <option value="all">All Staff Members</option>
+              <option *ngFor="let s of activityLogStaffList" [value]="s.id">
+                {{ s.first_name ? s.first_name + ' ' + s.last_name : s.username }} ({{ s.role }})
+              </option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading state -->
+      <div class="logs-loading" *ngIf="activityLogsLoading">
+        <ion-spinner name="crescent"></ion-spinner>
+        <span>Loading activity records...</span>
+      </div>
+
+      <!-- Error state -->
+      <div class="error-block" *ngIf="activityLogsError && !activityLogsLoading">
+        <ion-icon name="warning-outline"></ion-icon> Failed to load activity logs. Please refresh.
+      </div>
+
+      <!-- Empty state -->
+      <div class="empty-state" *ngIf="!activityLogsLoading && !activityLogsError && filteredActivityLogs.length === 0">
+        <ion-icon name="shield-checkmark-outline" class="empty-icon"></ion-icon>
+        <p>No activity logs found.</p>
+        <small *ngIf="activityLogSearch || activityLogCategoryFilter !== 'all' || activityLogStaffFilter !== 'all'">
+          Try resetting your search query or category filters.
+        </small>
+        <small *ngIf="!activityLogSearch && activityLogCategoryFilter === 'all' && activityLogStaffFilter === 'all'">
+          Staff activities and modifications will be recorded here automatically.
+        </small>
+      </div>
+
+      <!-- Activity Timeline List -->
+      <div class="activity-timeline-list" *ngIf="!activityLogsLoading && !activityLogsError && filteredActivityLogs.length > 0">
+        <div
+          class="activity-log-card"
+          *ngFor="let log of filteredActivityLogs"
+          [ngClass]="getActivityActionClass(log.action)"
+        >
+          <!-- Left: Action Icon -->
+          <div class="log-action-badge" [ngClass]="getActivityActionClass(log.action)">
+            <ion-icon [name]="getActivityActionIcon(log.action)"></ion-icon>
+          </div>
+
+          <!-- Main Log Body -->
+          <div class="log-main-body">
+            <div class="log-header-row">
+              <div class="log-user-meta">
+                <div class="log-avatar">{{ getInitials(log.user?.first_name ? log.user?.first_name + ' ' + log.user?.last_name : (log.user?.username || 'Staff')) }}</div>
+                <div class="log-user-info">
+                  <span class="log-user-name">
+                    {{ log.user?.first_name ? log.user?.first_name + ' ' + log.user?.last_name : (log.user?.username || 'Staff User') }}
+                  </span>
+                  <span class="log-role-badge" [ngClass]="'role-' + (log.user?.role || 'staff')">
+                    {{ (log.user?.role || 'staff') | uppercase }}
+                  </span>
+                  <span class="log-username-handle" *ngIf="log.user?.username">@{{ log.user?.username }}</span>
+                </div>
+              </div>
+              <div class="log-time-col">
+                <span class="log-timestamp" [title]="log.created_at">{{ formatNotifDate(log.created_at) }}</span>
+              </div>
+            </div>
+
+            <!-- Title & Description -->
+            <div class="log-content-row">
+              <div class="log-action-title">{{ log.action_title }}</div>
+              <div class="log-action-desc" *ngIf="log.action_description">{{ log.action_description }}</div>
+            </div>
+
+            <!-- Session Details (for login / logout actions) -->
+            <div class="log-session-box" *ngIf="log.action === 'login' || log.action === 'logout'">
+              <div class="session-item" *ngIf="log.login_at">
+                <ion-icon name="log-in-outline"></ion-icon>
+                <span class="session-label">Login:</span>
+                <span class="session-value">{{ formatNotifDate(log.login_at) }}</span>
+              </div>
+              <div class="session-item" *ngIf="log.logout_at">
+                <ion-icon name="log-out-outline"></ion-icon>
+                <span class="session-label">Logout:</span>
+                <span class="session-value">{{ formatNotifDate(log.logout_at) }}</span>
+              </div>
+              <div class="session-duration-tag" *ngIf="log.session_duration_minutes !== null && log.session_duration_minutes !== undefined">
+                <ion-icon name="time-outline"></ion-icon>
+                <span>Duration: {{ formatSessionDuration(log.session_duration_minutes) }}</span>
+              </div>
+              <div class="session-active-tag" *ngIf="!log.logout_at && log.action === 'login'">
+                <span class="live-pulse"></span>
+                <span>Active Session</span>
+              </div>
+            </div>
+
+            <!-- Footer: Meta & Payload Trigger -->
+            <div class="log-footer-row">
+              <div class="log-meta-tags">
+                <span class="meta-tag" *ngIf="log.ip_address">
+                  <ion-icon name="information-circle-outline"></ion-icon> {{ log.ip_address }}
+                </span>
+                <span class="meta-tag tag-category">
+                  {{ log.category | uppercase }}
+                </span>
+              </div>
+              <button
+                class="btn-view-payload"
+                *ngIf="log.payload && (log.payload | json) !== '{}'"
+                (click)="viewActivityPayload(log)"
+              >
+                <ion-icon name="eye-outline"></ion-icon> Details / Payload
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payload Inspector Modal -->
+      <div class="payload-modal-overlay" *ngIf="selectedActivityLog" (click)="closeActivityPayload()">
+        <div class="payload-modal-card" (click)="$event.stopPropagation()">
+          <div class="payload-modal-header">
+            <div class="payload-header-title">
+              <ion-icon [name]="getActivityActionIcon(selectedActivityLog.action)"></ion-icon>
+              <span>{{ selectedActivityLog.action_title }}</span>
+            </div>
+            <button class="btn-close-modal" (click)="closeActivityPayload()">
+              <ion-icon name="close-outline"></ion-icon>
+            </button>
+          </div>
+          <div class="payload-modal-body">
+            <div class="payload-meta-summary">
+              <div class="pms-row">
+                <span class="pms-lbl">Performed By:</span>
+                <span class="pms-val">
+                  {{ selectedActivityLog.user?.first_name ? selectedActivityLog.user?.first_name + ' ' + selectedActivityLog.user?.last_name : (selectedActivityLog.user?.username || 'Staff User') }}
+                  ({{ selectedActivityLog.user?.role }})
+                </span>
+              </div>
+              <div class="pms-row">
+                <span class="pms-lbl">Action Code:</span>
+                <span class="pms-val"><code>{{ selectedActivityLog.action }}</code></span>
+              </div>
+              <div class="pms-row" *ngIf="selectedActivityLog.target_type">
+                <span class="pms-lbl">Target:</span>
+                <span class="pms-val">{{ selectedActivityLog.target_type }} #{{ selectedActivityLog.target_id }}</span>
+              </div>
+              <div class="pms-row">
+                <span class="pms-lbl">Date / Time:</span>
+                <span class="pms-val">{{ formatNotifDate(selectedActivityLog.created_at) }}</span>
+              </div>
+              <div class="pms-row" *ngIf="selectedActivityLog.ip_address">
+                <span class="pms-lbl">IP Address:</span>
+                <span class="pms-val">{{ selectedActivityLog.ip_address }}</span>
+              </div>
+            </div>
+
+            <div class="payload-json-heading">Modification Payload / Attributes:</div>
+            <pre class="payload-json-view">{{ selectedActivityLog.payload | json }}</pre>
+          </div>
+          <div class="payload-modal-footer">
+            <button class="btn-modal-close" (click)="closeActivityPayload()">Close</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /logs panel -->
 
   </div>
 </ion-content>

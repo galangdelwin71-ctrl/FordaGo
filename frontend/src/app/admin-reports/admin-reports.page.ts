@@ -1,4 +1,4 @@
-// admin-reports.page.ts
+// admin-reports.page.ts — Rebuilt for FordaGO: non-redundant revenue & member feedback
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, DecimalPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -37,6 +37,14 @@ import {
   chevronForwardOutline,
   personOutline,
   shieldCheckmarkOutline,
+  star,
+  starOutline,
+  chatbubbleEllipsesOutline,
+  happyOutline,
+  sadOutline,
+  removeCircleOutline,
+  pricetagOutline,
+  walkOutline,
 } from 'ionicons/icons';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -46,46 +54,37 @@ import autoTable from 'jspdf-autotable';
 import { API_URL } from '../config/api.config';
 import { getCachedData, setCachedData } from '../utils/local-cache.util';
 import { CACHE_KEYS } from '../utils/cache-keys';
+import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refresh.component';
 
-export type Tab = 'overview' | 'memberships' | 'transactions' | 'attendance' | 'sales' | 'inventory';
+export type Tab = 'overview' | 'revenue' | 'memberships' | 'attendance' | 'feedback' | 'inventory';
 export type Period = 'daily' | 'weekly' | 'monthly' | 'yearly' | 'all';
 
 export interface AdminReportsCache {
-  overview?: Record<string, {
+  overview?: Record<string, any>;
+  revenue?: Record<string, {
     txRows: any[];
-    attRows: any[];
-    attSummary: any;
+    salesSummary: any;
     attSalesRows: any[];
     shopSalesRows: any[];
     membershipSalesRows: any[];
-    salesSummary: any;
-    invRows: any[];
-    invSummary: any;
-    membershipRows: any[];
-    membershipSummary: any;
   }>;
   memberships?: {
     rows: any[];
     summary: any;
   };
-  transactions?: Record<string, any[]>;
   attendance?: Record<string, {
     rows: any[];
     summary: any;
   }>;
-  sales?: Record<string, {
-    attSalesRows: any[];
-    shopSalesRows: any[];
-    membershipSalesRows: any[];
-    salesSummary: any;
+  feedback?: Record<string, {
+    rows: any[];
+    summary: any;
   }>;
   inventory?: {
     rows: any[];
     summary: any;
   };
 }
-
-import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refresh.component';
 
 @Component({
   selector: 'app-admin-reports',
@@ -118,7 +117,7 @@ export class AdminReportsPage implements OnInit {
 
   private api = API_URL;
 
-  // ── Local-First Stale-While-Revalidate In-Memory & Storage Cache ──
+  // Local-First Stale-While-Revalidate In-Memory & Storage Cache
   private static cache: AdminReportsCache = {};
 
   activeTab: Tab = 'overview';
@@ -130,6 +129,8 @@ export class AdminReportsPage implements OnInit {
   sourceFilter: 'all' | 'membership' | 'attendance' | 'order' = 'all';
   statusFilter: 'all' | 'paid' | 'pending' | 'rejected' = 'all';
   membershipFilter: 'all' | 'premium' | 'coach' | 'daily' | 'expiring' | 'pending' = 'all';
+  feedbackFilter: 'all' | 'promoter' | 'passive' | 'detractor' | 'with_comment' = 'all';
+  revenueViewMode: 'ledger' | 'streams' = 'ledger';
 
   // ── Memberships ───────────────────────────────────────
   membershipRows: any[] = [];
@@ -137,7 +138,6 @@ export class AdminReportsPage implements OnInit {
 
   get filteredMembershipRows(): any[] {
     return this.membershipRows.filter(m => {
-      // Sub filter
       if (this.membershipFilter === 'premium') {
         if (m.membership_type !== 'premium' || m.account_type === 'coach') return false;
       } else if (this.membershipFilter === 'coach') {
@@ -150,7 +150,6 @@ export class AdminReportsPage implements OnInit {
         if (m.membership_status !== 'pending') return false;
       }
 
-      // Search query
       if (this.searchQuery.trim()) {
         const q = this.searchQuery.toLowerCase();
         const name = (m.username || '').toLowerCase();
@@ -164,18 +163,20 @@ export class AdminReportsPage implements OnInit {
     });
   }
 
-  // ── Transactions ──────────────────────────────────────
+  // ── Consolidated Revenue & Financials ─────────────────
   txRows: any[] = [];
+  salesSummary: any = null;
+  attSalesRows: any[] = [];
+  shopSalesRows: any[] = [];
+  membershipSalesRows: any[] = [];
+
   get filteredTxRows(): any[] {
     return this.txRows.filter(tx => {
-      // Source filter
       if (this.sourceFilter !== 'all' && tx.source !== this.sourceFilter) return false;
-      // Status filter
       if (this.statusFilter !== 'all') {
         const key = this.getStatusKey(tx);
         if (key !== this.statusFilter) return false;
       }
-      // Search query
       if (this.searchQuery.trim()) {
         const q = this.searchQuery.toLowerCase();
         const name = (tx.username || '').toLowerCase();
@@ -188,7 +189,6 @@ export class AdminReportsPage implements OnInit {
     });
   }
 
-  // Financial calculations
   get txCollectedRevenue(): number {
     return this.txRows
       .filter(t => {
@@ -234,12 +234,6 @@ export class AdminReportsPage implements OnInit {
     });
   }
 
-  // ── Sales ─────────────────────────────────────────────
-  attSalesRows: any[] = [];
-  shopSalesRows: any[] = [];
-  membershipSalesRows: any[] = [];
-  salesSummary: any = null;
-
   // ── Inventory ─────────────────────────────────────────
   invRows: any[] = [];
   invSummary: any = null;
@@ -250,6 +244,29 @@ export class AdminReportsPage implements OnInit {
       const name = (item.name || '').toLowerCase();
       const brand = (item.brand || '').toLowerCase();
       return name.includes(q) || brand.includes(q);
+    });
+  }
+
+  // ── Member Feedback & NPS ─────────────────────────────
+  feedbackRows: any[] = [];
+  feedbackSummary: any = null;
+
+  get filteredFeedbackRows(): any[] {
+    return this.feedbackRows.filter(f => {
+      if (this.feedbackFilter === 'promoter' && f.sentiment !== 'promoter') return false;
+      if (this.feedbackFilter === 'passive' && f.sentiment !== 'passive') return false;
+      if (this.feedbackFilter === 'detractor' && f.sentiment !== 'detractor') return false;
+      if (this.feedbackFilter === 'with_comment' && (!f.reason || !f.reason.trim())) return false;
+
+      if (this.searchQuery.trim()) {
+        const q = this.searchQuery.toLowerCase();
+        const username = (f.user?.username || '').toLowerCase();
+        const name = (f.user?.name || '').toLowerCase();
+        const email = (f.user?.email || '').toLowerCase();
+        const reason = (f.reason || '').toLowerCase();
+        return username.includes(q) || name.includes(q) || email.includes(q) || reason.includes(q);
+      }
+      return true;
     });
   }
 
@@ -287,6 +304,14 @@ export class AdminReportsPage implements OnInit {
       chevronForwardOutline,
       personOutline,
       shieldCheckmarkOutline,
+      star,
+      starOutline,
+      chatbubbleEllipsesOutline,
+      happyOutline,
+      sadOutline,
+      removeCircleOutline,
+      pricetagOutline,
+      walkOutline,
     });
   }
 
@@ -304,10 +329,9 @@ export class AdminReportsPage implements OnInit {
     if (this.activeTab === tab) return;
     this.activeTab = tab;
     this.searchQuery = '';
-    // Adjust period if needed
     if (tab === 'inventory' || tab === 'memberships') {
-      // No period filter required for stock / membership profiles
-    } else if (tab === 'sales' && this.period === 'all') {
+      // Inventory and Memberships don't need period filter
+    } else if (tab === 'revenue' && this.period === 'all') {
       this.period = 'monthly';
     }
     const hasCached = this.applyCurrentTabFromCache();
@@ -327,19 +351,13 @@ export class AdminReportsPage implements OnInit {
     this.load();
   }
 
-  /**
-   * Restores cached report data immediately so tab switching and
-   * initial page loads render with 0ms latency without white screens or spinners.
-   */
   private async hydrateFromCache(): Promise<boolean> {
-    // 1. Check in-memory static cache first (instant 0ms)
     let hasData = this.applyCurrentTabFromCache();
     if (hasData) {
       this.isLoading = false;
       return true;
     }
 
-    // 2. Fallback to persistent storage cache
     const stored = await getCachedData<AdminReportsCache>(CACHE_KEYS.ADMIN_REPORTS);
     if (stored) {
       AdminReportsPage.cache = { ...AdminReportsPage.cache, ...stored };
@@ -349,7 +367,6 @@ export class AdminReportsPage implements OnInit {
         return true;
       }
     }
-
     return false;
   }
 
@@ -364,25 +381,28 @@ export class AdminReportsPage implements OnInit {
         this.txRows = o.txRows || [];
         this.attRows = o.attRows || [];
         this.attSummary = o.attSummary || null;
-        this.attSalesRows = o.attSalesRows || [];
-        this.shopSalesRows = o.shopSalesRows || [];
-        this.membershipSalesRows = o.membershipSalesRows || [];
         this.salesSummary = o.salesSummary || null;
         this.invRows = o.invRows || [];
         this.invSummary = o.invSummary || null;
         this.membershipRows = o.membershipRows || [];
         this.membershipSummary = o.membershipSummary || null;
+        this.feedbackRows = o.feedbackRows || [];
+        this.feedbackSummary = o.feedbackSummary || null;
+        return true;
+      }
+    } else if (tab === 'revenue') {
+      if (c.revenue?.[p]) {
+        this.txRows = c.revenue[p].txRows || [];
+        this.salesSummary = c.revenue[p].salesSummary || null;
+        this.attSalesRows = c.revenue[p].attSalesRows || [];
+        this.shopSalesRows = c.revenue[p].shopSalesRows || [];
+        this.membershipSalesRows = c.revenue[p].membershipSalesRows || [];
         return true;
       }
     } else if (tab === 'memberships') {
       if (c.memberships) {
         this.membershipRows = c.memberships.rows || [];
         this.membershipSummary = c.memberships.summary || null;
-        return true;
-      }
-    } else if (tab === 'transactions') {
-      if (c.transactions?.[p]) {
-        this.txRows = c.transactions[p] || [];
         return true;
       }
     } else if (tab === 'attendance') {
@@ -392,12 +412,10 @@ export class AdminReportsPage implements OnInit {
         this.attSummary = c.attendance[ap].summary || null;
         return true;
       }
-    } else if (tab === 'sales') {
-      if (c.sales?.[p]) {
-        this.attSalesRows = c.sales[p].attSalesRows || [];
-        this.shopSalesRows = c.sales[p].shopSalesRows || [];
-        this.membershipSalesRows = c.sales[p].membershipSalesRows || [];
-        this.salesSummary = c.sales[p].salesSummary || null;
+    } else if (tab === 'feedback') {
+      if (c.feedback?.[p]) {
+        this.feedbackRows = c.feedback[p].rows || [];
+        this.feedbackSummary = c.feedback[p].summary || null;
         return true;
       }
     } else if (tab === 'inventory') {
@@ -424,7 +442,7 @@ export class AdminReportsPage implements OnInit {
 
     if (this.activeTab === 'overview') {
       const ap = p === 'all' || p === 'yearly' ? 'monthly' : p;
-      let pendingReqs = 5;
+      let pendingReqs = 6;
       const checkDone = () => {
         pendingReqs--;
         if (pendingReqs <= 0) {
@@ -434,29 +452,14 @@ export class AdminReportsPage implements OnInit {
             txRows: this.txRows,
             attRows: this.attRows,
             attSummary: this.attSummary,
-            attSalesRows: this.attSalesRows,
-            shopSalesRows: this.shopSalesRows,
-            membershipSalesRows: this.membershipSalesRows,
             salesSummary: this.salesSummary,
             invRows: this.invRows,
             invSummary: this.invSummary,
             membershipRows: this.membershipRows,
             membershipSummary: this.membershipSummary,
+            feedbackRows: this.feedbackRows,
+            feedbackSummary: this.feedbackSummary,
           };
-          // Cross-populate individual tab caches for instant subsequent visits
-          if (!AdminReportsPage.cache.transactions) AdminReportsPage.cache.transactions = {};
-          AdminReportsPage.cache.transactions[p] = this.txRows;
-          if (!AdminReportsPage.cache.attendance) AdminReportsPage.cache.attendance = {};
-          AdminReportsPage.cache.attendance[ap] = { rows: this.attRows, summary: this.attSummary };
-          if (!AdminReportsPage.cache.sales) AdminReportsPage.cache.sales = {};
-          AdminReportsPage.cache.sales[p] = {
-            attSalesRows: this.attSalesRows,
-            shopSalesRows: this.shopSalesRows,
-            membershipSalesRows: this.membershipSalesRows,
-            salesSummary: this.salesSummary,
-          };
-          AdminReportsPage.cache.inventory = { rows: this.invRows, summary: this.invSummary };
-          AdminReportsPage.cache.memberships = { rows: this.membershipRows, summary: this.membershipSummary };
           void setCachedData(CACHE_KEYS.ADMIN_REPORTS, AdminReportsPage.cache);
         }
       };
@@ -504,6 +507,49 @@ export class AdminReportsPage implements OnInit {
         error: () => checkDone(),
       });
 
+      this.http.get<any>(`${this.api}/reports/admin/feedback?period=${p}`, h).subscribe({
+        next: data => {
+          this.feedbackRows = data?.rows || [];
+          this.feedbackSummary = data?.summary || null;
+          checkDone();
+        },
+        error: () => checkDone(),
+      });
+
+    } else if (this.activeTab === 'revenue') {
+      let pendingReqs = 2;
+      const checkDone = () => {
+        pendingReqs--;
+        if (pendingReqs <= 0) {
+          this.isLoading = false;
+          if (!AdminReportsPage.cache.revenue) AdminReportsPage.cache.revenue = {};
+          AdminReportsPage.cache.revenue[p] = {
+            txRows: this.txRows,
+            salesSummary: this.salesSummary,
+            attSalesRows: this.attSalesRows,
+            shopSalesRows: this.shopSalesRows,
+            membershipSalesRows: this.membershipSalesRows,
+          };
+          void setCachedData(CACHE_KEYS.ADMIN_REPORTS, AdminReportsPage.cache);
+        }
+      };
+
+      this.http.get<any[]>(`${this.api}/reports/admin/transactions?period=${p}`, h).subscribe({
+        next: data => { this.txRows = data || []; checkDone(); },
+        error: () => checkDone(),
+      });
+
+      this.http.get<any>(`${this.api}/reports/admin/sales?period=${p}`, h).subscribe({
+        next: data => {
+          this.attSalesRows = data?.attendanceSales || [];
+          this.shopSalesRows = data?.shopSales || [];
+          this.membershipSalesRows = data?.membershipSales || [];
+          this.salesSummary = data?.summary || null;
+          checkDone();
+        },
+        error: () => checkDone(),
+      });
+
     } else if (this.activeTab === 'memberships') {
       this.http.get<any>(`${this.api}/reports/admin/memberships`, h).subscribe({
         next: data => {
@@ -514,18 +560,6 @@ export class AdminReportsPage implements OnInit {
             rows: this.membershipRows,
             summary: this.membershipSummary,
           };
-          void setCachedData(CACHE_KEYS.ADMIN_REPORTS, AdminReportsPage.cache);
-        },
-        error: () => { this.isLoading = false; },
-      });
-
-    } else if (this.activeTab === 'transactions') {
-      this.http.get<any[]>(`${this.api}/reports/admin/transactions?period=${p}`, h).subscribe({
-        next: data => {
-          this.txRows = data || [];
-          this.isLoading = false;
-          if (!AdminReportsPage.cache.transactions) AdminReportsPage.cache.transactions = {};
-          AdminReportsPage.cache.transactions[p] = this.txRows;
           void setCachedData(CACHE_KEYS.ADMIN_REPORTS, AdminReportsPage.cache);
         },
         error: () => { this.isLoading = false; },
@@ -548,20 +582,16 @@ export class AdminReportsPage implements OnInit {
         error: () => { this.isLoading = false; },
       });
 
-    } else if (this.activeTab === 'sales') {
-      this.http.get<any>(`${this.api}/reports/admin/sales?period=${p}`, h).subscribe({
+    } else if (this.activeTab === 'feedback') {
+      this.http.get<any>(`${this.api}/reports/admin/feedback?period=${p}`, h).subscribe({
         next: data => {
-          this.attSalesRows = data?.attendanceSales || [];
-          this.shopSalesRows = data?.shopSales || [];
-          this.membershipSalesRows = data?.membershipSales || [];
-          this.salesSummary = data?.summary || null;
+          this.feedbackRows = data?.rows || [];
+          this.feedbackSummary = data?.summary || null;
           this.isLoading = false;
-          if (!AdminReportsPage.cache.sales) AdminReportsPage.cache.sales = {};
-          AdminReportsPage.cache.sales[p] = {
-            attSalesRows: this.attSalesRows,
-            shopSalesRows: this.shopSalesRows,
-            membershipSalesRows: this.membershipSalesRows,
-            salesSummary: this.salesSummary,
+          if (!AdminReportsPage.cache.feedback) AdminReportsPage.cache.feedback = {};
+          AdminReportsPage.cache.feedback[p] = {
+            rows: this.feedbackRows,
+            summary: this.feedbackSummary,
           };
           void setCachedData(CACHE_KEYS.ADMIN_REPORTS, AdminReportsPage.cache);
         },
@@ -712,10 +742,10 @@ export class AdminReportsPage implements OnInit {
     };
     const tabLabel: Record<string, string> = {
       overview: 'Executive Analytics Summary',
+      revenue: 'Revenue & Financial Audit Report',
       memberships: 'Membership Plans & Subscriptions',
-      transactions: 'Transaction Audit Ledger',
       attendance: 'Gym Attendance & Traffic Log',
-      sales: 'Revenue & Sales Breakdown',
+      feedback: 'Member Feedback & NPS Analytics',
       inventory: 'Shop Inventory & Stock Valuation',
     };
 
@@ -752,6 +782,7 @@ export class AdminReportsPage implements OnInit {
         ['Shop Merchandise Sales', `PHP ${this.decimalPipe.transform(this.salesSummary?.shopRevenue || 0, '1.2-2')}`],
         ['Pending Receivables (Orders/Plans)', `PHP ${this.decimalPipe.transform(this.salesSummary?.pendingRevenue || 0, '1.2-2')}`],
         ['Total Gym Visits', `${this.attSummary?.total || this.attRows.length || 0} check-ins`],
+        ['Average Member Satisfaction', `${this.feedbackSummary?.avg_rating || 0}/10 (NPS: ${this.feedbackSummary?.nps || 0})`],
       ];
 
       autoTable(doc, {
@@ -760,6 +791,58 @@ export class AdminReportsPage implements OnInit {
         body: kpis,
         headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' },
         styles: { fontSize: 9, cellPadding: 3 },
+      });
+
+    } else if (this.activeTab === 'revenue') {
+      doc.setFontSize(9.5);
+      doc.setTextColor(15, 23, 42);
+      doc.text(
+        `Total Realized: PHP ${this.decimalPipe.transform(this.txCollectedRevenue, '1.2-2')}   |   Pending: PHP ${this.decimalPipe.transform(this.txPendingRevenue, '1.2-2')}   |   Transactions: ${this.filteredTxRows.length}`,
+        14,
+        startY - 4,
+      );
+
+      autoTable(doc, {
+        startY,
+        head: [['Date & Time', 'Customer', 'Category', 'Details', 'Amount', 'Payment', 'Status']],
+        body: this.filteredTxRows.map(tx => [
+          this.datePipe.transform(tx.transaction_date, 'MMM d, yyyy h:mm a') ?? '',
+          tx.username,
+          tx.type_label,
+          tx.product_name || (tx.source === 'attendance' ? 'Gym Walk-in' : (tx.source === 'membership' ? 'Monthly Plan' : '—')),
+          tx.amount > 0 ? `PHP ${this.decimalPipe.transform(tx.amount, '1.2-2')}` : 'Included',
+          (tx.payment_method || 'cash').toUpperCase(),
+          this.getStatusLabel(tx),
+        ]),
+        headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        styles: { fontSize: 8, cellPadding: 2.2 },
+      });
+
+    } else if (this.activeTab === 'feedback') {
+      if (this.feedbackSummary) {
+        doc.setFontSize(9.5);
+        doc.setTextColor(15, 23, 42);
+        doc.text(
+          `Total Reviews: ${this.feedbackSummary.total}  |  Avg Rating: ${this.feedbackSummary.avg_rating}/10  |  NPS Score: ${this.feedbackSummary.nps}  |  Promoters: ${this.feedbackSummary.promoters}  |  Detractors: ${this.feedbackSummary.detractors}`,
+          14,
+          startY - 4,
+        );
+      }
+      autoTable(doc, {
+        startY,
+        head: [['Date', 'Member', 'Plan', 'Rating', 'Sentiment', 'Feedback / Review Comment']],
+        body: this.filteredFeedbackRows.map(f => [
+          this.datePipe.transform(f.created_at, 'MMM d, yyyy') ?? '',
+          f.user?.username || 'Member',
+          (f.user?.membership_type || 'daily').toUpperCase(),
+          `${f.rating} / 10`,
+          (f.sentiment || '').toUpperCase(),
+          f.reason || '(Rating only)',
+        ]),
+        headStyles: { fillColor: [234, 179, 8], textColor: [15, 23, 42], fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        styles: { fontSize: 8.5, cellPadding: 2.2 },
       });
 
     } else if (this.activeTab === 'memberships') {
@@ -789,32 +872,6 @@ export class AdminReportsPage implements OnInit {
         styles: { fontSize: 8.5, cellPadding: 2.2 },
       });
 
-    } else if (this.activeTab === 'transactions') {
-      doc.setFontSize(9.5);
-      doc.setTextColor(15, 23, 42);
-      doc.text(
-        `Total Rows: ${this.filteredTxRows.length}   |   Collected: PHP ${this.decimalPipe.transform(this.txCollectedRevenue, '1.2-2')}   |   Pending: PHP ${this.decimalPipe.transform(this.txPendingRevenue, '1.2-2')}`,
-        14,
-        startY - 4,
-      );
-
-      autoTable(doc, {
-        startY,
-        head: [['Date & Time', 'Member', 'Type', 'Details', 'Amount', 'Payment', 'Status']],
-        body: this.filteredTxRows.map(tx => [
-          this.datePipe.transform(tx.transaction_date, 'MMM d, yyyy h:mm a') ?? '',
-          tx.username,
-          tx.type_label,
-          tx.product_name || (tx.source === 'attendance' ? 'Gym Walk-in' : (tx.source === 'membership' ? 'Monthly Plan' : '—')),
-          tx.amount > 0 ? `PHP ${this.decimalPipe.transform(tx.amount, '1.2-2')}` : 'Included',
-          (tx.payment_method || 'cash').toUpperCase(),
-          this.getStatusLabel(tx),
-        ]),
-        headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [248, 250, 252] },
-        styles: { fontSize: 8, cellPadding: 2.2 },
-      });
-
     } else if (this.activeTab === 'attendance') {
       if (this.attSummary) {
         doc.setFontSize(9.5);
@@ -839,31 +896,6 @@ export class AdminReportsPage implements OnInit {
         headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' },
         alternateRowStyles: { fillColor: [248, 250, 252] },
         styles: { fontSize: 8, cellPadding: 2.2 },
-      });
-
-    } else if (this.activeTab === 'sales') {
-      if (this.salesSummary) {
-        doc.setFontSize(9.5);
-        doc.setTextColor(15, 23, 42);
-        doc.text(
-          `Total Revenue: PHP ${this.decimalPipe.transform(this.salesSummary.totalRevenue, '1.2-2')}  |  Premium: PHP ${this.decimalPipe.transform(this.salesSummary.membershipRevenue, '1.2-2')}  |  Gym: PHP ${this.decimalPipe.transform(this.salesSummary.gymRevenue, '1.2-2')}  |  Shop: PHP ${this.decimalPipe.transform(this.salesSummary.shopRevenue, '1.2-2')}`,
-          14,
-          startY - 4,
-        );
-      }
-      doc.setFontSize(10.5);
-      doc.setTextColor(15, 23, 42);
-      doc.text('Gym Daily Pass Revenue by Date', 14, startY + 2);
-      autoTable(doc, {
-        startY: startY + 6,
-        head: [['Date', 'Paid Walk-ins', 'Collected Revenue']],
-        body: this.attSalesRows.map(r => [
-          this.datePipe.transform(r.sale_date, 'MMM d, yyyy') ?? '',
-          r.count,
-          `PHP ${this.decimalPipe.transform(r.revenue, '1.2-2')}`,
-        ]),
-        headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' },
-        styles: { fontSize: 8.5, cellPadding: 2 },
       });
 
     } else if (this.activeTab === 'inventory') {

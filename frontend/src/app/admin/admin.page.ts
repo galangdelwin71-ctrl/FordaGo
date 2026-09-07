@@ -6,7 +6,9 @@ import {
   chevronUpOutline,
   chevronDownOutline,
   trashOutline,
+  logInOutline,
   logOutOutline,
+  walkOutline,
   timeOutline,
   megaphoneOutline,
   peopleOutline,
@@ -49,6 +51,10 @@ import {
   layersOutline,
   optionsOutline,
   ellipsisVerticalOutline,
+  statsChartOutline,
+  barChartOutline,
+  clipboardOutline,
+  fingerPrintOutline,
 } from 'ionicons/icons';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -101,7 +107,7 @@ export class AdminPage implements OnInit, OnDestroy {
   private readonly thumbnailImageDimension = 300;
   private readonly thumbnailImageQuality = 0.7;
 
-  activeTab: 'overview' | 'members' | 'schedule' | 'inventory' | 'equipment' | 'coaches' | 'notifs' | 'attendance' | 'feedback' = 'overview';
+  activeTab: 'overview' | 'members' | 'schedule' | 'inventory' | 'equipment' | 'coaches' | 'notifs' | 'attendance' | 'feedback' | 'logs' = 'overview';
   private readonly api = this.resolveApiBase();
 
   private resolveApiBase(): string {
@@ -820,7 +826,9 @@ export class AdminPage implements OnInit, OnDestroy {
       chevronUpOutline,
       chevronDownOutline,
       trashOutline,
+      logInOutline,
       logOutOutline,
+      walkOutline,
       timeOutline,
       megaphoneOutline,
       peopleOutline,
@@ -863,6 +871,10 @@ export class AdminPage implements OnInit, OnDestroy {
       layersOutline,
       optionsOutline,
       ellipsisVerticalOutline,
+      statsChartOutline,
+      barChartOutline,
+      clipboardOutline,
+      fingerPrintOutline,
     });
   }
 
@@ -1011,6 +1023,9 @@ export class AdminPage implements OnInit, OnDestroy {
     if (this.canManageCoaches) {
       this.loadCoaches();
     }
+
+    // Activity Logs
+    this.loadActivityLogs();
 
     this.loadDailyReports();
   }
@@ -2199,8 +2214,112 @@ export class AdminPage implements OnInit, OnDestroy {
     });
   }
 
-  navigateToFeedback() {
-    this.activeTab = 'feedback';
+  // ── Activity Logs (Audit Trail) ────────────────────────
+  activityLogs: any[] = [];
+  activityLogsLoading = false;
+  activityLogsError = false;
+  activityLogStats = { total_today: 0, logins_today: 0, modifications_today: 0, active_sessions: 0 };
+  activityLogStaffList: any[] = [];
+  activityLogSearch = '';
+  activityLogCategoryFilter: 'all' | 'auth' | 'members' | 'inventory' | 'equipment' | 'attendance' = 'all';
+  activityLogStaffFilter: string = 'all';
+  selectedActivityLog: any = null;
+
+  get filteredActivityLogs(): any[] {
+    const q = (this.activityLogSearch || '').trim().toLowerCase();
+    return this.activityLogs.filter(log => {
+      const matchSearch = !q
+        || (log.action_title || '').toLowerCase().includes(q)
+        || (log.action_description || '').toLowerCase().includes(q)
+        || (log.user?.username || '').toLowerCase().includes(q)
+        || (log.user?.first_name || '').toLowerCase().includes(q)
+        || (log.user?.last_name || '').toLowerCase().includes(q)
+        || (log.action || '').toLowerCase().includes(q)
+        || (log.ip_address || '').toLowerCase().includes(q);
+
+      const matchCategory = this.activityLogCategoryFilter === 'all'
+        ? true
+        : this.activityLogCategoryFilter === 'auth'
+          ? (log.action === 'login' || log.action === 'logout')
+          : log.category === this.activityLogCategoryFilter;
+
+      const matchStaff = this.activityLogStaffFilter === 'all'
+        ? true
+        : String(log.user_id) === String(this.activityLogStaffFilter);
+
+      return matchSearch && matchCategory && matchStaff;
+    });
+  }
+
+  loadActivityLogs() {
+    if (this.isEmployee) return;
+    const headers = { Authorization: `Bearer ${this.auth.token}` };
+    this.activityLogsLoading = true;
+    this.activityLogsError = false;
+
+    this.http.get<any>(`${this.api}/admin/activity-logs?per_page=60`, { headers }).subscribe({
+      next: res => {
+        this.activityLogsLoading = false;
+        if (res && res.data) {
+          this.activityLogs = res.data.data || res.data;
+          this.activityLogStats = res.stats || this.activityLogStats;
+          this.activityLogStaffList = res.staff_list || [];
+        } else if (Array.isArray(res)) {
+          this.activityLogs = res;
+        }
+      },
+      error: () => {
+        this.activityLogsLoading = false;
+        this.activityLogsError = true;
+        this.activityLogs = [];
+      }
+    });
+  }
+
+  getActivityActionIcon(action: string): string {
+    switch (action) {
+      case 'login': return 'log-in-outline';
+      case 'logout': return 'log-out-outline';
+      case 'create_member': return 'person-add-outline';
+      case 'update_member':
+      case 'update_membership': return 'create-outline';
+      case 'delete_member': return 'trash-outline';
+      case 'create_product': return 'add-outline';
+      case 'update_product': return 'create-outline';
+      case 'delete_product': return 'trash-outline';
+      case 'approve_order': return 'checkmark-circle-outline';
+      case 'create_equipment': return 'barbell-outline';
+      case 'update_equipment': return 'create-outline';
+      case 'delete_equipment': return 'trash-outline';
+      case 'confirm_attendance': return 'checkmark-outline';
+      case 'reject_attendance': return 'close-outline';
+      default: return 'document-text-outline';
+    }
+  }
+
+  getActivityActionClass(action: string): string {
+    if (action === 'login') return 'action-login';
+    if (action === 'logout') return 'action-logout';
+    if (action.includes('delete') || action.includes('reject')) return 'action-danger';
+    if (action.includes('approve') || action.includes('confirm') || action.includes('create')) return 'action-success';
+    return 'action-info';
+  }
+
+  formatSessionDuration(minutes: number | null | undefined): string {
+    if (minutes === null || minutes === undefined) return '';
+    if (minutes < 1) return '< 1 min';
+    if (minutes < 60) return `${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    const remMins = minutes % 60;
+    return remMins > 0 ? `${hours}h ${remMins}m` : `${hours}h`;
+  }
+
+  viewActivityPayload(log: any) {
+    this.selectedActivityLog = log;
+  }
+
+  closeActivityPayload() {
+    this.selectedActivityLog = null;
   }
 
   // ── Logout ────────────────────────────────────────────

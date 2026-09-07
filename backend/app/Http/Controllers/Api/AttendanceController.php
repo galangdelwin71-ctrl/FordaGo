@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\Notification;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use App\Services\FcmService;
 use Illuminate\Http\Request;
 
@@ -231,6 +232,20 @@ class AttendanceController extends Controller
             \Log::warning('Attendance confirm notification failed: ' . $e->getMessage());
         }
 
+        try {
+            $member = User::find($attendance->user_id);
+            $memberName = $member ? trim("{$member->first_name} {$member->last_name}") ?: $member->username : "User #{$attendance->user_id}";
+            ActivityLogger::log(
+                $request->user(),
+                'attendance_confirm',
+                "Confirmed Check-in: {$memberName}",
+                "Confirmed attendance check-in and ₱100 payment for {$memberName}.",
+                'attendance',
+                $attendance->id,
+                ['user_id' => $attendance->user_id, 'membership_type' => $attendance->membership_type]
+            );
+        } catch (\Throwable) {}
+
         return response()->json([
             'message'    => 'Attendance confirmed and payment recorded.',
             'attendance' => $attendance,
@@ -240,7 +255,7 @@ class AttendanceController extends Controller
     /**
      * PUT /api/attendance/{id}/reject
      */
-    public function reject(int $id)
+    public function reject(Request $request, int $id)
     {
         $attendance = Attendance::find($id);
         if (! $attendance) {
@@ -259,6 +274,22 @@ class AttendanceController extends Controller
         } catch (\Throwable) {
             // best-effort
         }
+
+        try {
+            $member = User::find($userId);
+            $memberName = $member ? trim("{$member->first_name} {$member->last_name}") ?: $member->username : "User #{$userId}";
+            if ($request->user()) {
+                ActivityLogger::log(
+                    $request->user(),
+                    'attendance_reject',
+                    "Rejected Check-in: {$memberName}",
+                    "Declined gym check-in request for {$memberName}.",
+                    'attendance',
+                    $id,
+                    ['user_id' => $userId]
+                );
+            }
+        } catch (\Throwable) {}
 
         return response()->json(['message' => 'Attendance request rejected.']);
     }

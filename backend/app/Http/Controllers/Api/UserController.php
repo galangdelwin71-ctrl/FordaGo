@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Notification;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use App\Services\SmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -224,6 +225,20 @@ class UserController extends Controller
             \Log::warning('Failed to notify super_admin of new account: ' . $e->getMessage());
         }
 
+        try {
+            if ($request->user() && in_array($request->user()->role, ['admin', 'super_admin', 'employee'], true)) {
+                ActivityLogger::log(
+                    $request->user(),
+                    'user_create',
+                    "Created {$roleLabel} Account",
+                    "Created account for @{$username} ({$rawEmail}) with role '{$assignedRole}' and plan '{$membershipType}'.",
+                    'user',
+                    $user->id,
+                    ['role' => $assignedRole, 'membership_type' => $membershipType, 'payment_method' => $paymentMethod]
+                );
+            }
+        } catch (\Throwable) {}
+
         return response()->json(['message' => 'Account created.', 'id' => $user->id], 201);
     }
 
@@ -377,6 +392,20 @@ class UserController extends Controller
                 } catch (\Throwable) {}
             }
 
+            if ($isAdmin && $request->user()->id !== $user->id) {
+                try {
+                    ActivityLogger::log(
+                        $request->user(),
+                        'user_update',
+                        "Updated User @{$user->username}",
+                        "Modified profile/account details for user #{$user->id} (@{$user->username}).",
+                        'user',
+                        $user->id,
+                        ['updated_fields' => array_keys($dataToUpdate)]
+                    );
+                } catch (\Throwable) {}
+            }
+
             return response()->json(['message' => 'User updated', 'profile_image' => $processedAvatar]);
         } catch (\Throwable $e) {
             \Log::error('User update failed: ' . $e->getMessage(), ['user_id' => $id]);
@@ -432,6 +461,18 @@ class UserController extends Controller
             \Log::warning('Failed to send FCM push on membership update: ' . $e->getMessage());
         }
 
+        try {
+            ActivityLogger::log(
+                $request->user(),
+                'membership_update',
+                "Approved Membership for @{$user->username}",
+                "Set {$membershipType} membership as active. Expiry: " . ($membershipExpiry ?: 'Daily/N/A'),
+                'user',
+                $user->id,
+                ['membership_type' => $membershipType, 'expiry' => $membershipExpiry]
+            );
+        } catch (\Throwable) {}
+
         return response()->json(['message' => 'Membership updated and user notified.']);
     }
 
@@ -467,6 +508,18 @@ class UserController extends Controller
         }
 
         $user->delete();
+
+        try {
+            ActivityLogger::log(
+                $request->user(),
+                'user_delete',
+                "Deleted User @{$user->username}",
+                "Permanently deleted account @{$user->username} ({$user->email}, role: {$user->role}).",
+                'user',
+                $user->id,
+                ['role' => $user->role, 'email' => $user->email]
+            );
+        } catch (\Throwable) {}
 
         return response()->json(['message' => 'User deleted']);
     }

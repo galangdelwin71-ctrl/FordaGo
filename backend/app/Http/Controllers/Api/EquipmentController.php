@@ -7,6 +7,7 @@ use App\Models\Equipment;
 use App\Models\EquipmentScanLog;
 use App\Models\Notification;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -196,6 +197,20 @@ class EquipmentController extends Controller
         // Notify all regular users (best-effort, mirrors Node version)
         $this->notifyNewEquipment($equipment->name);
 
+        try {
+            if ($request->user()) {
+                ActivityLogger::log(
+                    $request->user(),
+                    'equipment_create',
+                    "Added Equipment '{$equipment->name}'",
+                    "Created equipment item '{$equipment->name}' in category '{$equipment->category}'.",
+                    'equipment',
+                    $equipment->id,
+                    ['category' => $equipment->category, 'status' => $equipment->status]
+                );
+            }
+        } catch (\Throwable) {}
+
         return response()->json($equipment, 201);
     }
 
@@ -229,6 +244,20 @@ class EquipmentController extends Controller
 
         $this->invalidateEquipmentCache();
 
+        try {
+            if ($request->user()) {
+                ActivityLogger::log(
+                    $request->user(),
+                    'equipment_update',
+                    "Updated Equipment '{$equipment->name}'",
+                    "Modified equipment details for '{$equipment->name}' (status: {$equipment->status}).",
+                    'equipment',
+                    $equipment->id,
+                    ['category' => $equipment->category, 'status' => $equipment->status]
+                );
+            }
+        } catch (\Throwable) {}
+
         return response()->json($equipment);
     }
 
@@ -236,15 +265,28 @@ class EquipmentController extends Controller
      * DELETE /api/equipment/{id}
      * Delete equipment (staff only).
      */
-    public function destroy(int $id)
+    public function destroy(Request $request, int $id)
     {
         $equipment = Equipment::find($id);
         if (! $equipment) {
             return response()->json(['message' => 'Equipment not found'], 404);
         }
-
+        $name = $equipment->name;
         $equipment->delete();
         $this->invalidateEquipmentCache();
+
+        try {
+            if ($request->user()) {
+                ActivityLogger::log(
+                    $request->user(),
+                    'equipment_delete',
+                    "Deleted Equipment '{$name}'",
+                    "Permanently removed equipment item '{$name}' (ID #{$id}).",
+                    'equipment',
+                    $id
+                );
+            }
+        } catch (\Throwable) {}
 
         return response()->noContent();
     }

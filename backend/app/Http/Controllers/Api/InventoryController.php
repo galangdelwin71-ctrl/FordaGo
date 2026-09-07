@@ -7,6 +7,7 @@ use App\Models\Notification;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -96,6 +97,20 @@ class InventoryController extends Controller
 
         $this->invalidateProductsCache();
 
+        try {
+            if ($request->user()) {
+                ActivityLogger::log(
+                    $request->user(),
+                    'inventory_create',
+                    "Added Product '{$product->name}'",
+                    "Created product '{$product->name}' with price ₱{$price} and stock {$stock}.",
+                    'product',
+                    $product->id,
+                    ['price' => $price, 'stock' => $stock, 'brand' => $product->brand]
+                );
+            }
+        } catch (\Throwable) {}
+
         return response()->json($product, 201);
     }
 
@@ -121,18 +136,47 @@ class InventoryController extends Controller
 
         $this->invalidateProductsCache();
 
+        try {
+            if ($request->user()) {
+                ActivityLogger::log(
+                    $request->user(),
+                    'inventory_update',
+                    "Updated Product '{$product->name}'",
+                    "Modified product '{$product->name}'. Price: ₱{$price}, Stock: {$stock}.",
+                    'product',
+                    $product->id,
+                    ['price' => $price, 'stock' => $stock]
+                );
+            }
+        } catch (\Throwable) {}
+
         return response()->json(['message' => 'Product updated']);
     }
 
     /** DELETE /api/inventory/products/{id} */
-    public function destroyProduct(int $id)
+    public function destroyProduct(Request $request, int $id)
     {
         $product = Product::find($id);
         if (! $product) {
             return response()->json(['message' => 'Product not found'], 404);
         }
+        $name = $product->name;
         $product->delete();
         $this->invalidateProductsCache();
+
+        try {
+            if ($request->user()) {
+                ActivityLogger::log(
+                    $request->user(),
+                    'inventory_delete',
+                    "Deleted Product '{$name}'",
+                    "Permanently removed product '{$name}' (ID #{$id}) from shop inventory.",
+                    'product',
+                    $id
+                );
+            }
+        } catch (\Throwable) {}
+
         return response()->json(['message' => 'Product deleted']);
     }
 
@@ -432,6 +476,20 @@ class InventoryController extends Controller
                     ]);
                 }
             } catch (\Throwable $e) {}
+
+            try {
+                if ($request->user()) {
+                    ActivityLogger::log(
+                        $request->user(),
+                        'order_approve',
+                        "Approved Order Group #{$groupId}",
+                        "Verified payment and approved order group with " . $orders->count() . " item(s).",
+                        'order_group',
+                        null,
+                        ['order_group_id' => $groupId, 'items_count' => $orders->count()]
+                    );
+                }
+            } catch (\Throwable) {}
 
             return response()->json(['message' => 'Order approved']);
         });
