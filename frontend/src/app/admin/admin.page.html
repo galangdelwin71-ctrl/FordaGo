@@ -294,10 +294,9 @@
             <span class="stat-status-pill green">{{ activeMembersCount }} Active</span>
           </div>
           <div class="stat-value">{{ totalMembers }}</div>
-          <div class="stat-label">Total Registered Members</div>
-          <div class="stat-footer-link">
+          <div class="stat-label">Total Members</div>
+          <div class="stat-footer-text">
             <span>Manage Directory</span>
-            <ion-icon name="arrow-forward-outline"></ion-icon>
           </div>
         </div>
 
@@ -310,10 +309,9 @@
             </span>
           </div>
           <div class="stat-value green">{{ activeToday }}</div>
-          <div class="stat-label">Check-ins Recorded Today</div>
-          <div class="stat-footer-link">
+          <div class="stat-label">Check-ins Today</div>
+          <div class="stat-footer-text">
             <span>View Attendance Log</span>
-            <ion-icon name="arrow-forward-outline"></ion-icon>
           </div>
         </div>
 
@@ -332,10 +330,9 @@
           <div class="stat-value" [ngClass]="outOfStockProducts.length > 0 ? 'red' : (lowStockProducts.length > 0 ? 'amber' : 'gray')">
             {{ lowStockCount }}
           </div>
-          <div class="stat-label">Stock Alert Items (≤5 units)</div>
-          <div class="stat-footer-link">
+          <div class="stat-label">Low Stock Items</div>
+          <div class="stat-footer-text">
             <span>Open Shop Inventory</span>
-            <ion-icon name="arrow-forward-outline"></ion-icon>
           </div>
         </div>
 
@@ -348,10 +345,9 @@
             </span>
           </div>
           <div class="stat-value" [ngClass]="pendingOrders > 0 ? 'amber' : 'gray'">{{ pendingOrders }}</div>
-          <div class="stat-label">Pending Shop Orders</div>
-          <div class="stat-footer-link">
+          <div class="stat-label">Pending Orders</div>
+          <div class="stat-footer-text">
             <span>Review Order Queue</span>
-            <ion-icon name="arrow-forward-outline"></ion-icon>
           </div>
         </div>
       </div>
@@ -372,8 +368,8 @@
             <span class="panel-counter-badge" [ngClass]="outOfStockProducts.length > 0 ? 'red' : (lowStockProducts.length > 0 ? 'amber' : 'green')">
               {{ allLowStockAlerts.length }} {{ allLowStockAlerts.length === 1 ? 'Product' : 'Products' }}
             </span>
-            <button class="panel-action-link" (click)="navigateToLowStock()">
-              View Shop <ion-icon name="arrow-forward-outline"></ion-icon>
+            <button class="panel-pill-action" (click)="navigateToLowStock()">
+              View Shop
             </button>
           </div>
         </div>
@@ -441,8 +437,8 @@
             <span class="panel-counter-badge" [ngClass]="expiringMembers.length > 0 ? 'amber' : 'gray'">
               {{ expiringMembers.length }} {{ expiringMembers.length === 1 ? 'Member' : 'Members' }}
             </span>
-            <button class="panel-action-link" (click)="router.navigate(['/admin-reports'])" *ngIf="!isEmployee">
-              Reports <ion-icon name="arrow-forward-outline"></ion-icon>
+            <button class="panel-pill-action" (click)="router.navigate(['/admin-reports'])" *ngIf="!isEmployee">
+              View Reports
             </button>
           </div>
         </div>
@@ -451,7 +447,10 @@
         <div class="expiring-members-list" *ngIf="expiringMembers.length > 0">
           <div *ngFor="let m of expiringMembers" class="expiring-member-card clickable" (click)="viewExpiringMember(m)" role="button" tabindex="0" (keydown.enter)="viewExpiringMember(m)">
             <div class="exp-card-left">
-              <div class="exp-member-avatar">{{ m.initials }}</div>
+              <div class="exp-member-avatar">
+                <img *ngIf="m.profile_image" [src]="resolveImg(m.profile_image)" [alt]="m.username" (error)="m.profile_image = null" />
+                <span *ngIf="!m.profile_image">{{ m.initials }}</span>
+              </div>
               <div class="exp-member-details">
                 <div class="exp-member-name">{{ m.username }}</div>
                 <div class="exp-member-meta">
@@ -465,7 +464,6 @@
             </div>
             <div class="exp-card-right">
               <span class="badge warn">Expiring</span>
-              <ion-icon name="chevron-forward-outline" class="row-arrow"></ion-icon>
             </div>
           </div>
         </div>
@@ -496,8 +494,8 @@
             <span class="panel-counter-badge green">
               {{ attendanceToday.length }} Check-ins
             </span>
-            <button class="panel-action-link" (click)="navigateToAttendance()">
-              Full Attendance <ion-icon name="arrow-forward-outline"></ion-icon>
+            <button class="panel-pill-action" (click)="navigateToAttendance()">
+              All Check-ins
             </button>
           </div>
         </div>
@@ -506,7 +504,10 @@
         <div class="attendance-today-list" *ngIf="attendanceToday.length > 0">
           <div *ngFor="let a of attendanceToday.slice(0, 5)" class="attendance-today-item">
             <div class="att-item-left">
-              <div class="att-avatar">{{ a.initials }}</div>
+              <div class="att-avatar">
+                <img *ngIf="a.profile_image" [src]="resolveImg(a.profile_image)" [alt]="a.username" (error)="a.profile_image = null" />
+                <span *ngIf="!a.profile_image">{{ a.initials }}</span>
+              </div>
               <div class="att-info">
                 <div class="att-name">{{ a.username }}</div>
                 <div class="att-time">
@@ -563,7 +564,10 @@
         </div>
         <div class="member-card pending-card" *ngFor="let m of pendingMembers">
           <div class="member-card-main">
-            <div class="member-avatar pending-avatar">{{ m.initials }}</div>
+            <div class="member-avatar pending-avatar">
+              <img *ngIf="m.profile_image" [src]="resolveImg(m.profile_image)" [alt]="m.username" (error)="m.profile_image = null" />
+              <span *ngIf="!m.profile_image">{{ m.initials }}</span>
+            </div>
             <div class="member-card-details">
               <div class="member-card-name-row">
                 <span class="member-name">{{ m.username }}</span>
@@ -696,7 +700,10 @@
       <!-- Member Cards matching Reference Image -->
       <div *ngFor="let m of displayedMembers" class="member-card" [class.pending-card]="m.membership_status !== 'active'" [class.newest-card]="m.id === latestMemberId">
         <div class="member-card-main">
-          <div class="member-avatar">{{ m.initials }}</div>
+          <div class="member-avatar">
+            <img *ngIf="m.profile_image" [src]="resolveImg(m.profile_image)" [alt]="m.username" (error)="m.profile_image = null" />
+            <span *ngIf="!m.profile_image">{{ m.initials }}</span>
+          </div>
           <div class="member-card-details">
             <div class="member-card-name-row">
               <span class="member-name">{{ m.username }}</span>
@@ -1743,7 +1750,10 @@
         </div>
         <div class="member-card pending-card" *ngFor="let a of attendancePending">
           <div class="member-card-main">
-            <div class="member-avatar pending-avatar">{{ a.initials }}</div>
+            <div class="member-avatar pending-avatar">
+              <img *ngIf="a.profile_image" [src]="resolveImg(a.profile_image)" [alt]="a.username" (error)="a.profile_image = null" />
+              <span *ngIf="!a.profile_image">{{ a.initials }}</span>
+            </div>
             <div class="member-card-details">
               <div class="member-card-name-row">
                 <span class="member-name">{{ a.username }}</span>
@@ -1837,7 +1847,10 @@
         <!-- Attendance Cards Matching Reference Design -->
         <div *ngFor="let a of displayedAttendance" class="member-card" [class.pending-card]="a.payment_status!=='paid'">
           <div class="member-card-main">
-            <div class="member-avatar">{{ a.initials }}</div>
+            <div class="member-avatar">
+              <img *ngIf="a.profile_image" [src]="resolveImg(a.profile_image)" [alt]="a.username" (error)="a.profile_image = null" />
+              <span *ngIf="!a.profile_image">{{ a.initials }}</span>
+            </div>
             <div class="member-card-details">
               <div class="member-card-name-row">
                 <span class="member-name">{{ a.username }}</span>

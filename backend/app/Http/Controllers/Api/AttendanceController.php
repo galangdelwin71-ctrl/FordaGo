@@ -147,7 +147,7 @@ class AttendanceController extends Controller
             ->join('users', 'users.id', '=', 'attendance.user_id')
             ->whereDate('attendance.check_in_time', $today)
             ->orderByDesc('attendance.check_in_time')
-            ->select('attendance.*', 'users.username', 'users.email', 'users.membership_type as user_plan')
+            ->select('attendance.*', 'users.username', 'users.email', 'users.profile_image', 'users.membership_type as user_plan')
             ->get();
 
         return response()->json($rows);
@@ -164,7 +164,7 @@ class AttendanceController extends Controller
             ->join('users', 'users.id', '=', 'attendance.user_id')
             ->whereDate('attendance.check_in_time', $date)
             ->orderByDesc('attendance.check_in_time')
-            ->select('attendance.*', 'users.username', 'users.email', 'users.membership_type as user_plan')
+            ->select('attendance.*', 'users.username', 'users.email', 'users.profile_image', 'users.membership_type as user_plan')
             ->get();
 
         return response()->json($rows);
@@ -179,7 +179,7 @@ class AttendanceController extends Controller
             ->join('users', 'users.id', '=', 'attendance.user_id')
             ->where('attendance.payment_status', 'pending')
             ->orderByDesc('attendance.check_in_time')
-            ->select('attendance.*', 'users.username', 'users.email', 'users.phone')
+            ->select('attendance.*', 'users.username', 'users.email', 'users.phone', 'users.profile_image')
             ->get();
 
         return response()->json($rows);
