@@ -316,9 +316,13 @@ export class AppComponent implements OnDestroy {
     // Automatically poll and listen for real-time notifications for any logged-in user.
     // Also register FCM token on login so backend can send background push notifications.
     this.auth.user$.subscribe(user => {
-      if (user) {
-        // Fetch fresh profile state (including synced avatars) from server
-        void this.auth.fetchCurrentUser().subscribe();
+      if (user && this.auth.token) {
+        // Fetch fresh profile state (including synced avatars) from server safely
+        this.auth.fetchCurrentUser().subscribe({
+          error: () => {
+            // Handled gracefully: if session is expired or 401, auth service clears state
+          }
+        });
 
         this.notificationCenter.startPolling();
         // Register FCM token with backend — runs async, non-blocking
@@ -333,7 +337,7 @@ export class AppComponent implements OnDestroy {
 
             this.zone.run(() => {
               const incomingConvoId = Number(data.conversation_id);
-            this.coachingService.getConversations().subscribe();
+              this.coachingService.getConversations().subscribe({ error: () => {} });
 
               // Only show in-app toast & native push notification if user is NOT
               // currently reading this exact conversation, and conversation is NOT muted/snoozed.

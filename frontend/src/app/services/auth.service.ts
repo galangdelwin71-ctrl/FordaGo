@@ -16,21 +16,29 @@ export class AuthService {
     try {
       const raw = localStorage.getItem('user');
       const token = localStorage.getItem('token');
-      if (raw) {
+      if (raw && token) {
         const user = JSON.parse(raw);
         if (user && user.id) {
           this.userSubject.next(user);
+        } else {
+          this.clearStorage();
         }
+      } else {
+        this.clearStorage();
       }
       if (token) {
         void Preferences.set({ key: 'token', value: token });
       }
     } catch {
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
-      void Preferences.remove({ key: 'token' });
-      void Preferences.remove({ key: 'user' });
+      this.clearStorage();
     }
+  }
+
+  private clearStorage() {
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    void Preferences.remove({ key: 'token' });
+    void Preferences.remove({ key: 'user' });
   }
 
   register(
@@ -174,13 +182,22 @@ export class AuthService {
   }
 
   fetchCurrentUser() {
+    if (!this.token) {
+      this.logout();
+      return throwError(() => new Error('No active session.'));
+    }
     return this.http.get<any>(`${API_URL}/users/me`).pipe(
       tap((user) => {
         if (user && user.id) {
           this.updateCurrentUser(user);
         }
       }),
-      catchError((err: HttpErrorResponse) => this.handleError(err))
+      catchError((err: HttpErrorResponse) => {
+        if (err.status === 401) {
+          this.logout();
+        }
+        return this.handleError(err);
+      })
     );
   }
 
