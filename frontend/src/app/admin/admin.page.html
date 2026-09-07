@@ -27,6 +27,8 @@
       <button class="confirm-logout" (click)="confirmLogout()">Logout</button>
     </div>
   </div>
+</div>
+
 <!-- ── Quick Restock Dialog ──────────────────────────── -->
 <div class="confirm-overlay" *ngIf="quickRestockModal.show && quickRestockModal.product" (click)="closeQuickRestock()">
   <div class="confirm-box restock-box" (click)="$event.stopPropagation()">
