@@ -12,7 +12,7 @@ import {
   IonInput,
 } from '@ionic/angular/standalone';
 import { HttpClient } from '@angular/common/http';
-import { Subscription } from 'rxjs';
+import { Subscription, filter, take } from 'rxjs';
 import { WorkoutTrackerService, StoredWorkoutSession } from '../services/workout-tracker.service';
 import { NotificationCenterService } from '../services/notification-center.service';
 import { CoachingNavService, CoachingPanelTab } from '../services/coaching-nav.service';
@@ -1681,16 +1681,54 @@ export class DashboardPage implements OnInit, OnDestroy {
     this.checkAndStartOnboardingTour();
   }
 
+  ionViewDidEnter(): void {
+    if (!this.onboardingService.isRunning && !this.coachingPanelOpen) {
+      this.checkAndStartOnboardingTour();
+    }
+  }
+
+  private onboardingTourTimeout: any = null;
+  private onboardingRetryCount = 0;
+
   /**
    * Initializes and starts the interactive onboarding walkthrough in English if the member
    * has not seen it yet.
    */
   private checkAndStartOnboardingTour(): void {
     const user = this.auth.user;
-    if (!user) return;
+    if (!user) {
+      this.auth.user$
+        .pipe(
+          filter((u): u is any => !!u),
+          take(1)
+        )
+        .subscribe((u) => {
+          this.triggerOnboardingTour(u);
+        });
+      return;
+    }
+    this.triggerOnboardingTour(user);
+  }
 
-    // Delay slightly to let the DOM elements render and mount cleanly
-    setTimeout(() => {
+  private triggerOnboardingTour(user: any): void {
+    if (!user || !user.id) return;
+    if (['admin', 'super_admin', 'employee'].includes(user.role)) return;
+
+    if (this.onboardingService.hasUserSeenTour('dashboard_main', user.id)) {
+      return;
+    }
+
+    if (this.onboardingTourTimeout) {
+      clearTimeout(this.onboardingTourTimeout);
+      this.onboardingTourTimeout = null;
+    }
+
+    this.onboardingRetryCount = 0;
+    this.attemptStartDashboardTour(user);
+  }
+
+  private attemptStartDashboardTour(user: any): void {
+    this.onboardingTourTimeout = setTimeout(() => {
       if (this.onboardingService.isRunning || this.coachingPanelOpen) return;
 
       const allSteps: TourStep[] = [
@@ -1757,8 +1795,11 @@ export class DashboardPage implements OnInit, OnDestroy {
 
       if (availableSteps.length > 0) {
         this.onboardingService.startTour('dashboard_main', availableSteps, false, user.id);
+      } else if (this.onboardingRetryCount < 3) {
+        this.onboardingRetryCount++;
+        this.attemptStartDashboardTour(user);
       }
-    }, 700);
+    }, 600);
   }
 
   /**
@@ -1772,6 +1813,10 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.onboardingTourTimeout) {
+      clearTimeout(this.onboardingTourTimeout);
+      this.onboardingTourTimeout = null;
+    }
     this.trackerSubscription?.unsubscribe();
     this.userSubscription?.unsubscribe();
     this.coachingSubscription?.unsubscribe();

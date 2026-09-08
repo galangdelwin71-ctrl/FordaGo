@@ -22,7 +22,26 @@ export class OnboardingService {
   isVisible$ = this.isVisibleSubject.asObservable();
 
   private currentTourId: string | null = null;
+  private currentTourUserId: string | number | null = null;
   private tourKeyPrefix = 'fordago_tour_completed_';
+
+  private readonly allKnownTours = [
+    'dashboard_main',
+    'schedule_main',
+    'schedule_add_modal',
+    'schedule_week_plan_modal',
+    'scanner_main',
+    'shop_main',
+    'equipment_main',
+    'profile_main',
+    'coach_studio_main',
+    'coaching_member_main',
+    'chat_main',
+  ];
+
+  constructor() {
+    this.cleanupLegacyUnscopedKeys();
+  }
 
   get isRunning(): boolean {
     return this.isVisibleSubject.value;
@@ -50,66 +69,57 @@ export class OnboardingService {
 
   /**
    * Checks if user has already seen the tour for a specific tour id.
+   * Strictly user-scoped so a new user account is NEVER silenced by another user's activity.
    */
   hasUserSeenTour(tourId: string, userId?: string | number): boolean {
     try {
-      if (localStorage.getItem(`${this.tourKeyPrefix}global_all`) === 'true') {
-        return true;
+      const uId = userId || this.currentTourUserId || this.getCurrentUserId();
+      if (!uId) {
+        // If no user context exists, do not block the tour
+        return false;
       }
-      const uId = userId || this.getCurrentUserId() || 'guest';
+
+      // Check if user has explicitly cancelled all guides
       if (localStorage.getItem(`${this.tourKeyPrefix}global_all_${uId}`) === 'true') {
         return true;
       }
-      const key = `${this.tourKeyPrefix}${tourId}_${uId}`;
-      return (
-        localStorage.getItem(key) === 'true' ||
-        localStorage.getItem(`${this.tourKeyPrefix}${tourId}`) === 'true'
-      );
+
+      // Check if user has completed this specific tour
+      const userKey = `${this.tourKeyPrefix}${tourId}_${uId}`;
+      return localStorage.getItem(userKey) === 'true';
     } catch {
       return false;
     }
   }
 
   /**
-   * Marks tour as completed for user.
+   * Marks tour as completed strictly for the current user.
    */
   markTourSeen(tourId: string, userId?: string | number): void {
     try {
-      const uId = userId || this.getCurrentUserId() || 'guest';
-      const key = `${this.tourKeyPrefix}${tourId}_${uId}`;
-      localStorage.setItem(key, 'true');
-      localStorage.setItem(`${this.tourKeyPrefix}${tourId}`, 'true');
+      const uId = userId || this.currentTourUserId || this.getCurrentUserId();
+      if (uId) {
+        const key = `${this.tourKeyPrefix}${tourId}_${uId}`;
+        localStorage.setItem(key, 'true');
+      }
     } catch {
       // Ignore storage write errors
     }
   }
 
   /**
-   * Skips and cancels all guides across all panels permanently for the user.
+   * Skips and cancels all guides across all panels permanently for the current user.
    */
   skipAllTours(userId?: string | number): void {
     try {
-      localStorage.setItem(`${this.tourKeyPrefix}global_all`, 'true');
-      const uId = userId || this.getCurrentUserId() || 'guest';
-      localStorage.setItem(`${this.tourKeyPrefix}global_all_${uId}`, 'true');
+      const uId = userId || this.currentTourUserId || this.getCurrentUserId();
+      if (uId) {
+        localStorage.setItem(`${this.tourKeyPrefix}global_all_${uId}`, 'true');
 
-      const allKnownTours = [
-        'dashboard_main',
-        'schedule_main',
-        'schedule_add_modal',
-        'schedule_week_plan_modal',
-        'scanner_main',
-        'shop_main',
-        'equipment_main',
-        'profile_main',
-        'coach_studio_main',
-        'coaching_member_main',
-        'chat_main',
-      ];
-      allKnownTours.forEach((tid) => {
-        localStorage.setItem(`${this.tourKeyPrefix}${tid}_${uId}`, 'true');
-        localStorage.setItem(`${this.tourKeyPrefix}${tid}`, 'true');
-      });
+        this.allKnownTours.forEach((tid) => {
+          localStorage.setItem(`${this.tourKeyPrefix}${tid}_${uId}`, 'true');
+        });
+      }
     } catch {
       // Ignore storage write errors
     }
@@ -117,16 +127,64 @@ export class OnboardingService {
   }
 
   /**
-   * Resets tour progress so user can replay the tutorial.
+   * Resets a specific tour progress for the current user so they can replay it.
    */
   resetTour(tourId?: string, userId?: string | number): void {
     try {
+      const uId = userId || this.currentTourUserId || this.getCurrentUserId();
+      if (uId) {
+        localStorage.removeItem(`${this.tourKeyPrefix}global_all_${uId}`);
+        if (tourId) {
+          localStorage.removeItem(`${this.tourKeyPrefix}${tourId}_${uId}`);
+        }
+      }
+    } catch {
+      // Ignore storage errors
+    }
+  }
+
+  /**
+   * Resets all tours for the user so every guide will replay from the beginning.
+   */
+  resetAllToursForUser(userId?: string | number): void {
+    try {
+      const uId = userId || this.currentTourUserId || this.getCurrentUserId();
+      if (uId) {
+        localStorage.removeItem(`${this.tourKeyPrefix}global_all_${uId}`);
+        this.allKnownTours.forEach((tid) => {
+          localStorage.removeItem(`${this.tourKeyPrefix}${tid}_${uId}`);
+        });
+      }
+      this.cleanupLegacyUnscopedKeys();
+    } catch {
+      // Ignore storage errors
+    }
+  }
+
+  /**
+   * Removes poisoned legacy un-scoped localStorage keys left by earlier app versions.
+   * This ensures newly created accounts aren't falsely flagged as having completed guides.
+   */
+  cleanupLegacyUnscopedKeys(): void {
+    try {
       localStorage.removeItem(`${this.tourKeyPrefix}global_all`);
-      const uId = userId || this.getCurrentUserId() || 'guest';
-      localStorage.removeItem(`${this.tourKeyPrefix}global_all_${uId}`);
-      if (tourId) {
-        localStorage.removeItem(`${this.tourKeyPrefix}${tourId}_${uId}`);
-        localStorage.removeItem(`${this.tourKeyPrefix}${tourId}`);
+      this.allKnownTours.forEach((tid) => {
+        localStorage.removeItem(`${this.tourKeyPrefix}${tid}`);
+      });
+
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (!key || !key.startsWith(this.tourKeyPrefix)) continue;
+        if (key === `${this.tourKeyPrefix}global_all`) {
+          localStorage.removeItem(key);
+          continue;
+        }
+        for (const tid of this.allKnownTours) {
+          if (key === `${this.tourKeyPrefix}${tid}`) {
+            localStorage.removeItem(key);
+            break;
+          }
+        }
       }
     } catch {
       // Ignore storage errors
@@ -137,7 +195,9 @@ export class OnboardingService {
    * Starts a tour with provided steps.
    */
   startTour(tourId: string, steps: TourStep[], force = false, userId?: string | number): boolean {
-    if (!force && this.hasUserSeenTour(tourId, userId)) {
+    const resolvedUserId = userId || this.getCurrentUserId();
+
+    if (!force && this.hasUserSeenTour(tourId, resolvedUserId || undefined)) {
       return false;
     }
 
@@ -146,6 +206,7 @@ export class OnboardingService {
     }
 
     this.currentTourId = tourId;
+    this.currentTourUserId = resolvedUserId;
     this.activeTourSubject.next(steps);
     this.currentStepIndexSubject.next(0);
     this.isVisibleSubject.next(true);
@@ -175,12 +236,13 @@ export class OnboardingService {
 
   finishTour(): void {
     if (this.currentTourId) {
-      this.markTourSeen(this.currentTourId);
+      this.markTourSeen(this.currentTourId, this.currentTourUserId || undefined);
     }
     this.isVisibleSubject.next(false);
     this.activeTourSubject.next(null);
     this.currentStepIndexSubject.next(0);
     this.currentTourId = null;
+    this.currentTourUserId = null;
   }
 
   private getCurrentUserId(): string | number | null {

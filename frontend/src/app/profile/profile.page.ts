@@ -835,6 +835,17 @@ export class ProfilePage implements OnInit {
     });
   }
 
+  replayAppTour(): void {
+    const user = this.auth.user;
+    if (!user) return;
+    this.onboardingService.resetAllToursForUser(user.id);
+    void this.showMobileToast('Guides reset! Returning to Home...');
+    setTimeout(() => {
+      this.closeOverlaysForNavigation();
+      this.router.navigate(['/dashboard'], { replaceUrl: true });
+    }, 400);
+  }
+
   // ── Notifications panel ────────────────────────────────
   // Display/state now lives entirely in the shared NotificationPanelComponent
   // (see shared/notification-panel/); this page just toggles [isOpen] from

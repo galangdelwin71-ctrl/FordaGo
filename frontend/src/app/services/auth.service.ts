@@ -132,6 +132,26 @@ export class AuthService {
     void clearCachedData(CACHE_KEYS.COACH_CLIENTS);
     void clearCachedData(CACHE_KEYS.COACH_REQUESTS);
     void clearCachedData(CACHE_KEYS.ADMIN_REPORTS);
+
+    try {
+      localStorage.removeItem('fordago_tour_completed_global_all');
+      const legacyTours = [
+        'dashboard_main',
+        'schedule_main',
+        'schedule_add_modal',
+        'schedule_week_plan_modal',
+        'scanner_main',
+        'shop_main',
+        'equipment_main',
+        'profile_main',
+        'coach_studio_main',
+        'coaching_member_main',
+        'chat_main',
+      ];
+      legacyTours.forEach((tid) => {
+        localStorage.removeItem(`fordago_tour_completed_${tid}`);
+      });
+    } catch {}
   }
 
   get token() {
