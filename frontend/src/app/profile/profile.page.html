@@ -236,12 +236,22 @@
 <ion-modal
   [isOpen]="editModalOpen"
   (didDismiss)="closeEdit()"
-  [breakpoints]="[0, 0.55, 0.85]"
-  [initialBreakpoint]="0.55">
+  [breakpoints]="[0, 1]"
+  [initialBreakpoint]="1"
+  [handle]="true">
   <ng-template>
     <ion-content class="ion-padding modal-content">
       <div class="modal-handle"></div>
-      <div class="modal-title">Edit Profile</div>
+      <div class="modal-header-row">
+        <div class="modal-title">Edit Profile</div>
+        <button
+          type="button"
+          class="modal-header-save-btn"
+          [disabled]="phoneInvalid || savingProfile"
+          (click)="saveProfile()">
+          {{ savingProfile ? 'Saving…' : 'Save' }}
+        </button>
+      </div>
 
       <div class="profile-photo-editor">
         <div class="photo-preview" *ngIf="!editForm.profileImage">{{ profile.initials }}</div>
@@ -408,8 +418,8 @@
 <ion-modal
   [isOpen]="changePasswordModalOpen"
   (didDismiss)="closeChangePassword()"
-  [breakpoints]="[0, 0.55, 0.75]"
-  [initialBreakpoint]="0.55">
+  [breakpoints]="[0, 0.7, 1]"
+  [initialBreakpoint]="0.7">
   <ng-template>
     <ion-content class="ion-padding modal-content">
       <div class="modal-handle"></div>
@@ -517,8 +527,8 @@
 <ion-modal
   [isOpen]="renewalModalOpen"
   (didDismiss)="closeRenewal()"
-  [breakpoints]="[0, 0.75, 0.92]"
-  [initialBreakpoint]="0.75">
+  [breakpoints]="[0, 0.85, 1]"
+  [initialBreakpoint]="0.85">
   <ng-template>
     <ion-content class="ion-padding modal-content membership-modal-content">
       <div class="modal-handle"></div>
