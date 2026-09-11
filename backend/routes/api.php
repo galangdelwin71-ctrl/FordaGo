@@ -130,6 +130,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('workout-sessions')->group(function () {
         Route::get('/',                           [WorkoutSessionController::class, 'index']);
         Route::post('/',                          [WorkoutSessionController::class, 'store']);
+        Route::post('/batch',                     [WorkoutSessionController::class, 'batchStore']);
         Route::delete('/date/{sessionDate}',      [WorkoutSessionController::class, 'deleteByDate']);
         Route::patch('/{clientSessionId}',        [WorkoutSessionController::class, 'update']);
         Route::delete('/{clientSessionId}',       [WorkoutSessionController::class, 'destroy']);

@@ -126,11 +126,7 @@ export class WorkoutTrackerService {
     // the full month — not just whatever days happened to already exist.
     this.seedCurrentMonthIfNeeded();
     this.syncStoreStatuses();
-    // Explicit call (not just relying on writeStore()'s own call below):
-    // if every session was already correctly seeded/synced on this boot,
-    // syncStoreStatuses() never calls writeStore() at all (nothing
-    // `changed`), so nothing would otherwise schedule today's precise
-    // missed-check timers on a fresh app launch.
+    void this.syncUpcomingSessionsToServer();
     void this.scheduleMissedChecks();
     void this.scheduleUpcomingReminders();
     if (this.syncTimer) {
@@ -219,6 +215,7 @@ export class WorkoutTrackerService {
 
     if (changed) {
       this.writeStore(store);
+      void this.syncUpcomingSessionsToServer();
     }
 
     return changed;
@@ -400,6 +397,7 @@ export class WorkoutTrackerService {
     if (changed) {
       this.writeStore(store);
       this.syncStoreStatuses();
+      void this.syncUpcomingSessionsToServer();
       void this.scheduleMissedChecks();
       this.scheduleUpcomingReminders();
     }
@@ -706,6 +704,68 @@ export class WorkoutTrackerService {
   }
 
   /**
+   * Syncs all stored upcoming sessions for the current month and beyond to the backend MySQL database
+   * via POST /api/workout-sessions/batch.
+   * This guarantees that the server cron knows about future workouts and can dispatch
+   * 30-minute upcoming reminders and missed-workout FCM push notifications directly to the phone
+   * even when the app is completely closed or killed.
+   */
+  async syncUpcomingSessionsToServer(): Promise<void> {
+    if (!this.auth.token || !this.auth.user) return;
+    if (['admin', 'super_admin', 'employee'].includes(this.auth.user.role)) return;
+
+    try {
+      const store = this.readStore();
+      const payloadSessions: any[] = [];
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+
+      Object.keys(store).forEach((key) => {
+        const parts = key.split('-').map(Number);
+        if (parts.length !== 3 || parts.some(Number.isNaN)) return;
+        const [year, monthIndex, day] = parts;
+        const sessionDate = new Date(year, monthIndex, day, 0, 0, 0, 0);
+
+        // Include today and future days in the horizon
+        if (sessionDate >= todayStart) {
+          const isoDate = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          const daySessions = store[key] ?? [];
+
+          daySessions.forEach((session) => {
+            if (!session.id) return;
+            payloadSessions.push({
+              client_session_id: session.id,
+              session_date: isoDate,
+              title: session.title,
+              is_rest_day: session.isRestDay ?? session.title === 'Rest Day',
+              status: session.status,
+              exercises: session.exercises ?? [],
+              actual_minutes: session.actualMinutes ?? null,
+              started_at: session.startedAt ?? null,
+              time_val: session.timeVal,
+              time_ampm: session.timeAmpm,
+              duration: session.duration,
+              location: session.location,
+              coach: session.coach,
+              custom_target: session.customTarget ?? null,
+            });
+          });
+        }
+      });
+
+      if (payloadSessions.length === 0) return;
+
+      await firstValueFrom(
+        this.http.post<{ synced: number }>(`${API_URL}/workout-sessions/batch`, { sessions: payloadSessions }, {
+          headers: { Authorization: `Bearer ${this.auth.token}` },
+        })
+      );
+    } catch (err) {
+      console.warn('[WorkoutTracker] Failed to batch sync upcoming sessions to server:', err);
+    }
+  }
+
+  /**
    * Deletes one session from the backend (delete companion to pushSession).
    * Requires the session's calendar date because the backend's identifying
    * key is (user_id, client_session_id, session_date) — a client-generated
@@ -972,9 +1032,10 @@ export class WorkoutTrackerService {
           changed = true;
           const updated = { ...normalizedSession, status: 'missed' as SessionStatus };
 
-          // STRICTLY ONLY alert and push to server if this session was scheduled for TODAY
-          // Never fire notifications for past days (e.g. yesterday or earlier)
-          if (sessionDay.getTime() === today.getTime()) {
+          // Alert and push to server if this session was scheduled for TODAY or YESTERDAY (within 48h)
+          // so that opening the app after a missed day (e.g. yesterday) still shows the notification and home alternatives
+          const diffDays = Math.round((today.getTime() - sessionDay.getTime()) / (1000 * 60 * 60 * 24));
+          if (diffDays >= 0 && diffDays <= 1) {
             const homeAlternatives = this.homeWorkoutMap[normalizedSession.title] || this.homeWorkoutMap['Full Body'];
             void this.notificationCenter.notifyMissedWorkout(
               normalizedSession.title,
@@ -983,6 +1044,8 @@ export class WorkoutTrackerService {
               homeAlternatives
             );
             this.pushSession(sessionDate, updated);
+          } else if (sessionDay.getTime() < today.getTime()) {
+            this.pushSession(sessionDate, updated);
           }
           return updated;
         }
@@ -990,9 +1053,7 @@ export class WorkoutTrackerService {
         if (normalizedSession.status !== 'done' && normalizedSession.status !== computedStatus) {
           changed = true;
           const updated = { ...normalizedSession, status: computedStatus };
-          if (sessionDay.getTime() === today.getTime()) {
-            this.pushSession(sessionDate, updated);
-          }
+          this.pushSession(sessionDate, updated);
           return updated;
         }
 

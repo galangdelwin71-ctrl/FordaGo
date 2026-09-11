@@ -1631,6 +1631,7 @@ export class SchedulePage implements OnInit, OnDestroy {
     this.weekPlanSaved = true;
     // Apply template to the current week (unseeded days)
     this.applyWeekPlanToCurrentWeek();
+    void this.workoutTracker.syncUpcomingSessionsToServer();
     void this.workoutTracker.scheduleMissedChecks();
     this.workoutTracker.scheduleUpcomingReminders();
     setTimeout(() => {
@@ -1645,9 +1646,10 @@ export class SchedulePage implements OnInit, OnDestroy {
     localStorage.removeItem(this.WEEK_PLAN_KEY);
     this.weekPlanDays = this.buildDefaultWeekPlanDays();
     this.weekPlanSaved = false;
+    this.applyWeekPlanToCurrentWeek();
+    void this.workoutTracker.syncUpcomingSessionsToServer();
     void this.workoutTracker.scheduleMissedChecks();
     this.workoutTracker.scheduleUpcomingReminders();
-    this.applyWeekPlanToCurrentWeek();
     this.buildWeekStrip();
     this.renderSessions();
     this.toast.success('Reset to recommended workout plan');

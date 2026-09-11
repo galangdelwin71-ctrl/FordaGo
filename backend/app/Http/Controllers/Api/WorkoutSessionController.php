@@ -205,6 +205,87 @@ class WorkoutSessionController extends Controller
     }
 
     /**
+     * POST /api/workout-sessions/batch
+     * Upsert multiple workout sessions in a single request.
+     * Ideal for pre-seeding upcoming week/month schedules to the server so that
+     * backend cron notification checks can trigger high-priority FCM pushes
+     * even when the user hasn't opened the app.
+     */
+    public function batchStore(Request $request)
+    {
+        $userId = $request->user()->id;
+        $items = $request->input('sessions');
+
+        if (! is_array($items) || empty($items)) {
+            return response()->json(['message' => 'No sessions provided.'], 400);
+        }
+
+        $savedCount = 0;
+        foreach ($items as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+
+            $clientSessionId = $item['client_session_id'] ?? null;
+            $sessionDate     = $item['session_date'] ?? null;
+            $title           = $item['title'] ?? null;
+
+            if (! $clientSessionId || ! $sessionDate || ! $title) {
+                continue;
+            }
+
+            if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', $sessionDate)) {
+                continue;
+            }
+
+            $isRestDay = ! empty($item['is_rest_day']) || $title === 'Rest Day';
+
+            // Find existing session if already saved
+            $existing = WorkoutSession::where('user_id', $userId)
+                ->where('client_session_id', $clientSessionId)
+                ->where('session_date', $sessionDate)
+                ->first();
+
+            // If existing is already done or missed, don't revert to upcoming unless explicitly forced
+            $incomingStatus = $item['status'] ?? 'upcoming';
+            if ($existing && in_array($existing->status, ['done', 'missed']) && $incomingStatus === 'upcoming') {
+                $statusToSave = $existing->status;
+            } else {
+                $statusToSave = in_array($incomingStatus, ['upcoming', 'optional', 'missed', 'done']) ? $incomingStatus : 'upcoming';
+            }
+
+            WorkoutSession::updateOrCreate(
+                [
+                    'user_id'           => $userId,
+                    'client_session_id' => $clientSessionId,
+                    'session_date'      => $sessionDate,
+                ],
+                [
+                    'title'          => $title,
+                    'is_rest_day'    => $isRestDay,
+                    'status'         => $statusToSave,
+                    'exercises'      => $item['exercises'] ?? [],
+                    'actual_minutes' => $item['actual_minutes'] ?? null,
+                    'started_at'     => $item['started_at'] ?? null,
+                    'time_val'       => $item['time_val'] ?? null,
+                    'time_ampm'      => $item['time_ampm'] ?? null,
+                    'duration'       => $item['duration'] ?? null,
+                    'location'       => $item['location'] ?? null,
+                    'coach'          => $item['coach'] ?? null,
+                    'custom_target'  => $item['custom_target'] ?? null,
+                ]
+            );
+            $savedCount++;
+        }
+
+        // Invalidate user cache
+        Cache::forget("workout_sessions.{$userId}.all.all");
+        Cache::forget("workout_session_sync_{$userId}_" . now()->toDateString());
+
+        return response()->json(['synced' => $savedCount], 200);
+    }
+
+    /**
      * PATCH /api/workout-sessions/{clientSessionId}
      * Partial update (status, exercises, actual_minutes, started_at, ...).
      * session_date must be included in the body — it's part of the

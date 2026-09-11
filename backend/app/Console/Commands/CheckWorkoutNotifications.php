@@ -45,6 +45,12 @@ class CheckWorkoutNotifications extends Command
 
         $this->info("Checking workout notifications for {$todayStr} at {$now->toTimeString()} (Asia/Manila)");
 
+        // Auto-mark past uncompleted upcoming sessions as missed (e.g. yesterday or earlier)
+        WorkoutSession::whereDate('session_date', '<', $todayStr)
+            ->where('status', 'upcoming')
+            ->whereNull('started_at')
+            ->update(['status' => 'missed']);
+
         // Fetch today's upcoming non-rest sessions
         $sessions = WorkoutSession::with('user')
             ->whereDate('session_date', $todayStr)
