@@ -119,24 +119,28 @@ A total of **fifteen (15) respondents** were selected, categorized into two eval
 
 ## 2.5 Research Instrument
 
-The primary research instrument used to evaluate the system was a structured survey questionnaire adapted from the **ISO/IEC 25010 Systems and Software Quality Requirements and Evaluation (SQuaRE)** model (ISO, 2011).
+The primary research instrument used to evaluate the system was a structured survey questionnaire adapted from the **ISO/IEC 25010 Systems and Software Quality Requirements and Evaluation (SQuaRE)** model (ISO, 2011) and standardized by the College of Information and Communications Technology (CICT) for IT Expert capstone evaluations.
 
-The instrument assessed five (5) core software product quality characteristics:
+The evaluation instrument for IT Experts comprehensively assessed all eight (8) software product quality characteristics through thirty-three (33) standardized parameter indicators:
 
-1. **Functional Suitability:** Evaluates the degree to which system features (QR turnstile attendance, equipment tutorial scanner, PR milestone tracker, split routine planner, in-chat workout proposals, supplement POS, and PDF/Excel report export) completely and correctly satisfy user operational requirements.
-2. **Usability:** Measures interface aesthetics, clarity of navigation, ease of learning, feature accessibility, and the effectiveness of interactive onboarding guides.
-3. **Reliability:** Assesses system operational consistency, fault tolerance, transaction recoverability, and stable data persistence during concurrent operations.
-4. **Security:** Evaluates role-based access control (RBAC), token authentication, password encryption (Bcrypt), and the safeguarding of user personal and transactional records against unauthorized manipulation.
-5. **Performance Efficiency:** Evaluates API response speeds, database query execution times, WebSocket real-time message throughput, and mobile camera barcode scanning responsiveness under normal operational loads.
+1. **Functional Suitability (3 items):** Evaluates the degree to which system features (QR turnstile attendance, equipment tutorial scanner, PR milestone tracker, split routine planner, in-chat workout proposals, supplement POS, and PDF/Excel report export) completely, correctly, and appropriately satisfy gym operational requirements.
+2. **Performance Efficiency (3 items):** Evaluates transaction response times, system resource utilization (CPU, memory, database storage, and network bandwidth), and operational capacity under concurrent user traffic.
+3. **Compatibility (2 items):** Assesses the degree to which the system co-exists harmoniously with other applications and exhibits cross-platform interoperability across mobile operating systems and modern desktop browsers.
+4. **Usability (6 items):** Measures appropriateness recognizability, learnability for novice and experienced users, operability, user error protection, interface aesthetics, and system accessibility.
+5. **Reliability (4 items):** Assesses system maturity, high service availability, fault tolerance during network disruptions, and recoverability of transactional records following failures.
+6. **Security (6 items):** Evaluates data confidentiality, data integrity, fault resistance, non-repudiation of transactions, user accountability and audit logging, and token authenticity (Sanctum authentication and Bcrypt password hashing).
+7. **Maintainability (6 items):** Assesses modularity of Angular components and Laravel controllers, component availability, code reusability, fault analyzability, update modifiability, and testability.
+8. **Portability (3 items):** Measures environment adaptability, ease of client APK and web installation, and component replaceability across computing platforms.
 
-A **4-Point Likert Scale (Forced-Choice)** was utilized across all questionnaire items, consistent with the standard evaluation rubrics established by the College of Information and Communications Technology (CICT).
+A **5-Point Likert Scale** was utilized across all questionnaire items, consistent with the standard evaluation rubrics established by the College of Information and Communications Technology (CICT).
 
-| Scale | Numerical Range | Descriptive Rating | Verbal Interpretation |
-| :---: | :---: | :--- | :--- |
-| **4** | 3.26 – 4.00 | Strongly Agree (SA) | Excellent / Highly Acceptable |
-| **3** | 2.51 – 3.25 | Agree (A) | Very Good / Acceptable |
-| **2** | 1.76 – 2.50 | Disagree (D) | Fair / Needs Improvement |
-| **1** | 1.00 – 1.75 | Strongly Disagree (SD) | Poor / Unacceptable |
+| Scale | Numerical Range | Descriptive Rating | Evaluation Form Evidence Descriptor | Verbal Interpretation |
+| :---: | :---: | :--- | :--- | :--- |
+| **5** | 4.21 – 5.00 | Strongly Agree (SA) | There is very strong evidence on the existence of the quality | Excellent / Highly Acceptable |
+| **4** | 3.41 – 4.20 | Agree (A) | There is strong evidence on the existence of the quality | Very Good / Acceptable |
+| **3** | 2.61 – 3.40 | Moderately Agree (MA) | There is essential evidence on the existence of the quality | Fair / Needs Improvement |
+| **2** | 1.81 – 2.60 | Disagree (D) | There is weak evidence on the existence of the quality | Poor / Weak |
+| **1** | 1.00 – 1.80 | Strongly Disagree (SD) | There is no evidence in the existence of the quality | Very Poor / Unacceptable |
 
 ---
 
@@ -149,7 +153,7 @@ The researchers executed a systematic, five-stage data gathering procedure:
 | **Phase 1** | Protocol & Consent Securing | Submitting permission letters and distributing informed consent forms |
 | **Phase 2** | System Verification & Deployment | Deploying LAN servers and configuring Android APK test builds |
 | **Phase 3** | Demonstration & Hands-On User Testing | Guiding respondents through attendance, coaching, POS, and export workflows |
-| **Phase 4** | Questionnaire Administration | Administering the 20-item ISO/IEC 25010 4-point Likert instrument |
+| **Phase 4** | Questionnaire Administration | Administering the standardized 33-item ISO/IEC 25010 5-point Likert instrument to IT Experts and end-user usability forms |
 | **Phase 5** | Statistical Processing & Analysis | Computing weighted means, composite means, and grand overall means |
 
 ### Phase 1: Protocol and Consent Securing
@@ -165,7 +169,7 @@ The researchers conducted comprehensive demonstration sessions at AFFORDA Gym �
 * Administrators tested camera turnstile check-ins, order payment approvals, equipment placard printing, and PDF/Excel report exporting.
 
 ### Phase 4: Questionnaire Administration
-Immediately following hands-on testing, the structured ISO/IEC 25010 survey questionnaires were administered to the technical experts and end-users. The researchers provided clarification on technical terms when requested while maintaining strict impartiality.
+Immediately following hands-on testing, the standardized ISO/IEC 25010 survey questionnaires were administered to the technical experts and end-users. The researchers provided clarification on technical terms when requested while maintaining strict impartiality.
 
 ### Phase 5: Statistical Processing and Interpretation
 All completed questionnaires were gathered, tabulated, and entered into statistical spreadsheets for numerical computation, weighted mean calculation, and qualitative interpretation.
@@ -205,7 +209,7 @@ $$\overline{X} = \frac{\sum (f \cdot x)}{N}$$
 Where:
 * $\overline{X}$ = Weighted Mean of the criterion
 * $f$ = Frequency of responses for each rating scale
-* $x$ = Numerical weight assigned to each response scale ($4, 3, 2, 1$)
+* $x$ = Numerical weight assigned to each response scale ($5, 4, 3, 2, 1$)
 * $N$ = Total number of respondents ($N = 15$)
 
 ### 3. Composite Mean Formula
@@ -221,14 +225,15 @@ Where:
 ### 4. Verbal Interpretation Scale
 The calculated mean scores were interpreted using the following standard statistical range formula:
 
-$$\text{Scale Range} = \frac{\text{Highest Weight} - \text{Lowest Weight}}{\text{Number of Scales}} = \frac{4 - 1}{4} = \frac{3}{4} = 0.75$$
+$$\text{Scale Range} = \frac{\text{Highest Weight} - \text{Lowest Weight}}{\text{Number of Scales}} = \frac{5 - 1}{5} = \frac{4}{5} = 0.80$$
 
-| Rating Scale | Weighted Mean Range | Descriptive Evaluation | Verbal Interpretation |
-| :---: | :---: | :---: | :---: |
-| **4** | **3.26 – 4.00** | **Strongly Agree** | **Excellent Quality / Highly Acceptable** |
-| **3** | **2.51 – 3.25** | **Agree** | **Very Good Quality / Acceptable** |
-| **2** | **1.76 – 2.50** | **Disagree** | **Fair Quality / Needs Improvement** |
-| **1** | **1.00 – 1.75** | **Strongly Disagree** | **Poor Quality / Unacceptable** |
+| Rating Scale | Weighted Mean Range | Descriptive Evaluation | Evaluation Evidence Descriptor | Verbal Interpretation |
+| :---: | :---: | :--- | :--- | :--- |
+| **5** | **4.21 – 5.00** | **Strongly Agree (SA)** | **There is very strong evidence on the existence of the quality** | **Excellent Quality / Highly Acceptable** |
+| **4** | **3.41 – 4.20** | **Agree (A)** | **There is strong evidence on the existence of the quality** | **Very Good Quality / Acceptable** |
+| **3** | **2.61 – 3.40** | **Moderately Agree (MA)** | **There is essential evidence on the existence of the quality** | **Fair Quality / Needs Improvement** |
+| **2** | **1.81 – 2.60** | **Disagree (D)** | **There is weak evidence on the existence of the quality** | **Poor Quality / Weak** |
+| **1** | **1.00 – 1.80** | **Strongly Disagree (SD)** | **There is no evidence in the existence of the quality** | **Very Poor Quality / Unacceptable** |
 
 This statistical framework provided an objective, empirical basis for verifying whether FordaGO achieved the required software engineering standards for operational deployment at **AFFORDA Gym – Cabiao Branch**.
 

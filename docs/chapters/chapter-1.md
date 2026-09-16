@@ -65,7 +65,7 @@ The conceptual model of this study is structured using the **Input-Process-Outpu
 
 | INPUT | PROCESS | OUTPUT |
 | :--- | :--- | :--- |
-| **1. User & Account Data:**<br>• Member, Coach, Admin Profiles & Encrypted Credentials<br><br>**2. Gym Operational Data:**<br>• Membership Pass Types, Durations & Pricing<br>• Equipment Records, Specs & Muscle Target Media<br>• Personal Records (PR) & Weekly Split Routines<br>• Supplement Products, Stock Counts & POS Orders<br><br>**3. Hardware / Sensor Data:**<br>• Mobile Camera Optical Data Streams for QR Codes<br><br>**4. Evaluation Parameters:**<br>• ISO/IEC 25010 Criteria & 4-Point Likert Instrument | **1.** Requirements Analysis & Agile Sprint Planning<br>**2.** System Architecture & UI/UX Wireframing<br>**3.** Database Modeling & Schema Normalization (MySQL 3NF)<br>**4.** Backend REST API & Sanctum Auth Development (Laravel 11)<br>**5.** Real-Time WebSocket Event Broadcasting (Laravel Reverb)<br>**6.** Mobile Cross-Platform Client Development (Ionic 8 / Angular)<br>**7.** Optical Camera Barcode/QR Code Decoding<br>**8.** POS Cart Atomic Inventory Deductions<br>**9.** Dynamic Vector PDF/Excel Export Generation<br>**10.** ISO/IEC 25010 System Testing & Statistical Evaluation | **1. Deployed FordaGO Multi-Tier System:**<br>• Member Mobile Portal<br>• Coach Studio Hub<br>• Admin Command Center<br><br>**2.** Digital QR Attendance Check-In & Traffic Logs<br>**3.** Interactive Equipment QR Tutorial & Media Catalog<br>**4.** Personal Record (PR) & Weekly Split Workout Plans<br>**5.** Real-Time Coach-Trainee Chat & In-Chat Workout Proposals<br>**6.** Supplement POS Transactions & Verified Receipts<br>**7.** Dynamic Vector PDF/Excel Administrative Reports<br>**8.** Standardized Software Quality Assessment Report |
+| **1. User & Account Data:**<br>• Member, Coach, Admin Profiles & Encrypted Credentials<br><br>**2. Gym Operational Data:**<br>• Membership Pass Types, Durations & Pricing<br>• Equipment Records, Specs & Muscle Target Media<br>• Personal Records (PR) & Weekly Split Routines<br>• Supplement Products, Stock Counts & POS Orders<br><br>**3. Hardware / Sensor Data:**<br>• Mobile Camera Optical Data Streams for QR Codes<br><br>**4. Evaluation Parameters:**<br>• ISO/IEC 25010 Criteria & 5-Point Likert Instrument | **1.** Requirements Analysis & Agile Sprint Planning<br>**2.** System Architecture & UI/UX Wireframing<br>**3.** Database Modeling & Schema Normalization (MySQL 3NF)<br>**4.** Backend REST API & Sanctum Auth Development (Laravel 11)<br>**5.** Real-Time WebSocket Event Broadcasting (Laravel Reverb)<br>**6.** Mobile Cross-Platform Client Development (Ionic 8 / Angular)<br>**7.** Optical Camera Barcode/QR Code Decoding<br>**8.** POS Cart Atomic Inventory Deductions<br>**9.** Dynamic Vector PDF/Excel Export Generation<br>**10.** ISO/IEC 25010 System Testing & Statistical Evaluation | **1. Deployed FordaGO Multi-Tier System:**<br>• Member Mobile Portal<br>• Coach Studio Hub<br>• Admin Command Center<br><br>**2.** Digital QR Attendance Check-In & Traffic Logs<br>**3.** Interactive Equipment QR Tutorial & Media Catalog<br>**4.** Personal Record (PR) & Weekly Split Workout Plans<br>**5.** Real-Time Coach-Trainee Chat & In-Chat Workout Proposals<br>**6.** Supplement POS Transactions & Verified Receipts<br>**7.** Dynamic Vector PDF/Excel Administrative Reports<br>**8.** Standardized Software Quality Assessment Report |
 | 🡑 | ⮜─── **FEEDBACK & ITERATIVE REFINEMENT LOOP** ─── | 🡓 |
 <p align="center"><b>Figure 1.</b> <i>Conceptual Framework of the Study (Input-Process-Output Model)</i></p>
 
@@ -115,12 +115,21 @@ Specifically, this study seeks to answer the following research questions:
 
 2. What functional modules, system architecture, database design, and user interface features must be engineered in the proposed **FordaGO: Mobile-Based Gym Database Management System** to address the identified operational problems?
 
-3. What is the level of quality and acceptability of the developed FordaGO system as evaluated by IT professionals and gym end-users based on the **ISO/IEC 25010** software quality standard in terms of:
+3. What is the technical quality of the developed FordaGO system as evaluated by IT professionals based on the **ISO/IEC 25010** software quality standards in terms of:
+   - a. Functional Suitability;
+   - b. Performance Efficiency;
+   - c. Compatibility;
+   - d. Usability;
+   - e. Reliability;
+   - f. Security;
+   - g. Maintainability; and
+   - h. Portability?
+
+4. What is the level of user acceptability of the system as evaluated by gym end-users (administrators, front-desk personnel, accredited coaches, and active members) in terms of:
    - a. Functional Suitability;
    - b. Usability;
-   - c. Reliability;
-   - d. Security; and
-   - e. Performance Efficiency?
+   - c. Reliability; and
+   - d. Security?
 
 ---
 
@@ -155,10 +164,10 @@ This study encompasses the full design, development, integration, and empirical 
 
 | Member Mobile App *(Mobile Portal)* | Coach Studio *(Trainer Hub)* | Admin Command Center *(Administrative Panel)* |
 | :--- | :--- | :--- |
-| • Digital QR Attendance Pass<br>• Personal Record (PR) Metric Tracker<br>• 7-Day Split Routine Builder<br>• Equipment QR Scanner & Media Guides<br>• Supplement Shop & Cart Checkout<br>• In-Chat Coaching Proposal Acceptance<br>• Interactive Feature Walkthrough Guides | • Trainee Roster Management<br>• 1-on-1 Real-Time WebSocket Chat<br>• In-Chat Workout Plan Proposals<br>• Public Group Fitness Class Publishing<br>• Weekly Availability Slot Scheduler<br>• Trainer Consultation Earnings Tracker | • Digital Optical QR Turnstile Scanner<br>• Membership Pass Verification & Renewal<br>• Supplement POS & GCash Audit Logs<br>• Equipment Catalog & Placard Generator<br>• Coach Account & Profile Administration<br>• Client-Side Vector PDF & Excel Reports |
+| • Digital QR Attendance Pass<br>• Personal Record (PR) Metric Tracker<br>• 7-Day Split Routine Builder<br>• Equipment QR Scanner & Media Guides<br>• Supplement Shop & Cart Checkout<br>• In-Chat Coaching Proposal Acceptance<br>• Interactive Feature Walkthrough Guides | • Trainee Roster Management<br>• 1-on-1 Real-Time WebSocket Chat<br>• In-Chat Workout Plan Proposals<br>• Public Group Fitness Class Publishing<br>• Weekly Availability Slot Scheduler<br>• Trainer Consultation Earnings Tracker | • Digital Optical QR Turnstile Scanner<br>• Membership Pass Verification & Renewal<br>• Supplement POS & Counter Sales Audit Logs<br>• Equipment Catalog & Placard Generator<br>• Coach Account & Profile Administration<br>• Client-Side Vector PDF & Excel Reports |
 <p align="center"><b>Figure 2.</b> <i>FordaGO Tri-Tier Ecosystem Architecture</i></p>
 
-The system's functional scope is divided into nine major modules:
+The system's functional scope is divided into eleven (11) major modules:
 1. **User Authentication & Role-Based Access Control Module:** Provides secure token-based authentication using Laravel Sanctum, encrypted password hashing (Bcrypt), role-based middleware access control, and self-service password recovery via security verification.
 2. **QR Code Attendance Monitoring Module:** Replaces physical paper logbooks with camera-based QR code verification. Front-desk staff scan member QR codes using the digital turnstile scanner to instantly verify active pass validity, enforce anti-pass-sharing timestamp rules, and log check-in timestamps.
 3. **Interactive Equipment QR Information & Guidance Module:** Members scan physical QR placards affixed to gym machines using their smartphone cameras to immediately view high-resolution equipment photos, targeted muscle group diagrams, and step-by-step exercise execution instructions. Admins can generate and download printable QR placards directly from the system.
@@ -183,10 +192,24 @@ To maintain technical feasibility and ensure the study remains aligned with acad
 1. **Single-Branch Implementation:** The system is engineered exclusively for **AFFORDA Gym – Cabiao Branch** in Cabiao, Nueva Ecija. Distributed, multi-branch database synchronization across other branches (such as the San Isidro or Muñoz branches) is not included in this version.
 2. **Optical Camera Scanning vs. Hardware Turnstiles:** Attendance check-in and equipment lookup operate entirely through camera-based optical QR code decoding on smartphones and webcams. The system does not interface with physical electromechanical turnstiles, magnetic door latches, RFID card readers, or biometric fingerprint scanners.
 3. **Smart Wearables and Biometric Sensors:** The system does not integrate with external wearable hardware (e.g., Apple Watch, Fitbit, Garmin) or operating system health APIs (e.g., Apple HealthKit, Google Health Connect) for automated heart rate, pulse, or metabolic calorie tracking.
-4. **Payment Gateway Integration:** GCash payment processing is handled through manual reference number logging and digital receipt upload, which is audited and approved by front-desk personnel at the counter. Automated payment gateway APIs (e.g., PayMongo, Xendit, PayPal) or direct credit card merchant acquiring are excluded.
+4. **Exclusive Over-the-Counter (OTC) Cash Payment Mode:** All financial transactions—including membership pass issuance, walk-in day pass renewals, and supplement store orders—are strictly delimited to manual physical cash payments received and audited at the front-desk counter. Third-party online payment gateways, automated merchant aggregators (e.g., PayMongo, Maya, Xendit), and automated digital e-wallet APIs (e.g., automated GCash integration) are delimited from this release.
+
 5. **Computer Vision & AI Motion Coaching:** Equipment guidance is provided through pre-configured instructional media, descriptive execution steps, and anatomical diagrams. Real-time AI pose estimation and camera-based form-correction coaching are not included in this release.
 6. **Network Connectivity Dependency:** The application requires an active local wireless network (LAN) or internet connection to communicate with the centralized Laravel API server and Reverb WebSocket server. Offline capability is delimited to displaying locally cached view states.
 7. **User Base Restriction:** System access is restricted to registered members, accredited coaches, and authorized administrative staff of AFFORDA Gym – Cabiao Branch. Public social media feeds or open unauthenticated forums are excluded.
+
+---
+
+### Limitations of the Study
+While the delimitations represent deliberate scope boundaries established by the researchers, the study is subject to several inherent technical, environmental, behavioral, and operational limitations that are beyond the complete control of the developers:
+
+1. **Hardware and Camera Sensor Variance:** The optical QR code decoding speed and responsiveness are subject to the camera sensor specifications, autofocus capabilities, optical resolution, and physical lens cleanliness of individual user smartphones and the front-desk tablet or webcam.
+2. **Ambient and Environmental Gym Lighting Conditions:** Optical recognition of QR code placards affixed to gym machines and member screens is subject to ambient illumination within the gym floor. Shadows cast by bulky equipment, localized dimness in free-weight sections, or intense reflective glare from overhead fluorescent lighting on smartphone glass screens can occasionally prolong barcode decode acquisition times.
+3. **Centralized Cloud Network Dependency and ISP Latency:** Because FordaGO operates on a live centralized Linux Cloud Virtual Private Server (VPS) architecture using real-time WebSockets (Laravel Reverb) and secure REST APIs, system performance is inherently dependent on the stability and bandwidth of local Internet Service Providers (ISPs) and cellular telecommunications networks (4G/5G).
+4. **Mobile Operating System Background Execution Policies:** Aggressive battery optimization and background app memory termination policies implemented by proprietary Android OEM operating systems (e.g., Xiaomi MIUI/HyperOS, Oppo ColorOS, and Vivo FuntouchOS) may suspend background WebSocket listeners or delay push notification broadcasts when user devices enter deep sleep or experience extreme low-RAM conditions.
+5. **Subjectivity of Self-Logged Fitness Progress:** Workout performance metrics, Personal Record (PR) milestone weights, repetition counts, and daily routine completions rely entirely on user honesty and accurate self-reporting. In the absence of integrated mechanical barbell load-cell sensors or computer-vision pose tracking, the system cannot objectively verify whether an exercise was executed with full biomechanical range of motion or completed as logged.
+6. **Front-Desk Counter Verification Latency:** While digital order placement and attendance scanning are automated, manual payment confirmations and physical cash handovers at the reception counter necessitate human physical verification by front-desk personnel. Consequently, transaction reconciliation throughput is subject to staff availability and attentiveness during peak gym rush hours (5:00 PM to 8:00 PM).
+7. **Evaluation Sample Size and Contextual Generalizability:** The empirical evaluation of the system was conducted specifically within AFFORDA Gym – Cabiao Branch, involving ten (10) gym end-users (encompassing front-desk personnel, accredited coaches, and active gym members) and five (5) IT professionals. While statistically and methodologically sound for an academic capstone evaluation following ISO/IEC 25010 protocols, the evaluative findings reflect the operational dynamics, member volume, and demographic characteristics of a suburban local fitness center and may not fully represent high-volume, multi-facility commercial gym conglomerates in metropolitan environments.
 
 ---
 

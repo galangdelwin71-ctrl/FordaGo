@@ -61,6 +61,7 @@ import {
   logOutOutline,
   mailOutline,
   megaphoneOutline,
+  menuOutline,
   moonOutline,
   notifications,
   notificationsOffOutline,

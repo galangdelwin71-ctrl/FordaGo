@@ -18,12 +18,20 @@
 // duplicated markup/CSS from five separate files.
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonHeader, IonToolbar, IonIcon } from '@ionic/angular/standalone';
+import { IonHeader, IonToolbar, IonIcon, IonPopover } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import {
+  menuOutline,
+  barbellOutline,
+  personCircleOutline,
+  notificationsOutline,
+  chevronForwardOutline,
+} from 'ionicons/icons';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, IonHeader, IonToolbar, IonIcon],
+  imports: [CommonModule, IonHeader, IonToolbar, IonIcon, IonPopover],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss'],
 })
@@ -51,8 +59,28 @@ export class HeaderComponent {
 
   imageFailed = false;
 
+  constructor() {
+    addIcons({
+      menuOutline,
+      barbellOutline,
+      personCircleOutline,
+      notificationsOutline,
+      chevronForwardOutline,
+    });
+  }
+
   onImgError(): void {
     this.imageFailed = true;
+  }
+
+  onEquipmentClick(popover?: any): void {
+    popover?.dismiss();
+    this.equipmentClick.emit();
+  }
+
+  onCoachingClick(popover?: any): void {
+    popover?.dismiss();
+    this.coachingClick.emit();
   }
 
   @Output() coachingClick = new EventEmitter<void>();
@@ -60,3 +88,4 @@ export class HeaderComponent {
   @Output() notifClick = new EventEmitter<void>();
   @Output() profileClick = new EventEmitter<void>();
 }
+

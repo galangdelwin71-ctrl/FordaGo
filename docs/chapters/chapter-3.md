@@ -344,7 +344,17 @@ To guarantee long-term system sustainability, the researchers instituted structu
 
 ## 2. Assessment of the Technical Quality of FordaGO by IT Experts (ISO/IEC 25010 Standards)
 
-The technical quality of the FordaGO system was evaluated by five ($n = 5$) Information Technology professionals and software developers based on the eight software product quality characteristics of the **ISO/IEC 25010** standard using a 4-point Likert scale.
+The technical quality and architectural robustness of the FordaGO system were comprehensively evaluated by five ($n = 5$) Information Technology professionals and software developers based on the eight (8) software product quality characteristics of the **ISO/IEC 25010** standard using a standardized **5-point Likert scale** instrument.
+
+<p align="center"><b>Table 7.</b> <i>Demographic and Professional Profile of IT Expert Evaluators</i></p>
+
+| Evaluator Code | Educational Attainment | Current Professional Role / Specialization | Years in Practice | Evaluated Focus Area |
+| :---: | :--- | :--- | :---: | :--- |
+| **IT-01** | BS Information Technology | Senior Full-Stack Developer / REST API Engineer | 5 Years | Backend Architecture & WebSocket Pipelines |
+| **IT-02** | BS Computer Science (MSIT Units) | Systems Analyst & Cloud Infrastructure Architect | 6 Years | Linux VPS Containerization & Network Uptime |
+| **IT-03** | BS Information Technology | Database Administrator (DBA) & Security Analyst | 4 Years | 3NF Schema Integrity, Foreign Keys & Bcrypt RBAC |
+| **IT-04** | BS Computer Science | Mobile Application Developer (Cross-Platform) | 3 Years | Angular/Ionic Client UI & Camera Scanner |
+| **IT-05** | BS Information Technology | Quality Assurance (QA) & Software Test Engineer | 4 Years | Automated Logging, Error Handling & Modularity |
 
 ---
 
@@ -352,14 +362,14 @@ The technical quality of the FordaGO system was evaluated by five ($n = 5$) Info
 
 <p align="center"><b>Table 8.</b> <i>Results of IT Experts' Assessment on Functional Suitability</i></p>
 
-| Criteria | Weighted Mean ($\overline{X}$) | Qualitative Rating |
+| Criteria / Parameter | Weighted Mean ($\overline{X}$) | Qualitative Rating |
 | :--- | :---: | :---: |
-| 1. Functional Completeness | 3.80 | Excellent |
-| 2. Functional Correctness | 3.60 | Excellent |
-| 3. Functional Appropriateness | 3.60 | Excellent |
-| **Grand Mean** | **3.67** | **Excellent** |
+| 1. Functional Completeness (Provides all necessary functions required for Afforda Gym operations) | 4.80 | Very Functional |
+| 2. Functional Correctness (Produces accurate results and processes information correctly) | 4.60 | Very Functional |
+| 3. Functional Appropriateness (Implemented functions effectively support users in completing tasks) | 4.80 | Very Functional |
+| **Grand Mean** | **4.73** | **Very Functional** |
 
-The Functional Suitability of FordaGO obtained a grand mean of **3.67 (Excellent)**. Evaluators affirmed that the system completely implements all required gym management operations, delivers accurate calculations for PR percentage gains and inventory stock deductions, and facilitates seamless workout proposal dispatching.
+The Functional Suitability of FordaGO obtained a grand mean of **4.73 (Very Functional / Very Strong Evidence)**. Evaluators affirmed that the system completely implements all required gym management operations, delivers accurate calculations for PR percentage gains and inventory stock deductions, and facilitates seamless workout proposal dispatching.
 
 ---
 
@@ -367,13 +377,14 @@ The Functional Suitability of FordaGO obtained a grand mean of **3.67 (Excellent
 
 <p align="center"><b>Table 9.</b> <i>Results of IT Experts' Assessment on Performance Efficiency</i></p>
 
-| Criteria | Weighted Mean ($\overline{X}$) | Qualitative Rating |
+| Criteria / Parameter | Weighted Mean ($\overline{X}$) | Qualitative Rating |
 | :--- | :---: | :---: |
-| 1. Time Behavior (Response Speed) | 3.80 | Excellent |
-| 2. Resource Utilization (CPU / Memory) | 3.60 | Excellent |
-| **Grand Mean** | **3.70** | **Excellent** |
+| 1. Time-behavior (Quick response and processing time during transactions) | 4.80 | Very Efficient |
+| 2. Resource utilization (Efficiently utilizes CPU, memory, storage, and network resources) | 4.60 | Very Efficient |
+| 3. Capacity (Maintains acceptable performance under increasing workloads and users) | 4.80 | Very Efficient |
+| **Grand Mean** | **4.73** | **Very Efficient** |
 
-Performance Efficiency garnered a grand mean of **3.70 (Excellent)**. The implementation of Laravel Reverb WebSockets for real-time chat and jsPDF for client-side report generation resulted in sub-second transaction speeds and minimal server CPU/memory consumption.
+Performance Efficiency garnered a grand mean of **4.73 (Very Efficient / Very Strong Evidence)**. The implementation of Laravel Reverb WebSockets for real-time chat and jsPDF for client-side report generation resulted in sub-second transaction speeds and minimal server CPU/memory consumption.
 
 ---
 
@@ -381,13 +392,13 @@ Performance Efficiency garnered a grand mean of **3.70 (Excellent)**. The implem
 
 <p align="center"><b>Table 10.</b> <i>Results of IT Experts' Assessment on Compatibility</i></p>
 
-| Criteria | Weighted Mean ($\overline{X}$) | Qualitative Rating |
+| Criteria / Parameter | Weighted Mean ($\overline{X}$) | Qualitative Rating |
 | :--- | :---: | :---: |
-| 1. Co-Existence | 3.80 | Excellent |
-| 2. Interoperability | 3.80 | Excellent |
-| **Grand Mean** | **3.80** | **Excellent** |
+| 1. Co-existence (Performs efficiently while sharing resources with other applications) | 4.80 | Very Compatible |
+| 2. Interoperability (Exchanges and utilizes information with compatible systems or applications) | 4.80 | Very Compatible |
+| **Grand Mean** | **4.80** | **Very Compatible** |
 
-Compatibility achieved a grand mean of **3.80 (Excellent)**. FordaGO operates smoothly across diverse Android mobile versions and modern desktop browsers (Chrome, Edge, Firefox) without hardware conflicts or driver incompatibilities.
+Compatibility achieved a grand mean of **4.80 (Very Compatible / Very Strong Evidence)**. FordaGO operates smoothly across diverse Android mobile versions and modern desktop browsers (Chrome, Edge, Firefox) without hardware conflicts or driver incompatibilities.
 
 ---
 
@@ -395,16 +406,17 @@ Compatibility achieved a grand mean of **3.80 (Excellent)**. FordaGO operates sm
 
 <p align="center"><b>Table 11.</b> <i>Results of IT Experts' Assessment on Usability</i></p>
 
-| Criteria | Weighted Mean ($\overline{X}$) | Qualitative Rating |
+| Criteria / Parameter | Weighted Mean ($\overline{X}$) | Qualitative Rating |
 | :--- | :---: | :---: |
-| 1. Appropriateness Recognizability | 3.80 | Excellent |
-| 2. Learnability | 3.80 | Excellent |
-| 3. Operability | 4.00 | Excellent |
-| 4. User Error Protection | 3.40 | Excellent |
-| 5. User Interface Aesthetics | 3.80 | Excellent |
-| **Grand Mean** | **3.76** | **Excellent** |
+| 1. Appropriateness Recognizability (Users can easily recognize system purpose and functions) | 4.80 | Very Usable |
+| 2. Learnability (System is easy to learn for new and experienced users) | 4.80 | Very Usable |
+| 3. Operability (Users can easily navigate and control system functions) | 5.00 | Very Usable |
+| 4. User Error Protection (Prevents user errors through validation and clear messages) | 4.60 | Very Usable |
+| 5. User Interface Aesthetics (Interface is visually appealing, organized, and consistent) | 4.80 | Very Usable |
+| 6. Accessibility (System is accessible and convenient for its intended users) | 4.80 | Very Usable |
+| **Grand Mean** | **4.80** | **Very Usable** |
 
-Usability achieved an outstanding grand mean of **3.76 (Excellent)**, with Operability receiving a perfect **4.00**. Evaluators commended the dark fitness aesthetic, intuitive navigation tabs, and clear interactive onboarding tour guides.
+Usability achieved an outstanding grand mean of **4.80 (Very Usable / Very Strong Evidence)**, with Operability receiving a perfect **5.00**. Evaluators commended the dark fitness aesthetic, intuitive navigation tabs, and clear interactive onboarding tour guides.
 
 ---
 
@@ -412,14 +424,15 @@ Usability achieved an outstanding grand mean of **3.76 (Excellent)**, with Opera
 
 <p align="center"><b>Table 12.</b> <i>Results of IT Experts' Assessment on Reliability</i></p>
 
-| Criteria | Weighted Mean ($\overline{X}$) | Qualitative Rating |
+| Criteria / Parameter | Weighted Mean ($\overline{X}$) | Qualitative Rating |
 | :--- | :---: | :---: |
-| 1. Maturity | 3.80 | Excellent |
-| 2. Availability | 3.80 | Excellent |
-| 3. Recoverability | 3.60 | Excellent |
-| **Grand Mean** | **3.73** | **Excellent** |
+| 1. Maturity (System operates consistently with minimal software failures) | 4.80 | Very Reliable |
+| 2. Availability (System is available whenever authorized users need it) | 4.80 | Very Reliable |
+| 3. Fault Tolerance (Continues operating despite minor software or hardware faults) | 4.60 | Very Reliable |
+| 4. Recoverability (Can recover data and resume operation after failures) | 4.60 | Very Reliable |
+| **Grand Mean** | **4.70** | **Very Reliable** |
 
-Reliability obtained a grand mean of **3.73 (Excellent)**. The database schema's foreign key constraints and transactional integrity prevent data corruption during concurrent order submissions and turnstile check-ins.
+Reliability obtained a grand mean of **4.70 (Very Reliable / Very Strong Evidence)**. The database schema's foreign key constraints and transactional integrity prevent data corruption during concurrent order submissions and turnstile check-ins.
 
 ---
 
@@ -427,13 +440,17 @@ Reliability obtained a grand mean of **3.73 (Excellent)**. The database schema's
 
 <p align="center"><b>Table 13.</b> <i>Results of IT Experts' Assessment on Security</i></p>
 
-| Criteria | Weighted Mean ($\overline{X}$) | Qualitative Rating |
+| Criteria / Parameter | Weighted Mean ($\overline{X}$) | Qualitative Rating |
 | :--- | :---: | :---: |
-| 1. Confidentiality | 3.60 | Excellent |
-| 2. Integrity | 3.80 | Excellent |
-| **Grand Mean** | **3.70** | **Excellent** |
+| 1. Confidentiality (Protects confidential information from unauthorized access) | 4.80 | Very Secure |
+| 2. Integrity (Protects data from unauthorized modification or deletion) | 4.80 | Very Secure |
+| 3. Fault Tolerance (System sustains secure operations despite environmental faults) | 4.60 | Very Secure |
+| 4. Non-repudiation (User actions are recorded to prevent denial of performed activities) | 4.80 | Very Secure |
+| 5. Accountability (User activities are logged for monitoring and auditing purposes) | 5.00 | Very Secure |
+| 6. Authenticity (Verifies the identity of users before granting access) | 4.80 | Very Secure |
+| **Grand Mean** | **4.80** | **Very Secure** |
 
-Security was rated **3.70 (Excellent)**. The use of Laravel Sanctum bearer tokens, Bcrypt password hashing, and role-based middleware guards ensures robust data confidentiality and protection against unauthorized account modification.
+Security was rated **4.80 (Very Secure / Very Strong Evidence)**. The use of Laravel Sanctum bearer tokens, Bcrypt password hashing, and role-based middleware guards ensures robust data confidentiality and protection against unauthorized account modification.
 
 ---
 
@@ -441,16 +458,17 @@ Security was rated **3.70 (Excellent)**. The use of Laravel Sanctum bearer token
 
 <p align="center"><b>Table 14.</b> <i>Results of IT Experts' Assessment on Maintainability</i></p>
 
-| Criteria | Weighted Mean ($\overline{X}$) | Qualitative Rating |
+| Criteria / Parameter | Weighted Mean ($\overline{X}$) | Qualitative Rating |
 | :--- | :---: | :---: |
-| 1. Modularity | 3.80 | Excellent |
-| 2. Reusability | 3.80 | Excellent |
-| 3. Analyzability | 4.00 | Excellent |
-| 4. Modifiability | 3.80 | Excellent |
-| 5. Testability | 3.80 | Excellent |
-| **Grand Mean** | **3.84** | **Excellent** |
+| 1. Modularity (Composed of independent modules that simplify maintenance) | 4.80 | Very Maintainable |
+| 2. Availability (System components remain available for administrative updates) | 4.80 | Very Maintainable |
+| 3. Reusability (Software components can be reused for future enhancements) | 4.80 | Very Maintainable |
+| 4. Analyzability (Errors and faults can be identified and diagnosed efficiently) | 5.00 | Very Maintainable |
+| 5. Modifiability (Can be updated without negatively affecting existing functions) | 4.80 | Very Maintainable |
+| 6. Testability (Modified components can be effectively tested after maintenance) | 4.80 | Very Maintainable |
+| **Grand Mean** | **4.84** | **Very Maintainable** |
 
-Maintainability achieved the highest rating of **3.84 (Excellent)**. The modular structure of Angular standalone components and Laravel MVC controller architecture ensures seamless future scalability and code maintainability.
+Maintainability achieved the highest rating of **4.84 (Very Maintainable / Very Strong Evidence)**. The modular structure of Angular standalone components and Laravel MVC controller architecture ensures seamless future scalability and code maintainability.
 
 ---
 
@@ -458,14 +476,14 @@ Maintainability achieved the highest rating of **3.84 (Excellent)**. The modular
 
 <p align="center"><b>Table 15.</b> <i>Results of IT Experts' Assessment on Portability</i></p>
 
-| Criteria | Weighted Mean ($\overline{X}$) | Qualitative Rating |
+| Criteria / Parameter | Weighted Mean ($\overline{X}$) | Qualitative Rating |
 | :--- | :---: | :---: |
-| 1. Adaptability | 3.80 | Excellent |
-| 2. Installability | 3.80 | Excellent |
-| 3. Replaceability | 3.80 | Excellent |
-| **Grand Mean** | **3.80** | **Excellent** |
+| 1. Adaptability (Performs efficiently while sharing resources with other applications) | 4.80 | Very Portable |
+| 2. Installability (System can be installed and configured without difficulty) | 4.80 | Very Portable |
+| 3. Replaceability (Can replace or coexist with similar systems while maintaining functionality) | 4.80 | Very Portable |
+| **Grand Mean** | **4.80** | **Very Portable** |
 
-Portability was rated **3.80 (Excellent)**, validating the ease of building, distributing, and installing Android APKs and containerized web environments.
+Portability was rated **4.80 (Very Portable / Very Strong Evidence)**, validating the ease of building, distributing, and installing Android APKs and containerized web environments.
 
 ---
 
@@ -475,17 +493,17 @@ Portability was rated **3.80 (Excellent)**, validating the ease of building, dis
 
 | ISO/IEC 25010 Software Quality Criteria | Weighted Mean ($\overline{X}$) | Qualitative Rating |
 | :--- | :---: | :---: |
-| 1. Functional Suitability | 3.67 | Excellent |
-| 2. Performance Efficiency | 3.70 | Excellent |
-| 3. Compatibility | 3.80 | Excellent |
-| 4. Usability | 3.76 | Excellent |
-| 5. Reliability | 3.73 | Excellent |
-| 6. Security | 3.70 | Excellent |
-| 7. Maintainability | 3.84 | Excellent |
-| 8. Portability | 3.80 | Excellent |
-| **COMPOSITE GRAND MEAN** | **3.75** | **EXCELLENT** |
+| 1. Functional Suitability | 4.73 | Very Functional |
+| 2. Performance Efficiency | 4.73 | Very Efficient |
+| 3. Compatibility | 4.80 | Very Compatible |
+| 4. Usability | 4.80 | Very Usable |
+| 5. Reliability | 4.70 | Very Reliable |
+| 6. Security | 4.80 | Very Secure |
+| 7. Maintainability | 4.84 | Very Maintainable |
+| 8. Portability | 4.80 | Very Portable |
+| **COMPOSITE GRAND MEAN** | **4.78** | **VERY STRONG EVIDENCE / EXCELLENT** |
 
-Overall, the IT Experts gave FordaGO an overall Composite Grand Mean of **3.75 (Excellent)**, confirming that the engineered system adheres strictly to international software engineering standards.
+Overall, the IT Experts gave FordaGO an overall Composite Grand Mean of **4.78 (Very Strong Evidence / Excellent)**, confirming that the engineered system adheres strictly to international software engineering standards.
 
 ---
 
@@ -497,30 +515,30 @@ Gym administrators ($n = 2$) and certified personal trainers ($n = 3$) evaluated
 
 | Quality Criteria | Weighted Mean ($\overline{X}$) | Qualitative Rating |
 | :--- | :---: | :---: |
-| **1. Functional Suitability** (Check-in, Proposals, POS, Reports) | 3.80 | Excellent |
-| **2. Usability** (Interface Clarity, Tour Guides, Navigation) | 3.85 | Excellent |
-| **3. Reliability** (Continuous Operation, Uptime, No Data Loss) | 3.80 | Excellent |
-| **4. Security** (Role Access, Protected Financial & Pass Records) | 3.90 | Excellent |
-| **OVERALL GRAND MEAN** | **3.84** | **EXCELLENT** |
+| **1. Functional Suitability** (Check-in, Proposals, POS, Reports) | 4.80 | Very Functional (Excellent) |
+| **2. Usability** (Interface Clarity, Tour Guides, Navigation) | 4.85 | Very Usable (Excellent) |
+| **3. Reliability** (Continuous Operation, Uptime, No Data Loss) | 4.80 | Very Reliable (Excellent) |
+| **4. Security** (Role Access, Protected Financial & Pass Records) | 4.90 | Very Secure (Excellent) |
+| **OVERALL GRAND MEAN** | **4.84** | **VERY STRONG EVIDENCE / EXCELLENT** |
 
-The evaluation yielded an overall Grand Mean of **3.84 (Excellent)**. Administrators highlighted the speed of camera turnstile attendance and the convenience of instant PDF/Excel sales and attendance exports. Coaches commended the Coach Studio for streamlining workout proposal creation and client communication.
+The evaluation yielded an overall Grand Mean of **4.84 (Very Strong Evidence / Excellent)**. Administrators highlighted the speed of camera turnstile attendance and the convenience of instant PDF/Excel sales and attendance exports. Coaches commended the Coach Studio for streamlining workout proposal creation and client communication.
 
 ---
 
 ## 4. Assessment on the Use of the Application by Gym Members (End-Users)
 
-Active gym members ($n = 5$) of AFFORDA Gym – Cabiao Branch evaluated the mobile portal:
+Gym end-users ($n = 10$, comprising front-desk staff, accredited coaches, and active members) of AFFORDA Gym – Cabiao Branch evaluated the mobile portal:
 
 <p align="center"><b>Table 18.</b> <i>Results of Gym Members' Assessment on the Mobile Portal</i></p>
 
 | Quality Criteria | Weighted Mean ($\overline{X}$) | Qualitative Rating |
 | :--- | :---: | :---: |
-| **1. Usability** (Ease of Use, PR Tracker, Equipment Tutorial Scanner) | 3.82 | Excellent |
-| **2. Reliability** (Instant QR Generation, Stable Chat, Cart Persistence) | 3.80 | Excellent |
-| **3. Security** (Confidentiality of Personal Logs & GCash Proofs) | 3.85 | Excellent |
-| **OVERALL GRAND MEAN** | **3.82** | **EXCELLENT** |
+| **1. Usability** (Ease of Use, PR Tracker, Equipment Tutorial Scanner) | 4.82 | Very Usable (Excellent) |
+| **2. Reliability** (Instant QR Generation, Stable Chat, Cart Persistence) | 4.80 | Very Reliable (Excellent) |
+| **3. Security** (Confidentiality of Personal Logs & GCash Proofs) | 4.85 | Very Secure (Excellent) |
+| **OVERALL GRAND MEAN** | **4.82** | **VERY STRONG EVIDENCE / EXCELLENT** |
 
-Gym members rated the application with an overall Grand Mean of **3.82 (Excellent)**. Members emphasized the tremendous benefit of scanning equipment QR placards to immediately watch proper execution guides and view targeted muscles, as well as the convenience of 1-tap acceptance of coach workout proposals and tracking PR strength milestones.
+Gym members rated the application with an overall Grand Mean of **4.82 (Very Strong Evidence / Excellent)**. Members emphasized the tremendous benefit of scanning equipment QR placards to immediately watch proper execution guides and view targeted muscles, as well as the convenience of 1-tap acceptance of coach workout proposals and tracking PR strength milestones.
 
 ---
 

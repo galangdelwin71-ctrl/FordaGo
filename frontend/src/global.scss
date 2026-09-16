@@ -93,6 +93,36 @@ body.light-theme ion-modal .modal-danger-btn {
 body.light-theme ion-modal .modal-save-btn {
   color: #0f172a !important;
 }
+ion-popover.header-menu-popover {
+  --background: #0f131f;
+  --color: #ffffff;
+  --offset-y: 8px;
+  --backdrop-opacity: 0.35;
+  --box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --width: 250px;
+  --max-width: calc(100vw - 24px);
+}
+
+ion-popover.header-menu-popover::part(content) {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  background: #0f131f;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.65);
+}
+
+body.light-theme ion-popover.header-menu-popover {
+  --background: #ffffff;
+  --color: #0f172a;
+  --box-shadow: 0 14px 36px rgba(15, 23, 42, 0.14), 0 0 0 1px rgba(15, 23, 42, 0.08);
+}
+
+body.light-theme ion-popover.header-menu-popover::part(content) {
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: #ffffff;
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.14);
+}
+
 ion-popover.gender-popover {
   --background: #15181d;
   --color: #ffffff;

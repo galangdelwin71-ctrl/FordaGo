@@ -104,7 +104,8 @@ ion-toolbar {
 // across pages before).
 .notif-bell-btn,
 .coach-header-btn,
-.equip-header-btn {
+.equip-header-btn,
+.menu-header-btn {
   position: relative;
   width: 40px;
   height: 40px;
@@ -132,7 +133,8 @@ ion-toolbar {
 }
 
 .notif-bell-btn.has-unread,
-.coach-header-btn.has-unread {
+.coach-header-btn.has-unread,
+.menu-header-btn.has-unread {
   color: var(--header-yellow);
   border-color: rgba(255, 214, 0, 0.24);
   background: rgba(255, 214, 0, 0.07);
@@ -210,6 +212,111 @@ ion-toolbar {
   color: transparent;
 }
 
+// ── Quick Access Popover Menu ──────────────────────────────
+.header-menu-card {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #0f131f;
+  border-radius: 16px;
+}
+
+.header-menu-label {
+  padding: 4px 8px 2px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+}
+
+.header-menu-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease, transform 120ms ease;
+  position: relative;
+  overflow: visible;
+
+  &:hover {
+    background: rgba(255, 214, 0, 0.08);
+    border-color: rgba(255, 214, 0, 0.22);
+  }
+
+  &:active {
+    transform: scale(0.97);
+    background: rgba(255, 214, 0, 0.12);
+  }
+}
+
+.menu-row-icon-box {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+
+  ion-icon {
+    font-size: 20px;
+  }
+}
+
+.menu-row-icon-box.equip-icon-box {
+  color: var(--header-yellow);
+  background: rgba(255, 214, 0, 0.1);
+  border: 1px solid rgba(255, 214, 0, 0.22);
+}
+
+.menu-row-icon-box.coach-icon-box {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+
+  &.has-unread {
+    color: var(--header-yellow);
+    background: rgba(255, 214, 0, 0.14);
+    border-color: rgba(255, 214, 0, 0.35);
+  }
+}
+
+.menu-row-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.menu-row-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.2px;
+}
+
+.menu-row-desc {
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.45);
+  margin-top: 1px;
+}
+
+.menu-row-arrow {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.header-menu-row .menu-badge {
+  position: static;
+  margin-left: auto;
+}
+
 @media (max-width: 350px) {
   .toolbar-subtitle {
     display: none;
@@ -236,11 +343,42 @@ ion-toolbar {
 
   .notif-bell-btn,
   .coach-header-btn,
-  .equip-header-btn {
+  .equip-header-btn,
+  .menu-header-btn {
     color: rgba(15, 23, 42, 0.62);
     background: rgba(15, 23, 42, 0.045);
     border-color: rgba(15, 23, 42, 0.09);
     box-shadow: 0 5px 16px rgba(15, 23, 42, 0.07);
+  }
+
+  .header-menu-card {
+    background: #ffffff;
+  }
+
+  .header-menu-label {
+    color: rgba(15, 23, 42, 0.45);
+  }
+
+  .header-menu-row {
+    background: rgba(15, 23, 42, 0.03);
+    border-color: rgba(15, 23, 42, 0.07);
+
+    &:hover {
+      background: rgba(245, 158, 11, 0.08);
+      border-color: rgba(245, 158, 11, 0.25);
+    }
+  }
+
+  .menu-row-title {
+    color: #0f172a;
+  }
+
+  .menu-row-desc {
+    color: rgba(15, 23, 42, 0.5);
+  }
+
+  .menu-row-arrow {
+    color: rgba(15, 23, 42, 0.35);
   }
 
   // Reference design keeps the bell icon neutral (matching the equipment

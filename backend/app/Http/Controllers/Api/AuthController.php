@@ -16,8 +16,19 @@ use Illuminate\Support\Facades\RateLimiter;
 
 class AuthController extends Controller
 {
-    private const MAX_FAILED_ATTEMPTS = 5;
-    private const LOCKOUT_SECONDS = 15 * 60;
+    // Progressive Tiered Lockout Configuration:
+    // Tier 1: 5 failed attempts -> 15-minute temporary lockout
+    private const TIER1_MAX_ATTEMPTS = 5;
+    private const TIER1_LOCKOUT_SECONDS = 15 * 60;
+
+    // Tier 2: 10 cumulative failed attempts -> 1-hour extended lockout
+    private const TIER2_MAX_ATTEMPTS = 10;
+    private const TIER2_LOCKOUT_SECONDS = 60 * 60;
+
+    // Tier 3: 11+ cumulative failed attempts -> Forced OTP / Password Reset
+    private const TIER3_FORCE_OTP_ATTEMPTS = 11;
+    private const STRIKES_TTL_SECONDS = 24 * 60 * 60; // 24-hour tracking window
+
     private const RESET_CODE_TTL_SECONDS = 10 * 60;
     private const RESET_CODE_RESEND_SECONDS = 60;
     private const RESET_MAX_SENDS_PER_HOUR = 5;
@@ -240,23 +251,90 @@ class AuthController extends Controller
             return response()->json(['message' => 'Invalid email or password.'], 400);
         }
 
-        $attemptKey = 'login:'.$request->ip().':'.$email;
-        if (RateLimiter::tooManyAttempts($attemptKey, self::MAX_FAILED_ATTEMPTS)) {
-            return response()->json(['message' => 'Too many failed attempts. Please try again later.'], 429);
+        $strikeKey = 'login:strikes:'.$email;
+        $lockKey   = 'login:lock:'.$email;
+
+        // Check Tier 3: Hard Lockout / Mandatory OTP Verification
+        $currentStrikes = RateLimiter::attempts($strikeKey);
+        if ($currentStrikes >= self::TIER3_FORCE_OTP_ATTEMPTS) {
+            return response()->json([
+                'message'       => 'Account security alert: Maximum failed login attempts exceeded. Your account has been temporarily locked. Please reset your password via OTP verification to unlock your account.',
+                'require_reset' => true,
+                'status'        => 'locked',
+            ], 429);
+        }
+
+        // Check Tier 1 & Tier 2: Active Lockout Cooldown Window
+        if (RateLimiter::tooManyAttempts($lockKey, 1)) {
+            $secondsRemaining = RateLimiter::availableIn($lockKey);
+            $minutesRemaining = max(1, (int) ceil($secondsRemaining / 60));
+
+            if ($currentStrikes >= self::TIER2_MAX_ATTEMPTS) {
+                $lockMsg = "Repeated failed attempts detected. Account is locked for 1 hour ({$minutesRemaining} minute(s) remaining). You may use 'Forgot Password' with OTP verification to unlock immediately.";
+            } else {
+                $lockMsg = "Too many failed attempts. Account is locked for 15 minutes ({$minutesRemaining} minute(s) remaining). Please try again later or reset your password via OTP.";
+            }
+
+            return response()->json([
+                'message'       => $lockMsg,
+                'require_reset' => $currentStrikes >= self::TIER2_MAX_ATTEMPTS,
+                'retry_after'   => $secondsRemaining,
+            ], 429);
         }
 
         $user = User::where('email', $email)->first();
 
+        $loginFailed = false;
         if (! $user) {
             // Constant-time dummy check to prevent user enumeration
             $this->checkPassword($password, self::DUMMY_HASH);
-            RateLimiter::hit($attemptKey, self::LOCKOUT_SECONDS);
-            return response()->json(['message' => 'Invalid email or password.'], 401);
+            $loginFailed = true;
+        } elseif (! $this->checkPassword($password, $user->password)) {
+            $loginFailed = true;
         }
 
-        if (! $this->checkPassword($password, $user->password)) {
-            RateLimiter::hit($attemptKey, self::LOCKOUT_SECONDS);
-            return response()->json(['message' => 'Invalid email or password.'], 401);
+        if ($loginFailed) {
+            RateLimiter::hit($strikeKey, self::STRIKES_TTL_SECONDS);
+            $strikes = RateLimiter::attempts($strikeKey);
+
+            if ($strikes >= self::TIER3_FORCE_OTP_ATTEMPTS) {
+                return response()->json([
+                    'message'       => 'Account security alert: Maximum failed login attempts exceeded. Your account is now locked. Please use "Forgot Password" to verify your identity via OTP and reset your password.',
+                    'require_reset' => true,
+                ], 429);
+            }
+
+            if ($strikes === self::TIER2_MAX_ATTEMPTS) {
+                RateLimiter::hit($lockKey, self::TIER2_LOCKOUT_SECONDS);
+                return response()->json([
+                    'message'       => 'Repeated failed attempts detected. Account is now locked for 1 hour. You may reset your password via OTP to unlock immediately.',
+                    'require_reset' => true,
+                    'retry_after'   => self::TIER2_LOCKOUT_SECONDS,
+                ], 429);
+            }
+
+            if ($strikes === self::TIER1_MAX_ATTEMPTS) {
+                RateLimiter::hit($lockKey, self::TIER1_LOCKOUT_SECONDS);
+                return response()->json([
+                    'message'       => 'Too many failed attempts. Account is now locked for 15 minutes. Please try again later or reset your password.',
+                    'retry_after'   => self::TIER1_LOCKOUT_SECONDS,
+                ], 429);
+            }
+
+            if ($strikes < self::TIER1_MAX_ATTEMPTS) {
+                $remaining = self::TIER1_MAX_ATTEMPTS - $strikes;
+                $attemptWord = $remaining === 1 ? 'attempt' : 'attempts';
+                return response()->json([
+                    'message' => "Invalid email or password. {$remaining} {$attemptWord} remaining before account lockout.",
+                ], 401);
+            }
+
+            // Between Tier 1 and Tier 2 (strikes 6 to 9)
+            $remaining = self::TIER2_MAX_ATTEMPTS - $strikes;
+            $attemptWord = $remaining === 1 ? 'attempt' : 'attempts';
+            return response()->json([
+                'message' => "Invalid email or password. {$remaining} {$attemptWord} remaining before a 1-hour lockout.",
+            ], 401);
         }
 
         $isStaffRole = in_array($user->role, ['admin', 'super_admin', 'employee'], true);
@@ -267,7 +345,9 @@ class AuthController extends Controller
             return response()->json(['message' => $pendingMessage], 403);
         }
 
-        RateLimiter::clear($attemptKey);
+        // Login succeeded — clear all failed attempt counters and locks
+        RateLimiter::clear($strikeKey);
+        RateLimiter::clear($lockKey);
 
         // Check if premium membership expired and revert to daily if needed
         $user->checkAndExpireMembership();
@@ -653,7 +733,12 @@ class AuthController extends Controller
             return response()->json(['message' => 'Reset session is no longer valid. Please start again.'], 400);
         }
 
-        User::where('id', $payload['sub'])->update(['password' => Hash::make($newPassword)]);
+        $user = User::find($payload['sub']);
+        if ($user) {
+            $user->update(['password' => Hash::make($newPassword)]);
+            RateLimiter::clear('login:strikes:'.$user->email);
+            RateLimiter::clear('login:lock:'.$user->email);
+        }
         $resetRow->update(['password_changed_at' => now()]);
 
         return response()->json(['message' => 'Password updated successfully. You can now log in.']);
