@@ -18,18 +18,15 @@ ion-modal .modal-danger-btn {
 }
 
 ion-modal .modal-save-btn {
-  /* Was var(--accent-lime)/var(--accent-amber) -- those custom properties
-     are only ever declared inside individual pages' component-scoped SCSS
-     (e.g. inventory.page.scss' :root block), which Angular's view
-     encapsulation prevents from ever reaching the real document root. An
-     undefined var() inside a shorthand invalidates the WHOLE property, so
-     this rule's `background` silently fell back to transparent on every
-     page (Profile's "Save Changes", Dashboard's "Save PR", etc.), leaving
-     the `color: #000 !important` below with nothing to contrast against --
-     black text on a dark modal panel. Literal hex values match what the
-     component-level .modal-save-btn rules already use correctly. */
-  background: #FFD600 !important;
-  color: #000 !important;
+  background: #ffffff !important;
+  color: #0d111c !important;
+  box-shadow: 0 4px 18px rgba(255, 255, 255, 0.12) !important;
+}
+
+ion-modal .modal-save-btn:disabled {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: rgba(255, 255, 255, 0.35) !important;
+  box-shadow: none !important;
 }
 
 ion-modal .gold-cta-btn {

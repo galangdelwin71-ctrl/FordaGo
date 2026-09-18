@@ -215,8 +215,8 @@ ion-content {
   }
 
   &:hover {
-    border-color: rgba(255,214,0,0.2);
-    background: rgba(255,255,255,0.06);
+    border-color: rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.06);
   }
 
   &.danger {
@@ -711,16 +711,27 @@ ion-modal {
 .modal-save-btn {
   width: 100%;
   padding: 15px;
-  background: #FFD600;
-  color: #000;
+  background: #ffffff;
+  color: #0d111c;
   font-size: 15px;
   font-weight: 800;
   border: none;
   border-radius: 14px;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(255,214,0,0.3);
-  transition: transform 0.15s, box-shadow 0.15s;
-  &:active { transform: scale(0.97); box-shadow: none; }
+  box-shadow: 0 4px 18px rgba(255, 255, 255, 0.12);
+  transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+
+  &:active {
+    transform: scale(0.98);
+    box-shadow: none;
+  }
+
+  &:disabled {
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: rgba(255, 255, 255, 0.35) !important;
+    box-shadow: none !important;
+    cursor: not-allowed;
+  }
 }
 
 .modal-actions {
@@ -1011,9 +1022,9 @@ ion-modal {
     }
 
     &.is-selected {
-      background: rgba(255, 214, 0, 0.1);
-      border-color: #FFD600;
-      color: #FFD600;
+      background: rgba(255, 255, 255, 0.08);
+      border-color: #ffffff;
+      color: #ffffff;
     }
   }
 }
@@ -1069,7 +1080,7 @@ ion-modal {
   max-width: 340px;
   border-radius: 16px;
   background: linear-gradient(170deg, #101010 0%, #161616 100%);
-  border: 1px solid rgba(250, 204, 21, 0.38);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   padding: 24px 20px;
   text-align: center;
 }
@@ -1078,14 +1089,14 @@ ion-modal {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: rgba(250, 204, 21, 0.16);
+  background: rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 12px;
 
   ion-icon {
-    color: #fcd34d;
+    color: #ffffff;
     font-size: 28px;
   }
 }
@@ -1126,8 +1137,8 @@ ion-modal {
 }
 
 .confirm-logout {
-  color: #141414;
-  background: #FFD600;
+  color: #111317;
+  background: #ffffff;
 }
 
 // ── Animations ─────────────────────────────────────────
@@ -1261,10 +1272,16 @@ ion-content.fordago-page-content {
   border-radius: 12px;
   padding: 10px 14px;
   margin-top: 6px;
+  transition: border-color 0.2s, background 0.2s;
+
+  &:focus-within {
+    border-color: rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.07);
+  }
 
   ion-icon {
     font-size: 18px;
-    color: #FFD600;
+    color: rgba(255, 255, 255, 0.75);
   }
 }
 
@@ -1281,13 +1298,14 @@ ion-content.fordago-page-content {
   margin-top: 14px;
   text-align: center;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.55);
 
   span {
     cursor: pointer;
     strong {
-      color: #FFD600;
+      color: #ffffff;
       text-decoration: underline;
+      font-weight: 700;
     }
   }
 }
@@ -1315,11 +1333,12 @@ ion-content.fordago-page-content {
   }
 
   &.is-selected {
-    background: rgba(255, 214, 0, 0.08);
-    border-color: #FFD600;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1.5px solid #ffffff;
+    box-shadow: 0 0 14px rgba(255, 255, 255, 0.12);
 
     ion-icon {
-      color: #FFD600;
+      color: #ffffff;
     }
   }
 }
@@ -1361,8 +1380,9 @@ ion-content.fordago-page-content {
   margin-top: 8px;
   font-size: 11px;
   text-align: center;
-  color: #FFD600;
-  background: rgba(255, 214, 0, 0.1);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   padding: 4px 8px;
   border-radius: 6px;
 }
@@ -1385,11 +1405,11 @@ ion-content.fordago-page-content {
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 12px;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
 
   &:focus {
-    border-color: #FFD600;
-    box-shadow: 0 0 10px rgba(255, 214, 0, 0.3);
+    border-color: #ffffff;
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.25);
   }
 }
 
@@ -1401,13 +1421,15 @@ ion-content.fordago-page-content {
 .resend-text-btn {
   background: transparent;
   border: none;
-  color: #FFD600;
+  color: #ffffff;
   font-size: 13px;
   font-weight: 600;
+  text-decoration: underline;
   cursor: pointer;
 
   &:disabled {
     color: rgba(255, 255, 255, 0.35);
+    text-decoration: none;
     cursor: not-allowed;
   }
 }
@@ -1584,9 +1606,9 @@ ion-content.fordago-page-content {
 
   .dest-change-btn {
     background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 8px;
-    color: #FFD600;
+    color: #ffffff;
     font-size: 11px;
     font-weight: 700;
     padding: 6px 12px;
@@ -1594,8 +1616,8 @@ ion-content.fordago-page-content {
     transition: all 0.2s;
 
     &:hover {
-      background: rgba(255, 214, 0, 0.15);
-      border-color: #FFD600;
+      background: rgba(255, 255, 255, 0.16);
+      border-color: #ffffff;
     }
   }
 }
