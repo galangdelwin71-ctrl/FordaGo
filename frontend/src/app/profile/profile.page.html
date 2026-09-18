@@ -1223,6 +1223,83 @@
   </ng-template>
 </ion-modal>
 
+<!-- Email Change Verification Modal -->
+<ion-modal
+  [isOpen]="emailChangeModalOpen"
+  (didDismiss)="cancelEmailChange()"
+  [breakpoints]="[0, 0.75]"
+  [initialBreakpoint]="0.75"
+  [handle]="true">
+  <ng-template>
+    <ion-content class="ion-padding modal-content">
+      <div class="modal-handle"></div>
+      <div class="modal-header-row">
+        <div class="modal-title">Verify Email Change</div>
+        <button type="button" class="modal-close-icon-btn" (click)="cancelEmailChange()">✕</button>
+      </div>
+      <p class="modal-subtitle">
+        Please enter the 6-digit verification code sent to confirm your new email address.
+      </p>
+
+      <div class="twofa-otp-sent-banner" *ngIf="pendingNewEmail">
+        <ion-icon name="checkmark-circle"></ion-icon>
+        <span>Verification code sent to <strong>{{ pendingNewEmail }}</strong></span>
+      </div>
+
+      <div class="dev-otp-pill" *ngIf="emailChangeDevCode">
+        <span>DEV CODE: <strong>{{ emailChangeDevCode }}</strong></span>
+      </div>
+
+      <!-- 6-Digit OTP Input -->
+      <div class="form-group" style="margin-top: 18px;">
+        <label class="form-label" style="text-align: center; display: block;">ENTER 6-DIGIT VERIFICATION CODE</label>
+        <div class="twofa-otp-row">
+          <input
+            *ngFor="let digit of emailChangeOtpCode; let i = index"
+            [id]="'email-otp-' + i"
+            type="text"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            maxlength="1"
+            class="twofa-otp-box"
+            [value]="digit"
+            (input)="onEmailChangeOtpInput(i, $event)"
+            (keydown)="onEmailChangeOtpKeydown(i, $event)"
+          />
+        </div>
+      </div>
+
+      <div class="modal-err-msg" *ngIf="emailChangeError">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        <span>{{ emailChangeError }}</span>
+      </div>
+
+      <div class="twofa-resend-row">
+        <button
+          type="button"
+          class="resend-text-btn"
+          [disabled]="emailChangeCountdown > 0 || emailChangeLoading"
+          (click)="resendEmailChangeCode()">
+          {{ emailChangeCountdown > 0 ? 'Resend code in ' + emailChangeCountdown + 's' : 'Resend Code' }}
+        </button>
+      </div>
+
+      <div class="modal-actions">
+        <button
+          class="modal-save-btn"
+          [disabled]="emailChangeOtpCode.join('').length !== 6 || emailChangeLoading"
+          (click)="confirmEmailChange()">
+          <ion-spinner *ngIf="emailChangeLoading" name="crescent"></ion-spinner>
+          <span *ngIf="!emailChangeLoading">Verify &amp; Update Email</span>
+        </button>
+        <button class="modal-cancel-btn" (click)="cancelEmailChange()" [disabled]="emailChangeLoading">
+          Cancel
+        </button>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
 <app-notification-panel
   [isOpen]="notifPanelOpen"
   (closed)="closeNotifPanel()"

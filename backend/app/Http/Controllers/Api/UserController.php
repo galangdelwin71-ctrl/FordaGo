@@ -6,9 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Notification;
 use App\Models\User;
 use App\Services\ActivityLogger;
+use App\Services\MailService;
 use App\Services\SmsService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 
 /**
  * Ported from server/routes/user.js.
@@ -391,7 +395,7 @@ class UserController extends Controller
                     'username'      => $username ?: $user->username,
                     'first_name'    => $firstName ?: $user->first_name,
                     'last_name'     => $lastName  ?: $user->last_name,
-                    'email'         => $email     ?? $user->email,
+                    'email'         => $isAdmin ? ($email ?? $user->email) : $user->email,
                     'phone'         => $normalizedPhone,
                     'gender'        => $gender,
                     'profile_image' => $processedAvatar,
@@ -674,6 +678,125 @@ class UserController extends Controller
         $request->user()->update(['fcm_token' => null]);
 
         return response()->json(['message' => 'FCM token cleared.']);
+    }
+
+    /**
+     * POST /api/users/request-email-change
+     * Request a 6-digit OTP code to change email address.
+     */
+    public function requestEmailChange(Request $request)
+    {
+        $user = $request->user();
+        if (! $user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $newEmail = strtolower(trim((string) $request->input('new_email', '')));
+        if (! filter_var($newEmail, FILTER_VALIDATE_EMAIL)) {
+            return response()->json(['message' => 'Please provide a valid email address.'], 422);
+        }
+
+        if ($newEmail === strtolower((string) $user->email)) {
+            return response()->json(['message' => 'The new email is the same as your current email.'], 422);
+        }
+
+        if (User::where('email', $newEmail)->where('id', '!=', $user->id)->exists()) {
+            return response()->json(['message' => 'That email address is already in use by another account.'], 400);
+        }
+
+        $rateKey = 'email-change-req:'.$user->id;
+        if (RateLimiter::tooManyAttempts($rateKey.':cooldown', 1)) {
+            return response()->json(['message' => 'Please wait a moment before requesting another code.'], 429);
+        }
+
+        $code = (string) random_int(100000, 999999);
+        Cache::put("email_change:{$user->id}", [
+            'code'      => Hash::make($code),
+            'new_email' => $newEmail,
+        ], now()->addMinutes(10));
+
+        RateLimiter::hit($rateKey.':cooldown', 60);
+
+        $displayName = trim(($user->first_name ?? '').' '.($user->last_name ?? '')) ?: ($user->username ?? 'Member');
+        $subject     = 'FordaGO: Verify Your New Email Address';
+        $message     = "FordaGO: Your email change verification code is {$code}. Valid for 10 minutes.";
+
+        // 1. Send OTP to the new email address
+        $mailRes = MailService::sendPasswordResetOtp($newEmail, $code, $displayName);
+
+        // 2. Companion SMS to phone (if registered) to guarantee delivery on mobile
+        if ($user->phone) {
+            $smsDest = SmsService::normalizePhoneNumber($user->phone);
+            if ($smsDest) {
+                SmsService::send($smsDest, "FordaGO: Your verification code to change email to {$newEmail} is {$code}. Valid for 10 minutes.");
+                Log::info('Dispatched email change OTP companion SMS to phone', ['phone' => $smsDest]);
+            }
+        }
+
+        $isDebug = config('app.debug') && in_array(config('app.env'), ['local', 'development'], true);
+
+        return response()->json([
+            'message'            => 'Verification code sent to ' . $newEmail . ($user->phone ? ' and your phone.' : '.'),
+            'new_email'          => $newEmail,
+            'destination_masked' => $this->maskEmail($newEmail),
+            'dev_code'           => $isDebug ? $code : null,
+        ]);
+    }
+
+    /**
+     * POST /api/users/confirm-email-change
+     * Confirm 6-digit OTP code and update user's email address.
+     */
+    public function confirmEmailChange(Request $request)
+    {
+        $user = $request->user();
+        if (! $user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $code = trim((string) $request->input('code', ''));
+        if (! preg_match('/^\d{6}$/', $code)) {
+            return response()->json(['message' => 'Please enter a valid 6-digit code.'], 400);
+        }
+
+        $cacheKey = "email_change:{$user->id}";
+        $data = Cache::get($cacheKey);
+        if (! $data || empty($data['code']) || empty($data['new_email'])) {
+            return response()->json(['message' => 'Verification code expired or not found. Please request a new code.'], 400);
+        }
+
+        if (! Hash::check($code, $data['code'])) {
+            return response()->json(['message' => 'Invalid verification code. Please try again.'], 400);
+        }
+
+        $newEmail = $data['new_email'];
+
+        // Ensure uniqueness once more before committing
+        if (User::where('email', $newEmail)->where('id', '!=', $user->id)->exists()) {
+            return response()->json(['message' => 'That email address is already in use by another account.'], 400);
+        }
+
+        $oldEmail = $user->email;
+        $user->email = $newEmail;
+        $user->save();
+
+        Cache::forget($cacheKey);
+
+        ActivityLogger::log($request, 'email_change', "User {$user->username} changed email from {$oldEmail} to {$newEmail}.");
+
+        return response()->json([
+            'message' => 'Email address successfully updated!',
+            'user'    => $user->fresh(),
+        ]);
+    }
+
+    private function maskEmail(string $email): string
+    {
+        $at = strpos($email, '@');
+        if ($at === false || $at <= 2) {
+            return $email;
+        }
+        return substr($email, 0, 2) . '••••' . substr($email, $at);
     }
 }
 

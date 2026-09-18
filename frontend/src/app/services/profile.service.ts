@@ -59,6 +59,26 @@ export class ProfileService {
     );
   }
 
+  requestEmailChange(newEmail: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/request-email-change`, { new_email: newEmail }).pipe(
+      catchError(err => this.handleError(err))
+    );
+  }
+
+  confirmEmailChange(code: string, newEmail: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/confirm-email-change`, { code, new_email: newEmail }).pipe(
+      tap((res: any) => {
+        if (res?.user) {
+          const current = this.profileSubject.value;
+          if (current) {
+            this.profileSubject.next({ ...current, email: res.user.email });
+          }
+        }
+      }),
+      catchError(err => this.handleError(err))
+    );
+  }
+
   private handleError(err: HttpErrorResponse) {
     let message: string;
     if (err.status === 0) {

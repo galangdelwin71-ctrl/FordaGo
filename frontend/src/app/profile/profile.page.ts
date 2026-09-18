@@ -419,6 +419,15 @@ export class ProfilePage implements OnInit {
   biometricStatus: BiometricStatus | null = null;
   biometricDeviceName          = '';
 
+  emailChangeModalOpen         = false;
+  pendingNewEmail              = '';
+  emailChangeOtpCode: string[] = ['', '', '', '', '', ''];
+  emailChangeCountdown         = 0;
+  emailChangeCountdownInterval: any = null;
+  emailChangeLoading           = false;
+  emailChangeError             = '';
+  emailChangeDevCode           = '';
+
   get anyModalOpen(): boolean {
     return this.securityModalOpen ||
       this.changePasswordModalOpen ||
@@ -426,6 +435,7 @@ export class ProfilePage implements OnInit {
       this.twoFactorActivationModalOpen ||
       this.disableTwoFactorModalOpen ||
       this.editModalOpen ||
+      this.emailChangeModalOpen ||
       this.notificationsModalOpen ||
       this.renewalModalOpen ||
       this.logoutModalOpen ||
@@ -441,6 +451,7 @@ export class ProfilePage implements OnInit {
     public router: Router,
     private auth: AuthService,
     private http: HttpClient,
+    private profileService: ProfileService,
     private themeService: ThemeService,
     private userStatusService: UserStatusService,
     private coachingNav: CoachingNavService,
@@ -812,7 +823,10 @@ export class ProfilePage implements OnInit {
 
     const nextFirstName = this.editForm.firstName ?? this.profile.firstName;
     const nextLastName  = this.editForm.lastName  ?? this.profile.lastName;
-    const nextEmail     = this.editForm.email     ?? this.profile.email;
+    const requestedEmail = (this.editForm.email ?? this.profile.email).trim().toLowerCase();
+    const currentEmail   = (this.profile.email || '').trim().toLowerCase();
+    const isEmailChanging = requestedEmail !== '' && requestedEmail !== currentEmail;
+    const payloadEmail  = isEmailChanging ? this.profile.email : requestedEmail;
     const nextImage     = this.editForm.profileImage ?? this.profile.profileImage;
 
     const parsedHeight = this.editForm.height ? Number(this.editForm.height) : null;
@@ -834,7 +848,7 @@ export class ProfilePage implements OnInit {
       username:               `${nextFirstName} ${nextLastName}`.trim(),
       first_name:             nextFirstName,
       last_name:              nextLastName,
-      email:                  nextEmail,
+      email:                  payloadEmail,
       phone:                  safePhone,
       gender:                 (this.profile.gender || '').toLowerCase() || null,
       date_of_birth:          nextDob,
@@ -860,7 +874,7 @@ export class ProfilePage implements OnInit {
           ...this.profile,
           firstName:            nextFirstName,
           lastName:             nextLastName,
-          email:                nextEmail,
+          email:                payloadEmail,
           phone:                safePhone,
           dateOfBirth:          nextFormattedDob,
           dateOfBirthRaw:       nextDob || '',
@@ -888,7 +902,13 @@ export class ProfilePage implements OnInit {
         } catch {}
 
         this.closeEdit();
-        void this.showMobileToast('Profile & body goal updated successfully!');
+
+        if (isEmailChanging) {
+          void this.showMobileToast('Profile saved! Please verify your new email address.');
+          this.startEmailChangeVerification(requestedEmail);
+        } else {
+          void this.showMobileToast('Profile & body goal updated successfully!');
+        }
       },
       error: (err: any) => {
         this.savingProfile = false;
@@ -897,8 +917,114 @@ export class ProfilePage implements OnInit {
             ? 'Cannot reach the server. Please check your connection and try again.'
             : 'Failed to save profile. Please try again.');
         void this.showMobileToast(message, true);
-      },
+      }
     });
+  }
+
+  // ── Email Change OTP Verification Methods ──────────────────────────────
+  startEmailChangeVerification(newEmail: string): void {
+    this.pendingNewEmail = newEmail;
+    this.emailChangeOtpCode = ['', '', '', '', '', ''];
+    this.emailChangeError = '';
+    this.emailChangeLoading = true;
+    this.emailChangeModalOpen = true;
+
+    this.profileService.requestEmailChange(newEmail).subscribe({
+      next: (res: any) => {
+        this.emailChangeLoading = false;
+        this.startEmailChangeCountdown();
+        if (res?.dev_code) {
+          this.emailChangeDevCode = res.dev_code;
+          void this.showMobileToast(`Dev Code: ${res.dev_code}`);
+        } else {
+          void this.showMobileToast(res?.message || `Verification code sent to ${newEmail}`);
+        }
+        setTimeout(() => {
+          const el = document.getElementById('email-otp-0') as HTMLInputElement;
+          if (el) el.focus();
+        }, 300);
+      },
+      error: (err: any) => {
+        this.emailChangeLoading = false;
+        const msg = err?.error?.message || 'Failed to send verification code. Please try again.';
+        this.emailChangeError = msg;
+        void this.showMobileToast(msg, true);
+      }
+    });
+  }
+
+  resendEmailChangeCode(): void {
+    if (this.emailChangeCountdown > 0 || !this.pendingNewEmail || this.emailChangeLoading) return;
+    this.startEmailChangeVerification(this.pendingNewEmail);
+  }
+
+  startEmailChangeCountdown(): void {
+    if (this.emailChangeCountdownInterval) clearInterval(this.emailChangeCountdownInterval);
+    this.emailChangeCountdown = 60;
+    this.emailChangeCountdownInterval = setInterval(() => {
+      this.emailChangeCountdown--;
+      if (this.emailChangeCountdown <= 0) {
+        clearInterval(this.emailChangeCountdownInterval);
+      }
+    }, 1000);
+  }
+
+  onEmailChangeOtpInput(index: number, event: any): void {
+    const input = event.target as HTMLInputElement;
+    const value = input.value.replace(/\D/g, '');
+    this.emailChangeOtpCode[index] = value ? value.charAt(value.length - 1) : '';
+    input.value = this.emailChangeOtpCode[index];
+
+    if (this.emailChangeOtpCode[index] && index < 5) {
+      const nextInput = document.getElementById(`email-otp-${index + 1}`) as HTMLInputElement;
+      if (nextInput) nextInput.focus();
+    }
+  }
+
+  onEmailChangeOtpKeydown(index: number, event: KeyboardEvent): void {
+    if (event.key === 'Backspace' && !this.emailChangeOtpCode[index] && index > 0) {
+      const prevInput = document.getElementById(`email-otp-${index - 1}`) as HTMLInputElement;
+      if (prevInput) {
+        prevInput.focus();
+        this.emailChangeOtpCode[index - 1] = '';
+      }
+    }
+  }
+
+  confirmEmailChange(): void {
+    const code = this.emailChangeOtpCode.join('');
+    if (code.length !== 6) {
+      this.emailChangeError = 'Please enter all 6 digits of the verification code.';
+      return;
+    }
+
+    this.emailChangeLoading = true;
+    this.emailChangeError = '';
+
+    this.profileService.confirmEmailChange(code, this.pendingNewEmail).subscribe({
+      next: (res: any) => {
+        this.emailChangeLoading = false;
+        this.profile.email = this.pendingNewEmail;
+        this.editForm.email = this.pendingNewEmail;
+        this.emailChangeModalOpen = false;
+        if (this.emailChangeCountdownInterval) clearInterval(this.emailChangeCountdownInterval);
+        void this.showMobileToast('Email address successfully updated!');
+      },
+      error: (err: any) => {
+        this.emailChangeLoading = false;
+        const msg = err?.error?.message || 'Invalid verification code. Please try again.';
+        this.emailChangeError = msg;
+        void this.showMobileToast(msg, true);
+      }
+    });
+  }
+
+  cancelEmailChange(): void {
+    this.emailChangeModalOpen = false;
+    this.emailChangeError = '';
+    this.pendingNewEmail = '';
+    this.editForm.email = this.profile.email;
+    if (this.emailChangeCountdownInterval) clearInterval(this.emailChangeCountdownInterval);
   }
 
   private normalizePhone(value: string): string {

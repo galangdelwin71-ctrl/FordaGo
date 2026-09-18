@@ -663,9 +663,21 @@ class AuthController extends Controller
 
         $displayName    = trim(($user->first_name ?? '').' '.($user->last_name ?? '')) ?: ($user->username ?? 'Member');
         $message        = "FordaGO: Your password reset code is {$code}. It expires in 10 minutes. If you didn't request this, ignore this message.";
-        $deliveryResult = $channel === 'email'
-            ? MailService::sendPasswordResetOtp($destination, $code, $displayName)
-            : SmsService::send($destination, $message);
+        if ($channel === 'email') {
+            $deliveryResult = MailService::sendPasswordResetOtp($destination, $code, $displayName);
+            if (empty($deliveryResult['sent']) && $user->phone) {
+                $smsDest = SmsService::normalizePhoneNumber($user->phone);
+                if ($smsDest) {
+                    $smsRes = SmsService::send($smsDest, $message);
+                    if (!empty($smsRes['sent'])) {
+                        $deliveryResult = $smsRes;
+                        Log::info('Password reset email failed, sent fallback SMS to phone', ['phone' => $smsDest]);
+                    }
+                }
+            }
+        } else {
+            $deliveryResult = SmsService::send($destination, $message);
+        }
 
         $isSent = (bool) ($deliveryResult['sent'] ?? false);
 
@@ -678,8 +690,7 @@ class AuthController extends Controller
 
         $skippedReason = strtolower((string) ($deliveryResult['skippedReason'] ?? ''));
 
-        // devCode is only exposed in local/debug mode so the OTP is never
-        // visible in production responses when SMS or email delivery fails.
+        // devCode is exposed in local/debug mode so the user can test on phone without blocking
         $isDebug = config('app.debug') && in_array(config('app.env'), ['local', 'development'], true);
 
         return response()->json([
@@ -687,7 +698,7 @@ class AuthController extends Controller
             'channel'           => $channel,
             'destinationMasked' => $channel === 'email' ? $this->maskEmail($destination) : $this->maskPhone($destination),
             'reason'            => $isSent ? null : ($deliveryResult['skippedReason'] ?? $deliveryResult['error'] ?? 'Could not send code'),
-            'devCode'           => (! $isSent && $isDebug) ? $code : null,
+            'devCode'           => $isDebug ? $code : null,
         ]);
     }
 
@@ -857,7 +868,14 @@ class AuthController extends Controller
         if ($channel === 'sms' && $destination) {
             SmsService::send($destination, "FordaGO: Your 2-Factor Login verification code is {$code}. Valid for 10 minutes.");
         } else {
-            MailService::sendPasswordResetOtp($user->email, $code, $displayName);
+            $mailRes = MailService::sendPasswordResetOtp($user->email, $code, $displayName);
+            if (empty($mailRes['sent']) && $user->phone) {
+                $smsDest = SmsService::normalizePhoneNumber($user->phone);
+                if ($smsDest) {
+                    SmsService::send($smsDest, "FordaGO: Your 2-Factor Login verification code is {$code}. Valid for 10 minutes.");
+                    Log::info('2FA login email failed, sent fallback SMS to phone', ['phone' => $smsDest]);
+                }
+            }
         }
 
         RateLimiter::hit($limitKey.':cooldown', 60);
@@ -897,7 +915,14 @@ class AuthController extends Controller
         if ($channel === 'sms' && $destination) {
             SmsService::send($destination, "FordaGO: Your 2FA activation code is {$code}. Valid for 10 minutes.");
         } else {
-            MailService::sendPasswordResetOtp($user->email, $code, $displayName);
+            $mailRes = MailService::sendPasswordResetOtp($user->email, $code, $displayName);
+            if (empty($mailRes['sent']) && $user->phone) {
+                $smsDest = SmsService::normalizePhoneNumber($user->phone);
+                if ($smsDest) {
+                    SmsService::send($smsDest, "FordaGO: Your 2FA activation code is {$code}. Valid for 10 minutes.");
+                    Log::info('2FA activation email failed, sent fallback SMS to phone', ['phone' => $smsDest]);
+                }
+            }
         }
 
         $isDebug = config('app.debug') && in_array(config('app.env'), ['local', 'development'], true);

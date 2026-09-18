@@ -75,6 +75,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/create',         [UserController::class, 'store'])->middleware('role:admin,super_admin,employee');
         Route::put('/fcm-token',       [UserController::class, 'updateFcmToken']); // FCM push registration
         Route::delete('/fcm-token',    [UserController::class, 'clearFcmToken']);  // FCM push deregistration on logout
+        Route::post('/request-email-change', [UserController::class, 'requestEmailChange']);
+        Route::post('/confirm-email-change', [UserController::class, 'confirmEmailChange']);
         Route::put('/{id}',            [UserController::class, 'update'])->whereNumber('id');
         Route::put('/{id}/membership', [UserController::class, 'updateMembership'])->whereNumber('id')->middleware('role:admin,super_admin,employee');
         Route::delete('/{id}',         [UserController::class, 'destroy'])->whereNumber('id')->middleware('role:admin,super_admin,employee');

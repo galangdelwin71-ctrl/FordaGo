@@ -29,7 +29,10 @@ class MailService
         // 1. Check for Resend API Key (Bypasses SMTP port blocking via HTTPS port 443)
         $resendKey = config('services.resend.key');
         if ($resendKey) {
-            return self::sendViaResend($destination, $title, $body, $html);
+            $resendResult = self::sendViaResend($destination, $title, $body, $html);
+            if (!empty($resendResult['sent'])) {
+                return $resendResult;
+            }
         }
 
         // 2. Check for Brevo API Key (Bypasses SMTP port blocking via HTTPS port 443)
@@ -109,7 +112,10 @@ class MailService
         // 1. Resend API
         $resendKey = config('services.resend.key');
         if ($resendKey) {
-            return self::sendViaResend($destination, $title, $plainText, $htmlContent);
+            $resendResult = self::sendViaResend($destination, $title, $plainText, $htmlContent);
+            if (!empty($resendResult['sent'])) {
+                return $resendResult;
+            }
         }
 
         // 2. Brevo API
