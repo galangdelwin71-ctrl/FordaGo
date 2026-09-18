@@ -733,7 +733,7 @@ class UserController extends Controller
             }
         }
 
-        $isDebug = config('app.debug') && in_array(config('app.env'), ['local', 'development'], true);
+        $isDebug = (bool) config('app.debug');
 
         return response()->json([
             'message'            => 'Verification code sent to ' . $newEmail . ($user->phone ? ' and your phone.' : '.'),

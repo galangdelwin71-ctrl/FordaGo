@@ -381,7 +381,7 @@ class AuthController extends Controller
                 'exp'     => now()->addMinutes(10)->timestamp,
             ]));
 
-            $isDebug = config('app.debug') && in_array(config('app.env'), ['local', 'development'], true);
+            $isDebug = (bool) config('app.debug');
 
             return response()->json([
                 'status'             => '2fa_required',
@@ -692,7 +692,7 @@ class AuthController extends Controller
         $skippedReason = strtolower((string) ($deliveryResult['skippedReason'] ?? ''));
 
         // devCode is exposed in local/debug mode so the user can test on phone without blocking
-        $isDebug = config('app.debug') && in_array(config('app.env'), ['local', 'development'], true);
+        $isDebug = (bool) config('app.debug');
 
         return response()->json([
             'sent'              => $isSent,
@@ -881,7 +881,7 @@ class AuthController extends Controller
 
         RateLimiter::hit($limitKey.':cooldown', 60);
 
-        $isDebug = config('app.debug') && in_array(config('app.env'), ['local', 'development'], true);
+        $isDebug = (bool) config('app.debug');
 
         return response()->json([
             'message'            => 'A new verification code was sent.',
@@ -926,7 +926,7 @@ class AuthController extends Controller
             }
         }
 
-        $isDebug = config('app.debug') && in_array(config('app.env'), ['local', 'development'], true);
+        $isDebug = (bool) config('app.debug');
 
         return response()->json([
             'message'            => 'Verification code sent to your ' . ($channel === 'sms' ? 'phone' : 'email') . '.',
