@@ -10,6 +10,7 @@ use App\Services\ActivityLogger;
 use App\Services\MailService;
 use App\Services\SmsService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -363,6 +364,7 @@ class AuthController extends Controller
                 'two_factor_code'       => $codeHash,
                 'two_factor_expires_at' => now()->addMinutes(10),
             ]);
+            Cache::put("2fa_valid:{$user->id}:{$codeHash}", true, 600);
 
             $channel     = $user->two_factor_channel ?: 'email';
             $displayName = trim(($user->first_name ?? '').' '.($user->last_name ?? '')) ?: ($user->username ?? 'Member');
@@ -713,7 +715,9 @@ class AuthController extends Controller
             return response()->json(['message' => 'No account found with that email or phone number.'], 404);
         }
 
+        $inputHash = $this->hashResetCode($code);
         $resetRow = PasswordReset::where('user_id', $user->id)
+            ->where('code_hash', $inputHash)
             ->whereNull('verified_at')
             ->whereNull('password_changed_at')
             ->where('expires_at', '>', now())
@@ -721,14 +725,23 @@ class AuthController extends Controller
             ->first();
 
         if (! $resetRow) {
-            return response()->json(['message' => 'Code expired or not requested. Please request a new code.'], 400);
+            $anyRow = PasswordReset::where('user_id', $user->id)
+                ->whereNull('verified_at')
+                ->whereNull('password_changed_at')
+                ->where('expires_at', '>', now())
+                ->orderByDesc('created_at')
+                ->first();
+            if ($anyRow) {
+                $anyRow->increment('attempts');
+                if ($anyRow->attempts >= self::RESET_MAX_VERIFY_ATTEMPTS) {
+                    return response()->json(['message' => 'Too many attempts. Please request a new code.'], 429);
+                }
+            }
+            return response()->json(['message' => 'Invalid code. Please try again.'], 400);
         }
+
         if ($resetRow->attempts >= self::RESET_MAX_VERIFY_ATTEMPTS) {
             return response()->json(['message' => 'Too many attempts. Please request a new code.'], 429);
-        }
-        if ($this->hashResetCode($code) !== $resetRow->code_hash) {
-            $resetRow->increment('attempts');
-            return response()->json(['message' => 'Invalid code. Please try again.'], 400);
         }
 
         $resetRow->update(['verified_at' => now()]);
@@ -798,15 +811,16 @@ class AuthController extends Controller
             return response()->json(['message' => 'Account not found.'], 404);
         }
 
-        if (! $user->two_factor_code || ! $user->two_factor_expires_at || now()->isAfter($user->two_factor_expires_at)) {
-            return response()->json(['message' => 'Verification code expired. Please request a new code.'], 400);
+        $inputHash = $this->hashResetCode($code);
+        $isCurrent = ($user->two_factor_code && $inputHash === $user->two_factor_code && $user->two_factor_expires_at && now()->isBefore($user->two_factor_expires_at));
+        $isCached  = (bool) Cache::get("2fa_valid:{$user->id}:{$inputHash}");
+
+        if (! $isCurrent && ! $isCached) {
+            return response()->json(['message' => 'Invalid verification code. Please check the code sent to you.'], 400);
         }
 
-        if ($this->hashResetCode($code) !== $user->two_factor_code) {
-            return response()->json(['message' => 'Invalid verification code. Please try again.'], 400);
-        }
-
-        // Clear 2FA temporary code
+        // Clear 2FA temporary code and cache
+        Cache::forget("2fa_valid:{$user->id}:{$inputHash}");
         $user->update([
             'two_factor_code'       => null,
             'two_factor_expires_at' => null,
@@ -853,6 +867,7 @@ class AuthController extends Controller
             'two_factor_code'       => $codeHash,
             'two_factor_expires_at' => now()->addMinutes(10),
         ]);
+        Cache::put("2fa_valid:{$user->id}:{$codeHash}", true, 600);
 
         $channel     = $user->two_factor_channel ?: 'email';
         $displayName = trim(($user->first_name ?? '').' '.($user->last_name ?? '')) ?: ($user->username ?? 'Member');
@@ -897,6 +912,7 @@ class AuthController extends Controller
             'two_factor_expires_at' => now()->addMinutes(10),
             'two_factor_channel'    => $channel,
         ]);
+        Cache::put("2fa_valid:{$user->id}:{$codeHash}", true, 600);
 
         $displayName = trim(($user->first_name ?? '').' '.($user->last_name ?? '')) ?: ($user->username ?? 'Member');
 
@@ -929,14 +945,15 @@ class AuthController extends Controller
             return response()->json(['message' => 'Please enter a valid 6-digit code.'], 400);
         }
 
-        if (! $user->two_factor_code || ! $user->two_factor_expires_at || now()->isAfter($user->two_factor_expires_at)) {
-            return response()->json(['message' => 'Verification code expired. Please request a new code.'], 400);
+        $inputHash = $this->hashResetCode($code);
+        $isCurrent = ($user->two_factor_code && $inputHash === $user->two_factor_code && $user->two_factor_expires_at && now()->isBefore($user->two_factor_expires_at));
+        $isCached  = (bool) Cache::get("2fa_valid:{$user->id}:{$inputHash}");
+
+        if (! $isCurrent && ! $isCached) {
+            return response()->json(['message' => 'Invalid verification code. Please check the latest code sent to you.'], 400);
         }
 
-        if ($this->hashResetCode($code) !== $user->two_factor_code) {
-            return response()->json(['message' => 'Invalid verification code.'], 400);
-        }
-
+        Cache::forget("2fa_valid:{$user->id}:{$inputHash}");
         $user->update([
             'two_factor_enabled'    => true,
             'two_factor_code'       => null,

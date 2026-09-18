@@ -109,8 +109,8 @@ class MailService
     public static function sendPasswordResetOtp(string $to, string $code, string $name = 'Member'): array
     {
         $destination = trim($to);
-        $title = 'FordaGO Password Reset Code';
-        $plainText = "FordaGO: Your password reset code is {$code}. It expires in 10 minutes. If you didn't request this, ignore this message.";
+        $title = "FordaGO Security Code: {$code}";
+        $plainText = "FordaGO: Your verification code is {$code}. It expires in 10 minutes. If you didn't request this, ignore this message.";
 
         if ($destination === '' || $code === '') {
             return ['sent' => false, 'skippedReason' => 'Missing destination email or code'];
@@ -331,48 +331,25 @@ class MailService
      *
      * @return string[] Array suitable for CURLOPT_RESOLVE, e.g. ["api.resend.com:443:104.20.29.242"]
      */
+    private static array $dnsResolveCache = [];
+
     private static function getCurlResolve(string $host, int $port = 443): array
     {
-        $resolvedIps = [];
-
-        // 1. Static known Anycast Edge IPs as instant zero-latency fallback
-        $staticFallbacks = [
-            'api.resend.com'   => ['104.20.29.242', '172.66.165.132'],
-            'api.brevo.com'    => ['185.107.232.253', '185.107.232.254', '1.179.112.50'],
-            'app.philsms.com'  => ['172.67.143.149', '104.21.32.186'],
-            'api.semaphore.co' => ['104.26.2.82', '172.67.70.198', '104.26.3.82'],
-        ];
-
-        // 2. Try DNS over HTTPS (DoH) via raw IP 1.1.1.1 (requires zero DNS lookup)
-        try {
-            $ch = curl_init("https://1.1.1.1/dns-query?name={$host}&type=A");
-            curl_setopt_array($ch, [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_HTTPHEADER     => ['accept: application/dns-json'],
-                CURLOPT_TIMEOUT        => 2,
-                CURLOPT_SSL_VERIFYPEER => false,
-                CURLOPT_SSL_VERIFYHOST => false,
-            ]);
-            $res = curl_exec($ch);
-            curl_close($ch);
-            if ($res) {
-                $json = json_decode($res, true);
-                if (!empty($json['Answer'])) {
-                    foreach ($json['Answer'] as $ans) {
-                        if (($ans['type'] ?? 0) === 1 && !empty($ans['data']) && filter_var($ans['data'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-                            $resolvedIps[] = $ans['data'];
-                        }
-                    }
-                }
-            }
-        } catch (\Throwable) {}
-
-        // 3. Fall back to static Anycast IPs if DoH didn't return
-        if (empty($resolvedIps) && isset($staticFallbacks[$host])) {
-            $resolvedIps = $staticFallbacks[$host];
+        $cacheKey = "{$host}:{$port}";
+        if (isset(self::$dnsResolveCache[$cacheKey])) {
+            return self::$dnsResolveCache[$cacheKey];
         }
 
-        // 4. Try standard gethostbyname if still empty
+        $staticFallbacks = [
+            'api.resend.com'        => ['104.20.29.242', '172.66.165.132'],
+            'api.brevo.com'         => ['185.107.232.253', '185.107.232.254', '1.179.112.50'],
+            'app.philsms.com'       => ['172.67.143.149', '104.21.32.186'],
+            'dashboard.philsms.com' => ['172.67.194.35', '104.21.92.130'],
+            'api.semaphore.co'      => ['104.26.2.82', '172.67.70.198'],
+        ];
+
+        $resolvedIps = $staticFallbacks[$host] ?? [];
+
         if (empty($resolvedIps)) {
             $ip = @gethostbyname($host);
             if ($ip && $ip !== $host && filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
@@ -385,6 +362,6 @@ class MailService
             $entries[] = "{$host}:{$port}:{$ip}";
         }
 
-        return $entries;
+        return self::$dnsResolveCache[$cacheKey] = $entries;
     }
 }
