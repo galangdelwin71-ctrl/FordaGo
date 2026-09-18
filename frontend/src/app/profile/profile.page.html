@@ -718,7 +718,7 @@
       </div>
 
       <!-- Item 4: Reset Password via OTP -->
-      <div class="menu-item" (click)="openForgotPasswordRecovery()">
+      <div class="menu-item" (click)="openResetPasswordOtp()">
         <span class="menu-icon"><ion-icon name="key-outline"></ion-icon></span>
         <div class="menu-content">
           <div class="menu-label">Reset Password via OTP</div>
@@ -746,56 +746,268 @@
         <div class="modal-title">Change Password</div>
         <button type="button" class="modal-close-icon-btn" (click)="closeChangePassword()">✕</button>
       </div>
-      <p class="modal-subtitle">Keep your account safe by using at least 8 characters with numbers and letters.</p>
+      <p class="modal-subtitle">
+        Enter your current password and create a strong, secure new password.
+      </p>
 
+      <!-- Current Password -->
       <div class="form-group">
         <label class="form-label">Current Password</label>
         <div class="input-shell-custom">
-          <ion-icon name="lock-closed-outline"></ion-icon>
+          <ion-icon name="lock-closed-outline" class="input-lead-icon"></ion-icon>
           <input
-            type="password"
+            [type]="showCurrentPassword ? 'text' : 'password'"
             [(ngModel)]="passwordForm.current"
             placeholder="Enter current password"
             class="custom-modal-input" />
+          <button type="button" class="pwd-eye-btn" (click)="showCurrentPassword = !showCurrentPassword" aria-label="Toggle password visibility">
+            <ion-icon [name]="showCurrentPassword ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+          </button>
         </div>
       </div>
 
+      <!-- New Password -->
       <div class="form-group">
         <label class="form-label">New Password</label>
         <div class="input-shell-custom">
-          <ion-icon name="key-outline"></ion-icon>
+          <ion-icon name="key-outline" class="input-lead-icon"></ion-icon>
           <input
-            type="password"
+            [type]="showNewPassword ? 'text' : 'password'"
             [(ngModel)]="passwordForm.new"
-            placeholder="Minimum 8 characters"
+            placeholder="Create new password"
             class="custom-modal-input" />
+          <button type="button" class="pwd-eye-btn" (click)="showNewPassword = !showNewPassword" aria-label="Toggle password visibility">
+            <ion-icon [name]="showNewPassword ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+          </button>
         </div>
       </div>
 
+      <!-- Password Requirements Checklist -->
+      <div class="pwd-req-card" *ngIf="passwordForm.new">
+        <div class="pwd-req-title">Password Requirements:</div>
+        <div class="pwd-req-grid">
+          <div class="pwd-req-item" [class.is-met]="hasMinLength">
+            <ion-icon [name]="hasMinLength ? 'checkmark-circle' : 'close-circle-outline'"></ion-icon>
+            <span>8+ characters</span>
+          </div>
+          <div class="pwd-req-item" [class.is-met]="hasUppercase">
+            <ion-icon [name]="hasUppercase ? 'checkmark-circle' : 'close-circle-outline'"></ion-icon>
+            <span>1 uppercase letter</span>
+          </div>
+          <div class="pwd-req-item" [class.is-met]="hasLowercase">
+            <ion-icon [name]="hasLowercase ? 'checkmark-circle' : 'close-circle-outline'"></ion-icon>
+            <span>1 lowercase letter</span>
+          </div>
+          <div class="pwd-req-item" [class.is-met]="hasNumber">
+            <ion-icon [name]="hasNumber ? 'checkmark-circle' : 'close-circle-outline'"></ion-icon>
+            <span>1 number (0-9)</span>
+          </div>
+          <div class="pwd-req-item" [class.is-met]="hasSpecial">
+            <ion-icon [name]="hasSpecial ? 'checkmark-circle' : 'close-circle-outline'"></ion-icon>
+            <span>1 special character</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Confirm New Password -->
       <div class="form-group">
         <label class="form-label">Confirm New Password</label>
-        <div class="input-shell-custom">
-          <ion-icon name="checkmark-done-outline"></ion-icon>
+        <div class="input-shell-custom" [class.input-error]="passwordForm.confirm && !passwordsMatch">
+          <ion-icon name="checkmark-done-outline" class="input-lead-icon"></ion-icon>
           <input
-            type="password"
+            [type]="showConfirmPassword ? 'text' : 'password'"
             [(ngModel)]="passwordForm.confirm"
             placeholder="Re-enter new password"
             class="custom-modal-input" />
+          <button type="button" class="pwd-eye-btn" (click)="showConfirmPassword = !showConfirmPassword" aria-label="Toggle password visibility">
+            <ion-icon [name]="showConfirmPassword ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+          </button>
         </div>
+        <div class="pwd-match-hint" *ngIf="passwordForm.confirm">
+          <span *ngIf="passwordsMatch" class="match-ok">
+            <ion-icon name="checkmark-circle"></ion-icon> Passwords match
+          </span>
+          <span *ngIf="!passwordsMatch" class="match-bad">
+            <ion-icon name="alert-circle-outline"></ion-icon> Passwords do not match
+          </span>
+        </div>
+      </div>
+
+      <!-- Error Message -->
+      <div class="modal-err-msg" *ngIf="changePasswordError">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        <span>{{ changePasswordError }}</span>
       </div>
 
       <!-- Forgot Current Password Option -->
       <div class="forgot-pass-alt-link">
-        <span (click)="openForgotPasswordRecovery()">
-          Forgot your current password? <strong>Reset with OTP &rsaquo;</strong>
+        <span (click)="openResetPasswordOtp()">
+          Forgot your current password? <strong>Reset via OTP &rsaquo;</strong>
         </span>
       </div>
 
       <div class="modal-actions">
-        <button class="modal-save-btn" (click)="savePassword()">
-          Update Password
+        <button
+          class="modal-save-btn"
+          [disabled]="!isPasswordFormValid || savingPassword"
+          (click)="savePassword()">
+          <ion-spinner *ngIf="savingPassword" name="crescent"></ion-spinner>
+          <span *ngIf="!savingPassword">Update Password</span>
         </button>
-        <button class="modal-cancel-btn" (click)="closeChangePassword()">
+        <button class="modal-cancel-btn" (click)="closeChangePassword()" [disabled]="savingPassword">
+          Cancel
+        </button>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<!-- In-App Reset Password via OTP Modal -->
+<ion-modal
+  [isOpen]="resetOtpModalOpen"
+  (didDismiss)="closeResetOtpModal()"
+  [breakpoints]="[0, 1]"
+  [initialBreakpoint]="1"
+  [handle]="true">
+  <ng-template>
+    <ion-content class="ion-padding modal-content">
+      <div class="modal-handle"></div>
+      <div class="modal-header-row">
+        <div class="modal-title">Reset Password via OTP</div>
+        <button type="button" class="modal-close-icon-btn" (click)="closeResetOtpModal()">✕</button>
+      </div>
+      <p class="modal-subtitle">
+        Verify your account via 6-digit email OTP to set a new password without needing your old password.
+      </p>
+
+      <!-- Destination Card -->
+      <div class="reset-otp-dest-card">
+        <div class="dest-icon-wrap">
+          <ion-icon name="mail-outline"></ion-icon>
+        </div>
+        <div class="dest-info">
+          <div class="dest-label">Verification Sent To</div>
+          <div class="dest-val">{{ resetOtpSentDestination || profile.email }}</div>
+        </div>
+      </div>
+
+      <div class="dev-otp-pill" *ngIf="resetOtpDevCode">
+        <span>DEV CODE: <strong>{{ resetOtpDevCode }}</strong></span>
+      </div>
+
+      <!-- 6-Digit OTP Code -->
+      <div class="form-group" style="margin-top: 18px;">
+        <label class="form-label" style="text-align: center; display: block;">Enter 6-Digit Verification Code</label>
+        <div class="twofa-otp-row">
+          <input
+            *ngFor="let digit of resetOtpDigits; let i = index"
+            [id]="'reset-otp-' + i"
+            type="text"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            maxlength="1"
+            class="twofa-otp-box"
+            [value]="digit"
+            (input)="onResetOtpDigitInput($event, i)"
+            (keydown)="onResetOtpDigitKeyDown($event, i)"
+          />
+        </div>
+      </div>
+
+      <!-- Resend Row -->
+      <div class="twofa-resend-row">
+        <button
+          type="button"
+          class="resend-text-btn"
+          [disabled]="resetOtpCountdown > 0 || resetOtpLoading"
+          (click)="sendResetPasswordOtp()">
+          <ion-icon name="send-outline" style="font-size: 13px; vertical-align: middle;"></ion-icon>
+          {{ resetOtpCountdown > 0 ? 'Resend code in ' + resetOtpCountdown + 's' : 'Resend Code' }}
+        </button>
+      </div>
+
+      <!-- New Password -->
+      <div class="form-group" style="margin-top: 16px;">
+        <label class="form-label">New Password</label>
+        <div class="input-shell-custom">
+          <ion-icon name="key-outline" class="input-lead-icon"></ion-icon>
+          <input
+            [type]="showResetOtpNewPassword ? 'text' : 'password'"
+            [(ngModel)]="resetOtpForm.new"
+            placeholder="Create new password"
+            class="custom-modal-input" />
+          <button type="button" class="pwd-eye-btn" (click)="showResetOtpNewPassword = !showResetOtpNewPassword" aria-label="Toggle password visibility">
+            <ion-icon [name]="showResetOtpNewPassword ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Password Requirements Checklist -->
+      <div class="pwd-req-card" *ngIf="resetOtpForm.new">
+        <div class="pwd-req-title">Password Requirements:</div>
+        <div class="pwd-req-grid">
+          <div class="pwd-req-item" [class.is-met]="resetOtpHasMinLength">
+            <ion-icon [name]="resetOtpHasMinLength ? 'checkmark-circle' : 'close-circle-outline'"></ion-icon>
+            <span>8+ characters</span>
+          </div>
+          <div class="pwd-req-item" [class.is-met]="resetOtpHasUppercase">
+            <ion-icon [name]="resetOtpHasUppercase ? 'checkmark-circle' : 'close-circle-outline'"></ion-icon>
+            <span>1 uppercase letter</span>
+          </div>
+          <div class="pwd-req-item" [class.is-met]="resetOtpHasLowercase">
+            <ion-icon [name]="resetOtpHasLowercase ? 'checkmark-circle' : 'close-circle-outline'"></ion-icon>
+            <span>1 lowercase letter</span>
+          </div>
+          <div class="pwd-req-item" [class.is-met]="resetOtpHasNumber">
+            <ion-icon [name]="resetOtpHasNumber ? 'checkmark-circle' : 'close-circle-outline'"></ion-icon>
+            <span>1 number (0-9)</span>
+          </div>
+          <div class="pwd-req-item" [class.is-met]="resetOtpHasSpecial">
+            <ion-icon [name]="resetOtpHasSpecial ? 'checkmark-circle' : 'close-circle-outline'"></ion-icon>
+            <span>1 special character</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Confirm New Password -->
+      <div class="form-group">
+        <label class="form-label">Confirm New Password</label>
+        <div class="input-shell-custom" [class.input-error]="resetOtpForm.confirm && !resetOtpPasswordsMatch">
+          <ion-icon name="checkmark-done-outline" class="input-lead-icon"></ion-icon>
+          <input
+            [type]="showResetOtpConfirmPassword ? 'text' : 'password'"
+            [(ngModel)]="resetOtpForm.confirm"
+            placeholder="Re-enter new password"
+            class="custom-modal-input" />
+          <button type="button" class="pwd-eye-btn" (click)="showResetOtpConfirmPassword = !showResetOtpConfirmPassword" aria-label="Toggle password visibility">
+            <ion-icon [name]="showResetOtpConfirmPassword ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+          </button>
+        </div>
+        <div class="pwd-match-hint" *ngIf="resetOtpForm.confirm">
+          <span *ngIf="resetOtpPasswordsMatch" class="match-ok">
+            <ion-icon name="checkmark-circle"></ion-icon> Passwords match
+          </span>
+          <span *ngIf="!resetOtpPasswordsMatch" class="match-bad">
+            <ion-icon name="alert-circle-outline"></ion-icon> Passwords do not match
+          </span>
+        </div>
+      </div>
+
+      <!-- Error Message -->
+      <div class="modal-err-msg" *ngIf="resetOtpError">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        <span>{{ resetOtpError }}</span>
+      </div>
+
+      <div class="modal-actions">
+        <button
+          class="modal-save-btn"
+          [disabled]="!isResetOtpFormValid || resetOtpLoading"
+          (click)="submitResetPasswordOtp()">
+          <ion-spinner *ngIf="resetOtpLoading" name="crescent"></ion-spinner>
+          <span *ngIf="!resetOtpLoading">Verify Code &amp; Reset Password</span>
+        </button>
+        <button class="modal-cancel-btn" (click)="closeResetOtpModal()" [disabled]="resetOtpLoading">
           Cancel
         </button>
       </div>
@@ -923,12 +1135,15 @@
       <div class="form-group">
         <label class="form-label">Current Password</label>
         <div class="input-shell-custom">
-          <ion-icon name="lock-closed-outline"></ion-icon>
+          <ion-icon name="lock-closed-outline" class="input-lead-icon"></ion-icon>
           <input
-            type="password"
+            [type]="showDisable2faPassword ? 'text' : 'password'"
             [(ngModel)]="disableTwoFactorPassword"
             placeholder="Enter password to confirm"
             class="custom-modal-input" />
+          <button type="button" class="pwd-eye-btn" (click)="showDisable2faPassword = !showDisable2faPassword" aria-label="Toggle password visibility">
+            <ion-icon [name]="showDisable2faPassword ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+          </button>
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BiometricAuth, BiometryType } from '@aparajita/capacitor-biometric-auth';
 import { Preferences } from '@capacitor/preferences';
+import { Capacitor } from '@capacitor/core';
 
 const PREF_BIOMETRIC_TOKEN = 'fordago_bio_token';
 const PREF_BIOMETRIC_USER = 'fordago_bio_user';
@@ -84,6 +85,9 @@ export class BiometricService {
    * Prompt the native device biometric sensor dialog (Fingerprint / Face ID prompt).
    */
   async promptBiometric(reason = 'Verify your identity with FordaGO Passkey'): Promise<boolean> {
+    if (Capacitor.getPlatform() === 'web') {
+      return true;
+    }
     try {
       await BiometricAuth.authenticate({
         reason,

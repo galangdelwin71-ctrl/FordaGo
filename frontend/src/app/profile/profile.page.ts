@@ -55,6 +55,7 @@ import {
   radioButtonOnOutline,
   receiptOutline,
   scanOutline,
+  sendOutline,
   shieldCheckmark,
   shieldCheckmarkOutline,
   shieldOutline,
@@ -253,6 +254,91 @@ export class ProfilePage implements OnInit {
     new:      '',
     confirm:  '',
   };
+  showCurrentPassword = false;
+  showNewPassword = false;
+  showConfirmPassword = false;
+  savingPassword = false;
+  changePasswordError = '';
+
+  get hasMinLength(): boolean {
+    return (this.passwordForm.new || '').length >= 8;
+  }
+  get hasUppercase(): boolean {
+    return /[A-Z]/.test(this.passwordForm.new || '');
+  }
+  get hasLowercase(): boolean {
+    return /[a-z]/.test(this.passwordForm.new || '');
+  }
+  get hasNumber(): boolean {
+    return /[0-9]/.test(this.passwordForm.new || '');
+  }
+  get hasSpecial(): boolean {
+    return /[^A-Za-z0-9]/.test(this.passwordForm.new || '');
+  }
+  get passwordsMatch(): boolean {
+    return !!this.passwordForm.new && this.passwordForm.new === this.passwordForm.confirm;
+  }
+  get isPasswordFormValid(): boolean {
+    return (
+      !!this.passwordForm.current &&
+      this.hasMinLength &&
+      this.hasUppercase &&
+      this.hasLowercase &&
+      this.hasNumber &&
+      this.hasSpecial &&
+      this.passwordsMatch
+    );
+  }
+
+  // ── In-App Reset Password via OTP States ───────────────
+  resetOtpModalOpen = false;
+  resetOtpStep: 1 | 2 = 1;
+  resetOtpLoading = false;
+  resetOtpError = '';
+  resetOtpSentDestination = '';
+  resetOtpDevCode = '';
+  resetOtpDigits: string[] = ['', '', '', '', '', ''];
+  resetOtpCode = '';
+  resetOtpToken = '';
+  resetOtpCountdown = 0;
+  private resetOtpTimer: any = null;
+  resetOtpForm = {
+    new: '',
+    confirm: '',
+  };
+  showResetOtpNewPassword = false;
+  showResetOtpConfirmPassword = false;
+  showDisable2faPassword = false;
+
+  get resetOtpHasMinLength(): boolean {
+    return (this.resetOtpForm.new || '').length >= 8;
+  }
+  get resetOtpHasUppercase(): boolean {
+    return /[A-Z]/.test(this.resetOtpForm.new || '');
+  }
+  get resetOtpHasLowercase(): boolean {
+    return /[a-z]/.test(this.resetOtpForm.new || '');
+  }
+  get resetOtpHasNumber(): boolean {
+    return /[0-9]/.test(this.resetOtpForm.new || '');
+  }
+  get resetOtpHasSpecial(): boolean {
+    return /[^A-Za-z0-9]/.test(this.resetOtpForm.new || '');
+  }
+  get resetOtpPasswordsMatch(): boolean {
+    return !!this.resetOtpForm.new && this.resetOtpForm.new === this.resetOtpForm.confirm;
+  }
+  get isResetOtpFormValid(): boolean {
+    return (
+      this.resetOtpCode.length === 6 &&
+      this.resetOtpHasMinLength &&
+      this.resetOtpHasUppercase &&
+      this.resetOtpHasLowercase &&
+      this.resetOtpHasNumber &&
+      this.resetOtpHasSpecial &&
+      this.resetOtpPasswordsMatch
+    );
+  }
 
   // ── Notification Settings ─────────────────────────────
   notificationSettings: NotificationSetting[] = [
@@ -382,6 +468,7 @@ export class ProfilePage implements OnInit {
       'radio-button-on-outline': radioButtonOnOutline,
       'receipt-outline': receiptOutline,
       'scan-outline': scanOutline,
+      'send-outline': sendOutline,
       'shield-checkmark': shieldCheckmark,
       'shield-checkmark-outline': shieldCheckmarkOutline,
       'shield-outline': shieldOutline,
@@ -430,6 +517,7 @@ export class ProfilePage implements OnInit {
       radioButtonOnOutline,
       receiptOutline,
       scanOutline,
+      sendOutline,
       shieldCheckmark,
       shieldCheckmarkOutline,
       shieldOutline,
@@ -879,37 +967,47 @@ export class ProfilePage implements OnInit {
   // ── Password Management ───────────────────────────────
   openChangePassword(): void {
     this.passwordForm = { current: '', new: '', confirm: '' };
+    this.changePasswordError = '';
+    this.savingPassword = false;
+    this.showCurrentPassword = false;
+    this.showNewPassword = false;
+    this.showConfirmPassword = false;
     this.changePasswordModalOpen = true;
   }
 
   closeChangePassword(): void {
     this.changePasswordModalOpen = false;
     this.passwordForm = { current: '', new: '', confirm: '' };
+    this.changePasswordError = '';
+    this.savingPassword = false;
   }
 
   savePassword(): void {
+    this.changePasswordError = '';
     if (!this.passwordForm.current || !this.passwordForm.new || !this.passwordForm.confirm) {
-      void this.showMobileToast('Please fill in all password fields', true);
+      this.changePasswordError = 'Please fill in all password fields.';
       return;
     }
-    if (this.passwordForm.new !== this.passwordForm.confirm) {
-      void this.showMobileToast('New passwords do not match', true);
+    if (!this.isPasswordFormValid) {
+      this.changePasswordError = 'Please fulfill all password requirements below.';
       return;
     }
-    if (this.passwordForm.new.length < 8) {
-      void this.showMobileToast('Password must be at least 8 characters long', true);
-      return;
-    }
+
+    this.savingPassword = true;
     const headers = { Authorization: `Bearer ${this.auth.token}` };
     this.http.post(`${this.api}/auth/change-password`, {
       currentPassword: this.passwordForm.current,
       newPassword:     this.passwordForm.new,
     }, { headers }).subscribe({
       next: () => {
+        this.savingPassword = false;
         void this.showMobileToast('Password updated successfully!');
         this.closeChangePassword();
       },
-      error: (e: any) => void this.showMobileToast(e.error?.message || 'Failed to update password', true),
+      error: (e: any) => {
+        this.savingPassword = false;
+        this.changePasswordError = e.error?.message || 'Failed to update password. Please check your current password.';
+      },
     });
   }
 
@@ -1164,12 +1262,162 @@ export class ProfilePage implements OnInit {
     });
   }
 
+  // ── In-App Reset Password via OTP Methods ─────────────
   openForgotPasswordRecovery(): void {
+    this.openResetPasswordOtp();
+  }
+
+  openResetPasswordOtp(): void {
     this.closeChangePassword();
-    this.closeSecurityCenter();
-    const email = this.profile.email;
-    this.auth.logout();
-    this.router.navigate(['/login'], { queryParams: { mode: 'forgot', email } });
+    this.resetOtpModalOpen = true;
+    this.resetOtpStep = 1;
+    this.resetOtpLoading = false;
+    this.resetOtpError = '';
+    this.resetOtpSentDestination = '';
+    this.resetOtpDevCode = '';
+    this.resetOtpDigits = ['', '', '', '', '', ''];
+    this.resetOtpCode = '';
+    this.resetOtpToken = '';
+    this.resetOtpForm = { new: '', confirm: '' };
+    this.showResetOtpNewPassword = false;
+    this.showResetOtpConfirmPassword = false;
+    this.sendResetPasswordOtp();
+  }
+
+  closeResetOtpModal(): void {
+    this.resetOtpModalOpen = false;
+    this.clearResetOtpTimer();
+    this.resetOtpForm = { new: '', confirm: '' };
+    this.resetOtpDigits = ['', '', '', '', '', ''];
+    this.resetOtpCode = '';
+    this.resetOtpError = '';
+  }
+
+  sendResetPasswordOtp(): void {
+    this.resetOtpLoading = true;
+    this.resetOtpError = '';
+
+    this.http.post<any>(`${this.api}/auth/forgot-password/send`, {
+      identifier: this.profile.email,
+      channel: 'email',
+    }).subscribe({
+      next: (res) => {
+        this.resetOtpLoading = false;
+        this.resetOtpStep = 2;
+        this.resetOtpSentDestination = res.destinationMasked || this.profile.email;
+        this.resetOtpDevCode = res.devCode || '';
+        this.startResetOtpCountdown(60);
+        setTimeout(() => this.focusResetOtpInput(0), 150);
+      },
+      error: (err) => {
+        this.resetOtpLoading = false;
+        this.resetOtpError = err?.error?.message || 'Failed to send verification code. Please try again.';
+      }
+    });
+  }
+
+  private startResetOtpCountdown(seconds = 60): void {
+    this.clearResetOtpTimer();
+    this.resetOtpCountdown = seconds;
+    this.resetOtpTimer = setInterval(() => {
+      if (this.resetOtpCountdown > 1) {
+        this.resetOtpCountdown--;
+      } else {
+        this.resetOtpCountdown = 0;
+        this.clearResetOtpTimer();
+      }
+    }, 1000);
+  }
+
+  private clearResetOtpTimer(): void {
+    if (this.resetOtpTimer) {
+      clearInterval(this.resetOtpTimer);
+      this.resetOtpTimer = null;
+    }
+  }
+
+  onResetOtpDigitInput(event: any, index: number): void {
+    const input = event.target as HTMLInputElement;
+    const val = input.value.replace(/\D/g, '');
+
+    if (val.length > 1) {
+      const chars = val.slice(0, 6).split('');
+      for (let i = 0; i < 6; i++) {
+        this.resetOtpDigits[i] = chars[i] || '';
+      }
+      this.resetOtpCode = this.resetOtpDigits.join('');
+      const lastIndex = Math.min(chars.length - 1, 5);
+      this.focusResetOtpInput(lastIndex);
+      return;
+    }
+
+    this.resetOtpDigits[index] = val ? val.slice(-1) : '';
+    this.resetOtpCode = this.resetOtpDigits.join('');
+
+    if (val && index < 5) {
+      this.focusResetOtpInput(index + 1);
+    }
+  }
+
+  onResetOtpDigitKeyDown(event: KeyboardEvent, index: number): void {
+    if (event.key === 'Backspace' && !this.resetOtpDigits[index] && index > 0) {
+      this.resetOtpDigits[index - 1] = '';
+      this.resetOtpCode = this.resetOtpDigits.join('');
+      this.focusResetOtpInput(index - 1);
+    }
+  }
+
+  private focusResetOtpInput(index: number): void {
+    setTimeout(() => {
+      const el = document.getElementById(`reset-otp-${index}`) as HTMLInputElement | null;
+      if (el) {
+        el.focus();
+        el.select();
+      }
+    }, 50);
+  }
+
+  submitResetPasswordOtp(): void {
+    if (this.resetOtpCode.length !== 6) {
+      this.resetOtpError = 'Please enter the complete 6-digit verification code.';
+      return;
+    }
+    if (!this.isResetOtpFormValid) {
+      this.resetOtpError = 'Please fulfill all password requirements below and ensure passwords match.';
+      return;
+    }
+
+    this.resetOtpLoading = true;
+    this.resetOtpError = '';
+
+    // Step 1: Verify Code
+    this.http.post<any>(`${this.api}/auth/forgot-password/verify`, {
+      identifier: this.profile.email,
+      code: this.resetOtpCode,
+    }).subscribe({
+      next: (verifyRes) => {
+        const resetToken = verifyRes.resetToken;
+        // Step 2: Reset Password
+        this.http.post<any>(`${this.api}/auth/forgot-password/reset`, {
+          resetToken,
+          newPassword: this.resetOtpForm.new,
+        }).subscribe({
+          next: () => {
+            this.resetOtpLoading = false;
+            this.closeResetOtpModal();
+            void this.showMobileToast('Password successfully reset! Your new password is now active.');
+          },
+          error: (resetErr) => {
+            this.resetOtpLoading = false;
+            this.resetOtpError = resetErr?.error?.message || 'Failed to update password.';
+          }
+        });
+      },
+      error: (verifyErr) => {
+        this.resetOtpLoading = false;
+        this.resetOtpError = verifyErr?.error?.message || 'Invalid or expired verification code.';
+      }
+    });
   }
 
   // ── Notification Settings ─────────────────────────────

@@ -1426,3 +1426,160 @@ ion-content.fordago-page-content {
   background: #ef4444 !important;
   color: #fff !important;
 }
+
+.input-lead-icon {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.6);
+  flex-shrink: 0;
+}
+
+.pwd-eye-btn {
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.5);
+  transition: color 0.2s;
+
+  ion-icon {
+    font-size: 19px;
+    color: inherit;
+  }
+
+  &:hover, &:active {
+    color: #ffffff;
+  }
+}
+
+.input-shell-custom {
+  &.input-error {
+    border-color: rgba(239, 68, 68, 0.7) !important;
+  }
+}
+
+.pwd-req-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-top: 8px;
+
+  .pwd-req-title {
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 6px;
+  }
+
+  .pwd-req-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 12px;
+  }
+
+  .pwd-req-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11.5px;
+    color: rgba(255, 255, 255, 0.45);
+    transition: color 0.2s;
+
+    ion-icon {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.35);
+      flex-shrink: 0;
+    }
+
+    &.is-met {
+      color: #4ade80;
+      font-weight: 600;
+
+      ion-icon {
+        color: #4ade80;
+      }
+    }
+  }
+}
+
+.pwd-match-hint {
+  font-size: 11.5px;
+  margin-top: 5px;
+  padding-left: 4px;
+
+  .match-ok {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #4ade80;
+    font-weight: 600;
+
+    ion-icon {
+      font-size: 13px;
+    }
+  }
+
+  .match-bad {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #ef4444;
+
+    ion-icon {
+      font-size: 13px;
+    }
+  }
+}
+
+.reset-otp-dest-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-top: 10px;
+
+  .dest-icon-wrap {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.07);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    ion-icon {
+      font-size: 20px;
+      color: #ffffff;
+    }
+  }
+
+  .dest-info {
+    flex: 1;
+
+    .dest-label {
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .dest-val {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-top: 2px;
+      word-break: break-all;
+    }
+  }
+}
+
