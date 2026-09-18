@@ -1581,5 +1581,30 @@ ion-content.fordago-page-content {
       word-break: break-all;
     }
   }
+
+  .dest-change-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    color: #FFD600;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      background: rgba(255, 214, 0, 0.15);
+      border-color: #FFD600;
+    }
+  }
+}
+
+.twofa-channel-card {
+  &.is-disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    border-style: dashed;
+  }
 }
 

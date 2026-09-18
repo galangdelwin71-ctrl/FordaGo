@@ -293,6 +293,7 @@ export class ProfilePage implements OnInit {
   // ── In-App Reset Password via OTP States ───────────────
   resetOtpModalOpen = false;
   resetOtpStep: 1 | 2 = 1;
+  resetOtpChannel: 'email' | 'sms' = 'email';
   resetOtpLoading = false;
   resetOtpError = '';
   resetOtpSentDestination = '';
@@ -309,6 +310,19 @@ export class ProfilePage implements OnInit {
   showResetOtpNewPassword = false;
   showResetOtpConfirmPassword = false;
   showDisable2faPassword = false;
+
+  get resetOtpMaskedEmail(): string {
+    const email = this.profile?.email || (this.auth.user as any)?.email || '';
+    const at = email.indexOf('@');
+    if (at <= 2) return email;
+    return email.substring(0, 2) + '••••' + email.substring(at);
+  }
+
+  get resetOtpMaskedPhone(): string {
+    const phone = this.profile?.phone || (this.auth.user as any)?.phone || '';
+    if (!phone || phone.length < 7) return phone || '';
+    return phone.substring(0, 4) + ' ••• ••' + phone.substring(phone.length - 2);
+  }
 
   get resetOtpHasMinLength(): boolean {
     return (this.resetOtpForm.new || '').length >= 8;
@@ -1271,6 +1285,7 @@ export class ProfilePage implements OnInit {
     this.closeChangePassword();
     this.resetOtpModalOpen = true;
     this.resetOtpStep = 1;
+    this.resetOtpChannel = 'email';
     this.resetOtpLoading = false;
     this.resetOtpError = '';
     this.resetOtpSentDestination = '';
@@ -1281,7 +1296,6 @@ export class ProfilePage implements OnInit {
     this.resetOtpForm = { new: '', confirm: '' };
     this.showResetOtpNewPassword = false;
     this.showResetOtpConfirmPassword = false;
-    this.sendResetPasswordOtp();
   }
 
   closeResetOtpModal(): void {
@@ -1296,15 +1310,16 @@ export class ProfilePage implements OnInit {
   sendResetPasswordOtp(): void {
     this.resetOtpLoading = true;
     this.resetOtpError = '';
+    const identifier = (this.resetOtpChannel === 'sms' && this.profile.phone) ? this.profile.phone : this.profile.email;
 
     this.http.post<any>(`${this.api}/auth/forgot-password/send`, {
-      identifier: this.profile.email,
-      channel: 'email',
+      identifier,
+      channel: this.resetOtpChannel,
     }).subscribe({
       next: (res) => {
         this.resetOtpLoading = false;
         this.resetOtpStep = 2;
-        this.resetOtpSentDestination = res.destinationMasked || this.profile.email;
+        this.resetOtpSentDestination = res.destinationMasked || (this.resetOtpChannel === 'sms' ? this.resetOtpMaskedPhone : this.resetOtpMaskedEmail);
         this.resetOtpDevCode = res.devCode || '';
         this.startResetOtpCountdown(60);
         setTimeout(() => this.focusResetOtpInput(0), 150);
