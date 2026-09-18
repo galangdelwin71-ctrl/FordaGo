@@ -26,19 +26,22 @@ class MailService
             return ['sent' => false, 'skippedReason' => 'Missing destination email or message'];
         }
 
-        // 1. Check for Resend API Key (Bypasses SMTP port blocking via HTTPS port 443)
+        // 1. Check for Brevo API Key (Bypasses SMTP port blocking via HTTPS port 443, sends to ANY recipient)
+        $brevoKey = config('services.brevo.key');
+        if ($brevoKey) {
+            $brevoResult = self::sendViaBrevo($destination, $title, $body, $html);
+            if (!empty($brevoResult['sent'])) {
+                return $brevoResult;
+            }
+        }
+
+        // 2. Check for Resend API Key (Fallback)
         $resendKey = config('services.resend.key');
         if ($resendKey) {
             $resendResult = self::sendViaResend($destination, $title, $body, $html);
             if (!empty($resendResult['sent'])) {
                 return $resendResult;
             }
-        }
-
-        // 2. Check for Brevo API Key (Bypasses SMTP port blocking via HTTPS port 443)
-        $brevoKey = config('services.brevo.key');
-        if ($brevoKey) {
-            return self::sendViaBrevo($destination, $title, $body, $html);
         }
 
         // 3. Standard Laravel Mailer (SMTP / log)
@@ -124,19 +127,22 @@ class MailService
             Log::warning('Failed rendering Blade email template: ' . $e->getMessage());
         }
 
-        // 1. Resend API
+        // 1. Brevo API (Universal delivery to any inbox)
+        $brevoKey = config('services.brevo.key');
+        if ($brevoKey) {
+            $brevoResult = self::sendViaBrevo($destination, $title, $plainText, $htmlContent);
+            if (!empty($brevoResult['sent'])) {
+                return $brevoResult;
+            }
+        }
+
+        // 2. Resend API (Fallback)
         $resendKey = config('services.resend.key');
         if ($resendKey) {
             $resendResult = self::sendViaResend($destination, $title, $plainText, $htmlContent);
             if (!empty($resendResult['sent'])) {
                 return $resendResult;
             }
-        }
-
-        // 2. Brevo API
-        $brevoKey = config('services.brevo.key');
-        if ($brevoKey) {
-            return self::sendViaBrevo($destination, $title, $plainText, $htmlContent);
         }
 
         // 3. Fallback to Laravel Mailer

@@ -26,8 +26,8 @@ return [
 
     'brevo' => [
         'key'        => env('BREVO_API_KEY'),
-        'from_email' => env('MAIL_FROM_ADDRESS', 'no-reply@fordago.com'),
-        'from_name'  => env('MAIL_FROM_NAME', 'FordaGO Gym'),
+        'from_email' => env('BREVO_FROM_EMAIL', 'delwingalang08@gmail.com'),
+        'from_name'  => env('BREVO_FROM_NAME', env('MAIL_FROM_NAME', 'FordaGO Gym')),
     ],
 
     'ses' => [
