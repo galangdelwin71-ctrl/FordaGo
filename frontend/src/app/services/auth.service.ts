@@ -245,6 +245,100 @@ export class AuthService {
     );
   }
 
+  setSession(token: string, user: any) {
+    if (token && user) {
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      void Preferences.set({ key: 'token', value: token });
+      void Preferences.set({ key: 'user', value: JSON.stringify(user) });
+      this.userSubject.next(user);
+    }
+  }
+
+  changePassword(currentPassword: string, newPassword: string) {
+    return this.http.post<any>(`${this.apiUrl}/change-password`, { currentPassword, newPassword }).pipe(
+      catchError((err: HttpErrorResponse) => this.handleError(err))
+    );
+  }
+
+  twoFactorVerify(tempToken: string, code: string) {
+    return this.http.post<any>(`${this.apiUrl}/2fa/verify`, { temp_token: tempToken, code }).pipe(
+      tap(res => {
+        if (res && res.token && res.user) {
+          this.setSession(res.token, res.user);
+        }
+      }),
+      catchError((err: HttpErrorResponse) => this.handleError(err))
+    );
+  }
+
+  twoFactorResend(tempToken: string) {
+    return this.http.post<any>(`${this.apiUrl}/2fa/resend`, { temp_token: tempToken }).pipe(
+      catchError((err: HttpErrorResponse) => this.handleError(err))
+    );
+  }
+
+  requestTwoFactorActivation(channel: 'email' | 'sms') {
+    return this.http.post<any>(`${this.apiUrl}/2fa/request-activation`, { channel }).pipe(
+      catchError((err: HttpErrorResponse) => this.handleError(err))
+    );
+  }
+
+  confirmTwoFactorActivation(code: string) {
+    return this.http.post<any>(`${this.apiUrl}/2fa/confirm-activation`, { code }).pipe(
+      tap(res => {
+        if (res && res.user) {
+          this.updateCurrentUser(res.user);
+        }
+      }),
+      catchError((err: HttpErrorResponse) => this.handleError(err))
+    );
+  }
+
+  disableTwoFactor(currentPassword: string) {
+    return this.http.post<any>(`${this.apiUrl}/2fa/disable`, { current_password: currentPassword }).pipe(
+      tap(res => {
+        if (res && res.user) {
+          this.updateCurrentUser(res.user);
+        }
+      }),
+      catchError((err: HttpErrorResponse) => this.handleError(err))
+    );
+  }
+
+  biometricRegister(deviceName?: string) {
+    return this.http.post<any>(`${this.apiUrl}/biometric/register`, { device_name: deviceName }).pipe(
+      tap(res => {
+        if (res && res.user) {
+          this.updateCurrentUser(res.user);
+        }
+      }),
+      catchError((err: HttpErrorResponse) => this.handleError(err))
+    );
+  }
+
+  biometricToggle(enable: boolean, deviceName?: string) {
+    return this.http.post<any>(`${this.apiUrl}/biometric/toggle`, { enable, device_name: deviceName }).pipe(
+      tap(res => {
+        if (res && res.user) {
+          this.updateCurrentUser(res.user);
+        }
+      }),
+      catchError((err: HttpErrorResponse) => this.handleError(err))
+    );
+  }
+
+  biometricLogin(identifier: string, biometricToken: string) {
+    return this.http.post<any>(`${this.apiUrl}/biometric/login`, { identifier, biometric_token: biometricToken }).pipe(
+      tap(res => {
+        if (res && res.token && res.user) {
+          this.setSession(res.token, res.user);
+        }
+      }),
+      catchError((err: HttpErrorResponse) => this.handleError(err))
+    );
+  }
+
   private handleError(err: HttpErrorResponse) {
     let message: string;
     if (err.status === 0) {

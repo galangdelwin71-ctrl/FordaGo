@@ -21,7 +21,7 @@
 
       <div
         class="tab-row"
-        *ngIf="segment !== 'forgot' && (segment === 'login' || regStep === 1)"
+        *ngIf="segment !== 'forgot' && segment !== '2fa' && (segment === 'login' || regStep === 1)"
         [class.register-active]="segment === 'register'"
       >
         <span class="tab-indicator" aria-hidden="true"></span>
@@ -57,6 +57,43 @@
           <h2>Sign in</h2>
           <p>Access your FordaGO account.</p>
         </header>
+
+        <!-- BIOMETRIC QUICK LOGIN (GCash Style) -->
+        <div class="biometric-quick-card" *ngIf="savedBiometricUser">
+          <div class="bio-quick-header">
+            <div class="bio-quick-avatar">
+              <ion-icon name="fingerprint-outline" aria-hidden="true"></ion-icon>
+            </div>
+            <div class="bio-quick-info">
+              <span class="bio-quick-badge">Biometric Passkey</span>
+              <strong class="bio-quick-name">{{ savedBiometricUser.name }}</strong>
+              <small class="bio-quick-sub">{{ savedBiometricUser.identifier }}</small>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            class="bio-quick-action-btn"
+            (click)="loginWithBiometric()"
+            [disabled]="biometricLoading"
+          >
+            <ion-spinner *ngIf="biometricLoading" name="crescent"></ion-spinner>
+            <ion-icon *ngIf="!biometricLoading" name="fingerprint-outline" aria-hidden="true"></ion-icon>
+            <span>{{ biometricLoading ? 'Authenticating...' : 'Sign In with Biometrics' }}</span>
+          </button>
+
+          <div class="bio-quick-footer">
+            <button type="button" class="bio-switch-btn" (click)="clearBiometricForAnotherUser()">
+              Switch to another account
+            </button>
+          </div>
+        </div>
+
+        <div class="divider" *ngIf="savedBiometricUser" aria-hidden="true">
+          <span></span>
+          <small>OR SIGN IN WITH PASSWORD</small>
+          <span></span>
+        </div>
 
         <div class="field">
           <label class="field-lbl" for="login-email">Email</label>
@@ -1332,6 +1369,97 @@
           </button>
         </div>
 
+      </section>
+
+      <!-- TWO-FACTOR AUTHENTICATION (2FA / MFA) VERIFICATION -->
+      <section *ngIf="segment === '2fa'" class="view-panel twofa-panel">
+        <div class="twofa-top-bar">
+          <button
+            type="button"
+            class="auth-back-btn"
+            (click)="backToLoginFrom2fa()"
+            aria-label="Back to sign in"
+          >
+            <ion-icon name="chevron-back-outline" aria-hidden="true"></ion-icon>
+          </button>
+          <span class="twofa-security-title">Two-Factor Authentication</span>
+        </div>
+
+        <div class="feature-icon-wrapper twofa-icon-glow">
+          <span class="feature-icon shield-glow">
+            <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
+          </span>
+        </div>
+
+        <header class="panel-heading centered-heading">
+          <h2>Security Verification</h2>
+          <p>We sent a 6-digit authentication code to</p>
+          <div class="destination-pill">
+            <ion-icon [name]="twoFactorChannel === 'sms' ? 'chatbubble-ellipses-outline' : 'mail-outline'"></ion-icon>
+            <span>{{ twoFactorDestination || 'your registered contact' }}</span>
+          </div>
+        </header>
+
+        <!-- Demo Mode Helper Card for local testing -->
+        <div class="demo-code-banner" *ngIf="twoFactorDevCode">
+          <div class="demo-code-header">
+            <ion-icon name="information-circle-outline"></ion-icon>
+            <span>Demo Mode (Local Testing)</span>
+          </div>
+          <p>Your 2FA Code is: <strong class="demo-code-text">{{ twoFactorDevCode }}</strong></p>
+        </div>
+
+        <!-- 6-Box OTP Input Grid -->
+        <div class="otp-boxes-container">
+          <input
+            *ngFor="let digit of twoFactorOtpDigits; let i = index"
+            [id]="'login-2fa-' + i"
+            class="otp-digit-box"
+            [class.filled]="digit !== ''"
+            type="tel"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            maxlength="1"
+            [value]="digit"
+            (input)="onTwoFactorDigitInput($event, i)"
+            (keydown)="onTwoFactorDigitKeyDown($event, i)"
+            autocomplete="one-time-code"
+          />
+        </div>
+
+        <div class="err-msg" *ngIf="twoFactorError" role="alert">
+          <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
+          <span>{{ twoFactorError }}</span>
+        </div>
+
+        <button
+          class="submit-btn"
+          type="button"
+          [disabled]="twoFactorLoading || twoFactorCode.length !== 6"
+          [class.is-loading]="twoFactorLoading"
+          (click)="submitTwoFactorLogin()"
+        >
+          <ion-spinner *ngIf="twoFactorLoading" name="crescent"></ion-spinner>
+          <span>{{ twoFactorLoading ? 'Verifying...' : 'Confirm & Sign In' }}</span>
+          <ion-icon *ngIf="!twoFactorLoading" name="checkmark-outline" aria-hidden="true"></ion-icon>
+        </button>
+
+        <div class="resend-row">
+          <button
+            type="button"
+            class="resend-btn"
+            [disabled]="twoFactorResendCountdown > 0 || twoFactorLoading"
+            (click)="resendTwoFactorLogin()"
+          >
+            <ion-icon name="refresh-outline" aria-hidden="true"></ion-icon>
+            <span *ngIf="twoFactorResendCountdown === 0">Resend Code</span>
+            <span *ngIf="twoFactorResendCountdown > 0">Resend in {{ twoFactorResendCountdown }}s</span>
+          </button>
+        </div>
+
+        <button type="button" class="bottom-text-link" (click)="backToLoginFrom2fa()">
+          Cancel &amp; return to <strong>Sign In</strong>
+        </button>
       </section>
 
     </section>

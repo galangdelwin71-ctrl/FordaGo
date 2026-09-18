@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -353,33 +354,52 @@ class AuthController extends Controller
         $user->checkAndExpireMembership();
         $user->refresh();
 
+        // Two-Factor Authentication Interception
+        if ($user->two_factor_enabled) {
+            $code = $this->generateResetCode();
+            $codeHash = $this->hashResetCode($code);
+            $user->update([
+                'two_factor_code'       => $codeHash,
+                'two_factor_expires_at' => now()->addMinutes(10),
+            ]);
+
+            $channel     = $user->two_factor_channel ?: 'email';
+            $displayName = trim(($user->first_name ?? '').' '.($user->last_name ?? '')) ?: ($user->username ?? 'Member');
+            $destination = ($channel === 'sms' && $user->phone) ? SmsService::normalizePhoneNumber($user->phone) : $user->email;
+
+            if ($channel === 'sms' && $destination) {
+                SmsService::send($destination, "FordaGO: Your 2-Factor Login verification code is {$code}. Valid for 10 minutes.");
+            } else {
+                MailService::sendPasswordResetOtp($user->email, $code, $displayName);
+            }
+
+            $tempToken = Crypt::encryptString(json_encode([
+                'purpose' => '2fa_login',
+                'user_id' => $user->id,
+                'channel' => $channel,
+                'exp'     => now()->addMinutes(10)->timestamp,
+            ]));
+
+            $isDebug = config('app.debug') && in_array(config('app.env'), ['local', 'development'], true);
+
+            return response()->json([
+                'status'             => '2fa_required',
+                'requires_2fa'       => true,
+                'temp_token'         => $tempToken,
+                'channel'            => $channel,
+                'destination_masked' => $channel === 'sms' ? $this->maskPhone($destination) : $this->maskEmail($destination),
+                'message'            => 'Two-Factor Authentication is active. A 6-digit verification code was sent to your ' . ($channel === 'sms' ? 'phone' : 'email') . '.',
+                'dev_code'           => $isDebug ? $code : null,
+            ]);
+        }
+
         $token = $user->createToken('api')->plainTextToken;
 
         ActivityLogger::logLogin($user, $request);
 
         return response()->json([
             'token' => $token,
-            'user'  => [
-                'id'                 => $user->id,
-                'username'           => $user->username,
-                'first_name'         => $user->first_name ?? '',
-                'last_name'          => $user->last_name  ?? '',
-                'email'              => $user->email,
-                'role'               => $user->role,
-                'phone'              => $user->phone,
-                'gender'             => $user->gender,
-                'date_of_birth'      => $user->date_of_birth ? ($user->date_of_birth instanceof \Carbon\CarbonInterface ? $user->date_of_birth->format('Y-m-d') : (string) $user->date_of_birth) : null,
-                'profile_image'      => $user->profile_image,
-                'membership_type'    => $user->membership_type,
-                'membership_status'  => $user->membership_status,
-                'payment_method'     => $user->payment_method,
-                'membership_expiry'  => $user->membership_expiry,
-                'created_at'         => $user->created_at,
-                // Coach accounts now have role = 'coach' (5-Tier RBAC).
-                // Exposed here so the frontend can route/guard coach-only
-                // pages right after login without an extra round trip.
-                'has_coach_profile'  => $user->isCoach(),
-            ],
+            'user'  => $this->formatUserData($user),
         ]);
     }
 
@@ -742,5 +762,316 @@ class AuthController extends Controller
         $resetRow->update(['password_changed_at' => now()]);
 
         return response()->json(['message' => 'Password updated successfully. You can now log in.']);
+    }
+
+    // ── 2FA & Biometric Authentication ───────────────────────────────────
+
+    public function twoFactorVerify(Request $request)
+    {
+        $tempToken = (string) $request->input('temp_token', '');
+        $code      = trim((string) $request->input('code', ''));
+
+        if ($tempToken === '' || ! preg_match('/^\d{6}$/', $code)) {
+            return response()->json(['message' => 'Please enter the 6-digit verification code.'], 400);
+        }
+
+        try {
+            $payload = json_decode(Crypt::decryptString($tempToken), true);
+        } catch (\Throwable) {
+            return response()->json(['message' => 'Verification session expired. Please log in again.'], 400);
+        }
+
+        if (! is_array($payload) || ($payload['purpose'] ?? '') !== '2fa_login') {
+            return response()->json(['message' => 'Invalid verification session.'], 400);
+        }
+
+        if (! isset($payload['exp']) || $payload['exp'] < now()->timestamp) {
+            return response()->json(['message' => 'Verification code expired. Please log in again.'], 400);
+        }
+
+        $user = User::find($payload['user_id']);
+        if (! $user) {
+            return response()->json(['message' => 'Account not found.'], 404);
+        }
+
+        if (! $user->two_factor_code || ! $user->two_factor_expires_at || now()->isAfter($user->two_factor_expires_at)) {
+            return response()->json(['message' => 'Verification code expired. Please request a new code.'], 400);
+        }
+
+        if ($this->hashResetCode($code) !== $user->two_factor_code) {
+            return response()->json(['message' => 'Invalid verification code. Please try again.'], 400);
+        }
+
+        // Clear 2FA temporary code
+        $user->update([
+            'two_factor_code'       => null,
+            'two_factor_expires_at' => null,
+        ]);
+
+        $user->checkAndExpireMembership();
+        $user->refresh();
+
+        $token = $user->createToken('api')->plainTextToken;
+        ActivityLogger::logLogin($user, $request);
+
+        return response()->json([
+            'token' => $token,
+            'user'  => $this->formatUserData($user),
+        ]);
+    }
+
+    public function twoFactorResend(Request $request)
+    {
+        $tempToken = (string) $request->input('temp_token', '');
+        if ($tempToken === '') {
+            return response()->json(['message' => 'Verification session required.'], 400);
+        }
+
+        try {
+            $payload = json_decode(Crypt::decryptString($tempToken), true);
+        } catch (\Throwable) {
+            return response()->json(['message' => 'Verification session expired. Please log in again.'], 400);
+        }
+
+        $user = User::find($payload['user_id'] ?? null);
+        if (! $user) {
+            return response()->json(['message' => 'Account not found.'], 404);
+        }
+
+        $limitKey = '2fa-resend:'.$user->id;
+        if (RateLimiter::tooManyAttempts($limitKey.':cooldown', 1)) {
+            return response()->json(['message' => 'Please wait a moment before requesting another code.'], 429);
+        }
+
+        $code     = $this->generateResetCode();
+        $codeHash = $this->hashResetCode($code);
+        $user->update([
+            'two_factor_code'       => $codeHash,
+            'two_factor_expires_at' => now()->addMinutes(10),
+        ]);
+
+        $channel     = $user->two_factor_channel ?: 'email';
+        $displayName = trim(($user->first_name ?? '').' '.($user->last_name ?? '')) ?: ($user->username ?? 'Member');
+        $destination = ($channel === 'sms' && $user->phone) ? SmsService::normalizePhoneNumber($user->phone) : $user->email;
+
+        if ($channel === 'sms' && $destination) {
+            SmsService::send($destination, "FordaGO: Your 2-Factor Login verification code is {$code}. Valid for 10 minutes.");
+        } else {
+            MailService::sendPasswordResetOtp($user->email, $code, $displayName);
+        }
+
+        RateLimiter::hit($limitKey.':cooldown', 60);
+
+        $isDebug = config('app.debug') && in_array(config('app.env'), ['local', 'development'], true);
+
+        return response()->json([
+            'message'            => 'A new verification code was sent.',
+            'channel'            => $channel,
+            'destination_masked' => $channel === 'sms' ? $this->maskPhone($destination) : $this->maskEmail($destination),
+            'dev_code'           => $isDebug ? $code : null,
+        ]);
+    }
+
+    public function requestTwoFactorActivation(Request $request)
+    {
+        $user = $request->user();
+        if (! $user) return response()->json(['message' => 'Unauthorized'], 401);
+
+        $channel = $request->input('channel') === 'sms' ? 'sms' : 'email';
+        if ($channel === 'sms' && ! $user->phone) {
+            return response()->json(['message' => 'Please add a valid phone number to your profile first.'], 400);
+        }
+
+        $code     = $this->generateResetCode();
+        $codeHash = $this->hashResetCode($code);
+
+        $user->update([
+            'two_factor_code'       => $codeHash,
+            'two_factor_expires_at' => now()->addMinutes(10),
+            'two_factor_channel'    => $channel,
+        ]);
+
+        $displayName = trim(($user->first_name ?? '').' '.($user->last_name ?? '')) ?: ($user->username ?? 'Member');
+        $destination = ($channel === 'sms' && $user->phone) ? SmsService::normalizePhoneNumber($user->phone) : $user->email;
+
+        if ($channel === 'sms' && $destination) {
+            SmsService::send($destination, "FordaGO: Your 2FA activation code is {$code}. Valid for 10 minutes.");
+        } else {
+            MailService::sendPasswordResetOtp($user->email, $code, $displayName);
+        }
+
+        $isDebug = config('app.debug') && in_array(config('app.env'), ['local', 'development'], true);
+
+        return response()->json([
+            'message'            => 'Verification code sent to your ' . ($channel === 'sms' ? 'phone' : 'email') . '.',
+            'channel'            => $channel,
+            'destination_masked' => $channel === 'sms' ? $this->maskPhone($destination) : $this->maskEmail($destination),
+            'dev_code'           => $isDebug ? $code : null,
+        ]);
+    }
+
+    public function confirmTwoFactorActivation(Request $request)
+    {
+        $user = $request->user();
+        if (! $user) return response()->json(['message' => 'Unauthorized'], 401);
+
+        $code = trim((string) $request->input('code', ''));
+        if (! preg_match('/^\d{6}$/', $code)) {
+            return response()->json(['message' => 'Please enter a valid 6-digit code.'], 400);
+        }
+
+        if (! $user->two_factor_code || ! $user->two_factor_expires_at || now()->isAfter($user->two_factor_expires_at)) {
+            return response()->json(['message' => 'Verification code expired. Please request a new code.'], 400);
+        }
+
+        if ($this->hashResetCode($code) !== $user->two_factor_code) {
+            return response()->json(['message' => 'Invalid verification code.'], 400);
+        }
+
+        $user->update([
+            'two_factor_enabled'    => true,
+            'two_factor_code'       => null,
+            'two_factor_expires_at' => null,
+        ]);
+
+        return response()->json([
+            'message' => 'Two-Factor Authentication is now enabled on your account.',
+            'user'    => $this->formatUserData($user),
+        ]);
+    }
+
+    public function disableTwoFactor(Request $request)
+    {
+        $user = $request->user();
+        if (! $user) return response()->json(['message' => 'Unauthorized'], 401);
+
+        $currentPassword = (string) $request->input('current_password', '');
+        if ($currentPassword === '' || ! $this->checkPassword($currentPassword, $user->password)) {
+            return response()->json(['message' => 'Incorrect password. Verification failed.'], 401);
+        }
+
+        $user->update([
+            'two_factor_enabled'    => false,
+            'two_factor_code'       => null,
+            'two_factor_expires_at' => null,
+        ]);
+
+        return response()->json([
+            'message' => 'Two-Factor Authentication has been disabled.',
+            'user'    => $this->formatUserData($user),
+        ]);
+    }
+
+    public function biometricRegister(Request $request)
+    {
+        $user = $request->user();
+        if (! $user) return response()->json(['message' => 'Unauthorized'], 401);
+
+        $deviceName = trim((string) $request->input('device_name', 'Mobile Device'));
+        $biometricToken = Str::random(64);
+        $tokenHash = hash('sha256', $biometricToken . ':' . config('app.key'));
+
+        $user->update([
+            'biometric_enabled'     => true,
+            'biometric_token_hash'  => $tokenHash,
+            'biometric_device_name' => substr($deviceName, 0, 100),
+        ]);
+
+        return response()->json([
+            'message'         => 'Biometric Passkey registered successfully.',
+            'biometric_token' => $biometricToken,
+            'device_name'     => $deviceName,
+            'user'            => $this->formatUserData($user),
+        ]);
+    }
+
+    public function biometricToggle(Request $request)
+    {
+        $user = $request->user();
+        if (! $user) return response()->json(['message' => 'Unauthorized'], 401);
+
+        $enable = (bool) $request->input('enable', false);
+        if (! $enable) {
+            $user->update([
+                'biometric_enabled'     => false,
+                'biometric_token_hash'  => null,
+                'biometric_device_name' => null,
+            ]);
+            return response()->json([
+                'message' => 'Biometric login disabled.',
+                'user'    => $this->formatUserData($user),
+            ]);
+        }
+
+        return $this->biometricRegister($request);
+    }
+
+    public function biometricLogin(Request $request)
+    {
+        $identifier     = trim((string) ($request->input('identifier') ?? $request->input('email') ?? ''));
+        $biometricToken = trim((string) $request->input('biometric_token', ''));
+
+        if ($identifier === '' || $biometricToken === '') {
+            return response()->json(['message' => 'Device credential or identifier missing.'], 400);
+        }
+
+        $user = User::where('email', $identifier)
+            ->orWhere('username', $identifier)
+            ->first();
+
+        if (! $user || ! $user->biometric_enabled || ! $user->biometric_token_hash) {
+            return response()->json(['message' => 'Biometric login is not active for this account on this device.'], 401);
+        }
+
+        $computedHash = hash('sha256', $biometricToken . ':' . config('app.key'));
+        if (! hash_equals($user->biometric_token_hash, $computedHash)) {
+            return response()->json(['message' => 'Biometric passkey invalid or expired. Please log in with password.'], 401);
+        }
+
+        $isStaffRole = in_array($user->role, ['admin', 'super_admin', 'employee'], true);
+        if (! $isStaffRole && $user->membership_status !== 'active') {
+            return response()->json(['message' => 'Your account is pending verification. Please wait for approval.'], 403);
+        }
+
+        // Clear login strikes
+        RateLimiter::clear('login:strikes:'.$user->email);
+        RateLimiter::clear('login:lock:'.$user->email);
+
+        $user->checkAndExpireMembership();
+        $user->refresh();
+
+        $token = $user->createToken('api')->plainTextToken;
+        ActivityLogger::logLogin($user, $request);
+
+        return response()->json([
+            'token' => $token,
+            'user'  => $this->formatUserData($user),
+        ]);
+    }
+
+    private function formatUserData(User $user): array
+    {
+        return [
+            'id'                    => $user->id,
+            'username'              => $user->username,
+            'first_name'            => $user->first_name ?? '',
+            'last_name'             => $user->last_name  ?? '',
+            'email'                 => $user->email,
+            'role'                  => $user->role,
+            'phone'                 => $user->phone,
+            'gender'                => $user->gender,
+            'date_of_birth'         => $user->date_of_birth ? ($user->date_of_birth instanceof \Carbon\CarbonInterface ? $user->date_of_birth->format('Y-m-d') : (string) $user->date_of_birth) : null,
+            'profile_image'         => $user->profile_image,
+            'membership_type'       => $user->membership_type,
+            'membership_status'     => $user->membership_status,
+            'payment_method'        => $user->payment_method,
+            'membership_expiry'     => $user->membership_expiry,
+            'created_at'            => $user->created_at,
+            'has_coach_profile'     => $user->isCoach(),
+            'two_factor_enabled'    => (bool) $user->two_factor_enabled,
+            'two_factor_channel'    => $user->two_factor_channel ?? 'email',
+            'biometric_enabled'     => (bool) $user->biometric_enabled,
+            'biometric_device_name' => $user->biometric_device_name,
+        ];
     }
 }

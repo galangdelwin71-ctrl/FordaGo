@@ -64,6 +64,7 @@ class UserController extends Controller
             'phone', 'gender', 'date_of_birth', 'profile_image', 'membership_type',
             'membership_status', 'payment_method', 'membership_expiry',
             'height', 'weight', 'bmi', 'fitness_goal', 'preferred_workout_time',
+            'two_factor_enabled', 'two_factor_channel', 'biometric_enabled', 'biometric_device_name',
         ])->find($request->user()->id);
 
         if (! $user) {
@@ -79,6 +80,7 @@ class UserController extends Controller
             'phone', 'gender', 'date_of_birth', 'profile_image', 'membership_type',
             'membership_status', 'payment_method', 'membership_expiry',
             'height', 'weight', 'bmi', 'fitness_goal', 'preferred_workout_time',
+            'two_factor_enabled', 'two_factor_channel', 'biometric_enabled', 'biometric_device_name',
         ])->find($request->user()->id);
 
         $payload = $user->toArray();

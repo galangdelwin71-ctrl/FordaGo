@@ -21,6 +21,7 @@ import { UserStatusService } from '../services/user-status.service';
 import { CoachingNavService, CoachingPanelTab } from '../services/coaching-nav.service';
 import { CoachingService } from '../services/coaching.service';
 import { WorkoutTrackerService } from '../services/workout-tracker.service';
+import { BiometricService, BiometricStatus } from '../services/biometric.service';
 import { NoNegativeDirective } from '../directives/no-negative.directive';
 import { HeaderComponent } from '../shared/header/header.component';
 import { NotificationPanelComponent } from '../shared/notification-panel/notification-panel.component';
@@ -243,6 +244,30 @@ export class ProfilePage implements OnInit {
   isDarkMode                 = true;
   isActiveStatus             = true;
 
+  // ── Security Center States ────────────────────────────
+  securityModalOpen            = false;
+  twoFactorEnabled             = false;
+  twoFactorChannel: 'email' | 'sms' = 'email';
+  twoFactorLoading             = false;
+  twoFactorActivationModalOpen = false;
+  twoFactorOtpDigits: string[] = ['', '', '', '', '', ''];
+  twoFactorCode                = '';
+  twoFactorError               = '';
+  twoFactorSentDestination     = '';
+  twoFactorDevCode             = '';
+  twoFactorResendCountdown     = 0;
+  private twoFactorResendTimer: any = null;
+
+  disableTwoFactorModalOpen    = false;
+  disableTwoFactorPassword     = '';
+  disableTwoFactorError        = '';
+  disableTwoFactorLoading      = false;
+
+  biometricEnabled             = false;
+  biometricLoading             = false;
+  biometricStatus: BiometricStatus | null = null;
+  biometricDeviceName          = '';
+
   /** Coach icon badge — kept in sync via CoachingService.unreadCount$ across all pages. */
   coachUnreadCount = 0;
 
@@ -261,6 +286,7 @@ export class ProfilePage implements OnInit {
     public onboardingService: OnboardingService,
     private fcmService: FcmService,
     private workoutTracker: WorkoutTrackerService,
+    public biometricService: BiometricService,
   ) {}
 
   private showMobileToast(message: string, isError = false): Promise<void> {
@@ -410,6 +436,16 @@ export class ProfilePage implements OnInit {
       preferredWorkoutTime: user.preferred_workout_time || '17:00',
     };
 
+    this.twoFactorEnabled = !!(user as any).two_factor_enabled;
+    this.twoFactorChannel = (user as any).two_factor_channel || 'email';
+    this.biometricEnabled = !!(user as any).biometric_enabled;
+    this.biometricDeviceName = (user as any).biometric_device_name || '';
+
+    // Check device biometric capabilities
+    this.biometricService.checkBiometrics().then((status) => {
+      this.biometricStatus = status;
+    }).catch(() => {});
+
     // Also fetch fresh state from server in background
     this.auth.fetchCurrentUser().subscribe({
       next: (freshUser) => {
@@ -434,6 +470,11 @@ export class ProfilePage implements OnInit {
             fDobRaw = fRawDob.includes('T') ? fRawDob.split('T')[0] : fRawDob;
           }
         }
+
+        this.twoFactorEnabled = !!freshUser.two_factor_enabled;
+        this.twoFactorChannel = freshUser.two_factor_channel || 'email';
+        this.biometricEnabled = !!freshUser.biometric_enabled;
+        this.biometricDeviceName = freshUser.biometric_device_name || '';
 
         this.profile = {
           ...this.profile,
@@ -719,6 +760,265 @@ export class ProfilePage implements OnInit {
       },
       error: (e: any) => void this.showMobileToast(e.error?.message || 'Failed to update password', true),
     });
+  }
+
+  // ── Security Center Methods ───────────────────────────
+  async openSecurityCenter(): Promise<void> {
+    const user = this.auth.user as any;
+    this.twoFactorEnabled = !!user?.two_factor_enabled;
+    this.twoFactorChannel = user?.two_factor_channel || 'email';
+    this.biometricEnabled = !!user?.biometric_enabled;
+    this.biometricDeviceName = user?.biometric_device_name || '';
+
+    this.securityModalOpen = true;
+
+    try {
+      this.biometricStatus = await this.biometricService.checkBiometrics();
+      const localActive = await this.biometricService.isBiometricActiveOnDevice();
+      if (localActive) {
+        this.biometricEnabled = true;
+      }
+    } catch {}
+  }
+
+  closeSecurityCenter(): void {
+    this.securityModalOpen = false;
+  }
+
+  // ── Biometrics / Passkey Toggle ───────────────────────
+  async onBiometricToggle(event: any): Promise<void> {
+    const targetState = !this.biometricEnabled;
+    this.biometricLoading = true;
+
+    if (targetState) {
+      // User wants to enable Biometric Passkey
+      const verified = await this.biometricService.promptBiometric('Enable FordaGO Biometric Passkey for this device');
+      if (!verified) {
+        this.biometricLoading = false;
+        if (event?.target) event.target.checked = false;
+        void this.showMobileToast('Biometric verification cancelled.', true);
+        return;
+      }
+
+      const deviceName = this.biometricService.getDeviceModelName();
+      this.auth.biometricRegister(deviceName).subscribe({
+        next: async (res: any) => {
+          this.biometricLoading = false;
+          this.biometricEnabled = true;
+          this.biometricDeviceName = deviceName;
+          await this.biometricService.saveBiometricCredential(
+            res.biometric_token,
+            {
+              identifier: this.profile.email,
+              name: this.fullName,
+              avatar: this.profile.profileImage,
+            },
+            deviceName
+          );
+          void this.showMobileToast('Biometric Passkey enabled! You can now log in using fingerprint / face unlock.');
+        },
+        error: (err: any) => {
+          this.biometricLoading = false;
+          if (event?.target) event.target.checked = false;
+          void this.showMobileToast(err?.error?.message || 'Failed to enable biometric passkey.', true);
+        }
+      });
+    } else {
+      // User wants to disable Biometric Passkey
+      this.auth.biometricToggle(false).subscribe({
+        next: async () => {
+          this.biometricLoading = false;
+          this.biometricEnabled = false;
+          this.biometricDeviceName = '';
+          await this.biometricService.clearBiometricCredential();
+          void this.showMobileToast('Biometric Passkey disabled.');
+        },
+        error: (err: any) => {
+          this.biometricLoading = false;
+          if (event?.target) event.target.checked = true;
+          void this.showMobileToast(err?.error?.message || 'Failed to disable biometric passkey.', true);
+        }
+      });
+    }
+  }
+
+  // ── Two-Factor Authentication (2FA) ───────────────────
+  onTwoFactorToggle(event: any): void {
+    if (!this.twoFactorEnabled) {
+      if (event?.target) event.target.checked = false;
+      this.openTwoFactorActivation();
+    } else {
+      if (event?.target) event.target.checked = true;
+      this.openDisableTwoFactor();
+    }
+  }
+
+  openTwoFactorActivation(): void {
+    this.twoFactorActivationModalOpen = true;
+    this.twoFactorOtpDigits = ['', '', '', '', '', ''];
+    this.twoFactorCode = '';
+    this.twoFactorError = '';
+    this.twoFactorSentDestination = '';
+    this.twoFactorDevCode = '';
+    this.requestTwoFactorCode(this.twoFactorChannel);
+  }
+
+  closeTwoFactorActivation(): void {
+    this.twoFactorActivationModalOpen = false;
+    this.clearTwoFactorTimer();
+  }
+
+  requestTwoFactorCode(channel: 'email' | 'sms'): void {
+    this.twoFactorChannel = channel;
+    this.twoFactorLoading = true;
+    this.twoFactorError = '';
+
+    this.auth.requestTwoFactorActivation(channel).subscribe({
+      next: (res: any) => {
+        this.twoFactorLoading = false;
+        this.twoFactorSentDestination = res?.destination_masked || '';
+        this.twoFactorDevCode = res?.dev_code || '';
+        this.startTwoFactorCountdown(60);
+        setTimeout(() => this.focusTwoFactorInput(0), 150);
+      },
+      error: (err: any) => {
+        this.twoFactorLoading = false;
+        this.twoFactorError = err?.error?.message || 'Failed to send verification code.';
+      }
+    });
+  }
+
+  private startTwoFactorCountdown(seconds = 60): void {
+    this.clearTwoFactorTimer();
+    this.twoFactorResendCountdown = seconds;
+    this.twoFactorResendTimer = setInterval(() => {
+      if (this.twoFactorResendCountdown > 1) {
+        this.twoFactorResendCountdown--;
+      } else {
+        this.twoFactorResendCountdown = 0;
+        this.clearTwoFactorTimer();
+      }
+    }, 1000);
+  }
+
+  private clearTwoFactorTimer(): void {
+    if (this.twoFactorResendTimer) {
+      clearInterval(this.twoFactorResendTimer);
+      this.twoFactorResendTimer = null;
+    }
+  }
+
+  onTwoFactorDigitInput(event: any, index: number): void {
+    const input = event.target as HTMLInputElement;
+    const val = input.value.replace(/\D/g, '');
+
+    if (val.length > 1) {
+      const chars = val.slice(0, 6).split('');
+      for (let i = 0; i < 6; i++) {
+        this.twoFactorOtpDigits[i] = chars[i] || '';
+      }
+      this.twoFactorCode = this.twoFactorOtpDigits.join('');
+      const lastIndex = Math.min(chars.length - 1, 5);
+      this.focusTwoFactorInput(lastIndex);
+      if (this.twoFactorCode.length === 6) {
+        this.verifyTwoFactorActivation();
+      }
+      return;
+    }
+
+    this.twoFactorOtpDigits[index] = val ? val.slice(-1) : '';
+    this.twoFactorCode = this.twoFactorOtpDigits.join('');
+
+    if (val && index < 5) {
+      this.focusTwoFactorInput(index + 1);
+    }
+    if (this.twoFactorCode.length === 6) {
+      this.verifyTwoFactorActivation();
+    }
+  }
+
+  onTwoFactorDigitKeyDown(event: KeyboardEvent, index: number): void {
+    if (event.key === 'Backspace' && !this.twoFactorOtpDigits[index] && index > 0) {
+      this.twoFactorOtpDigits[index - 1] = '';
+      this.twoFactorCode = this.twoFactorOtpDigits.join('');
+      this.focusTwoFactorInput(index - 1);
+    }
+  }
+
+  private focusTwoFactorInput(index: number): void {
+    setTimeout(() => {
+      const el = document.getElementById(`twofa-otp-${index}`) as HTMLInputElement | null;
+      if (el) {
+        el.focus();
+        el.select();
+      }
+    }, 50);
+  }
+
+  verifyTwoFactorActivation(): void {
+    if (this.twoFactorCode.length !== 6) {
+      this.twoFactorError = 'Please enter all 6 digits.';
+      return;
+    }
+
+    this.twoFactorLoading = true;
+    this.twoFactorError = '';
+
+    this.auth.confirmTwoFactorActivation(this.twoFactorCode).subscribe({
+      next: () => {
+        this.twoFactorLoading = false;
+        this.twoFactorEnabled = true;
+        this.closeTwoFactorActivation();
+        void this.showMobileToast('Two-Factor Authentication is now active!');
+      },
+      error: (err: any) => {
+        this.twoFactorLoading = false;
+        this.twoFactorError = err?.error?.message || 'Invalid code. Please try again.';
+      }
+    });
+  }
+
+  openDisableTwoFactor(): void {
+    this.disableTwoFactorModalOpen = true;
+    this.disableTwoFactorPassword = '';
+    this.disableTwoFactorError = '';
+    this.disableTwoFactorLoading = false;
+  }
+
+  closeDisableTwoFactor(): void {
+    this.disableTwoFactorModalOpen = false;
+    this.disableTwoFactorPassword = '';
+  }
+
+  confirmDisableTwoFactor(): void {
+    if (!this.disableTwoFactorPassword) {
+      this.disableTwoFactorError = 'Please enter your password to confirm.';
+      return;
+    }
+
+    this.disableTwoFactorLoading = true;
+    this.disableTwoFactorError = '';
+
+    this.auth.disableTwoFactor(this.disableTwoFactorPassword).subscribe({
+      next: () => {
+        this.disableTwoFactorLoading = false;
+        this.twoFactorEnabled = false;
+        this.closeDisableTwoFactor();
+        void this.showMobileToast('Two-Factor Authentication has been disabled.');
+      },
+      error: (err: any) => {
+        this.disableTwoFactorLoading = false;
+        this.disableTwoFactorError = err?.error?.message || 'Incorrect password.';
+      }
+    });
+  }
+
+  openForgotPasswordRecovery(): void {
+    this.closeChangePassword();
+    this.closeSecurityCenter();
+    const email = this.profile.email;
+    this.auth.logout();
+    this.router.navigate(['/login'], { queryParams: { mode: 'forgot', email } });
   }
 
   // ── Notification Settings ─────────────────────────────

@@ -40,7 +40,22 @@ Route::prefix('auth')->group(function () {
     Route::post('/forgot-password/verify', [AuthController::class, 'forgotPasswordVerify']);
     Route::post('/forgot-password/reset',  [AuthController::class, 'forgotPasswordReset']);
 
-    Route::middleware('auth:sanctum')->post('/change-password', [AuthController::class, 'changePassword']);
+    // 2FA Public Verification & Resend
+    Route::post('/2fa/verify', [AuthController::class, 'twoFactorVerify']);
+    Route::post('/2fa/resend', [AuthController::class, 'twoFactorResend']);
+
+    // Biometric Public 1-Tap Login
+    Route::post('/biometric/login', [AuthController::class, 'biometricLogin']);
+
+    // Authenticated Security Controls
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/change-password',           [AuthController::class, 'changePassword']);
+        Route::post('/2fa/request-activation',   [AuthController::class, 'requestTwoFactorActivation']);
+        Route::post('/2fa/confirm-activation',   [AuthController::class, 'confirmTwoFactorActivation']);
+        Route::post('/2fa/disable',              [AuthController::class, 'disableTwoFactor']);
+        Route::post('/biometric/register',       [AuthController::class, 'biometricRegister']);
+        Route::post('/biometric/toggle',         [AuthController::class, 'biometricToggle']);
+    });
 });
 
 // Convenience: return the authenticated user (used by frontend on app boot)

@@ -102,41 +102,14 @@
       </div>
     </div>
 
-    <!-- Account Settings Menu -->
-    <div class="section-label">Account</div>
-
-    <div class="menu-item fade-up" id="tour-profile-transactions" (click)="router.navigate(['/transactions'])">
-      <span class="menu-icon"><ion-icon name="receipt-outline"></ion-icon></span>
-      <div class="menu-content">
-        <div class="menu-label">Transaction History</div>
-        <div class="menu-sub">Gym visits &amp; shop purchases</div>
-      </div>
-      <span class="menu-arrow">›</span>
-    </div>
+    <!-- Category 1: Account & Personalization -->
+    <div class="section-label">Account &amp; Personalization</div>
 
     <div class="menu-item fade-up" id="tour-profile-edit" (click)="openEdit()">
       <span class="menu-icon"><ion-icon name="create-outline"></ion-icon></span>
       <div class="menu-content">
         <div class="menu-label">Edit Profile</div>
-        <div class="menu-sub">Update your personal info</div>
-      </div>
-      <span class="menu-arrow">›</span>
-    </div>
-
-    <div class="menu-item fade-up" id="tour-profile-security" (click)="openChangePassword()">
-      <span class="menu-icon"><ion-icon name="lock-closed-outline"></ion-icon></span>
-      <div class="menu-content">
-        <div class="menu-label">Change Password</div>
-        <div class="menu-sub">Security settings</div>
-      </div>
-      <span class="menu-arrow">›</span>
-    </div>
-
-    <div class="menu-item fade-up" id="tour-profile-notifications" (click)="openNotifications()">
-      <span class="menu-icon"><ion-icon name="notifications-outline"></ion-icon></span>
-      <div class="menu-content">
-        <div class="menu-label">Notifications</div>
-        <div class="menu-sub">Manage alerts & reminders</div>
+        <div class="menu-sub">Update personal info &amp; target fitness goal</div>
       </div>
       <span class="menu-arrow">›</span>
     </div>
@@ -152,6 +125,44 @@
       <ion-toggle [checked]="isActiveStatus" (ionChange)="onActiveStatusToggle($event)" class="theme-toggle"></ion-toggle>
     </div>
 
+    <div class="menu-item fade-up" id="tour-profile-history" (click)="openProgressHistory()">
+      <span class="menu-icon"><ion-icon name="stats-chart-outline"></ion-icon></span>
+      <div class="menu-content">
+        <div class="menu-label">Progress History</div>
+        <div class="menu-sub">View past sessions &amp; records</div>
+      </div>
+      <span class="menu-arrow">›</span>
+    </div>
+
+    <div class="menu-item fade-up" id="tour-profile-transactions" (click)="router.navigate(['/transactions'])">
+      <span class="menu-icon"><ion-icon name="receipt-outline"></ion-icon></span>
+      <div class="menu-content">
+        <div class="menu-label">Transaction History</div>
+        <div class="menu-sub">Gym visits &amp; shop purchases</div>
+      </div>
+      <span class="menu-arrow">›</span>
+    </div>
+
+    <!-- Category 2: Security & Privacy (Security Center) -->
+    <div class="section-label">Security &amp; Privacy</div>
+
+    <div class="menu-item security-menu-item fade-up" id="tour-profile-security" (click)="openSecurityCenter()">
+      <span class="menu-icon security-glow-icon"><ion-icon name="shield-checkmark-outline"></ion-icon></span>
+      <div class="menu-content">
+        <div class="menu-label-row">
+          <div class="menu-label">Security Center</div>
+          <span *ngIf="twoFactorEnabled || biometricEnabled" class="security-badge-active">
+            <ion-icon name="checkmark-circle"></ion-icon> Protected
+          </span>
+        </div>
+        <div class="menu-sub">Password, 2FA Verification &amp; Passkey</div>
+      </div>
+      <span class="menu-arrow">›</span>
+    </div>
+
+    <!-- Category 3: App Preferences -->
+    <div class="section-label">App Preferences</div>
+
     <div class="menu-item fade-up" id="tour-profile-theme">
       <span class="menu-icon"><ion-icon name="moon-outline"></ion-icon></span>
       <div class="menu-content">
@@ -161,14 +172,17 @@
       <ion-toggle [checked]="isDarkMode" (ionChange)="onThemeToggle($event)" class="theme-toggle"></ion-toggle>
     </div>
 
-    <div class="menu-item fade-up" id="tour-profile-history" (click)="openProgressHistory()">
-      <span class="menu-icon"><ion-icon name="stats-chart-outline"></ion-icon></span>
+    <div class="menu-item fade-up" id="tour-profile-notifications" (click)="openNotifications()">
+      <span class="menu-icon"><ion-icon name="notifications-outline"></ion-icon></span>
       <div class="menu-content">
-        <div class="menu-label">Progress History</div>
-        <div class="menu-sub">View past sessions & records</div>
+        <div class="menu-label">Notifications</div>
+        <div class="menu-sub">Manage alerts &amp; reminders</div>
       </div>
       <span class="menu-arrow">›</span>
     </div>
+
+    <!-- Category 4: Support & Information -->
+    <div class="section-label">Support &amp; Information</div>
 
     <div class="menu-item fade-up" id="tour-profile-feedback" (click)="openFeedbackSupport()">
       <span class="menu-icon"><ion-icon name="chatbubbles-outline"></ion-icon></span>
@@ -187,6 +201,9 @@
       </div>
       <span class="menu-arrow">›</span>
     </div>
+
+    <!-- Category 5: Account Session -->
+    <div class="section-label">Account Session</div>
 
     <div class="menu-item danger fade-up" (click)="confirmLogout()">
       <span class="menu-icon"><ion-icon name="log-out-outline"></ion-icon></span>
@@ -627,6 +644,344 @@
     </div>
   </div>
 </div>
+
+<!-- Security Center Modal -->
+<ion-modal
+  [isOpen]="securityModalOpen"
+  (didDismiss)="closeSecurityCenter()"
+  [breakpoints]="[0, 1]"
+  [initialBreakpoint]="1"
+  [handle]="true">
+  <ng-template>
+    <ion-content class="ion-padding modal-content security-modal-body">
+      <div class="modal-handle"></div>
+      <div class="modal-header-row">
+        <div class="modal-title flex-title">
+          <ion-icon name="shield-checkmark-outline" class="title-glow-icon"></ion-icon>
+          <span>Security Center</span>
+        </div>
+        <button type="button" class="modal-close-icon-btn" (click)="closeSecurityCenter()">✕</button>
+      </div>
+
+      <p class="security-intro-text">
+        Manage login security, device passkeys, two-factor authentication, and account passwords.
+      </p>
+
+      <!-- Security Status Badge Banner -->
+      <div class="sec-status-banner" [class.is-secure]="twoFactorEnabled || biometricEnabled">
+        <div class="sec-shield-avatar">
+          <ion-icon [name]="twoFactorEnabled || biometricEnabled ? 'shield-checkmark' : 'shield-outline'"></ion-icon>
+        </div>
+        <div class="sec-shield-meta">
+          <div class="sec-shield-title">
+            {{ (twoFactorEnabled && biometricEnabled) ? 'Maximum Security Active' : (twoFactorEnabled || biometricEnabled ? 'Account Protected' : 'Standard Protection') }}
+          </div>
+          <div class="sec-shield-desc">
+            {{ (twoFactorEnabled && biometricEnabled) ? 'Biometric Passkey and 2FA OTP are safeguarding your account.' : (twoFactorEnabled ? 'Two-Factor Authentication is active on every login.' : (biometricEnabled ? 'Biometric Passkey is active on this device.' : 'Enable 2FA and Biometrics to protect against unauthorized logins.')) }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Item 1: Biometric Passkey (Fingerprint / Face ID - GCash Style) -->
+      <div class="sec-feature-card">
+        <div class="sec-feature-main">
+          <div class="sec-feature-icon bio-icon-bg">
+            <ion-icon name="fingerprint-outline"></ion-icon>
+          </div>
+          <div class="sec-feature-copy">
+            <div class="sec-feature-title">Biometric Passkey</div>
+            <div class="sec-feature-sub">
+              {{ biometricEnabled ? 'Active on ' + (biometricDeviceName || 'this phone') : 'Log in in 1-tap using your phone\'s fingerprint or face unlock' }}
+            </div>
+          </div>
+          <ion-toggle
+            [checked]="biometricEnabled"
+            [disabled]="biometricLoading"
+            (ionChange)="onBiometricToggle($event)"
+            class="theme-toggle">
+          </ion-toggle>
+        </div>
+        <div class="sec-feature-chips">
+          <span class="sec-chip"><ion-icon name="phone-portrait-outline"></ion-icon> {{ biometricStatus?.typeName || 'Fingerprint / Face ID' }}</span>
+          <span *ngIf="biometricEnabled" class="sec-chip chip-active"><ion-icon name="checkmark-circle"></ion-icon> 1-Tap Login Active</span>
+        </div>
+      </div>
+
+      <!-- Item 2: Two-Factor Authentication (2FA / MFA) -->
+      <div class="sec-feature-card">
+        <div class="sec-feature-main">
+          <div class="sec-feature-icon mfa-icon-bg">
+            <ion-icon name="shield-checkmark-outline"></ion-icon>
+          </div>
+          <div class="sec-feature-copy">
+            <div class="sec-feature-title">Two-Factor Authentication (2FA)</div>
+            <div class="sec-feature-sub">
+              {{ twoFactorEnabled ? 'Requires 6-digit OTP code sent via ' + (twoFactorChannel === 'sms' ? 'SMS' : 'Email') : 'Require a 6-digit OTP code verification every time you sign in' }}
+            </div>
+          </div>
+          <ion-toggle
+            [checked]="twoFactorEnabled"
+            (ionChange)="onTwoFactorToggle($event)"
+            class="theme-toggle">
+          </ion-toggle>
+        </div>
+        <div class="sec-feature-chips" *ngIf="twoFactorEnabled">
+          <span class="sec-chip chip-active">
+            <ion-icon [name]="twoFactorChannel === 'sms' ? 'call-outline' : 'mail-outline'"></ion-icon>
+            {{ twoFactorChannel === 'sms' ? 'SMS Phone OTP' : 'Email OTP' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Item 3: Password Management -->
+      <div class="sec-feature-card">
+        <div class="sec-feature-main">
+          <div class="sec-feature-icon pwd-icon-bg">
+            <ion-icon name="lock-closed-outline"></ion-icon>
+          </div>
+          <div class="sec-feature-copy">
+            <div class="sec-feature-title">Account Password</div>
+            <div class="sec-feature-sub">Change your password or reset via 6-digit OTP</div>
+          </div>
+        </div>
+        <div class="sec-btn-row">
+          <button type="button" class="sec-card-btn gold-btn" (click)="openChangePassword()">
+            <ion-icon name="key-outline"></ion-icon> Change Password
+          </button>
+          <button type="button" class="sec-card-btn dark-btn" (click)="openForgotPasswordRecovery()">
+            <ion-icon name="refresh-outline"></ion-icon> Reset via OTP
+          </button>
+        </div>
+      </div>
+
+      <div style="height: 30px;"></div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<!-- Change Password Modal -->
+<ion-modal
+  [isOpen]="changePasswordModalOpen"
+  (didDismiss)="closeChangePassword()"
+  [breakpoints]="[0, 1]"
+  [initialBreakpoint]="1"
+  [handle]="true">
+  <ng-template>
+    <ion-content class="ion-padding modal-content">
+      <div class="modal-handle"></div>
+      <div class="modal-header-row">
+        <div class="modal-title">Change Password</div>
+        <button type="button" class="modal-close-icon-btn" (click)="closeChangePassword()">✕</button>
+      </div>
+      <p class="modal-subtitle">Keep your account safe by using at least 8 characters with numbers and letters.</p>
+
+      <div class="form-group">
+        <label class="form-label">Current Password</label>
+        <div class="input-shell-custom">
+          <ion-icon name="lock-closed-outline"></ion-icon>
+          <input
+            type="password"
+            [(ngModel)]="passwordForm.current"
+            placeholder="Enter current password"
+            class="custom-modal-input" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">New Password</label>
+        <div class="input-shell-custom">
+          <ion-icon name="key-outline"></ion-icon>
+          <input
+            type="password"
+            [(ngModel)]="passwordForm.new"
+            placeholder="Minimum 8 characters"
+            class="custom-modal-input" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Confirm New Password</label>
+        <div class="input-shell-custom">
+          <ion-icon name="checkmark-done-outline"></ion-icon>
+          <input
+            type="password"
+            [(ngModel)]="passwordForm.confirm"
+            placeholder="Re-enter new password"
+            class="custom-modal-input" />
+        </div>
+      </div>
+
+      <!-- Forgot Current Password Option -->
+      <div class="forgot-pass-alt-link">
+        <span (click)="openForgotPasswordRecovery()">
+          Forgot your current password? <strong>Reset with OTP &rsaquo;</strong>
+        </span>
+      </div>
+
+      <div class="modal-actions">
+        <button class="modal-save-btn" (click)="savePassword()">
+          Update Password
+        </button>
+        <button class="modal-cancel-btn" (click)="closeChangePassword()">
+          Cancel
+        </button>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<!-- 2FA Activation Setup Modal -->
+<ion-modal
+  [isOpen]="twoFactorActivationModalOpen"
+  (didDismiss)="closeTwoFactorActivation()"
+  [breakpoints]="[0, 1]"
+  [initialBreakpoint]="1"
+  [handle]="true">
+  <ng-template>
+    <ion-content class="ion-padding modal-content">
+      <div class="modal-handle"></div>
+      <div class="modal-header-row">
+        <div class="modal-title flex-title">
+          <ion-icon name="shield-checkmark-outline" class="title-glow-icon"></ion-icon>
+          <span>Enable 2-Factor Authentication</span>
+        </div>
+        <button type="button" class="modal-close-icon-btn" (click)="closeTwoFactorActivation()">✕</button>
+      </div>
+
+      <p class="modal-subtitle">
+        Choose where you want to receive your 6-digit login verification codes:
+      </p>
+
+      <!-- Channel Selector -->
+      <div class="twofa-channel-grid">
+        <div
+          class="twofa-channel-card"
+          [class.is-selected]="twoFactorChannel === 'email'"
+          (click)="requestTwoFactorCode('email')">
+          <ion-icon name="mail-outline"></ion-icon>
+          <div class="twofa-card-title">Email OTP</div>
+          <div class="twofa-card-sub">{{ profile.email }}</div>
+        </div>
+
+        <div
+          class="twofa-channel-card"
+          [class.is-selected]="twoFactorChannel === 'sms'"
+          (click)="requestTwoFactorCode('sms')">
+          <ion-icon name="call-outline"></ion-icon>
+          <div class="twofa-card-title">SMS OTP</div>
+          <div class="twofa-card-sub">{{ profile.phone || 'Phone number' }}</div>
+        </div>
+      </div>
+
+      <div class="twofa-otp-sent-banner" *ngIf="twoFactorSentDestination">
+        <ion-icon name="checkmark-circle"></ion-icon>
+        <span>Verification code sent to <strong>{{ twoFactorSentDestination }}</strong></span>
+      </div>
+
+      <div class="dev-otp-pill" *ngIf="twoFactorDevCode">
+        <span>DEV CODE: <strong>{{ twoFactorDevCode }}</strong></span>
+      </div>
+
+      <!-- 6-Digit OTP Input -->
+      <div class="form-group" style="margin-top: 18px;">
+        <label class="form-label" style="text-align: center; display: block;">Enter 6-Digit Verification Code</label>
+        <div class="twofa-otp-row">
+          <input
+            *ngFor="let digit of twoFactorOtpDigits; let i = index"
+            [id]="'twofa-otp-' + i"
+            type="text"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            maxlength="1"
+            class="twofa-otp-box"
+            [value]="digit"
+            (input)="onTwoFactorDigitInput($event, i)"
+            (keydown)="onTwoFactorDigitKeyDown($event, i)"
+          />
+        </div>
+      </div>
+
+      <div class="modal-err-msg" *ngIf="twoFactorError">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        <span>{{ twoFactorError }}</span>
+      </div>
+
+      <div class="twofa-resend-row">
+        <button
+          type="button"
+          class="resend-text-btn"
+          [disabled]="twoFactorResendCountdown > 0 || twoFactorLoading"
+          (click)="requestTwoFactorCode(twoFactorChannel)">
+          {{ twoFactorResendCountdown > 0 ? 'Resend code in ' + twoFactorResendCountdown + 's' : 'Resend Code' }}
+        </button>
+      </div>
+
+      <div class="modal-actions">
+        <button
+          class="modal-save-btn"
+          [disabled]="twoFactorCode.length !== 6 || twoFactorLoading"
+          (click)="verifyTwoFactorActivation()">
+          <ion-spinner *ngIf="twoFactorLoading" name="crescent"></ion-spinner>
+          <span *ngIf="!twoFactorLoading">Verify &amp; Enable 2FA</span>
+        </button>
+        <button class="modal-cancel-btn" (click)="closeTwoFactorActivation()" [disabled]="twoFactorLoading">
+          Cancel
+        </button>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<!-- 2FA Disable Modal (Confirm with Password) -->
+<ion-modal
+  [isOpen]="disableTwoFactorModalOpen"
+  (didDismiss)="closeDisableTwoFactor()"
+  [breakpoints]="[0, 0.6]"
+  [initialBreakpoint]="0.6"
+  [handle]="true">
+  <ng-template>
+    <ion-content class="ion-padding modal-content">
+      <div class="modal-handle"></div>
+      <div class="modal-header-row">
+        <div class="modal-title">Disable 2FA</div>
+        <button type="button" class="modal-close-icon-btn" (click)="closeDisableTwoFactor()">✕</button>
+      </div>
+      <p class="modal-subtitle">
+        For your security, please enter your current account password to disable Two-Factor Authentication.
+      </p>
+
+      <div class="form-group">
+        <label class="form-label">Current Password</label>
+        <div class="input-shell-custom">
+          <ion-icon name="lock-closed-outline"></ion-icon>
+          <input
+            type="password"
+            [(ngModel)]="disableTwoFactorPassword"
+            placeholder="Enter password to confirm"
+            class="custom-modal-input" />
+        </div>
+      </div>
+
+      <div class="modal-err-msg" *ngIf="disableTwoFactorError">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        <span>{{ disableTwoFactorError }}</span>
+      </div>
+
+      <div class="modal-actions">
+        <button
+          class="modal-save-btn danger-btn"
+          [disabled]="!disableTwoFactorPassword || disableTwoFactorLoading"
+          (click)="confirmDisableTwoFactor()">
+          <ion-spinner *ngIf="disableTwoFactorLoading" name="crescent"></ion-spinner>
+          <span *ngIf="!disableTwoFactorLoading">Confirm Disable 2FA</span>
+        </button>
+        <button class="modal-cancel-btn" (click)="closeDisableTwoFactor()" [disabled]="disableTwoFactorLoading">
+          Cancel
+        </button>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
 
 <app-notification-panel
   [isOpen]="notifPanelOpen"

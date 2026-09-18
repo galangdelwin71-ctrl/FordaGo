@@ -1,6 +1,7 @@
 import { Component, HostListener, OnDestroy } from '@angular/core';
 import { AuthService } from '../services/auth.service';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { BiometricService } from '../services/biometric.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonContent, IonIcon, IonSpinner } from '@ionic/angular/standalone';
@@ -28,6 +29,7 @@ import {
   diamondOutline,
   eyeOffOutline,
   eyeOutline,
+  fingerPrintOutline,
   fitnessOutline,
   flameOutline,
   flashOutline,
@@ -69,8 +71,24 @@ import {
   imports: [CommonModule, FormsModule, IonContent, IonIcon, IonSpinner, NoNegativeDirective],
 })
 export class LoginPage implements OnDestroy {
-  segment: 'login' | 'register' | 'forgot' = 'login';
+  segment: 'login' | 'register' | 'forgot' | '2fa' = 'login';
   regStep = 1;
+
+  // Biometric Quick Login (GCash style)
+  savedBiometricUser: { identifier: string; name: string; avatar?: string } | null = null;
+  biometricLoading = false;
+
+  // 2FA Verification fields
+  twoFactorTempToken = '';
+  twoFactorDestination = '';
+  twoFactorChannel = 'email';
+  twoFactorCode = '';
+  twoFactorOtpDigits: string[] = ['', '', '', '', '', ''];
+  twoFactorDevCode = '';
+  twoFactorError = '';
+  twoFactorLoading = false;
+  twoFactorResendCountdown = 0;
+  private twoFactorResendTimer: any = null;
 
   genderOpen = false;
   readonly genderOptions = [
@@ -185,7 +203,12 @@ export class LoginPage implements OnDestroy {
   fpSelectedAccountName = '';
   private fpResendTimer: ReturnType<typeof setInterval> | null = null;
 
-  constructor(private auth: AuthService, private router: Router) {
+  constructor(
+    private auth: AuthService,
+    private router: Router,
+    private route: ActivatedRoute,
+    public biometricService: BiometricService
+  ) {
     // Register every icon used by this standalone page.
     // This prevents blank icons in production builds or offline installs.
     addIcons({
@@ -208,6 +231,8 @@ export class LoginPage implements OnDestroy {
       'diamond-outline': diamondOutline,
       'eye-off-outline': eyeOffOutline,
       'eye-outline': eyeOutline,
+      'fingerprint-outline': fingerPrintOutline,
+      'finger-print-outline': fingerPrintOutline,
       'information-circle-outline': informationCircleOutline,
       'key-outline': keyOutline,
       'keypad-outline': keypadOutline,
@@ -314,8 +339,35 @@ export class LoginPage implements OnDestroy {
   ionViewWillEnter(): void {
     this.resetLoginInputs();
     this.resetForgotPasswordInputs();
-    this.segment = 'login';
+    this.checkBiometricLoginAvailability();
+    this.checkRouteQueryParams();
     this.genderOpen = false;
+  }
+
+  private async checkBiometricLoginAvailability(): Promise<void> {
+    try {
+      const active = await this.biometricService.isBiometricActiveOnDevice();
+      if (active) {
+        this.savedBiometricUser = await this.biometricService.getSavedBiometricUser();
+      } else {
+        this.savedBiometricUser = null;
+      }
+    } catch {
+      this.savedBiometricUser = null;
+    }
+  }
+
+  private checkRouteQueryParams(): void {
+    this.route.queryParams.subscribe((params) => {
+      if (params['mode'] === 'forgot') {
+        this.segment = 'forgot';
+        if (params['email']) {
+          this.fpIdentifier = params['email'];
+        }
+      } else if (this.segment !== '2fa') {
+        this.segment = 'login';
+      }
+    });
   }
 
   private resetLoginInputs(): void {
@@ -851,27 +903,30 @@ export class LoginPage implements OnDestroy {
     this.loading = true;
 
     this.auth.login(this.email.trim().toLowerCase(), this.password).subscribe({
-      next: () => {
+      next: (res: any) => {
         this.loading = false;
-        const user = this.auth.user;
 
+        // Check if 2FA verification is required
+        if (res?.requires_2fa || res?.status === '2fa_required') {
+          this.twoFactorTempToken = res.temp_token;
+          this.twoFactorDestination = res.destination_masked;
+          this.twoFactorChannel = res.channel || 'email';
+          this.twoFactorDevCode = res.dev_code || '';
+          this.twoFactorOtpDigits = ['', '', '', '', '', ''];
+          this.twoFactorCode = '';
+          this.twoFactorError = '';
+          this.segment = '2fa';
+          this.startTwoFactorTimer(60);
+          setTimeout(() => this.focusTwoFactorDigit(0), 150);
+          return;
+        }
+
+        const user = this.auth.user;
         if (!user) {
           this.error = 'Login succeeded but no user data returned. Please try again.';
           return;
         }
 
-        // replaceUrl: true -- login is an auth BOUNDARY, same as every
-        // root/tab page's goTo*() elsewhere in this app (see e.g.
-        // dashboard.page.ts's goToSchedule()). Without this, a plain push
-        // left /login sitting in browser/router history underneath
-        // /dashboard or /admin. That's invisible for a single continuous
-        // session, but the moment the SAME session logs out and back in
-        // as a different account (e.g. switching from a member account to
-        // a coach account to test both), the stale /login entry becomes
-        // reachable again by walking Location.back() -- which is exactly
-        // what a plain back button / hardware back press does from any
-        // drill-in page (chat, coach profile, transactions). replaceUrl
-        // keeps /login from ever persisting in history once login succeeds.
         if (['admin', 'super_admin', 'employee'].includes(user.role)) {
           this.router.navigate(['/admin'], { replaceUrl: true });
         } else {
@@ -883,6 +938,181 @@ export class LoginPage implements OnDestroy {
         this.error = err?.error?.message || 'Login failed. Please check your credentials and try again.';
       },
     });
+  }
+
+  // ── Biometric / Passkey Login (GCash style) ─────────────
+
+  async loginWithBiometric(): Promise<void> {
+    if (!this.savedBiometricUser) return;
+    this.error = '';
+    this.biometricLoading = true;
+
+    try {
+      const verified = await this.biometricService.promptBiometric('Verify FordaGO Passkey');
+      if (!verified) {
+        this.biometricLoading = false;
+        this.error = 'Biometric authentication was cancelled.';
+        return;
+      }
+
+      const token = await this.biometricService.getSavedBiometricToken();
+      if (!token) {
+        this.biometricLoading = false;
+        this.error = 'No biometric passkey found on this device. Please sign in with password.';
+        return;
+      }
+
+      this.auth.biometricLogin(this.savedBiometricUser.identifier, token).subscribe({
+        next: () => {
+          this.biometricLoading = false;
+          const user = this.auth.user;
+          if (!user) {
+            this.error = 'Login succeeded but user profile was not loaded.';
+            return;
+          }
+          if (['admin', 'super_admin', 'employee'].includes(user.role)) {
+            this.router.navigate(['/admin'], { replaceUrl: true });
+          } else {
+            this.router.navigate(['/dashboard'], { replaceUrl: true });
+          }
+        },
+        error: (err: any) => {
+          this.biometricLoading = false;
+          this.error = err?.error?.message || 'Biometric passkey expired or revoked. Please log in with password.';
+        }
+      });
+    } catch {
+      this.biometricLoading = false;
+      this.error = 'Biometric sensor error. Please sign in with password.';
+    }
+  }
+
+  async clearBiometricForAnotherUser(): Promise<void> {
+    await this.biometricService.clearBiometricCredential();
+    this.savedBiometricUser = null;
+  }
+
+  // ── Two-Factor Authentication Login Flow ────────────────
+
+  onTwoFactorDigitInput(event: any, index: number): void {
+    const input = event.target as HTMLInputElement;
+    const val = input.value.replace(/\D/g, '');
+
+    if (val.length > 1) {
+      const chars = val.slice(0, 6).split('');
+      for (let i = 0; i < 6; i++) {
+        this.twoFactorOtpDigits[i] = chars[i] || '';
+      }
+      this.twoFactorCode = this.twoFactorOtpDigits.join('');
+      const lastIndex = Math.min(chars.length - 1, 5);
+      this.focusTwoFactorDigit(lastIndex);
+      if (this.twoFactorCode.length === 6) {
+        this.submitTwoFactorLogin();
+      }
+      return;
+    }
+
+    this.twoFactorOtpDigits[index] = val ? val.slice(-1) : '';
+    this.twoFactorCode = this.twoFactorOtpDigits.join('');
+
+    if (val && index < 5) {
+      this.focusTwoFactorDigit(index + 1);
+    }
+    if (this.twoFactorCode.length === 6) {
+      this.submitTwoFactorLogin();
+    }
+  }
+
+  onTwoFactorDigitKeyDown(event: KeyboardEvent, index: number): void {
+    if (event.key === 'Backspace' && !this.twoFactorOtpDigits[index] && index > 0) {
+      this.twoFactorOtpDigits[index - 1] = '';
+      this.twoFactorCode = this.twoFactorOtpDigits.join('');
+      this.focusTwoFactorDigit(index - 1);
+    }
+  }
+
+  focusTwoFactorDigit(index: number): void {
+    setTimeout(() => {
+      const el = document.getElementById(`login-2fa-${index}`) as HTMLInputElement | null;
+      if (el) {
+        el.focus();
+        el.select();
+      }
+    }, 50);
+  }
+
+  submitTwoFactorLogin(): void {
+    if (this.twoFactorCode.length !== 6) {
+      this.twoFactorError = 'Please enter all 6 digits of the code.';
+      return;
+    }
+
+    this.twoFactorLoading = true;
+    this.twoFactorError = '';
+
+    this.auth.twoFactorVerify(this.twoFactorTempToken, this.twoFactorCode).subscribe({
+      next: () => {
+        this.twoFactorLoading = false;
+        this.clearTwoFactorTimer();
+        const user = this.auth.user;
+        if (!user) {
+          this.twoFactorError = 'Verification succeeded but user session could not be established.';
+          return;
+        }
+        if (['admin', 'super_admin', 'employee'].includes(user.role)) {
+          this.router.navigate(['/admin'], { replaceUrl: true });
+        } else {
+          this.router.navigate(['/dashboard'], { replaceUrl: true });
+        }
+      },
+      error: (err: any) => {
+        this.twoFactorLoading = false;
+        this.twoFactorError = err?.error?.message || 'Invalid verification code. Please try again.';
+      }
+    });
+  }
+
+  resendTwoFactorLogin(): void {
+    if (this.twoFactorResendCountdown > 0 || this.twoFactorLoading) return;
+    this.twoFactorLoading = true;
+    this.twoFactorError = '';
+
+    this.auth.twoFactorResend(this.twoFactorTempToken).subscribe({
+      next: (res: any) => {
+        this.twoFactorLoading = false;
+        this.twoFactorDevCode = res?.dev_code || '';
+        this.startTwoFactorTimer(60);
+      },
+      error: (err: any) => {
+        this.twoFactorLoading = false;
+        this.twoFactorError = err?.error?.message || 'Failed to resend verification code.';
+      }
+    });
+  }
+
+  private startTwoFactorTimer(seconds = 60): void {
+    this.clearTwoFactorTimer();
+    this.twoFactorResendCountdown = seconds;
+    this.twoFactorResendTimer = setInterval(() => {
+      if (this.twoFactorResendCountdown > 1) {
+        this.twoFactorResendCountdown--;
+      } else {
+        this.twoFactorResendCountdown = 0;
+        this.clearTwoFactorTimer();
+      }
+    }, 1000);
+  }
+
+  private clearTwoFactorTimer(): void {
+    if (this.twoFactorResendTimer) {
+      clearInterval(this.twoFactorResendTimer);
+      this.twoFactorResendTimer = null;
+    }
+  }
+
+  backToLoginFrom2fa(): void {
+    this.clearTwoFactorTimer();
+    this.segment = 'login';
   }
 
   toggleLoginPassword(): void {

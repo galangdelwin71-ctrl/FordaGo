@@ -1185,3 +1185,422 @@ ion-content.fordago-page-content {
   -webkit-overflow-scrolling: touch !important;
   touch-action: pan-y !important;
 }
+
+/* ── Security Center & 2FA Modal Styles ───────────────── */
+.security-menu-item {
+  border-left: 3px solid #FFD600 !important;
+  background: rgba(255, 214, 0, 0.04) !important;
+
+  &:active {
+    background: rgba(255, 214, 0, 0.1) !important;
+  }
+}
+
+.security-glow-icon {
+  background: rgba(255, 214, 0, 0.15) !important;
+  color: #FFD600 !important;
+}
+
+.menu-label-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.security-badge-active {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(34, 197, 94, 0.18);
+  color: #4ade80;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 12px;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+
+  ion-icon {
+    font-size: 12px;
+  }
+}
+
+.security-modal-body {
+  --background: #0d111c;
+  color: #fff;
+}
+
+.flex-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.title-glow-icon {
+  color: #FFD600;
+  font-size: 22px;
+}
+
+.modal-close-icon-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.security-intro-text {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 6px 0 16px 0;
+  line-height: 1.4;
+}
+
+.sec-status-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 15px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 16px;
+
+  &.is-secure {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(255, 214, 0, 0.08));
+    border: 1px solid rgba(74, 222, 128, 0.3);
+  }
+}
+
+.sec-shield-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(255, 214, 0, 0.15);
+  color: #FFD600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+
+  .is-secure & {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+  }
+}
+
+.sec-shield-meta {
+  flex: 1;
+}
+
+.sec-shield-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.sec-shield-desc {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 2px;
+}
+
+.sec-feature-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 15px;
+  margin-bottom: 12px;
+  transition: background 0.2s;
+}
+
+.sec-feature-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sec-feature-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+
+  &.bio-icon-bg {
+    background: rgba(255, 214, 0, 0.15);
+    color: #FFD600;
+  }
+  &.mfa-icon-bg {
+    background: rgba(59, 130, 246, 0.18);
+    color: #60a5fa;
+  }
+  &.pwd-icon-bg {
+    background: rgba(168, 85, 247, 0.18);
+    color: #c084fc;
+  }
+}
+
+.sec-feature-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.sec-feature-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.sec-feature-sub {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: 3px;
+  line-height: 1.35;
+}
+
+.sec-feature-chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  flex-wrap: wrap;
+}
+
+.sec-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px 10px;
+  border-radius: 12px;
+
+  &.chip-active {
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+  }
+}
+
+.sec-btn-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.sec-card-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 11px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 12px;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.15s;
+
+  &:active {
+    transform: scale(0.97);
+  }
+
+  &.gold-btn {
+    background: #FFD600;
+    color: #000;
+  }
+  &.dark-btn {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+}
+
+.input-shell-custom {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-top: 6px;
+
+  ion-icon {
+    font-size: 18px;
+    color: #FFD600;
+  }
+}
+
+.custom-modal-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 14px;
+}
+
+.forgot-pass-alt-link {
+  margin-top: 14px;
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+
+  span {
+    cursor: pointer;
+    strong {
+      color: #FFD600;
+      text-decoration: underline;
+    }
+  }
+}
+
+.twofa-channel-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.twofa-channel-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  ion-icon {
+    font-size: 24px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 6px;
+  }
+
+  &.is-selected {
+    background: rgba(255, 214, 0, 0.08);
+    border-color: #FFD600;
+
+    ion-icon {
+      color: #FFD600;
+    }
+  }
+}
+
+.twofa-card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.twofa-card-sub {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.twofa-otp-sent-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  font-size: 12px;
+  color: #4ade80;
+
+  ion-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+}
+
+.dev-otp-pill {
+  margin-top: 8px;
+  font-size: 11px;
+  text-align: center;
+  color: #FFD600;
+  background: rgba(255, 214, 0, 0.1);
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.twofa-otp-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.twofa-otp-box {
+  width: 44px;
+  height: 52px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  outline: none;
+  transition: border-color 0.2s;
+
+  &:focus {
+    border-color: #FFD600;
+    box-shadow: 0 0 10px rgba(255, 214, 0, 0.3);
+  }
+}
+
+.twofa-resend-row {
+  text-align: center;
+  margin-top: 14px;
+}
+
+.resend-text-btn {
+  background: transparent;
+  border: none;
+  color: #FFD600;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    color: rgba(255, 255, 255, 0.35);
+    cursor: not-allowed;
+  }
+}
+
+.modal-err-msg {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  color: #ef4444;
+  font-size: 12px;
+  justify-content: center;
+}
+
+.danger-btn {
+  background: #ef4444 !important;
+  color: #fff !important;
+}

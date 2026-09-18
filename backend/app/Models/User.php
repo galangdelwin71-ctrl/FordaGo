@@ -32,8 +32,16 @@ use Laravel\Sanctum\HasApiTokens;
     'bmi',
     'fitness_goal',
     'preferred_workout_time',
+    'two_factor_enabled',
+    'two_factor_channel',
+    'two_factor_code',
+    'two_factor_expires_at',
+    'biometric_enabled',
+    'biometric_credential_id',
+    'biometric_token_hash',
+    'biometric_device_name',
 ])]
-#[Hidden(['password'])]
+#[Hidden(['password', 'two_factor_code', 'biometric_token_hash'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -60,6 +68,9 @@ class User extends Authenticatable
             'height'   => 'float',
             'weight'   => 'float',
             'bmi'      => 'float',
+            'two_factor_enabled' => 'boolean',
+            'biometric_enabled'  => 'boolean',
+            'two_factor_expires_at' => 'datetime',
         ];
     }
 
