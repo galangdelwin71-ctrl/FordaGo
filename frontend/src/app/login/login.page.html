@@ -1389,7 +1389,7 @@
           <h2>Security Verification</h2>
           <p>We sent a 6-digit authentication code to</p>
           <div class="destination-pill">
-            <ion-icon [name]="twoFactorChannel === 'sms' ? 'chatbubble-ellipses-outline' : 'mail-outline'"></ion-icon>
+            <ion-icon [name]="twoFactorChannel === 'sms' ? 'chatbubble-ellipses-outline' : (twoFactorChannel === 'both' ? 'notifications-outline' : 'mail-outline')"></ion-icon>
             <span>{{ twoFactorDestination || 'your registered contact' }}</span>
           </div>
         </header>
