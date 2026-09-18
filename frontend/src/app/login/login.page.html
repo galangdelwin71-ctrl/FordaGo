@@ -197,35 +197,33 @@
           <p>Tell us a little about yourself.</p>
         </header>
 
-        <div class="two-col responsive-columns">
-          <div class="field">
-            <label class="field-lbl" for="reg-first-name">First Name</label>
-            <div class="input-shell">
-              <ion-icon name="person-outline" aria-hidden="true"></ion-icon>
-              <input
-                id="reg-first-name"
-                class="field-input"
-                type="text"
-                [(ngModel)]="reg.firstName"
-                placeholder="Enter first name"
-                autocomplete="given-name"
-              />
-            </div>
+        <div class="field">
+          <label class="field-lbl" for="reg-first-name">First Name</label>
+          <div class="input-shell">
+            <ion-icon name="person-outline" aria-hidden="true"></ion-icon>
+            <input
+              id="reg-first-name"
+              class="field-input"
+              type="text"
+              [(ngModel)]="reg.firstName"
+              placeholder="Enter first name"
+              autocomplete="given-name"
+            />
           </div>
+        </div>
 
-          <div class="field">
-            <label class="field-lbl" for="reg-last-name">Last Name</label>
-            <div class="input-shell">
-              <ion-icon name="person-outline" aria-hidden="true"></ion-icon>
-              <input
-                id="reg-last-name"
-                class="field-input"
-                type="text"
-                [(ngModel)]="reg.lastName"
-                placeholder="Enter last name"
-                autocomplete="family-name"
-              />
-            </div>
+        <div class="field">
+          <label class="field-lbl" for="reg-last-name">Last Name</label>
+          <div class="input-shell">
+            <ion-icon name="person-outline" aria-hidden="true"></ion-icon>
+            <input
+              id="reg-last-name"
+              class="field-input"
+              type="text"
+              [(ngModel)]="reg.lastName"
+              placeholder="Enter last name"
+              autocomplete="family-name"
+            />
           </div>
         </div>
 
@@ -264,76 +262,74 @@
           </div>
         </div>
 
-        <div class="two-col responsive-columns">
-          <div class="field gender-field">
-            <label class="field-lbl" id="reg-gender-label">Gender</label>
+        <div class="field gender-field">
+          <label class="field-lbl" id="reg-gender-label">Gender</label>
+
+          <div
+            class="gender-picker"
+            [class.open]="genderOpen"
+            (click)="$event.stopPropagation()"
+          >
+            <button
+              type="button"
+              class="gender-trigger"
+              (click)="toggleGenderDropdown($event)"
+              [attr.aria-expanded]="genderOpen"
+              aria-haspopup="listbox"
+              aria-labelledby="reg-gender-label"
+            >
+              <span class="gender-trigger-left">
+                <ion-icon name="people-outline" aria-hidden="true"></ion-icon>
+                <span class="gender-value" [class.placeholder]="!reg.gender">
+                  {{ genderLabel }}
+                </span>
+              </span>
+
+              <ion-icon
+                class="gender-chevron"
+                name="chevron-down-outline"
+                aria-hidden="true"
+              ></ion-icon>
+            </button>
 
             <div
-              class="gender-picker"
-              [class.open]="genderOpen"
-              (click)="$event.stopPropagation()"
+              class="gender-menu"
+              *ngIf="genderOpen"
+              role="listbox"
+              aria-labelledby="reg-gender-label"
             >
               <button
                 type="button"
-                class="gender-trigger"
-                (click)="toggleGenderDropdown($event)"
-                [attr.aria-expanded]="genderOpen"
-                aria-haspopup="listbox"
-                aria-labelledby="reg-gender-label"
+                class="gender-option"
+                *ngFor="let option of genderOptions"
+                [class.selected]="reg.gender === option.value"
+                [attr.aria-selected]="reg.gender === option.value"
+                (click)="selectGender(option.value)"
+                role="option"
               >
-                <span class="gender-trigger-left">
-                  <ion-icon name="people-outline" aria-hidden="true"></ion-icon>
-                  <span class="gender-value" [class.placeholder]="!reg.gender">
-                    {{ genderLabel }}
-                  </span>
-                </span>
-
+                <span>{{ option.label }}</span>
                 <ion-icon
-                  class="gender-chevron"
-                  name="chevron-down-outline"
+                  *ngIf="reg.gender === option.value"
+                  name="checkmark-outline"
                   aria-hidden="true"
                 ></ion-icon>
               </button>
-
-              <div
-                class="gender-menu"
-                *ngIf="genderOpen"
-                role="listbox"
-                aria-labelledby="reg-gender-label"
-              >
-                <button
-                  type="button"
-                  class="gender-option"
-                  *ngFor="let option of genderOptions"
-                  [class.selected]="reg.gender === option.value"
-                  [attr.aria-selected]="reg.gender === option.value"
-                  (click)="selectGender(option.value)"
-                  role="option"
-                >
-                  <span>{{ option.label }}</span>
-                  <ion-icon
-                    *ngIf="reg.gender === option.value"
-                    name="checkmark-outline"
-                    aria-hidden="true"
-                  ></ion-icon>
-                </button>
-              </div>
             </div>
           </div>
+        </div>
 
-          <div class="field">
-            <label class="field-lbl" for="reg-dob">Date of Birth</label>
-            <div class="input-shell">
-              <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
-              <input
-                id="reg-dob"
-                class="field-input dob-input"
-                type="date"
-                [(ngModel)]="reg.dateOfBirth"
-                [max]="maxDobDate"
-                min="1920-01-01"
-              />
-            </div>
+        <div class="field">
+          <label class="field-lbl" for="reg-dob">Date of Birth</label>
+          <div class="input-shell">
+            <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+            <input
+              id="reg-dob"
+              class="field-input dob-input"
+              type="date"
+              [(ngModel)]="reg.dateOfBirth"
+              [max]="maxDobDate"
+              min="1920-01-01"
+            />
           </div>
         </div>
 
@@ -428,45 +424,43 @@
         </header>
 
         <!-- Height and Weight -->
-        <div class="two-col responsive-columns">
-          <div class="field">
-            <label class="field-lbl" for="reg-height">Height (cm)</label>
-            <div class="input-shell">
-              <ion-icon name="scale-outline" aria-hidden="true"></ion-icon>
-              <input
-                id="reg-height"
-                class="field-input"
-                type="number"
-                [(ngModel)]="reg.height"
-                (input)="onHeightOrWeightChange()"
-                placeholder="e.g. 170"
-                appNoNegative
-                min="50"
-                max="260"
-                step="0.5"
-                inputmode="decimal"
-              />
-            </div>
+        <div class="field">
+          <label class="field-lbl" for="reg-height">Height (cm)</label>
+          <div class="input-shell">
+            <ion-icon name="scale-outline" aria-hidden="true"></ion-icon>
+            <input
+              id="reg-height"
+              class="field-input"
+              type="number"
+              [(ngModel)]="reg.height"
+              (input)="onHeightOrWeightChange()"
+              placeholder="e.g. 170"
+              appNoNegative
+              min="50"
+              max="260"
+              step="0.5"
+              inputmode="decimal"
+            />
           </div>
+        </div>
 
-          <div class="field">
-            <label class="field-lbl" for="reg-weight">Weight (kg)</label>
-            <div class="input-shell">
-              <ion-icon name="speedometer-outline" aria-hidden="true"></ion-icon>
-              <input
-                id="reg-weight"
-                class="field-input"
-                type="number"
-                [(ngModel)]="reg.weight"
-                (input)="onHeightOrWeightChange()"
-                placeholder="e.g. 68"
-                appNoNegative
-                min="20"
-                max="350"
-                step="0.5"
-                inputmode="decimal"
-              />
-            </div>
+        <div class="field">
+          <label class="field-lbl" for="reg-weight">Weight (kg)</label>
+          <div class="input-shell">
+            <ion-icon name="speedometer-outline" aria-hidden="true"></ion-icon>
+            <input
+              id="reg-weight"
+              class="field-input"
+              type="number"
+              [(ngModel)]="reg.weight"
+              (input)="onHeightOrWeightChange()"
+              placeholder="e.g. 68"
+              appNoNegative
+              min="20"
+              max="350"
+              step="0.5"
+              inputmode="decimal"
+            />
           </div>
         </div>
 
