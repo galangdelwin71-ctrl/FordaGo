@@ -58,12 +58,27 @@ class MailService
             ];
         }
 
-        if ($mailer === 'smtp' && (! config('mail.mailers.smtp.username') || ! config('mail.mailers.smtp.host'))) {
-            return [
-                'sent' => false,
-                'provider' => 'smtp',
-                'skippedReason' => 'SMTP is not configured (MAIL_HOST/MAIL_USERNAME/MAIL_PASSWORD in .env)',
-            ];
+        if ($mailer === 'smtp') {
+            $host = config('mail.mailers.smtp.host');
+            $port = (int) (config('mail.mailers.smtp.port') ?: 587);
+            if (! config('mail.mailers.smtp.username') || ! $host) {
+                return [
+                    'sent' => false,
+                    'provider' => 'smtp',
+                    'skippedReason' => 'SMTP is not configured (MAIL_HOST/MAIL_USERNAME/MAIL_PASSWORD in .env)',
+                ];
+            }
+            // Fast probe to avoid 60-second connection timeouts when cloud firewalls block outbound SMTP
+            $fp = @fsockopen($host, $port, $errno, $errstr, 1.5);
+            if (! $fp) {
+                Log::warning("SMTP port {$port} on {$host} is unreachable/blocked ({$errstr}). Skipping SMTP fallback.");
+                return [
+                    'sent' => false,
+                    'provider' => 'smtp',
+                    'skippedReason' => "SMTP port {$port} unreachable/blocked on this server.",
+                ];
+            }
+            fclose($fp);
         }
 
         try {
@@ -141,12 +156,27 @@ class MailService
             ];
         }
 
-        if ($mailer === 'smtp' && (! config('mail.mailers.smtp.username') || ! config('mail.mailers.smtp.host'))) {
-            return [
-                'sent' => false,
-                'provider' => 'smtp',
-                'skippedReason' => 'SMTP is not configured (MAIL_HOST/MAIL_USERNAME/MAIL_PASSWORD in .env)',
-            ];
+        if ($mailer === 'smtp') {
+            $host = config('mail.mailers.smtp.host');
+            $port = (int) (config('mail.mailers.smtp.port') ?: 587);
+            if (! config('mail.mailers.smtp.username') || ! $host) {
+                return [
+                    'sent' => false,
+                    'provider' => 'smtp',
+                    'skippedReason' => 'SMTP is not configured (MAIL_HOST/MAIL_USERNAME/MAIL_PASSWORD in .env)',
+                ];
+            }
+            // Fast probe to avoid 60-second connection timeouts when cloud firewalls block outbound SMTP
+            $fp = @fsockopen($host, $port, $errno, $errstr, 1.5);
+            if (! $fp) {
+                Log::warning("SMTP port {$port} on {$host} is unreachable/blocked ({$errstr}). Skipping SMTP fallback.");
+                return [
+                    'sent' => false,
+                    'provider' => 'smtp',
+                    'skippedReason' => "SMTP port {$port} unreachable/blocked on this server.",
+                ];
+            }
+            fclose($fp);
         }
 
         try {

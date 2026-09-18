@@ -400,6 +400,8 @@ export class ProfilePage implements OnInit {
   twoFactorEnabled             = false;
   twoFactorChannel: 'email' | 'sms' = 'email';
   twoFactorLoading             = false;
+  twoFactorSending             = false;
+  twoFactorVerifying           = false;
   twoFactorActivationModalOpen = false;
   twoFactorOtpDigits: string[] = ['', '', '', '', '', ''];
   twoFactorCode                = '';
@@ -1272,11 +1274,13 @@ export class ProfilePage implements OnInit {
 
   requestTwoFactorCode(channel: 'email' | 'sms'): void {
     this.twoFactorChannel = channel;
+    this.twoFactorSending = true;
     this.twoFactorLoading = true;
     this.twoFactorError = '';
 
     this.auth.requestTwoFactorActivation(channel).subscribe({
       next: (res: any) => {
+        this.twoFactorSending = false;
         this.twoFactorLoading = false;
         this.twoFactorSentDestination = res?.destination_masked || '';
         this.twoFactorDevCode = res?.dev_code || '';
@@ -1284,6 +1288,7 @@ export class ProfilePage implements OnInit {
         setTimeout(() => this.focusTwoFactorInput(0), 150);
       },
       error: (err: any) => {
+        this.twoFactorSending = false;
         this.twoFactorLoading = false;
         this.twoFactorError = err?.error?.message || 'Failed to send verification code.';
       }
@@ -1363,17 +1368,20 @@ export class ProfilePage implements OnInit {
       return;
     }
 
+    this.twoFactorVerifying = true;
     this.twoFactorLoading = true;
     this.twoFactorError = '';
 
     this.auth.confirmTwoFactorActivation(this.twoFactorCode).subscribe({
       next: () => {
+        this.twoFactorVerifying = false;
         this.twoFactorLoading = false;
         this.twoFactorEnabled = true;
         this.closeTwoFactorActivation();
         void this.showMobileToast('Two-Factor Authentication is now active!');
       },
       error: (err: any) => {
+        this.twoFactorVerifying = false;
         this.twoFactorLoading = false;
         this.twoFactorError = err?.error?.message || 'Invalid code. Please try again.';
       }

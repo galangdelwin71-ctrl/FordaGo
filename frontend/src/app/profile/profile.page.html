@@ -1094,8 +1094,10 @@
         <div
           class="twofa-channel-card"
           [class.is-selected]="twoFactorChannel === 'email'"
+          [class.is-loading]="twoFactorSending && twoFactorChannel === 'email'"
           (click)="requestTwoFactorCode('email')">
-          <ion-icon name="mail-outline"></ion-icon>
+          <ion-icon *ngIf="!(twoFactorSending && twoFactorChannel === 'email')" name="mail-outline"></ion-icon>
+          <ion-spinner *ngIf="twoFactorSending && twoFactorChannel === 'email'" name="crescent" style="width:20px;height:20px;"></ion-spinner>
           <div class="twofa-card-title">Email OTP</div>
           <div class="twofa-card-sub">{{ profile.email }}</div>
         </div>
@@ -1103,8 +1105,10 @@
         <div
           class="twofa-channel-card"
           [class.is-selected]="twoFactorChannel === 'sms'"
+          [class.is-loading]="twoFactorSending && twoFactorChannel === 'sms'"
           (click)="requestTwoFactorCode('sms')">
-          <ion-icon name="call-outline"></ion-icon>
+          <ion-icon *ngIf="!(twoFactorSending && twoFactorChannel === 'sms')" name="call-outline"></ion-icon>
+          <ion-spinner *ngIf="twoFactorSending && twoFactorChannel === 'sms'" name="crescent" style="width:20px;height:20px;"></ion-spinner>
           <div class="twofa-card-title">SMS OTP</div>
           <div class="twofa-card-sub">{{ profile.phone || 'Phone number' }}</div>
         </div>
@@ -1147,21 +1151,22 @@
         <button
           type="button"
           class="resend-text-btn"
-          [disabled]="twoFactorResendCountdown > 0 || twoFactorLoading"
+          [disabled]="twoFactorResendCountdown > 0 || twoFactorSending || twoFactorVerifying"
           (click)="requestTwoFactorCode(twoFactorChannel)">
-          {{ twoFactorResendCountdown > 0 ? 'Resend code in ' + twoFactorResendCountdown + 's' : 'Resend Code' }}
+          <ion-spinner *ngIf="twoFactorSending" name="crescent" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></ion-spinner>
+          {{ twoFactorResendCountdown > 0 ? 'Resend code in ' + twoFactorResendCountdown + 's' : (twoFactorSending ? 'Sending code...' : 'Resend Code') }}
         </button>
       </div>
 
       <div class="modal-actions">
         <button
           class="modal-save-btn"
-          [disabled]="twoFactorCode.length !== 6 || twoFactorLoading"
+          [disabled]="twoFactorCode.length !== 6 || twoFactorVerifying || twoFactorSending"
           (click)="verifyTwoFactorActivation()">
-          <ion-spinner *ngIf="twoFactorLoading" name="crescent"></ion-spinner>
-          <span *ngIf="!twoFactorLoading">Verify &amp; Enable 2FA</span>
+          <ion-spinner *ngIf="twoFactorVerifying" name="crescent"></ion-spinner>
+          <span *ngIf="!twoFactorVerifying">Verify &amp; Enable 2FA</span>
         </button>
-        <button class="modal-cancel-btn" (click)="closeTwoFactorActivation()" [disabled]="twoFactorLoading">
+        <button class="modal-cancel-btn" (click)="closeTwoFactorActivation()" [disabled]="twoFactorVerifying">
           Cancel
         </button>
       </div>
