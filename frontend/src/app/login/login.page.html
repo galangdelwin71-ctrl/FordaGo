@@ -1226,7 +1226,7 @@
               [disabled]="fpLoading"
               (click)="fpResendCode()"
             >
-              <ion-icon name="refresh-outline"></ion-icon>
+              <ion-icon name="send-outline"></ion-icon>
               <span>Didn't receive code? <strong>Resend OTP</strong></span>
             </button>
           </div>
@@ -1451,7 +1451,7 @@
             [disabled]="twoFactorResendCountdown > 0 || twoFactorLoading"
             (click)="resendTwoFactorLogin()"
           >
-            <ion-icon name="refresh-outline" aria-hidden="true"></ion-icon>
+            <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
             <span *ngIf="twoFactorResendCountdown === 0">Resend Code</span>
             <span *ngIf="twoFactorResendCountdown > 0">Resend in {{ twoFactorResendCountdown }}s</span>
           </button>
