@@ -143,18 +143,13 @@
       <span class="menu-arrow">›</span>
     </div>
 
-    <!-- Category 2: Security & Privacy (Security Center) -->
+    <!-- Category 2: Security & Privacy -->
     <div class="section-label">Security &amp; Privacy</div>
 
-    <div class="menu-item security-menu-item fade-up" id="tour-profile-security" (click)="openSecurityCenter()">
-      <span class="menu-icon security-glow-icon"><ion-icon name="shield-checkmark-outline"></ion-icon></span>
+    <div class="menu-item fade-up" id="tour-profile-security" (click)="openSecurityCenter()">
+      <span class="menu-icon"><ion-icon name="shield-checkmark-outline"></ion-icon></span>
       <div class="menu-content">
-        <div class="menu-label-row">
-          <div class="menu-label">Security Center</div>
-          <span *ngIf="twoFactorEnabled || biometricEnabled" class="security-badge-active">
-            <ion-icon name="checkmark-circle"></ion-icon> Protected
-          </span>
-        </div>
+        <div class="menu-label">Security Center</div>
         <div class="menu-sub">Password, 2FA Verification &amp; Passkey</div>
       </div>
       <span class="menu-arrow">›</span>
