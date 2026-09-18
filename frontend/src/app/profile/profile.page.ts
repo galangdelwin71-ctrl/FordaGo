@@ -419,6 +419,19 @@ export class ProfilePage implements OnInit {
   biometricStatus: BiometricStatus | null = null;
   biometricDeviceName          = '';
 
+  get anyModalOpen(): boolean {
+    return this.securityModalOpen ||
+      this.changePasswordModalOpen ||
+      this.resetOtpModalOpen ||
+      this.twoFactorActivationModalOpen ||
+      this.disableTwoFactorModalOpen ||
+      this.editModalOpen ||
+      this.notificationsModalOpen ||
+      this.renewalModalOpen ||
+      this.logoutModalOpen ||
+      this.progressHistoryModalOpen;
+  }
+
   /** Coach icon badge — kept in sync via CoachingService.unreadCount$ across all pages. */
   coachUnreadCount = 0;
 
