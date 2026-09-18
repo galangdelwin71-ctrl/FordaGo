@@ -1162,15 +1162,6 @@
             </div>
           </header>
 
-          <!-- Demo Mode Helper Card -->
-          <div class="demo-code-banner" *ngIf="fpDevCode">
-            <div class="demo-code-header">
-              <ion-icon name="information-circle-outline"></ion-icon>
-              <span>Demo Mode (Local Testing)</span>
-            </div>
-            <p>Your OTP Code is: <strong class="demo-code-text">{{ fpDevCode }}</strong></p>
-          </div>
-
           <!-- 6-Box OTP Input Grid -->
           <div class="otp-boxes-container" (paste)="onOtpPaste($event)">
             <input
@@ -1389,19 +1380,10 @@
           <h2>Security Verification</h2>
           <p>We sent a 6-digit authentication code to</p>
           <div class="destination-pill">
-            <ion-icon [name]="twoFactorChannel === 'sms' ? 'chatbubble-ellipses-outline' : (twoFactorChannel === 'both' ? 'notifications-outline' : 'mail-outline')"></ion-icon>
+            <ion-icon [name]="twoFactorChannel === 'sms' ? 'chatbubble-ellipses-outline' : 'mail-outline'"></ion-icon>
             <span>{{ twoFactorDestination || 'your registered contact' }}</span>
           </div>
         </header>
-
-        <!-- Demo Mode Helper Card for local testing -->
-        <div class="demo-code-banner" *ngIf="twoFactorDevCode">
-          <div class="demo-code-header">
-            <ion-icon name="information-circle-outline"></ion-icon>
-            <span>Demo Mode (Local Testing)</span>
-          </div>
-          <p>Your 2FA Code is: <strong class="demo-code-text">{{ twoFactorDevCode }}</strong></p>
-        </div>
 
         <!-- 6-Box OTP Input Grid -->
         <div class="otp-boxes-container">

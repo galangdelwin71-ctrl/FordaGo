@@ -366,14 +366,17 @@ class AuthController extends Controller
 
             $channel     = $user->two_factor_channel ?: 'email';
             $displayName = trim(($user->first_name ?? '').' '.($user->last_name ?? '')) ?: ($user->username ?? 'Member');
-            $smsDest     = $user->phone ? SmsService::normalizePhoneNumber($user->phone) : null;
 
-            // Dispatch simultaneously to Email and SMS so user receives it everywhere
-            if ($user->email) {
+            if ($channel === 'sms' && $user->phone) {
+                $destination = SmsService::normalizePhoneNumber($user->phone);
+                SmsService::send($destination, "FordaGO: Your 2-Factor Login verification code is {$code}. Valid for 10 minutes.");
+                $destMasked = $this->maskPhone($destination);
+                $msg = 'Two-Factor Authentication is active. A 6-digit verification code was sent to your phone.';
+            } else {
+                $channel = 'email';
                 MailService::sendPasswordResetOtp($user->email, $code, $displayName);
-            }
-            if ($smsDest) {
-                SmsService::send($smsDest, "FordaGO: Your 2-Factor Login verification code is {$code}. Valid for 10 minutes.");
+                $destMasked = $this->maskEmail($user->email);
+                $msg = 'Two-Factor Authentication is active. A 6-digit verification code was sent to your email.';
             }
 
             $tempToken = Crypt::encryptString(json_encode([
@@ -383,23 +386,14 @@ class AuthController extends Controller
                 'exp'     => now()->addMinutes(10)->timestamp,
             ]));
 
-            $isDebug = (bool) config('app.debug');
-
-            $destMasked = $user->email ? $this->maskEmail($user->email) : '';
-            if ($smsDest) {
-                $destMasked = $destMasked ? ($destMasked . ' & ' . $this->maskPhone($smsDest)) : $this->maskPhone($smsDest);
-            }
-
             return response()->json([
                 'status'             => '2fa_required',
                 'requires_2fa'       => true,
                 'temp_token'         => $tempToken,
-                'channel'            => $smsDest ? 'both' : $channel,
+                'channel'            => $channel,
                 'destination_masked' => $destMasked,
-                'message'            => $smsDest
-                    ? 'Two-Factor Authentication is active. A 6-digit verification code was sent to your email and phone.'
-                    : 'Two-Factor Authentication is active. A 6-digit verification code was sent to your email.',
-                'dev_code'           => $isDebug ? $code : null,
+                'message'            => $msg,
+                'dev_code'           => null,
             ]);
         }
 
@@ -673,25 +667,12 @@ class AuthController extends Controller
 
         $displayName    = trim(($user->first_name ?? '').' '.($user->last_name ?? '')) ?: ($user->username ?? 'Member');
         $message        = "FordaGO: Your password reset code is {$code}. It expires in 10 minutes. If you didn't request this, ignore this message.";
-        $deliveryResult = ['sent' => false];
-
-        // Send to Email if user has email
-        if ($user->email) {
-            $mailRes = MailService::sendPasswordResetOtp($user->email, $code, $displayName);
-            if (!empty($mailRes['sent'])) {
-                $deliveryResult = $mailRes;
-            }
-        }
-
-        // Also send to SMS if user has phone
-        if ($user->phone) {
-            $smsDest = SmsService::normalizePhoneNumber($user->phone);
-            if ($smsDest) {
-                $smsRes = SmsService::send($smsDest, $message);
-                if (!empty($smsRes['sent'])) {
-                    $deliveryResult = $smsRes;
-                }
-            }
+        if ($channel === 'sms') {
+            $deliveryResult = SmsService::send($destination, $message);
+            $destMasked = $this->maskPhone($destination);
+        } else {
+            $deliveryResult = MailService::sendPasswordResetOtp($destination, $code, $displayName);
+            $destMasked = $this->maskEmail($destination);
         }
 
         $isSent = (bool) ($deliveryResult['sent'] ?? false);
@@ -705,23 +686,12 @@ class AuthController extends Controller
 
         $skippedReason = strtolower((string) ($deliveryResult['skippedReason'] ?? ''));
 
-        // devCode is exposed in local/debug mode so the user can test on phone without blocking
-        $isDebug = (bool) config('app.debug');
-
-        $destMasked = $user->email ? $this->maskEmail($user->email) : '';
-        if ($user->phone) {
-            $smsDest = SmsService::normalizePhoneNumber($user->phone);
-            if ($smsDest) {
-                $destMasked = $destMasked ? ($destMasked . ' & ' . $this->maskPhone($smsDest)) : $this->maskPhone($smsDest);
-            }
-        }
-
         return response()->json([
             'sent'              => $isSent,
-            'channel'           => $user->phone ? 'both' : 'email',
-            'destinationMasked' => $destMasked ?: $this->maskEmail($destination),
+            'channel'           => $channel,
+            'destinationMasked' => $destMasked,
             'reason'            => $isSent ? null : ($deliveryResult['skippedReason'] ?? $deliveryResult['error'] ?? 'Could not send code'),
-            'devCode'           => $isDebug ? $code : null,
+            'devCode'           => null,
         ]);
     }
 
@@ -886,30 +856,26 @@ class AuthController extends Controller
 
         $channel     = $user->two_factor_channel ?: 'email';
         $displayName = trim(($user->first_name ?? '').' '.($user->last_name ?? '')) ?: ($user->username ?? 'Member');
-        $smsDest     = $user->phone ? SmsService::normalizePhoneNumber($user->phone) : null;
 
-        // Dispatch simultaneously to Email and SMS
-        if ($user->email) {
+        if ($channel === 'sms' && $user->phone) {
+            $destination = SmsService::normalizePhoneNumber($user->phone);
+            SmsService::send($destination, "FordaGO: Your 2-Factor Login verification code is {$code}. Valid for 10 minutes.");
+            $destMasked = $this->maskPhone($destination);
+            $msg = 'A new verification code was sent to your phone.';
+        } else {
+            $channel = 'email';
             MailService::sendPasswordResetOtp($user->email, $code, $displayName);
-        }
-        if ($smsDest) {
-            SmsService::send($smsDest, "FordaGO: Your 2-Factor Login verification code is {$code}. Valid for 10 minutes.");
+            $destMasked = $this->maskEmail($user->email);
+            $msg = 'A new verification code was sent to your email.';
         }
 
         RateLimiter::hit($limitKey.':cooldown', 60);
 
-        $isDebug = (bool) config('app.debug');
-
-        $destMasked = $user->email ? $this->maskEmail($user->email) : '';
-        if ($smsDest) {
-            $destMasked = $destMasked ? ($destMasked . ' & ' . $this->maskPhone($smsDest)) : $this->maskPhone($smsDest);
-        }
-
         return response()->json([
-            'message'            => $smsDest ? 'A new verification code was sent to your email and phone.' : 'A new verification code was sent to your email.',
-            'channel'            => $smsDest ? 'both' : 'email',
+            'message'            => $msg,
+            'channel'            => $channel,
             'destination_masked' => $destMasked,
-            'dev_code'           => $isDebug ? $code : null,
+            'dev_code'           => null,
         ]);
     }
 
@@ -933,28 +899,23 @@ class AuthController extends Controller
         ]);
 
         $displayName = trim(($user->first_name ?? '').' '.($user->last_name ?? '')) ?: ($user->username ?? 'Member');
-        $smsDest     = $user->phone ? SmsService::normalizePhoneNumber($user->phone) : null;
 
-        // Dispatch simultaneously to Email and SMS
-        if ($user->email) {
+        if ($channel === 'sms') {
+            $destination = SmsService::normalizePhoneNumber($user->phone);
+            SmsService::send($destination, "FordaGO: Your 2FA activation code is {$code}. Valid for 10 minutes.");
+            $destMasked = $this->maskPhone($destination);
+            $msg = 'Verification code sent to your phone.';
+        } else {
             MailService::sendPasswordResetOtp($user->email, $code, $displayName);
-        }
-        if ($smsDest) {
-            SmsService::send($smsDest, "FordaGO: Your 2FA activation code is {$code}. Valid for 10 minutes.");
-        }
-
-        $isDebug = (bool) config('app.debug');
-
-        $destMasked = $user->email ? $this->maskEmail($user->email) : '';
-        if ($smsDest) {
-            $destMasked = $destMasked ? ($destMasked . ' & ' . $this->maskPhone($smsDest)) : $this->maskPhone($smsDest);
+            $destMasked = $this->maskEmail($user->email);
+            $msg = 'Verification code sent to your email.';
         }
 
         return response()->json([
-            'message'            => $smsDest ? 'Verification code sent to your email and phone.' : 'Verification code sent to your email.',
-            'channel'            => $smsDest ? 'both' : $channel,
+            'message'            => $msg,
+            'channel'            => $channel,
             'destination_masked' => $destMasked,
-            'dev_code'           => $isDebug ? $code : null,
+            'dev_code'           => null,
         ]);
     }
 
