@@ -212,14 +212,68 @@ ion-toolbar {
   color: transparent;
 }
 
-// ── Quick Access Popover Menu ──────────────────────────────
+// ── Quick Access Dropdown Menu ─────────────────────────────
+.menu-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.menu-header-btn.is-active {
+  color: var(--header-yellow);
+  border-color: rgba(255, 214, 0, 0.4);
+  background: rgba(255, 214, 0, 0.12);
+}
+
+.header-menu-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1050;
+  background: rgba(0, 0, 0, 0.38);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  animation: menuFadeIn 120ms ease-out forwards;
+}
+
+.header-menu-dropdown-wrap {
+  position: fixed;
+  top: calc(var(--ion-safe-area-top, 0px) + 62px);
+  right: 12px;
+  width: 256px;
+  max-width: calc(100vw - 24px);
+  z-index: 1060;
+  animation: menuPopIn 160ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: top right;
+}
+
+@keyframes menuFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes menuPopIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
 .header-menu-card {
   padding: 10px;
   display: flex;
   flex-direction: column;
   gap: 6px;
   background: #0f131f;
-  border-radius: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
 .header-menu-label {
@@ -351,8 +405,20 @@ ion-toolbar {
     box-shadow: 0 5px 16px rgba(15, 23, 42, 0.07);
   }
 
+  .menu-header-btn.is-active {
+    color: #0f172a;
+    border-color: rgba(15, 23, 42, 0.25);
+    background: rgba(15, 23, 42, 0.08);
+  }
+
+  .header-menu-backdrop {
+    background: rgba(15, 23, 42, 0.22);
+  }
+
   .header-menu-card {
     background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.14), 0 0 0 1px rgba(15, 23, 42, 0.08);
   }
 
   .header-menu-label {

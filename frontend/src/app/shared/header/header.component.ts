@@ -16,9 +16,11 @@
 // Extracting one <app-header> component with one canonical stylesheet
 // guarantees the header renders identically everywhere, and it removes the
 // duplicated markup/CSS from five separate files.
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonHeader, IonToolbar, IonIcon, IonPopover } from '@ionic/angular/standalone';
+import { Router, NavigationStart } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { IonHeader, IonToolbar, IonIcon } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
   menuOutline,
@@ -26,16 +28,17 @@ import {
   personCircleOutline,
   notificationsOutline,
   chevronForwardOutline,
+  closeOutline,
 } from 'ionicons/icons';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, IonHeader, IonToolbar, IonIcon, IonPopover],
+  imports: [CommonModule, IonHeader, IonToolbar, IonIcon],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss'],
 })
-export class HeaderComponent {
+export class HeaderComponent implements OnDestroy {
   /** Small uppercase label under "FordaGO", e.g. "QR SCANNER", "SCHEDULE". */
   @Input() subtitle = '';
 
@@ -58,28 +61,64 @@ export class HeaderComponent {
   @Input() initials = 'U';
 
   imageFailed = false;
+  isMenuOpen = false;
 
-  constructor() {
+  private routerSub?: Subscription;
+
+  constructor(private router: Router) {
     addIcons({
       menuOutline,
       barbellOutline,
       personCircleOutline,
       notificationsOutline,
       chevronForwardOutline,
+      closeOutline,
     });
+
+    // Automatically close the quick menu on any route navigation so nothing stays lingering
+    this.routerSub = this.router.events.subscribe((event) => {
+      if (event instanceof NavigationStart) {
+        this.isMenuOpen = false;
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.isMenuOpen = false;
+    this.routerSub?.unsubscribe();
   }
 
   onImgError(): void {
     this.imageFailed = true;
   }
 
-  onEquipmentClick(popover?: any): void {
-    popover?.dismiss();
+  toggleMenu(event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.isMenuOpen = !this.isMenuOpen;
+  }
+
+  closeMenu(event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.isMenuOpen = false;
+  }
+
+  onEquipmentClick(event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.isMenuOpen = false;
     this.equipmentClick.emit();
   }
 
-  onCoachingClick(popover?: any): void {
-    popover?.dismiss();
+  onCoachingClick(event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.isMenuOpen = false;
     this.coachingClick.emit();
   }
 

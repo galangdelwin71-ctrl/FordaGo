@@ -35,26 +35,31 @@
         <img *ngIf="profileImage && !imageFailed" [src]="profileImage" alt="" (error)="onImgError()" class="avatar avatar-img" />
       </button>
 
-      <!-- 3. THREE-LINE MENU ICON -->
-      <button
-        type="button"
-        id="tour-menu-header-btn"
-        class="menu-header-btn"
-        [class.has-unread]="coachUnreadCount > 0"
-        aria-label="Open quick menu">
-        <ion-icon name="menu-outline" aria-hidden="true"></ion-icon>
-        <span class="notif-bell-badge" *ngIf="coachUnreadCount > 0">{{ coachUnreadCount > 99 ? '99+' : coachUnreadCount }}</span>
-      </button>
+      <!-- 3. THREE-LINE MENU ICON (TOGGLE) -->
+      <div class="menu-container">
+        <button
+          type="button"
+          id="tour-menu-header-btn"
+          class="menu-header-btn"
+          [class.is-active]="isMenuOpen"
+          [class.has-unread]="coachUnreadCount > 0"
+          (click)="toggleMenu($event)"
+          [attr.aria-expanded]="isMenuOpen"
+          aria-label="Open quick menu">
+          <ion-icon [name]="isMenuOpen ? 'close-outline' : 'menu-outline'" aria-hidden="true"></ion-icon>
+          <span class="notif-bell-badge" *ngIf="coachUnreadCount > 0 && !isMenuOpen">{{ coachUnreadCount > 99 ? '99+' : coachUnreadCount }}</span>
+        </button>
 
-      <!-- Popover Menu with Equipment & Coaching -->
-      <ion-popover
-        #headerMenuPopover
-        trigger="tour-menu-header-btn"
-        [dismissOnSelect]="true"
-        side="bottom"
-        alignment="end"
-        class="header-menu-popover">
-        <ng-template>
+        <!-- Full-screen transparent backdrop to catch outside taps without freezing -->
+        <div
+          *ngIf="isMenuOpen"
+          class="header-menu-backdrop"
+          (click)="closeMenu($event)"
+          (touchstart)="closeMenu($event)">
+        </div>
+
+        <!-- Dropdown Menu with Equipment & Coaching -->
+        <div *ngIf="isMenuOpen" class="header-menu-dropdown-wrap" (click)="$event.stopPropagation()">
           <div class="header-menu-card">
             <div class="header-menu-label">QUICK ACCESS</div>
 
@@ -63,7 +68,7 @@
               type="button"
               id="tour-equip-header-btn"
               class="header-menu-row"
-              (click)="onEquipmentClick(headerMenuPopover)"
+              (click)="onEquipmentClick($event)"
               aria-label="Open equipment">
               <div class="menu-row-icon-box equip-icon-box">
                 <ion-icon name="barbell-outline" aria-hidden="true"></ion-icon>
@@ -81,7 +86,7 @@
               id="tour-coach-header-btn"
               class="header-menu-row"
               [class.has-unread]="coachUnreadCount > 0"
-              (click)="onCoachingClick(headerMenuPopover)"
+              (click)="onCoachingClick($event)"
               aria-label="Open coaching">
               <div class="menu-row-icon-box coach-icon-box" [class.has-unread]="coachUnreadCount > 0">
                 <ion-icon name="person-circle-outline" aria-hidden="true"></ion-icon>
@@ -94,8 +99,8 @@
               <ion-icon *ngIf="coachUnreadCount === 0" name="chevron-forward-outline" class="menu-row-arrow" aria-hidden="true"></ion-icon>
             </button>
           </div>
-        </ng-template>
-      </ion-popover>
+        </div>
+      </div>
     </div>
   </ion-toolbar>
 </ion-header>
