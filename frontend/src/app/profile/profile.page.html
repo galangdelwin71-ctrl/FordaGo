@@ -651,105 +651,83 @@
     <ion-content class="ion-padding modal-content security-modal-body">
       <div class="modal-handle"></div>
       <div class="modal-header-row">
-        <div class="modal-title flex-title">
-          <ion-icon name="shield-checkmark-outline" class="title-glow-icon"></ion-icon>
-          <span>Security Center</span>
-        </div>
+        <div class="modal-title">Security Center</div>
         <button type="button" class="modal-close-icon-btn" (click)="closeSecurityCenter()">✕</button>
       </div>
 
-      <p class="security-intro-text">
+      <p class="modal-subtitle">
         Manage login security, device passkeys, two-factor authentication, and account passwords.
       </p>
 
-      <!-- Security Status Badge Banner -->
-      <div class="sec-status-banner" [class.is-secure]="twoFactorEnabled || biometricEnabled">
-        <div class="sec-shield-avatar">
-          <ion-icon [name]="twoFactorEnabled || biometricEnabled ? 'shield-checkmark' : 'shield-outline'"></ion-icon>
-        </div>
-        <div class="sec-shield-meta">
-          <div class="sec-shield-title">
+      <!-- Security Status Card (Clean & white/silver like other cards) -->
+      <div class="sec-status-card">
+        <span class="sec-status-icon">
+          <ion-icon [name]="(twoFactorEnabled || biometricEnabled) ? 'shield-checkmark-outline' : 'shield-outline'"></ion-icon>
+        </span>
+        <div class="sec-status-content">
+          <div class="sec-status-title">
             {{ (twoFactorEnabled && biometricEnabled) ? 'Maximum Security Active' : (twoFactorEnabled || biometricEnabled ? 'Account Protected' : 'Standard Protection') }}
           </div>
-          <div class="sec-shield-desc">
+          <div class="sec-status-sub">
             {{ (twoFactorEnabled && biometricEnabled) ? 'Biometric Passkey and 2FA OTP are safeguarding your account.' : (twoFactorEnabled ? 'Two-Factor Authentication is active on every login.' : (biometricEnabled ? 'Biometric Passkey is active on this device.' : 'Enable 2FA and Biometrics to protect against unauthorized logins.')) }}
           </div>
         </div>
       </div>
 
-      <!-- Item 1: Biometric Passkey (Fingerprint / Face ID - GCash Style) -->
-      <div class="sec-feature-card">
-        <div class="sec-feature-main">
-          <div class="sec-feature-icon bio-icon-bg">
-            <ion-icon name="fingerprint-outline"></ion-icon>
+      <!-- Item 1: Biometric Passkey (Fingerprint / Face ID) -->
+      <div class="menu-item">
+        <span class="menu-icon"><ion-icon name="fingerprint-outline"></ion-icon></span>
+        <div class="menu-content">
+          <div class="menu-label">Biometric Passkey</div>
+          <div class="menu-sub">
+            {{ biometricEnabled ? 'Active on this device (1-tap login)' : 'Log in in 1-tap using fingerprint or face unlock' }}
           </div>
-          <div class="sec-feature-copy">
-            <div class="sec-feature-title">Biometric Passkey</div>
-            <div class="sec-feature-sub">
-              {{ biometricEnabled ? 'Active on ' + (biometricDeviceName || 'this phone') : 'Log in in 1-tap using your phone\'s fingerprint or face unlock' }}
-            </div>
-          </div>
-          <ion-toggle
-            [checked]="biometricEnabled"
-            [disabled]="biometricLoading"
-            (ionChange)="onBiometricToggle($event)"
-            class="theme-toggle">
-          </ion-toggle>
         </div>
-        <div class="sec-feature-chips">
-          <span class="sec-chip"><ion-icon name="phone-portrait-outline"></ion-icon> {{ biometricStatus?.typeName || 'Fingerprint / Face ID' }}</span>
-          <span *ngIf="biometricEnabled" class="sec-chip chip-active"><ion-icon name="checkmark-circle"></ion-icon> 1-Tap Login Active</span>
-        </div>
+        <ion-toggle
+          [checked]="biometricEnabled"
+          [disabled]="biometricLoading"
+          (ionChange)="onBiometricToggle($event)"
+          class="theme-toggle">
+        </ion-toggle>
       </div>
 
       <!-- Item 2: Two-Factor Authentication (2FA / MFA) -->
-      <div class="sec-feature-card">
-        <div class="sec-feature-main">
-          <div class="sec-feature-icon mfa-icon-bg">
-            <ion-icon name="shield-checkmark-outline"></ion-icon>
+      <div class="menu-item">
+        <span class="menu-icon"><ion-icon name="shield-checkmark-outline"></ion-icon></span>
+        <div class="menu-content">
+          <div class="menu-label">Two-Factor Authentication (2FA)</div>
+          <div class="menu-sub">
+            {{ twoFactorEnabled ? 'Requires 6-digit OTP code sent via ' + (twoFactorChannel === 'sms' ? 'SMS' : 'Email') : 'Require a 6-digit OTP verification code on sign in' }}
           </div>
-          <div class="sec-feature-copy">
-            <div class="sec-feature-title">Two-Factor Authentication (2FA)</div>
-            <div class="sec-feature-sub">
-              {{ twoFactorEnabled ? 'Requires 6-digit OTP code sent via ' + (twoFactorChannel === 'sms' ? 'SMS' : 'Email') : 'Require a 6-digit OTP code verification every time you sign in' }}
-            </div>
-          </div>
-          <ion-toggle
-            [checked]="twoFactorEnabled"
-            (ionChange)="onTwoFactorToggle($event)"
-            class="theme-toggle">
-          </ion-toggle>
         </div>
-        <div class="sec-feature-chips" *ngIf="twoFactorEnabled">
-          <span class="sec-chip chip-active">
-            <ion-icon [name]="twoFactorChannel === 'sms' ? 'call-outline' : 'mail-outline'"></ion-icon>
-            {{ twoFactorChannel === 'sms' ? 'SMS Phone OTP' : 'Email OTP' }}
-          </span>
-        </div>
+        <ion-toggle
+          [checked]="twoFactorEnabled"
+          (ionChange)="onTwoFactorToggle($event)"
+          class="theme-toggle">
+        </ion-toggle>
       </div>
 
-      <!-- Item 3: Password Management -->
-      <div class="sec-feature-card">
-        <div class="sec-feature-main">
-          <div class="sec-feature-icon pwd-icon-bg">
-            <ion-icon name="lock-closed-outline"></ion-icon>
-          </div>
-          <div class="sec-feature-copy">
-            <div class="sec-feature-title">Account Password</div>
-            <div class="sec-feature-sub">Change your password or reset via 6-digit OTP</div>
-          </div>
+      <!-- Item 3: Change Password -->
+      <div class="menu-item" (click)="openChangePassword()">
+        <span class="menu-icon"><ion-icon name="lock-closed-outline"></ion-icon></span>
+        <div class="menu-content">
+          <div class="menu-label">Change Password</div>
+          <div class="menu-sub">Update your account login password</div>
         </div>
-        <div class="sec-btn-row">
-          <button type="button" class="sec-card-btn gold-btn" (click)="openChangePassword()">
-            <ion-icon name="key-outline"></ion-icon> Change Password
-          </button>
-          <button type="button" class="sec-card-btn dark-btn" (click)="openForgotPasswordRecovery()">
-            <ion-icon name="refresh-outline"></ion-icon> Reset via OTP
-          </button>
-        </div>
+        <span class="menu-arrow">›</span>
       </div>
 
-      <div style="height: 30px;"></div>
+      <!-- Item 4: Reset Password via OTP -->
+      <div class="menu-item" (click)="openForgotPasswordRecovery()">
+        <span class="menu-icon"><ion-icon name="key-outline"></ion-icon></span>
+        <div class="menu-content">
+          <div class="menu-label">Reset Password via OTP</div>
+          <div class="menu-sub">Direct password recovery with 6-digit OTP</div>
+        </div>
+        <span class="menu-arrow">›</span>
+      </div>
+
+      <div style="height: 24px;"></div>
     </ion-content>
   </ng-template>
 </ion-modal>
@@ -836,10 +814,7 @@
     <ion-content class="ion-padding modal-content">
       <div class="modal-handle"></div>
       <div class="modal-header-row">
-        <div class="modal-title flex-title">
-          <ion-icon name="shield-checkmark-outline" class="title-glow-icon"></ion-icon>
-          <span>Enable 2-Factor Authentication</span>
-        </div>
+        <div class="modal-title">Enable 2-Factor Authentication</div>
         <button type="button" class="modal-close-icon-btn" (click)="closeTwoFactorActivation()">✕</button>
       </div>
 
