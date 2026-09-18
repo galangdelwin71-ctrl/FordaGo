@@ -287,25 +287,12 @@ class MailService
         }
 
         try {
-            $resolve = self::getCurlResolve('api.brevo.com', 443);
-            $curlOptions = [
-                CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
-            ];
-            if (!empty($resolve)) {
-                $curlOptions[CURLOPT_RESOLVE] = $resolve;
-            }
-
             $client = Http::withHeaders([
                 'api-key'      => $apiKey,
                 'Content-Type' => 'application/json',
                 'Accept'       => 'application/json',
             ])
-            ->withOptions([
-                'force_ip_resolve' => 'v4',
-                'connect_timeout'  => 8,
-                'curl'             => $curlOptions,
-            ])
-            ->timeout(15);
+            ->timeout(8);
             if (PHP_OS_FAMILY === 'Windows' || config('app.env') === 'local') {
                 $client = $client->withoutVerifying();
             }
