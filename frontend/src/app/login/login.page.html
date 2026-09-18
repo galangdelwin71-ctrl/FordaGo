@@ -65,7 +65,7 @@
               <ion-icon name="fingerprint-outline" aria-hidden="true"></ion-icon>
             </div>
             <div class="bio-quick-info">
-              <span class="bio-quick-badge">Biometric Passkey</span>
+              <span class="bio-quick-badge">Biometric &amp; Face Unlock</span>
               <strong class="bio-quick-name">{{ savedBiometricUser.name }}</strong>
               <small class="bio-quick-sub">{{ savedBiometricUser.identifier }}</small>
             </div>
@@ -79,7 +79,7 @@
           >
             <ion-spinner *ngIf="biometricLoading" name="crescent"></ion-spinner>
             <ion-icon *ngIf="!biometricLoading" name="fingerprint-outline" aria-hidden="true"></ion-icon>
-            <span>{{ biometricLoading ? 'Authenticating...' : 'Sign In with Biometrics' }}</span>
+            <span>{{ biometricLoading ? 'Authenticating...' : 'Sign In with Fingerprint / Face Unlock' }}</span>
           </button>
 
           <div class="bio-quick-footer">
