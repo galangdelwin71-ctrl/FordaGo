@@ -40,6 +40,7 @@ use Laravel\Sanctum\HasApiTokens;
     'biometric_credential_id',
     'biometric_token_hash',
     'biometric_device_name',
+    'has_seen_guide',
 ])]
 #[Hidden(['password', 'two_factor_code', 'biometric_token_hash'])]
 class User extends Authenticatable
@@ -70,6 +71,7 @@ class User extends Authenticatable
             'bmi'      => 'float',
             'two_factor_enabled' => 'boolean',
             'biometric_enabled'  => 'boolean',
+            'has_seen_guide'     => 'boolean',
             'two_factor_expires_at' => 'datetime',
         ];
     }

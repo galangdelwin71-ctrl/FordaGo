@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { API_BASE_URL } from '../config/api.config';
 
 export interface TourStep {
   targetId: string;
@@ -73,7 +74,13 @@ export class OnboardingService {
    */
   hasUserSeenTour(tourId: string, userId?: string | number): boolean {
     try {
-      const uId = userId || this.currentTourUserId || this.getCurrentUserId();
+      // If user account is marked as has_seen_guide in DB/session, NEVER show any tour
+      const user = this.getCurrentUser();
+      if (user && (user.has_seen_guide === true || user.has_seen_guide === 1 || user.has_seen_guide === '1')) {
+        return true;
+      }
+
+      const uId = userId || this.currentTourUserId || user?.id || user?.email || this.getCurrentUserId();
       if (!uId) {
         // If no user context exists, do not block the tour
         return false;
@@ -102,6 +109,10 @@ export class OnboardingService {
         const key = `${this.tourKeyPrefix}${tourId}_${uId}`;
         localStorage.setItem(key, 'true');
       }
+      // If dashboard_main tour was completed, also persist to server so they never see it again
+      if (tourId === 'dashboard_main') {
+        this.persistGuideCompletionToServer(userId);
+      }
     } catch {
       // Ignore storage write errors
     }
@@ -111,19 +122,50 @@ export class OnboardingService {
    * Skips and cancels all guides across all panels permanently for the current user.
    */
   skipAllTours(userId?: string | number): void {
+    this.persistGuideCompletionToServer(userId);
+    this.finishTour();
+  }
+
+  /**
+   * Permanently persists guide completion to the server database and local session
+   * so that even if the app is uninstalled and reinstalled, the guide will NEVER show again.
+   */
+  persistGuideCompletionToServer(userId?: string | number): void {
     try {
-      const uId = userId || this.currentTourUserId || this.getCurrentUserId();
+      // 1. Update user in localStorage
+      const user = this.getCurrentUser();
+      if (user) {
+        user.has_seen_guide = true;
+        localStorage.setItem('user', JSON.stringify(user));
+      }
+
+      // 2. Mark local tour keys
+      const uId = userId || this.currentTourUserId || user?.id || user?.email || this.getCurrentUserId();
       if (uId) {
         localStorage.setItem(`${this.tourKeyPrefix}global_all_${uId}`, 'true');
-
         this.allKnownTours.forEach((tid) => {
           localStorage.setItem(`${this.tourKeyPrefix}${tid}_${uId}`, 'true');
         });
       }
-    } catch {
-      // Ignore storage write errors
+
+      // 3. Post to backend API
+      const token = localStorage.getItem('token');
+      if (token) {
+        fetch(`${API_BASE_URL}/api/users/complete-guide`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({})
+        }).catch((err) => {
+          console.warn('Failed to sync complete-guide to backend:', err);
+        });
+      }
+    } catch (err) {
+      console.warn('Error persisting guide completion:', err);
     }
-    this.finishTour();
   }
 
   /**
@@ -245,16 +287,24 @@ export class OnboardingService {
     this.currentTourUserId = null;
   }
 
-  private getCurrentUserId(): string | number | null {
+  private getCurrentUser(): any | null {
     try {
       const userRaw = localStorage.getItem('user');
       if (userRaw) {
-        const user = JSON.parse(userRaw);
-        return user?.id || user?.email || null;
+        return JSON.parse(userRaw);
       }
     } catch {
       return null;
     }
     return null;
+  }
+
+  private getCurrentUserId(): string | number | null {
+    try {
+      const user = this.getCurrentUser();
+      return user?.id || user?.email || null;
+    } catch {
+      return null;
+    }
   }
 }

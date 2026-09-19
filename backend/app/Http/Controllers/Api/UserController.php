@@ -68,7 +68,7 @@ class UserController extends Controller
             'phone', 'gender', 'date_of_birth', 'profile_image', 'membership_type',
             'membership_status', 'payment_method', 'membership_expiry',
             'height', 'weight', 'bmi', 'fitness_goal', 'preferred_workout_time',
-            'two_factor_enabled', 'two_factor_channel', 'biometric_enabled', 'biometric_device_name',
+            'two_factor_enabled', 'two_factor_channel', 'biometric_enabled', 'biometric_device_name', 'has_seen_guide',
         ])->find($request->user()->id);
 
         if (! $user) {
@@ -84,13 +84,29 @@ class UserController extends Controller
             'phone', 'gender', 'date_of_birth', 'profile_image', 'membership_type',
             'membership_status', 'payment_method', 'membership_expiry',
             'height', 'weight', 'bmi', 'fitness_goal', 'preferred_workout_time',
-            'two_factor_enabled', 'two_factor_channel', 'biometric_enabled', 'biometric_device_name',
+            'two_factor_enabled', 'two_factor_channel', 'biometric_enabled', 'biometric_device_name', 'has_seen_guide',
         ])->find($request->user()->id);
 
         $payload = $user->toArray();
         $payload['has_coach_profile'] = $user->isCoach();
 
         return response()->json($payload);
+    }
+
+    /**
+     * POST /api/users/complete-guide
+     * Mark onboarding guide / app tour as completed for this user permanently.
+     */
+    public function completeGuide(Request $request)
+    {
+        $user = $request->user();
+        if ($user) {
+            $user->update(['has_seen_guide' => true]);
+        }
+        return response()->json([
+            'success'        => true,
+            'has_seen_guide' => true,
+        ]);
     }
 
     /**

@@ -1160,6 +1160,7 @@ class AuthController extends Controller
             'two_factor_channel'    => $user->two_factor_channel ?? 'email',
             'biometric_enabled'     => (bool) $user->biometric_enabled,
             'biometric_device_name' => $user->biometric_device_name,
+            'has_seen_guide'        => (bool) ($user->has_seen_guide ?? false),
         ];
     }
 }

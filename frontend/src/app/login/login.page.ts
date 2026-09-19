@@ -1079,10 +1079,10 @@ export class LoginPage implements OnDestroy {
       return;
     }
 
-    // If device has biometric sensor and user has not enabled biometrics yet on this device, prompt for consent!
+    // If device has biometric sensor and user has not linked biometrics yet on this device, prompt for consent!
     if (this.hasBiometricHardware) {
       this.biometricService.isAccountBiometricEnabled(user.email).then((alreadyEnabled) => {
-        if (!alreadyEnabled && !user.biometric_enabled) {
+        if (!alreadyEnabled) {
           this.pendingPostLoginUser = user;
           this.showPostLoginBioPromptModal = true;
         } else {

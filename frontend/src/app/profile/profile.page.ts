@@ -1245,10 +1245,8 @@ export class ProfilePage implements OnInit {
 
     try {
       this.biometricStatus = await this.biometricService.checkBiometrics();
-      const localActive = await this.biometricService.isBiometricActiveOnDevice();
-      if (localActive) {
-        this.biometricEnabled = true;
-      }
+      const localActive = await this.biometricService.isAccountBiometricEnabled(user?.email);
+      this.biometricEnabled = localActive;
     } catch {}
   }
 

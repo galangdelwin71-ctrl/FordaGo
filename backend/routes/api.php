@@ -72,6 +72,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/',                [UserController::class, 'index'])->middleware('role:admin,super_admin,employee');
         Route::get('/count',           [UserController::class, 'count'])->middleware('role:admin,super_admin,employee');
         Route::get('/me',              [UserController::class, 'me']);
+        Route::post('/complete-guide', [UserController::class, 'completeGuide']);
         Route::post('/membership/renew', [UserController::class, 'renewOrUpgradeMembership']);
         Route::post('/create',         [UserController::class, 'store'])->middleware('role:admin,super_admin,employee');
         Route::put('/fcm-token',       [UserController::class, 'updateFcmToken']); // FCM push registration
