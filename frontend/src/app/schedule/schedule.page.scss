@@ -797,6 +797,15 @@ ion-content {
 // ── Add Workout Modal ─────────────────────────────────────
 .modal-content {
   --background: #0B0E1A;
+  --overflow: auto !important;
+
+  &::part(scroll) {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    overscroll-behavior-y: contain;
+  }
 }
 
 .field-icon ion-icon,
@@ -806,7 +815,9 @@ ion-content {
 }
 
 .modal-sheet {
-  padding: 0 16px calc(96px + env(safe-area-inset-bottom));
+  padding: 16px 16px calc(96px + env(safe-area-inset-bottom));
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
 
   .modal-handle {
     width: 36px; height: 3px;

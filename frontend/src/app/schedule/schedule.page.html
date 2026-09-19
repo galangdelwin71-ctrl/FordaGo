@@ -348,12 +348,12 @@
 <ion-modal
   [isOpen]="addModalOpen"
   (didDismiss)="closeAddModal()"
-  [breakpoints]="[0, 0.92, 1]"
-  [initialBreakpoint]="0.92">
+  [breakpoints]="[0, 1]"
+  [initialBreakpoint]="1"
+  [handle]="true">
   <ng-template>
     <ion-content class="modal-content">
       <div class="modal-sheet">
-        <div class="modal-handle"></div>
         <div class="modal-title">Add Workout</div>
 
         <div class="wplan-rest-row" style="margin-bottom: 16px;">
@@ -506,11 +506,10 @@
 </app-notification-panel>
 
 <!-- Home Workout Guide Modal -->
-<ion-modal [isOpen]="homeWorkoutModalOpen" (didDismiss)="closeHomeWorkoutModal()" [breakpoints]="[0,0.65,0.95]" [initialBreakpoint]="0.65">
+<ion-modal [isOpen]="homeWorkoutModalOpen" (didDismiss)="closeHomeWorkoutModal()" [breakpoints]="[0, 1]" [initialBreakpoint]="1" [handle]="true">
   <ng-template>
     <ion-content class="modal-content">
       <div class="modal-sheet">
-        <div class="modal-handle"></div>
         <div class="modal-title">Home Workout Guide</div>
         <div class="modal-sub" *ngIf="homeWorkout.sessionTitle">For missed {{ homeWorkout.sessionTitle }} session</div>
         <div class="home-guide-list">
@@ -534,11 +533,10 @@
 </ion-modal>
 
 <!-- Workout History Modal -->
-<ion-modal [isOpen]="historyModalOpen" (didDismiss)="closeHistoryModal()" [breakpoints]="[0,0.75,1]" [initialBreakpoint]="0.75">
+<ion-modal [isOpen]="historyModalOpen" (didDismiss)="closeHistoryModal()" [breakpoints]="[0, 1]" [initialBreakpoint]="1" [handle]="true">
   <ng-template>
     <ion-content class="modal-content">
       <div class="modal-sheet">
-        <div class="modal-handle"></div>
         <div class="modal-title">Workout History</div>
         <div class="history-empty" *ngIf="historyItems.length === 0">
           <ion-icon name="barbell-outline" class="empty-icon"></ion-icon>
@@ -578,11 +576,10 @@
 </ion-modal>
 
 <!-- Week Plan Modal -->
-<ion-modal [isOpen]="weekPlanModalOpen" (didDismiss)="closeWeekPlanModal()" [breakpoints]="[0,0.92,1]" [initialBreakpoint]="0.92">
+<ion-modal [isOpen]="weekPlanModalOpen" (didDismiss)="closeWeekPlanModal()" [breakpoints]="[0, 1]" [initialBreakpoint]="1" [handle]="true">
   <ng-template>
     <ion-content class="modal-content">
       <div class="modal-sheet">
-        <div class="modal-handle"></div>
         <div class="modal-title">My Week Plan</div>
         <div class="modal-sub">Set your workout for each day. This will auto-fill your schedule every week.</div>
 
