@@ -7,6 +7,17 @@ const PREF_BIOMETRIC_TOKEN = 'fordago_bio_token';
 const PREF_BIOMETRIC_USER = 'fordago_bio_user';
 const PREF_BIOMETRIC_DEVICE = 'fordago_bio_device';
 const PREF_BIOMETRIC_ENABLED = 'fordago_bio_enabled';
+const PREF_BIOMETRIC_ACCOUNTS = 'fordago_bio_accounts';
+
+export interface BiometricAccount {
+  identifier: string;
+  name: string;
+  role?: string;
+  avatar?: string;
+  token: string;
+  deviceName?: string;
+  registeredAt?: string;
+}
 
 export interface BiometricStatus {
   isAvailable: boolean;
@@ -17,7 +28,9 @@ export interface BiometricStatus {
     identifier: string;
     name: string;
     avatar?: string;
+    role?: string;
   } | null;
+  savedAccounts: BiometricAccount[];
 }
 
 @Injectable({
@@ -69,8 +82,9 @@ export class BiometricService {
       }
     }
 
-    const savedUser = await this.getSavedBiometricUser();
-    const isConfigured = !!(savedUser && (await this.getSavedBiometricToken()));
+    const savedAccounts = await this.getSavedBiometricAccounts();
+    const savedUser = savedAccounts.length > 0 ? savedAccounts[0] : await this.getSavedBiometricUser();
+    const isConfigured = savedAccounts.length > 0 || !!(savedUser && (await this.getSavedBiometricToken()));
 
     return {
       isAvailable,
@@ -78,6 +92,7 @@ export class BiometricService {
       typeName,
       isConfigured,
       savedUser,
+      savedAccounts,
     };
   }
 
@@ -156,17 +171,108 @@ export class BiometricService {
   }
 
   /**
-   * Store biometric credentials securely in device storage.
+   * Retrieve all saved biometric accounts on this device.
+   */
+  async getSavedBiometricAccounts(): Promise<BiometricAccount[]> {
+    try {
+      const { value } = await Preferences.get({ key: PREF_BIOMETRIC_ACCOUNTS });
+      if (value) {
+        const parsed = JSON.parse(value);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch {}
+
+    // Migration fallback for legacy single-account data
+    const oldUser = await this.getSavedBiometricUser();
+    const oldToken = await this.getSavedBiometricToken();
+    if (oldUser && oldToken) {
+      const migrated: BiometricAccount = {
+        identifier: oldUser.identifier,
+        name: oldUser.name,
+        role: (oldUser as any).role || 'member',
+        avatar: oldUser.avatar,
+        token: oldToken,
+        deviceName: (await Preferences.get({ key: PREF_BIOMETRIC_DEVICE })).value || this.getDeviceModelName(),
+        registeredAt: new Date().toISOString(),
+      };
+      try {
+        await Preferences.set({ key: PREF_BIOMETRIC_ACCOUNTS, value: JSON.stringify([migrated]) });
+      } catch {}
+      return [migrated];
+    }
+
+    return [];
+  }
+
+  /**
+   * Save or update an account in the multi-account biometric registry.
+   */
+  async saveBiometricAccount(account: BiometricAccount): Promise<void> {
+    const accounts = await this.getSavedBiometricAccounts();
+    const idx = accounts.findIndex(a => a.identifier.toLowerCase() === account.identifier.toLowerCase());
+    if (idx >= 0) {
+      accounts[idx] = { ...accounts[idx], ...account };
+    } else {
+      accounts.push(account);
+    }
+    await Preferences.set({ key: PREF_BIOMETRIC_ACCOUNTS, value: JSON.stringify(accounts) });
+
+    // Also persist as latest active for fallback
+    await Preferences.set({ key: PREF_BIOMETRIC_TOKEN, value: account.token });
+    await Preferences.set({ key: PREF_BIOMETRIC_USER, value: JSON.stringify(account) });
+    if (account.deviceName) {
+      await Preferences.set({ key: PREF_BIOMETRIC_DEVICE, value: account.deviceName });
+    }
+    await Preferences.set({ key: PREF_BIOMETRIC_ENABLED, value: 'true' });
+  }
+
+  /**
+   * Remove a single account from the biometric registry.
+   */
+  async removeBiometricAccount(identifier: string): Promise<void> {
+    if (!identifier) return;
+    let accounts = await this.getSavedBiometricAccounts();
+    accounts = accounts.filter(a => a.identifier.toLowerCase() !== identifier.toLowerCase());
+    await Preferences.set({ key: PREF_BIOMETRIC_ACCOUNTS, value: JSON.stringify(accounts) });
+
+    if (accounts.length === 0) {
+      await this.clearBiometricCredential();
+    } else {
+      // Set the first remaining account as primary fallback
+      await Preferences.set({ key: PREF_BIOMETRIC_TOKEN, value: accounts[0].token });
+      await Preferences.set({ key: PREF_BIOMETRIC_USER, value: JSON.stringify(accounts[0]) });
+    }
+  }
+
+  /**
+   * Check if a specific account identifier has biometrics registered on this device.
+   */
+  async isAccountBiometricEnabled(identifier: string): Promise<boolean> {
+    if (!identifier) return false;
+    const accounts = await this.getSavedBiometricAccounts();
+    return accounts.some(a => a.identifier.toLowerCase() === identifier.toLowerCase());
+  }
+
+  /**
+   * Legacy wrapper: Store biometric credentials securely in device storage.
    */
   async saveBiometricCredential(
     token: string,
-    user: { identifier: string; name: string; avatar?: string },
+    user: { identifier: string; name: string; avatar?: string; role?: string },
     deviceName: string
   ): Promise<void> {
-    await Preferences.set({ key: PREF_BIOMETRIC_TOKEN, value: token });
-    await Preferences.set({ key: PREF_BIOMETRIC_USER, value: JSON.stringify(user) });
-    await Preferences.set({ key: PREF_BIOMETRIC_DEVICE, value: deviceName });
-    await Preferences.set({ key: PREF_BIOMETRIC_ENABLED, value: 'true' });
+    const account: BiometricAccount = {
+      identifier: user.identifier,
+      name: user.name,
+      role: user.role || 'member',
+      avatar: user.avatar,
+      token,
+      deviceName,
+      registeredAt: new Date().toISOString(),
+    };
+    await this.saveBiometricAccount(account);
   }
 
   async getSavedBiometricToken(): Promise<string | null> {
@@ -174,7 +280,7 @@ export class BiometricService {
     return value || null;
   }
 
-  async getSavedBiometricUser(): Promise<{ identifier: string; name: string; avatar?: string } | null> {
+  async getSavedBiometricUser(): Promise<{ identifier: string; name: string; avatar?: string; role?: string } | null> {
     const { value } = await Preferences.get({ key: PREF_BIOMETRIC_USER });
     if (!value) return null;
     try {
@@ -185,19 +291,19 @@ export class BiometricService {
   }
 
   async isBiometricActiveOnDevice(): Promise<boolean> {
-    const { value } = await Preferences.get({ key: PREF_BIOMETRIC_ENABLED });
-    const token = await this.getSavedBiometricToken();
-    return value === 'true' && !!token;
+    const accounts = await this.getSavedBiometricAccounts();
+    return accounts.length > 0;
   }
 
   /**
-   * Clear saved biometric credentials when user toggles off or switches account.
+   * Clear all saved biometric credentials when user explicitly resets all accounts.
    */
   async clearBiometricCredential(): Promise<void> {
     await Preferences.remove({ key: PREF_BIOMETRIC_TOKEN });
     await Preferences.remove({ key: PREF_BIOMETRIC_USER });
     await Preferences.remove({ key: PREF_BIOMETRIC_DEVICE });
     await Preferences.remove({ key: PREF_BIOMETRIC_ENABLED });
+    await Preferences.remove({ key: PREF_BIOMETRIC_ACCOUNTS });
   }
 
   /**

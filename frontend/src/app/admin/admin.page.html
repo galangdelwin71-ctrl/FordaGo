@@ -229,6 +229,213 @@
   </div>
 </div>
 
+<!-- ── Admin Security & Access Protection Modal ──────── -->
+<div class="confirm-overlay" *ngIf="adminSecurityModalOpen" (click)="closeAdminSecurityModal()">
+  <div class="admin-security-modal-card" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="security-modal-header">
+      <div class="security-modal-badge">
+        <ion-icon name="shield-checkmark"></ion-icon>
+        <span>Access &amp; Privilege Protection</span>
+      </div>
+      <button class="security-modal-close" (click)="closeAdminSecurityModal()" aria-label="Close">✕</button>
+    </div>
+
+    <div class="security-modal-title">Admin Account Security</div>
+    <p class="security-modal-sub">
+      Safeguard administrative controls, member records, and financial data with high-grade security.
+    </p>
+
+    <!-- Biometric Passkey Card -->
+    <div class="security-feature-card">
+      <div class="feature-card-icon-wrap">
+        <ion-icon name="finger-print-outline"></ion-icon>
+      </div>
+      <div class="feature-card-body">
+        <div class="feature-card-title-row">
+          <span class="feature-title">Biometric Passkey</span>
+          <span class="feature-status-pill" [class.is-on]="adminBiometricActive">
+            {{ adminBiometricActive ? 'Active' : 'Disabled' }}
+          </span>
+        </div>
+        <p class="feature-desc">
+          Sign in instantly with fingerprint or face recognition on this device without typing your password.
+        </p>
+      </div>
+      <div class="feature-toggle-wrap">
+        <button
+          type="button"
+          class="security-action-btn"
+          [class.btn-active]="adminBiometricActive"
+          [disabled]="adminBiometricLoading"
+          (click)="toggleAdminBiometric()"
+        >
+          <ion-spinner *ngIf="adminBiometricLoading" name="crescent"></ion-spinner>
+          <span *ngIf="!adminBiometricLoading">{{ adminBiometricActive ? 'Disable' : 'Enable' }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Two-Factor Authentication Card -->
+    <div class="security-feature-card">
+      <div class="feature-card-icon-wrap">
+        <ion-icon name="key-outline"></ion-icon>
+      </div>
+      <div class="feature-card-body">
+        <div class="feature-card-title-row">
+          <span class="feature-title">Two-Factor Authentication (2FA)</span>
+          <span class="feature-status-pill" [class.is-on]="adminTwoFactorActive">
+            {{ adminTwoFactorActive ? 'Active' : 'Disabled' }}
+          </span>
+        </div>
+        <p class="feature-desc">
+          Require a 6-digit one-time passcode sent to your verified email every time you log in.
+        </p>
+      </div>
+      <div class="feature-toggle-wrap">
+        <button
+          type="button"
+          class="security-action-btn"
+          [class.btn-active]="adminTwoFactorActive"
+          [disabled]="adminTwoFactorLoading"
+          (click)="toggleAdminTwoFactor()"
+        >
+          <ion-spinner *ngIf="adminTwoFactorLoading" name="crescent"></ion-spinner>
+          <span *ngIf="!adminTwoFactorLoading">{{ adminTwoFactorActive ? 'Disable' : 'Enable' }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Active Session Card -->
+    <div class="security-info-box">
+      <div class="info-row">
+        <span class="info-label">Active Role:</span>
+        <span class="info-value-pill">{{ panelLabel }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Admin Account:</span>
+        <span class="info-value">{{ auth.user?.email }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Protection Guard:</span>
+        <span class="info-value green">Encrypted JWT Session Active</span>
+      </div>
+    </div>
+
+    <div class="confirm-actions" style="margin-top: 20px;">
+      <button class="confirm-save-restock" (click)="closeAdminSecurityModal()">Done &amp; Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Admin Two-Factor OTP Activation Modal ─────────── -->
+<div class="confirm-overlay" *ngIf="adminTwoFactorOtpModalOpen" (click)="closeAdminTwoFactorOtpModal()">
+  <div class="admin-security-modal-card otp-modal-card" (click)="$event.stopPropagation()">
+    <div class="security-modal-header">
+      <div class="security-modal-badge">
+        <ion-icon name="key-outline"></ion-icon>
+        <span>Verify 2FA Activation</span>
+      </div>
+      <button class="security-modal-close" (click)="closeAdminTwoFactorOtpModal()" aria-label="Close">✕</button>
+    </div>
+
+    <div class="security-modal-title">Enter Verification Code</div>
+    <p class="security-modal-sub">
+      A 6-digit verification code was sent to <strong style="color: #fff;">{{ adminTwoFactorSentDest || auth.user?.email }}</strong>
+    </p>
+
+    <!-- 6-Box OTP Input Grid -->
+    <div class="otp-boxes-container" style="display:flex; justify-content:center; gap:8px; margin: 18px 0;">
+      <input
+        *ngFor="let digit of adminTwoFactorOtpDigits; let i = index"
+        [id]="'admin-twofa-' + i"
+        class="twofa-otp-box"
+        type="tel"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        maxlength="1"
+        [value]="digit"
+        (focus)="focusAdminTwoFactorInput(i)"
+        (input)="onAdminTwoFactorDigitInput($event, i)"
+        (keydown)="onAdminTwoFactorDigitKeyDown($event, i)"
+      />
+    </div>
+
+    <div class="modal-err-msg" *ngIf="adminTwoFactorError" style="margin-bottom: 12px; color: #ff5c71; text-align: center; font-size: 13px;">
+      {{ adminTwoFactorError }}
+    </div>
+
+    <div style="text-align:center; margin-bottom: 16px;">
+      <button
+        type="button"
+        style="background:transparent; border:0; color:#ffd600; font-size:13px; font-weight:600; cursor:pointer;"
+        [disabled]="adminTwoFactorCountdown > 0 || adminTwoFactorLoading"
+        (click)="requestAdminTwoFactorCode(adminTwoFactorChannel)"
+      >
+        {{ adminTwoFactorCountdown > 0 ? 'Resend code in ' + adminTwoFactorCountdown + 's' : 'Resend Code' }}
+      </button>
+    </div>
+
+    <div class="confirm-actions">
+      <button
+        class="confirm-save-restock"
+        [disabled]="adminTwoFactorCode.length !== 6 || adminTwoFactorLoading"
+        (click)="confirmAdminTwoFactorActivation()"
+      >
+        <ion-spinner *ngIf="adminTwoFactorLoading" name="crescent"></ion-spinner>
+        <span *ngIf="!adminTwoFactorLoading">Verify &amp; Enable 2FA</span>
+      </button>
+      <button class="confirm-cancel" (click)="closeAdminTwoFactorOtpModal()" [disabled]="adminTwoFactorLoading">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Admin 2FA Disable Confirmation Modal ──────────── -->
+<div class="confirm-overlay" *ngIf="adminDisableTwoFactorModalOpen" (click)="closeAdminDisableTwoFactorModal()">
+  <div class="admin-security-modal-card otp-modal-card" (click)="$event.stopPropagation()">
+    <div class="security-modal-header">
+      <div class="security-modal-badge" style="background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.25); color: #dc2626;">
+        <ion-icon name="warning-outline"></ion-icon>
+        <span>Security Verification</span>
+      </div>
+      <button class="security-modal-close" (click)="closeAdminDisableTwoFactorModal()" aria-label="Close">✕</button>
+    </div>
+
+    <div class="security-modal-title">Disable Two-Factor Authentication</div>
+    <p class="security-modal-sub">
+      For security, please enter your admin password to confirm disabling 2FA.
+    </p>
+
+    <div style="margin: 16px 0;">
+      <input
+        type="password"
+        class="admin-pass-input"
+        placeholder="Enter your account password"
+        [(ngModel)]="adminDisableTwoFactorPassword"
+        (keyup.enter)="confirmAdminDisableTwoFactor()"
+        style="width: 100%; height: 44px; border-radius: 10px; border: 1.5px solid #e2e8f0; padding: 0 14px; font-size: 14px; color: #0f172a; box-sizing: border-box;"
+      />
+    </div>
+
+    <div class="modal-err-msg" *ngIf="adminDisableTwoFactorError" style="margin-bottom: 12px; color: #ff5c71; text-align: center; font-size: 13px;">
+      {{ adminDisableTwoFactorError }}
+    </div>
+
+    <div class="confirm-actions">
+      <button
+        class="confirm-save-restock"
+        style="background: #dc2626; color: #ffffff;"
+        [disabled]="!adminDisableTwoFactorPassword || adminDisableTwoFactorLoading"
+        (click)="confirmAdminDisableTwoFactor()"
+      >
+        <ion-spinner *ngIf="adminDisableTwoFactorLoading" name="crescent"></ion-spinner>
+        <span *ngIf="!adminDisableTwoFactorLoading">Confirm &amp; Disable 2FA</span>
+      </button>
+      <button class="confirm-cancel" (click)="closeAdminDisableTwoFactorModal()" [disabled]="adminDisableTwoFactorLoading">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── Admin Dashboard ───────────────────────────────── -->
 <ion-header [translucent]="false" class="ion-no-border">
   <ion-toolbar class="admin-toolbar">
@@ -238,6 +445,10 @@
     </div>
 
     <div class="toolbar-right" slot="end">
+      <button class="header-security-btn" (click)="openAdminSecurityModal()" title="Admin Security &amp; Protection" aria-label="Security">
+        <ion-icon name="shield-checkmark-outline"></ion-icon>
+        <span class="security-dot-indicator" [class.is-active]="adminTwoFactorActive || adminBiometricActive"></span>
+      </button>
       <button class="header-bell-btn" (click)="openNotifsTab()" title="Notifications" aria-label="Notifications">
         <ion-icon name="notifications-outline"></ion-icon>
         <span class="bell-badge-count" *ngIf="unreadAdminNotifsCount > 0">{{ unreadAdminNotifsCount > 99 ? '99+' : unreadAdminNotifsCount }}</span>

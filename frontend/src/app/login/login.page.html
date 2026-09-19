@@ -1401,7 +1401,6 @@
         >
           <ion-spinner *ngIf="twoFactorLoading" name="crescent"></ion-spinner>
           <span>{{ twoFactorLoading ? 'Verifying...' : 'Confirm & Sign In' }}</span>
-          <ion-icon *ngIf="!twoFactorLoading" name="checkmark-outline" aria-hidden="true"></ion-icon>
         </button>
 
         <div class="resend-row">
@@ -1438,4 +1437,53 @@
 
     </section>
   </main>
+
+  <!-- ── Multi-Account Biometric Selector Modal ──────────────────── -->
+  <div class="bio-picker-overlay" *ngIf="showBiometricAccountPickerModal" (click)="closeBiometricAccountPicker()">
+    <div class="bio-picker-card" (click)="$event.stopPropagation()">
+      <div class="bio-picker-header">
+        <div class="bio-picker-icon-badge">
+          <ion-icon name="finger-print-outline"></ion-icon>
+        </div>
+        <div class="bio-picker-title-wrap">
+          <h3 class="bio-picker-title">Biometrics Verified</h3>
+          <p class="bio-picker-subtitle">Select which account to open:</p>
+        </div>
+        <button type="button" class="bio-picker-close-btn" (click)="closeBiometricAccountPicker()" aria-label="Close">✕</button>
+      </div>
+
+      <div class="bio-accounts-list">
+        <div
+          *ngFor="let acc of detectedBiometricAccounts"
+          class="bio-account-item"
+          [class.is-logging-in]="biometricLoading && selectedBiometricIdentifier === acc.identifier"
+          (click)="selectAccountAndLogin(acc)"
+        >
+          <div class="bio-account-avatar">
+            <img *ngIf="acc.avatar" [src]="resolveImg(acc.avatar)" [alt]="acc.name" />
+            <span *ngIf="!acc.avatar">{{ (acc.name || acc.identifier).charAt(0).toUpperCase() }}</span>
+          </div>
+          <div class="bio-account-info">
+            <div class="bio-account-name-row">
+              <span class="bio-account-name">{{ acc.name || 'FordaGO User' }}</span>
+              <span class="bio-role-badge" [class.admin-badge]="acc.role === 'admin' || acc.role === 'super_admin'" [class.coach-badge]="acc.role === 'coach' || acc.role === 'employee'">
+                {{ acc.role === 'super_admin' ? 'Super Admin' : (acc.role === 'admin' ? 'Admin' : (acc.role === 'coach' ? 'Coach' : (acc.role === 'employee' ? 'Staff' : 'Member'))) }}
+              </span>
+            </div>
+            <span class="bio-account-email">{{ maskEmail(acc.identifier) }}</span>
+          </div>
+          <div class="bio-account-action">
+            <ion-spinner *ngIf="biometricLoading && selectedBiometricIdentifier === acc.identifier" name="crescent"></ion-spinner>
+            <ion-icon *ngIf="!(biometricLoading && selectedBiometricIdentifier === acc.identifier)" name="chevron-forward-outline"></ion-icon>
+          </div>
+        </div>
+      </div>
+
+      <div class="bio-picker-footer">
+        <button type="button" class="bio-cancel-btn" (click)="closeBiometricAccountPicker()">
+          Use another account with password
+        </button>
+      </div>
+    </div>
+  </div>
 </ion-content>

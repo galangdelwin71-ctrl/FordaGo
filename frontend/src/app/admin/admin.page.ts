@@ -87,6 +87,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { BiometricService } from '../services/biometric.service';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { NoNegativeDirective } from '../directives/no-negative.directive';
@@ -1077,6 +1078,7 @@ export class AdminPage implements OnInit, OnDestroy {
   constructor(
     public auth: AuthService,
     public router: Router,
+    public biometricService: BiometricService,
     private http: HttpClient,
     private coaching: CoachingService,
     private toast: ToastService,
@@ -3276,5 +3278,294 @@ export class AdminPage implements OnInit, OnDestroy {
     // page (in whichever account logs in next) can never resolve back to
     // a stale /login entry.
     this.router.navigate(['/login'], { replaceUrl: true });
+  }
+
+  // ── Admin Security Suite (2FA & Biometric Passkey) ────
+  adminSecurityModalOpen = false;
+  adminBiometricActive = false;
+  adminBiometricLoading = false;
+  adminTwoFactorActive = false;
+  adminTwoFactorLoading = false;
+  adminTwoFactorChannel: 'email' | 'sms' = 'email';
+  adminTwoFactorOtpModalOpen = false;
+  adminTwoFactorOtpDigits: string[] = ['', '', '', '', '', ''];
+  adminTwoFactorCode = '';
+  adminTwoFactorError = '';
+  adminTwoFactorCountdown = 0;
+  adminTwoFactorCountdownInterval: any = null;
+  adminTwoFactorSentDest = '';
+
+  // Admin 2FA Disable Modal State
+  adminDisableTwoFactorModalOpen = false;
+  adminDisableTwoFactorPassword = '';
+  adminDisableTwoFactorError = '';
+  adminDisableTwoFactorLoading = false;
+
+  async openAdminSecurityModal(): Promise<void> {
+    const userEmail = this.auth.user?.email || '';
+    this.adminBiometricActive = await this.biometricService.isAccountBiometricEnabled(userEmail);
+    this.adminTwoFactorActive = !!this.auth.user?.two_factor_enabled;
+    this.adminSecurityModalOpen = true;
+  }
+
+  closeAdminSecurityModal(): void {
+    this.adminSecurityModalOpen = false;
+    this.closeAdminTwoFactorOtpModal();
+    this.closeAdminDisableTwoFactorModal();
+  }
+
+  async toggleAdminBiometric(event?: any): Promise<void> {
+    const user = this.auth.user;
+    if (!user || !user.email) {
+      this.toast.error('No authenticated admin session.');
+      return;
+    }
+
+    if (!this.adminBiometricActive) {
+      // Enable biometric passkey
+      this.adminBiometricLoading = true;
+      try {
+        const verified = await this.biometricService.promptBiometric('Register Admin Biometric Passkey');
+        if (!verified) {
+          this.adminBiometricLoading = false;
+          if (event?.target) event.target.checked = false;
+          this.toast.error(this.biometricService.lastError || 'Biometric authentication was cancelled.');
+          return;
+        }
+
+        const deviceName = this.biometricService.getDeviceModelName();
+        this.auth.biometricRegister(deviceName).subscribe({
+          next: async (res: any) => {
+            this.adminBiometricLoading = false;
+            this.adminBiometricActive = true;
+            await this.biometricService.saveBiometricAccount({
+              identifier: user.email,
+              name: (user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : user.name) || user.email,
+              role: user.role || 'Admin',
+              avatar: user.avatar_url || user.avatar || '',
+              token: res?.biometric_token,
+              deviceName: deviceName
+            });
+            this.toast.success('Admin Biometric Passkey registered on this device!');
+          },
+          error: (err: any) => {
+            this.adminBiometricLoading = false;
+            if (event?.target) event.target.checked = false;
+            this.toast.error(err?.error?.message || 'Failed to register biometric passkey.');
+          }
+        });
+      } catch (err: any) {
+        this.adminBiometricLoading = false;
+        this.toast.error(err?.message || 'Biometric registration failed.');
+      }
+    } else {
+      // Disable biometric passkey
+      this.adminBiometricLoading = true;
+      this.auth.biometricToggle(false).subscribe({
+        next: async () => {
+          this.adminBiometricLoading = false;
+          this.adminBiometricActive = false;
+          await this.biometricService.removeBiometricAccount(user.email);
+          this.toast.success('Admin Biometric Passkey removed from this device.');
+        },
+        error: (err: any) => {
+          this.adminBiometricLoading = false;
+          if (event?.target) event.target.checked = true;
+          this.toast.error(err?.error?.message || 'Failed to disable biometric passkey.');
+        }
+      });
+    }
+  }
+
+  toggleAdminTwoFactor(event?: any): void {
+    if (!this.adminTwoFactorActive) {
+      if (event?.target) event.target.checked = false;
+      this.openAdminTwoFactorOtpModal();
+    } else {
+      // Open password confirmation to disable
+      this.openAdminDisableTwoFactorModal();
+    }
+  }
+
+  openAdminDisableTwoFactorModal(): void {
+    this.adminDisableTwoFactorModalOpen = true;
+    this.adminDisableTwoFactorPassword = '';
+    this.adminDisableTwoFactorError = '';
+    this.adminDisableTwoFactorLoading = false;
+  }
+
+  closeAdminDisableTwoFactorModal(): void {
+    this.adminDisableTwoFactorModalOpen = false;
+    this.adminDisableTwoFactorPassword = '';
+    this.adminDisableTwoFactorError = '';
+    this.adminDisableTwoFactorLoading = false;
+  }
+
+  confirmAdminDisableTwoFactor(): void {
+    if (!this.adminDisableTwoFactorPassword) {
+      this.adminDisableTwoFactorError = 'Please enter your password to confirm.';
+      return;
+    }
+    this.adminDisableTwoFactorLoading = true;
+    this.adminDisableTwoFactorError = '';
+
+    this.auth.disableTwoFactor(this.adminDisableTwoFactorPassword).subscribe({
+      next: () => {
+        this.adminDisableTwoFactorLoading = false;
+        this.adminTwoFactorActive = false;
+        if (this.auth.user) this.auth.user.two_factor_enabled = false;
+        this.closeAdminDisableTwoFactorModal();
+        this.toast.success('Admin Two-Factor Authentication disabled.');
+      },
+      error: (err: any) => {
+        this.adminDisableTwoFactorLoading = false;
+        this.adminDisableTwoFactorError = err?.error?.message || 'Incorrect password. Verification failed.';
+      }
+    });
+  }
+
+  openAdminTwoFactorOtpModal(): void {
+    this.adminTwoFactorOtpModalOpen = true;
+    this.adminTwoFactorOtpDigits = ['', '', '', '', '', ''];
+    this.adminTwoFactorCode = '';
+    this.adminTwoFactorError = '';
+    this.adminTwoFactorSentDest = '';
+    this.requestAdminTwoFactorCode(this.adminTwoFactorChannel);
+  }
+
+  closeAdminTwoFactorOtpModal(): void {
+    this.adminTwoFactorOtpModalOpen = false;
+    if (this.adminTwoFactorCountdownInterval) {
+      clearInterval(this.adminTwoFactorCountdownInterval);
+      this.adminTwoFactorCountdownInterval = null;
+    }
+  }
+
+  requestAdminTwoFactorCode(channel: 'email' | 'sms'): void {
+    this.adminTwoFactorChannel = channel;
+    this.adminTwoFactorLoading = true;
+    this.adminTwoFactorError = '';
+
+    this.auth.requestTwoFactorActivation(channel).subscribe({
+      next: (res: any) => {
+        this.adminTwoFactorLoading = false;
+        this.adminTwoFactorSentDest = res?.destination_masked || '';
+        this.startAdminTwoFactorCountdown(60);
+      },
+      error: (err: any) => {
+        this.adminTwoFactorLoading = false;
+        this.adminTwoFactorError = err?.error?.message || 'Failed to send verification code.';
+      }
+    });
+  }
+
+  private startAdminTwoFactorCountdown(seconds = 60): void {
+    if (this.adminTwoFactorCountdownInterval) clearInterval(this.adminTwoFactorCountdownInterval);
+    this.adminTwoFactorCountdown = seconds;
+    this.adminTwoFactorCountdownInterval = setInterval(() => {
+      if (this.adminTwoFactorCountdown > 1) {
+        this.adminTwoFactorCountdown--;
+      } else {
+        this.adminTwoFactorCountdown = 0;
+        clearInterval(this.adminTwoFactorCountdownInterval);
+        this.adminTwoFactorCountdownInterval = null;
+      }
+    }, 1000);
+  }
+
+  onAdminTwoFactorDigitInput(event: any, index: number): void {
+    const input = event.target as HTMLInputElement;
+    const rawVal = input?.value || '';
+    const val = rawVal.replace(/\D/g, '');
+
+    if (val.length > 1) {
+      // Paste/autofill
+      const digits = val.slice(0, 6).split('');
+      for (let i = 0; i < 6; i++) {
+        this.adminTwoFactorOtpDigits[i] = digits[i] || '';
+        const el = document.getElementById(`admin-twofa-${i}`) as HTMLInputElement | null;
+        if (el) el.value = this.adminTwoFactorOtpDigits[i];
+      }
+      this.adminTwoFactorCode = this.adminTwoFactorOtpDigits.join('');
+      const focusIndex = Math.min(digits.length, 5);
+      this.focusAdminTwoFactorInput(focusIndex);
+      return;
+    }
+
+    this.adminTwoFactorOtpDigits[index] = val ? val.slice(-1) : '';
+    if (input) input.value = this.adminTwoFactorOtpDigits[index];
+
+    this.syncAdminTwoFactorOtpCode();
+
+    if (val && index < 5) {
+      this.focusAdminTwoFactorInput(index + 1);
+    }
+  }
+
+  onAdminTwoFactorDigitKeyDown(event: KeyboardEvent, index: number): void {
+    if (event.key === 'Backspace') {
+      const current = this.adminTwoFactorOtpDigits[index];
+      if (!current && index > 0) {
+        this.adminTwoFactorOtpDigits[index - 1] = '';
+        const prev = document.getElementById(`admin-twofa-${index - 1}`) as HTMLInputElement | null;
+        if (prev) prev.value = '';
+        this.focusAdminTwoFactorInput(index - 1);
+        this.syncAdminTwoFactorOtpCode();
+      } else {
+        this.adminTwoFactorOtpDigits[index] = '';
+        const el = document.getElementById(`admin-twofa-${index}`) as HTMLInputElement | null;
+        if (el) el.value = '';
+        this.syncAdminTwoFactorOtpCode();
+      }
+    } else if (event.key === 'ArrowLeft' && index > 0) {
+      this.focusAdminTwoFactorInput(index - 1);
+    } else if (event.key === 'ArrowRight' && index < 5) {
+      this.focusAdminTwoFactorInput(index + 1);
+    }
+  }
+
+  syncAdminTwoFactorOtpCode(): void {
+    let full = '';
+    for (let i = 0; i < 6; i++) {
+      const el = document.getElementById(`admin-twofa-${i}`) as HTMLInputElement | null;
+      const v = el ? el.value.replace(/\D/g, '') : (this.adminTwoFactorOtpDigits[i] || '');
+      this.adminTwoFactorOtpDigits[i] = v ? v.slice(-1) : '';
+      if (el) el.value = this.adminTwoFactorOtpDigits[i];
+      full += this.adminTwoFactorOtpDigits[i];
+    }
+    this.adminTwoFactorCode = full;
+  }
+
+  focusAdminTwoFactorInput(index: number): void {
+    setTimeout(() => {
+      const el = document.getElementById(`admin-twofa-${index}`) as HTMLInputElement | null;
+      if (el) {
+        el.focus();
+        el.select();
+      }
+    }, 30);
+  }
+
+  confirmAdminTwoFactorActivation(): void {
+    if (this.adminTwoFactorCode.length !== 6) {
+      this.adminTwoFactorError = 'Please enter all 6 digits of the code.';
+      return;
+    }
+    this.adminTwoFactorLoading = true;
+    this.adminTwoFactorError = '';
+
+    this.auth.confirmTwoFactorActivation(this.adminTwoFactorCode).subscribe({
+      next: () => {
+        this.adminTwoFactorLoading = false;
+        this.adminTwoFactorActive = true;
+        if (this.auth.user) this.auth.user.two_factor_enabled = true;
+        this.closeAdminTwoFactorOtpModal();
+        this.toast.success('Admin Two-Factor Authentication successfully enabled!');
+      },
+      error: (err: any) => {
+        this.adminTwoFactorLoading = false;
+        this.adminTwoFactorError = err?.error?.message || 'Invalid or expired code. Please try again.';
+      }
+    });
   }
 }

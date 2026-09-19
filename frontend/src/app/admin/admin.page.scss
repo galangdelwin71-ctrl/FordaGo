@@ -8414,3 +8414,311 @@ input[type="time"],
     transform: translate(-50%, -50%) scale(1);
   }
 }
+
+/* ── Admin Security & Access Protection Suite ───────── */
+.header-security-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: #f8fafc;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  ion-icon {
+    font-size: 19px;
+    color: #0f172a;
+  }
+
+  &:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  .security-dot-indicator {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #94a3b8;
+    border: 1.5px solid #ffffff;
+    transition: all 0.2s ease;
+
+    &.is-active {
+      background: #10b981;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.7);
+    }
+  }
+}
+
+.admin-security-modal-card {
+  width: 100%;
+  max-width: 480px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 25px 60px rgba(15, 23, 42, 0.2);
+  animation: adminScaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+  max-height: 90vh;
+  overflow-y: auto;
+
+  &.otp-modal-card {
+    max-width: 420px;
+  }
+
+  .security-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+
+    .security-modal-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(234, 179, 8, 0.12);
+      border: 1px solid rgba(234, 179, 8, 0.25);
+      border-radius: 999px;
+      color: #b45309;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+
+      ion-icon {
+        font-size: 14px;
+      }
+    }
+
+    .security-modal-close {
+      width: 30px;
+      height: 30px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 50%;
+      color: #64748b;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+
+      &:hover {
+        background: #e2e8f0;
+        color: #0f172a;
+      }
+    }
+  }
+
+  .security-modal-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.3px;
+    margin-bottom: 6px;
+  }
+
+  .security-modal-sub {
+    font-size: 13px;
+    color: #64748b;
+    line-height: 1.45;
+    margin: 0 0 20px;
+  }
+
+  .security-feature-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: #cbd5e1;
+      background: #ffffff;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+    }
+
+    .feature-card-icon-wrap {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #0f172a;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .feature-card-body {
+      flex: 1;
+
+      .feature-card-title-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+
+        .feature-title {
+          font-size: 14px;
+          font-weight: 700;
+          color: #0f172a;
+        }
+
+        .feature-status-pill {
+          font-size: 10px;
+          font-weight: 700;
+          padding: 2px 7px;
+          border-radius: 999px;
+          background: #f1f5f9;
+          color: #64748b;
+          border: 1px solid #e2e8f0;
+
+          &.is-on {
+            background: rgba(16, 185, 129, 0.12);
+            color: #059669;
+            border-color: rgba(16, 185, 129, 0.25);
+          }
+        }
+      }
+
+      .feature-desc {
+        font-size: 12px;
+        color: #64748b;
+        margin: 4px 0 0;
+        line-height: 1.4;
+      }
+    }
+
+    .feature-toggle-wrap {
+      flex-shrink: 0;
+
+      .security-action-btn {
+        min-width: 76px;
+        height: 32px;
+        padding: 0 12px;
+        background: #0f172a;
+        color: #ffffff;
+        border: none;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        &:hover {
+          background: #1e293b;
+          transform: translateY(-1px);
+        }
+
+        &:active {
+          transform: scale(0.96);
+        }
+
+        &.btn-active {
+          background: #fee2e2;
+          color: #dc2626;
+          border: 1px solid rgba(220, 38, 38, 0.2);
+
+          &:hover {
+            background: #fecaca;
+          }
+        }
+
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        ion-spinner {
+          width: 16px;
+          height: 16px;
+        }
+      }
+    }
+  }
+
+  .security-info-box {
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin: 14px 0 0;
+
+    .info-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 0;
+      font-size: 12px;
+
+      .info-label {
+        color: #64748b;
+        font-weight: 500;
+      }
+
+      .info-value {
+        color: #0f172a;
+        font-weight: 600;
+
+        &.green {
+          color: #059669;
+          font-weight: 700;
+        }
+      }
+
+      .info-value-pill {
+        background: rgba(234, 179, 8, 0.15);
+        color: #b45309;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 11px;
+      }
+    }
+  }
+
+  .twofa-otp-box {
+    width: 44px;
+    height: 50px;
+    border-radius: 12px;
+    border: 1.5px solid #e2e8f0;
+    background: #ffffff;
+    color: #0f172a;
+    font-size: 22px;
+    font-weight: 800;
+    text-align: center;
+    transition: all 0.2s ease;
+
+    &:focus {
+      border-color: #0f172a;
+      box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+      outline: none;
+    }
+  }
+}

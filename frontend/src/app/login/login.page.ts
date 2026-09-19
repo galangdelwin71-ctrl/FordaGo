@@ -1,7 +1,7 @@
 import { Component, HostListener, OnDestroy } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { BiometricService } from '../services/biometric.service';
+import { BiometricService, BiometricAccount } from '../services/biometric.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonContent, IonIcon, IonSpinner } from '@ionic/angular/standalone';
@@ -76,9 +76,17 @@ export class LoginPage implements OnDestroy {
 
   // Biometric Quick Login (GCash style auto-prompt & sleek view)
   savedBiometricUser: { identifier: string; name: string; avatar?: string } | null = null;
+  savedBiometricAccounts: BiometricAccount[] = [];
+  detectedBiometricAccounts: BiometricAccount[] = [];
+  showBiometricAccountPickerModal = false;
+  selectedBiometricIdentifier = '';
   biometricLoading = false;
   showPasswordFallback = false;
   autoBiometricTriggered = false;
+
+  resolveImg(path: string | null | undefined): string {
+    return resolveImageUrl(path);
+  }
 
   // 2FA Verification fields
   twoFactorTempToken = '';
@@ -370,14 +378,17 @@ export class LoginPage implements OnDestroy {
     try {
       const active = await this.biometricService.isBiometricActiveOnDevice();
       if (active) {
-        this.savedBiometricUser = await this.biometricService.getSavedBiometricUser();
+        this.savedBiometricAccounts = await this.biometricService.getSavedBiometricAccounts();
+        this.savedBiometricUser = this.savedBiometricAccounts.length > 0 ? this.savedBiometricAccounts[0] : null;
         if (this.savedBiometricUser?.identifier && !this.email) {
           this.email = this.savedBiometricUser.identifier;
         }
       } else {
+        this.savedBiometricAccounts = [];
         this.savedBiometricUser = null;
       }
     } catch {
+      this.savedBiometricAccounts = [];
       this.savedBiometricUser = null;
     }
   }
@@ -970,56 +981,92 @@ export class LoginPage implements OnDestroy {
   // ── Biometric / Passkey Login (GCash style) ─────────────
 
   async loginWithBiometric(isAuto = false): Promise<void> {
-    if (!this.savedBiometricUser) return;
+    const accounts = await this.biometricService.getSavedBiometricAccounts();
+    if (!accounts || accounts.length === 0) {
+      if (!isAuto) {
+        this.error = 'No biometric passkey registered on this device. Please sign in with password.';
+      }
+      return;
+    }
+
     this.error = '';
     this.biometricLoading = true;
 
     try {
+      // 1. Scan fingerprint hardware first
       const verified = await this.biometricService.promptBiometric('Verify FordaGO Passkey');
       if (!verified) {
         this.biometricLoading = false;
-        // On auto-prompt, if user cancelled or dismissed the bottom sheet, leave screen clean without error banner
         if (!isAuto) {
           this.error = this.biometricService.lastError || 'Biometric authentication was cancelled.';
         }
         return;
       }
 
-      const token = await this.biometricService.getSavedBiometricToken();
-      if (!token) {
+      // 2. Hardware scan succeeded! Check how many accounts exist
+      if (accounts.length === 1) {
+        // Exactly one account -> Sign in immediately
+        this.executeBiometricLogin(accounts[0]);
+      } else {
+        // Multiple accounts detected -> Open sleek account selector modal
         this.biometricLoading = false;
-        this.error = 'No biometric passkey found on this device. Please sign in with password.';
-        return;
+        this.detectedBiometricAccounts = accounts;
+        this.showBiometricAccountPickerModal = true;
       }
-
-      this.auth.biometricLogin(this.savedBiometricUser.identifier, token).subscribe({
-        next: () => {
-          this.biometricLoading = false;
-          const user = this.auth.user;
-          if (!user) {
-            this.error = 'Login succeeded but user profile was not loaded.';
-            return;
-          }
-          if (['admin', 'super_admin', 'employee'].includes(user.role)) {
-            this.router.navigate(['/admin'], { replaceUrl: true });
-          } else {
-            this.router.navigate(['/dashboard'], { replaceUrl: true });
-          }
-        },
-        error: (err: any) => {
-          this.biometricLoading = false;
-          this.error = err?.error?.message || 'Biometric passkey expired or revoked. Please log in with password.';
-        }
-      });
     } catch {
       this.biometricLoading = false;
       this.error = 'Biometric sensor error. Please sign in with password.';
     }
   }
 
+  selectAccountAndLogin(account: BiometricAccount): void {
+    if (this.biometricLoading) return;
+    this.selectedBiometricIdentifier = account.identifier;
+    this.biometricLoading = true;
+    this.executeBiometricLogin(account);
+  }
+
+  private executeBiometricLogin(account: BiometricAccount): void {
+    this.auth.biometricLogin(account.identifier, account.token).subscribe({
+      next: () => {
+        this.biometricLoading = false;
+        this.showBiometricAccountPickerModal = false;
+        this.selectedBiometricIdentifier = '';
+        const user = this.auth.user;
+        if (!user) {
+          this.error = 'Login succeeded but user profile was not loaded.';
+          return;
+        }
+        if (['admin', 'super_admin', 'employee'].includes(user.role)) {
+          this.router.navigate(['/admin'], { replaceUrl: true });
+        } else {
+          this.router.navigate(['/dashboard'], { replaceUrl: true });
+        }
+      },
+      error: (err: any) => {
+        this.biometricLoading = false;
+        this.selectedBiometricIdentifier = '';
+        this.error = err?.error?.message || 'Biometric passkey expired or revoked. Please log in with password.';
+      }
+    });
+  }
+
+  closeBiometricAccountPicker(): void {
+    this.showBiometricAccountPickerModal = false;
+    this.selectedBiometricIdentifier = '';
+  }
+
+  maskEmail(val: string): string {
+    if (!val || !val.includes('@')) return val || '';
+    const [u, domain] = val.split('@');
+    if (u.length <= 2) return `${u}***@${domain}`;
+    return `${u.slice(0, 2)}****${u.slice(-1)}@${domain}`;
+  }
+
   async clearBiometricForAnotherUser(): Promise<void> {
     await this.biometricService.clearBiometricCredential();
     this.savedBiometricUser = null;
+    this.savedBiometricAccounts = [];
     this.showPasswordFallback = false;
     this.autoBiometricTriggered = false;
   }

@@ -1099,7 +1099,6 @@
           <ion-icon *ngIf="!(twoFactorSending && twoFactorChannel === 'email')" name="mail-outline"></ion-icon>
           <ion-spinner *ngIf="twoFactorSending && twoFactorChannel === 'email'" name="crescent" style="width:20px;height:20px;"></ion-spinner>
           <div class="twofa-card-title">Email OTP</div>
-          <div class="twofa-card-sub">{{ profile.email }}</div>
         </div>
 
         <div
@@ -1110,7 +1109,6 @@
           <ion-icon *ngIf="!(twoFactorSending && twoFactorChannel === 'sms')" name="call-outline"></ion-icon>
           <ion-spinner *ngIf="twoFactorSending && twoFactorChannel === 'sms'" name="crescent" style="width:20px;height:20px;"></ion-spinner>
           <div class="twofa-card-title">SMS OTP</div>
-          <div class="twofa-card-sub">{{ profile.phone || 'Phone number' }}</div>
         </div>
       </div>
 
@@ -1126,12 +1124,13 @@
           <input
             *ngFor="let digit of twoFactorOtpDigits; let i = index"
             [id]="'twofa-otp-' + i"
-            type="text"
+            type="tel"
             inputmode="numeric"
             pattern="[0-9]*"
             maxlength="1"
             class="twofa-otp-box"
             [value]="digit"
+            (focus)="onTwoFactorOtpFocus($event)"
             (input)="onTwoFactorDigitInput($event, i)"
             (keydown)="onTwoFactorDigitKeyDown($event, i)"
           />

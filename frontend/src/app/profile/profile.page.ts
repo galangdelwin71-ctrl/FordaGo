@@ -1316,7 +1316,7 @@ export class ProfilePage implements OnInit {
           this.biometricLoading = false;
           this.biometricEnabled = false;
           this.biometricDeviceName = '';
-          await this.biometricService.clearBiometricCredential();
+          await this.biometricService.removeBiometricAccount(this.profile.email);
           void this.showMobileToast('Biometric Passkey disabled.');
         },
         error: (err: any) => {
@@ -1397,16 +1397,36 @@ export class ProfilePage implements OnInit {
     }
   }
 
+  onTwoFactorOtpFocus(event: FocusEvent): void {
+    const input = event.target as HTMLInputElement;
+    if (input) input.select();
+  }
+
+  private syncTwoFactorOtpFromDom(): void {
+    let full = '';
+    for (let i = 0; i < 6; i++) {
+      const el = document.getElementById(`twofa-otp-${i}`) as HTMLInputElement | null;
+      const v = el ? el.value.replace(/\D/g, '') : (this.twoFactorOtpDigits[i] || '');
+      this.twoFactorOtpDigits[i] = v ? v.slice(-1) : '';
+      if (el) el.value = this.twoFactorOtpDigits[i];
+      full += this.twoFactorOtpDigits[i];
+    }
+    this.twoFactorCode = full;
+  }
+
   onTwoFactorDigitInput(event: any, index: number): void {
     const input = event.target as HTMLInputElement;
-    const val = input.value.replace(/\D/g, '');
+    const rawVal = input?.value || '';
+    const val = rawVal.replace(/\D/g, '');
 
     if (val.length > 1) {
       const chars = val.slice(0, 6).split('');
       for (let i = 0; i < 6; i++) {
         this.twoFactorOtpDigits[i] = chars[i] || '';
+        const el = document.getElementById(`twofa-otp-${i}`) as HTMLInputElement | null;
+        if (el) el.value = this.twoFactorOtpDigits[i];
       }
-      this.twoFactorCode = this.twoFactorOtpDigits.join('');
+      this.syncTwoFactorOtpFromDom();
       const lastIndex = Math.min(chars.length - 1, 5);
       this.focusTwoFactorInput(lastIndex);
       if (this.twoFactorCode.length === 6) {
@@ -1416,7 +1436,8 @@ export class ProfilePage implements OnInit {
     }
 
     this.twoFactorOtpDigits[index] = val ? val.slice(-1) : '';
-    this.twoFactorCode = this.twoFactorOtpDigits.join('');
+    if (input) input.value = this.twoFactorOtpDigits[index];
+    this.syncTwoFactorOtpFromDom();
 
     if (val && index < 5) {
       this.focusTwoFactorInput(index + 1);
@@ -1427,10 +1448,19 @@ export class ProfilePage implements OnInit {
   }
 
   onTwoFactorDigitKeyDown(event: KeyboardEvent, index: number): void {
-    if (event.key === 'Backspace' && !this.twoFactorOtpDigits[index] && index > 0) {
-      this.twoFactorOtpDigits[index - 1] = '';
-      this.twoFactorCode = this.twoFactorOtpDigits.join('');
-      this.focusTwoFactorInput(index - 1);
+    const input = event.target as HTMLInputElement;
+    if (event.key === 'Backspace' || event.key === 'Delete' || (event as any).keyCode === 8) {
+      if (!this.twoFactorOtpDigits[index] && index > 0) {
+        this.twoFactorOtpDigits[index - 1] = '';
+        const prevInput = document.getElementById(`twofa-otp-${index - 1}`) as HTMLInputElement | null;
+        if (prevInput) prevInput.value = '';
+        this.syncTwoFactorOtpFromDom();
+        this.focusTwoFactorInput(index - 1);
+      } else {
+        this.twoFactorOtpDigits[index] = '';
+        if (input) input.value = '';
+        this.syncTwoFactorOtpFromDom();
+      }
     }
   }
 
@@ -1441,7 +1471,7 @@ export class ProfilePage implements OnInit {
         el.focus();
         el.select();
       }
-    }, 50);
+    }, 30);
   }
 
   verifyTwoFactorActivation(): void {
