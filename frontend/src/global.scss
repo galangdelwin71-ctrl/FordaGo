@@ -917,16 +917,19 @@ body.light-theme {
     }
 
     /* Propose Workout Plan modal */
-    &.proposal-modal .modal-wrapper {
+    &.proposal-modal .modal-content,
+    &.proposal-modal .modal-sheet {
       background: #ffffff !important;
-      border-color: rgba(15,23,42,0.12) !important;
+      --background: #ffffff !important;
     }
-    &.proposal-modal .modal-header .modal-title-group {
+    &.proposal-modal .modal-header-row .modal-title-group {
       .modal-badge { color: #0f172a !important; }
-      h3 { color: #0f172a !important; }
+      .modal-title { color: #0f172a !important; }
+      .modal-sub { color: #64748b !important; }
     }
-    &.proposal-modal .modal-header .modal-close-btn {
+    &.proposal-modal .modal-close-icon-btn {
       background: rgba(15,23,42,0.06) !important;
+      border-color: rgba(15,23,42,0.1) !important;
       color: #0f172a !important;
     }
     &.proposal-modal .form-alert {
@@ -934,58 +937,68 @@ body.light-theme {
       border-color: rgba(220,38,38,0.25) !important;
       color: #dc2626 !important;
     }
-    &.proposal-modal .form-group label,
-    &.proposal-modal .quick-ex-section label,
-    &.proposal-modal .exercises-header label {
-      color: rgba(15,23,42,0.55) !important;
+    &.proposal-modal .field-label {
+      color: rgba(15,23,42,0.6) !important;
     }
     &.proposal-modal .field-wrap .field-icon { color: #64748b !important; }
-    &.proposal-modal .form-input {
+    &.proposal-modal .field-wrap input,
+    &.proposal-modal .field-wrap select {
       background: #f8fafc !important;
       border-color: rgba(15,23,42,0.12) !important;
       color: #0f172a !important;
       option { background: #ffffff !important; color: #0f172a !important; }
     }
-    &.proposal-modal .quick-chip-btn {
+    &.proposal-modal .target-chip {
       background: #f1f5f9 !important;
       border-color: rgba(15,23,42,0.1) !important;
       color: #475569 !important;
       &:hover { background: #e2e8f0 !important; color: #0f172a !important; }
+      &.program-chip {
+        background: rgba(234,179,8,0.1) !important;
+        border-color: rgba(234,179,8,0.3) !important;
+        color: #0f172a !important;
+        ion-icon { color: #0f172a !important; }
+      }
     }
-    &.proposal-modal .program-chip-btn {
-      color: #0f172a !important;
-      ion-icon { color: #0f172a !important; }
-      &:hover { background: rgba(15,23,42,0.06) !important; border-color: rgba(15,23,42,0.22) !important; }
+    &.proposal-modal .routine-section-header {
+      .routine-title { color: #0f172a !important; }
+      .routine-sub { color: #64748b !important; }
     }
-    &.proposal-modal .btn-add-item {
-      background: #f1f5f9 !important;
-      border-color: #cbd5e1 !important;
-      color: #0f172a !important;
+    &.proposal-modal .btn-add-exercise {
+      background: #ffd600 !important;
+      color: #000000 !important;
     }
-    &.proposal-modal .ex-form-card {
+    &.proposal-modal .routine-card {
       background: #f8fafc !important;
       border-color: rgba(15,23,42,0.08) !important;
     }
-    &.proposal-modal .ex-index { background: #f1f5f9 !important; color: #0f172a !important; }
-    &.proposal-modal .ex-icon { color: rgba(15,23,42,0.35) !important; }
-    &.proposal-modal .btn-remove-ex {
+    &.proposal-modal .routine-num {
+      background: #f1f5f9 !important;
+      border-color: rgba(15,23,42,0.12) !important;
+      color: #0f172a !important;
+    }
+    &.proposal-modal .btn-del-exercise {
       background: rgba(220,38,38,0.08) !important;
       border-color: rgba(220,38,38,0.25) !important;
       color: #dc2626 !important;
     }
-    &.proposal-modal .mini-field {
+    &.proposal-modal .routine-param-box {
       background: #ffffff !important;
       border-color: rgba(15,23,42,0.09) !important;
-      .mini-label { color: rgba(15,23,42,0.45) !important; }
-      .mini-input { color: #0f172a !important; }
+      .param-lbl { color: rgba(15,23,42,0.45) !important; }
+      .param-val { color: #0f172a !important; }
     }
-    &.proposal-modal .sets-divider { color: rgba(15,23,42,0.35) !important; }
-    &.proposal-modal .btn-cancel {
+    &.proposal-modal .param-times { color: rgba(15,23,42,0.35) !important; }
+    &.proposal-modal .modal-actions {
+      background: #ffffff !important;
+      border-top: 1px solid rgba(15,23,42,0.08) !important;
+    }
+    &.proposal-modal .btn-secondary {
       background: #f1f5f9 !important;
       border-color: rgba(15,23,42,0.1) !important;
       color: #0f172a !important;
     }
-    &.proposal-modal .btn-submit-proposal {
+    &.proposal-modal .btn-primary.btn-yellow {
       background: linear-gradient(135deg, #ffd600 0%, #eab308 100%) !important;
       color: #000000 !important;
       border: none !important;
