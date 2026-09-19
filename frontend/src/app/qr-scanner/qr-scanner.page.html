@@ -47,7 +47,7 @@
         <div [id]="'fordago-qr-reader'" class="camera-reader" [class.live]="isScanning"></div>
       </div>
       <div class="scan-label">{{ isScanning ? 'Scanning in Progress…' : 'Point Camera at QR Code' }}</div>
-      <div class="scan-sub">{{ scanStatusMessage }}</div>
+      <div class="scan-sub">{{ isScanning ? 'Hold steady to detect the code' : (scanStatusMessage || 'Point your camera at a gym QR code to scan') }}</div>
     </div>
 
     <!-- Camera permission notice -->
@@ -472,7 +472,7 @@
       <div class="tut-modal-top">
         <div class="tut-brand-badge">
           <ion-icon name="barbell-outline"></ion-icon>
-          <span>AFFORDA GYM GUIDE</span>
+          <span>Afforda Gym Guide</span>
         </div>
         <button type="button" class="tut-close-icon-btn" (click)="closeTutorialModal()" aria-label="Close guide">
           <ion-icon name="close-outline"></ion-icon>
@@ -568,7 +568,7 @@
                   <path fill="#FFFFFF" d="M9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                 </svg>
                 <div class="yt-text-wrap">
-                  <span class="yt-badge">YOUTUBE VIDEO TUTORIAL</span>
+                  <span class="yt-badge">YouTube Video Tutorial</span>
                   <span class="yt-main-text">Watch How to Use Properly</span>
                   <span class="yt-sub-text">Direct in-app video demonstration</span>
                 </div>

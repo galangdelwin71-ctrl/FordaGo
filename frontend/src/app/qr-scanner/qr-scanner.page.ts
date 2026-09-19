@@ -167,7 +167,7 @@ export class QrScannerPage implements OnInit, OnDestroy {
   currentFilter: ScanFilter = 'all';
   isScanning                = false;
   isProcessingScan          = false;
-  scanStatusMessage         = 'Use your camera to scan official gym attendance or equipment QR codes.';
+  scanStatusMessage         = 'Point your camera at a gym QR code to scan';
   cameraPermissionState: CameraPermissionState = 'unknown';
 
   myLogs: ScanLogEntry[] = [];
@@ -674,7 +674,7 @@ export class QrScannerPage implements OnInit, OnDestroy {
         this.tutorialModalOpen = true;
         this.isScanning = false;
         this.isProcessingScan = false;
-        this.scanStatusMessage = `Equipment guide opened for ${guide.name}.`;
+        this.scanStatusMessage = 'Point your camera at a gym QR code to scan';
         return;
       }
     }
@@ -721,7 +721,7 @@ export class QrScannerPage implements OnInit, OnDestroy {
     this.tutorialModalOpen = true;
     this.isScanning = false;
     this.isProcessingScan = false;
-    this.scanStatusMessage = `Equipment guide opened for ${equipment.name}.`;
+    this.scanStatusMessage = 'Point your camera at a gym QR code to scan';
   }
 
   private saveEquipmentScanLog(equipment: { id: string; name: string }, rawQr: string): void {
@@ -913,6 +913,7 @@ export class QrScannerPage implements OnInit, OnDestroy {
     this.isVideoPlaying    = false;
     this.currentEmbedUrl   = null;
     this.currentVideoUrl   = '';
+    this.scanStatusMessage = 'Point your camera at a gym QR code to scan';
   }
 
   // ── Coaching screen ────────────────────────────────────────

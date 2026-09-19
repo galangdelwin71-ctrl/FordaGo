@@ -411,7 +411,7 @@ export function buildGoalWeekPlan(
               { name: 'Dip / Leg Raise Station (Knee Tucks)', sets: 3, reps: '12-15' },
             ]
           : [
-              { name: 'FUNCTIONAL TRAINER CABLE CROSSOVER MACHINE', sets: 3, reps: '15' },
+              { name: 'Functional Trainer Cable Crossover Machine', sets: 3, reps: '15' },
               { name: 'Kettlebells (Kettlebell Swings)', sets: 3, reps: '20' },
               { name: 'Selectorized Chest Press Machine', sets: 3, reps: '12-15' },
               { name: 'Lat Pulldown Machine', sets: 3, reps: '12-15' },
@@ -460,7 +460,7 @@ export function buildGoalWeekPlan(
         time: normTime,
         isRest: false,
         exercises: [
-          { name: 'PLATE LOADED 45 DEGREE LEG PRESS MACHINE', sets: 3, reps: '15' },
+          { name: 'Plate-Loaded 45-Degree Leg Press Machine', sets: 3, reps: '15' },
           { name: 'Hip Thrust Machine', sets: 3, reps: '12-15' },
           { name: 'Hip Abductor / Adductor Machine', sets: 3, reps: '15-20' },
           { name: 'Leg Extension / Leg Curl Machine', sets: 3, reps: '15' },
@@ -479,7 +479,7 @@ export function buildGoalWeekPlan(
         exercises: [
           { name: 'Plate-Loaded Incline Chest Press Machine', sets: 3, reps: '12-15' },
           { name: 'Seated Row Machine / Low Row Machine', sets: 3, reps: '12-15' },
-          { name: 'PIN-SELECTED STANDING LATERAL RAISE MACHINE', sets: 3, reps: '15' },
+          { name: 'Pin-Selected Standing Lateral Raise Machine', sets: 3, reps: '15' },
           { name: 'Assisted Pull-Up / Dip Machine', sets: 3, reps: '12' },
           { name: 'Dual Adjustable Pulley Machine (Tricep Pushdown)', sets: 3, reps: '15' },
         ],
@@ -496,7 +496,7 @@ export function buildGoalWeekPlan(
         exercises: [
           { name: 'Kettlebells (Goblet Squats & Cleans)', sets: 3, reps: '12-15' },
           { name: '45-Degree Hyperextension / Back Extension Bench', sets: 3, reps: '15' },
-          { name: 'FUNCTIONAL TRAINER CABLE CROSSOVER MACHINE', sets: 3, reps: '15' },
+          { name: 'Functional Trainer Cable Crossover Machine', sets: 3, reps: '15' },
           { name: 'Treadmill (Cooldown Walk)', sets: 1, reps: '15 min' },
         ],
       },
@@ -530,7 +530,7 @@ export function buildGoalWeekPlan(
         isRest: false,
         exercises: [
           { name: 'Olympic Power Rack / Squat Rack with Pull-Up Bar', sets: 5, reps: '5' },
-          { name: 'PLATE LOADED 45 DEGREE LEG PRESS MACHINE', sets: 4, reps: '6-8' },
+          { name: 'Plate-Loaded 45-Degree Leg Press Machine', sets: 4, reps: '6-8' },
           { name: 'Hack Squat Machine', sets: 3, reps: '8' },
           { name: '45-Degree Hyperextension Bench (Weighted)', sets: 3, reps: '10' },
           { name: 'Seated Calf Raise Machine', sets: 3, reps: '12' },
@@ -607,9 +607,9 @@ export function buildGoalWeekPlan(
         time: normTime,
         isRest: false,
         exercises: [
-          { name: 'SMITH MACHINE POWER RACK COMBO (Overhead Press)', sets: 4, reps: '6' },
+          { name: 'Smith Machine Power Rack Combo (Overhead Press)', sets: 4, reps: '6' },
           { name: 'Assisted Pull-Up / Dip Machine', sets: 4, reps: '6-8' },
-          { name: 'PIN-SELECTED STANDING LATERAL RAISE MACHINE', sets: 3, reps: '10' },
+          { name: 'Pin-Selected Standing Lateral Raise Machine', sets: 3, reps: '10' },
           { name: 'Dip / Leg Raise Station (Weighted Leg Raises)', sets: 3, reps: '12' },
         ],
       },
@@ -690,7 +690,7 @@ export function buildGoalWeekPlan(
         exercises: [
           { name: 'Hip Thrust Machine', sets: 3, reps: '15' },
           { name: 'Hip Abductor / Adductor Machine', sets: 3, reps: '15-20' },
-          { name: 'PLATE LOADED 45 DEGREE LEG PRESS MACHINE', sets: 3, reps: '15' },
+          { name: 'Plate-Loaded 45-Degree Leg Press Machine', sets: 3, reps: '15' },
           { name: 'Leg Extension / Leg Curl Machine', sets: 3, reps: '15' },
           { name: 'Seated Calf Raise Machine', sets: 3, reps: '20' },
         ],
@@ -707,7 +707,7 @@ export function buildGoalWeekPlan(
         exercises: [
           { name: 'Plate-Loaded Incline Chest Press Machine', sets: 3, reps: '12-15' },
           { name: 'Seated Row Machine / Low Row Machine', sets: 3, reps: '15' },
-          { name: 'PIN-SELECTED STANDING LATERAL RAISE MACHINE', sets: 3, reps: '15-20' },
+          { name: 'Pin-Selected Standing Lateral Raise Machine', sets: 3, reps: '15-20' },
           { name: 'Dual Adjustable Pulley (Tricep Pushdown & Facepulls)', sets: 3, reps: '15' },
           { name: 'Preacher Curl Bench with Dumbbell', sets: 3, reps: '15' },
         ],
@@ -724,7 +724,7 @@ export function buildGoalWeekPlan(
         exercises: [
           { name: 'Assisted Pull-Up / Dip Machine', sets: 3, reps: '12-15' },
           { name: 'Kettlebells (Lunges & Cleans)', sets: 3, reps: '12 each' },
-          { name: 'FUNCTIONAL TRAINER CABLE CROSSOVER MACHINE', sets: 3, reps: '15' },
+          { name: 'Functional Trainer Cable Crossover Machine', sets: 3, reps: '15' },
           { name: 'Treadmill (Cooldown Walk)', sets: 1, reps: '15 min' },
         ],
       },
@@ -758,8 +758,8 @@ export function buildGoalWeekPlan(
       exercises: [
         { name: 'Plate-Loaded Incline Chest Press Machine', sets: 4, reps: '8-10' },
         { name: 'Selectorized Chest Press Machine', sets: 3, reps: '10-12' },
-        { name: 'PEC FLY / REAR DELT MACHINE', sets: 3, reps: '12-15' },
-        { name: 'PIN-SELECTED STANDING LATERAL RAISE MACHINE', sets: 4, reps: '12-15' },
+        { name: 'Pec Fly / Rear Delt Machine', sets: 3, reps: '12-15' },
+        { name: 'Pin-Selected Standing Lateral Raise Machine', sets: 4, reps: '12-15' },
         { name: 'Plate-Loaded Seated Dip Machine', sets: 3, reps: '10-12' },
         { name: 'Dual Adjustable Pulley Machine (Tricep Rope Pushdown)', sets: 3, reps: '12-15' },
       ],
@@ -776,7 +776,7 @@ export function buildGoalWeekPlan(
       exercises: [
         { name: 'Plate-Loaded Lat Pulldown Machine', sets: 4, reps: '8-10' },
         { name: 'Seated Row Machine / Low Row Machine', sets: 4, reps: '10-12' },
-        { name: 'PEC FLY / REAR DELT MACHINE (Rear Delt Fly)', sets: 3, reps: '12-15' },
+        { name: 'Pec Fly / Rear Delt Machine (Rear Delt Fly)', sets: 3, reps: '12-15' },
         { name: 'Preacher Curl Bench (EZ Bar Curl)', sets: 3, reps: '10-12' },
         { name: 'Seated Bicep Curl / Preacher Curl Machine', sets: 3, reps: '12' },
         { name: 'Multi-Function Cable Column (Face Pulls)', sets: 3, reps: '15' },
@@ -807,7 +807,7 @@ export function buildGoalWeekPlan(
       isRest: false,
       exercises: [
         { name: 'Hack Squat Machine', sets: 4, reps: '8-10' },
-        { name: 'PLATE LOADED 45 DEGREE LEG PRESS MACHINE', sets: 4, reps: '10-12' },
+        { name: 'Plate-Loaded 45-Degree Leg Press Machine', sets: 4, reps: '10-12' },
         { name: 'Leg Extension Machine', sets: 3, reps: '12-15' },
         { name: 'Leg Extension / Leg Curl Machine (Hamstring Curl)', sets: 3, reps: '10-12' },
         { name: 'Hip Thrust Machine', sets: 3, reps: '10-12' },
@@ -824,7 +824,7 @@ export function buildGoalWeekPlan(
       time: normTime,
       isRest: false,
       exercises: [
-        { name: 'ISO-LATERAL PLATE-LOADED CHEST PRESS', sets: 3, reps: '10-12' },
+        { name: 'Iso-Lateral Plate-Loaded Chest Press', sets: 3, reps: '10-12' },
         { name: 'Shoulder Press Machine', sets: 3, reps: '10-12' },
         { name: 'Lat Pulldown Machine (Neutral Grip)', sets: 3, reps: '10-12' },
         { name: 'Dual Adjustable Pulley (Cable Crossover) Machine', sets: 3, reps: '12-15' },
@@ -843,7 +843,7 @@ export function buildGoalWeekPlan(
       exercises: [
         { name: 'Preacher Curl Bench', sets: 3, reps: '10-12' },
         { name: 'Plate-Loaded Seated Dip Machine', sets: 3, reps: '10-12' },
-        { name: 'PIN-SELECTED STANDING LATERAL RAISE MACHINE', sets: 4, reps: '12-15' },
+        { name: 'Pin-Selected Standing Lateral Raise Machine', sets: 4, reps: '12-15' },
         { name: 'Dip / Leg Raise Station (Leg Raises)', sets: 3, reps: '15' },
         { name: '45-Degree Hyperextension / Back Extension Bench', sets: 3, reps: '15' },
       ],
