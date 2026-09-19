@@ -22,52 +22,62 @@
 
     ## 1. System Overview
 
-    **FordaGo** is a gym management mobile application built using Ionic + Angular (frontend) and Node.js/Express with MySQL (backend). It is designed for AFFORDA Gym – San Isidro Branch to replace manual gym operations with a digital solution.
+    **FordaGo** is a gym management mobile application built using Ionic + Angular with Capacitor (frontend) and Laravel Framework with MySQL (backend). It is designed for AFFORDA Gym – San Isidro Branch to replace manual gym operations with a synchronized digital solution.
 
     **User Roles:**
-    - **Member (User)** — login, dashboard, QR scanning, schedule, inventory, profile, transactions
-    - **Admin** — all user features plus member management, attendance, inventory control, reports, and notifications
+    - **Member (User)** — login, biometric authentication, dashboard, QR scanning, schedule, inventory cart, profile, workout tracking
+    - **Coach** — client consultations, workout proposal, schedule tracking, real-time messaging
+    - **Admin / Super Admin** — member verification, attendance logs, equipment tracking, inventory control, PDF reporting, notifications, and security audit logs
 
     ---
 
     ## 2. Technology Stack
 
-    ### Frontend
+    ### Frontend & Mobile Client
     | Technology | Version | Purpose |
     |---|---|---|
-    | Angular | ^20.0.0 | Core frontend framework |
-    | Ionic Framework | ^8.0.0 | Mobile UI components |
-    | Capacitor | 8.3.0 | Android/iOS native bridge |
-    | TypeScript | ~5.9.0 | Programming language |
-    | html5-qrcode | ^2.3.8 | QR code scanning |
-    | jsPDF + jspdf-autotable | ^4.2.1 / ^5.0.7 | PDF report generation |
+    | Angular | ^20.3.0 | Core client Single Page Application framework |
+    | Ionic Framework | ^8.0.0 | Mobile UI components and gestures |
+    | Capacitor | ^8.3.0 | Android native runtime and hardware bridge |
+    | TypeScript | ~5.9.0 | Strongly-typed programming language |
+    | @aparajita/capacitor-biometric-auth | ^10.0.0 | Native fingerprint & biometric authentication |
+    | html5-qrcode | ^2.3.8 | Real-time hardware camera QR code scanning |
+    | jsPDF + jspdf-autotable | ^4.2.1 / ^5.0.7 | Client-side administrative PDF report generation |
+    | Laravel Echo + Pusher-JS | ^2.4.0 / ^8.6.0 | Client WebSocket connection for real-time sync |
 
-    ### Backend
+    ### Backend & Database Tier
     | Technology | Version | Purpose |
     |---|---|---|
-    | Node.js + Express | ^4.18.2 | REST API server |
-    | MySQL2 | ^3.6.0 | Database driver |
-    | JSON Web Token (JWT) | ^9.0.2 | Authentication |
-    | bcryptjs | ^2.4.3 | Password hashing |
+    | Laravel Framework | ^12.0 / ^13.0 | Enterprise MVC RESTful JSON API server (PHP 8.3+) |
+    | Laravel Sanctum | ^4.3 | Cryptographic Bearer Token authentication & RBAC |
+    | Laravel Reverb | ^1.11 | High-throughput native WebSocket server |
+    | MySQL / MariaDB | 8.0+ | Relational database management system |
+    | Bcrypt Hashing | Cost 10 | Adaptive password cryptographic hashing |
+    | SMS Gateway (SmsService) | Multi-carrier | Automated SMS via Semaphore / PhilSMS / Twilio |
 
     ---
 
     ## 3. System Architecture
 
-    FordaGo uses a **three-tier architecture**:
+    FordaGo uses a **decoupled three-tier and event-driven architecture**:
 
     ```
     ┌─────────────────────────────────────────────────┐
     │              PRESENTATION TIER                  │
-    │   Ionic/Angular SPA (Mobile + Web Browser)      │
-    └────────────────────┬────────────────────────────┘
-                        │ HTTP/REST (JSON) + JWT
-    ┌────────────────────▼────────────────────────────┐
-    │               LOGIC TIER                        │
-    │        Node.js + Express REST API               │
-    │   Port: 3001  |  Base URL: /api                 │
-    └─────────────────── 
-                        │ mysql2
+    │   Ionic 8 / Angular 20 SPA (Android APK / Web)  │
+    └───────────┬─────────────────────────┬───────────┘
+                │ HTTPS REST API          │ WSS WebSockets
+                │ Bearer Token            │ Laravel Echo
+    ┌───────────▼─────────────────────────▼───────────┐
+    │               LOGIC & API TIER                  │
+    │        Laravel 12+ REST API & Reverb Server     │
+    │   Sanctum Auth | Rate Limiter | Controllers     │
+    └───────────────────┬─────────────────────────────┘
+                        │ Eloquent ORM / PDO
+    ┌───────────────────▼─────────────────────────────┐
+    │               DATABASE TIER                     │
+    │        MySQL 8.0+ Relational Database           │
+    └─────────────────────────────────────────────────┘
     ┌────────────────────▼────────────────────────────┐
     │               DATA TIER                         │
     │         MySQL Database  (fordago)               │
