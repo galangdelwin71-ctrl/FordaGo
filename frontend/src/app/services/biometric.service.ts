@@ -118,17 +118,17 @@ export class BiometricService {
       }
 
       if (code === 'biometryNotEnrolled' || errMsg.toLowerCase().includes('not enrolled')) {
-        this.lastError = 'Walang naka-set na Fingerprint o Face Unlock sa cellphone na ito. Mangyaring pumunta sa Phone Settings (Security > Fingerprint) upang mag-enroll bago ito i-on.';
+        this.lastError = 'No fingerprint or face unlock enrolled on this device. Please set up biometrics in your phone Settings (Security > Fingerprint) first.';
         return false;
       }
 
       if (code === 'biometryLockout' || errMsg.toLowerCase().includes('lockout')) {
-        this.lastError = 'Naka-lock ang biometric sensor dahil sa sunod-sunod na maling scan. I-unlock muna ang phone gamit ang PIN o mag-login gamit ang password.';
+        this.lastError = 'Biometric sensor locked due to too many failed attempts. Please unlock with phone PIN or use your password.';
         return false;
       }
 
       if (code === 'passcodeNotSet' || errMsg.toLowerCase().includes('passcode')) {
-        this.lastError = 'Kailangan munang mag-set up ng Screen Lock (PIN / Pattern) sa Settings ng iyong cellphone.';
+        this.lastError = 'Device screen lock (PIN / Pattern) is required in your phone Settings to use this feature.';
         return false;
       }
 

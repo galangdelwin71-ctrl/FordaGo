@@ -238,21 +238,21 @@ ion-content {
   flex-direction: column;
 
   .equip-name {
-    font-size: 11.5px;
-    font-weight: 800;
+    font-size: 12px;
+    font-weight: 650;
     color: #fff;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    margin-bottom: 1px;
+    margin-bottom: 2px;
   }
 
   .equip-cat {
-    font-size: 8px;
-    color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-    font-weight: 700;
+    font-size: 10px;
+    color: #94a3b8;
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: 500;
   }
 
   .equip-weight {
@@ -305,11 +305,11 @@ ion-content {
   flex-shrink: 0;
 
   .modal-title {
-    font-size: 14px;
-    font-weight: 800;
-    letter-spacing: 0.4px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
     color: #ffd600;
-    text-transform: uppercase;
+    text-transform: none;
   }
 
   .modal-dismiss-btn {
@@ -366,8 +366,8 @@ ion-content {
 }
 
 .modal-name {
-  font-size: 19px;
-  font-weight: 800;
+  font-size: 18px;
+  font-weight: 700;
   color: #fff;
   letter-spacing: -0.3px;
 }
@@ -379,10 +379,10 @@ ion-content {
   flex-wrap: wrap;
 
   .modal-cat {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: normal;
     color: #94a3b8;
     background: #1e293b;
     border: 1px solid #334155;
@@ -931,8 +931,8 @@ ion-content {
   }
   .equip-photo-placeholder ion-icon { color: rgba(15, 23, 42, 0.2); }
   .equip-card-info {
-    .equip-name { color: #0f172a; font-weight: 800; }
-    .equip-cat  { color: #64748b; font-weight: 750; }
+    .equip-name { color: #0f172a; font-weight: 650; }
+    .equip-cat  { color: #64748b; font-weight: 500; }
     .equip-weight {
       color: #475569;
       background: #f1f5f9;

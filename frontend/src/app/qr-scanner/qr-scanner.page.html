@@ -496,7 +496,7 @@
             <span class="equip-cat">{{ activeFullGuide?.category || activeEquipment?.category }}</span>
             <span class="equip-status-pill available">
               <span class="status-dot"></span>
-              <span>{{ (activeFullGuide?.status || 'available') | uppercase }}</span>
+              <span>{{ (activeFullGuide?.status || 'available') | titlecase }}</span>
             </span>
           </div>
         </div>
@@ -511,7 +511,7 @@
         />
         <div class="machine-photo-badge">
           <ion-icon name="camera-outline"></ion-icon>
-          <span>AFFORDA GYM MACHINE PHOTO</span>
+          <span>Afforda Gym Machine Photo</span>
         </div>
       </div>
 

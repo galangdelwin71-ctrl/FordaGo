@@ -738,7 +738,7 @@
             <strong class="pw-status-badge">•••••••• (Encrypted in Database)</strong>
           </div>
           <small class="pw-defense-note">
-            Naka-encrypt (one-way bcrypt hash) ang kasalukuyang password para sa data privacy ng user. Kung nais baguhin o i-reset, i-type ang bagong password o pindutin ang Generate Password sa ibaba.
+            Current password is encrypted (one-way bcrypt hash) for user data privacy and security. To change or reset it, enter a new password or click Generate Password below.
           </small>
         </div>
 
@@ -918,7 +918,7 @@
 
         <!-- Duration Field -->
         <div class="form-field-group" style="margin-bottom: 12px;">
-          <label class="field-lbl"><ion-icon name="timer-outline"></ion-icon> Duration / Tagal (e.g. 1 hr, 2 hrs, 60 min)</label>
+          <label class="field-lbl"><ion-icon name="timer-outline"></ion-icon> Duration (e.g. 1 hr, 2 hrs, 60 min)</label>
           <input class="field-input" type="text" placeholder="e.g. 60 min, 1 hr, 2 hrs" [(ngModel)]="newSession.duration" />
           <div class="quick-pill-row" style="margin-top: 4px;">
             <button type="button" class="quick-pill" (click)="setQuickDuration('30 min', 'new')">30 min</button>
@@ -1030,7 +1030,7 @@
 
         <!-- Duration Field in Edit -->
         <div class="form-field-group" style="margin-bottom: 12px;">
-          <label class="field-lbl"><ion-icon name="timer-outline"></ion-icon> Duration / Tagal (e.g. 1 hr, 2 hrs, 60 min)</label>
+          <label class="field-lbl"><ion-icon name="timer-outline"></ion-icon> Duration (e.g. 1 hr, 2 hrs, 60 min)</label>
           <input class="field-input" type="text" placeholder="e.g. 60 min, 1 hr, 2 hrs" [(ngModel)]="editingSession.duration" />
           <div class="quick-pill-row" style="margin-top: 4px;">
             <button type="button" class="quick-pill" (click)="setQuickDuration('30 min', 'edit')">30 min</button>

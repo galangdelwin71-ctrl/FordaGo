@@ -1203,7 +1203,7 @@ export class ProfilePage implements OnInit {
           this.biometricLoading = false;
           if (event?.target) event.target.checked = false;
           void this.showMobileToast(
-            'Walang naka-set na Fingerprint o Face Unlock sa cellphone mo. Mangyaring mag-set up muna sa Phone Settings (Security > Fingerprint) bago ito i-on.',
+            'No fingerprint or face unlock enrolled on this device. Please set up biometrics in your phone Settings (Security > Fingerprint) first.',
             true
           );
           return;
