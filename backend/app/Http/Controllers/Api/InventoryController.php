@@ -84,13 +84,17 @@ class InventoryController extends Controller
         }
 
         $price = $this->toNonNegative($request->input('price'), 0);
+        $costPrice = $this->toNonNegative($request->input('cost_price'), 0);
         $stock = (int) $this->toNonNegative($request->input('stock'), 0);
+        $expiryDate = $request->input('expiry_date') ? trim((string)$request->input('expiry_date')) : null;
 
         $product = Product::create([
             'name'          => $name,
             'brand'         => $request->input('brand') ?: null,
             'price'         => $price,
+            'cost_price'    => $costPrice,
             'stock'         => $stock,
+            'expiry_date'   => $expiryDate,
             'image_url'     => $request->input('image_url') ?: null,
             'thumbnail_url' => $request->input('thumbnail_url') ?: null,
         ]);
@@ -103,10 +107,10 @@ class InventoryController extends Controller
                     $request->user(),
                     'inventory_create',
                     "Added Product '{$product->name}'",
-                    "Created product '{$product->name}' with price ₱{$price} and stock {$stock}.",
+                    "Created product '{$product->name}' with price ₱{$price}, cost ₱{$costPrice} and stock {$stock}.",
                     'product',
                     $product->id,
-                    ['price' => $price, 'stock' => $stock, 'brand' => $product->brand]
+                    ['price' => $price, 'cost_price' => $costPrice, 'stock' => $stock, 'brand' => $product->brand, 'expiry_date' => $expiryDate]
                 );
             }
         } catch (\Throwable) {}
@@ -128,15 +132,19 @@ class InventoryController extends Controller
         $oldStock = (int) $product->stock;
 
         $price = $this->toNonNegative($request->input('price'), 0);
+        $costPrice = $this->toNonNegative($request->input('cost_price'), 0);
         $stock = (int) $this->toNonNegative($request->input('stock'), 0);
         $newName = trim((string) $request->input('name', $product->name));
         $newBrand = $request->input('brand') ?: null;
+        $expiryDate = $request->input('expiry_date') ? trim((string)$request->input('expiry_date')) : null;
 
         $product->update([
             'name'          => $newName,
             'brand'         => $newBrand,
             'price'         => $price,
+            'cost_price'    => $costPrice,
             'stock'         => $stock,
+            'expiry_date'   => $expiryDate,
             'image_url'     => $request->input('image_url') ?: null,
             'thumbnail_url' => $request->input('thumbnail_url') ?: null,
         ]);

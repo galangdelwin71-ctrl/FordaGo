@@ -482,21 +482,33 @@ class ReportsController extends Controller
                 p.name,
                 p.brand,
                 p.price,
+                COALESCE(p.cost_price, 0.00) AS cost_price,
                 p.stock AS current_stock,
+                p.expiry_date,
                 COALESCE(SUM(CASE WHEN o.status IN ('approved', 'completed') THEN o.quantity ELSE 0 END), 0) AS total_sold,
                 COALESCE(SUM(CASE WHEN o.status IN ('approved', 'completed') THEN o.total    ELSE 0 END), 0) AS total_revenue
             FROM products p
             LEFT JOIN orders o ON o.product_id = p.id
-            GROUP BY p.id, p.name, p.brand, p.price, p.stock
+            GROUP BY p.id, p.name, p.brand, p.price, p.cost_price, p.stock, p.expiry_date
             ORDER BY total_sold DESC
         ");
 
-        $rows = collect($rows)->map(function ($row) {
+        $today = new \DateTime('today');
+
+        $rows = collect($rows)->map(function ($row) use ($today) {
             $row->price         = (float) $row->price;
+            $row->cost_price    = (float) $row->cost_price;
             $row->current_stock = (int) $row->current_stock;
             $row->total_sold    = (int) $row->total_sold;
             $row->total_revenue = (float) $row->total_revenue;
-            
+
+            // Profit calculations (Tubo)
+            $row->profit_per_unit = max(0, $row->price - $row->cost_price);
+            $row->profit_margin   = $row->price > 0 ? round((($row->price - $row->cost_price) / $row->price) * 100, 1) : 0;
+            $row->cogs            = $row->cost_price * $row->total_sold; // Cost of Goods Sold
+            $row->total_profit    = max(0, $row->total_revenue - $row->cogs); // Total Net Tubo
+
+            // Stock status
             if ($row->current_stock == 0) {
                 $row->stock_status = 'out_of_stock';
             } elseif ($row->current_stock <= 5) {
@@ -504,20 +516,54 @@ class ReportsController extends Controller
             } else {
                 $row->stock_status = 'in_stock';
             }
-            
+
+            // Expiry status
+            if (!empty($row->expiry_date)) {
+                $exp = new \DateTime($row->expiry_date);
+                $diff = (int) $today->diff($exp)->format('%r%a');
+                $row->days_until_expiry = $diff;
+                if ($diff < 0) {
+                    $row->expiry_status = 'expired';
+                } elseif ($diff <= 30) {
+                    $row->expiry_status = 'expiring_soon';
+                } else {
+                    $row->expiry_status = 'good';
+                }
+            } else {
+                $row->days_until_expiry = null;
+                $row->expiry_status = 'none';
+            }
+
             return $row;
         })->values()->all();
 
-        $totalStock       = collect($rows)->sum('current_stock');
-        $totalSold        = collect($rows)->sum('total_sold');
-        $totalRevenue     = collect($rows)->sum('total_revenue');
-        $lowStockCount    = collect($rows)->where('stock_status', 'low_stock')->count();
-        $outOfStockCount  = collect($rows)->where('stock_status', 'out_of_stock')->count();
-        $inventoryValue   = collect($rows)->sum(fn ($r) => $r->price * $r->current_stock);
+        $totalStock         = collect($rows)->sum('current_stock');
+        $totalSold          = collect($rows)->sum('total_sold');
+        $totalRevenue       = collect($rows)->sum('total_revenue');
+        $totalCogs          = collect($rows)->sum('cogs');
+        $totalProfit        = collect($rows)->sum('total_profit');
+        $lowStockCount      = collect($rows)->where('stock_status', 'low_stock')->count();
+        $outOfStockCount    = collect($rows)->where('stock_status', 'out_of_stock')->count();
+        $expiringSoonCount  = collect($rows)->where('expiry_status', 'expiring_soon')->count();
+        $expiredCount       = collect($rows)->where('expiry_status', 'expired')->count();
+        $inventoryValue     = collect($rows)->sum(fn ($r) => $r->price * $r->current_stock);
+        $inventoryCostValue = collect($rows)->sum(fn ($r) => $r->cost_price * $r->current_stock);
 
         return response()->json([
             'rows'    => $rows,
-            'summary' => compact('totalStock', 'totalSold', 'totalRevenue', 'lowStockCount', 'outOfStockCount', 'inventoryValue'),
+            'summary' => compact(
+                'totalStock',
+                'totalSold',
+                'totalRevenue',
+                'totalCogs',
+                'totalProfit',
+                'lowStockCount',
+                'outOfStockCount',
+                'expiringSoonCount',
+                'expiredCount',
+                'inventoryValue',
+                'inventoryCostValue'
+            ),
         ]);
     }
 

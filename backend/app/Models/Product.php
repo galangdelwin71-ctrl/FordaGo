@@ -14,7 +14,9 @@ class Product extends Model
         'name',
         'brand',
         'price',
+        'cost_price',
         'stock',
+        'expiry_date',
         'image_url',
         'thumbnail_url',
     ];
@@ -23,6 +25,8 @@ class Product extends Model
     {
         return [
             'price' => 'decimal:2',
+            'cost_price' => 'decimal:2',
+            'expiry_date' => 'date:Y-m-d',
             'created_at' => 'datetime',
         ];
     }

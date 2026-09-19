@@ -594,6 +594,63 @@ export class AdminPage implements OnInit, OnDestroy {
     );
   }
 
+  // ── Shop Sub-Navigation & Enhanced Analytics ──────
+  shopSubTab: 'products' | 'orders' | 'expiring' = 'products';
+
+  getProductUnitProfit(p: any): number {
+    const price = Number(p?.price) || 0;
+    const cost = Number(p?.cost_price) || 0;
+    return Math.max(0, price - cost);
+  }
+
+  getProductMargin(p: any): number {
+    const price = Number(p?.price) || 0;
+    const cost = Number(p?.cost_price) || 0;
+    if (price <= 0) return 0;
+    return Math.round(((price - cost) / price) * 100);
+  }
+
+  getProductExpiryDays(p: any): number | null {
+    if (!p?.expiry_date) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const exp = new Date(p.expiry_date);
+    if (isNaN(exp.getTime())) return null;
+    exp.setHours(0, 0, 0, 0);
+    const diffTime = exp.getTime() - today.getTime();
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
+
+  getProductExpiryStatus(p: any): 'expired' | 'expiring_soon' | 'good' | 'none' {
+    const days = this.getProductExpiryDays(p);
+    if (days === null) return 'none';
+    if (days < 0) return 'expired';
+    if (days <= 30) return 'expiring_soon';
+    return 'good';
+  }
+
+  getExpiringProducts(): any[] {
+    return this.products.filter(p => {
+      const st = this.getProductExpiryStatus(p);
+      return st === 'expired' || st === 'expiring_soon';
+    });
+  }
+
+  getExpiringProductsCount(): number {
+    return this.getExpiringProducts().length;
+  }
+
+  getTotalInventoryCost(): number {
+    return this.products.reduce((acc, p) => acc + ((Number(p.cost_price) || 0) * (Number(p.stock) || 0)), 0);
+  }
+
+  getTotalProjectedProfit(): number {
+    return this.products.reduce((acc, p) => {
+      const unitProfit = this.getProductUnitProfit(p);
+      return acc + (unitProfit * (Number(p.stock) || 0));
+    }, 0);
+  }
+
   get displayedPendingOrderGroups(): any[] {
     if (this.showAllPendingOrders || this.pendingOrderSearch.trim()) {
       return this.filteredPendingOrderGroups;
@@ -1418,7 +1475,7 @@ export class AdminPage implements OnInit, OnDestroy {
     member_names: [] as string[],
   };
   memberTagSearch = '';
-  newProduct   = { name: '', brand: '', price: 0, stock: 0, image_url: '', thumbnail_url: '' };
+  newProduct   = { name: '', brand: '', price: 0, cost_price: 0, stock: 0, expiry_date: '', image_url: '', thumbnail_url: '' };
   newEquipment = { name: '', category: '', icon: '', status: 'available', image_url: '', thumbnail_url: '', description: '', weight_scale: '' };
 
   private normalizeEquipmentStatus(value: string | undefined): string {
@@ -1711,7 +1768,11 @@ export class AdminPage implements OnInit, OnDestroy {
   openAddProduct() { this.toggleAddProduct(); }
 
   editProduct(p: any) {
-    this.editingProduct = { ...p };
+    this.editingProduct = {
+      ...p,
+      cost_price: p.cost_price != null ? Number(p.cost_price) : 0,
+      expiry_date: p.expiry_date ? String(p.expiry_date).substring(0, 10) : ''
+    };
     this.showAddProduct = false;
   }
 
@@ -1722,7 +1783,7 @@ export class AdminPage implements OnInit, OnDestroy {
       next: (p) => {
         this.products.unshift(p);
         this.processInventoryData(this.products);
-        this.newProduct = { name: '', brand: '', price: 0, stock: 0, image_url: '', thumbnail_url: '' };
+        this.newProduct = { name: '', brand: '', price: 0, cost_price: 0, stock: 0, expiry_date: '', image_url: '', thumbnail_url: '' };
         this.showAddProduct = false;
         this.toast.success('Product added successfully');
         this.loadAll();

@@ -802,10 +802,20 @@
           <div class="kpi-value">₱{{ invSummary.totalRevenue | number:'1.2-2' }}</div>
           <div class="kpi-subtext">Total sales generated</div>
         </div>
+        <div class="kpi-card rose" *ngIf="invSummary.totalCogs > 0">
+          <div class="kpi-title">Cost of Goods Sold (COGS)</div>
+          <div class="kpi-value">₱{{ invSummary.totalCogs | number:'1.2-2' }}</div>
+          <div class="kpi-subtext">Capital cost of sold items</div>
+        </div>
+        <div class="kpi-card emerald">
+          <div class="kpi-title">Total Net Profit</div>
+          <div class="kpi-value">₱{{ invSummary.totalProfit | number:'1.2-2' }}</div>
+          <div class="kpi-subtext">Gross revenue minus COGS</div>
+        </div>
         <div class="kpi-card purple">
           <div class="kpi-title">Inventory Asset Value</div>
           <div class="kpi-value">₱{{ invSummary.inventoryValue | number:'1.2-2' }}</div>
-          <div class="kpi-subtext">Retail value of stock</div>
+          <div class="kpi-subtext">Capital cost: ₱{{ invSummary.inventoryCostValue | number:'1.2-2' }}</div>
         </div>
       </div>
 
@@ -835,6 +845,7 @@
         <div
           *ngFor="let item of filteredInvRows; let i = index"
           class="inv-card"
+          [class.has-expiry-warning]="item.expiry_status === 'expired' || item.expiry_status === 'expiring_soon'"
           [style.animation-delay]="(i * 0.02) + 's'"
         >
           <div class="inv-card-top">
@@ -842,15 +853,31 @@
               <div class="inv-name">{{ item.name }}</div>
               <div class="inv-brand" *ngIf="item.brand">{{ item.brand }}</div>
             </div>
-            <div class="inv-status-chip" [class]="item.stock_status">
-              {{ item.stock_status === 'out_of_stock' ? 'Out of Stock' : (item.stock_status === 'low_stock' ? 'Low Stock' : 'In Stock') }}
+            <div class="inv-chips-wrap">
+              <span class="inv-expiry-chip" [ngClass]="item.expiry_status" *ngIf="item.expiry_date">
+                <ion-icon [name]="item.expiry_status === 'expired' ? 'close-circle' : (item.expiry_status === 'expiring_soon' ? 'alert-circle' : 'time-outline')"></ion-icon>
+                <span *ngIf="item.expiry_status === 'expired'">Expired ({{ item.expiry_date | date:'MMM d, y' }})</span>
+                <span *ngIf="item.expiry_status === 'expiring_soon'">Expiring in {{ item.expiry_days }}d</span>
+                <span *ngIf="item.expiry_status === 'good'">Exp: {{ item.expiry_date | date:'MMM d, y' }}</span>
+              </span>
+              <div class="inv-status-chip" [class]="item.stock_status">
+                {{ item.stock_status === 'out_of_stock' ? 'Out of Stock' : (item.stock_status === 'low_stock' ? 'Low Stock' : 'In Stock') }}
+              </div>
             </div>
           </div>
 
           <div class="inv-stats-row">
             <div class="inv-stat-cell">
-              <span class="stat-lbl">Unit Price</span>
+              <span class="stat-lbl">Selling Price</span>
               <span class="stat-val">₱{{ item.price | number:'1.2-2' }}</span>
+            </div>
+            <div class="inv-stat-cell">
+              <span class="stat-lbl">Cost Price</span>
+              <span class="stat-val">₱{{ (item.cost_price || 0) | number:'1.2-2' }}</span>
+            </div>
+            <div class="inv-stat-cell">
+              <span class="stat-lbl">Unit Profit</span>
+              <span class="stat-val green">+₱{{ (item.profit_per_unit || 0) | number:'1.2-2' }} <small>({{ item.profit_margin || 0 }}%)</small></span>
             </div>
             <div class="inv-stat-cell">
               <span class="stat-lbl">In Stock</span>
@@ -863,6 +890,14 @@
             <div class="inv-stat-cell">
               <span class="stat-lbl">Total Sales</span>
               <span class="stat-val gold">₱{{ item.total_revenue | number:'1.2-2' }}</span>
+            </div>
+            <div class="inv-stat-cell">
+              <span class="stat-lbl">Total COGS</span>
+              <span class="stat-val">₱{{ (item.cogs || 0) | number:'1.2-2' }}</span>
+            </div>
+            <div class="inv-stat-cell">
+              <span class="stat-lbl">Net Profit</span>
+              <span class="stat-val green" style="font-size: 15px; font-weight: 900;">+₱{{ (item.total_profit || 0) | number:'1.2-2' }}</span>
             </div>
           </div>
         </div>

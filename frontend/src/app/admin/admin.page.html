@@ -1158,18 +1158,308 @@
     <!-- ══════════════════════════════════════════════ -->
     <div *ngIf="activeTab==='inventory'">
 
-      <div class="section-header-row">
-        <span class="section-label" style="margin:0">Supplements Shop</span>
-        <button class="add-btn" (click)="toggleAddProduct()">{{ showAddProduct ? '✕ Cancel' : '+ Add Product' }}</button>
+      <!-- Shop Sub-Navigation Tabs -->
+      <div class="shop-sub-nav">
+        <button class="shop-sub-btn" [class.active]="shopSubTab==='products'" (click)="shopSubTab='products'">
+          <ion-icon name="cube-outline"></ion-icon>
+          <span>Products Catalog</span>
+          <span class="sub-count">{{ products.length }}</span>
+        </button>
+        <button class="shop-sub-btn" [class.active]="shopSubTab==='orders'" (click)="shopSubTab='orders'">
+          <ion-icon name="receipt-outline"></ion-icon>
+          <span>Pending Orders</span>
+          <span class="sub-badge warning" *ngIf="pendingOrderGroups.length > 0">{{ pendingOrderGroups.length }}</span>
+        </button>
+        <button class="shop-sub-btn" [class.active]="shopSubTab==='expiring'" (click)="shopSubTab='expiring'">
+          <ion-icon name="alert-circle-outline"></ion-icon>
+          <span>Expiration Alerts</span>
+          <span class="sub-badge danger" *ngIf="getExpiringProductsCount() > 0">{{ getExpiringProductsCount() }}</span>
+        </button>
       </div>
 
-      <!-- Add Product Form -->
+      <!-- Quick Shop Metrics -->
+      <div class="shop-kpi-row">
+        <div class="shop-kpi-card" (click)="shopSubTab='products'" style="cursor: pointer;">
+          <span class="shop-kpi-lbl">Total Products</span>
+          <span class="shop-kpi-val">{{ products.length }}</span>
+          <span class="shop-kpi-sub">Active in catalog</span>
+        </div>
+        <div class="shop-kpi-card amber" (click)="shopSubTab='orders'" style="cursor: pointer;">
+          <span class="shop-kpi-lbl">Pending Orders</span>
+          <span class="shop-kpi-val">{{ pendingOrderGroups.length }}</span>
+          <span class="shop-kpi-sub">Needs verification</span>
+        </div>
+        <div class="shop-kpi-card rose" (click)="shopSubTab='expiring'" style="cursor: pointer;">
+          <span class="shop-kpi-lbl">Expiring Soon / Expired</span>
+          <span class="shop-kpi-val">{{ getExpiringProductsCount() }}</span>
+          <span class="shop-kpi-sub">Attention required</span>
+        </div>
+        <div class="shop-kpi-card emerald">
+          <span class="shop-kpi-lbl">Projected Profit</span>
+          <span class="shop-kpi-val">₱{{ getTotalProjectedProfit() | number:'1.2-2' }}</span>
+          <span class="shop-kpi-sub">Est. inventory return</span>
+        </div>
+      </div>
+
+      <!-- ── VIEW 1: PRODUCTS CATALOG ───────────────────────── -->
+      <div *ngIf="shopSubTab==='products'">
+        <div class="section-header-row">
+          <span class="section-label" style="margin:0">
+            <ion-icon name="cube-outline"></ion-icon> Products Catalog
+          </span>
+          <button class="add-btn" (click)="toggleAddProduct()">{{ showAddProduct ? '✕ Cancel' : '+ Add Product' }}</button>
+        </div>
+
+        <!-- Search Input for Products -->
+        <div class="search-input-wrap" style="margin-bottom: 12px;">
+          <ion-icon name="search-outline" class="search-icon"></ion-icon>
+          <input
+            class="search-input-field"
+            type="text"
+            placeholder="Search products by name or brand…"
+            [(ngModel)]="productSearch"
+          />
+          <button
+            class="clear-search-btn"
+            *ngIf="productSearch"
+            (click)="productSearch=''"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div class="empty-state" *ngIf="filteredProducts.length === 0">
+          {{ productSearch ? 'No products matching "' + productSearch + '".' : 'No products listed.' }}
+        </div>
+
+        <!-- Product Cards -->
+        <div *ngFor="let p of displayedProducts" class="member-card product-card" [class.healthy-stock]="p.stock > 5" [class.low-stock]="p.stock > 0 && p.stock <= 5" [class.out-of-stock]="p.stock <= 0">
+          <div class="product-card-main">
+            <img *ngIf="p.image_url" [src]="resolveImg(p.thumbnail_url || p.image_url)" class="product-card-thumb" alt="{{ p.name }}" />
+            <div *ngIf="!p.image_url" class="product-card-thumb fallback">{{ p.icon || '🛍️' }}</div>
+
+            <div class="product-card-info">
+              <div class="product-card-title">{{ p.name }}</div>
+              <div class="product-card-brand">Brand: {{ p.brand || 'FordaGO' }}</div>
+
+              <!-- Price, Cost & Profit per item -->
+              <div class="product-card-price-row">
+                <span class="product-card-price" title="Selling Price">₱{{ p.price | number:'1.2-2' }}</span>
+                <span class="cost-tag" *ngIf="p.cost_price > 0" title="Capital / Cost Price">Cost: ₱{{ p.cost_price | number:'1.2-2' }}</span>
+                <span class="profit-tag" *ngIf="getProductUnitProfit(p) > 0" title="Profit per item">
+                  +₱{{ getProductUnitProfit(p) | number:'1.2-2' }} ({{ getProductMargin(p) }}% profit)
+                </span>
+                <span class="product-card-sep">|</span>
+                <span class="stock-pill" [ngClass]="getStockBadge(p.stock).cls">
+                  <ion-icon [name]="getStockBadge(p.stock).icon"></ion-icon>
+                  <span>{{ getStockBadge(p.stock).label }}</span>
+                </span>
+              </div>
+
+              <!-- Expiration Status Badge -->
+              <div class="expiry-badge-row" *ngIf="p.expiry_date">
+                <span class="expiry-pill" [ngClass]="getProductExpiryStatus(p)">
+                  <ion-icon [name]="getProductExpiryStatus(p) === 'expired' ? 'close-circle' : (getProductExpiryStatus(p) === 'expiring_soon' ? 'alert-circle' : 'checkmark-circle')"></ion-icon>
+                  <span *ngIf="getProductExpiryStatus(p) === 'expired'">Expired on {{ p.expiry_date | date:'MMM d, yyyy' }}</span>
+                  <span *ngIf="getProductExpiryStatus(p) === 'expiring_soon'">Expiring in {{ getProductExpiryDays(p) }} days ({{ p.expiry_date | date:'MMM d, yyyy' }})</span>
+                  <span *ngIf="getProductExpiryStatus(p) === 'good'">Exp: {{ p.expiry_date | date:'MMM d, yyyy' }}</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-actions-row">
+            <button class="act-btn approve-btn" (click)="openQuickRestock(p, $event)" title="Quick Restock">
+              <ion-icon name="flash-outline"></ion-icon> Restock
+            </button>
+            <button class="act-btn edit" (click)="editProduct(p)">
+              <ion-icon name="create-outline"></ion-icon> Edit
+            </button>
+            <button class="act-btn del" (click)="deleteProduct(p)">
+              <ion-icon name="trash-outline"></ion-icon> Delete
+            </button>
+          </div>
+        </div>
+
+        <!-- View More / View Less for Products -->
+        <div class="view-more-wrap" *ngIf="filteredProducts.length > productsLimit && !productSearch">
+          <button class="view-more-btn" (click)="showAllProducts = !showAllProducts">
+            <ion-icon [name]="showAllProducts ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+            <span>{{ showAllProducts ? 'View Less' : 'View More (' + (filteredProducts.length - productsLimit) + ' more)' }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── VIEW 2: PENDING ORDERS ─────────────────────────── -->
+      <div *ngIf="shopSubTab==='orders'">
+        <div class="section-header-row">
+          <span class="section-label" style="margin:0">
+            <ion-icon name="receipt-outline"></ion-icon> Pending Customer Orders
+          </span>
+          <span class="order-count-badge" *ngIf="pendingOrderGroups.length > 0">{{ pendingOrderGroups.length }} pending</span>
+        </div>
+
+        <!-- Search Input for Pending Orders -->
+        <div class="search-input-wrap" style="margin-bottom: 12px;">
+          <ion-icon name="search-outline" class="search-icon"></ion-icon>
+          <input
+            class="search-input-field"
+            type="text"
+            placeholder="Search buyer name or email…"
+            [(ngModel)]="pendingOrderSearch"
+          />
+          <button
+            class="clear-search-btn"
+            *ngIf="pendingOrderSearch"
+            (click)="pendingOrderSearch=''"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div class="empty-state" *ngIf="filteredPendingOrderGroups.length === 0">
+          {{ pendingOrderSearch ? 'No pending orders matching "' + pendingOrderSearch + '".' : 'No pending orders at this time.' }}
+        </div>
+
+        <!-- Pending Orders Cards -->
+        <div *ngFor="let g of displayedPendingOrderGroups" class="member-card order-card">
+          <div class="order-card-header">
+            <div class="order-buyer-info">
+              <div class="order-buyer-name">{{ g.username }}</div>
+              <div class="order-buyer-email">{{ g.email }}</div>
+            </div>
+            <span class="order-status-badge pending">PENDING</span>
+          </div>
+
+          <div class="order-card-divider"></div>
+
+          <div class="order-details-block">
+            <div class="order-detail-line">
+              <span class="order-detail-label">Items:</span>
+              <span class="order-detail-val">
+                <span *ngFor="let item of g.items; let last = last"><strong>{{ item.quantity }}x</strong> {{ item.name }}<span *ngIf="!last">, </span></span>
+              </span>
+            </div>
+            <div class="order-detail-line">
+              <span class="order-detail-label">Payment Method:</span>
+              <span class="order-detail-val"><strong>{{ g.paymentMethod === 'cash' ? 'Cash' : 'GCash' }}</strong></span>
+            </div>
+            <div class="order-detail-line">
+              <span class="order-detail-label">Total Amount:</span>
+              <span class="order-detail-val price">₱{{ g.total | number:'1.2-2' }}</span>
+            </div>
+          </div>
+
+          <div class="card-actions-row dual" style="margin-top: 14px;">
+            <button class="act-btn del" [disabled]="g.cancelling" (click)="rejectOrderGroup(g)">
+              <ion-icon name="trash-outline"></ion-icon> Reject
+            </button>
+            <button class="act-btn verify-payment-btn" [disabled]="g.cancelling" (click)="approveOrderGroup(g)">
+              <ion-icon name="checkmark-outline"></ion-icon> Verify Payment
+            </button>
+          </div>
+        </div>
+
+        <!-- View More / View Less for Pending Orders -->
+        <div class="view-more-wrap" *ngIf="filteredPendingOrderGroups.length > pendingOrdersLimit && !pendingOrderSearch">
+          <button class="view-more-btn" (click)="showAllPendingOrders = !showAllPendingOrders">
+            <ion-icon [name]="showAllPendingOrders ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+            <span>{{ showAllPendingOrders ? 'View Less' : 'View More (' + (filteredPendingOrderGroups.length - pendingOrdersLimit) + ' more)' }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── VIEW 3: EXPIRING PRODUCTS ALERTS ───────────────── -->
+      <div *ngIf="shopSubTab==='expiring'">
+        <div class="section-header-row">
+          <span class="section-label" style="margin:0">
+            <ion-icon name="alert-circle-outline"></ion-icon> Products Expiration Monitor
+          </span>
+          <span class="badge" [class.badge-warn]="getExpiringProductsCount() > 0">
+            {{ getExpiringProductsCount() }} Alerts
+          </span>
+        </div>
+
+        <div class="empty-state" *ngIf="getExpiringProducts().length === 0">
+          <ion-icon name="checkmark-circle-outline" style="font-size: 32px; color: #22c55e; margin-bottom: 8px;"></ion-icon>
+          <div>All products are fresh! No expiring or expired supplements found.</div>
+        </div>
+
+        <!-- Expiring Product Cards -->
+        <div *ngFor="let p of getExpiringProducts()" class="member-card product-card alert-card" [class.expired-border]="getProductExpiryStatus(p) === 'expired'">
+          <div class="product-card-main">
+            <img *ngIf="p.image_url" [src]="resolveImg(p.thumbnail_url || p.image_url)" class="product-card-thumb" alt="{{ p.name }}" />
+            <div *ngIf="!p.image_url" class="product-card-thumb fallback">{{ p.icon || '🛍️' }}</div>
+
+            <div class="product-card-info">
+              <div class="product-card-title">{{ p.name }}</div>
+              <div class="product-card-brand">Brand: {{ p.brand || 'FordaGO' }}</div>
+
+              <div class="expiry-alert-notice" [ngClass]="getProductExpiryStatus(p)">
+                <ion-icon [name]="getProductExpiryStatus(p) === 'expired' ? 'close-circle' : 'alert-circle'"></ion-icon>
+                <strong *ngIf="getProductExpiryStatus(p) === 'expired'">EXPIRED on {{ p.expiry_date | date:'MMM d, yyyy' }}</strong>
+                <strong *ngIf="getProductExpiryStatus(p) === 'expiring_soon'">EXPIRING SOON in {{ getProductExpiryDays(p) }} days ({{ p.expiry_date | date:'MMM d, yyyy' }})</strong>
+              </div>
+
+              <div class="product-card-price-row" style="margin-top: 6px;">
+                <span class="product-card-price">₱{{ p.price | number:'1.2-2' }}</span>
+                <span class="cost-tag" *ngIf="p.cost_price > 0">Cost: ₱{{ p.cost_price | number:'1.2-2' }}</span>
+                <span class="profit-tag" *ngIf="getProductUnitProfit(p) > 0">+₱{{ getProductUnitProfit(p) | number:'1.2-2' }} profit</span>
+                <span class="product-card-sep">|</span>
+                <span class="stock-pill">{{ p.stock }} in stock</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-actions-row">
+            <button class="act-btn edit" (click)="editProduct(p)">
+              <ion-icon name="create-outline"></ion-icon> Update Expiry
+            </button>
+            <button class="act-btn del" (click)="deleteProduct(p)">
+              <ion-icon name="trash-outline"></ion-icon> Delete / Pull Out
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Product Modal Form -->
       <div class="inline-form" *ngIf="showAddProduct">
         <div class="form-title">New Product</div>
-        <input class="field-input" type="text"   placeholder="Name"   [(ngModel)]="newProduct.name" />
-        <input class="field-input" type="text"   placeholder="Brand"  [(ngModel)]="newProduct.brand" />
-        <input class="field-input" type="number" placeholder="Price"  [(ngModel)]="newProduct.price" appNoNegative pattern="[0-9]*(\.[0-9]{1,2})?" />
-        <input class="field-input" type="number" placeholder="Stock"  [(ngModel)]="newProduct.stock" appNoNegative pattern="[0-9]*" />
+        
+        <label class="field-lbl">Product Name</label>
+        <input class="field-input" type="text" placeholder="e.g. Whey Protein 1LB" [(ngModel)]="newProduct.name" />
+
+        <label class="field-lbl">Brand / Manufacturer</label>
+        <input class="field-input" type="text" placeholder="e.g. Athlene, Optimum" [(ngModel)]="newProduct.brand" />
+
+        <div class="form-grid-2">
+          <div>
+            <label class="field-lbl">Selling Price (₱)</label>
+            <input class="field-input" type="number" placeholder="Selling Price" [(ngModel)]="newProduct.price" appNoNegative pattern="[0-9]*(\.[0-9]{1,2})?" />
+          </div>
+          <div>
+            <label class="field-lbl">Cost Price / Capital (₱)</label>
+            <input class="field-input" type="number" placeholder="Cost Price" [(ngModel)]="newProduct.cost_price" appNoNegative pattern="[0-9]*(\.[0-9]{1,2})?" />
+          </div>
+        </div>
+
+        <!-- Profit Live Calculation -->
+        <div class="profit-calc-preview" *ngIf="newProduct.price > 0 || newProduct.cost_price > 0">
+          <ion-icon name="trending-up-outline"></ion-icon>
+          <span>Profit per unit: <strong>+₱{{ getProductUnitProfit(newProduct) | number:'1.2-2' }}</strong> ({{ getProductMargin(newProduct) }}% margin)</span>
+        </div>
+
+        <div class="form-grid-2" style="margin-top: 8px;">
+          <div>
+            <label class="field-lbl">Stock Quantity</label>
+            <input class="field-input" type="number" placeholder="Initial stock" [(ngModel)]="newProduct.stock" appNoNegative pattern="[0-9]*" />
+          </div>
+          <div>
+            <label class="field-lbl">Expiry Date (Optional)</label>
+            <input class="field-input" type="date" [(ngModel)]="newProduct.expiry_date" />
+          </div>
+        </div>
+
         <div class="image-upload-wrap">
           <label class="image-upload-label">Product Photo</label>
           <label class="image-upload-btn">
@@ -1179,16 +1469,51 @@
           </label>
           <img *ngIf="newProduct.image_url" [src]="newProduct.image_url" class="image-preview" />
         </div>
-        <button class="submit-btn" (click)="saveProduct()">Save Product</button>
+
+        <div class="form-actions">
+          <button class="submit-btn" (click)="saveProduct()">Save Product</button>
+          <button class="cancel-btn" (click)="showAddProduct=false">Cancel</button>
+        </div>
       </div>
 
-      <!-- Edit Product Form -->
+      <!-- Edit Product Modal Form -->
       <div class="inline-form" *ngIf="editingProduct">
-        <div class="form-title">Edit Product</div>
-        <input class="field-input" type="text"   placeholder="Name"  [(ngModel)]="editingProduct.name" />
-        <input class="field-input" type="text"   placeholder="Brand" [(ngModel)]="editingProduct.brand" />
-        <input class="field-input" type="number" placeholder="Price" [(ngModel)]="editingProduct.price" appNoNegative pattern="[0-9]*(\.[0-9]{1,2})?" />
-        <input class="field-input" type="number" placeholder="Stock" [(ngModel)]="editingProduct.stock" appNoNegative pattern="[0-9]*" />
+        <div class="form-title">Edit Product — {{ editingProduct.name }}</div>
+
+        <label class="field-lbl">Product Name</label>
+        <input class="field-input" type="text" placeholder="Name" [(ngModel)]="editingProduct.name" />
+
+        <label class="field-lbl">Brand / Manufacturer</label>
+        <input class="field-input" type="text" placeholder="Brand" [(ngModel)]="editingProduct.brand" />
+
+        <div class="form-grid-2">
+          <div>
+            <label class="field-lbl">Selling Price (₱)</label>
+            <input class="field-input" type="number" placeholder="Price" [(ngModel)]="editingProduct.price" appNoNegative pattern="[0-9]*(\.[0-9]{1,2})?" />
+          </div>
+          <div>
+            <label class="field-lbl">Cost Price / Capital (₱)</label>
+            <input class="field-input" type="number" placeholder="Cost" [(ngModel)]="editingProduct.cost_price" appNoNegative pattern="[0-9]*(\.[0-9]{1,2})?" />
+          </div>
+        </div>
+
+        <!-- Profit Live Calculation in Edit -->
+        <div class="profit-calc-preview" *ngIf="editingProduct.price > 0 || editingProduct.cost_price > 0">
+          <ion-icon name="trending-up-outline"></ion-icon>
+          <span>Profit per unit: <strong>+₱{{ getProductUnitProfit(editingProduct) | number:'1.2-2' }}</strong> ({{ getProductMargin(editingProduct) }}% margin)</span>
+        </div>
+
+        <div class="form-grid-2" style="margin-top: 8px;">
+          <div>
+            <label class="field-lbl">Stock Quantity</label>
+            <input class="field-input" type="number" placeholder="Stock" [(ngModel)]="editingProduct.stock" appNoNegative pattern="[0-9]*" />
+          </div>
+          <div>
+            <label class="field-lbl">Expiry Date (Optional)</label>
+            <input class="field-input" type="date" [(ngModel)]="editingProduct.expiry_date" />
+          </div>
+        </div>
+
         <div class="image-upload-wrap">
           <label class="image-upload-label">Product Photo</label>
           <label class="image-upload-btn">
@@ -1198,127 +1523,11 @@
           </label>
           <img *ngIf="editingProduct.image_url" [src]="editingProduct.image_url" class="image-preview" />
         </div>
+
         <div class="form-actions">
-          <button class="submit-btn" (click)="updateProduct()">Update</button>
+          <button class="submit-btn" (click)="updateProduct()">Update Product</button>
           <button class="cancel-btn" (click)="editingProduct=null">Cancel</button>
         </div>
-      </div>
-
-      <div class="empty-state" *ngIf="products.length === 0">No products.</div>
-
-      <!-- Product Cards (matching user-side light mode design) -->
-      <div *ngFor="let p of displayedProducts" class="member-card product-card" [class.healthy-stock]="p.stock > 5" [class.low-stock]="p.stock > 0 && p.stock <= 5" [class.out-of-stock]="p.stock <= 0">
-        <div class="product-card-main">
-          <img *ngIf="p.image_url" [src]="resolveImg(p.thumbnail_url || p.image_url)" class="product-card-thumb" alt="{{ p.name }}" />
-          <div *ngIf="!p.image_url" class="product-card-thumb fallback">{{ p.icon || '🛍️' }}</div>
-
-          <div class="product-card-info">
-            <div class="product-card-title">{{ p.name }}</div>
-            <div class="product-card-brand">Brand: {{ p.brand || 'FordaGO' }}</div>
-            <div class="product-card-price-row">
-              <span class="product-card-price">₱{{ p.price | number:'1.2-2' }}</span>
-              <span class="product-card-sep">|</span>
-              <span class="stock-pill" [ngClass]="getStockBadge(p.stock).cls">
-                <ion-icon [name]="getStockBadge(p.stock).icon"></ion-icon>
-                <span>{{ getStockBadge(p.stock).label }}</span>
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div class="card-actions-row">
-          <button class="act-btn approve-btn" (click)="openQuickRestock(p, $event)" title="Quick Restock">
-            <ion-icon name="flash-outline"></ion-icon> Restock
-          </button>
-          <button class="act-btn edit" (click)="editProduct(p)">
-            <ion-icon name="create-outline"></ion-icon> Edit
-          </button>
-          <button class="act-btn del" (click)="deleteProduct(p)">
-            <ion-icon name="trash-outline"></ion-icon> Delete
-          </button>
-        </div>
-      </div>
-
-      <!-- View More / View Less for Products -->
-      <div class="view-more-wrap" *ngIf="filteredProducts.length > productsLimit && !productSearch">
-        <button class="view-more-btn" (click)="showAllProducts = !showAllProducts">
-          <ion-icon [name]="showAllProducts ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
-          <span>{{ showAllProducts ? 'View Less' : 'View More (' + (filteredProducts.length - productsLimit) + ' more)' }}</span>
-        </button>
-      </div>
-
-      <!-- ── Pending Orders Section ───────────────────────────── -->
-      <div id="pending-orders-section" class="section-label" style="margin-top: 24px;">
-        <ion-icon name="receipt-outline"></ion-icon> PENDING ORDERS
-      </div>
-
-      <!-- Search Input for Pending Orders -->
-      <div class="search-input-wrap" style="margin-bottom: 12px;">
-        <ion-icon name="search-outline" class="search-icon"></ion-icon>
-        <input
-          class="search-input-field"
-          type="text"
-          placeholder="Search buyer name or email…"
-          [(ngModel)]="pendingOrderSearch"
-        />
-        <button
-          class="clear-search-btn"
-          *ngIf="pendingOrderSearch"
-          (click)="pendingOrderSearch=''"
-        >
-          ✕
-        </button>
-      </div>
-
-      <div class="empty-state" *ngIf="filteredPendingOrderGroups.length === 0">
-        {{ pendingOrderSearch ? 'No pending orders matching "' + pendingOrderSearch + '".' : 'No pending orders.' }}
-      </div>
-
-      <!-- Pending Orders Cards (matching reference design) -->
-      <div *ngFor="let g of displayedPendingOrderGroups" class="member-card order-card">
-        <div class="order-card-header">
-          <div class="order-buyer-info">
-            <div class="order-buyer-name">{{ g.username }}</div>
-            <div class="order-buyer-email">{{ g.email }}</div>
-          </div>
-          <span class="order-status-badge pending">PENDING</span>
-        </div>
-
-        <div class="order-card-divider"></div>
-
-        <div class="order-details-block">
-          <div class="order-detail-line">
-            <span class="order-detail-label">Items:</span>
-            <span class="order-detail-val">
-              <span *ngFor="let item of g.items; let last = last"><strong>{{ item.quantity }}x</strong> {{ item.name }}<span *ngIf="!last">, </span></span>
-            </span>
-          </div>
-          <div class="order-detail-line">
-            <span class="order-detail-label">Payment Method:</span>
-            <span class="order-detail-val"><strong>{{ g.paymentMethod === 'cash' ? 'Cash' : 'GCash' }}</strong></span>
-          </div>
-          <div class="order-detail-line">
-            <span class="order-detail-label">Total Amount:</span>
-            <span class="order-detail-val price">₱{{ g.total | number:'1.2-2' }}</span>
-          </div>
-        </div>
-
-        <div class="card-actions-row dual" style="margin-top: 14px;">
-          <button class="act-btn del" [disabled]="g.cancelling" (click)="rejectOrderGroup(g)">
-            <ion-icon name="trash-outline"></ion-icon> Reject
-          </button>
-          <button class="act-btn verify-payment-btn" [disabled]="g.cancelling" (click)="approveOrderGroup(g)">
-            <ion-icon name="checkmark-outline"></ion-icon> Verify Payment
-          </button>
-        </div>
-      </div>
-
-      <!-- View More / View Less for Pending Orders -->
-      <div class="view-more-wrap" *ngIf="filteredPendingOrderGroups.length > pendingOrdersLimit && !pendingOrderSearch">
-        <button class="view-more-btn" (click)="showAllPendingOrders = !showAllPendingOrders">
-          <ion-icon [name]="showAllPendingOrders ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
-          <span>{{ showAllPendingOrders ? 'View Less' : 'View More (' + (filteredPendingOrderGroups.length - pendingOrdersLimit) + ' more)' }}</span>
-        </button>
       </div>
 
     </div>

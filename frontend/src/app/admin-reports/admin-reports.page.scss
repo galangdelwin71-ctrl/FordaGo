@@ -1415,6 +1415,48 @@ ion-content.reports-content {
     }
   }
 
+  &.has-expiry-warning {
+    border-left: 4px solid #ef4444;
+  }
+
+  .inv-chips-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .inv-expiry-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+
+    ion-icon {
+      font-size: 12px;
+    }
+
+    &.good {
+      background: rgba(16, 185, 129, 0.12);
+      color: #047857;
+    }
+    &.expiring_soon {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+      font-weight: 800;
+    }
+    &.expired {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+      font-weight: 800;
+    }
+  }
+
   .inv-status-chip {
     font-size: 10px;
     font-weight: 800;
@@ -1438,27 +1480,37 @@ ion-content.reports-content {
 
   .inv-stats-row {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
+    grid-template-columns: repeat(auto-fit, minmax(115px, 1fr));
+    gap: 10px;
     text-align: center;
   }
 
   .inv-stat-cell {
     display: flex;
     flex-direction: column;
+    background: #f8fafc;
+    padding: 8px 6px;
+    border-radius: 8px;
+    border: 1px solid rgba(15, 23, 42, 0.04);
 
     .stat-lbl {
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
       color: var(--text-muted);
       text-transform: uppercase;
+      letter-spacing: 0.2px;
       margin-bottom: 2px;
     }
 
     .stat-val {
-      font-size: 14px;
+      font-size: 13.5px;
       font-weight: 800;
       color: var(--text-primary);
+
+      small {
+        font-size: 10.5px;
+        font-weight: 600;
+      }
 
       &.green { color: var(--accent-emerald-dark); }
       &.gold  { color: var(--accent-gold-dark); }
