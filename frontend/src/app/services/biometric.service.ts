@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { BiometricAuth, BiometryType } from '@aparajita/capacitor-biometric-auth';
 import { Preferences } from '@capacitor/preferences';
 import { Capacitor } from '@capacitor/core';
+import { Device } from '@capacitor/device';
+import { API_BASE_URL } from '../config/api.config';
 
 const PREF_BIOMETRIC_TOKEN = 'fordago_bio_token';
 const PREF_BIOMETRIC_USER = 'fordago_bio_user';
@@ -319,5 +321,59 @@ export class BiometricService {
       return 'Apple iOS Device';
     }
     return 'Authorized Device';
+  }
+
+  /**
+   * Get unique hardware device identifier (persists across app uninstalls/reinstalls on Android)
+   */
+  async getDeviceId(): Promise<string> {
+    try {
+      if (Capacitor.isNativePlatform()) {
+        const info = await Device.getId();
+        if (info && info.identifier) {
+          return info.identifier;
+        }
+      }
+    } catch (err) {
+      console.warn('Could not read native device ID:', err);
+    }
+    // Fallback: persistent storage key or generated UUID
+    const { value } = await Preferences.get({ key: 'fordago_device_uuid' });
+    if (value) return value;
+    const fallbackId = 'dev-' + Math.random().toString(36).substring(2, 12) + '-' + Date.now().toString(36);
+    await Preferences.set({ key: 'fordago_device_uuid', value: fallbackId });
+    return fallbackId;
+  }
+
+  /**
+   * Query server for any accounts linked to this physical device (used for fresh install / reinstall recovery)
+   */
+  async fetchDeviceAccountsFromServer(): Promise<BiometricAccount[]> {
+    const deviceId = await this.getDeviceId();
+    if (!deviceId) return [];
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/biometric/device-accounts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ device_id: deviceId }),
+      });
+      const data = await res.json();
+      if (data && Array.isArray(data.accounts)) {
+        return data.accounts.map((acc: any) => ({
+          identifier: acc.identifier,
+          name: acc.name,
+          role: acc.role || 'Member',
+          avatar: acc.avatar || '',
+          token: '', // recovered from server upon login
+          deviceName: acc.device_name || this.getDeviceModelName(),
+        }));
+      }
+    } catch (err) {
+      console.warn('Failed to query device accounts from server:', err);
+    }
+    return [];
   }
 }

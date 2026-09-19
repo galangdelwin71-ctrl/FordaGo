@@ -2880,3 +2880,165 @@ ion-content.login-bg::part(scroll) {
   to { opacity: 1; }
 }
 
+/* ── Post-Login Consent Prompt & Fresh Install Alert ── */
+.bio-consent-card {
+  max-width: 380px !important;
+  text-align: center;
+  padding: 28px 22px !important;
+
+  .bio-consent-icon-ring {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    background: rgba(36, 180, 126, 0.14);
+    border: 1.5px solid rgba(36, 180, 126, 0.35);
+    color: #24b47e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+
+    &.alert-ring {
+      background: rgba(255, 214, 0, 0.14);
+      border-color: rgba(255, 214, 0, 0.35);
+      color: #ffd600;
+    }
+  }
+
+  .bio-consent-title {
+    color: #ffffff;
+    font-size: 19px;
+    font-weight: 800;
+    margin: 0 0 8px;
+    letter-spacing: -0.2px;
+  }
+
+  .bio-consent-sub {
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 13.5px;
+    line-height: 1.45;
+    margin: 0 0 18px;
+
+    strong {
+      color: #ffd600;
+    }
+  }
+
+  .bio-consent-user-chip {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 14px;
+    padding: 10px 14px;
+    margin-bottom: 20px;
+    text-align: left;
+
+    .chip-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: #ffd600;
+      color: #000000;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+
+    .chip-info {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+
+      .chip-name {
+        color: #ffffff;
+        font-size: 13.5px;
+        font-weight: 700;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .chip-email {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 12px;
+      }
+    }
+  }
+
+  .bio-consent-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    .bio-consent-allow-btn {
+      width: 100%;
+      height: 46px;
+      border-radius: 12px;
+      background: #ffd600;
+      color: #000000;
+      font-size: 14px;
+      font-weight: 800;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 160ms ease;
+
+      &:hover {
+        background: #ffe033;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: scale(0.98);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      ion-spinner {
+        width: 20px;
+        height: 20px;
+        color: #000000;
+      }
+    }
+
+    .bio-consent-skip-btn {
+      width: 100%;
+      height: 40px;
+      border-radius: 12px;
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: rgba(255, 255, 255, 0.75);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 160ms ease;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: #ffffff;
+      }
+
+      &:active {
+        transform: scale(0.98);
+      }
+    }
+  }
+}
+

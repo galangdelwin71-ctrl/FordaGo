@@ -1005,19 +1005,26 @@ class AuthController extends Controller
         if (! $user) return response()->json(['message' => 'Unauthorized'], 401);
 
         $deviceName = trim((string) $request->input('device_name', 'Mobile Device'));
+        $deviceId   = trim((string) $request->input('device_id', ''));
         $biometricToken = Str::random(64);
         $tokenHash = hash('sha256', $biometricToken . ':' . config('app.key'));
 
-        $user->update([
+        $updateData = [
             'biometric_enabled'     => true,
             'biometric_token_hash'  => $tokenHash,
             'biometric_device_name' => substr($deviceName, 0, 100),
-        ]);
+        ];
+        if ($deviceId !== '') {
+            $updateData['biometric_credential_id'] = $deviceId;
+        }
+
+        $user->update($updateData);
 
         return response()->json([
             'message'         => 'Biometric Passkey registered successfully.',
             'biometric_token' => $biometricToken,
             'device_name'     => $deviceName,
+            'device_id'       => $deviceId,
             'user'            => $this->formatUserData($user),
         ]);
     }
@@ -1030,9 +1037,10 @@ class AuthController extends Controller
         $enable = (bool) $request->input('enable', false);
         if (! $enable) {
             $user->update([
-                'biometric_enabled'     => false,
-                'biometric_token_hash'  => null,
-                'biometric_device_name' => null,
+                'biometric_enabled'       => false,
+                'biometric_token_hash'    => null,
+                'biometric_device_name'   => null,
+                'biometric_credential_id' => null,
             ]);
             return response()->json([
                 'message' => 'Biometric login disabled.',
@@ -1043,26 +1051,68 @@ class AuthController extends Controller
         return $this->biometricRegister($request);
     }
 
+    public function getDeviceBiometricAccounts(Request $request)
+    {
+        $deviceId = trim((string) $request->input('device_id', ''));
+        if ($deviceId === '') {
+            return response()->json(['accounts' => []]);
+        }
+
+        $users = User::where('biometric_enabled', true)
+            ->where('biometric_credential_id', $deviceId)
+            ->get();
+
+        $accounts = $users->map(function ($u) {
+            return [
+                'identifier' => $u->email,
+                'name'       => trim(($u->first_name ?? '') . ' ' . ($u->last_name ?? '')) ?: ($u->username ?? $u->name ?? $u->email),
+                'role'       => $u->role ?? 'Member',
+                'avatar'     => $u->profile_image ?? $u->avatar_url ?? null,
+                'email'      => $u->email,
+                'device_name'=> $u->biometric_device_name ?? 'Mobile Device',
+            ];
+        });
+
+        return response()->json(['accounts' => $accounts]);
+    }
+
     public function biometricLogin(Request $request)
     {
         $identifier     = trim((string) ($request->input('identifier') ?? $request->input('email') ?? ''));
         $biometricToken = trim((string) $request->input('biometric_token', ''));
+        $deviceId       = trim((string) $request->input('device_id', ''));
 
-        if ($identifier === '' || $biometricToken === '') {
-            return response()->json(['message' => 'Device credential or identifier missing.'], 400);
+        if ($identifier === '') {
+            return response()->json(['message' => 'Identifier is required.'], 400);
         }
 
         $user = User::where('email', $identifier)
             ->orWhere('username', $identifier)
             ->first();
 
-        if (! $user || ! $user->biometric_enabled || ! $user->biometric_token_hash) {
-            return response()->json(['message' => 'Biometric login is not active for this account on this device.'], 401);
+        if (! $user || ! $user->biometric_enabled) {
+            return response()->json(['message' => 'Biometric login is not active for this account.'], 401);
         }
 
-        $computedHash = hash('sha256', $biometricToken . ':' . config('app.key'));
-        if (! hash_equals($user->biometric_token_hash, $computedHash)) {
+        $tokenValid = false;
+        if ($biometricToken !== '' && $user->biometric_token_hash) {
+            $computedHash = hash('sha256', $biometricToken . ':' . config('app.key'));
+            $tokenValid = hash_equals($user->biometric_token_hash, $computedHash);
+        }
+
+        $deviceMatches = ($deviceId !== '' && !empty($user->biometric_credential_id) && hash_equals((string)$user->biometric_credential_id, $deviceId));
+
+        if (! $tokenValid && ! $deviceMatches) {
             return response()->json(['message' => 'Biometric passkey invalid or expired. Please log in with password.'], 401);
+        }
+
+        // If fresh-install device recovery, generate new token for local persistence
+        $newBiometricToken = null;
+        if (! $tokenValid && $deviceMatches) {
+            $newBiometricToken = Str::random(64);
+            $user->update([
+                'biometric_token_hash' => hash('sha256', $newBiometricToken . ':' . config('app.key')),
+            ]);
         }
 
         $isStaffRole = in_array($user->role, ['admin', 'super_admin', 'employee'], true);
@@ -1081,8 +1131,9 @@ class AuthController extends Controller
         ActivityLogger::logLogin($user, $request);
 
         return response()->json([
-            'token' => $token,
-            'user'  => $this->formatUserData($user),
+            'token'           => $token,
+            'biometric_token' => $newBiometricToken ?? $biometricToken,
+            'user'            => $this->formatUserData($user),
         ]);
     }
 

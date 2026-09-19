@@ -45,7 +45,8 @@ Route::prefix('auth')->group(function () {
     Route::post('/2fa/resend', [AuthController::class, 'twoFactorResend']);
 
     // Biometric Public 1-Tap Login
-    Route::post('/biometric/login', [AuthController::class, 'biometricLogin']);
+    Route::post('/biometric/login',           [AuthController::class, 'biometricLogin']);
+    Route::post('/biometric/device-accounts', [AuthController::class, 'getDeviceBiometricAccounts']);
 
     // Authenticated Security Controls
     Route::middleware('auth:sanctum')->group(function () {

@@ -127,18 +127,18 @@
             <span>{{ loading ? 'Signing In' : 'Login' }}</span>
           </button>
 
-          <!-- Biometric Icon Button (Tap to re-trigger native popup if dismissed) -->
+          <!-- Biometric Icon Button (Always visible when hardware is present, or accounts registered) -->
           <button
-            *ngIf="savedBiometricUser"
+            *ngIf="hasBiometricHardware || savedBiometricUser || savedBiometricAccounts.length > 0"
             type="button"
             class="bio-quick-icon-btn"
             (click)="loginWithBiometric()"
             [disabled]="biometricLoading || loading"
-            title="Login with your Biometrics"
-            aria-label="Login with your Biometrics"
+            title="Scan fingerprint to access FordaGO accounts"
+            aria-label="Scan fingerprint to access FordaGO accounts"
           >
             <ion-spinner *ngIf="biometricLoading" name="crescent"></ion-spinner>
-            <ion-icon *ngIf="!biometricLoading" name="fingerprint-outline" aria-hidden="true"></ion-icon>
+            <ion-icon *ngIf="!biometricLoading" name="finger-print-outline" aria-hidden="true"></ion-icon>
           </button>
         </div>
 
@@ -1482,6 +1482,82 @@
       <div class="bio-picker-footer">
         <button type="button" class="bio-cancel-btn" (click)="closeBiometricAccountPicker()">
           Use another account with password
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Post-Login Biometric Permission / Activation Modal ───────── -->
+  <div class="bio-picker-overlay" *ngIf="showPostLoginBioPromptModal" (click)="skipPostLoginBio()">
+    <div class="bio-picker-card bio-consent-card" (click)="$event.stopPropagation()">
+      <div class="bio-consent-icon-ring">
+        <ion-icon name="finger-print-outline"></ion-icon>
+      </div>
+
+      <h3 class="bio-consent-title">Allow Fingerprint Login?</h3>
+      <p class="bio-consent-sub">
+        Allow FordaGO to use your fingerprint for instant, 1-tap sign-ins on this device next time.
+      </p>
+
+      <div class="bio-consent-user-chip" *ngIf="pendingPostLoginUser">
+        <div class="chip-avatar">
+          <img
+            *ngIf="pendingPostLoginUser.avatar_url || pendingPostLoginUser.avatar || pendingPostLoginUser.profile_image"
+            [src]="resolveImg(pendingPostLoginUser.avatar_url || pendingPostLoginUser.avatar || pendingPostLoginUser.profile_image)"
+            alt=""
+          />
+          <span *ngIf="!(pendingPostLoginUser.avatar_url || pendingPostLoginUser.avatar || pendingPostLoginUser.profile_image)">
+            {{ (pendingPostLoginUser.first_name || pendingPostLoginUser.name || pendingPostLoginUser.email).charAt(0).toUpperCase() }}
+          </span>
+        </div>
+        <div class="chip-info">
+          <span class="chip-name">{{ pendingPostLoginUser.first_name ? (pendingPostLoginUser.first_name + ' ' + (pendingPostLoginUser.last_name || '')) : (pendingPostLoginUser.name || pendingPostLoginUser.email) }}</span>
+          <span class="chip-email">{{ maskEmail(pendingPostLoginUser.email) }}</span>
+        </div>
+      </div>
+
+      <div class="bio-consent-actions">
+        <button
+          type="button"
+          class="bio-consent-allow-btn"
+          [disabled]="postLoginBioLoading"
+          (click)="confirmEnablePostLoginBio()"
+        >
+          <ion-spinner *ngIf="postLoginBioLoading" name="crescent"></ion-spinner>
+          <span *ngIf="!postLoginBioLoading">Allow &amp; Enable</span>
+        </button>
+
+        <button
+          type="button"
+          class="bio-consent-skip-btn"
+          [disabled]="postLoginBioLoading"
+          (click)="skipPostLoginBio()"
+        >
+          Not Now
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── No Accounts Linked Alert Modal ─────────────────── -->
+  <div class="bio-picker-overlay" *ngIf="showNoAccountsLinkedModal" (click)="closeNoAccountsLinkedModal()">
+    <div class="bio-picker-card bio-consent-card" (click)="$event.stopPropagation()">
+      <div class="bio-consent-icon-ring alert-ring">
+        <ion-icon name="finger-print-outline"></ion-icon>
+      </div>
+
+      <h3 class="bio-consent-title">No Accounts Found on Device</h3>
+      <p class="bio-consent-sub">
+        Wala pang account na naka-link sa fingerprint ng device na ito. Mag-sign in muna gamit ang iyong email at password, at piliin ang <strong>Allow</strong> para mai-konek ang iyong daliri.
+      </p>
+
+      <div class="bio-consent-actions">
+        <button
+          type="button"
+          class="bio-consent-allow-btn"
+          (click)="closeNoAccountsLinkedModal()"
+        >
+          Sign In with Password
         </button>
       </div>
     </div>

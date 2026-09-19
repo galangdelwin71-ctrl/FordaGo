@@ -83,6 +83,13 @@ export class LoginPage implements OnDestroy {
   biometricLoading = false;
   showPasswordFallback = false;
   autoBiometricTriggered = false;
+  hasBiometricHardware = false;
+
+  // Fresh install & Post-login consent prompt states
+  showNoAccountsLinkedModal = false;
+  showPostLoginBioPromptModal = false;
+  pendingPostLoginUser: any = null;
+  postLoginBioLoading = false;
 
   resolveImg(path: string | null | undefined): string {
     return resolveImageUrl(path);
@@ -376,6 +383,9 @@ export class LoginPage implements OnDestroy {
 
   private async checkBiometricLoginAvailability(): Promise<void> {
     try {
+      const bioStatus = await this.biometricService.checkBiometrics();
+      this.hasBiometricHardware = !!bioStatus.isAvailable;
+
       const active = await this.biometricService.isBiometricActiveOnDevice();
       if (active) {
         this.savedBiometricAccounts = await this.biometricService.getSavedBiometricAccounts();
@@ -388,6 +398,7 @@ export class LoginPage implements OnDestroy {
         this.savedBiometricUser = null;
       }
     } catch {
+      this.hasBiometricHardware = false;
       this.savedBiometricAccounts = [];
       this.savedBiometricUser = null;
     }
@@ -965,11 +976,7 @@ export class LoginPage implements OnDestroy {
           return;
         }
 
-        if (['admin', 'super_admin', 'employee'].includes(user.role)) {
-          this.router.navigate(['/admin'], { replaceUrl: true });
-        } else {
-          this.router.navigate(['/dashboard'], { replaceUrl: true });
-        }
+        this.handleLoginSuccess(user);
       },
       error: (err: any) => {
         this.loading = false;
@@ -981,14 +988,6 @@ export class LoginPage implements OnDestroy {
   // ── Biometric / Passkey Login (GCash style) ─────────────
 
   async loginWithBiometric(isAuto = false): Promise<void> {
-    const accounts = await this.biometricService.getSavedBiometricAccounts();
-    if (!accounts || accounts.length === 0) {
-      if (!isAuto) {
-        this.error = 'No biometric passkey registered on this device. Please sign in with password.';
-      }
-      return;
-    }
-
     this.error = '';
     this.biometricLoading = true;
 
@@ -1003,10 +1002,29 @@ export class LoginPage implements OnDestroy {
         return;
       }
 
-      // 2. Hardware scan succeeded! Check how many accounts exist
+      // 2. Check local accounts first
+      let accounts = await this.biometricService.getSavedBiometricAccounts();
+
+      // 3. If local accounts empty (e.g. fresh install / reinstalled app), query server by Device ID
+      if (!accounts || accounts.length === 0) {
+        const serverAccounts = await this.biometricService.fetchDeviceAccountsFromServer();
+        if (serverAccounts && serverAccounts.length > 0) {
+          accounts = serverAccounts;
+          this.savedBiometricAccounts = serverAccounts;
+        }
+      }
+
+      // 4. If still no accounts linked on this device
+      if (!accounts || accounts.length === 0) {
+        this.biometricLoading = false;
+        this.showNoAccountsLinkedModal = true;
+        return;
+      }
+
+      // 5. Hardware scan succeeded! Check account count
       if (accounts.length === 1) {
         // Exactly one account -> Sign in immediately
-        this.executeBiometricLogin(accounts[0]);
+        await this.executeBiometricLogin(accounts[0]);
       } else {
         // Multiple accounts detected -> Open sleek account selector modal
         this.biometricLoading = false;
@@ -1023,25 +1041,29 @@ export class LoginPage implements OnDestroy {
     if (this.biometricLoading) return;
     this.selectedBiometricIdentifier = account.identifier;
     this.biometricLoading = true;
-    this.executeBiometricLogin(account);
+    void this.executeBiometricLogin(account);
   }
 
-  private executeBiometricLogin(account: BiometricAccount): void {
-    this.auth.biometricLogin(account.identifier, account.token).subscribe({
-      next: () => {
+  private async executeBiometricLogin(account: BiometricAccount): Promise<void> {
+    const deviceId = await this.biometricService.getDeviceId();
+    this.auth.biometricLogin(account.identifier, account.token, deviceId).subscribe({
+      next: async (res: any) => {
         this.biometricLoading = false;
         this.showBiometricAccountPickerModal = false;
         this.selectedBiometricIdentifier = '';
+
+        // If fresh install recovery issued a new token, persist to local storage
+        if (res?.biometric_token) {
+          account.token = res.biometric_token;
+          await this.biometricService.saveBiometricAccount(account);
+        }
+
         const user = this.auth.user;
         if (!user) {
           this.error = 'Login succeeded but user profile was not loaded.';
           return;
         }
-        if (['admin', 'super_admin', 'employee'].includes(user.role)) {
-          this.router.navigate(['/admin'], { replaceUrl: true });
-        } else {
-          this.router.navigate(['/dashboard'], { replaceUrl: true });
-        }
+        this.proceedToUserHome(user);
       },
       error: (err: any) => {
         this.biometricLoading = false;
@@ -1049,6 +1071,94 @@ export class LoginPage implements OnDestroy {
         this.error = err?.error?.message || 'Biometric passkey expired or revoked. Please log in with password.';
       }
     });
+  }
+
+  handleLoginSuccess(user: any): void {
+    if (!user) {
+      this.error = 'Login succeeded but user session could not be established.';
+      return;
+    }
+
+    // If device has biometric sensor and user has not enabled biometrics yet on this device, prompt for consent!
+    if (this.hasBiometricHardware) {
+      this.biometricService.isAccountBiometricEnabled(user.email).then((alreadyEnabled) => {
+        if (!alreadyEnabled && !user.biometric_enabled) {
+          this.pendingPostLoginUser = user;
+          this.showPostLoginBioPromptModal = true;
+        } else {
+          this.proceedToUserHome(user);
+        }
+      }).catch(() => {
+        this.proceedToUserHome(user);
+      });
+    } else {
+      this.proceedToUserHome(user);
+    }
+  }
+
+  proceedToUserHome(user: any): void {
+    if (['admin', 'super_admin', 'employee'].includes(user.role)) {
+      this.router.navigate(['/admin'], { replaceUrl: true });
+    } else {
+      this.router.navigate(['/dashboard'], { replaceUrl: true });
+    }
+  }
+
+  async confirmEnablePostLoginBio(): Promise<void> {
+    const user = this.pendingPostLoginUser;
+    if (!user) return;
+    this.postLoginBioLoading = true;
+
+    try {
+      const verified = await this.biometricService.promptBiometric(
+        'Register Fingerprint Passkey for ' + (user.first_name || user.name || 'your account')
+      );
+      if (!verified) {
+        this.postLoginBioLoading = false;
+        this.showPostLoginBioPromptModal = false;
+        this.proceedToUserHome(user);
+        return;
+      }
+
+      const deviceId = await this.biometricService.getDeviceId();
+      const deviceName = this.biometricService.getDeviceModelName();
+
+      this.auth.biometricRegister(deviceName, deviceId).subscribe({
+        next: async (res: any) => {
+          this.postLoginBioLoading = false;
+          await this.biometricService.saveBiometricAccount({
+            identifier: user.email,
+            name: (user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : user.name) || user.email,
+            role: user.role || 'Member',
+            avatar: user.avatar_url || user.avatar || user.profile_image || '',
+            token: res?.biometric_token,
+            deviceName: deviceName,
+          });
+          this.showPostLoginBioPromptModal = false;
+          this.proceedToUserHome(user);
+        },
+        error: () => {
+          this.postLoginBioLoading = false;
+          this.showPostLoginBioPromptModal = false;
+          this.proceedToUserHome(user);
+        }
+      });
+    } catch {
+      this.postLoginBioLoading = false;
+      this.showPostLoginBioPromptModal = false;
+      this.proceedToUserHome(user);
+    }
+  }
+
+  skipPostLoginBio(): void {
+    this.showPostLoginBioPromptModal = false;
+    if (this.pendingPostLoginUser) {
+      this.proceedToUserHome(this.pendingPostLoginUser);
+    }
+  }
+
+  closeNoAccountsLinkedModal(): void {
+    this.showNoAccountsLinkedModal = false;
   }
 
   closeBiometricAccountPicker(): void {
@@ -1138,11 +1248,7 @@ export class LoginPage implements OnDestroy {
           this.twoFactorError = 'Verification succeeded but user session could not be established.';
           return;
         }
-        if (['admin', 'super_admin', 'employee'].includes(user.role)) {
-          this.router.navigate(['/admin'], { replaceUrl: true });
-        } else {
-          this.router.navigate(['/dashboard'], { replaceUrl: true });
-        }
+        this.handleLoginSuccess(user);
       },
       error: (err: any) => {
         this.twoFactorLoading = false;

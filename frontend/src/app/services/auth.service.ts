@@ -308,8 +308,8 @@ export class AuthService {
     );
   }
 
-  biometricRegister(deviceName?: string) {
-    return this.http.post<any>(`${this.apiUrl}/biometric/register`, { device_name: deviceName }).pipe(
+  biometricRegister(deviceName?: string, deviceId?: string) {
+    return this.http.post<any>(`${this.apiUrl}/biometric/register`, { device_name: deviceName, device_id: deviceId }).pipe(
       tap(res => {
         if (res && res.user) {
           this.updateCurrentUser(res.user);
@@ -319,8 +319,8 @@ export class AuthService {
     );
   }
 
-  biometricToggle(enable: boolean, deviceName?: string) {
-    return this.http.post<any>(`${this.apiUrl}/biometric/toggle`, { enable, device_name: deviceName }).pipe(
+  biometricToggle(enable: boolean, deviceName?: string, deviceId?: string) {
+    return this.http.post<any>(`${this.apiUrl}/biometric/toggle`, { enable, device_name: deviceName, device_id: deviceId }).pipe(
       tap(res => {
         if (res && res.user) {
           this.updateCurrentUser(res.user);
@@ -330,13 +330,23 @@ export class AuthService {
     );
   }
 
-  biometricLogin(identifier: string, biometricToken: string) {
-    return this.http.post<any>(`${this.apiUrl}/biometric/login`, { identifier, biometric_token: biometricToken }).pipe(
+  biometricLogin(identifier: string, biometricToken?: string, deviceId?: string) {
+    return this.http.post<any>(`${this.apiUrl}/biometric/login`, {
+      identifier,
+      biometric_token: biometricToken || '',
+      device_id: deviceId || ''
+    }).pipe(
       tap(res => {
         if (res && res.token && res.user) {
           this.setSession(res.token, res.user);
         }
       }),
+      catchError((err: HttpErrorResponse) => this.handleError(err))
+    );
+  }
+
+  getDeviceBiometricAccounts(deviceId: string) {
+    return this.http.post<any>(`${this.apiUrl}/biometric/device-accounts`, { device_id: deviceId }).pipe(
       catchError((err: HttpErrorResponse) => this.handleError(err))
     );
   }
