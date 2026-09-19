@@ -1392,112 +1392,20 @@
     <!-- ══════════════════════════════════════════════ -->
     <div *ngIf="activeTab==='notifs'">
 
-      <!-- ── Send Notification Compose Card ───────────── -->
-      <div class="member-card notif-compose-card">
-        <div class="form-title" style="margin-bottom: 12px; font-size: 15px;">
-          <ion-icon name="paper-plane-outline"></ion-icon> Send Notification
+      <!-- ── Notification Center Action Bar & Header ─── -->
+      <div class="notif-header-action-row">
+        <div class="notif-section-heading">
+          <ion-icon name="notifications-outline"></ion-icon>
+          <span>Notifications & Announcements</span>
         </div>
-
-        <!-- Modern Recipient Selector -->
-        <label class="field-lbl"><ion-icon name="people-outline"></ion-icon> Recipient</label>
-
-        <!-- Mode Toggle Segment -->
-        <div class="recipient-toggle-grid">
-          <button
-            type="button"
-            class="recipient-toggle-btn"
-            [class.active]="notifRecipientType === 'all'"
-            (click)="setNotifRecipientType('all')"
-          >
-            <ion-icon name="megaphone-outline"></ion-icon>
-            <span>All Members</span>
-          </button>
-          <button
-            type="button"
-            class="recipient-toggle-btn"
-            [class.active]="notifRecipientType === 'specific'"
-            (click)="setNotifRecipientType('specific')"
-          >
-            <ion-icon name="person-outline"></ion-icon>
-            <span>Specific Member</span>
-          </button>
-        </div>
-
-        <!-- If "All Members" selected -->
-        <div class="recipient-broadcast-banner" *ngIf="notifRecipientType === 'all'">
-          <ion-icon name="information-circle-outline"></ion-icon>
-          <span>This announcement will be delivered to <strong>all registered gym members</strong>.</span>
-        </div>
-
-        <!-- If "Specific Member" selected -->
-        <div class="specific-member-picker-wrap" *ngIf="notifRecipientType === 'specific'">
-
-          <!-- If a member is chosen -->
-          <div class="selected-member-chip-card" *ngIf="selectedNotifTargetMember">
-            <div class="member-mini-avatar">
-              <img *ngIf="selectedNotifTargetMember.photo_url" [src]="resolveImg(selectedNotifTargetMember.photo_url)" alt="{{ selectedNotifTargetMember.username }}" />
-              <span *ngIf="!selectedNotifTargetMember.photo_url">{{ selectedNotifTargetMember.username?.charAt(0)?.toUpperCase() || 'M' }}</span>
-            </div>
-            <div class="selected-member-info">
-              <div class="selected-name">{{ selectedNotifTargetMember.username }}</div>
-              <div class="selected-email">{{ selectedNotifTargetMember.email }}</div>
-            </div>
-            <button type="button" class="change-recipient-btn" (click)="clearNotifTargetMember()">
-              Change ✕
-            </button>
-          </div>
-
-          <!-- Member search & list dropdown (when choosing or changing) -->
-          <div class="member-picker-dropdown" *ngIf="!selectedNotifTargetMember || showRecipientDropdown">
-            <div class="mention-search-box" style="margin-bottom: 8px;">
-              <ion-icon name="search-outline"></ion-icon>
-              <input
-                type="text"
-                placeholder="Search member name or email…"
-                [(ngModel)]="notifRecipientSearch"
-              />
-            </div>
-
-            <div class="member-picker-list">
-              <div class="empty-state mini" *ngIf="filteredRecipientMembers.length === 0" style="padding: 12px; font-size: 12px;">
-                No members matching search.
-              </div>
-              <button
-                type="button"
-                *ngFor="let m of filteredRecipientMembers"
-                class="member-picker-item"
-                [class.selected]="notifTargetUserId === m.id"
-                (click)="selectNotifTargetMember(m)"
-              >
-                <div class="member-mini-avatar">
-                  <img *ngIf="m.photo_url" [src]="resolveImg(m.photo_url)" alt="{{ m.username }}" />
-                  <span *ngIf="!m.photo_url">{{ m.username?.charAt(0)?.toUpperCase() || 'M' }}</span>
-                </div>
-                <div class="member-picker-info">
-                  <div class="member-picker-name">{{ m.username }}</div>
-                  <div class="member-picker-email">{{ m.email }}</div>
-                </div>
-                <span class="role-badge">{{ m.role }}</span>
-              </button>
-            </div>
-          </div>
-
-        </div>
-
-        <label class="field-lbl">Title / Subject (Optional)</label>
-        <input class="field-input" type="text" placeholder="e.g. Gym Maintenance, Schedule Update" [(ngModel)]="notifTitle" />
-
-        <label class="field-lbl">Message</label>
-        <textarea class="field-input notif-textarea" [(ngModel)]="notifMessage" placeholder="Type announcement or alert message…" rows="3"></textarea>
-
-        <button class="submit-btn" (click)="sendNotification()" style="margin-top: 10px;">
-          <ion-icon name="send-outline"></ion-icon>
-          <span>{{ notifTargetUserId ? 'Send Direct Notice' : 'Send to All Members' }}</span>
+        <button type="button" class="btn-primary-send-notif" (click)="openSendNotifModal()">
+          <ion-icon name="paper-plane-outline"></ion-icon>
+          <span>Send Notification</span>
         </button>
       </div>
 
       <!-- ── Notification Views Navigation ────────────── -->
-      <div class="view-tabs-row notif-view-tabs" style="margin-top: 20px; margin-bottom: 14px;">
+      <div class="view-tabs-row notif-view-tabs" style="margin-top: 4px; margin-bottom: 14px;">
         <button
           class="view-tab-btn"
           [class.active]="notifViewMode === 'broadcasts'"
@@ -1542,7 +1450,7 @@
         </div>
 
         <div
-          *ngFor="let n of displayedBroadcastNotifications"
+          *ngFor="let n of displayedBroadcastNotifications; trackBy: trackById"
           class="member-card notif-card interactive-card"
           [class.unread-card]="!n.is_read"
           (click)="viewNotification(n)"
@@ -1616,8 +1524,9 @@
               type="text"
               placeholder="Search member account by name or email…"
               [(ngModel)]="notifMemberSearch"
+              (input)="onNotifMemberSearchChange()"
             />
-            <button class="clear-search-btn" *ngIf="notifMemberSearch" (click)="notifMemberSearch=''">✕</button>
+            <button class="clear-search-btn" *ngIf="notifMemberSearch" (click)="notifMemberSearch=''; onNotifMemberSearchChange()">✕</button>
           </div>
 
           <div class="empty-state" *ngIf="membersForNotifications.length === 0">
@@ -1625,7 +1534,7 @@
           </div>
 
           <div
-            *ngFor="let m of membersForNotifications"
+            *ngFor="let m of membersForNotifications; trackBy: trackById"
             class="member-card member-notif-account-card interactive-card"
             (click)="selectNotifMember(m)"
           >
@@ -1684,7 +1593,7 @@
           </div>
 
           <div
-            *ngFor="let n of selectedMemberNotifications"
+            *ngFor="let n of selectedMemberNotifications; trackBy: trackById"
             class="member-card notif-card interactive-card"
             [class.unread-card]="!n.is_read"
             (click)="viewNotification(n)"
@@ -3520,6 +3429,121 @@
     <div class="admin-modal-footer">
       <button type="button" class="cancel-btn" (click)="editingMembershipFor = null">Cancel</button>
       <button type="button" class="submit-btn" (click)="saveMembership()">Save Membership</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 12. Send Notification Modal ─────────────────── -->
+<div class="modal-backdrop-overlay" *ngIf="showSendNotifModal" (click)="closeSendNotifModal()">
+  <div class="admin-modal-card notif-compose-modal" (click)="$event.stopPropagation()">
+    <div class="admin-modal-header">
+      <h3 class="admin-modal-title">
+        <ion-icon name="paper-plane-outline"></ion-icon>
+        <span>Send Notification</span>
+      </h3>
+      <button type="button" class="admin-modal-close-btn" (click)="closeSendNotifModal()" aria-label="Close">✕</button>
+    </div>
+    <div class="admin-modal-body">
+      <!-- Modern Recipient Selector -->
+      <label class="field-lbl"><ion-icon name="people-outline"></ion-icon> Recipient</label>
+
+      <!-- Mode Toggle Segment -->
+      <div class="recipient-toggle-grid">
+        <button
+          type="button"
+          class="recipient-toggle-btn"
+          [class.active]="notifRecipientType === 'all'"
+          (click)="setNotifRecipientType('all')"
+        >
+          <ion-icon name="megaphone-outline"></ion-icon>
+          <span>All Members</span>
+        </button>
+        <button
+          type="button"
+          class="recipient-toggle-btn"
+          [class.active]="notifRecipientType === 'specific'"
+          (click)="setNotifRecipientType('specific')"
+        >
+          <ion-icon name="person-outline"></ion-icon>
+          <span>Specific Member</span>
+        </button>
+      </div>
+
+      <!-- If "All Members" selected -->
+      <div class="recipient-broadcast-banner" *ngIf="notifRecipientType === 'all'">
+        <ion-icon name="information-circle-outline"></ion-icon>
+        <span>This announcement will be delivered to <strong>all registered gym members</strong>.</span>
+      </div>
+
+      <!-- If "Specific Member" selected -->
+      <div class="specific-member-picker-wrap" *ngIf="notifRecipientType === 'specific'">
+
+        <!-- If a member is chosen -->
+        <div class="selected-member-chip-card" *ngIf="selectedNotifTargetMember">
+          <div class="member-mini-avatar">
+            <img *ngIf="selectedNotifTargetMember.photo_url" [src]="resolveImg(selectedNotifTargetMember.photo_url)" alt="{{ selectedNotifTargetMember.username }}" />
+            <span *ngIf="!selectedNotifTargetMember.photo_url">{{ selectedNotifTargetMember.username?.charAt(0)?.toUpperCase() || 'M' }}</span>
+          </div>
+          <div class="selected-member-info">
+            <div class="selected-name">{{ selectedNotifTargetMember.username }}</div>
+            <div class="selected-email">{{ selectedNotifTargetMember.email }}</div>
+          </div>
+          <button type="button" class="change-recipient-btn" (click)="clearNotifTargetMember()">
+            Change ✕
+          </button>
+        </div>
+
+        <!-- Member search & list dropdown (when choosing or changing) -->
+        <div class="member-picker-dropdown" *ngIf="!selectedNotifTargetMember || showRecipientDropdown">
+          <div class="mention-search-box" style="margin-bottom: 8px;">
+            <ion-icon name="search-outline"></ion-icon>
+            <input
+              type="text"
+              placeholder="Search member name or email…"
+              [(ngModel)]="notifRecipientSearch"
+              (input)="onNotifRecipientSearchChange()"
+            />
+          </div>
+
+          <div class="member-picker-list">
+            <div class="empty-state mini" *ngIf="filteredRecipientMembers.length === 0" style="padding: 12px; font-size: 12px;">
+              No members matching search.
+            </div>
+            <button
+              type="button"
+              *ngFor="let m of filteredRecipientMembers; trackBy: trackById"
+              class="member-picker-item"
+              [class.selected]="notifTargetUserId === m.id"
+              (click)="selectNotifTargetMember(m)"
+            >
+              <div class="member-mini-avatar">
+                <img *ngIf="m.photo_url" [src]="resolveImg(m.photo_url)" alt="{{ m.username }}" />
+                <span *ngIf="!m.photo_url">{{ m.username?.charAt(0)?.toUpperCase() || 'M' }}</span>
+              </div>
+              <div class="member-picker-info">
+                <div class="member-picker-name">{{ m.username }}</div>
+                <div class="member-picker-email">{{ m.email }}</div>
+              </div>
+              <span class="role-badge">{{ m.role }}</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <label class="field-lbl">Title / Subject (Optional)</label>
+      <input class="field-input" type="text" placeholder="e.g. Gym Maintenance, Schedule Update" [(ngModel)]="notifTitle" />
+
+      <label class="field-lbl">Message *</label>
+      <textarea class="field-input notif-textarea" [(ngModel)]="notifMessage" placeholder="Type announcement or alert message…" rows="3"></textarea>
+    </div>
+    <div class="admin-modal-footer">
+      <button type="button" class="cancel-btn" (click)="closeSendNotifModal()">Cancel</button>
+      <button type="button" class="submit-btn" [disabled]="!notifMessage.trim() || isSendingNotif" (click)="sendNotification()">
+        <ion-icon name="send-outline" *ngIf="!isSendingNotif"></ion-icon>
+        <ion-spinner name="crescent" *ngIf="isSendingNotif" style="width: 16px; height: 16px;"></ion-spinner>
+        <span>{{ isSendingNotif ? 'Sending...' : (notifTargetUserId ? 'Send Direct Notice' : 'Send to All Members') }}</span>
+      </button>
     </div>
   </div>
 </div>

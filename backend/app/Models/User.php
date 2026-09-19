@@ -151,7 +151,7 @@ class User extends Authenticatable
                     Notification::create([
                         'user_id' => $this->id,
                         'title'   => 'Premium Membership Expired',
-                        'message' => 'Nawala na ang iyong Premium Pass dahil natapos na ang validity period nito. Ang iyong account ay naka-set na ngayon bilang Daily Pass (₱40/session). Maaari kang mag-upgrade ulit anumang oras.',
+                        'message' => 'Your Premium Pass has expired as the validity period has ended. Your account is now set to Daily Pass (₱40/session). You may renew or upgrade your membership anytime.',
                         'is_read' => false,
                     ]);
                 } catch (\Throwable $e) {

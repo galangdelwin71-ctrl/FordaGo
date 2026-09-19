@@ -701,82 +701,51 @@ export class AdminPage implements OnInit, OnDestroy {
   showNotifDetailModal = false;
   selectedNotifDetail: any = null;
 
-  get selectedNotifTargetMember(): any {
-    return this.members.find(m => m.id === this.notifTargetUserId);
+  showSendNotifModal = false;
+  isSendingNotif = false;
+
+  // Cached collections to prevent expensive re-computations on change detection
+  cachedBroadcastNotifications: any[] = [];
+  cachedMembersForNotifications: any[] = [];
+  cachedFilteredMembersForNotifications: any[] = [];
+  cachedSelectedMemberNotifications: any[] = [];
+  cachedFilteredRecipientMembers: any[] = [];
+
+  openSendNotifModal() {
+    this.showSendNotifModal = true;
+    this.filterRecipientMembers();
   }
 
-  get filteredRecipientMembers(): any[] {
-    const q = this.notifRecipientSearch.trim().toLowerCase();
-    if (!q) return this.members;
-    return this.members.filter(m =>
-      (m.username && m.username.toLowerCase().includes(q)) ||
-      (m.email && m.email.toLowerCase().includes(q))
-    );
+  closeSendNotifModal() {
+    this.showSendNotifModal = false;
   }
 
-  setNotifRecipientType(type: 'all' | 'specific') {
-    this.notifRecipientType = type;
-    if (type === 'all') {
-      this.notifTargetUserId = null;
-      this.showRecipientDropdown = false;
-    } else {
-      if (!this.notifTargetUserId) {
-        this.showRecipientDropdown = true;
+  trackById(index: number, item: any): any {
+    return item?.id != null ? item.id : index;
+  }
+
+  refreshNotificationCaches() {
+    // 1. Memoize category details directly on notification items
+    if (Array.isArray(this.notifications)) {
+      for (const n of this.notifications) {
+        if (!n._category) {
+          n._category = this.computeNotifCategory(n);
+        }
       }
     }
-  }
 
-  selectNotifTargetMember(m: any) {
-    this.notifTargetUserId = m.id;
-    this.notifRecipientType = 'specific';
-    this.showRecipientDropdown = false;
-    this.notifRecipientSearch = '';
-  }
-
-  clearNotifTargetMember() {
-    this.notifTargetUserId = null;
-    this.showRecipientDropdown = true;
-  }
-
-  openNotifsTab() {
-    this.activeTab = 'notifs';
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  get broadcastNotifications(): any[] {
-    return this.notifications.filter(n => {
+    // 2. Filter broadcasts (exclude personal workout session alerts)
+    this.cachedBroadcastNotifications = (this.notifications || []).filter(n => {
       const title = (n.title || '').toLowerCase();
-      // Exclude personal workout session alerts from admin broadcast/notif view
       if (title.includes('missed workout') || title.includes('workout session') || n.session_key) {
         return false;
       }
       return !n.user_id || n.user_id === this.auth.user?.id;
     });
-  }
 
-  get unreadAdminNotifsCount(): number {
-    return this.broadcastNotifications.filter(n => !n.is_read).length;
-  }
-
-  get filteredBroadcastNotifications(): any[] {
-    const q = this.broadcastSearch.trim().toLowerCase();
-    if (!q) return this.broadcastNotifications;
-    return this.broadcastNotifications.filter(n =>
-      (n.message && n.message.toLowerCase().includes(q)) ||
-      (n.title && n.title.toLowerCase().includes(q))
-    );
-  }
-
-  get displayedBroadcastNotifications(): any[] {
-    if (this.showAllBroadcasts || this.broadcastSearch.trim()) {
-      return this.filteredBroadcastNotifications;
-    }
-    return this.filteredBroadcastNotifications.slice(0, this.broadcastLimit);
-  }
-
-  get membersForNotifications(): any[] {
+    // 3. Build members notification summary map
     const map = new Map<number, any>();
-    for (const m of this.members) {
+    for (const m of (this.members || [])) {
       map.set(m.id, {
         id: m.id,
         username: m.username,
@@ -789,7 +758,7 @@ export class AdminPage implements OnInit, OnDestroy {
       });
     }
 
-    for (const n of this.notifications) {
+    for (const n of (this.notifications || [])) {
       const title = (n.title || '').toLowerCase();
       if (title.includes('missed workout') || title.includes('workout session') || n.session_key) {
         continue;
@@ -814,18 +783,50 @@ export class AdminPage implements OnInit, OnDestroy {
       }
     }
 
-    const list = Array.from(map.values()).sort((a, b) => b.notifications.length - a.notifications.length);
-    const q = this.notifMemberSearch.trim().toLowerCase();
-    if (!q) return list;
-    return list.filter(m =>
+    this.cachedMembersForNotifications = Array.from(map.values()).sort((a, b) => b.notifications.length - a.notifications.length);
+    this.filterMembersForNotifications();
+    this.updateSelectedMemberNotifications();
+    this.filterRecipientMembers();
+  }
+
+  filterMembersForNotifications() {
+    const q = (this.notifMemberSearch || '').trim().toLowerCase();
+    if (!q) {
+      this.cachedFilteredMembersForNotifications = this.cachedMembersForNotifications;
+      return;
+    }
+    this.cachedFilteredMembersForNotifications = this.cachedMembersForNotifications.filter(m =>
       (m.username && m.username.toLowerCase().includes(q)) ||
       (m.email && m.email.toLowerCase().includes(q))
     );
   }
 
-  get selectedMemberNotifications(): any[] {
-    if (!this.selectedNotifMember) return [];
-    return this.notifications.filter(n => {
+  onNotifMemberSearchChange() {
+    this.filterMembersForNotifications();
+  }
+
+  filterRecipientMembers() {
+    const q = (this.notifRecipientSearch || '').trim().toLowerCase();
+    if (!q) {
+      this.cachedFilteredRecipientMembers = this.members || [];
+      return;
+    }
+    this.cachedFilteredRecipientMembers = (this.members || []).filter(m =>
+      (m.username && m.username.toLowerCase().includes(q)) ||
+      (m.email && m.email.toLowerCase().includes(q))
+    );
+  }
+
+  onNotifRecipientSearchChange() {
+    this.filterRecipientMembers();
+  }
+
+  updateSelectedMemberNotifications() {
+    if (!this.selectedNotifMember) {
+      this.cachedSelectedMemberNotifications = [];
+      return;
+    }
+    this.cachedSelectedMemberNotifications = (this.notifications || []).filter(n => {
       const title = (n.title || '').toLowerCase();
       if (title.includes('missed workout') || title.includes('workout session') || n.session_key) {
         return false;
@@ -834,18 +835,97 @@ export class AdminPage implements OnInit, OnDestroy {
     });
   }
 
+  get selectedNotifTargetMember(): any {
+    return (this.members || []).find(m => m.id === this.notifTargetUserId);
+  }
+
+  get filteredRecipientMembers(): any[] {
+    return this.cachedFilteredRecipientMembers;
+  }
+
+  setNotifRecipientType(type: 'all' | 'specific') {
+    this.notifRecipientType = type;
+    if (type === 'all') {
+      this.notifTargetUserId = null;
+      this.showRecipientDropdown = false;
+    } else {
+      if (!this.notifTargetUserId) {
+        this.showRecipientDropdown = true;
+      }
+    }
+  }
+
+  selectNotifTargetMember(m: any) {
+    this.notifTargetUserId = m.id;
+    this.notifRecipientType = 'specific';
+    this.showRecipientDropdown = false;
+    this.notifRecipientSearch = '';
+    this.filterRecipientMembers();
+  }
+
+  clearNotifTargetMember() {
+    this.notifTargetUserId = null;
+    this.showRecipientDropdown = true;
+  }
+
+  openNotifsTab() {
+    this.activeTab = 'notifs';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  get broadcastNotifications(): any[] {
+    return this.cachedBroadcastNotifications;
+  }
+
+  get unreadAdminNotifsCount(): number {
+    return this.cachedBroadcastNotifications.filter(n => !n.is_read).length;
+  }
+
+  get filteredBroadcastNotifications(): any[] {
+    const q = (this.broadcastSearch || '').trim().toLowerCase();
+    if (!q) return this.cachedBroadcastNotifications;
+    return this.cachedBroadcastNotifications.filter(n =>
+      (n.message && n.message.toLowerCase().includes(q)) ||
+      (n.title && n.title.toLowerCase().includes(q))
+    );
+  }
+
+  get displayedBroadcastNotifications(): any[] {
+    if (this.showAllBroadcasts || (this.broadcastSearch || '').trim()) {
+      return this.filteredBroadcastNotifications;
+    }
+    return this.filteredBroadcastNotifications.slice(0, this.broadcastLimit);
+  }
+
+  get membersForNotifications(): any[] {
+    return this.cachedFilteredMembersForNotifications;
+  }
+
+  get selectedMemberNotifications(): any[] {
+    return this.cachedSelectedMemberNotifications;
+  }
+
   selectNotifMember(m: any) {
     this.selectedNotifMember = m;
+    this.updateSelectedMemberNotifications();
   }
 
   clearSelectedNotifMember() {
     this.selectedNotifMember = null;
+    this.cachedSelectedMemberNotifications = [];
   }
 
   getNotifTypeCategory(n: any): { label: string; icon: string; cssClass: string } {
+    if (n && n._category) return n._category;
+    const cat = this.computeNotifCategory(n);
+    if (n) n._category = cat;
+    return cat;
+  }
+
+  computeNotifCategory(n: any): { label: string; icon: string; cssClass: string } {
     const title = (n?.title || '').toLowerCase();
     const msg = (n?.message || '').toLowerCase();
-    if (title.includes('registration') || title.includes('registered') || msg.includes('nag-register')) {
+    if (title.includes('registration') || title.includes('registered') || msg.includes('registered') || msg.includes('nag-register')) {
       return { label: 'REGISTRATION', icon: 'person-add-outline', cssClass: 'type-reg' };
     }
     if (title.includes('verification') || title.includes('renewal') || title.includes('membership') || msg.includes('premium pass') || msg.includes('renew')) {
@@ -1280,6 +1360,7 @@ export class AdminPage implements OnInit, OnDestroy {
         });
         this.members = membersWithDays;
         this.totalMembers = data.length;
+        this.refreshNotificationCaches();
         if (sorted.length > 0) {
           this.latestMemberId = sorted[0].id;
         } else {
@@ -1295,6 +1376,7 @@ export class AdminPage implements OnInit, OnDestroy {
         this.totalMembers = 0;
         this.latestMemberId = null;
         this.expiringMembers = [];
+        this.refreshNotificationCaches();
       }
     });
 
@@ -1336,8 +1418,14 @@ export class AdminPage implements OnInit, OnDestroy {
 
     // Notifications
     this.http.get<any[]>(`${this.api}/notifications`, { headers }).subscribe({
-      next: data => this.notifications = data,
-      error: () => this.notifications = []
+      next: data => {
+        this.notifications = data;
+        this.refreshNotificationCaches();
+      },
+      error: () => {
+        this.notifications = [];
+        this.refreshNotificationCaches();
+      }
     });
 
     // Feedback (admin/super_admin only)
@@ -2214,7 +2302,8 @@ export class AdminPage implements OnInit, OnDestroy {
 
   // ── Notifications actions ─────────────────────────────
   sendNotification() {
-    if (!this.notifMessage.trim()) return;
+    if (!this.notifMessage.trim() || this.isSendingNotif) return;
+    this.isSendingNotif = true;
     const headers = { Authorization: `Bearer ${this.auth.token}` };
     const payload: any = {
       message: this.notifMessage.trim(),
@@ -2225,6 +2314,7 @@ export class AdminPage implements OnInit, OnDestroy {
     }
     this.http.post<any>(`${this.api}/notifications`, payload, { headers }).subscribe({
       next: (res) => {
+        this.isSendingNotif = false;
         const targetMember = this.notifTargetUserId ? this.members.find(m => m.id === this.notifTargetUserId) : null;
         const newNotif = {
           id: res?.id || Date.now(),
@@ -2236,12 +2326,17 @@ export class AdminPage implements OnInit, OnDestroy {
           created_at: new Date().toISOString()
         };
         this.notifications.unshift(newNotif);
+        this.refreshNotificationCaches();
         this.notifMessage = '';
         this.notifTitle = '';
         this.notifTargetUserId = null;
+        this.showSendNotifModal = false;
         this.toast.success('Notification sent successfully!');
       },
-      error: () => this.toast.error('Failed to send notification')
+      error: () => {
+        this.isSendingNotif = false;
+        this.toast.error('Failed to send notification');
+      }
     });
   }
 
@@ -2254,6 +2349,7 @@ export class AdminPage implements OnInit, OnDestroy {
       this.http.delete(`${this.api}/notifications/${n.id}`, { headers }).subscribe({
         next: () => {
           this.notifications = this.notifications.filter(x => x.id !== n.id);
+          this.refreshNotificationCaches();
           if (this.selectedNotifDetail?.id === n.id) {
             this.showNotifDetailModal = false;
             this.selectedNotifDetail = null;
@@ -2264,6 +2360,7 @@ export class AdminPage implements OnInit, OnDestroy {
           // If already removed or not found (404), clean up local list
           if (err?.status === 404 || err?.status === 200) {
             this.notifications = this.notifications.filter(x => x.id !== n.id);
+            this.refreshNotificationCaches();
             if (this.selectedNotifDetail?.id === n.id) {
               this.showNotifDetailModal = false;
               this.selectedNotifDetail = null;
