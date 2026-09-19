@@ -544,10 +544,10 @@ class ReportsController extends Controller
         $totalProfit        = collect($rows)->sum('total_profit');
         $lowStockCount      = collect($rows)->where('stock_status', 'low_stock')->count();
         $outOfStockCount    = collect($rows)->where('stock_status', 'out_of_stock')->count();
-        $expiringSoonCount  = collect($rows)->where('expiry_status', 'expiring_soon')->count();
-        $expiredCount       = collect($rows)->where('expiry_status', 'expired')->count();
-        $inventoryValue     = collect($rows)->sum(fn ($r) => $r->price * $r->current_stock);
-        $inventoryCostValue = collect($rows)->sum(fn ($r) => $r->cost_price * $r->current_stock);
+        $expiredLossRisk    = (float) collect($rows)->where('expiry_status', 'expired')->sum(fn ($r) => (float)$r->cost_price * (int)$r->current_stock);
+        $expiringSoonRisk   = (float) collect($rows)->where('expiry_status', 'expiring_soon')->sum(fn ($r) => (float)$r->cost_price * (int)$r->current_stock);
+        $inventoryValue     = (float) collect($rows)->sum(fn ($r) => (float)$r->price * (int)$r->current_stock);
+        $inventoryCostValue = (float) collect($rows)->sum(fn ($r) => (float)$r->cost_price * (int)$r->current_stock);
 
         return response()->json([
             'rows'    => $rows,
@@ -561,6 +561,8 @@ class ReportsController extends Controller
                 'outOfStockCount',
                 'expiringSoonCount',
                 'expiredCount',
+                'expiredLossRisk',
+                'expiringSoonRisk',
                 'inventoryValue',
                 'inventoryCostValue'
             ),

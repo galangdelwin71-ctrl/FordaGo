@@ -274,6 +274,22 @@
                 <span class="health-lbl">Expiring in 7 Days</span>
               </div>
             </div>
+
+            <div class="health-pill" [class.alert]="(invSummary?.expiredCount || 0) > 0" *ngIf="(invSummary?.expiredCount || 0) > 0">
+              <ion-icon name="close-circle-outline"></ion-icon>
+              <div class="health-info">
+                <span class="health-val text-rose">{{ invSummary?.expiredCount || 0 }} expired SKUs</span>
+                <span class="health-lbl">Loss Risk: ₱{{ (invSummary?.expiredLossRisk || 0) | number:'1.2-2' }}</span>
+              </div>
+            </div>
+
+            <div class="health-pill" [class.alert]="(invSummary?.expiringSoonCount || 0) > 0" *ngIf="(invSummary?.expiringSoonCount || 0) > 0">
+              <ion-icon name="alert-circle-outline"></ion-icon>
+              <div class="health-info">
+                <span class="health-val text-amber">{{ invSummary?.expiringSoonCount || 0 }} expiring</span>
+                <span class="health-lbl">Near Expiry (≤30 Days)</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -361,6 +377,10 @@
             <button class="fg-btn" [class.active]="membershipFilter === 'daily'" (click)="membershipFilter = 'daily'">Daily Pass</button>
             <button class="fg-btn" [class.active]="membershipFilter === 'pending'" (click)="membershipFilter = 'pending'">Pending ({{ membershipSummary?.pendingPremium || 0 }})</button>
           </div>
+          <button class="header-action-btn pdf-pill" style="height: 34px; padding: 0 12px; border-radius: 8px; font-weight: 700; margin-left: auto;" (click)="downloadPDF('memberships')" title="Export Full Membership & Expiration Audit PDF">
+            <ion-icon name="download-outline"></ion-icon>
+            <span class="btn-text">Export Retention &amp; Expiry PDF</span>
+          </button>
         </div>
       </div>
 
@@ -817,11 +837,21 @@
           <div class="kpi-value">₱{{ invSummary.inventoryValue | number:'1.2-2' }}</div>
           <div class="kpi-subtext">Capital cost: ₱{{ invSummary.inventoryCostValue | number:'1.2-2' }}</div>
         </div>
+        <div class="kpi-card rose" *ngIf="(invSummary.expiredCount || 0) > 0">
+          <div class="kpi-title">Expired Products Risk</div>
+          <div class="kpi-value text-rose">{{ invSummary.expiredCount }} SKUs</div>
+          <div class="kpi-subtext">Loss risk: ₱{{ (invSummary.expiredLossRisk || 0) | number:'1.2-2' }}</div>
+        </div>
+        <div class="kpi-card amber" *ngIf="(invSummary.expiringSoonCount || 0) > 0">
+          <div class="kpi-title">Expiring Soon (≤30d)</div>
+          <div class="kpi-value text-amber">{{ invSummary.expiringSoonCount }} SKUs</div>
+          <div class="kpi-subtext">Value at risk: ₱{{ (invSummary.expiringSoonRisk || 0) | number:'1.2-2' }}</div>
+        </div>
       </div>
 
-      <!-- Search Box -->
-      <div class="filter-toolbar fade-up">
-        <div class="search-box">
+      <!-- Search & Quick Action Toolbar -->
+      <div class="filter-toolbar fade-up" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <div class="search-box" style="flex: 1; min-width: 240px;">
           <ion-icon name="search-outline"></ion-icon>
           <input
             type="text"
@@ -831,6 +861,10 @@
           />
           <button *ngIf="searchQuery" class="clear-search" (click)="searchQuery = ''">✕</button>
         </div>
+        <button class="header-action-btn pdf-pill" style="height: 42px; padding: 0 16px; border-radius: 10px; font-weight: 700;" (click)="downloadPDF('inventory')" title="Export Full Inventory & Expiration Audit PDF">
+          <ion-icon name="download-outline"></ion-icon>
+          <span class="btn-text">Export Stock &amp; Expiry PDF</span>
+        </button>
       </div>
 
       <!-- Empty State -->
@@ -857,8 +891,8 @@
               <span class="inv-expiry-chip" [ngClass]="item.expiry_status" *ngIf="item.expiry_date">
                 <ion-icon [name]="item.expiry_status === 'expired' ? 'close-circle' : (item.expiry_status === 'expiring_soon' ? 'alert-circle' : 'time-outline')"></ion-icon>
                 <span *ngIf="item.expiry_status === 'expired'">Expired ({{ item.expiry_date | date:'MMM d, y' }})</span>
-                <span *ngIf="item.expiry_status === 'expiring_soon'">Expiring in {{ item.expiry_days }}d</span>
-                <span *ngIf="item.expiry_status === 'good'">Exp: {{ item.expiry_date | date:'MMM d, y' }}</span>
+                <span *ngIf="item.expiry_status === 'expiring_soon'">Expiring in {{ item.days_until_expiry ?? item.expiry_days }}d</span>
+                <span *ngIf="item.expiry_status === 'good'">Exp: {{ item.expiry_date | date:'MMM d, y' }} ({{ item.days_until_expiry ?? item.expiry_days }}d left)</span>
               </span>
               <div class="inv-status-chip" [class]="item.stock_status">
                 {{ item.stock_status === 'out_of_stock' ? 'Out of Stock' : (item.stock_status === 'low_stock' ? 'Low Stock' : 'In Stock') }}

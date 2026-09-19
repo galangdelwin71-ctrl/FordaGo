@@ -2347,47 +2347,125 @@ export class AdminPage implements OnInit, OnDestroy {
   }
 
   exportAttendancePdf() {
-    const doc = new jsPDF();
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const reportDate = this.selectedReportDate || this.toIsoDate(new Date());
-
-    doc.setFontSize(14);
-    doc.text('FordaGO Attendance Report', 14, 16);
-    doc.setFontSize(10);
-    doc.text(`Date: ${reportDate}`, 14, 22);
-    doc.text(`Generated: ${this.formatDateTime(new Date())}`, 14, 27);
-    doc.text(`Total Records: ${this.attendanceToday.length}`, 14, 32);
+    const genTime = this.formatDateTime(new Date());
 
     const rows = this.attendanceToday.map((a, index) => [
       index + 1,
       a.id || '-',
       a.username || '-',
       a.email || '-',
-      a.membership_type || '-',
+      a.membership_type === 'premium' ? 'Premium Member' : 'Daily Pass (₱40)',
       this.formatDateTime(a.check_in_time),
-      a.payment_status === 'paid' ? 'Confirmed' : 'Pending',
+      a.payment_status === 'paid' ? 'CONFIRMED' : 'PENDING',
     ]);
 
     autoTable(doc, {
-      startY: 36,
-      head: [['#', 'Attendance ID', 'Member', 'Email', 'Plan', 'Check-in DateTime', 'Status']],
-      body: rows.length ? rows : [['-', '-', 'No attendance records', '-', '-', '-', '-']],
-      styles: { fontSize: 8.5 },
-      headStyles: { fillColor: [20, 20, 20] },
+      startY: 44,
+      margin: { top: 44, bottom: 22, left: 14, right: 14 },
+      head: [[
+        { content: 'DAILY GYM ATTENDANCE & VISITOR LOG', colSpan: 7, styles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' } },
+      ], ['#', 'ID', 'Member Name', 'Email Address', 'Plan Type', 'Check-in Time', 'Status']],
+      body: rows.length ? rows : [['-', '-', 'No attendance records logged for this date', '-', '-', '-', '-']],
+      headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.5 },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      styles: { fontSize: 7.2, cellPadding: 2 },
     });
+
+    const totalPages = (doc as any).getNumberOfPages ? (doc as any).getNumberOfPages() : ((doc.internal as any).getNumberOfPages ? (doc.internal as any).getNumberOfPages() : 1);
+    const finalTableY = (doc as any).lastAutoTable?.finalY ?? 200;
+
+    for (let p = 1; p <= totalPages; p++) {
+      doc.setPage(p);
+      if (p === 1) {
+        doc.setFillColor(15, 23, 42);
+        doc.rect(0, 0, 210, 24, 'F');
+        doc.setFillColor(234, 179, 8);
+        doc.rect(0, 24, 210, 2, 'F');
+
+        doc.setFontSize(13);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(234, 179, 8);
+        doc.text('FORDAGO FITNESS & WELLNESS CLUB', 14, 11);
+
+        doc.setFontSize(7.5);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(226, 232, 240);
+        doc.text('MANAGEMENT INFORMATION SYSTEM • ATTENDANCE LOG', 14, 18);
+
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(255, 255, 255);
+        doc.text('FACILITY ATTENDANCE REPORT', 196, 11, { align: 'right' });
+
+        doc.setFontSize(7);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(203, 213, 225);
+        doc.text('CONFIDENTIAL • LIVE AUDIT', 196, 18, { align: 'right' });
+
+        doc.setFillColor(248, 250, 252);
+        doc.setDrawColor(226, 232, 240);
+        doc.setLineWidth(0.3);
+        doc.rect(14, 28, 182, 12, 'FD');
+
+        doc.setFontSize(7.5);
+        doc.setTextColor(71, 85, 105);
+        doc.text(`Log Date: ${reportDate}`, 17, 33);
+        doc.text(`Generated: ${genTime}`, 70, 33);
+        doc.text(`Total Records: ${this.attendanceToday.length} check-ins`, 132, 33);
+
+        doc.text('Facility: FordaGO Main Gym Floor', 17, 37.5);
+        doc.text('Status: Live Database Verified', 70, 37.5);
+        doc.text('Auditor: FordaGO Control Desk', 132, 37.5);
+      } else {
+        doc.setFillColor(15, 23, 42);
+        doc.rect(0, 0, 210, 10, 'F');
+        doc.setFillColor(234, 179, 8);
+        doc.rect(0, 10, 210, 1, 'F');
+
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(255, 255, 255);
+        doc.text('FordaGO Fitness MIS • Attendance Report', 14, 7);
+        doc.setFontSize(7);
+        doc.setTextColor(203, 213, 225);
+        doc.text(`Date: ${reportDate} | Page ${p} of ${totalPages}`, 196, 7, { align: 'right' });
+      }
+
+      doc.setDrawColor(203, 213, 225);
+      doc.setLineWidth(0.2);
+      doc.line(14, 285, 196, 285);
+      doc.setFontSize(7);
+      doc.setTextColor(100, 116, 139);
+      doc.text('FordaGO Management Information System • Official Attendance Record', 14, 289.5);
+      doc.text('CONFIDENTIAL', 105, 289.5, { align: 'center' });
+      doc.text(`Page ${p} of ${totalPages}`, 196, 289.5, { align: 'right' });
+
+      if (p === totalPages && finalTableY <= 242) {
+        const signY = Math.max(finalTableY + 8, 245);
+        doc.setFontSize(7.5);
+        doc.setTextColor(100, 116, 139);
+        doc.text('CONSOLIDATED BY:', 18, signY);
+        doc.text('AUDITED BY:', 120, signY);
+        doc.setDrawColor(148, 163, 184);
+        doc.line(18, signY + 11, 85, signY + 11);
+        doc.line(120, signY + 11, 187, signY + 11);
+        doc.setFontSize(7.5);
+        doc.setTextColor(15, 23, 42);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Front Desk Administrator', 18, signY + 15);
+        doc.text('Facility Operations Manager', 120, signY + 15);
+      }
+    }
 
     doc.save(`fordago-attendance-${reportDate}.pdf`);
   }
 
   exportEquipmentLogsPdf() {
-    const doc = new jsPDF();
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const reportDate = this.selectedReportDate || this.toIsoDate(new Date());
-
-    doc.setFontSize(14);
-    doc.text('FordaGO Equipment QR Scan Report', 14, 16);
-    doc.setFontSize(10);
-    doc.text(`Date: ${reportDate}`, 14, 22);
-    doc.text(`Generated: ${this.formatDateTime(new Date())}`, 14, 27);
-    doc.text(`Total Records: ${this.equipmentScanLogs.length}`, 14, 32);
+    const genTime = this.formatDateTime(new Date());
 
     const rows = this.equipmentScanLogs.map((log, index) => [
       index + 1,
@@ -2400,12 +2478,101 @@ export class AdminPage implements OnInit, OnDestroy {
     ]);
 
     autoTable(doc, {
-      startY: 36,
-      head: [['#', 'Log ID', 'Member', 'Email', 'Equipment', 'Code', 'Scan DateTime']],
-      body: rows.length ? rows : [['-', '-', 'No equipment scans', '-', '-', '-', '-']],
-      styles: { fontSize: 8.5 },
-      headStyles: { fillColor: [20, 20, 20] },
+      startY: 44,
+      margin: { top: 44, bottom: 22, left: 14, right: 14 },
+      head: [[
+        { content: 'EQUIPMENT QR SCAN & USAGE AUDIT LOG', colSpan: 7, styles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' } },
+      ], ['#', 'Log ID', 'Member', 'Email', 'Equipment', 'Code', 'Scan DateTime']],
+      body: rows.length ? rows : [['-', '-', 'No equipment scans logged for this date', '-', '-', '-', '-']],
+      headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.5 },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      styles: { fontSize: 7.2, cellPadding: 2 },
     });
+
+    const totalPages = (doc as any).getNumberOfPages ? (doc as any).getNumberOfPages() : ((doc.internal as any).getNumberOfPages ? (doc.internal as any).getNumberOfPages() : 1);
+    const finalTableY = (doc as any).lastAutoTable?.finalY ?? 200;
+
+    for (let p = 1; p <= totalPages; p++) {
+      doc.setPage(p);
+      if (p === 1) {
+        doc.setFillColor(15, 23, 42);
+        doc.rect(0, 0, 210, 24, 'F');
+        doc.setFillColor(234, 179, 8);
+        doc.rect(0, 24, 210, 2, 'F');
+
+        doc.setFontSize(13);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(234, 179, 8);
+        doc.text('FORDAGO FITNESS & WELLNESS CLUB', 14, 11);
+
+        doc.setFontSize(7.5);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(226, 232, 240);
+        doc.text('MANAGEMENT INFORMATION SYSTEM • EQUIPMENT USAGE LOG', 14, 18);
+
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(255, 255, 255);
+        doc.text('EQUIPMENT QR AUDIT REPORT', 196, 11, { align: 'right' });
+
+        doc.setFontSize(7);
+        doc.setTextColor(203, 213, 225);
+        doc.text('CONFIDENTIAL • LIVE AUDIT', 196, 18, { align: 'right' });
+
+        doc.setFillColor(248, 250, 252);
+        doc.setDrawColor(226, 232, 240);
+        doc.setLineWidth(0.3);
+        doc.rect(14, 28, 182, 12, 'FD');
+
+        doc.setFontSize(7.5);
+        doc.setTextColor(71, 85, 105);
+        doc.text(`Log Date: ${reportDate}`, 17, 33);
+        doc.text(`Generated: ${genTime}`, 70, 33);
+        doc.text(`Total Records: ${this.equipmentScanLogs.length} scans`, 132, 33);
+
+        doc.text('Equipment: Gym Assets & Free Weights', 17, 37.5);
+        doc.text('Status: Live Database Verified', 70, 37.5);
+        doc.text('Auditor: FordaGO Equipment Desk', 132, 37.5);
+      } else {
+        doc.setFillColor(15, 23, 42);
+        doc.rect(0, 0, 210, 10, 'F');
+        doc.setFillColor(234, 179, 8);
+        doc.rect(0, 10, 210, 1, 'F');
+
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(255, 255, 255);
+        doc.text('FordaGO Fitness MIS • Equipment Scans', 14, 7);
+        doc.setFontSize(7);
+        doc.setTextColor(203, 213, 225);
+        doc.text(`Date: ${reportDate} | Page ${p} of ${totalPages}`, 196, 7, { align: 'right' });
+      }
+
+      doc.setDrawColor(203, 213, 225);
+      doc.setLineWidth(0.2);
+      doc.line(14, 285, 196, 285);
+      doc.setFontSize(7);
+      doc.setTextColor(100, 116, 139);
+      doc.text('FordaGO Management Information System • Official Equipment Usage Record', 14, 289.5);
+      doc.text('CONFIDENTIAL', 105, 289.5, { align: 'center' });
+      doc.text(`Page ${p} of ${totalPages}`, 196, 289.5, { align: 'right' });
+
+      if (p === totalPages && finalTableY <= 242) {
+        const signY = Math.max(finalTableY + 8, 245);
+        doc.setFontSize(7.5);
+        doc.setTextColor(100, 116, 139);
+        doc.text('CONSOLIDATED BY:', 18, signY);
+        doc.text('AUDITED BY:', 120, signY);
+        doc.setDrawColor(148, 163, 184);
+        doc.line(18, signY + 11, 85, signY + 11);
+        doc.line(120, signY + 11, 187, signY + 11);
+        doc.setFontSize(7.5);
+        doc.setTextColor(15, 23, 42);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Equipment Custodian', 18, signY + 15);
+        doc.text('Facility Operations Manager', 120, signY + 15);
+      }
+    }
 
     doc.save(`fordago-equipment-scans-${reportDate}.pdf`);
   }

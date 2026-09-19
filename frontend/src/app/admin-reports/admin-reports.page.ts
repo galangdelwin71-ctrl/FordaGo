@@ -37,6 +37,8 @@ import {
   chevronForwardOutline,
   personOutline,
   shieldCheckmarkOutline,
+  closeCircleOutline,
+  hourglassOutline,
 } from 'ionicons/icons';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -287,6 +289,8 @@ export class AdminReportsPage implements OnInit {
       chevronForwardOutline,
       personOutline,
       shieldCheckmarkOutline,
+      closeCircleOutline,
+      hourglassOutline,
     });
   }
 
@@ -415,6 +419,36 @@ export class AdminReportsPage implements OnInit {
     return { Authorization: `Bearer ${this.auth.token}` };
   }
 
+  private normalizeInventoryRows(rows: any[]): any[] {
+    return (rows || []).map(r => {
+      const days = r.days_until_expiry !== undefined && r.days_until_expiry !== null ? Number(r.days_until_expiry) : null;
+      const price = Number(r.price || 0);
+      const costPrice = Number(r.cost_price || 0);
+      const stock = Number(r.current_stock || 0);
+      const sold = Number(r.total_sold || 0);
+      const rev = Number(r.total_revenue || 0);
+      const unitProfit = Number(r.profit_per_unit ?? Math.max(0, price - costPrice));
+      const margin = Number(r.profit_margin ?? (price > 0 ? Math.round(((price - costPrice) / price) * 1000) / 10 : 0));
+      const cogs = Number(r.cogs ?? (costPrice * sold));
+      const totalProfit = Number(r.total_profit ?? Math.max(0, rev - cogs));
+
+      return {
+        ...r,
+        price,
+        cost_price: costPrice,
+        current_stock: stock,
+        total_sold: sold,
+        total_revenue: rev,
+        profit_per_unit: unitProfit,
+        profit_margin: margin,
+        cogs,
+        total_profit: totalProfit,
+        days_until_expiry: days,
+        expiry_days: days,
+      };
+    });
+  }
+
   load() {
     if (!this.applyCurrentTabFromCache()) {
       this.isLoading = true;
@@ -488,7 +522,7 @@ export class AdminReportsPage implements OnInit {
 
       this.http.get<any>(`${this.api}/reports/admin/inventory`, h).subscribe({
         next: data => {
-          this.invRows = data?.rows || [];
+          this.invRows = this.normalizeInventoryRows(data?.rows || []);
           this.invSummary = data?.summary || null;
           checkDone();
         },
@@ -571,7 +605,7 @@ export class AdminReportsPage implements OnInit {
     } else if (this.activeTab === 'inventory') {
       this.http.get<any>(`${this.api}/reports/admin/inventory`, h).subscribe({
         next: data => {
-          this.invRows = data?.rows || [];
+          this.invRows = this.normalizeInventoryRows(data?.rows || []);
           this.invSummary = data?.summary || null;
           this.isLoading = false;
           AdminReportsPage.cache.inventory = {
@@ -697,204 +731,832 @@ export class AdminReportsPage implements OnInit {
     return map[this.period] ?? this.period;
   }
 
+  // ── Helper formatters for PDF & Reports ────────────────
+  private formatCurrency(amount: any): string {
+    const num = Number(amount || 0);
+    return `PHP ${this.decimalPipe.transform(num, '1.2-2') ?? '0.00'}`;
+  }
+
+  private formatDate(date: any, fallback = '—'): string {
+    if (!date) return fallback;
+    return this.datePipe.transform(date, 'MMM d, yyyy') ?? fallback;
+  }
+
+  private formatDateTime(date: any, fallback = '—'): string {
+    if (!date) return fallback;
+    return this.datePipe.transform(date, 'MMM d, yyyy h:mm a') ?? fallback;
+  }
+
   // ── Print ─────────────────────────────────────────────
   printCurrent() {
     window.print();
   }
 
-  // ── PDF download ──────────────────────────────────────
-  downloadPDF() {
+  // ── Professional Executive PDF Generator ──────────────
+  downloadPDF(tabToExport?: Tab) {
+    const targetTab: Tab = tabToExport || this.activeTab;
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
     const periodLabel: Record<string, string> = {
-      daily: 'Daily',
-      weekly: 'Weekly',
-      monthly: 'Monthly',
-      yearly: 'Yearly',
-      all: 'All Time',
+      daily: 'Today (Daily)',
+      weekly: 'This Week (Weekly)',
+      monthly: 'This Month (Monthly)',
+      yearly: 'This Year (Yearly)',
+      all: 'All-Time Records',
     };
+
     const tabLabel: Record<string, string> = {
-      overview: 'Executive Analytics Summary',
-      memberships: 'Membership Plans & Subscriptions',
-      transactions: 'Transaction Audit Ledger',
-      attendance: 'Gym Attendance & Traffic Log',
-      sales: 'Revenue & Sales Breakdown',
-      inventory: 'Shop Inventory & Stock Valuation',
+      overview: 'Executive Analytics & Comprehensive Operational Audit',
+      memberships: 'Membership Roster, Retention & Expiration Audit',
+      transactions: 'Financial Transaction & Receivables Audit Ledger',
+      attendance: 'Gym Attendance, Traffic & Peak-Hours Analysis',
+      sales: 'Revenue Streams & Sales Performance Ledger',
+      inventory: 'Shop Inventory Valuation & Batch Expiration Audit',
     };
 
-    // Header Branding
-    doc.setFillColor(244, 245, 248);
-    doc.rect(0, 0, 210, 32, 'F');
+    const reportTitle = tabLabel[targetTab] || 'Management Intelligence Audit';
+    const currentPeriod = this.period;
+    const genTimestamp = this.formatDateTime(new Date());
+    const reportRef = `FDG-${targetTab.toUpperCase().slice(0, 3)}-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(1000 + Math.random() * 9000)}`;
 
-    doc.setFontSize(16);
-    doc.setTextColor(15, 23, 42);
-    doc.setFont('helvetica', 'bold');
-    doc.text('FordaGO Fitness — Admin Analytics Report', 14, 15);
+    let startY = 44;
 
-    doc.setFontSize(9.5);
-    doc.setTextColor(100, 116, 139);
-    doc.setFont('helvetica', 'normal');
-    doc.text(
-      `${tabLabel[this.activeTab]}  |  Period: ${periodLabel[this.period] ?? 'Monthly'}  |  Generated: ${new Date().toLocaleString()}`,
-      14,
-      23,
-    );
+    // ───────────────────────────────────────────────────────
+    // TAB 1: INVENTORY & EXPIRATION AUDIT
+    // ───────────────────────────────────────────────────────
+    if (targetTab === 'inventory') {
+      const rows = this.filteredInvRows.length ? this.filteredInvRows : this.invRows;
+      const totalProducts = this.invRows.length;
+      const totalStock = this.invSummary?.totalStock ?? this.invRows.reduce((a, b) => a + (b.current_stock || 0), 0);
+      const totalSold = this.invSummary?.totalSold ?? this.invRows.reduce((a, b) => a + (b.total_sold || 0), 0);
+      const totalRevenue = this.invSummary?.totalRevenue ?? this.invRows.reduce((a, b) => a + (b.total_revenue || 0), 0);
+      const totalCogs = this.invSummary?.totalCogs ?? this.invRows.reduce((a, b) => a + ((b.cost_price || 0) * (b.total_sold || 0)), 0);
+      const totalProfit = this.invSummary?.totalProfit ?? Math.max(0, totalRevenue - totalCogs);
+      const inventoryValue = this.invSummary?.inventoryValue ?? this.invRows.reduce((a, b) => a + ((b.price || 0) * (b.current_stock || 0)), 0);
+      const inventoryCostValue = this.invSummary?.inventoryCostValue ?? this.invRows.reduce((a, b) => a + ((b.cost_price || 0) * (b.current_stock || 0)), 0);
 
-    let startY = 40;
+      // Expiration segments
+      const expiredItems = this.invRows.filter(r => r.expiry_status === 'expired' || (r.days_until_expiry !== null && r.days_until_expiry < 0));
+      const expiredUnits = expiredItems.reduce((a, b) => a + (b.current_stock || 0), 0);
+      const expiredLossRisk = this.invSummary?.expiredLossRisk ?? expiredItems.reduce((a, b) => a + ((b.cost_price || 0) * (b.current_stock || 0)), 0);
 
-    if (this.activeTab === 'overview') {
-      doc.setFontSize(11);
-      doc.setTextColor(15, 23, 42);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Key Performance Indicators', 14, startY);
+      const expiringSoonItems = this.invRows.filter(r => r.expiry_status === 'expiring_soon' || (r.days_until_expiry !== null && r.days_until_expiry >= 0 && r.days_until_expiry <= 30));
+      const expiringSoonUnits = expiringSoonItems.reduce((a, b) => a + (b.current_stock || 0), 0);
+      const expiringSoonRisk = this.invSummary?.expiringSoonRisk ?? expiringSoonItems.reduce((a, b) => a + ((b.cost_price || 0) * (b.current_stock || 0)), 0);
 
-      const kpis = [
-        ['Total Collected Realized Revenue', `PHP ${this.decimalPipe.transform(this.grandTotalCollected, '1.2-2')}`],
-        ['Premium Membership Subscriptions', `PHP ${this.decimalPipe.transform(this.salesSummary?.membershipRevenue || 0, '1.2-2')}`],
-        ['Gym Daily Walk-in Passes', `PHP ${this.decimalPipe.transform(this.salesSummary?.gymRevenue || 0, '1.2-2')}`],
-        ['Shop Merchandise Sales', `PHP ${this.decimalPipe.transform(this.salesSummary?.shopRevenue || 0, '1.2-2')}`],
-        ['Pending Receivables (Orders/Plans)', `PHP ${this.decimalPipe.transform(this.salesSummary?.pendingRevenue || 0, '1.2-2')}`],
-        ['Total Gym Visits', `${this.attSummary?.total || this.attRows.length || 0} check-ins`],
+      // KPI Scorecard Table
+      const invKpis = [
+        [
+          { content: 'Active Product Lines', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          `${totalProducts} catalog SKUs`,
+          { content: 'Stock on Hand', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          `${totalStock} total units`,
+        ],
+        [
+          { content: 'Gross Merchandise Sales', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          this.formatCurrency(totalRevenue),
+          { content: 'Cost of Goods Sold (COGS)', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          this.formatCurrency(totalCogs),
+        ],
+        [
+          { content: 'Net Merchandise Tubo (Profit)', styles: { fontStyle: 'bold', fillColor: [241, 245, 249], textColor: [5, 150, 105] } },
+          { content: this.formatCurrency(totalProfit), styles: { fontStyle: 'bold', textColor: [5, 150, 105] } },
+          { content: 'Units Sold (Lifetime)', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          `${totalSold} units purchased`,
+        ],
+        [
+          { content: 'Asset Valuation (Retail)', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          this.formatCurrency(inventoryValue),
+          { content: 'Capital Asset Cost (Puhunan)', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          this.formatCurrency(inventoryCostValue),
+        ],
+        [
+          { content: 'Expired Stock Alert', styles: { fontStyle: 'bold', fillColor: [254, 226, 226], textColor: [185, 28, 28] } },
+          { content: `${expiredItems.length} SKUs (${expiredUnits} units) — Loss: ${this.formatCurrency(expiredLossRisk)}`, styles: { fontStyle: 'bold', textColor: [185, 28, 28], fillColor: [254, 226, 226] } },
+          { content: 'Expiring Soon Alert (≤30d)', styles: { fontStyle: 'bold', fillColor: [254, 243, 199], textColor: [180, 83, 9] } },
+          { content: `${expiringSoonItems.length} SKUs (${expiringSoonUnits} units) — Risk: ${this.formatCurrency(expiringSoonRisk)}`, styles: { fontStyle: 'bold', textColor: [180, 83, 9], fillColor: [254, 243, 199] } },
+        ],
       ];
 
       autoTable(doc, {
-        startY: startY + 4,
-        head: [['Metric', 'Value']],
-        body: kpis,
-        headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' },
-        styles: { fontSize: 9, cellPadding: 3 },
-      });
-
-    } else if (this.activeTab === 'memberships') {
-      if (this.membershipSummary) {
-        doc.setFontSize(9.5);
-        doc.setTextColor(15, 23, 42);
-        doc.text(
-          `Total Members: ${this.membershipSummary.totalMembers}  |  Active Premium: ${this.membershipSummary.activePremium}  |  Premium Revenue: PHP ${this.decimalPipe.transform(this.membershipSummary.premiumRevenue, '1.2-2')}  |  Expiring: ${this.membershipSummary.expiringSoon}`,
-          14,
-          startY - 4,
-        );
-      }
-      autoTable(doc, {
         startY,
-        head: [['Member', 'Email', 'Plan', 'Payment', 'Expiry Date', 'Remaining', 'Status']],
-        body: this.filteredMembershipRows.map(m => [
-          m.username,
-          m.email,
-          m.membership_type === 'premium' ? 'Premium (₱500)' : 'Daily Pass',
-          (m.payment_method || 'cash').toUpperCase(),
-          m.membership_expiry ? this.datePipe.transform(m.membership_expiry, 'MMM d, yyyy') ?? '—' : '—',
-          m.membership_type === 'premium' ? `${m.days_left} days` : 'Per visit',
-          m.membership_status === 'active' ? 'Active' : 'Pending',
-        ]),
-        headStyles: { fillColor: [234, 179, 8], textColor: [15, 23, 42], fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [248, 250, 252] },
-        styles: { fontSize: 8.5, cellPadding: 2.2 },
-      });
-
-    } else if (this.activeTab === 'transactions') {
-      doc.setFontSize(9.5);
-      doc.setTextColor(15, 23, 42);
-      doc.text(
-        `Total Rows: ${this.filteredTxRows.length}   |   Collected: PHP ${this.decimalPipe.transform(this.txCollectedRevenue, '1.2-2')}   |   Pending: PHP ${this.decimalPipe.transform(this.txPendingRevenue, '1.2-2')}`,
-        14,
-        startY - 4,
-      );
-
-      autoTable(doc, {
-        startY,
-        head: [['Date & Time', 'Member', 'Type', 'Details', 'Amount', 'Payment', 'Status']],
-        body: this.filteredTxRows.map(tx => [
-          this.datePipe.transform(tx.transaction_date, 'MMM d, yyyy h:mm a') ?? '',
-          tx.username,
-          tx.type_label,
-          tx.product_name || (tx.source === 'attendance' ? 'Gym Walk-in' : (tx.source === 'membership' ? 'Monthly Plan' : '—')),
-          tx.amount > 0 ? `PHP ${this.decimalPipe.transform(tx.amount, '1.2-2')}` : 'Included',
-          (tx.payment_method || 'cash').toUpperCase(),
-          this.getStatusLabel(tx),
-        ]),
-        headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [248, 250, 252] },
+        margin: { top: 44, bottom: 22, left: 14, right: 14 },
+        head: [[{ content: 'INVENTORY & PERISHABLES EXECUTIVE SUMMARY', colSpan: 4, styles: { halign: 'center', fillColor: [15, 23, 42], textColor: [234, 179, 8], fontStyle: 'bold' } }]],
+        body: invKpis as any,
         styles: { fontSize: 8, cellPadding: 2.2 },
+        theme: 'grid',
       });
 
-    } else if (this.activeTab === 'attendance') {
-      if (this.attSummary) {
-        doc.setFontSize(9.5);
-        doc.setTextColor(15, 23, 42);
-        doc.text(
-          `Total Visits: ${this.attSummary.total}  |  Daily Passes: ${this.attSummary.daily}  |  Premium: ${this.attSummary.premium}  |  Revenue: PHP ${this.decimalPipe.transform(this.attSummary.totalRevenue, '1.2-2')}`,
-          14,
-          startY - 4,
-        );
-      }
-      autoTable(doc, {
-        startY,
-        head: [['Check-in Time', 'Member', 'Email', 'Plan', 'Amount', 'Status']],
-        body: this.filteredAttRows.map(r => [
-          this.datePipe.transform(r.check_in_time, 'MMM d, yyyy h:mm a') ?? '',
-          r.username,
-          r.email,
-          r.membership_type === 'daily' ? 'Daily Pass' : 'Premium Member',
-          r.membership_type === 'daily' ? 'PHP 40.00' : 'Included',
-          (r.payment_status || 'paid').toUpperCase(),
-        ]),
-        headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [248, 250, 252] },
-        styles: { fontSize: 8, cellPadding: 2.2 },
-      });
+      startY = (doc as any).lastAutoTable.finalY + 7;
 
-    } else if (this.activeTab === 'sales') {
-      if (this.salesSummary) {
-        doc.setFontSize(9.5);
-        doc.setTextColor(15, 23, 42);
-        doc.text(
-          `Total Revenue: PHP ${this.decimalPipe.transform(this.salesSummary.totalRevenue, '1.2-2')}  |  Premium: PHP ${this.decimalPipe.transform(this.salesSummary.membershipRevenue, '1.2-2')}  |  Gym: PHP ${this.decimalPipe.transform(this.salesSummary.gymRevenue, '1.2-2')}  |  Shop: PHP ${this.decimalPipe.transform(this.salesSummary.shopRevenue, '1.2-2')}`,
-          14,
-          startY - 4,
-        );
-      }
-      doc.setFontSize(10.5);
-      doc.setTextColor(15, 23, 42);
-      doc.text('Gym Daily Pass Revenue by Date', 14, startY + 2);
-      autoTable(doc, {
-        startY: startY + 6,
-        head: [['Date', 'Paid Walk-ins', 'Collected Revenue']],
-        body: this.attSalesRows.map(r => [
-          this.datePipe.transform(r.sale_date, 'MMM d, yyyy') ?? '',
-          r.count,
-          `PHP ${this.decimalPipe.transform(r.revenue, '1.2-2')}`,
-        ]),
-        headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' },
-        styles: { fontSize: 8.5, cellPadding: 2 },
-      });
+      // Section 1: PRIORITY EXPIRATION AUDIT TABLE
+      if (expiredItems.length > 0 || expiringSoonItems.length > 0) {
+        const priorityItems = [...expiredItems, ...expiringSoonItems];
+        const priorityRows = priorityItems.map((item, idx) => {
+          const isExp = item.expiry_status === 'expired' || (item.days_until_expiry !== null && item.days_until_expiry < 0);
+          const daysText = isExp
+            ? `Expired (${Math.abs(item.days_until_expiry)}d ago)`
+            : `${item.days_until_expiry} days remaining`;
+          const directive = isExp ? 'PULL-OUT & WRITE OFF' : '20-50% CLEARANCE SALE';
+          const lossRisk = (item.cost_price || 0) * (item.current_stock || 0);
 
-    } else if (this.activeTab === 'inventory') {
-      if (this.invSummary) {
-        doc.setFontSize(9.5);
-        doc.setTextColor(15, 23, 42);
-        doc.text(
-          `Total Products: ${this.invRows.length}  |  Stock Units: ${this.invSummary.totalStock}  |  Sold Units: ${this.invSummary.totalSold}  |  Inventory Value: PHP ${this.decimalPipe.transform(this.invSummary.inventoryValue, '1.2-2')}`,
-          14,
-          startY - 4,
-        );
+          return [
+            idx + 1,
+            item.name,
+            item.brand || '—',
+            item.current_stock,
+            this.formatCurrency(item.cost_price),
+            this.formatCurrency(item.price),
+            this.formatDate(item.expiry_date),
+            daysText,
+            directive,
+            this.formatCurrency(lossRisk),
+          ];
+        });
+
+        // Add total risk footer row
+        const combinedRisk = expiredLossRisk + expiringSoonRisk;
+        priorityRows.push([
+          { content: 'TOTAL PERISHABLE CAPITAL AT RISK (IMMEDIATE ACTION)', colSpan: 9, styles: { halign: 'right', fontStyle: 'bold', fillColor: [254, 226, 226], textColor: [185, 28, 28] } } as any,
+          { content: this.formatCurrency(combinedRisk), styles: { fontStyle: 'bold', fillColor: [254, 226, 226], textColor: [185, 28, 28] } } as any,
+        ]);
+
+        autoTable(doc, {
+          startY,
+          margin: { top: 44, bottom: 22, left: 14, right: 14 },
+          head: [[
+            { content: 'URGENT SPOILAGE & SHELF-LIFE AUDIT REGISTER', colSpan: 10, styles: { fillColor: [185, 28, 28], textColor: [255, 255, 255], fontStyle: 'bold' } },
+          ], [
+            '#', 'Product Name', 'Brand', 'Stock', 'Unit Cost', 'Retail', 'Expiry Date', 'Lifespan', 'Audit Directive', 'Loss at Risk',
+          ]],
+          body: priorityRows,
+          headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.5 },
+          styles: { fontSize: 7.2, cellPadding: 2 },
+          didParseCell: (data) => {
+            if (data.section === 'body' && data.row.index < priorityItems.length) {
+              const item = priorityItems[data.row.index];
+              const isExp = item.expiry_status === 'expired' || (item.days_until_expiry !== null && item.days_until_expiry < 0);
+              if (isExp) {
+                data.cell.styles.fillColor = [254, 226, 226];
+                if (data.column.index === 8 || data.column.index === 9) {
+                  data.cell.styles.textColor = [153, 27, 27];
+                  data.cell.styles.fontStyle = 'bold';
+                }
+              } else {
+                data.cell.styles.fillColor = [254, 243, 199];
+                if (data.column.index === 8 || data.column.index === 9) {
+                  data.cell.styles.textColor = [146, 64, 14];
+                  data.cell.styles.fontStyle = 'bold';
+                }
+              }
+            }
+          },
+        });
+
+        startY = (doc as any).lastAutoTable.finalY + 7;
+      } else {
+        // Safe Banner
+        autoTable(doc, {
+          startY,
+          margin: { top: 44, bottom: 22, left: 14, right: 14 },
+          body: [[
+            {
+              content: '✓ PERISHABLES AUDIT: All inventory batches are fresh and strictly within approved shelf-life limits (0 expired, 0 near-expiry).',
+              styles: { halign: 'center', fillColor: [236, 253, 245], textColor: [4, 120, 87], fontStyle: 'bold', fontSize: 8.5 },
+            },
+          ]],
+          theme: 'plain',
+        });
+        startY = (doc as any).lastAutoTable.finalY + 6;
       }
-      autoTable(doc, {
-        startY,
-        head: [['Product Name', 'Brand', 'Unit Price', 'Stock on Hand', 'Units Sold', 'Total Revenue']],
-        body: this.filteredInvRows.map(item => [
+
+      // Section 2: COMPLETE INVENTORY MASTER & PROFITABILITY LEDGER
+      const masterRows = rows.map((item, idx) => {
+        const isExp = item.expiry_status === 'expired' || (item.days_until_expiry !== null && item.days_until_expiry < 0);
+        const isExpSoon = item.expiry_status === 'expiring_soon' || (item.days_until_expiry !== null && item.days_until_expiry >= 0 && item.days_until_expiry <= 30);
+        let statusTag = 'Fresh / Safe';
+        if (isExp) statusTag = `EXPIRED (${Math.abs(item.days_until_expiry)}d ago)`;
+        else if (isExpSoon) statusTag = `EXPIRING (${item.days_until_expiry}d left)`;
+        else if (!item.expiry_date) statusTag = 'Non-perishable';
+
+        return [
+          idx + 1,
           item.name,
           item.brand || '—',
-          `PHP ${this.decimalPipe.transform(item.price, '1.2-2')}`,
+          this.formatCurrency(item.cost_price),
+          this.formatCurrency(item.price),
+          `${item.profit_margin || 0}%`,
           item.current_stock,
           item.total_sold,
-          `PHP ${this.decimalPipe.transform(item.total_revenue, '1.2-2')}`,
-        ]),
-        headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [248, 250, 252] },
-        styles: { fontSize: 8.5, cellPadding: 2.2 },
+          this.formatCurrency(item.total_revenue),
+          this.formatCurrency(item.total_profit),
+          item.expiry_date ? this.formatDate(item.expiry_date) : 'No Expiry',
+          statusTag,
+        ];
       });
+
+      autoTable(doc, {
+        startY,
+        margin: { top: 44, bottom: 22, left: 14, right: 14 },
+        head: [[
+          { content: 'COMPLETE PRODUCT INVENTORY, COSTING & PROFITABILITY MASTER', colSpan: 12, styles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' } },
+        ], [
+          '#', 'Product Name', 'Brand', 'Unit Cost', 'Retail', 'Margin', 'Stock', 'Sold', 'Sales Rev', 'Net Tubo', 'Expiry Date', 'Shelf-Life Status',
+        ]],
+        body: masterRows,
+        headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.2 },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        styles: { fontSize: 7, cellPadding: 1.8 },
+        didParseCell: (data) => {
+          if (data.section === 'body' && data.column.index === 11) {
+            const val = String(data.cell.raw || '');
+            if (val.includes('EXPIRED')) {
+              data.cell.styles.fillColor = [254, 226, 226];
+              data.cell.styles.textColor = [153, 27, 27];
+              data.cell.styles.fontStyle = 'bold';
+            } else if (val.includes('EXPIRING')) {
+              data.cell.styles.fillColor = [254, 243, 199];
+              data.cell.styles.textColor = [146, 64, 14];
+              data.cell.styles.fontStyle = 'bold';
+            }
+          }
+        },
+      });
+
+    // ───────────────────────────────────────────────────────
+    // TAB 2: OVERVIEW / EXECUTIVE DASHBOARD
+    // ───────────────────────────────────────────────────────
+    } else if (targetTab === 'overview') {
+      const expiredItems = this.invRows.filter(r => r.expiry_status === 'expired' || (r.days_until_expiry !== null && r.days_until_expiry < 0));
+      const expiredLossRisk = this.invSummary?.expiredLossRisk ?? expiredItems.reduce((a, b) => a + ((b.cost_price || 0) * (b.current_stock || 0)), 0);
+      const expiringMembers = this.membershipRows.filter(m => m.is_expiring_soon);
+
+      const kpis = [
+        [
+          { content: 'Total Realized Revenue Collected', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          this.formatCurrency(this.grandTotalCollected),
+          { content: 'Pending Receivables (Orders/Plans)', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          this.formatCurrency(this.salesSummary?.pendingRevenue || 0),
+        ],
+        [
+          { content: 'Premium Subscriptions (₱500/mo)', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          this.formatCurrency(this.salesSummary?.membershipRevenue || 0),
+          { content: 'Active Premium Memberships', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          `${this.membershipSummary?.activePremium || 0} active members`,
+        ],
+        [
+          { content: 'Gym Daily Passes (₱40/visit)', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          this.formatCurrency(this.salesSummary?.gymRevenue || 0),
+          { content: 'Gym Walk-ins & Visits Logged', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          `${this.attSummary?.total || this.attRows.length || 0} check-ins`,
+        ],
+        [
+          { content: 'Shop Merchandise Realized Revenue', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          this.formatCurrency(this.salesSummary?.shopRevenue || 0),
+          { content: 'Inventory Valuation (Capital Cost)', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          this.formatCurrency(this.invSummary?.inventoryCostValue || 0),
+        ],
+        [
+          { content: 'Product Expiry Capital Loss Risk', styles: { fontStyle: 'bold', fillColor: [254, 226, 226], textColor: [185, 28, 28] } },
+          { content: `${expiredItems.length} products expired — ${this.formatCurrency(expiredLossRisk)}`, styles: { fontStyle: 'bold', fillColor: [254, 226, 226], textColor: [185, 28, 28] } },
+          { content: 'Memberships Expiring This Week', styles: { fontStyle: 'bold', fillColor: [254, 243, 199], textColor: [180, 83, 9] } },
+          { content: `${expiringMembers.length} members require renewal`, styles: { fontStyle: 'bold', fillColor: [254, 243, 199], textColor: [180, 83, 9] } },
+        ],
+      ];
+
+      autoTable(doc, {
+        startY,
+        margin: { top: 44, bottom: 22, left: 14, right: 14 },
+        head: [[{ content: 'EXECUTIVE PERFORMANCE AUDIT SCORECARD', colSpan: 4, styles: { halign: 'center', fillColor: [15, 23, 42], textColor: [234, 179, 8], fontStyle: 'bold' } }]],
+        body: kpis as any,
+        styles: { fontSize: 8, cellPadding: 2.2 },
+        theme: 'grid',
+      });
+
+      startY = (doc as any).lastAutoTable.finalY + 7;
+
+      // Revenue Distribution Table
+      const streams = [
+        ['Premium Membership Subscriptions', this.formatCurrency(this.salesSummary?.membershipRevenue || 0), `${this.revenueMembershipPercent}%`, this.formatCurrency(this.salesSummary?.cashRevenue || 0), 'Cash / GCash'],
+        ['Gym Walk-in Daily Passes', this.formatCurrency(this.salesSummary?.gymRevenue || 0), `${this.revenueGymPercent}%`, '—', 'Cash at Counter'],
+        ['Shop Products & Nutrition', this.formatCurrency(this.salesSummary?.shopRevenue || 0), `${this.revenueShopPercent}%`, this.formatCurrency(this.salesSummary?.pendingRevenue || 0), 'Cash / GCash'],
+      ];
+
+      autoTable(doc, {
+        startY,
+        margin: { top: 44, bottom: 22, left: 14, right: 14 },
+        head: [[
+          { content: 'REVENUE STREAM CONTRIBUTION BREAKDOWN', colSpan: 5, styles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold' } },
+        ], ['Revenue Stream', 'Collected Realized', 'Share of Total', 'Pending Receivables', 'Payment Channels']],
+        body: streams,
+        headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.5 },
+        styles: { fontSize: 7.5, cellPadding: 2 },
+      });
+
+      startY = (doc as any).lastAutoTable.finalY + 7;
+
+      // Immediate Expiration & Spoilage Register
+      if (expiredItems.length > 0 || expiringMembers.length > 0) {
+        const riskData: any[] = [];
+        expiredItems.slice(0, 8).forEach(item => {
+          riskData.push([
+            'Expired Product',
+            item.name,
+            `Stock: ${item.current_stock} units`,
+            this.formatDate(item.expiry_date),
+            `Loss Risk: ${this.formatCurrency((item.cost_price || 0) * (item.current_stock || 0))}`,
+            'Pull out from gym inventory immediately',
+          ]);
+        });
+        expiringMembers.slice(0, 8).forEach(m => {
+          riskData.push([
+            'Expiring Member',
+            m.username || 'Member',
+            m.phone || m.email || '—',
+            this.formatDate(m.membership_expiry),
+            `${m.days_left} days remaining`,
+            'Send renewal reminder notification',
+          ]);
+        });
+
+        autoTable(doc, {
+          startY,
+          margin: { top: 44, bottom: 22, left: 14, right: 14 },
+          head: [[
+            { content: 'CRITICAL EXPIRATION & RETENTION ALERTS (ATTENTION REQUIRED)', colSpan: 6, styles: { fillColor: [185, 28, 28], textColor: [255, 255, 255], fontStyle: 'bold' } },
+          ], ['Category', 'Target Item / Member', 'Contact / Quantity', 'Expiry Date', 'Risk / Days Left', 'Required Follow-up Action']],
+          body: riskData,
+          headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.5 },
+          styles: { fontSize: 7.2, cellPadding: 2 },
+        });
+
+        startY = (doc as any).lastAutoTable.finalY + 7;
+      }
+
+      // Facility Traffic Breakdown
+      const trafficRows = [
+        ['Morning Rush (5:00 AM – 11:59 AM)', `${this.attSummary?.morningCount || 0} check-ins`, `${this.attendanceMorningPercent}%`, 'High equipment utilization'],
+        ['Afternoon Session (12:00 PM – 4:59 PM)', `${this.attSummary?.afternoonCount || 0} check-ins`, `${this.attendanceAfternoonPercent}%`, 'Moderate facility load'],
+        ['Evening Peak (5:00 PM – 11:00 PM)', `${this.attSummary?.eveningCount || 0} check-ins`, `${this.attendanceEveningPercent}%`, 'Peak gym traffic hours'],
+      ];
+
+      autoTable(doc, {
+        startY,
+        margin: { top: 44, bottom: 22, left: 14, right: 14 },
+        head: [[
+          { content: 'GYM TRAFFIC & FACILITY UTILIZATION SCHEDULE', colSpan: 4, styles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold' } },
+        ], ['Time Interval', 'Visits Count', 'Traffic Share', 'Capacity Status']],
+        body: trafficRows,
+        headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.5 },
+        styles: { fontSize: 7.5, cellPadding: 2 },
+      });
+
+    // ───────────────────────────────────────────────────────
+    // TAB 3: MEMBERSHIPS & RETENTION AUDIT
+    // ───────────────────────────────────────────────────────
+    } else if (targetTab === 'memberships') {
+      const expiringSoon = this.filteredMembershipRows.filter(m => m.is_expiring_soon);
+      const expired = this.filteredMembershipRows.filter(m => m.is_expired);
+
+      const memKpis = [
+        [
+          { content: 'Total Registered Accounts', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          `${this.membershipSummary?.totalMembers || this.membershipRows.length} accounts`,
+          { content: 'Active Premium Subscribers', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          `${this.membershipSummary?.activePremium || 0} members (₱500/mo)`,
+        ],
+        [
+          { content: 'Monthly Premium Run-rate', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          this.formatCurrency(this.membershipSummary?.premiumRevenue || 0),
+          { content: 'Registered Fitness Coaches', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          `${this.membershipSummary?.totalCoaches || 0} coaches on roster`,
+        ],
+        [
+          { content: 'Expiring Within 7 Days', styles: { fontStyle: 'bold', fillColor: [254, 243, 199], textColor: [180, 83, 9] } },
+          { content: `${this.membershipSummary?.expiringSoon || expiringSoon.length} members require renewal`, styles: { fontStyle: 'bold', fillColor: [254, 243, 199], textColor: [180, 83, 9] } },
+          { content: 'Expired Membership Plans', styles: { fontStyle: 'bold', fillColor: [254, 226, 226], textColor: [185, 28, 28] } },
+          { content: `${this.membershipSummary?.expiredPlans || expired.length} expired accounts`, styles: { fontStyle: 'bold', fillColor: [254, 226, 226], textColor: [185, 28, 28] } },
+        ],
+      ];
+
+      autoTable(doc, {
+        startY,
+        margin: { top: 44, bottom: 22, left: 14, right: 14 },
+        head: [[{ content: 'MEMBERSHIP & SUBSCRIPTION AUDIT SUMMARY', colSpan: 4, styles: { halign: 'center', fillColor: [15, 23, 42], textColor: [234, 179, 8], fontStyle: 'bold' } }]],
+        body: memKpis as any,
+        styles: { fontSize: 8, cellPadding: 2.2 },
+        theme: 'grid',
+      });
+
+      startY = (doc as any).lastAutoTable.finalY + 7;
+
+      // Priority Renewal Register
+      const priorityList = [...expiringSoon, ...expired];
+      if (priorityList.length > 0) {
+        const priorityRows = priorityList.map((m, idx) => [
+          idx + 1,
+          m.username,
+          m.email || '—',
+          m.phone || '—',
+          m.membership_type === 'premium' ? 'Premium (₱500)' : 'Coach Profile',
+          this.formatDate(m.membership_expiry),
+          m.is_expired ? 'EXPIRED' : `${m.days_left}d left`,
+          m.is_expired ? 'Account Inactive' : 'Action Needed',
+          m.is_expired ? 'Contact for Reactivation Plan' : 'Send Renewal SMS Reminder',
+        ]);
+
+        autoTable(doc, {
+          startY,
+          margin: { top: 44, bottom: 22, left: 14, right: 14 },
+          head: [[
+            { content: 'PRIORITY RETENTION & RENEWAL REGISTER (EXPIRING SOON & EXPIRED)', colSpan: 9, styles: { fillColor: [180, 83, 9], textColor: [255, 255, 255], fontStyle: 'bold' } },
+          ], ['#', 'Member Name', 'Email', 'Phone', 'Plan', 'Expiry Date', 'Lifespan', 'Account Status', 'Required Retention Action']],
+          body: priorityRows,
+          headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.2 },
+          styles: { fontSize: 7, cellPadding: 2 },
+          didParseCell: (data) => {
+            if (data.section === 'body' && data.row.index < priorityList.length) {
+              const item = priorityList[data.row.index];
+              if (item.is_expired) {
+                data.cell.styles.fillColor = [254, 226, 226];
+                if (data.column.index === 6 || data.column.index === 7) {
+                  data.cell.styles.textColor = [153, 27, 27];
+                  data.cell.styles.fontStyle = 'bold';
+                }
+              } else {
+                data.cell.styles.fillColor = [254, 243, 199];
+                if (data.column.index === 6 || data.column.index === 7) {
+                  data.cell.styles.textColor = [146, 64, 14];
+                  data.cell.styles.fontStyle = 'bold';
+                }
+              }
+            }
+          },
+        });
+
+        startY = (doc as any).lastAutoTable.finalY + 7;
+      }
+
+      // Complete Roster
+      const rosterRows = this.filteredMembershipRows.map((m, idx) => [
+        idx + 1,
+        m.username,
+        m.account_type === 'coach' ? 'Coach' : 'Member',
+        m.email || '—',
+        m.membership_type === 'premium' ? 'Premium (₱500)' : (m.membership_type === 'daily' ? 'Daily Pass' : 'Coach'),
+        (m.payment_method || 'cash').toUpperCase(),
+        m.membership_expiry ? this.formatDate(m.membership_expiry) : 'Per Visit',
+        m.membership_type === 'premium' ? `${m.days_left}d left` : 'Per Visit',
+        m.membership_status === 'active' ? 'Active' : 'Pending',
+      ]);
+
+      autoTable(doc, {
+        startY,
+        margin: { top: 44, bottom: 22, left: 14, right: 14 },
+        head: [[
+          { content: 'COMPLETE MEMBERSHIP & COACH AUDIT ROSTER', colSpan: 9, styles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' } },
+        ], ['#', 'Member Name', 'Type', 'Email', 'Plan', 'Payment', 'Expiry Date', 'Remaining', 'Status']],
+        body: rosterRows,
+        headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.2 },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        styles: { fontSize: 7, cellPadding: 1.8 },
+      });
+
+    // ───────────────────────────────────────────────────────
+    // TAB 4: TRANSACTIONS AUDIT
+    // ───────────────────────────────────────────────────────
+    } else if (targetTab === 'transactions') {
+      const txKpis = [
+        [
+          { content: 'Total Transactions Logged', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          `${this.filteredTxRows.length} transactions`,
+          { content: 'Total Audit Volume', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          this.formatCurrency(this.txTotalVolume),
+        ],
+        [
+          { content: 'Collected Realized Revenue', styles: { fontStyle: 'bold', fillColor: [241, 245, 249], textColor: [5, 150, 105] } },
+          { content: this.formatCurrency(this.txCollectedRevenue), styles: { fontStyle: 'bold', textColor: [5, 150, 105] } },
+          { content: 'Pending Receivables', styles: { fontStyle: 'bold', fillColor: [241, 245, 249], textColor: [180, 83, 9] } },
+          { content: this.formatCurrency(this.txPendingRevenue), styles: { fontStyle: 'bold', textColor: [180, 83, 9] } },
+        ],
+      ];
+
+      autoTable(doc, {
+        startY,
+        margin: { top: 44, bottom: 22, left: 14, right: 14 },
+        head: [[{ content: 'TRANSACTION AUDIT LEDGER SUMMARY', colSpan: 4, styles: { halign: 'center', fillColor: [15, 23, 42], textColor: [234, 179, 8], fontStyle: 'bold' } }]],
+        body: txKpis as any,
+        styles: { fontSize: 8, cellPadding: 2.2 },
+        theme: 'grid',
+      });
+
+      startY = (doc as any).lastAutoTable.finalY + 7;
+
+      const txTableRows = this.filteredTxRows.map((tx, idx) => [
+        idx + 1,
+        this.formatDateTime(tx.transaction_date),
+        tx.username,
+        tx.type_label,
+        tx.product_name || (tx.source === 'attendance' ? 'Gym Walk-in Access' : (tx.source === 'membership' ? 'Monthly Plan Subscription' : '—')),
+        tx.amount > 0 ? this.formatCurrency(tx.amount) : 'Included',
+        (tx.payment_method || 'cash').toUpperCase(),
+        this.getStatusLabel(tx),
+      ]);
+
+      autoTable(doc, {
+        startY,
+        margin: { top: 44, bottom: 22, left: 14, right: 14 },
+        head: [[
+          { content: 'DETAILED FINANCIAL AUDIT LOG', colSpan: 8, styles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' } },
+        ], ['#', 'Date & Time', 'Member / Payer', 'Type', 'Description / Details', 'Amount', 'Channel', 'Audit Status']],
+        body: txTableRows,
+        headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.2 },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        styles: { fontSize: 7, cellPadding: 1.8 },
+      });
+
+    // ───────────────────────────────────────────────────────
+    // TAB 5: ATTENDANCE & TRAFFIC
+    // ───────────────────────────────────────────────────────
+    } else if (targetTab === 'attendance') {
+      const attKpis = [
+        [
+          { content: 'Total Visits Logged', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          `${this.attSummary?.total || this.attRows.length} check-ins`,
+          { content: 'Daily Walk-in Passes', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          `${this.attSummary?.daily || 0} visits (₱40)`,
+        ],
+        [
+          { content: 'Premium Member Visits', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          `${this.attSummary?.premium || 0} visits`,
+          { content: 'Total Walk-in Pass Revenue', styles: { fontStyle: 'bold', fillColor: [241, 245, 249], textColor: [5, 150, 105] } },
+          { content: this.formatCurrency(this.attSummary?.totalRevenue || 0), styles: { fontStyle: 'bold', textColor: [5, 150, 105] } },
+        ],
+      ];
+
+      autoTable(doc, {
+        startY,
+        margin: { top: 44, bottom: 22, left: 14, right: 14 },
+        head: [[{ content: 'ATTENDANCE & TRAFFIC AUDIT SUMMARY', colSpan: 4, styles: { halign: 'center', fillColor: [15, 23, 42], textColor: [234, 179, 8], fontStyle: 'bold' } }]],
+        body: attKpis as any,
+        styles: { fontSize: 8, cellPadding: 2.2 },
+        theme: 'grid',
+      });
+
+      startY = (doc as any).lastAutoTable.finalY + 7;
+
+      const attTableRows = this.filteredAttRows.map((r, idx) => [
+        idx + 1,
+        this.formatDateTime(r.check_in_time),
+        r.username,
+        r.email || '—',
+        r.membership_type === 'daily' ? 'Daily Pass (₱40)' : 'Premium Member',
+        r.membership_type === 'daily' ? this.formatCurrency(40) : 'Included in Plan',
+        (r.payment_status || 'paid').toUpperCase(),
+      ]);
+
+      autoTable(doc, {
+        startY,
+        margin: { top: 44, bottom: 22, left: 14, right: 14 },
+        head: [[
+          { content: 'CHRONOLOGICAL GYM ATTENDANCE LOG', colSpan: 7, styles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' } },
+        ], ['#', 'Check-in Date & Time', 'Member Name', 'Email Address', 'Plan Type', 'Fee Paid', 'Payment Status']],
+        body: attTableRows,
+        headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.2 },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        styles: { fontSize: 7, cellPadding: 1.8 },
+      });
+
+    // ───────────────────────────────────────────────────────
+    // TAB 6: SALES & REVENUE BREAKDOWN
+    // ───────────────────────────────────────────────────────
+    } else if (targetTab === 'sales') {
+      const salesKpis = [
+        [
+          { content: 'Total Realized Revenue', styles: { fontStyle: 'bold', fillColor: [241, 245, 249], textColor: [5, 150, 105] } },
+          { content: this.formatCurrency(this.salesSummary?.totalRevenue || 0), styles: { fontStyle: 'bold', textColor: [5, 150, 105] } },
+          { content: 'Pending Orders & Subscriptions', styles: { fontStyle: 'bold', fillColor: [241, 245, 249], textColor: [180, 83, 9] } },
+          { content: this.formatCurrency(this.salesSummary?.pendingRevenue || 0), styles: { fontStyle: 'bold', textColor: [180, 83, 9] } },
+        ],
+        [
+          { content: 'Premium Membership Subscriptions', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          this.formatCurrency(this.salesSummary?.membershipRevenue || 0),
+          { content: 'Cash Receipts Share', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          `${this.formatCurrency(this.salesSummary?.cashRevenue || 0)} (${this.paymentCashPercent}%)`,
+        ],
+        [
+          { content: 'Gym Walk-in Daily Passes', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          this.formatCurrency(this.salesSummary?.gymRevenue || 0),
+          { content: 'GCash Digital Payments Share', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          `${this.formatCurrency(this.salesSummary?.gcashRevenue || 0)} (${this.paymentGcashPercent}%)`,
+        ],
+        [
+          { content: 'Shop Merchandise Realized', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          this.formatCurrency(this.salesSummary?.shopRevenue || 0),
+          { content: 'Merchandise Items Sold', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          `${this.salesSummary?.itemsSold || 0} units`,
+        ],
+      ];
+
+      autoTable(doc, {
+        startY,
+        margin: { top: 44, bottom: 22, left: 14, right: 14 },
+        head: [[{ content: 'FINANCIAL SALES & REVENUE AUDIT SUMMARY', colSpan: 4, styles: { halign: 'center', fillColor: [15, 23, 42], textColor: [234, 179, 8], fontStyle: 'bold' } }]],
+        body: salesKpis as any,
+        styles: { fontSize: 8, cellPadding: 2.2 },
+        theme: 'grid',
+      });
+
+      startY = (doc as any).lastAutoTable.finalY + 7;
+
+      // Table A: Daily Gym Passes
+      if (this.attSalesRows.length > 0) {
+        const attSalesTable = this.attSalesRows.map(r => [
+          this.formatDate(r.sale_date),
+          this.datePipe.transform(r.sale_date, 'EEEE') ?? '',
+          r.count,
+          this.formatCurrency(r.revenue),
+        ]);
+
+        autoTable(doc, {
+          startY,
+          margin: { top: 44, bottom: 22, left: 14, right: 14 },
+          head: [[
+            { content: 'GYM DAILY WALK-IN PASSES (REVENUE BY DATE)', colSpan: 4, styles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold' } },
+          ], ['Date', 'Day of Week', 'Paid Check-ins', 'Collected Revenue']],
+          body: attSalesTable,
+          headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.2 },
+          alternateRowStyles: { fillColor: [248, 250, 252] },
+          styles: { fontSize: 7, cellPadding: 1.8 },
+        });
+
+        startY = (doc as any).lastAutoTable.finalY + 7;
+      }
+
+      // Table B: Shop Sales
+      if (this.shopSalesRows.length > 0) {
+        const shopSalesTable = this.shopSalesRows.map(r => [
+          this.formatDate(r.sale_date),
+          this.datePipe.transform(r.sale_date, 'EEEE') ?? '',
+          r.count,
+          this.formatCurrency(r.revenue),
+        ]);
+
+        autoTable(doc, {
+          startY,
+          margin: { top: 44, bottom: 22, left: 14, right: 14 },
+          head: [[
+            { content: 'SHOP MERCHANDISE SALES (REVENUE BY DATE)', colSpan: 4, styles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold' } },
+          ], ['Date', 'Day of Week', 'Completed Orders', 'Collected Revenue']],
+          body: shopSalesTable,
+          headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.2 },
+          alternateRowStyles: { fillColor: [248, 250, 252] },
+          styles: { fontSize: 7, cellPadding: 1.8 },
+        });
+
+        startY = (doc as any).lastAutoTable.finalY + 7;
+      }
+
+      // Table C: Membership Subscriptions
+      if (this.membershipSalesRows.length > 0) {
+        const memSalesTable = this.membershipSalesRows.map(r => [
+          this.formatDate(r.sale_date),
+          this.datePipe.transform(r.sale_date, 'EEEE') ?? '',
+          r.count,
+          this.formatCurrency(r.revenue),
+        ]);
+
+        autoTable(doc, {
+          startY,
+          margin: { top: 44, bottom: 22, left: 14, right: 14 },
+          head: [[
+            { content: 'PREMIUM MEMBERSHIP SUBSCRIPTIONS (REVENUE BY DATE)', colSpan: 4, styles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold' } },
+          ], ['Date', 'Day of Week', 'New / Renewed Subscriptions', 'Collected Revenue']],
+          body: memSalesTable,
+          headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.2 },
+          alternateRowStyles: { fillColor: [248, 250, 252] },
+          styles: { fontSize: 7, cellPadding: 1.8 },
+        });
+      }
     }
 
-    doc.save(`FordaGO_Report_${this.activeTab}_${this.period}_${new Date().toISOString().slice(0, 10)}.pdf`);
+    // ───────────────────────────────────────────────────────
+    // MULTI-PAGE EXECUTIVE DECORATIONS (HEADERS & FOOTERS)
+    // ───────────────────────────────────────────────────────
+    const totalPages = (doc as any).getNumberOfPages ? (doc as any).getNumberOfPages() : ((doc.internal as any).getNumberOfPages ? (doc.internal as any).getNumberOfPages() : 1);
+    const finalTableY = (doc as any).lastAutoTable?.finalY ?? 200;
+
+    for (let p = 1; p <= totalPages; p++) {
+      doc.setPage(p);
+
+      if (p === 1) {
+        // Page 1 Luxury Header Banner
+        doc.setFillColor(15, 23, 42); // Deep Navy Slate #0F172A
+        doc.rect(0, 0, 210, 24, 'F');
+
+        // Gold Accent Bar
+        doc.setFillColor(234, 179, 8); // Gold #EAB308
+        doc.rect(0, 24, 210, 2, 'F');
+
+        // Brand Text
+        doc.setFontSize(13);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(234, 179, 8);
+        doc.text('FORDAGO FITNESS & WELLNESS CLUB', 14, 11);
+
+        doc.setFontSize(7.5);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(226, 232, 240);
+        doc.text('MANAGEMENT INFORMATION SYSTEM • OFFICIAL AUDIT REPORT', 14, 18);
+
+        // Header Right Metadata
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(255, 255, 255);
+        doc.text(reportTitle.toUpperCase(), 196, 11, { align: 'right' });
+
+        doc.setFontSize(7);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(203, 213, 225);
+        doc.text(`CONFIDENTIAL • REF: ${reportRef}`, 196, 18, { align: 'right' });
+
+        // Metadata Sub-Strip Card
+        doc.setFillColor(248, 250, 252);
+        doc.setDrawColor(226, 232, 240);
+        doc.setLineWidth(0.3);
+        doc.rect(14, 28, 182, 12, 'FD');
+
+        doc.setFontSize(7.5);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(71, 85, 105);
+
+        doc.text(`Audit Scope: ${periodLabel[currentPeriod] ?? 'All Time'}`, 17, 33);
+        doc.text(`Generated: ${genTimestamp}`, 70, 33);
+        doc.text('Classification: STRICTLY CONFIDENTIAL', 132, 33);
+
+        doc.text(`Module: ${targetTab.toUpperCase()}`, 17, 37.5);
+        doc.text('Database Sync: 100% Verified Live', 70, 37.5);
+        doc.text('Prepared By: FordaGO Administration', 132, 37.5);
+
+      } else {
+        // Pages 2+ Compact Header
+        doc.setFillColor(15, 23, 42);
+        doc.rect(0, 0, 210, 10, 'F');
+
+        doc.setFillColor(234, 179, 8);
+        doc.rect(0, 10, 210, 1, 'F');
+
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(255, 255, 255);
+        doc.text(`FordaGO Fitness MIS • ${reportTitle}`, 14, 7);
+
+        doc.setFontSize(7);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(203, 213, 225);
+        doc.text(`Generated: ${genTimestamp} | CONFIDENTIAL`, 196, 7, { align: 'right' });
+      }
+
+      // Bottom Footer on Every Page
+      doc.setDrawColor(203, 213, 225);
+      doc.setLineWidth(0.2);
+      doc.line(14, 285, 196, 285);
+
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(100, 116, 139);
+      doc.text('FordaGO Management Information System • Official Administrative Audit Report', 14, 289.5);
+      doc.text('CONFIDENTIAL — FOR INTERNAL AUDIT ONLY', 105, 289.5, { align: 'center' });
+      doc.text(`Page ${p} of ${totalPages}`, 196, 289.5, { align: 'right' });
+
+      // Official Sign-off on Last Page if room permits
+      if (p === totalPages && finalTableY <= 242) {
+        const signY = Math.max(finalTableY + 8, 245);
+        doc.setFontSize(7.5);
+        doc.setTextColor(100, 116, 139);
+        doc.setFont('helvetica', 'normal');
+        doc.text('PREPARED & CONSOLIDATED BY:', 18, signY);
+        doc.text('VERIFIED & AUDITED BY:', 120, signY);
+
+        doc.setDrawColor(148, 163, 184);
+        doc.setLineWidth(0.3);
+        doc.line(18, signY + 11, 85, signY + 11);
+        doc.line(120, signY + 11, 187, signY + 11);
+
+        doc.setFontSize(7.5);
+        doc.setTextColor(15, 23, 42);
+        doc.setFont('helvetica', 'bold');
+        doc.text('FordaGO System Administrator', 18, signY + 15);
+        doc.text('Operations & Inventory Controller', 120, signY + 15);
+
+        doc.setFontSize(6.5);
+        doc.setTextColor(148, 163, 184);
+        doc.setFont('helvetica', 'italic');
+        doc.text('Signed / Certified True & Accurate', 18, signY + 18.5);
+        doc.text('Official Administrative Endorsement', 120, signY + 18.5);
+      }
+    }
+
+    doc.save(`FordaGO_Audit_${targetTab.toUpperCase()}_${currentPeriod}_${new Date().toISOString().slice(0, 10)}.pdf`);
   }
 }

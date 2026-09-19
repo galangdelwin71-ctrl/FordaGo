@@ -193,47 +193,95 @@ export class TransactionsPage implements OnInit {
     const periodLabel: Record<string, string> = {
       all: 'All Time', daily: 'Today', weekly: 'This Week', monthly: 'This Month'
     };
+    const genTime = this.datePipe.transform(new Date(), 'MMM d, yyyy h:mm a') ?? '';
 
-    doc.setFontSize(18);
-    doc.setTextColor(255, 214, 0);
-    doc.text('FordaGO Gym', 14, 18);
-    doc.setFontSize(11);
-    doc.setTextColor(80, 80, 80);
-    doc.text(`Transaction History — ${periodLabel[this.period]}`, 14, 26);
-    doc.text(`Member: ${user.username || 'N/A'}`, 14, 32);
-    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 38);
-
-    // Summary line
-    doc.setFontSize(10);
-    doc.setTextColor(40, 40, 40);
-    doc.text(`Total Transactions: ${this.transactions.length}   |   Total Spent: ₱${this.decimalPipe.transform(this.totalSpent, '1.2-2')}   |   Gym Visits: ${this.attendanceCount}`, 14, 46);
-
-    const rows = this.transactions.map(tx => [
-      this.datePipe.transform(tx.transaction_date, 'MMM d, yyyy HH:mm') ?? '',
+    const rows = this.transactions.map((tx, index) => [
+      index + 1,
+      this.datePipe.transform(tx.transaction_date, 'MMM d, yyyy h:mm a') ?? '',
       tx.type_label,
-      tx.product_name || (tx.source === 'attendance' ? 'Gym Check-in' : (tx.source === 'membership' ? '1-Month Premium Pass' : '—')),
-      tx.amount > 0 ? `₱${this.decimalPipe.transform(tx.amount, '1.2-2')}` : 'Included',
-      this.getStatusLabel(tx),
+      tx.product_name || (tx.source === 'attendance' ? 'Gym Check-in Access' : (tx.source === 'membership' ? '1-Month Premium Pass' : '—')),
+      tx.amount > 0 ? `PHP ${this.decimalPipe.transform(tx.amount, '1.2-2')}` : 'Included in Plan',
+      this.getStatusLabel(tx).toUpperCase(),
     ]);
 
     autoTable(doc, {
-      startY: 52,
-      head: [['Date & Time', 'Type', 'Details', 'Amount', 'Status']],
-      body: rows,
-      headStyles: { fillColor: [30, 30, 30], textColor: [255, 214, 0], fontStyle: 'bold' },
-      alternateRowStyles: { fillColor: [248, 248, 248] },
-      styles: { fontSize: 9, cellPadding: 3 },
+      startY: 44,
+      margin: { top: 44, bottom: 22, left: 14, right: 14 },
+      head: [[
+        { content: 'MEMBER TRANSACTION & PAYMENT STATEMENT', colSpan: 6, styles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' } },
+      ], ['#', 'Date & Time', 'Transaction Category', 'Description / Item', 'Amount', 'Payment Status']],
+      body: rows.length ? rows : [['-', '-', 'No transactions logged for this period', '-', '-', '-']],
+      headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.5 },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      styles: { fontSize: 7.5, cellPadding: 2.2 },
     });
 
-    // Footer
-    const pageCount = (doc as any).internal.getNumberOfPages();
+    const pageCount = (doc as any).getNumberOfPages ? (doc as any).getNumberOfPages() : ((doc.internal as any).getNumberOfPages ? (doc.internal as any).getNumberOfPages() : 1);
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
-      doc.setFontSize(8);
-      doc.setTextColor(150);
-      doc.text(`FordaGO Gym — Transaction Report  |  Page ${i} of ${pageCount}`, 14, doc.internal.pageSize.height - 8);
+      if (i === 1) {
+        doc.setFillColor(15, 23, 42);
+        doc.rect(0, 0, 210, 24, 'F');
+        doc.setFillColor(234, 179, 8);
+        doc.rect(0, 24, 210, 2, 'F');
+
+        doc.setFontSize(13);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(234, 179, 8);
+        doc.text('FORDAGO FITNESS & WELLNESS CLUB', 14, 11);
+
+        doc.setFontSize(7.5);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(226, 232, 240);
+        doc.text('MEMBER ACCOUNT STATEMENT • OFFICIAL PAYMENT HISTORY', 14, 18);
+
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(255, 255, 255);
+        doc.text('TRANSACTION LEDGER', 196, 11, { align: 'right' });
+
+        doc.setFontSize(7);
+        doc.setTextColor(203, 213, 225);
+        doc.text(`CONFIDENTIAL • MEMBER REF`, 196, 18, { align: 'right' });
+
+        doc.setFillColor(248, 250, 252);
+        doc.setDrawColor(226, 232, 240);
+        doc.setLineWidth(0.3);
+        doc.rect(14, 28, 182, 12, 'FD');
+
+        doc.setFontSize(7.5);
+        doc.setTextColor(71, 85, 105);
+        doc.text(`Member Account: ${user.username || 'Valued Member'}`, 17, 33);
+        doc.text(`Period Scope: ${periodLabel[this.period]}`, 75, 33);
+        doc.text(`Total Spent: PHP ${this.decimalPipe.transform(this.totalSpent, '1.2-2')}`, 135, 33);
+
+        doc.text(`Generated: ${genTime}`, 17, 37.5);
+        doc.text(`Visits: ${this.attendanceCount} check-ins`, 75, 37.5);
+        doc.text(`Transactions Count: ${this.transactions.length} records`, 135, 37.5);
+      } else {
+        doc.setFillColor(15, 23, 42);
+        doc.rect(0, 0, 210, 10, 'F');
+        doc.setFillColor(234, 179, 8);
+        doc.rect(0, 10, 210, 1, 'F');
+
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(255, 255, 255);
+        doc.text('FordaGO Fitness — Member Statement', 14, 7);
+        doc.setFontSize(7);
+        doc.setTextColor(203, 213, 225);
+        doc.text(`Page ${i} of ${pageCount}`, 196, 7, { align: 'right' });
+      }
+
+      doc.setDrawColor(203, 213, 225);
+      doc.setLineWidth(0.2);
+      doc.line(14, 285, 196, 285);
+      doc.setFontSize(7);
+      doc.setTextColor(100, 116, 139);
+      doc.text('FordaGO Fitness & Wellness Club • Official Electronic Account Ledger', 14, 289.5);
+      doc.text(`Page ${i} of ${pageCount}`, 196, 289.5, { align: 'right' });
     }
 
-    doc.save(`fordago-transactions-${this.period}-${Date.now()}.pdf`);
+    doc.save(`fordago-transactions-${this.period}-${new Date().toISOString().slice(0, 10)}.pdf`);
   }
 }
