@@ -684,98 +684,6 @@
         </div>
       </div>
 
-      <!-- Add Member Form -->
-      <div class="inline-form" *ngIf="showAddMember">
-        <div class="form-title">New Account</div>
-        <input class="field-input" type="text"     placeholder="Full name / Username *"  [(ngModel)]="newMember.username" />
-        <input class="field-input" type="email"    placeholder="Email *"                 [(ngModel)]="newMember.email" />
-        <div class="pw-shell">
-          <input class="field-input" [type]="showNewMemberPw ? 'text' : 'password'" placeholder="Password *" [(ngModel)]="newMember.password" />
-          <button type="button" class="pw-eye" (click)="showNewMemberPw = !showNewMemberPw" [attr.aria-label]="showNewMemberPw ? 'Hide password' : 'Show password'">
-            <ion-icon [name]="showNewMemberPw ? 'eye-off-outline' : 'eye-outline'" aria-hidden="true"></ion-icon>
-          </button>
-        </div>
-        <input class="field-input" type="tel"      placeholder="Phone number (optional)" [(ngModel)]="newMember.phone" />
-        <select class="field-input" [(ngModel)]="newMember.gender">
-          <option value="">Gender (optional)</option>
-          <option value="male">Male</option>
-          <option value="female">Female</option>
-          <option value="other">Other</option>
-        </select>
-        <select class="field-input" [(ngModel)]="newMember.role">
-          <option *ngFor="let r of assignableRoles" [value]="r.value">{{ r.label }}</option>
-        </select>
-        <ng-container *ngIf="newMember.role === 'user'">
-          <select class="field-input" [(ngModel)]="newMember.membership_type">
-            <option value="premium">Premium (Monthly)</option>
-            <option value="daily">Daily Pass</option>
-          </select>
-          <select class="field-input" *ngIf="newMember.membership_type === 'premium'" [(ngModel)]="newMember.payment_method">
-            <option value="cash">Cash</option>
-            <option value="gcash">GCash</option>
-          </select>
-        </ng-container>
-        <button class="submit-btn" (click)="saveMember()">Save Account</button>
-      </div>
-
-      <!-- Edit Member Form -->
-      <div class="inline-form" *ngIf="editingMember">
-        <div class="form-title">
-          <ion-icon name="create-outline"></ion-icon> Edit Member — {{ editingMember.username }}
-        </div>
-
-        <label class="field-lbl">Username / Name</label>
-        <input class="field-input" type="text"  placeholder="Username" [(ngModel)]="editingMember.username" />
-
-        <label class="field-lbl">Email Address</label>
-        <input class="field-input" type="email" placeholder="Email"    [(ngModel)]="editingMember.email" />
-
-        <!-- Current Password Status Banner -->
-        <div class="current-pw-info-banner">
-          <div class="current-pw-lbl">
-            <ion-icon name="shield-checkmark-outline"></ion-icon>
-            <span>Current Password:</span>
-            <strong class="pw-status-badge">•••••••• (Encrypted in Database)</strong>
-          </div>
-          <small class="pw-defense-note">
-            Current password is encrypted (one-way bcrypt hash) for user data privacy and security. To change or reset it, enter a new password or click Generate Password below.
-          </small>
-        </div>
-
-        <div class="pw-label-row">
-          <label class="field-lbl">New Password (leave blank to keep current):</label>
-          <button type="button" class="gen-pw-btn" (click)="generateRandomMemberPassword()">
-            <ion-icon name="sparkles-outline"></ion-icon> Generate Password
-          </button>
-        </div>
-        <div class="pw-shell">
-          <input class="field-input" [type]="showEditMemberPw ? 'text' : 'password'" placeholder="Type new password or click Generate..." [(ngModel)]="editingMember.password" />
-          <button type="button" class="pw-eye" (click)="showEditMemberPw = !showEditMemberPw" [attr.aria-label]="showEditMemberPw ? 'Hide password' : 'Show password'">
-            <ion-icon [name]="showEditMemberPw ? 'eye-off-outline' : 'eye-outline'" aria-hidden="true"></ion-icon>
-          </button>
-        </div>
-
-        <label class="field-lbl">Phone Number</label>
-        <input class="field-input" type="tel"   placeholder="Phone"    [(ngModel)]="editingMember.phone" />
-
-        <label class="field-lbl">Gender</label>
-        <select class="field-input" [(ngModel)]="editingMember.gender">
-          <option value="">Gender</option>
-          <option value="male">Male</option>
-          <option value="female">Female</option>
-          <option value="other">Other</option>
-        </select>
-
-        <label class="field-lbl" *ngIf="!isEmployee">Role</label>
-        <select class="field-input" *ngIf="!isEmployee" [(ngModel)]="editingMember.role">
-          <option *ngFor="let r of assignableRoles" [value]="r.value">{{ r.label }}</option>
-        </select>
-        <div class="form-actions">
-          <button class="submit-btn" (click)="updateMember()">Update</button>
-          <button class="cancel-btn" (click)="editingMember=null">Cancel</button>
-        </div>
-      </div>
-
       <!-- Search Input -->
       <div class="search-input-wrap">
         <ion-icon name="search-outline" class="search-icon"></ion-icon>
@@ -870,231 +778,6 @@
         <span class="section-tag-chip">GYM SESSIONS</span>
         <div class="header-actions">
           <button class="add-btn" (click)="toggleAddSession()">{{ showAddSession ? '✕ Cancel' : '+ Add Session' }}</button>
-        </div>
-      </div>
-
-      <!-- Add Session Form -->
-      <div class="inline-form session-form-card" *ngIf="showAddSession">
-        <div class="form-title">
-          <ion-icon name="calendar-number-outline"></ion-icon> New Training Session
-        </div>
-
-        <!-- Title -->
-        <label class="field-lbl"><ion-icon name="fitness-outline"></ion-icon> Session Title *</label>
-        <input class="field-input" type="text" placeholder="e.g. Morning HIIT, Leg Day Bootcamp, Boxing..." [(ngModel)]="newSession.title" />
-
-        <!-- Description -->
-        <label class="field-lbl"><ion-icon name="document-text-outline"></ion-icon> Description / Notes</label>
-        <textarea class="field-input field-textarea" rows="2" placeholder="Session details, routine breakdown, gear required..." [(ngModel)]="newSession.description"></textarea>
-
-        <!-- Date & Time & Duration Grid -->
-        <div class="form-grid-2">
-          <div class="form-field-group">
-            <label class="field-lbl"><ion-icon name="calendar-outline"></ion-icon> Date *</label>
-            <div class="input-with-icon-wrap">
-              <input class="field-input input-iconic date-time-field" type="date" [(ngModel)]="newSession.date" #newDateInput (click)="openPicker(newDateInput)" />
-            </div>
-            <div class="quick-pill-row">
-              <button type="button" class="quick-pill" (click)="setQuickDate(0, 'new')">Today</button>
-              <button type="button" class="quick-pill" (click)="setQuickDate(1, 'new')">Tomorrow</button>
-              <button type="button" class="quick-pill" (click)="setQuickDate(7, 'new')">+7 Days</button>
-            </div>
-          </div>
-
-          <div class="form-field-group">
-            <label class="field-lbl"><ion-icon name="time-outline"></ion-icon> Start Time</label>
-            <div class="input-with-icon-wrap">
-              <input class="field-input input-iconic date-time-field" type="time" [(ngModel)]="newSession.time" #newTimeInput (click)="openPicker(newTimeInput)" />
-            </div>
-            <div class="quick-pill-row">
-              <button type="button" class="quick-pill" (click)="setQuickTime('07:00', 'new')">7 AM</button>
-              <button type="button" class="quick-pill" (click)="setQuickTime('09:00', 'new')">9 AM</button>
-              <button type="button" class="quick-pill" (click)="setQuickTime('14:00', 'new')">2 PM</button>
-              <button type="button" class="quick-pill" (click)="setQuickTime('16:00', 'new')">4 PM</button>
-              <button type="button" class="quick-pill" (click)="setQuickTime('18:00', 'new')">6 PM</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Duration Field -->
-        <div class="form-field-group" style="margin-bottom: 12px;">
-          <label class="field-lbl"><ion-icon name="timer-outline"></ion-icon> Duration (e.g. 1 hr, 2 hrs, 60 min)</label>
-          <input class="field-input" type="text" placeholder="e.g. 60 min, 1 hr, 2 hrs" [(ngModel)]="newSession.duration" />
-          <div class="quick-pill-row" style="margin-top: 4px;">
-            <button type="button" class="quick-pill" (click)="setQuickDuration('30 min', 'new')">30 min</button>
-            <button type="button" class="quick-pill" (click)="setQuickDuration('45 min', 'new')">45 min</button>
-            <button type="button" class="quick-pill" (click)="setQuickDuration('1 hr', 'new')">1 hr (60m)</button>
-            <button type="button" class="quick-pill" (click)="setQuickDuration('1.5 hrs', 'new')">1.5 hrs</button>
-            <button type="button" class="quick-pill" (click)="setQuickDuration('2 hrs', 'new')">2 hrs (120m)</button>
-            <button type="button" class="quick-pill" (click)="setQuickDuration('3 hrs', 'new')">3 hrs</button>
-          </div>
-        </div>
-
-        <!-- Location & Coach Grid -->
-        <div class="form-grid-2">
-          <div class="form-field-group">
-            <label class="field-lbl"><ion-icon name="location-outline"></ion-icon> Location</label>
-            <input class="field-input" type="text" placeholder="e.g. Main Gym Floor, Studio A" [(ngModel)]="newSession.location" />
-          </div>
-          <div class="form-field-group">
-            <label class="field-lbl"><ion-icon name="person-outline"></ion-icon> Coach / Trainer</label>
-            <input class="field-input" type="text" placeholder="e.g. Coach Ethan, Coach Ryza" [(ngModel)]="newSession.coach" />
-          </div>
-        </div>
-
-        <!-- Mention Members Section -->
-        <div class="mention-section">
-          <label class="field-lbl">
-            <ion-icon name="people-outline"></ion-icon> Mention / Tag Members
-          </label>
-          <div class="mention-hint">Tag member accounts who scheduled this session to notify them automatically:</div>
-
-          <!-- Mentioned Member Chips -->
-          <div class="mentioned-chips-wrap" *ngIf="newSession.member_ids && newSession.member_ids.length > 0">
-            <span class="mentioned-chip" *ngFor="let id of newSession.member_ids; let i = index">
-              <ion-icon name="person-circle-outline"></ion-icon>
-              <span>@{{ newSession.member_names[i] || ('Member #' + id) }}</span>
-              <button type="button" class="remove-mention-btn" (click)="removeMentionedMember(id, 'new')" title="Remove member">✕</button>
-            </span>
-          </div>
-
-          <!-- Search member picker -->
-          <div class="mention-search-box">
-            <ion-icon name="search-outline"></ion-icon>
-            <input type="text" placeholder="Search member name or email to mention..." [(ngModel)]="memberTagSearch" />
-          </div>
-
-          <div class="member-select-list">
-            <button type="button"
-              *ngFor="let m of filteredMentionMembers"
-              class="member-select-item"
-              [class.selected]="isMemberMentioned(m.id, 'new')"
-              (click)="toggleMemberMention(m, 'new')">
-              <span class="member-mini-avatar">{{ m.initials }}</span>
-              <div class="member-mini-info">
-                <div class="member-mini-name">{{ m.username }}</div>
-                <div class="member-mini-email">{{ m.email }}</div>
-              </div>
-              <ion-icon [name]="isMemberMentioned(m.id, 'new') ? 'checkmark-circle' : 'add-circle-outline'" class="select-check-icon"></ion-icon>
-            </button>
-          </div>
-        </div>
-
-        <button class="submit-btn" (click)="saveSession()">
-          <ion-icon name="calendar-outline"></ion-icon> Save Session
-        </button>
-      </div>
-
-      <!-- Edit Session Form -->
-      <div class="inline-form session-form-card" *ngIf="editingSession">
-        <div class="form-title">
-          <ion-icon name="create-outline"></ion-icon> Edit Session
-        </div>
-
-        <!-- Title -->
-        <label class="field-lbl"><ion-icon name="fitness-outline"></ion-icon> Session Title *</label>
-        <input class="field-input" type="text" placeholder="Title" [(ngModel)]="editingSession.title" />
-
-        <!-- Description -->
-        <label class="field-lbl"><ion-icon name="document-text-outline"></ion-icon> Description / Notes</label>
-        <textarea class="field-input field-textarea" rows="2" placeholder="Session details, routine breakdown, gear required..." [(ngModel)]="editingSession.description"></textarea>
-
-        <!-- Date & Time & Duration Grid -->
-        <div class="form-grid-2">
-          <div class="form-field-group">
-            <label class="field-lbl"><ion-icon name="calendar-outline"></ion-icon> Date *</label>
-            <div class="input-with-icon-wrap">
-              <input class="field-input input-iconic date-time-field" type="date" [(ngModel)]="editingSession.date" #editDateInput (click)="openPicker(editDateInput)" />
-            </div>
-            <div class="quick-pill-row">
-              <button type="button" class="quick-pill" (click)="setQuickDate(0, 'edit')">Today</button>
-              <button type="button" class="quick-pill" (click)="setQuickDate(1, 'edit')">Tomorrow</button>
-              <button type="button" class="quick-pill" (click)="setQuickDate(7, 'edit')">+7 Days</button>
-            </div>
-          </div>
-
-          <div class="form-field-group">
-            <label class="field-lbl"><ion-icon name="time-outline"></ion-icon> Start Time</label>
-            <div class="input-with-icon-wrap">
-              <input class="field-input input-iconic date-time-field" type="time" [(ngModel)]="editingSession.time" #editTimeInput (click)="openPicker(editTimeInput)" />
-            </div>
-            <div class="quick-pill-row">
-              <button type="button" class="quick-pill" (click)="setQuickTime('07:00', 'edit')">7 AM</button>
-              <button type="button" class="quick-pill" (click)="setQuickTime('09:00', 'edit')">9 AM</button>
-              <button type="button" class="quick-pill" (click)="setQuickTime('14:00', 'edit')">2 PM</button>
-              <button type="button" class="quick-pill" (click)="setQuickTime('16:00', 'edit')">4 PM</button>
-              <button type="button" class="quick-pill" (click)="setQuickTime('18:00', 'edit')">6 PM</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Duration Field in Edit -->
-        <div class="form-field-group" style="margin-bottom: 12px;">
-          <label class="field-lbl"><ion-icon name="timer-outline"></ion-icon> Duration (e.g. 1 hr, 2 hrs, 60 min)</label>
-          <input class="field-input" type="text" placeholder="e.g. 60 min, 1 hr, 2 hrs" [(ngModel)]="editingSession.duration" />
-          <div class="quick-pill-row" style="margin-top: 4px;">
-            <button type="button" class="quick-pill" (click)="setQuickDuration('30 min', 'edit')">30 min</button>
-            <button type="button" class="quick-pill" (click)="setQuickDuration('45 min', 'edit')">45 min</button>
-            <button type="button" class="quick-pill" (click)="setQuickDuration('1 hr', 'edit')">1 hr (60m)</button>
-            <button type="button" class="quick-pill" (click)="setQuickDuration('1.5 hrs', 'edit')">1.5 hrs</button>
-            <button type="button" class="quick-pill" (click)="setQuickDuration('2 hrs', 'edit')">2 hrs (120m)</button>
-            <button type="button" class="quick-pill" (click)="setQuickDuration('3 hrs', 'edit')">3 hrs</button>
-          </div>
-        </div>
-
-        <!-- Location & Coach Grid -->
-        <div class="form-grid-2">
-          <div class="form-field-group">
-            <label class="field-lbl"><ion-icon name="location-outline"></ion-icon> Location</label>
-            <input class="field-input" type="text" placeholder="Location" [(ngModel)]="editingSession.location" />
-          </div>
-          <div class="form-field-group">
-            <label class="field-lbl"><ion-icon name="person-outline"></ion-icon> Coach / Trainer</label>
-            <input class="field-input" type="text" placeholder="Coach" [(ngModel)]="editingSession.coach" />
-          </div>
-        </div>
-
-        <!-- Mention Members Section -->
-        <div class="mention-section">
-          <label class="field-lbl">
-            <ion-icon name="people-outline"></ion-icon> Mention / Tag Members
-          </label>
-          <div class="mention-hint">Tag member accounts who scheduled this session:</div>
-
-          <!-- Mentioned Member Chips -->
-          <div class="mentioned-chips-wrap" *ngIf="editingSession.member_ids && editingSession.member_ids.length > 0">
-            <span class="mentioned-chip" *ngFor="let id of editingSession.member_ids; let i = index">
-              <ion-icon name="person-circle-outline"></ion-icon>
-              <span>@{{ editingSession.member_names[i] || ('Member #' + id) }}</span>
-              <button type="button" class="remove-mention-btn" (click)="removeMentionedMember(id, 'edit')" title="Remove member">✕</button>
-            </span>
-          </div>
-
-          <!-- Search member picker -->
-          <div class="mention-search-box">
-            <ion-icon name="search-outline"></ion-icon>
-            <input type="text" placeholder="Search member name or email to mention..." [(ngModel)]="memberTagSearch" />
-          </div>
-
-          <div class="member-select-list">
-            <button type="button"
-              *ngFor="let m of filteredMentionMembers"
-              class="member-select-item"
-              [class.selected]="isMemberMentioned(m.id, 'edit')"
-              (click)="toggleMemberMention(m, 'edit')">
-              <span class="member-mini-avatar">{{ m.initials }}</span>
-              <div class="member-mini-info">
-                <div class="member-mini-name">{{ m.username }}</div>
-                <div class="member-mini-email">{{ m.email }}</div>
-              </div>
-              <ion-icon [name]="isMemberMentioned(m.id, 'edit') ? 'checkmark-circle' : 'add-circle-outline'" class="select-check-icon"></ion-icon>
-            </button>
-          </div>
-        </div>
-
-        <div class="form-actions">
-          <button class="submit-btn" (click)="updateSession()">Update Session</button>
-          <button class="cancel-btn" (click)="editingSession=null">Cancel</button>
         </div>
       </div>
 
@@ -1422,114 +1105,6 @@
         </div>
       </div>
 
-      <!-- Add Product Modal Form -->
-      <div class="inline-form" *ngIf="showAddProduct">
-        <div class="form-title">New Product</div>
-        
-        <label class="field-lbl">Product Name</label>
-        <input class="field-input" type="text" placeholder="e.g. Whey Protein 1LB" [(ngModel)]="newProduct.name" />
-
-        <label class="field-lbl">Brand / Manufacturer</label>
-        <input class="field-input" type="text" placeholder="e.g. Athlene, Optimum" [(ngModel)]="newProduct.brand" />
-
-        <div class="form-grid-2">
-          <div>
-            <label class="field-lbl">Selling Price (₱)</label>
-            <input class="field-input" type="number" placeholder="Selling Price" [(ngModel)]="newProduct.price" appNoNegative pattern="[0-9]*(\.[0-9]{1,2})?" />
-          </div>
-          <div>
-            <label class="field-lbl">Cost Price / Capital (₱)</label>
-            <input class="field-input" type="number" placeholder="Cost Price" [(ngModel)]="newProduct.cost_price" appNoNegative pattern="[0-9]*(\.[0-9]{1,2})?" />
-          </div>
-        </div>
-
-        <!-- Profit Live Calculation -->
-        <div class="profit-calc-preview" *ngIf="newProduct.price > 0 || newProduct.cost_price > 0">
-          <ion-icon name="trending-up-outline"></ion-icon>
-          <span>Profit per unit: <strong>+₱{{ getProductUnitProfit(newProduct) | number:'1.2-2' }}</strong> ({{ getProductMargin(newProduct) }}% margin)</span>
-        </div>
-
-        <div class="form-grid-2" style="margin-top: 8px;">
-          <div>
-            <label class="field-lbl">Stock Quantity</label>
-            <input class="field-input" type="number" placeholder="Initial stock" [(ngModel)]="newProduct.stock" appNoNegative pattern="[0-9]*" />
-          </div>
-          <div>
-            <label class="field-lbl">Expiry Date (Optional)</label>
-            <input class="field-input" type="date" [(ngModel)]="newProduct.expiry_date" />
-          </div>
-        </div>
-
-        <div class="image-upload-wrap">
-          <label class="image-upload-label">Product Photo</label>
-          <label class="image-upload-btn">
-            <ion-icon name="camera-outline"></ion-icon>
-            <span>{{ newProduct.image_url ? 'Change Photo' : 'Upload Photo' }}</span>
-            <input type="file" accept="image/*" style="display:none" (change)="onProductImageChange($event, 'new')" />
-          </label>
-          <img *ngIf="newProduct.image_url" [src]="newProduct.image_url" class="image-preview" />
-        </div>
-
-        <div class="form-actions">
-          <button class="submit-btn" (click)="saveProduct()">Save Product</button>
-          <button class="cancel-btn" (click)="showAddProduct=false">Cancel</button>
-        </div>
-      </div>
-
-      <!-- Edit Product Modal Form -->
-      <div class="inline-form" *ngIf="editingProduct">
-        <div class="form-title">Edit Product — {{ editingProduct.name }}</div>
-
-        <label class="field-lbl">Product Name</label>
-        <input class="field-input" type="text" placeholder="Name" [(ngModel)]="editingProduct.name" />
-
-        <label class="field-lbl">Brand / Manufacturer</label>
-        <input class="field-input" type="text" placeholder="Brand" [(ngModel)]="editingProduct.brand" />
-
-        <div class="form-grid-2">
-          <div>
-            <label class="field-lbl">Selling Price (₱)</label>
-            <input class="field-input" type="number" placeholder="Price" [(ngModel)]="editingProduct.price" appNoNegative pattern="[0-9]*(\.[0-9]{1,2})?" />
-          </div>
-          <div>
-            <label class="field-lbl">Cost Price / Capital (₱)</label>
-            <input class="field-input" type="number" placeholder="Cost" [(ngModel)]="editingProduct.cost_price" appNoNegative pattern="[0-9]*(\.[0-9]{1,2})?" />
-          </div>
-        </div>
-
-        <!-- Profit Live Calculation in Edit -->
-        <div class="profit-calc-preview" *ngIf="editingProduct.price > 0 || editingProduct.cost_price > 0">
-          <ion-icon name="trending-up-outline"></ion-icon>
-          <span>Profit per unit: <strong>+₱{{ getProductUnitProfit(editingProduct) | number:'1.2-2' }}</strong> ({{ getProductMargin(editingProduct) }}% margin)</span>
-        </div>
-
-        <div class="form-grid-2" style="margin-top: 8px;">
-          <div>
-            <label class="field-lbl">Stock Quantity</label>
-            <input class="field-input" type="number" placeholder="Stock" [(ngModel)]="editingProduct.stock" appNoNegative pattern="[0-9]*" />
-          </div>
-          <div>
-            <label class="field-lbl">Expiry Date (Optional)</label>
-            <input class="field-input" type="date" [(ngModel)]="editingProduct.expiry_date" />
-          </div>
-        </div>
-
-        <div class="image-upload-wrap">
-          <label class="image-upload-label">Product Photo</label>
-          <label class="image-upload-btn">
-            <ion-icon name="camera-outline"></ion-icon>
-            <span>{{ editingProduct.image_url ? 'Change Photo' : 'Upload Photo' }}</span>
-            <input type="file" accept="image/*" style="display:none" (change)="onProductImageChange($event, 'edit')" />
-          </label>
-          <img *ngIf="editingProduct.image_url" [src]="editingProduct.image_url" class="image-preview" />
-        </div>
-
-        <div class="form-actions">
-          <button class="submit-btn" (click)="updateProduct()">Update Product</button>
-          <button class="cancel-btn" (click)="editingProduct=null">Cancel</button>
-        </div>
-      </div>
-
     </div>
 
     <!-- ══════════════════════════════════════════════ -->
@@ -1542,60 +1117,6 @@
         <button class="add-btn" (click)="toggleAddEquipment()">{{ showAddEquipment ? '✕ Cancel' : '+ Add Equipment' }}</button>
       </div>
 
-      <!-- Add Equipment Form -->
-      <div class="inline-form" *ngIf="showAddEquipment">
-        <div class="form-title">New Equipment</div>
-        <input class="field-input" type="text" placeholder="Equipment name (e.g. Treadmill)" [(ngModel)]="newEquipment.name" />
-        <input class="field-input" type="text" placeholder="Category (e.g. Cardio, Strength)" [(ngModel)]="newEquipment.category" />
-        <input class="field-input" type="text" placeholder="Optional weight scale (leave blank if not applicable, e.g. Treadmill)" [(ngModel)]="newEquipment.weight_scale" />
-        <textarea class="field-input" placeholder="Description (optional)" [(ngModel)]="newEquipment.description" rows="2" style="resize:vertical;"></textarea>
-        <select class="field-input" [(ngModel)]="newEquipment.status">
-          <option value="available">Available</option>
-          <option value="unavailable">Not Available</option>
-          <option value="maintenance">Under Maintenance</option>
-        </select>
-        <!-- Image Upload -->
-        <label class="field-lbl">Equipment Photo</label>
-        <div class="img-upload-wrap">
-          <img *ngIf="newEquipment.image_url" [src]="newEquipment.image_url" class="img-preview" alt="Preview" />
-          <div *ngIf="!newEquipment.image_url" class="img-placeholder">No photo selected</div>
-          <label class="img-upload-btn">
-            📷 Choose Photo
-            <input type="file" accept="image/*" style="display:none" (change)="onEquipmentImageChange($event, 'new')" />
-          </label>
-          <button *ngIf="newEquipment.image_url" class="cancel-btn" style="margin-top:6px" (click)="newEquipment.image_url=''">Remove Photo</button>
-        </div>
-        <button class="submit-btn" (click)="saveEquipment()">Save Equipment</button>
-      </div>
-
-      <!-- Edit Equipment Form -->
-      <div class="inline-form" *ngIf="editingEquipment">
-        <div class="form-title">Edit Equipment</div>
-        <input class="field-input" type="text" placeholder="Equipment name" [(ngModel)]="editingEquipment.name" />
-        <input class="field-input" type="text" placeholder="Category" [(ngModel)]="editingEquipment.category" />
-        <input class="field-input" type="text" placeholder="Optional weight scale (leave blank if not applicable)" [(ngModel)]="editingEquipment.weight_scale" />
-        <textarea class="field-input" placeholder="Description (optional)" [(ngModel)]="editingEquipment.description" rows="2" style="resize:vertical;"></textarea>
-        <select class="field-input" [(ngModel)]="editingEquipment.status">
-          <option value="available">Available</option>
-          <option value="unavailable">Not Available</option>
-          <option value="maintenance">Under Maintenance</option>
-        </select>
-        <!-- Image Upload -->
-        <label class="field-lbl">Equipment Photo</label>
-        <div class="img-upload-wrap">
-          <img *ngIf="editingEquipment.image_url" [src]="editingEquipment.image_url" class="img-preview" alt="Preview" />
-          <div *ngIf="!editingEquipment.image_url" class="img-placeholder">No photo selected</div>
-          <label class="img-upload-btn">
-            📷 Choose Photo
-            <input type="file" accept="image/*" style="display:none" (change)="onEquipmentImageChange($event, 'edit')" />
-          </label>
-          <button *ngIf="editingEquipment.image_url" class="cancel-btn" style="margin-top:6px" (click)="editingEquipment.image_url=''">Remove Photo</button>
-        </div>
-        <div class="form-actions">
-          <button class="submit-btn" (click)="updateEquipment()">Update</button>
-          <button class="cancel-btn" (click)="editingEquipment=null">Cancel</button>
-        </div>
-      </div>
 
       <!-- Search Input for Equipment -->
       <div class="search-input-wrap" style="margin-bottom: 12px;">
@@ -2269,90 +1790,6 @@
         </div>
       </div>
 
-      <!-- Add Coach Form -->
-      <div class="inline-form" *ngIf="showAddCoach">
-        <div class="form-title">
-          <ion-icon name="person-add-outline"></ion-icon> New Coach
-        </div>
-
-        <div class="filter-row">
-          <div class="filter-group">
-            <button class="filter-chip" [class.active]="coachFormMode==='new'" (click)="coachFormMode='new'">New Account</button>
-            <button class="filter-chip" [class.active]="coachFormMode==='promote'" (click)="coachFormMode='promote'">Promote Existing Member</button>
-          </div>
-        </div>
-
-        <!-- New account fields -->
-        <ng-container *ngIf="coachFormMode==='new'">
-          <input class="field-input" type="text"     placeholder="Username *" [(ngModel)]="newCoach.username" />
-          <input class="field-input" type="email"    placeholder="Email *"    [(ngModel)]="newCoach.email" />
-          <input class="field-input" type="password" placeholder="Temporary Password *" [(ngModel)]="newCoach.password" />
-          <div class="form-grid-2">
-            <input class="field-input" type="text" placeholder="First Name" [(ngModel)]="newCoach.first_name" />
-            <input class="field-input" type="text" placeholder="Last Name"  [(ngModel)]="newCoach.last_name" />
-          </div>
-          <div class="form-grid-2">
-            <input class="field-input" type="tel" placeholder="Phone" [(ngModel)]="newCoach.phone" />
-            <select class="field-input" [(ngModel)]="newCoach.gender">
-              <option value="">Select Gender</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-        </ng-container>
-
-        <!-- Promote member dropdown -->
-        <select class="field-input" *ngIf="coachFormMode==='promote'" [(ngModel)]="newCoach.user_id">
-          <option [ngValue]="null">Select Member to Promote *</option>
-          <option *ngFor="let m of promotableMembers" [ngValue]="m.id">{{ m.username }} ({{ m.email }})</option>
-        </select>
-        <div class="empty-state" *ngIf="coachFormMode==='promote' && promotableMembers.length === 0">
-          No eligible members — everyone already has a coach profile.
-        </div>
-
-        <!-- Shared coach profile fields -->
-        <textarea class="field-input" placeholder="Bio (optional)" [(ngModel)]="newCoach.bio" rows="2" style="resize:vertical;"></textarea>
-        <input class="field-input" type="text"   placeholder="Specialty (e.g. Strength & Conditioning)" [(ngModel)]="newCoach.specialty" />
-        <input class="field-input" type="number" placeholder="Session rate (₱)" [(ngModel)]="newCoach.rate" appNoNegative pattern="[0-9]*(\.[0-9]{1,2})?" />
-
-        <div class="image-upload-wrap">
-          <label class="image-upload-label">Coach Photo</label>
-          <label class="image-upload-btn">
-            <ion-icon name="camera-outline"></ion-icon>
-            <span>{{ newCoach.photo_url ? 'Change Photo' : 'Upload Photo' }}</span>
-            <input type="file" accept="image/*" style="display:none" (change)="onCoachImageChange($event, 'new')" />
-          </label>
-          <img *ngIf="newCoach.photo_url" [src]="newCoach.photo_url" class="image-preview" />
-        </div>
-
-        <button class="submit-btn" (click)="saveCoach()">Save Coach</button>
-      </div>
-
-      <!-- Edit Coach Form -->
-      <div class="inline-form" *ngIf="editingCoach">
-        <div class="form-title">
-          <ion-icon name="create-outline"></ion-icon> Edit Coach — {{ editingCoach.username }}
-        </div>
-        <textarea class="field-input" placeholder="Bio (optional)" [(ngModel)]="editingCoach.bio" rows="2" style="resize:vertical;"></textarea>
-        <input class="field-input" type="text"   placeholder="Specialty" [(ngModel)]="editingCoach.specialty" />
-        <input class="field-input" type="number" placeholder="Session rate (₱)" [(ngModel)]="editingCoach.rate" appNoNegative pattern="[0-9]*(\.[0-9]{1,2})?" />
-
-        <div class="image-upload-wrap">
-          <label class="image-upload-label">Coach Photo</label>
-          <label class="image-upload-btn">
-            <ion-icon name="camera-outline"></ion-icon>
-            <span>{{ editingCoach.photo_url ? 'Change Photo' : 'Upload Photo' }}</span>
-            <input type="file" accept="image/*" style="display:none" (change)="onCoachImageChange($event, 'edit')" />
-          </label>
-          <img *ngIf="editingCoach.photo_url" [src]="editingCoach.photo_url" class="image-preview" />
-        </div>
-
-        <div class="form-actions">
-          <button class="submit-btn" (click)="updateCoach()">Update</button>
-          <button class="cancel-btn" (click)="editingCoach=null">Cancel</button>
-        </div>
-      </div>
 
       <!-- Filter row -->
       <div class="filter-row">
@@ -2433,22 +1870,6 @@
 
     </div>
 
-    <!-- Membership edit modal -->
-    <div class="overlay" *ngIf="editingMembershipFor" (click)="editingMembershipFor=null"></div>
-    <div class="edit-membership-modal" *ngIf="editingMembershipFor">
-      <div class="modal-title-sm">Edit Membership — {{ editingMembershipFor.username }}</div>
-      <label class="field-lbl">Membership Type</label>
-      <select class="field-input" [(ngModel)]="membershipForm.membership_type">
-        <option value="premium">Premium</option>
-        <option value="daily">Daily Pass</option>
-      </select>
-      <label class="field-lbl" style="margin-top:10px">Expiry Date (Leave blank for Daily)</label>
-      <input type="date" class="field-input" [(ngModel)]="membershipForm.membership_expiry">
-      <div class="form-actions">
-        <button class="act-btn" (click)="editingMembershipFor=null">Cancel</button>
-        <button class="act-btn edit" (click)="saveMembership()">Save</button>
-      </div>
-    </div>
 
     <!-- ══════════════════════════════════════════════ -->
     <!-- TAB: FEEDBACK                                  -->
@@ -3139,6 +2560,756 @@
       <button type="button" class="btn-modal-close" (click)="closeActivityPayload()">Close</button>
     </div>
 
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- CENTRALIZED ROOT MODALS (FIXED VIEWPORT CENTERING ON ANY SCROLL) -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+
+<!-- ── 1. Add Member Modal ─────────────────────────── -->
+<div class="modal-backdrop-overlay" *ngIf="showAddMember" (click)="showAddMember = false">
+  <div class="admin-modal-card" (click)="$event.stopPropagation()">
+    <div class="admin-modal-header">
+      <h3 class="admin-modal-title">
+        <ion-icon name="person-add-outline"></ion-icon>
+        <span>New Member Account</span>
+      </h3>
+      <button type="button" class="admin-modal-close-btn" (click)="showAddMember = false" aria-label="Close">✕</button>
+    </div>
+    <div class="admin-modal-body">
+      <label class="field-lbl">Full Name / Username *</label>
+      <input class="field-input" type="text" placeholder="Full name or username *" [(ngModel)]="newMember.username" />
+
+      <label class="field-lbl">Email Address *</label>
+      <input class="field-input" type="email" placeholder="Email *" [(ngModel)]="newMember.email" />
+
+      <label class="field-lbl">Password *</label>
+      <div class="pw-shell">
+        <input class="field-input" [type]="showNewMemberPw ? 'text' : 'password'" placeholder="Password *" [(ngModel)]="newMember.password" />
+        <button type="button" class="pw-eye" (click)="showNewMemberPw = !showNewMemberPw" [attr.aria-label]="showNewMemberPw ? 'Hide password' : 'Show password'">
+          <ion-icon [name]="showNewMemberPw ? 'eye-off-outline' : 'eye-outline'" aria-hidden="true"></ion-icon>
+        </button>
+      </div>
+
+      <label class="field-lbl">Phone Number (Optional)</label>
+      <input class="field-input" type="tel" placeholder="Phone number (optional)" [(ngModel)]="newMember.phone" />
+
+      <label class="field-lbl">Gender</label>
+      <select class="field-input" [(ngModel)]="newMember.gender">
+        <option value="">Gender (Optional)</option>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+        <option value="other">Other</option>
+      </select>
+
+      <label class="field-lbl">Account Role</label>
+      <select class="field-input" [(ngModel)]="newMember.role">
+        <option *ngFor="let r of assignableRoles" [value]="r.value">{{ r.label }}</option>
+      </select>
+
+      <ng-container *ngIf="newMember.role === 'user'">
+        <label class="field-lbl">Membership Pass Type</label>
+        <select class="field-input" [(ngModel)]="newMember.membership_type">
+          <option value="premium">Premium (Monthly)</option>
+          <option value="daily">Daily Pass</option>
+        </select>
+        <label class="field-lbl" *ngIf="newMember.membership_type === 'premium'">Payment Method</label>
+        <select class="field-input" *ngIf="newMember.membership_type === 'premium'" [(ngModel)]="newMember.payment_method">
+          <option value="cash">Cash</option>
+          <option value="gcash">GCash</option>
+        </select>
+      </ng-container>
+    </div>
+    <div class="admin-modal-footer">
+      <button type="button" class="cancel-btn" (click)="showAddMember = false">Cancel</button>
+      <button type="button" class="submit-btn" (click)="saveMember()">Save Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 2. Edit Member Modal ────────────────────────── -->
+<div class="modal-backdrop-overlay" *ngIf="editingMember" (click)="editingMember = null">
+  <div class="admin-modal-card" (click)="$event.stopPropagation()">
+    <div class="admin-modal-header">
+      <h3 class="admin-modal-title">
+        <ion-icon name="create-outline"></ion-icon>
+        <span>Edit Member — {{ editingMember.username }}</span>
+      </h3>
+      <button type="button" class="admin-modal-close-btn" (click)="editingMember = null" aria-label="Close">✕</button>
+    </div>
+    <div class="admin-modal-body">
+      <label class="field-lbl">Username / Name</label>
+      <input class="field-input" type="text" placeholder="Username" [(ngModel)]="editingMember.username" />
+
+      <label class="field-lbl">Email Address</label>
+      <input class="field-input" type="email" placeholder="Email" [(ngModel)]="editingMember.email" />
+
+      <!-- Current Password Status Banner -->
+      <div class="current-pw-info-banner">
+        <div class="current-pw-lbl">
+          <ion-icon name="shield-checkmark-outline"></ion-icon>
+          <span>Current Password:</span>
+          <strong class="pw-status-badge">•••••••• (Encrypted in Database)</strong>
+        </div>
+        <small class="pw-defense-note">
+          Current password is encrypted (one-way bcrypt hash) for user data privacy and security. To change or reset it, enter a new password or click Generate Password below.
+        </small>
+      </div>
+
+      <div class="pw-label-row">
+        <label class="field-lbl">New Password (leave blank to keep current):</label>
+        <button type="button" class="gen-pw-btn" (click)="generateRandomMemberPassword()">
+          <ion-icon name="sparkles-outline"></ion-icon> Generate Password
+        </button>
+      </div>
+      <div class="pw-shell">
+        <input class="field-input" [type]="showEditMemberPw ? 'text' : 'password'" placeholder="Type new password or click Generate..." [(ngModel)]="editingMember.password" />
+        <button type="button" class="pw-eye" (click)="showEditMemberPw = !showEditMemberPw" [attr.aria-label]="showEditMemberPw ? 'Hide password' : 'Show password'">
+          <ion-icon [name]="showEditMemberPw ? 'eye-off-outline' : 'eye-outline'" aria-hidden="true"></ion-icon>
+        </button>
+      </div>
+
+      <label class="field-lbl">Phone Number</label>
+      <input class="field-input" type="tel" placeholder="Phone" [(ngModel)]="editingMember.phone" />
+
+      <label class="field-lbl">Gender</label>
+      <select class="field-input" [(ngModel)]="editingMember.gender">
+        <option value="">Gender</option>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+        <option value="other">Other</option>
+      </select>
+
+      <label class="field-lbl" *ngIf="!isEmployee">Role</label>
+      <select class="field-input" *ngIf="!isEmployee" [(ngModel)]="editingMember.role">
+        <option *ngFor="let r of assignableRoles" [value]="r.value">{{ r.label }}</option>
+      </select>
+    </div>
+    <div class="admin-modal-footer">
+      <button type="button" class="cancel-btn" (click)="editingMember = null">Cancel</button>
+      <button type="button" class="submit-btn" (click)="updateMember()">Update Member</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 3. Add Session Modal ────────────────────────── -->
+<div class="modal-backdrop-overlay" *ngIf="showAddSession" (click)="showAddSession = false">
+  <div class="admin-modal-card wide-modal" (click)="$event.stopPropagation()">
+    <div class="admin-modal-header">
+      <h3 class="admin-modal-title">
+        <ion-icon name="calendar-number-outline"></ion-icon>
+        <span>New Training Session</span>
+      </h3>
+      <button type="button" class="admin-modal-close-btn" (click)="showAddSession = false" aria-label="Close">✕</button>
+    </div>
+    <div class="admin-modal-body">
+      <!-- Title -->
+      <label class="field-lbl"><ion-icon name="fitness-outline"></ion-icon> Session Title *</label>
+      <input class="field-input" type="text" placeholder="e.g. Morning HIIT, Leg Day Bootcamp, Boxing..." [(ngModel)]="newSession.title" />
+
+      <!-- Description -->
+      <label class="field-lbl"><ion-icon name="document-text-outline"></ion-icon> Description / Notes</label>
+      <textarea class="field-input field-textarea" rows="2" placeholder="Session details, routine breakdown, gear required..." [(ngModel)]="newSession.description"></textarea>
+
+      <!-- Date & Time & Duration Grid -->
+      <div class="form-grid-2">
+        <div class="form-field-group">
+          <label class="field-lbl"><ion-icon name="calendar-outline"></ion-icon> Date *</label>
+          <div class="input-with-icon-wrap">
+            <input class="field-input input-iconic date-time-field" type="date" [(ngModel)]="newSession.date" #newDateInput (click)="openPicker(newDateInput)" />
+          </div>
+          <div class="quick-pill-row">
+            <button type="button" class="quick-pill" (click)="setQuickDate(0, 'new')">Today</button>
+            <button type="button" class="quick-pill" (click)="setQuickDate(1, 'new')">Tomorrow</button>
+            <button type="button" class="quick-pill" (click)="setQuickDate(7, 'new')">+7 Days</button>
+          </div>
+        </div>
+
+        <div class="form-field-group">
+          <label class="field-lbl"><ion-icon name="time-outline"></ion-icon> Start Time</label>
+          <div class="input-with-icon-wrap">
+            <input class="field-input input-iconic date-time-field" type="time" [(ngModel)]="newSession.time" #newTimeInput (click)="openPicker(newTimeInput)" />
+          </div>
+          <div class="quick-pill-row">
+            <button type="button" class="quick-pill" (click)="setQuickTime('07:00', 'new')">7 AM</button>
+            <button type="button" class="quick-pill" (click)="setQuickTime('09:00', 'new')">9 AM</button>
+            <button type="button" class="quick-pill" (click)="setQuickTime('14:00', 'new')">2 PM</button>
+            <button type="button" class="quick-pill" (click)="setQuickTime('16:00', 'new')">4 PM</button>
+            <button type="button" class="quick-pill" (click)="setQuickTime('18:00', 'new')">6 PM</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Duration Field -->
+      <div class="form-field-group" style="margin-bottom: 12px;">
+        <label class="field-lbl"><ion-icon name="timer-outline"></ion-icon> Duration (e.g. 1 hr, 2 hrs, 60 min)</label>
+        <input class="field-input" type="text" placeholder="e.g. 60 min, 1 hr, 2 hrs" [(ngModel)]="newSession.duration" />
+        <div class="quick-pill-row" style="margin-top: 4px;">
+          <button type="button" class="quick-pill" (click)="setQuickDuration('30 min', 'new')">30 min</button>
+          <button type="button" class="quick-pill" (click)="setQuickDuration('45 min', 'new')">45 min</button>
+          <button type="button" class="quick-pill" (click)="setQuickDuration('1 hr', 'new')">1 hr (60m)</button>
+          <button type="button" class="quick-pill" (click)="setQuickDuration('1.5 hrs', 'new')">1.5 hrs</button>
+          <button type="button" class="quick-pill" (click)="setQuickDuration('2 hrs', 'new')">2 hrs (120m)</button>
+          <button type="button" class="quick-pill" (click)="setQuickDuration('3 hrs', 'new')">3 hrs</button>
+        </div>
+      </div>
+
+      <!-- Location & Coach Grid -->
+      <div class="form-grid-2">
+        <div class="form-field-group">
+          <label class="field-lbl"><ion-icon name="location-outline"></ion-icon> Location</label>
+          <input class="field-input" type="text" placeholder="e.g. Main Gym Floor, Studio A" [(ngModel)]="newSession.location" />
+        </div>
+        <div class="form-field-group">
+          <label class="field-lbl"><ion-icon name="person-outline"></ion-icon> Coach / Trainer</label>
+          <input class="field-input" type="text" placeholder="e.g. Coach Ethan, Coach Ryza" [(ngModel)]="newSession.coach" />
+        </div>
+      </div>
+
+      <!-- Mention Members Section -->
+      <div class="mention-section">
+        <label class="field-lbl">
+          <ion-icon name="people-outline"></ion-icon> Mention / Tag Members
+        </label>
+        <div class="mention-hint">Tag member accounts who scheduled this session to notify them automatically:</div>
+
+        <!-- Mentioned Member Chips -->
+        <div class="mentioned-chips-wrap" *ngIf="newSession.member_ids && newSession.member_ids.length > 0">
+          <span class="mentioned-chip" *ngFor="let id of newSession.member_ids; let i = index">
+            <ion-icon name="person-circle-outline"></ion-icon>
+            <span>@{{ newSession.member_names[i] || ('Member #' + id) }}</span>
+            <button type="button" class="remove-mention-btn" (click)="removeMentionedMember(id, 'new')" title="Remove member">✕</button>
+          </span>
+        </div>
+
+        <!-- Search member picker -->
+        <div class="mention-search-box">
+          <ion-icon name="search-outline"></ion-icon>
+          <input type="text" placeholder="Search member name or email to mention..." [(ngModel)]="memberTagSearch" />
+        </div>
+
+        <div class="member-select-list">
+          <button type="button"
+            *ngFor="let m of filteredMentionMembers"
+            class="member-select-item"
+            [class.selected]="isMemberMentioned(m.id, 'new')"
+            (click)="toggleMemberMention(m, 'new')">
+            <span class="member-mini-avatar">{{ m.initials }}</span>
+            <div class="member-mini-info">
+              <div class="member-mini-name">{{ m.username }}</div>
+              <div class="member-mini-email">{{ m.email }}</div>
+            </div>
+            <ion-icon [name]="isMemberMentioned(m.id, 'new') ? 'checkmark-circle' : 'add-circle-outline'" class="select-check-icon"></ion-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="admin-modal-footer">
+      <button type="button" class="cancel-btn" (click)="showAddSession = false">Cancel</button>
+      <button type="button" class="submit-btn" (click)="saveSession()">Save Session</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 4. Edit Session Modal ────────────────────────── -->
+<div class="modal-backdrop-overlay" *ngIf="editingSession" (click)="editingSession = null">
+  <div class="admin-modal-card wide-modal" (click)="$event.stopPropagation()">
+    <div class="admin-modal-header">
+      <h3 class="admin-modal-title">
+        <ion-icon name="create-outline"></ion-icon>
+        <span>Edit Session — {{ editingSession.title }}</span>
+      </h3>
+      <button type="button" class="admin-modal-close-btn" (click)="editingSession = null" aria-label="Close">✕</button>
+    </div>
+    <div class="admin-modal-body">
+      <!-- Title -->
+      <label class="field-lbl"><ion-icon name="fitness-outline"></ion-icon> Session Title *</label>
+      <input class="field-input" type="text" placeholder="Title" [(ngModel)]="editingSession.title" />
+
+      <!-- Description -->
+      <label class="field-lbl"><ion-icon name="document-text-outline"></ion-icon> Description / Notes</label>
+      <textarea class="field-input field-textarea" rows="2" placeholder="Session details, routine breakdown, gear required..." [(ngModel)]="editingSession.description"></textarea>
+
+      <!-- Date & Time & Duration Grid -->
+      <div class="form-grid-2">
+        <div class="form-field-group">
+          <label class="field-lbl"><ion-icon name="calendar-outline"></ion-icon> Date *</label>
+          <div class="input-with-icon-wrap">
+            <input class="field-input input-iconic date-time-field" type="date" [(ngModel)]="editingSession.date" #editDateInput (click)="openPicker(editDateInput)" />
+          </div>
+          <div class="quick-pill-row">
+            <button type="button" class="quick-pill" (click)="setQuickDate(0, 'edit')">Today</button>
+            <button type="button" class="quick-pill" (click)="setQuickDate(1, 'edit')">Tomorrow</button>
+            <button type="button" class="quick-pill" (click)="setQuickDate(7, 'edit')">+7 Days</button>
+          </div>
+        </div>
+
+        <div class="form-field-group">
+          <label class="field-lbl"><ion-icon name="time-outline"></ion-icon> Start Time</label>
+          <div class="input-with-icon-wrap">
+            <input class="field-input input-iconic date-time-field" type="time" [(ngModel)]="editingSession.time" #editTimeInput (click)="openPicker(editTimeInput)" />
+          </div>
+          <div class="quick-pill-row">
+            <button type="button" class="quick-pill" (click)="setQuickTime('07:00', 'edit')">7 AM</button>
+            <button type="button" class="quick-pill" (click)="setQuickTime('09:00', 'edit')">9 AM</button>
+            <button type="button" class="quick-pill" (click)="setQuickTime('14:00', 'edit')">2 PM</button>
+            <button type="button" class="quick-pill" (click)="setQuickTime('16:00', 'edit')">4 PM</button>
+            <button type="button" class="quick-pill" (click)="setQuickTime('18:00', 'edit')">6 PM</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Duration Field in Edit -->
+      <div class="form-field-group" style="margin-bottom: 12px;">
+        <label class="field-lbl"><ion-icon name="timer-outline"></ion-icon> Duration (e.g. 1 hr, 2 hrs, 60 min)</label>
+        <input class="field-input" type="text" placeholder="e.g. 60 min, 1 hr, 2 hrs" [(ngModel)]="editingSession.duration" />
+        <div class="quick-pill-row" style="margin-top: 4px;">
+          <button type="button" class="quick-pill" (click)="setQuickDuration('30 min', 'edit')">30 min</button>
+          <button type="button" class="quick-pill" (click)="setQuickDuration('45 min', 'edit')">45 min</button>
+          <button type="button" class="quick-pill" (click)="setQuickDuration('1 hr', 'edit')">1 hr (60m)</button>
+          <button type="button" class="quick-pill" (click)="setQuickDuration('1.5 hrs', 'edit')">1.5 hrs</button>
+          <button type="button" class="quick-pill" (click)="setQuickDuration('2 hrs', 'edit')">2 hrs (120m)</button>
+          <button type="button" class="quick-pill" (click)="setQuickDuration('3 hrs', 'edit')">3 hrs</button>
+        </div>
+      </div>
+
+      <!-- Location & Coach Grid -->
+      <div class="form-grid-2">
+        <div class="form-field-group">
+          <label class="field-lbl"><ion-icon name="location-outline"></ion-icon> Location</label>
+          <input class="field-input" type="text" placeholder="Location" [(ngModel)]="editingSession.location" />
+        </div>
+        <div class="form-field-group">
+          <label class="field-lbl"><ion-icon name="person-outline"></ion-icon> Coach / Trainer</label>
+          <input class="field-input" type="text" placeholder="Coach" [(ngModel)]="editingSession.coach" />
+        </div>
+      </div>
+
+      <!-- Mention Members Section -->
+      <div class="mention-section">
+        <label class="field-lbl">
+          <ion-icon name="people-outline"></ion-icon> Mention / Tag Members
+        </label>
+        <div class="mention-hint">Tag member accounts who scheduled this session:</div>
+
+        <!-- Mentioned Member Chips -->
+        <div class="mentioned-chips-wrap" *ngIf="editingSession.member_ids && editingSession.member_ids.length > 0">
+          <span class="mentioned-chip" *ngFor="let id of editingSession.member_ids; let i = index">
+            <ion-icon name="person-circle-outline"></ion-icon>
+            <span>@{{ editingSession.member_names[i] || ('Member #' + id) }}</span>
+            <button type="button" class="remove-mention-btn" (click)="removeMentionedMember(id, 'edit')" title="Remove member">✕</button>
+          </span>
+        </div>
+
+        <!-- Search member picker -->
+        <div class="mention-search-box">
+          <ion-icon name="search-outline"></ion-icon>
+          <input type="text" placeholder="Search member name or email to mention..." [(ngModel)]="memberTagSearch" />
+        </div>
+
+        <div class="member-select-list">
+          <button type="button"
+            *ngFor="let m of filteredMentionMembers"
+            class="member-select-item"
+            [class.selected]="isMemberMentioned(m.id, 'edit')"
+            (click)="toggleMemberMention(m, 'edit')">
+            <span class="member-mini-avatar">{{ m.initials }}</span>
+            <div class="member-mini-info">
+              <div class="member-mini-name">{{ m.username }}</div>
+              <div class="member-mini-email">{{ m.email }}</div>
+            </div>
+            <ion-icon [name]="isMemberMentioned(m.id, 'edit') ? 'checkmark-circle' : 'add-circle-outline'" class="select-check-icon"></ion-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="admin-modal-footer">
+      <button type="button" class="cancel-btn" (click)="editingSession = null">Cancel</button>
+      <button type="button" class="submit-btn" (click)="updateSession()">Update Session</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 5. Add Product Modal ────────────────────────── -->
+<div class="modal-backdrop-overlay" *ngIf="showAddProduct" (click)="showAddProduct = false">
+  <div class="admin-modal-card" (click)="$event.stopPropagation()">
+    <div class="admin-modal-header">
+      <h3 class="admin-modal-title">
+        <ion-icon name="bag-add-outline"></ion-icon>
+        <span>New Product</span>
+      </h3>
+      <button type="button" class="admin-modal-close-btn" (click)="showAddProduct = false" aria-label="Close">✕</button>
+    </div>
+    <div class="admin-modal-body">
+      <label class="field-lbl">Product Name</label>
+      <input class="field-input" type="text" placeholder="e.g. Whey Protein 1LB" [(ngModel)]="newProduct.name" />
+
+      <label class="field-lbl">Brand / Manufacturer</label>
+      <input class="field-input" type="text" placeholder="e.g. Athlene, Optimum" [(ngModel)]="newProduct.brand" />
+
+      <div class="form-grid-2">
+        <div>
+          <label class="field-lbl">Selling Price (₱)</label>
+          <input class="field-input" type="number" placeholder="Selling Price" [(ngModel)]="newProduct.price" appNoNegative pattern="[0-9]*(\.[0-9]{1,2})?" />
+        </div>
+        <div>
+          <label class="field-lbl">Cost Price / Capital (₱)</label>
+          <input class="field-input" type="number" placeholder="Cost Price" [(ngModel)]="newProduct.cost_price" appNoNegative pattern="[0-9]*(\.[0-9]{1,2})?" />
+        </div>
+      </div>
+
+      <!-- Profit Live Calculation -->
+      <div class="profit-calc-preview" *ngIf="newProduct.price > 0 || newProduct.cost_price > 0">
+        <ion-icon name="trending-up-outline"></ion-icon>
+        <span>Profit per unit: <strong>+₱{{ getProductUnitProfit(newProduct) | number:'1.2-2' }}</strong> ({{ getProductMargin(newProduct) }}% margin)</span>
+      </div>
+
+      <div class="form-grid-2" style="margin-top: 8px;">
+        <div>
+          <label class="field-lbl">Stock Quantity</label>
+          <input class="field-input" type="number" placeholder="Initial stock" [(ngModel)]="newProduct.stock" appNoNegative pattern="[0-9]*" />
+        </div>
+        <div>
+          <label class="field-lbl">Expiry Date (Optional)</label>
+          <input class="field-input" type="date" [(ngModel)]="newProduct.expiry_date" />
+        </div>
+      </div>
+
+      <div class="image-upload-wrap">
+        <label class="image-upload-label">Product Photo</label>
+        <label class="image-upload-btn">
+          <ion-icon name="camera-outline"></ion-icon>
+          <span>{{ newProduct.image_url ? 'Change Photo' : 'Upload Photo' }}</span>
+          <input type="file" accept="image/*" style="display:none" (change)="onProductImageChange($event, 'new')" />
+        </label>
+        <img *ngIf="newProduct.image_url" [src]="newProduct.image_url" class="image-preview" />
+      </div>
+    </div>
+    <div class="admin-modal-footer">
+      <button type="button" class="cancel-btn" (click)="showAddProduct = false">Cancel</button>
+      <button type="button" class="submit-btn" (click)="saveProduct()">Save Product</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 6. Edit Product Modal ───────────────────────── -->
+<div class="modal-backdrop-overlay" *ngIf="editingProduct" (click)="editingProduct = null">
+  <div class="admin-modal-card" (click)="$event.stopPropagation()">
+    <div class="admin-modal-header">
+      <h3 class="admin-modal-title">
+        <ion-icon name="create-outline"></ion-icon>
+        <span>Edit Product — {{ editingProduct.name }}</span>
+      </h3>
+      <button type="button" class="admin-modal-close-btn" (click)="editingProduct = null" aria-label="Close">✕</button>
+    </div>
+    <div class="admin-modal-body">
+      <label class="field-lbl">Product Name</label>
+      <input class="field-input" type="text" placeholder="Name" [(ngModel)]="editingProduct.name" />
+
+      <label class="field-lbl">Brand / Manufacturer</label>
+      <input class="field-input" type="text" placeholder="Brand" [(ngModel)]="editingProduct.brand" />
+
+      <div class="form-grid-2">
+        <div>
+          <label class="field-lbl">Selling Price (₱)</label>
+          <input class="field-input" type="number" placeholder="Price" [(ngModel)]="editingProduct.price" appNoNegative pattern="[0-9]*(\.[0-9]{1,2})?" />
+        </div>
+        <div>
+          <label class="field-lbl">Cost Price / Capital (₱)</label>
+          <input class="field-input" type="number" placeholder="Cost" [(ngModel)]="editingProduct.cost_price" appNoNegative pattern="[0-9]*(\.[0-9]{1,2})?" />
+        </div>
+      </div>
+
+      <!-- Profit Live Calculation in Edit -->
+      <div class="profit-calc-preview" *ngIf="editingProduct.price > 0 || editingProduct.cost_price > 0">
+        <ion-icon name="trending-up-outline"></ion-icon>
+        <span>Profit per unit: <strong>+₱{{ getProductUnitProfit(editingProduct) | number:'1.2-2' }}</strong> ({{ getProductMargin(editingProduct) }}% margin)</span>
+      </div>
+
+      <div class="form-grid-2" style="margin-top: 8px;">
+        <div>
+          <label class="field-lbl">Stock Quantity</label>
+          <input class="field-input" type="number" placeholder="Stock" [(ngModel)]="editingProduct.stock" appNoNegative pattern="[0-9]*" />
+        </div>
+        <div>
+          <label class="field-lbl">Expiry Date (Optional)</label>
+          <input class="field-input" type="date" [(ngModel)]="editingProduct.expiry_date" />
+        </div>
+      </div>
+
+      <div class="image-upload-wrap">
+        <label class="image-upload-label">Product Photo</label>
+        <label class="image-upload-btn">
+          <ion-icon name="camera-outline"></ion-icon>
+          <span>{{ editingProduct.image_url ? 'Change Photo' : 'Upload Photo' }}</span>
+          <input type="file" accept="image/*" style="display:none" (change)="onProductImageChange($event, 'edit')" />
+        </label>
+        <img *ngIf="editingProduct.image_url" [src]="editingProduct.image_url" class="image-preview" />
+      </div>
+    </div>
+    <div class="admin-modal-footer">
+      <button type="button" class="cancel-btn" (click)="editingProduct = null">Cancel</button>
+      <button type="button" class="submit-btn" (click)="updateProduct()">Update Product</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 7. Add Equipment Modal ──────────────────────── -->
+<div class="modal-backdrop-overlay" *ngIf="showAddEquipment" (click)="showAddEquipment = false">
+  <div class="admin-modal-card" (click)="$event.stopPropagation()">
+    <div class="admin-modal-header">
+      <h3 class="admin-modal-title">
+        <ion-icon name="barbell-outline"></ion-icon>
+        <span>New Equipment</span>
+      </h3>
+      <button type="button" class="admin-modal-close-btn" (click)="showAddEquipment = false" aria-label="Close">✕</button>
+    </div>
+    <div class="admin-modal-body">
+      <label class="field-lbl">Equipment Name</label>
+      <input class="field-input" type="text" placeholder="Equipment name (e.g. Treadmill)" [(ngModel)]="newEquipment.name" />
+
+      <label class="field-lbl">Category</label>
+      <input class="field-input" type="text" placeholder="Category (e.g. Cardio, Strength)" [(ngModel)]="newEquipment.category" />
+
+      <label class="field-lbl">Weight Scale (Optional)</label>
+      <input class="field-input" type="text" placeholder="Optional weight scale (leave blank if not applicable, e.g. Treadmill)" [(ngModel)]="newEquipment.weight_scale" />
+
+      <label class="field-lbl">Description (Optional)</label>
+      <textarea class="field-input field-textarea" placeholder="Description (optional)" [(ngModel)]="newEquipment.description" rows="2" style="resize:vertical;"></textarea>
+
+      <label class="field-lbl">Status</label>
+      <select class="field-input" [(ngModel)]="newEquipment.status">
+        <option value="available">Available</option>
+        <option value="unavailable">Not Available</option>
+        <option value="maintenance">Under Maintenance</option>
+      </select>
+
+      <!-- Image Upload -->
+      <label class="field-lbl">Equipment Photo</label>
+      <div class="img-upload-wrap">
+        <img *ngIf="newEquipment.image_url" [src]="newEquipment.image_url" class="img-preview" alt="Preview" />
+        <div *ngIf="!newEquipment.image_url" class="img-placeholder">No photo selected</div>
+        <label class="img-upload-btn">
+          📷 Choose Photo
+          <input type="file" accept="image/*" style="display:none" (change)="onEquipmentImageChange($event, 'new')" />
+        </label>
+        <button *ngIf="newEquipment.image_url" type="button" class="cancel-btn" style="margin-top:6px" (click)="newEquipment.image_url=''">Remove Photo</button>
+      </div>
+    </div>
+    <div class="admin-modal-footer">
+      <button type="button" class="cancel-btn" (click)="showAddEquipment = false">Cancel</button>
+      <button type="button" class="submit-btn" (click)="saveEquipment()">Save Equipment</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 8. Edit Equipment Modal ─────────────────────── -->
+<div class="modal-backdrop-overlay" *ngIf="editingEquipment" (click)="editingEquipment = null">
+  <div class="admin-modal-card" (click)="$event.stopPropagation()">
+    <div class="admin-modal-header">
+      <h3 class="admin-modal-title">
+        <ion-icon name="create-outline"></ion-icon>
+        <span>Edit Equipment — {{ editingEquipment.name }}</span>
+      </h3>
+      <button type="button" class="admin-modal-close-btn" (click)="editingEquipment = null" aria-label="Close">✕</button>
+    </div>
+    <div class="admin-modal-body">
+      <label class="field-lbl">Equipment Name</label>
+      <input class="field-input" type="text" placeholder="Equipment name" [(ngModel)]="editingEquipment.name" />
+
+      <label class="field-lbl">Category</label>
+      <input class="field-input" type="text" placeholder="Category" [(ngModel)]="editingEquipment.category" />
+
+      <label class="field-lbl">Weight Scale (Optional)</label>
+      <input class="field-input" type="text" placeholder="Optional weight scale (leave blank if not applicable)" [(ngModel)]="editingEquipment.weight_scale" />
+
+      <label class="field-lbl">Description (Optional)</label>
+      <textarea class="field-input field-textarea" placeholder="Description (optional)" [(ngModel)]="editingEquipment.description" rows="2" style="resize:vertical;"></textarea>
+
+      <label class="field-lbl">Status</label>
+      <select class="field-input" [(ngModel)]="editingEquipment.status">
+        <option value="available">Available</option>
+        <option value="unavailable">Not Available</option>
+        <option value="maintenance">Under Maintenance</option>
+      </select>
+
+      <!-- Image Upload -->
+      <label class="field-lbl">Equipment Photo</label>
+      <div class="img-upload-wrap">
+        <img *ngIf="editingEquipment.image_url" [src]="editingEquipment.image_url" class="img-preview" alt="Preview" />
+        <div *ngIf="!editingEquipment.image_url" class="img-placeholder">No photo selected</div>
+        <label class="img-upload-btn">
+          📷 Choose Photo
+          <input type="file" accept="image/*" style="display:none" (change)="onEquipmentImageChange($event, 'edit')" />
+        </label>
+        <button *ngIf="editingEquipment.image_url" type="button" class="cancel-btn" style="margin-top:6px" (click)="editingEquipment.image_url=''">Remove Photo</button>
+      </div>
+    </div>
+    <div class="admin-modal-footer">
+      <button type="button" class="cancel-btn" (click)="editingEquipment = null">Cancel</button>
+      <button type="button" class="submit-btn" (click)="updateEquipment()">Update Equipment</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 9. Add Coach Modal ──────────────────────────── -->
+<div class="modal-backdrop-overlay" *ngIf="showAddCoach" (click)="showAddCoach = false">
+  <div class="admin-modal-card" (click)="$event.stopPropagation()">
+    <div class="admin-modal-header">
+      <h3 class="admin-modal-title">
+        <ion-icon name="person-add-outline"></ion-icon>
+        <span>New Coach</span>
+      </h3>
+      <button type="button" class="admin-modal-close-btn" (click)="showAddCoach = false" aria-label="Close">✕</button>
+    </div>
+    <div class="admin-modal-body">
+      <div class="filter-row" style="margin-bottom: 8px;">
+        <div class="filter-group">
+          <button type="button" class="filter-chip" [class.active]="coachFormMode==='new'" (click)="coachFormMode='new'">New Account</button>
+          <button type="button" class="filter-chip" [class.active]="coachFormMode==='promote'" (click)="coachFormMode='promote'">Promote Existing Member</button>
+        </div>
+      </div>
+
+      <!-- New account fields -->
+      <ng-container *ngIf="coachFormMode==='new'">
+        <label class="field-lbl">Username *</label>
+        <input class="field-input" type="text" placeholder="Username *" [(ngModel)]="newCoach.username" />
+
+        <label class="field-lbl">Email Address *</label>
+        <input class="field-input" type="email" placeholder="Email *" [(ngModel)]="newCoach.email" />
+
+        <label class="field-lbl">Temporary Password *</label>
+        <input class="field-input" type="password" placeholder="Temporary Password *" [(ngModel)]="newCoach.password" />
+
+        <div class="form-grid-2">
+          <div>
+            <label class="field-lbl">First Name</label>
+            <input class="field-input" type="text" placeholder="First Name" [(ngModel)]="newCoach.first_name" />
+          </div>
+          <div>
+            <label class="field-lbl">Last Name</label>
+            <input class="field-input" type="text" placeholder="Last Name" [(ngModel)]="newCoach.last_name" />
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div>
+            <label class="field-lbl">Phone Number</label>
+            <input class="field-input" type="tel" placeholder="Phone" [(ngModel)]="newCoach.phone" />
+          </div>
+          <div>
+            <label class="field-lbl">Gender</label>
+            <select class="field-input" [(ngModel)]="newCoach.gender">
+              <option value="">Select Gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Promote member dropdown -->
+      <ng-container *ngIf="coachFormMode==='promote'">
+        <label class="field-lbl">Select Member to Promote *</label>
+        <select class="field-input" [(ngModel)]="newCoach.user_id">
+          <option [ngValue]="null">Select Member to Promote *</option>
+          <option *ngFor="let m of promotableMembers" [ngValue]="m.id">{{ m.username }} ({{ m.email }})</option>
+        </select>
+        <div class="empty-state" *ngIf="promotableMembers.length === 0">
+          No eligible members — everyone already has a coach profile.
+        </div>
+      </ng-container>
+
+      <!-- Shared coach profile fields -->
+      <label class="field-lbl">Bio (Optional)</label>
+      <textarea class="field-input field-textarea" placeholder="Bio (optional)" [(ngModel)]="newCoach.bio" rows="2" style="resize:vertical;"></textarea>
+
+      <label class="field-lbl">Specialty</label>
+      <input class="field-input" type="text" placeholder="Specialty (e.g. Strength & Conditioning)" [(ngModel)]="newCoach.specialty" />
+
+      <label class="field-lbl">Session Rate (₱)</label>
+      <input class="field-input" type="number" placeholder="Session rate (₱)" [(ngModel)]="newCoach.rate" appNoNegative pattern="[0-9]*(\.[0-9]{1,2})?" />
+
+      <div class="image-upload-wrap">
+        <label class="image-upload-label">Coach Photo</label>
+        <label class="image-upload-btn">
+          <ion-icon name="camera-outline"></ion-icon>
+          <span>{{ newCoach.photo_url ? 'Change Photo' : 'Upload Photo' }}</span>
+          <input type="file" accept="image/*" style="display:none" (change)="onCoachImageChange($event, 'new')" />
+        </label>
+        <img *ngIf="newCoach.photo_url" [src]="newCoach.photo_url" class="image-preview" />
+      </div>
+    </div>
+    <div class="admin-modal-footer">
+      <button type="button" class="cancel-btn" (click)="showAddCoach = false">Cancel</button>
+      <button type="button" class="submit-btn" (click)="saveCoach()">Save Coach</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 10. Edit Coach Modal ────────────────────────── -->
+<div class="modal-backdrop-overlay" *ngIf="editingCoach" (click)="editingCoach = null">
+  <div class="admin-modal-card" (click)="$event.stopPropagation()">
+    <div class="admin-modal-header">
+      <h3 class="admin-modal-title">
+        <ion-icon name="create-outline"></ion-icon>
+        <span>Edit Coach — {{ editingCoach.username }}</span>
+      </h3>
+      <button type="button" class="admin-modal-close-btn" (click)="editingCoach = null" aria-label="Close">✕</button>
+    </div>
+    <div class="admin-modal-body">
+      <label class="field-lbl">Bio (Optional)</label>
+      <textarea class="field-input field-textarea" placeholder="Bio (optional)" [(ngModel)]="editingCoach.bio" rows="2" style="resize:vertical;"></textarea>
+
+      <label class="field-lbl">Specialty</label>
+      <input class="field-input" type="text" placeholder="Specialty" [(ngModel)]="editingCoach.specialty" />
+
+      <label class="field-lbl">Session Rate (₱)</label>
+      <input class="field-input" type="number" placeholder="Session rate (₱)" [(ngModel)]="editingCoach.rate" appNoNegative pattern="[0-9]*(\.[0-9]{1,2})?" />
+
+      <div class="image-upload-wrap">
+        <label class="image-upload-label">Coach Photo</label>
+        <label class="image-upload-btn">
+          <ion-icon name="camera-outline"></ion-icon>
+          <span>{{ editingCoach.photo_url ? 'Change Photo' : 'Upload Photo' }}</span>
+          <input type="file" accept="image/*" style="display:none" (change)="onCoachImageChange($event, 'edit')" />
+        </label>
+        <img *ngIf="editingCoach.photo_url" [src]="editingCoach.photo_url" class="image-preview" />
+      </div>
+    </div>
+    <div class="admin-modal-footer">
+      <button type="button" class="cancel-btn" (click)="editingCoach = null">Cancel</button>
+      <button type="button" class="submit-btn" (click)="updateCoach()">Update Coach</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 11. Edit Membership Modal ───────────────────── -->
+<div class="modal-backdrop-overlay" *ngIf="editingMembershipFor" (click)="editingMembershipFor = null">
+  <div class="admin-modal-card sm-modal" (click)="$event.stopPropagation()">
+    <div class="admin-modal-header">
+      <h3 class="admin-modal-title">
+        <ion-icon name="card-outline"></ion-icon>
+        <span>Edit Membership — {{ editingMembershipFor.username }}</span>
+      </h3>
+      <button type="button" class="admin-modal-close-btn" (click)="editingMembershipFor = null" aria-label="Close">✕</button>
+    </div>
+    <div class="admin-modal-body">
+      <label class="field-lbl">Membership Type</label>
+      <select class="field-input" [(ngModel)]="membershipForm.membership_type">
+        <option value="premium">Premium</option>
+        <option value="daily">Daily Pass</option>
+      </select>
+
+      <label class="field-lbl" style="margin-top:10px">Expiry Date (Leave blank for Daily)</label>
+      <input type="date" class="field-input" [(ngModel)]="membershipForm.membership_expiry" />
+    </div>
+    <div class="admin-modal-footer">
+      <button type="button" class="cancel-btn" (click)="editingMembershipFor = null">Cancel</button>
+      <button type="button" class="submit-btn" (click)="saveMembership()">Save Membership</button>
+    </div>
   </div>
 </div>
 

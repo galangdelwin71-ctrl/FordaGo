@@ -2195,6 +2195,115 @@ ion-content.admin-content {
   letter-spacing: normal;
 }
 
+/* ── Centered Modal Backdrop Overlay (Always on Active Screen) ── */
+.modal-backdrop-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(15, 23, 42, 0.65) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 100000 !important;
+  padding: 16px !important;
+  animation: fadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  overflow-y: auto !important;
+
+  .admin-modal-card {
+    width: 100%;
+    max-width: 530px;
+    max-height: calc(100vh - 32px);
+    background: #ffffff;
+    border-radius: 20px;
+    border: 1px solid rgba(15, 23, 42, 0.14);
+    box-shadow: 0 25px 65px -10px rgba(15, 23, 42, 0.4), 0 0 0 1px rgba(15, 23, 42, 0.04);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: adminModalPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    margin: auto;
+
+    &.wide-modal {
+      max-width: 680px;
+    }
+
+    &.sm-modal {
+      max-width: 440px;
+    }
+
+    .admin-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+      background: #fafafa;
+      flex-shrink: 0;
+
+      .admin-modal-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 16px;
+        font-weight: 800;
+        color: #0f172a;
+        margin: 0;
+
+        ion-icon {
+          font-size: 20px;
+          color: #eab308;
+        }
+      }
+
+      .admin-modal-close-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border: 1px solid rgba(15, 23, 42, 0.1);
+        background: #ffffff;
+        color: #64748b;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+
+        &:hover {
+          background: #f1f5f9;
+          color: #0f172a;
+        }
+      }
+    }
+
+    .admin-modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: calc(85vh - 120px);
+    }
+
+    .admin-modal-footer {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 14px 20px;
+      border-top: 1px solid rgba(15, 23, 42, 0.08);
+      background: #fafafa;
+      flex-shrink: 0;
+
+      button {
+        min-width: 110px;
+      }
+    }
+  }
+}
+
 .inline-form {
   position: fixed;
   top: 50%;
