@@ -425,11 +425,11 @@ export class ProfilePage implements OnInit {
   emailChangeModalOpen         = false;
   pendingNewEmail              = '';
   emailChangeOtpCode: string[] = ['', '', '', '', '', ''];
+  emailChangeCode              = '';
   emailChangeCountdown         = 0;
   emailChangeCountdownInterval: any = null;
   emailChangeLoading           = false;
   emailChangeError             = '';
-  emailChangeDevCode           = '';
 
   get anyModalOpen(): boolean {
     return this.securityModalOpen ||
@@ -928,6 +928,7 @@ export class ProfilePage implements OnInit {
   startEmailChangeVerification(newEmail: string): void {
     this.pendingNewEmail = newEmail;
     this.emailChangeOtpCode = ['', '', '', '', '', ''];
+    this.emailChangeCode = '';
     this.emailChangeError = '';
     this.emailChangeLoading = true;
     this.emailChangeModalOpen = true;
@@ -936,16 +937,8 @@ export class ProfilePage implements OnInit {
       next: (res: any) => {
         this.emailChangeLoading = false;
         this.startEmailChangeCountdown();
-        if (res?.dev_code) {
-          this.emailChangeDevCode = res.dev_code;
-          void this.showMobileToast(`Dev Code: ${res.dev_code}`);
-        } else {
-          void this.showMobileToast(res?.message || `Verification code sent to ${newEmail}`);
-        }
-        setTimeout(() => {
-          const el = document.getElementById('email-otp-0') as HTMLInputElement;
-          if (el) el.focus();
-        }, 300);
+        void this.showMobileToast(res?.message || `Verification code sent to ${newEmail}`);
+        this.focusEmailChangeOtpInput(0);
       },
       error: (err: any) => {
         this.emailChangeLoading = false;
@@ -972,30 +965,99 @@ export class ProfilePage implements OnInit {
     }, 1000);
   }
 
-  onEmailChangeOtpInput(index: number, event: any): void {
+  onEmailChangeOtpFocus(event: FocusEvent): void {
     const input = event.target as HTMLInputElement;
-    const value = input.value.replace(/\D/g, '');
-    this.emailChangeOtpCode[index] = value ? value.charAt(value.length - 1) : '';
-    input.value = this.emailChangeOtpCode[index];
-
-    if (this.emailChangeOtpCode[index] && index < 5) {
-      const nextInput = document.getElementById(`email-otp-${index + 1}`) as HTMLInputElement;
-      if (nextInput) nextInput.focus();
+    if (input) {
+      input.select();
     }
   }
 
-  onEmailChangeOtpKeydown(index: number, event: KeyboardEvent): void {
-    if (event.key === 'Backspace' && !this.emailChangeOtpCode[index] && index > 0) {
-      const prevInput = document.getElementById(`email-otp-${index - 1}`) as HTMLInputElement;
-      if (prevInput) {
-        prevInput.focus();
+  private syncEmailChangeOtpFromDom(): void {
+    let full = '';
+    for (let i = 0; i < 6; i++) {
+      const el = document.getElementById(`email-otp-${i}`) as HTMLInputElement | null;
+      const v = el ? el.value.replace(/\D/g, '') : (this.emailChangeOtpCode[i] || '');
+      this.emailChangeOtpCode[i] = v ? v.slice(-1) : '';
+      if (el) el.value = this.emailChangeOtpCode[i];
+      full += this.emailChangeOtpCode[i];
+    }
+    this.emailChangeCode = full;
+  }
+
+  onEmailChangeOtpInput(event: any, index: number): void {
+    const input = event.target as HTMLInputElement;
+    const rawVal = input?.value || '';
+    const val = rawVal.replace(/\D/g, '');
+
+    // Handle multi-character paste or Android autofill
+    if (val.length > 1) {
+      const chars = val.slice(0, 6).split('');
+      for (let i = 0; i < 6; i++) {
+        this.emailChangeOtpCode[i] = chars[i] || '';
+        const el = document.getElementById(`email-otp-${i}`) as HTMLInputElement | null;
+        if (el) el.value = this.emailChangeOtpCode[i];
+      }
+      this.emailChangeCode = this.emailChangeOtpCode.join('');
+      const lastIndex = Math.min(chars.length - 1, 5);
+      this.focusEmailChangeOtpInput(lastIndex);
+      return;
+    }
+
+    this.emailChangeOtpCode[index] = val ? val.slice(-1) : '';
+    if (input) input.value = this.emailChangeOtpCode[index];
+    this.syncEmailChangeOtpFromDom();
+
+    // Advance to next box asynchronously to prevent Android soft keyboard from sending the same keystroke twice
+    if (val && index < 5) {
+      this.focusEmailChangeOtpInput(index + 1);
+    }
+  }
+
+  onEmailChangeOtpKeydown(event: KeyboardEvent, index: number): void {
+    const input = event.target as HTMLInputElement;
+    if (event.key === 'Backspace' || event.key === 'Delete' || (event as any).keyCode === 8) {
+      if (!this.emailChangeOtpCode[index] && index > 0) {
         this.emailChangeOtpCode[index - 1] = '';
+        const prevInput = document.getElementById(`email-otp-${index - 1}`) as HTMLInputElement | null;
+        if (prevInput) prevInput.value = '';
+        this.syncEmailChangeOtpFromDom();
+        this.focusEmailChangeOtpInput(index - 1);
+      } else {
+        this.emailChangeOtpCode[index] = '';
+        if (input) input.value = '';
+        this.syncEmailChangeOtpFromDom();
       }
     }
   }
 
+  onEmailChangeOtpPaste(event: ClipboardEvent): void {
+    event.preventDefault();
+    const pasted = (event.clipboardData?.getData('text') || '').replace(/\D/g, '');
+    if (!pasted) return;
+
+    const chars = pasted.slice(0, 6).split('');
+    for (let i = 0; i < 6; i++) {
+      this.emailChangeOtpCode[i] = chars[i] || '';
+      const el = document.getElementById(`email-otp-${i}`) as HTMLInputElement | null;
+      if (el) el.value = this.emailChangeOtpCode[i];
+    }
+    this.syncEmailChangeOtpFromDom();
+    const lastIndex = Math.min(chars.length - 1, 5);
+    this.focusEmailChangeOtpInput(lastIndex);
+  }
+
+  private focusEmailChangeOtpInput(index: number): void {
+    setTimeout(() => {
+      const el = document.getElementById(`email-otp-${index}`) as HTMLInputElement | null;
+      if (el) {
+        el.focus();
+        el.select();
+      }
+    }, 30);
+  }
+
   confirmEmailChange(): void {
-    const code = this.emailChangeOtpCode.join('');
+    const code = this.emailChangeCode || this.emailChangeOtpCode.join('');
     if (code.length !== 6) {
       this.emailChangeError = 'Please enter all 6 digits of the verification code.';
       return;
@@ -1010,6 +1072,8 @@ export class ProfilePage implements OnInit {
         this.profile.email = this.pendingNewEmail;
         this.editForm.email = this.pendingNewEmail;
         this.emailChangeModalOpen = false;
+        this.emailChangeOtpCode = ['', '', '', '', '', ''];
+        this.emailChangeCode = '';
         if (this.emailChangeCountdownInterval) clearInterval(this.emailChangeCountdownInterval);
         void this.showMobileToast('Email address successfully updated!');
       },
@@ -1025,6 +1089,8 @@ export class ProfilePage implements OnInit {
   cancelEmailChange(): void {
     this.emailChangeModalOpen = false;
     this.emailChangeError = '';
+    this.emailChangeOtpCode = ['', '', '', '', '', ''];
+    this.emailChangeCode = '';
     this.pendingNewEmail = '';
     this.editForm.email = this.profile.email;
     if (this.emailChangeCountdownInterval) clearInterval(this.emailChangeCountdownInterval);

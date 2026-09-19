@@ -1247,10 +1247,6 @@
         <span>Verification code sent to <strong>{{ pendingNewEmail }}</strong></span>
       </div>
 
-      <div class="dev-otp-pill" *ngIf="emailChangeDevCode">
-        <span>DEV CODE: <strong>{{ emailChangeDevCode }}</strong></span>
-      </div>
-
       <!-- 6-Digit OTP Input -->
       <div class="form-group" style="margin-top: 18px;">
         <label class="form-label" style="text-align: center; display: block;">ENTER 6-DIGIT VERIFICATION CODE</label>
@@ -1258,14 +1254,16 @@
           <input
             *ngFor="let digit of emailChangeOtpCode; let i = index"
             [id]="'email-otp-' + i"
-            type="text"
+            type="tel"
             inputmode="numeric"
             pattern="[0-9]*"
             maxlength="1"
             class="twofa-otp-box"
             [value]="digit"
-            (input)="onEmailChangeOtpInput(i, $event)"
-            (keydown)="onEmailChangeOtpKeydown(i, $event)"
+            (focus)="onEmailChangeOtpFocus($event)"
+            (input)="onEmailChangeOtpInput($event, i)"
+            (keydown)="onEmailChangeOtpKeydown($event, i)"
+            (paste)="onEmailChangeOtpPaste($event)"
           />
         </div>
       </div>
@@ -1288,7 +1286,7 @@
       <div class="modal-actions">
         <button
           class="modal-save-btn"
-          [disabled]="emailChangeOtpCode.join('').length !== 6 || emailChangeLoading"
+          [disabled]="emailChangeCode.length !== 6 || emailChangeLoading"
           (click)="confirmEmailChange()">
           <ion-spinner *ngIf="emailChangeLoading" name="crescent"></ion-spinner>
           <span *ngIf="!emailChangeLoading">Verify &amp; Update Email</span>

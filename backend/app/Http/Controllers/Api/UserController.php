@@ -733,13 +733,11 @@ class UserController extends Controller
             }
         }
 
-        $isDebug = (bool) config('app.debug');
-
         return response()->json([
             'message'            => 'Verification code sent to ' . $newEmail . ($user->phone ? ' and your phone.' : '.'),
             'new_email'          => $newEmail,
             'destination_masked' => $this->maskEmail($newEmail),
-            'dev_code'           => $isDebug ? $code : null,
+            'dev_code'           => null,
         ]);
     }
 
