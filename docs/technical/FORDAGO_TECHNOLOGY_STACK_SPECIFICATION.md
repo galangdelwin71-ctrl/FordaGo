@@ -174,3 +174,50 @@ The system adopts a **Decoupled Client-Server & Event-Driven Architecture**:
 ### Q4: "What makes FordaGo real-time?"
 > **Answer:**  
 > *"Rather than relying on continuous, battery-draining HTTP polling, FordaGo uses **Laravel Reverb with Laravel Echo over WebSockets**. When an attendance QR code is scanned or a coach sends a message, a backend event is broadcasted. Active clients receive the socket payload within milliseconds, immediately updating the UI without any manual screen refresh."*
+
+---
+
+## 6. Strategic Business & Evaluation Reviewer (Core Call Questions)
+
+### Question 1: "How do you save data and what do you plan to do with that?"
+* **How Data is Saved:**
+  * **Relational Database (MySQL):** Data is saved in structured, normalized relational tables (Users, Attendances, Equipment, Inventory Products, Shop Orders, Coaching Sessions, Notifications, and Activity Logs).
+  * **Security & Integrity:** Passwords use adaptive **Bcrypt** hashing. Client requests are authenticated via **Laravel Sanctum Bearer tokens**. Critical actions use ACID database transactions (`DB::transaction`) to avoid data corruption.
+* **What We Plan to Do with the Data:**
+  1. **Operational Automation:** Real-time QR attendance check-in, automated tracking of daily walk-ins vs. monthly premium passes, auto-expiry detection, and live inventory stock level updates.
+  2. **Business Intelligence & Reporting:** Aggregating data into actionable reports (peak gym hours, daily revenue, member retention trends, and expiring passes) exported to PDF via jsPDF.
+  3. **Personalized Member Progress:** Using workout completion logs to calculate user streaks and enable coaches to propose tailored workout routines based on historical attendance.
+
+---
+
+### Question 2: "Was this a unique project and what is the use case that you built on?"
+* **The Core Use Case:**
+  * Built specifically for local community fitness centers (**AffordaGym – San Isidro Branch**) that currently rely on manual paper logbooks, paper receipts, unmonitored daily pass fees, and disconnected communication between members and fitness coaches.
+* **What Makes FordaGo Unique (Novelty & Value Proposition):**
+  1. **All-in-One Community Gym Ecosystem:** Unlike generic fitness tracker apps (which only track reps) or standalone POS systems (which only track payments), FordaGo unifies **hardware check-in, gym equipment training, coaching consultations, and inventory commerce** into a single mobile app.
+  2. **Dual-Function QR Architecture:**
+     * *Front-Desk QR:* High-speed contactless attendance and payment verification.
+     * *Equipment QR:* Optical tags pasted on machines that open step-by-step video/visual exercise guides and muscle group target instructions.
+  3. **Hardware Biometric Security:** Members can securely authenticate via their device's native fingerprint/biometric scanner.
+  4. **Direct Coach-Member Consultation:** Members receive workout plans and chat directly with gym-assigned coaches within the platform.
+
+---
+
+### Question 3: "Did you think about the marketing side?"
+* **Yes, Built-in Growth, Retention & Marketing Strategy:**
+  1. **Member Retention through Gamification:** Visual workout streak counters and milestone badges incentivize members to return consistently, reducing gym membership churn.
+  2. **Direct Marketing & Broadcast Announcements:** Gym administrators can push gym-wide marketing announcements (seasonal discount promos, supplement sales, holiday hours, fitness challenges) directly to every member's smartphone.
+  3. **Daily-to-Premium Conversion Funnel:** Walk-in members who scan the Daily Pass QR are prompted with the transparent benefits of upgrading to a monthly Premium Pass, boosting recurring gym revenue.
+  4. **Dynamic Capacity Marketing:** Peak hour analytics help gym management launch off-peak discounts or happy-hour promos to balance gym traffic.
+
+---
+
+### Question 4: "Does this all have basic features like push notifications and how do you manage it?"
+* **Yes, Comprehensive Notification System:**
+  * **Technology Engine:** Integrated using **Firebase Cloud Messaging (FCM)**, **Capacitor Local Notifications**, and **Laravel Reverb WebSockets** for instant real-time delivery.
+  * **How It Is Managed (Admin Notification Center):**
+    1. **Broadcast Announcements:** One-click modal dispatch to broadcast announcements to all registered gym members at once.
+    2. **Targeted Direct Notices:** Admins can select an individual member from a searchable list to send private notices (e.g., payment confirmations, order pickup alerts, account verification).
+    3. **Automated Event Triggers:** The system automatically notifies members when their membership is about to expire, when a coach proposes a new workout plan, or when an inventory order status changes.
+    4. **Notification Management Hub:** Full administrative interface to filter notifications by member account, search past broadcasts, mark all as read, and delete obsolete entries.
+
