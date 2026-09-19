@@ -26,21 +26,21 @@ class MailService
             return ['sent' => false, 'skippedReason' => 'Missing destination email or message'];
         }
 
-        // 1. Check for Brevo API Key (Bypasses SMTP port blocking via HTTPS port 443, sends to ANY recipient)
-        $brevoKey = config('services.brevo.key');
-        if ($brevoKey) {
-            $brevoResult = self::sendViaBrevo($destination, $title, $body, $html);
-            if (!empty($brevoResult['sent'])) {
-                return $brevoResult;
-            }
-        }
-
-        // 2. Check for Resend API Key (Fallback)
+        // 1. Resend API (Lightning fast ~0.4s delivery)
         $resendKey = config('services.resend.key');
         if ($resendKey) {
             $resendResult = self::sendViaResend($destination, $title, $body, $html);
             if (!empty($resendResult['sent'])) {
                 return $resendResult;
+            }
+        }
+
+        // 2. Brevo API (Universal fallback)
+        $brevoKey = config('services.brevo.key');
+        if ($brevoKey) {
+            $brevoResult = self::sendViaBrevo($destination, $title, $body, $html);
+            if (!empty($brevoResult['sent'])) {
+                return $brevoResult;
             }
         }
 
@@ -104,13 +104,13 @@ class MailService
     }
 
     /**
-     * Send 6-digit OTP verification email for Password Reset.
+     * Send 6-digit OTP verification email for Two-Factor Authentication Login.
      */
-    public static function sendPasswordResetOtp(string $to, string $code, string $name = 'Member'): array
+    public static function sendTwoFactorOtp(string $to, string $code, string $name = 'Member'): array
     {
         $destination = trim($to);
         $title = "FordaGO Security Code: {$code}";
-        $plainText = "FordaGO: Your verification code is {$code}. It expires in 10 minutes. If you didn't request this, ignore this message.";
+        $plainText = "FordaGO: Your 2-Factor Login verification code is {$code}. It expires in 60 minutes. If you didn't request this, ignore this message.";
 
         if ($destination === '' || $code === '') {
             return ['sent' => false, 'skippedReason' => 'Missing destination email or code'];
@@ -120,14 +120,26 @@ class MailService
         $htmlContent = null;
         try {
             $htmlContent = View::make('emails.password-reset-otp', [
-                'code' => $code,
-                'name' => $name,
+                'code'        => $code,
+                'name'        => $name,
+                'heading'     => 'Two-Factor Authentication',
+                'subtitle'    => 'We received a sign-in request for your FordaGO account. Use the 6-digit verification code below to complete your login:',
+                'instruction' => 'Enter this code on the FordaGO login verification screen to sign in.',
             ])->render();
         } catch (\Throwable $e) {
             Log::warning('Failed rendering Blade email template: ' . $e->getMessage());
         }
 
-        // 1. Brevo API (Universal delivery to any inbox)
+        // 1. Resend API (Lightning fast ~0.4s delivery)
+        $resendKey = config('services.resend.key');
+        if ($resendKey) {
+            $resendResult = self::sendViaResend($destination, $title, $plainText, $htmlContent);
+            if (!empty($resendResult['sent'])) {
+                return $resendResult;
+            }
+        }
+
+        // 2. Brevo API (Universal fallback)
         $brevoKey = config('services.brevo.key');
         if ($brevoKey) {
             $brevoResult = self::sendViaBrevo($destination, $title, $plainText, $htmlContent);
@@ -136,12 +148,51 @@ class MailService
             }
         }
 
-        // 2. Resend API (Fallback)
+        return ['sent' => false, 'provider' => 'none'];
+    }
+
+    /**
+     * Send 6-digit OTP verification email for Password Reset.
+     */
+    public static function sendPasswordResetOtp(string $to, string $code, string $name = 'Member'): array
+    {
+        $destination = trim($to);
+        $title = "FordaGO Security Code: {$code}";
+        $plainText = "FordaGO: Your verification code is {$code}. It expires in 60 minutes. If you didn't request this, ignore this message.";
+
+        if ($destination === '' || $code === '') {
+            return ['sent' => false, 'skippedReason' => 'Missing destination email or code'];
+        }
+
+        // Render beautiful HTML template
+        $htmlContent = null;
+        try {
+            $htmlContent = View::make('emails.password-reset-otp', [
+                'code'        => $code,
+                'name'        => $name,
+                'heading'     => 'Password Reset Request',
+                'subtitle'    => 'We received a request to reset the password for your FordaGO account. Use the 6-digit one-time password (OTP) below to proceed:',
+                'instruction' => 'Enter this code into the FordaGO app to choose a new password.',
+            ])->render();
+        } catch (\Throwable $e) {
+            Log::warning('Failed rendering Blade email template: ' . $e->getMessage());
+        }
+
+        // 1. Resend API (Lightning fast ~0.4s delivery)
         $resendKey = config('services.resend.key');
         if ($resendKey) {
             $resendResult = self::sendViaResend($destination, $title, $plainText, $htmlContent);
             if (!empty($resendResult['sent'])) {
                 return $resendResult;
+            }
+        }
+
+        // 2. Brevo API (Universal fallback)
+        $brevoKey = config('services.brevo.key');
+        if ($brevoKey) {
+            $brevoResult = self::sendViaBrevo($destination, $title, $plainText, $htmlContent);
+            if (!empty($brevoResult['sent'])) {
+                return $brevoResult;
             }
         }
 
@@ -232,21 +283,7 @@ class MailService
         }
 
         try {
-            $curlOptions = [
-                CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
-                CURLOPT_RESOLVE   => [
-                    'api.resend.com:443:104.18.2.146',
-                    'api.resend.com:443:104.18.3.146',
-                ],
-            ];
-
-            $client = Http::withToken($apiKey)
-                ->withOptions([
-                    'force_ip_resolve' => 'v4',
-                    'connect_timeout'  => 8,
-                    'curl'             => $curlOptions,
-                ])
-                ->timeout(15);
+            $client = Http::withToken($apiKey)->timeout(8);
             if (PHP_OS_FAMILY === 'Windows' || config('app.env') === 'local') {
                 $client = $client->withoutVerifying();
             }

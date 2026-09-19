@@ -38,12 +38,12 @@
               
               <!-- Greeting & Subtitle -->
               <h2 style="margin: 0 0 12px 0; font-size: 20px; font-weight: 800; color: #ffffff; text-align: center;">
-                Password Reset Request
+                {{ $heading ?? 'Password Reset Request' }}
               </h2>
               
               <p style="margin: 0 0 20px 0; font-size: 14px; line-height: 1.6; color: #a4b0c6; text-align: center;">
                 Hi <strong style="color: #ffffff;">{{ $name ?? 'Member' }}</strong>,<br>
-                We received a request to reset the password for your FordaGO account. Use the 6-digit one-time password (OTP) below to proceed:
+                {{ $subtitle ?? 'We received a request to reset the password for your FordaGO account. Use the 6-digit one-time password (OTP) below to proceed:' }}
               </p>
 
               <!-- 6-Digit OTP Code Box -->
@@ -58,15 +58,15 @@
                         {{ $code }}
                       </div>
                       <div style="font-size: 11px; color: #8f9bb3; margin-top: 8px; font-weight: 600;">
-                        ⏱️ Expires in 10 minutes
+                        ⏱ Expires in 60 minutes
                       </div>
                     </div>
                   </td>
                 </tr>
               </table>
 
-              <p style="margin: 20px 0 0 0; font-size: 13px; line-height: 1.5; color: #7f8ca3; text-align: center;">
-                Enter this code into the FordaGO app to choose a new password.
+              <p style="margin: 0; font-size: 12px; color: #8f9bb3; text-align: center;">
+                {{ $instruction ?? 'Enter this code into the FordaGO app to complete verification.' }}
               </p>
 
               <!-- Security Notice Callout -->

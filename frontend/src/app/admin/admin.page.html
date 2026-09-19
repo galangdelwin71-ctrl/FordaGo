@@ -720,22 +720,53 @@
 
       <!-- Edit Member Form -->
       <div class="inline-form" *ngIf="editingMember">
-        <div class="form-title">Edit Member</div>
+        <div class="form-title">
+          <ion-icon name="create-outline"></ion-icon> Edit Member — {{ editingMember.username }}
+        </div>
+
+        <label class="field-lbl">Username / Name</label>
         <input class="field-input" type="text"  placeholder="Username" [(ngModel)]="editingMember.username" />
+
+        <label class="field-lbl">Email Address</label>
         <input class="field-input" type="email" placeholder="Email"    [(ngModel)]="editingMember.email" />
+
+        <!-- Current Password Status Banner -->
+        <div class="current-pw-info-banner">
+          <div class="current-pw-lbl">
+            <ion-icon name="shield-checkmark-outline"></ion-icon>
+            <span>Current Password:</span>
+            <strong class="pw-status-badge">•••••••• (Encrypted in Database)</strong>
+          </div>
+          <small class="pw-defense-note">
+            Naka-encrypt (one-way bcrypt hash) ang kasalukuyang password para sa data privacy ng user. Kung nais baguhin o i-reset, i-type ang bagong password o pindutin ang Generate Password sa ibaba.
+          </small>
+        </div>
+
+        <div class="pw-label-row">
+          <label class="field-lbl">New Password (leave blank to keep current):</label>
+          <button type="button" class="gen-pw-btn" (click)="generateRandomMemberPassword()">
+            <ion-icon name="sparkles-outline"></ion-icon> Generate Password
+          </button>
+        </div>
         <div class="pw-shell">
-          <input class="field-input" [type]="showEditMemberPw ? 'text' : 'password'" placeholder="New Password (leave blank to keep)" [(ngModel)]="editingMember.password" />
+          <input class="field-input" [type]="showEditMemberPw ? 'text' : 'password'" placeholder="Type new password or click Generate..." [(ngModel)]="editingMember.password" />
           <button type="button" class="pw-eye" (click)="showEditMemberPw = !showEditMemberPw" [attr.aria-label]="showEditMemberPw ? 'Hide password' : 'Show password'">
             <ion-icon [name]="showEditMemberPw ? 'eye-off-outline' : 'eye-outline'" aria-hidden="true"></ion-icon>
           </button>
         </div>
+
+        <label class="field-lbl">Phone Number</label>
         <input class="field-input" type="tel"   placeholder="Phone"    [(ngModel)]="editingMember.phone" />
+
+        <label class="field-lbl">Gender</label>
         <select class="field-input" [(ngModel)]="editingMember.gender">
           <option value="">Gender</option>
           <option value="male">Male</option>
           <option value="female">Female</option>
           <option value="other">Other</option>
         </select>
+
+        <label class="field-lbl" *ngIf="!isEmployee">Role</label>
         <select class="field-input" *ngIf="!isEmployee" [(ngModel)]="editingMember.role">
           <option *ngFor="let r of assignableRoles" [value]="r.value">{{ r.label }}</option>
         </select>

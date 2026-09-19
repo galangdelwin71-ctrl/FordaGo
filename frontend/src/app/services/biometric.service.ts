@@ -81,29 +81,77 @@ export class BiometricService {
     };
   }
 
+  lastError = '';
+
   /**
    * Prompt the native device biometric sensor dialog (Fingerprint / Face ID prompt).
    */
-  async promptBiometric(reason = 'Verify your identity with FordaGO Passkey'): Promise<boolean> {
+  async promptBiometric(reason = 'Login with your Biometrics'): Promise<boolean> {
+    this.lastError = '';
+
+    // If running in browser, allow instant testing
     if (Capacitor.getPlatform() === 'web') {
       return true;
     }
+
     try {
       await BiometricAuth.authenticate({
         reason,
-        cancelTitle: 'Cancel',
+        cancelTitle: 'Use Password',
         allowDeviceCredential: true,
-        androidTitle: 'FordaGO Biometric Passkey',
-        androidSubtitle: 'Use your fingerprint or face unlock to proceed',
+        androidTitle: 'FordaGO',
+        androidSubtitle: 'Login with your Biometrics',
+        androidConfirmationRequired: false,
       });
       return true;
     } catch (err: any) {
-      // If running on browser or plugin unhandled, allow simulated prompt
       const errMsg = String(err?.message || err || '');
+      const code = String(err?.code || '');
+
       if (errMsg.includes('plugin_not_implemented') || errMsg.includes('not implemented on web')) {
         return true;
       }
-      return false;
+
+      if (code === 'userCancel' || errMsg.toLowerCase().includes('cancel') || errMsg.toLowerCase().includes('user abort')) {
+        this.lastError = 'Biometric authentication was cancelled.';
+        return false;
+      }
+
+      if (code === 'biometryNotEnrolled' || errMsg.toLowerCase().includes('not enrolled')) {
+        this.lastError = 'Walang naka-set na Fingerprint o Face Unlock sa cellphone na ito. Mangyaring pumunta sa Phone Settings (Security > Fingerprint) upang mag-enroll bago ito i-on.';
+        return false;
+      }
+
+      if (code === 'biometryLockout' || errMsg.toLowerCase().includes('lockout')) {
+        this.lastError = 'Naka-lock ang biometric sensor dahil sa sunod-sunod na maling scan. I-unlock muna ang phone gamit ang PIN o mag-login gamit ang password.';
+        return false;
+      }
+
+      if (code === 'passcodeNotSet' || errMsg.toLowerCase().includes('passcode')) {
+        this.lastError = 'Kailangan munang mag-set up ng Screen Lock (PIN / Pattern) sa Settings ng iyong cellphone.';
+        return false;
+      }
+
+      // Fallback: Retry without allowDeviceCredential in case device policy restricts credentials
+      try {
+        await BiometricAuth.authenticate({
+          reason,
+          cancelTitle: 'Use Password',
+          allowDeviceCredential: false,
+          androidTitle: 'FordaGO',
+          androidSubtitle: 'Login with your Biometrics',
+          androidConfirmationRequired: false,
+        });
+        return true;
+      } catch (retryErr: any) {
+        const retryMsg = String(retryErr?.message || retryErr || '');
+        if (retryMsg.toLowerCase().includes('cancel')) {
+          this.lastError = 'Biometric authentication was cancelled.';
+        } else {
+          this.lastError = 'Biometric verification failed. Please sign in with password.';
+        }
+        return false;
+      }
     }
   }
 

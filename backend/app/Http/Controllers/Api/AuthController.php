@@ -272,11 +272,7 @@ class AuthController extends Controller
             $secondsRemaining = RateLimiter::availableIn($lockKey);
             $minutesRemaining = max(1, (int) ceil($secondsRemaining / 60));
 
-            if ($currentStrikes >= self::TIER2_MAX_ATTEMPTS) {
-                $lockMsg = "Repeated failed attempts detected. Account is locked for 1 hour ({$minutesRemaining} minute(s) remaining). You may use 'Forgot Password' with OTP verification to unlock immediately.";
-            } else {
-                $lockMsg = "Too many failed attempts. Account is locked for 15 minutes ({$minutesRemaining} minute(s) remaining). Please try again later or reset your password via OTP.";
-            }
+            $lockMsg = "Too many attempts. Please try again after {$minutesRemaining} minute(s).";
 
             return response()->json([
                 'message'       => $lockMsg,
@@ -316,27 +312,16 @@ class AuthController extends Controller
                 ], 429);
             }
 
-            if ($strikes === self::TIER1_MAX_ATTEMPTS) {
+            if ($strikes >= self::TIER1_MAX_ATTEMPTS) {
                 RateLimiter::hit($lockKey, self::TIER1_LOCKOUT_SECONDS);
                 return response()->json([
-                    'message'       => 'Too many failed attempts. Account is now locked for 15 minutes. Please try again later or reset your password.',
-                    'retry_after'   => self::TIER1_LOCKOUT_SECONDS,
+                    'message'     => 'Too many attempts. Please try again after 15 minutes.',
+                    'retry_after' => self::TIER1_LOCKOUT_SECONDS,
                 ], 429);
             }
 
-            if ($strikes < self::TIER1_MAX_ATTEMPTS) {
-                $remaining = self::TIER1_MAX_ATTEMPTS - $strikes;
-                $attemptWord = $remaining === 1 ? 'attempt' : 'attempts';
-                return response()->json([
-                    'message' => "Invalid email or password. {$remaining} {$attemptWord} remaining before account lockout.",
-                ], 401);
-            }
-
-            // Between Tier 1 and Tier 2 (strikes 6 to 9)
-            $remaining = self::TIER2_MAX_ATTEMPTS - $strikes;
-            $attemptWord = $remaining === 1 ? 'attempt' : 'attempts';
             return response()->json([
-                'message' => "Invalid email or password. {$remaining} {$attemptWord} remaining before a 1-hour lockout.",
+                'message' => 'Invalid email or password.',
             ], 401);
         }
 
@@ -362,21 +347,21 @@ class AuthController extends Controller
             $codeHash = $this->hashResetCode($code);
             $user->update([
                 'two_factor_code'       => $codeHash,
-                'two_factor_expires_at' => now()->addMinutes(10),
+                'two_factor_expires_at' => now()->addMinutes(60),
             ]);
-            Cache::put("2fa_valid:{$user->id}:{$codeHash}", true, 600);
+            Cache::put("2fa_valid:{$user->id}:{$codeHash}", true, 3600);
 
             $channel     = $user->two_factor_channel ?: 'email';
             $displayName = trim(($user->first_name ?? '').' '.($user->last_name ?? '')) ?: ($user->username ?? 'Member');
 
             if ($channel === 'sms' && $user->phone) {
                 $destination = SmsService::normalizePhoneNumber($user->phone);
-                SmsService::send($destination, "FordaGO: Your 2-Factor Login verification code is {$code}. Valid for 10 minutes.");
+                SmsService::send($destination, "FordaGO: Your 2-Factor Login verification code is {$code}. Valid for 60 minutes.");
                 $destMasked = $this->maskPhone($destination);
                 $msg = 'Two-Factor Authentication is active. A 6-digit verification code was sent to your phone.';
             } else {
                 $channel = 'email';
-                MailService::sendPasswordResetOtp($user->email, $code, $displayName);
+                MailService::sendTwoFactorOtp($user->email, $code, $displayName);
                 $destMasked = $this->maskEmail($user->email);
                 $msg = 'Two-Factor Authentication is active. A 6-digit verification code was sent to your email.';
             }
@@ -385,7 +370,7 @@ class AuthController extends Controller
                 'purpose' => '2fa_login',
                 'user_id' => $user->id,
                 'channel' => $channel,
-                'exp'     => now()->addMinutes(10)->timestamp,
+                'exp'     => now()->addMinutes(60)->timestamp,
             ]));
 
             return response()->json([
@@ -394,6 +379,9 @@ class AuthController extends Controller
                 'temp_token'         => $tempToken,
                 'channel'            => $channel,
                 'destination_masked' => $destMasked,
+                'has_phone'          => !empty($user->phone),
+                'phone_masked'       => !empty($user->phone) ? $this->maskPhone($user->phone) : null,
+                'email_masked'       => $this->maskEmail($user->email),
                 'message'            => $msg,
                 'dev_code'           => null,
             ]);
@@ -802,7 +790,7 @@ class AuthController extends Controller
             return response()->json(['message' => 'Invalid verification session.'], 400);
         }
 
-        if (! isset($payload['exp']) || $payload['exp'] < now()->timestamp) {
+        if (! isset($payload['exp']) || $payload['exp'] < now()->subHours(2)->timestamp) {
             return response()->json(['message' => 'Verification code expired. Please log in again.'], 400);
         }
 
@@ -856,40 +844,63 @@ class AuthController extends Controller
             return response()->json(['message' => 'Account not found.'], 404);
         }
 
+        $requestedChannel = (string) $request->input('channel', '');
+        if ($requestedChannel === 'sms' && !empty($user->phone)) {
+            $channel = 'sms';
+        } elseif ($requestedChannel === 'email') {
+            $channel = 'email';
+        } else {
+            $channel = $user->two_factor_channel ?: 'email';
+        }
+
+        $isChannelSwitch = ($requestedChannel !== '' && $requestedChannel !== ($user->two_factor_channel ?: 'email'));
+
         $limitKey = '2fa-resend:'.$user->id;
-        if (RateLimiter::tooManyAttempts($limitKey.':cooldown', 1)) {
+        if (! $isChannelSwitch && RateLimiter::tooManyAttempts($limitKey.':cooldown', 1)) {
             return response()->json(['message' => 'Please wait a moment before requesting another code.'], 429);
         }
 
         $code     = $this->generateResetCode();
         $codeHash = $this->hashResetCode($code);
+
         $user->update([
             'two_factor_code'       => $codeHash,
-            'two_factor_expires_at' => now()->addMinutes(10),
+            'two_factor_expires_at' => now()->addMinutes(60),
+            'two_factor_channel'    => $channel,
         ]);
-        Cache::put("2fa_valid:{$user->id}:{$codeHash}", true, 600);
+        Cache::put("2fa_valid:{$user->id}:{$codeHash}", true, 3600);
 
-        $channel     = $user->two_factor_channel ?: 'email';
         $displayName = trim(($user->first_name ?? '').' '.($user->last_name ?? '')) ?: ($user->username ?? 'Member');
 
         if ($channel === 'sms' && $user->phone) {
             $destination = SmsService::normalizePhoneNumber($user->phone);
-            SmsService::send($destination, "FordaGO: Your 2-Factor Login verification code is {$code}. Valid for 10 minutes.");
+            SmsService::send($destination, "FordaGO: Your 2-Factor Login verification code is {$code}. Valid for 60 minutes.");
             $destMasked = $this->maskPhone($destination);
-            $msg = 'A new verification code was sent to your phone.';
+            $msg = 'A new verification code was sent to your phone via SMS.';
         } else {
             $channel = 'email';
-            MailService::sendPasswordResetOtp($user->email, $code, $displayName);
+            MailService::sendTwoFactorOtp($user->email, $code, $displayName);
             $destMasked = $this->maskEmail($user->email);
             $msg = 'A new verification code was sent to your email.';
         }
 
-        RateLimiter::hit($limitKey.':cooldown', 60);
+        RateLimiter::hit($limitKey.':cooldown', 30);
+
+        $newTempToken = Crypt::encryptString(json_encode([
+            'purpose' => '2fa_login',
+            'user_id' => $user->id,
+            'channel' => $channel,
+            'exp'     => now()->addMinutes(60)->timestamp,
+        ]));
 
         return response()->json([
             'message'            => $msg,
             'channel'            => $channel,
             'destination_masked' => $destMasked,
+            'temp_token'         => $newTempToken,
+            'has_phone'          => !empty($user->phone),
+            'phone_masked'       => !empty($user->phone) ? $this->maskPhone($user->phone) : null,
+            'email_masked'       => $this->maskEmail($user->email),
             'dev_code'           => null,
         ]);
     }
@@ -909,20 +920,20 @@ class AuthController extends Controller
 
         $user->update([
             'two_factor_code'       => $codeHash,
-            'two_factor_expires_at' => now()->addMinutes(10),
+            'two_factor_expires_at' => now()->addMinutes(60),
             'two_factor_channel'    => $channel,
         ]);
-        Cache::put("2fa_valid:{$user->id}:{$codeHash}", true, 600);
+        Cache::put("2fa_valid:{$user->id}:{$codeHash}", true, 3600);
 
         $displayName = trim(($user->first_name ?? '').' '.($user->last_name ?? '')) ?: ($user->username ?? 'Member');
 
         if ($channel === 'sms') {
             $destination = SmsService::normalizePhoneNumber($user->phone);
-            SmsService::send($destination, "FordaGO: Your 2FA activation code is {$code}. Valid for 10 minutes.");
+            SmsService::send($destination, "FordaGO: Your 2FA activation code is {$code}. Valid for 60 minutes.");
             $destMasked = $this->maskPhone($destination);
             $msg = 'Verification code sent to your phone.';
         } else {
-            MailService::sendPasswordResetOtp($user->email, $code, $displayName);
+            MailService::sendTwoFactorOtp($user->email, $code, $displayName);
             $destMasked = $this->maskEmail($user->email);
             $msg = 'Verification code sent to your email.';
         }

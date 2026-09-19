@@ -272,8 +272,10 @@ export class AuthService {
     );
   }
 
-  twoFactorResend(tempToken: string) {
-    return this.http.post<any>(`${this.apiUrl}/2fa/resend`, { temp_token: tempToken }).pipe(
+  twoFactorResend(tempToken: string, channel?: 'email' | 'sms') {
+    const body: any = { temp_token: tempToken };
+    if (channel) body.channel = channel;
+    return this.http.post<any>(`${this.apiUrl}/2fa/resend`, body).pipe(
       catchError((err: HttpErrorResponse) => this.handleError(err))
     );
   }

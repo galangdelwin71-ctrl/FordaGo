@@ -25,6 +25,7 @@ import {
   chevronBackOutline,
   chevronDownOutline,
   chevronForwardOutline,
+  chevronUpOutline,
   closeCircleOutline,
   diamondOutline,
   eyeOffOutline,
@@ -73,14 +74,18 @@ export class LoginPage implements OnDestroy {
   segment: 'login' | 'register' | 'forgot' | '2fa' = 'login';
   regStep = 1;
 
-  // Biometric Quick Login (GCash style)
+  // Biometric Quick Login (GCash style auto-prompt & sleek view)
   savedBiometricUser: { identifier: string; name: string; avatar?: string } | null = null;
   biometricLoading = false;
+  showPasswordFallback = false;
+  autoBiometricTriggered = false;
 
   // 2FA Verification fields
   twoFactorTempToken = '';
   twoFactorDestination = '';
   twoFactorChannel = 'email';
+  twoFactorHasPhone = false;
+  twoFactorPhoneMasked = '';
   twoFactorCode = '';
   twoFactorOtpDigits: string[] = ['', '', '', '', '', ''];
   twoFactorDevCode = '';
@@ -226,6 +231,7 @@ export class LoginPage implements OnDestroy {
       'chevron-back-outline': chevronBackOutline,
       'chevron-down-outline': chevronDownOutline,
       'chevron-forward-outline': chevronForwardOutline,
+      'chevron-up-outline': chevronUpOutline,
       'close-circle-outline': closeCircleOutline,
       'diamond-outline': diamondOutline,
       'eye-off-outline': eyeOffOutline,
@@ -334,12 +340,30 @@ export class LoginPage implements OnDestroy {
     this.reg.fitness_goal = goalId;
   }
 
-  ionViewWillEnter(): void {
+  async ionViewWillEnter(): Promise<void> {
     this.resetLoginInputs();
     this.resetForgotPasswordInputs();
-    this.checkBiometricLoginAvailability();
+    this.showPasswordFallback = false;
+    this.autoBiometricTriggered = false;
+    await this.checkBiometricLoginAvailability();
     this.checkRouteQueryParams();
     this.genderOpen = false;
+  }
+
+  ionViewDidEnter(): void {
+    // GCash-style auto-prompt: if user has Passkey enabled on this device, immediately prompt biometric scan
+    if (this.savedBiometricUser && !this.autoBiometricTriggered && this.segment === 'login') {
+      this.autoBiometricTriggered = true;
+      setTimeout(() => {
+        if (this.savedBiometricUser && this.segment === 'login' && !this.biometricLoading) {
+          void this.loginWithBiometric(true);
+        }
+      }, 350);
+    }
+  }
+
+  togglePasswordFallback(): void {
+    this.showPasswordFallback = !this.showPasswordFallback;
   }
 
   private async checkBiometricLoginAvailability(): Promise<void> {
@@ -347,6 +371,9 @@ export class LoginPage implements OnDestroy {
       const active = await this.biometricService.isBiometricActiveOnDevice();
       if (active) {
         this.savedBiometricUser = await this.biometricService.getSavedBiometricUser();
+        if (this.savedBiometricUser?.identifier && !this.email) {
+          this.email = this.savedBiometricUser.identifier;
+        }
       } else {
         this.savedBiometricUser = null;
       }
@@ -909,6 +936,8 @@ export class LoginPage implements OnDestroy {
           this.twoFactorTempToken = res.temp_token;
           this.twoFactorDestination = res.destination_masked;
           this.twoFactorChannel = res.channel || 'email';
+          this.twoFactorHasPhone = !!res.has_phone;
+          this.twoFactorPhoneMasked = res.phone_masked || '';
           this.twoFactorDevCode = res.dev_code || '';
           this.twoFactorOtpDigits = ['', '', '', '', '', ''];
           this.twoFactorCode = '';
@@ -940,7 +969,7 @@ export class LoginPage implements OnDestroy {
 
   // ── Biometric / Passkey Login (GCash style) ─────────────
 
-  async loginWithBiometric(): Promise<void> {
+  async loginWithBiometric(isAuto = false): Promise<void> {
     if (!this.savedBiometricUser) return;
     this.error = '';
     this.biometricLoading = true;
@@ -949,7 +978,10 @@ export class LoginPage implements OnDestroy {
       const verified = await this.biometricService.promptBiometric('Verify FordaGO Passkey');
       if (!verified) {
         this.biometricLoading = false;
-        this.error = 'Biometric authentication was cancelled.';
+        // On auto-prompt, if user cancelled or dismissed the bottom sheet, leave screen clean without error banner
+        if (!isAuto) {
+          this.error = this.biometricService.lastError || 'Biometric authentication was cancelled.';
+        }
         return;
       }
 
@@ -988,6 +1020,8 @@ export class LoginPage implements OnDestroy {
   async clearBiometricForAnotherUser(): Promise<void> {
     await this.biometricService.clearBiometricCredential();
     this.savedBiometricUser = null;
+    this.showPasswordFallback = false;
+    this.autoBiometricTriggered = false;
   }
 
   // ── Two-Factor Authentication Login Flow ────────────────
@@ -1070,16 +1104,34 @@ export class LoginPage implements OnDestroy {
     });
   }
 
-  resendTwoFactorLogin(): void {
-    if (this.twoFactorResendCountdown > 0 || this.twoFactorLoading) return;
+  resendTwoFactorLogin(targetChannel?: 'email' | 'sms'): void {
+    const isChannelSwitch = !!targetChannel && targetChannel !== this.twoFactorChannel;
+    if (!isChannelSwitch && this.twoFactorResendCountdown > 0) return;
+    if (this.twoFactorLoading) return;
     this.twoFactorLoading = true;
     this.twoFactorError = '';
 
-    this.auth.twoFactorResend(this.twoFactorTempToken).subscribe({
+    this.auth.twoFactorResend(this.twoFactorTempToken, targetChannel).subscribe({
       next: (res: any) => {
         this.twoFactorLoading = false;
-        this.twoFactorDevCode = res?.dev_code || '';
-        this.startTwoFactorTimer(60);
+        if (res.temp_token) {
+          this.twoFactorTempToken = res.temp_token;
+        }
+        if (res.destination_masked) {
+          this.twoFactorDestination = res.destination_masked;
+        }
+        if (res.channel) {
+          this.twoFactorChannel = res.channel;
+        }
+        if (res.has_phone !== undefined) {
+          this.twoFactorHasPhone = !!res.has_phone;
+        }
+        if (res.phone_masked) {
+          this.twoFactorPhoneMasked = res.phone_masked;
+        }
+        this.twoFactorOtpDigits = ['', '', '', '', '', ''];
+        this.twoFactorCode = '';
+        this.startTwoFactorTimer(30);
       },
       error: (err: any) => {
         this.twoFactorLoading = false;

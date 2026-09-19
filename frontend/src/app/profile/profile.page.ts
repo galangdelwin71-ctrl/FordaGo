@@ -83,6 +83,7 @@ import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refres
 import { OnboardingService, TourStep } from '../services/onboarding.service';
 import { FeedbackService } from '../services/feedback.service';
 import { FcmService } from '../services/fcm.service';
+import { Capacitor } from '@capacitor/core';
 import { API_URL, resolveImageUrl } from '../config/api.config';
 import {
   FITNESS_GOAL_OPTIONS,
@@ -1195,12 +1196,27 @@ export class ProfilePage implements OnInit {
     this.biometricLoading = true;
 
     if (targetState) {
+      // Check if device supports biometrics and has enrolled biometrics
+      if (Capacitor.getPlatform() !== 'web') {
+        const check = await this.biometricService.checkBiometrics();
+        if (!check.isAvailable) {
+          this.biometricLoading = false;
+          if (event?.target) event.target.checked = false;
+          void this.showMobileToast(
+            'Walang naka-set na Fingerprint o Face Unlock sa cellphone mo. Mangyaring mag-set up muna sa Phone Settings (Security > Fingerprint) bago ito i-on.',
+            true
+          );
+          return;
+        }
+      }
+
       // User wants to enable Biometric Passkey
       const verified = await this.biometricService.promptBiometric('Enable FordaGO Biometric Passkey for this device');
       if (!verified) {
         this.biometricLoading = false;
         if (event?.target) event.target.checked = false;
-        void this.showMobileToast('Biometric verification cancelled.', true);
+        const errDetail = this.biometricService.lastError || 'Biometric verification cancelled.';
+        void this.showMobileToast(errDetail, true);
         return;
       }
 

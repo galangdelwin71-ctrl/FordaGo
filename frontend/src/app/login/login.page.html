@@ -58,43 +58,6 @@
           <p>Access your FordaGO account.</p>
         </header>
 
-        <!-- BIOMETRIC QUICK LOGIN (GCash Style) -->
-        <div class="biometric-quick-card" *ngIf="savedBiometricUser">
-          <div class="bio-quick-header">
-            <div class="bio-quick-avatar">
-              <ion-icon name="fingerprint-outline" aria-hidden="true"></ion-icon>
-            </div>
-            <div class="bio-quick-info">
-              <span class="bio-quick-badge">Biometric &amp; Face Unlock</span>
-              <strong class="bio-quick-name">{{ savedBiometricUser.name }}</strong>
-              <small class="bio-quick-sub">{{ savedBiometricUser.identifier }}</small>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            class="bio-quick-action-btn"
-            (click)="loginWithBiometric()"
-            [disabled]="biometricLoading"
-          >
-            <ion-spinner *ngIf="biometricLoading" name="crescent"></ion-spinner>
-            <ion-icon *ngIf="!biometricLoading" name="fingerprint-outline" aria-hidden="true"></ion-icon>
-            <span>{{ biometricLoading ? 'Authenticating...' : 'Sign In with Fingerprint / Face Unlock' }}</span>
-          </button>
-
-          <div class="bio-quick-footer">
-            <button type="button" class="bio-switch-btn" (click)="clearBiometricForAnotherUser()">
-              Switch to another account
-            </button>
-          </div>
-        </div>
-
-        <div class="divider" *ngIf="savedBiometricUser" aria-hidden="true">
-          <span></span>
-          <small>OR SIGN IN WITH PASSWORD</small>
-          <span></span>
-        </div>
-
         <div class="field">
           <label class="field-lbl" for="login-email">Email</label>
           <div class="input-shell">
@@ -153,16 +116,37 @@
           <span>{{ error }}</span>
         </div>
 
-        <button
-          class="submit-btn"
-          type="submit"
-          [disabled]="loading"
-          [class.is-loading]="loading"
-        >
-          <ion-spinner *ngIf="loading" name="crescent"></ion-spinner>
-          <span>{{ loading ? 'Signing In' : 'Login' }}</span>
-        
-        </button>
+        <div class="login-submit-row">
+          <button
+            class="submit-btn"
+            type="submit"
+            [disabled]="loading || biometricLoading"
+            [class.is-loading]="loading"
+          >
+            <ion-spinner *ngIf="loading" name="crescent"></ion-spinner>
+            <span>{{ loading ? 'Signing In' : 'Login' }}</span>
+          </button>
+
+          <!-- Biometric Icon Button (Tap to re-trigger native popup if dismissed) -->
+          <button
+            *ngIf="savedBiometricUser"
+            type="button"
+            class="bio-quick-icon-btn"
+            (click)="loginWithBiometric()"
+            [disabled]="biometricLoading || loading"
+            title="Login with your Biometrics"
+            aria-label="Login with your Biometrics"
+          >
+            <ion-spinner *ngIf="biometricLoading" name="crescent"></ion-spinner>
+            <ion-icon *ngIf="!biometricLoading" name="fingerprint-outline" aria-hidden="true"></ion-icon>
+          </button>
+        </div>
+
+        <div class="bio-switch-account-wrap" *ngIf="savedBiometricUser">
+          <button type="button" class="text-link" (click)="clearBiometricForAnotherUser()">
+            Not {{ savedBiometricUser.name }}? Switch account
+          </button>
+        </div>
 
         <div class="divider" aria-hidden="true">
           <span></span>
@@ -1430,6 +1414,20 @@
             <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
             <span *ngIf="twoFactorResendCountdown === 0">Resend Code</span>
             <span *ngIf="twoFactorResendCountdown > 0">Resend in {{ twoFactorResendCountdown }}s</span>
+          </button>
+        </div>
+
+        <!-- Channel Switcher -->
+        <div class="channel-switch-wrap" *ngIf="twoFactorHasPhone">
+          <button
+            type="button"
+            class="channel-switch-btn"
+            [disabled]="twoFactorLoading"
+            (click)="resendTwoFactorLogin(twoFactorChannel === 'email' ? 'sms' : 'email')"
+          >
+            <ion-icon [name]="twoFactorChannel === 'email' ? 'phone-portrait-outline' : 'mail-outline'"></ion-icon>
+            <span *ngIf="twoFactorChannel === 'email'">Send code via SMS</span>
+            <span *ngIf="twoFactorChannel === 'sms'">Send code via Email</span>
           </button>
         </div>
 

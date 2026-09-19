@@ -1551,7 +1551,18 @@ export class AdminPage implements OnInit, OnDestroy {
     this.editingMember = { ...m, password: '' };
     this.showAddMember = false;
     this.showEditMemberPw = false;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  generateRandomMemberPassword() {
+    if (!this.editingMember) return;
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%';
+    let pw = 'Forda@';
+    for (let i = 0; i < 4; i++) {
+      pw += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    this.editingMember.password = pw;
+    this.showEditMemberPw = true;
+    this.toast.info(`Generated temporary password: ${pw}`);
   }
 
   saveMember() {
@@ -1628,7 +1639,6 @@ export class AdminPage implements OnInit, OnDestroy {
       member_names: memberNames,
     };
     this.showAddSession = false;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   saveSession() {
@@ -1703,7 +1713,6 @@ export class AdminPage implements OnInit, OnDestroy {
   editProduct(p: any) {
     this.editingProduct = { ...p };
     this.showAddProduct = false;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   saveProduct() {
@@ -1904,7 +1913,6 @@ export class AdminPage implements OnInit, OnDestroy {
   editEquipment(e: any) {
     this.editingEquipment = { ...e };
     this.showAddEquipment = false;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   async onEquipmentImageChange(event: Event, target: 'new' | 'edit'): Promise<void> {
@@ -1985,7 +1993,6 @@ export class AdminPage implements OnInit, OnDestroy {
     // showing so the preview isn't blank on open.
     this.editingCoach = { ...c, photo_url: c.profile_image || '' };
     this.showAddCoach = false;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   async onCoachImageChange(event: Event, target: 'new' | 'edit'): Promise<void> {
