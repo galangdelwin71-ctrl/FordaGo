@@ -1,0 +1,502 @@
+.receipt-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: rgba(10, 15, 29, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.18s ease-out;
+}
+
+.receipt-modal-wrapper {
+  width: 100%;
+  max-width: 360px;
+  max-height: 94vh;
+  display: flex;
+  flex-direction: column;
+  animation: popIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+// Top Action Bar above paper
+.receipt-top-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px 10px;
+
+  .modal-label {
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #eab308;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    &::before {
+      content: '';
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 6px #22c55e;
+    }
+  }
+
+  .receipt-close-btn {
+    background: rgba(255, 255, 255, 0.12);
+    border: none;
+    color: #f1f5f9;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.15rem;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.24);
+      transform: scale(1.05);
+    }
+  }
+}
+
+// Scroll Wrapper
+.paper-scroll-wrap {
+  overflow-y: auto;
+  max-height: calc(94vh - 110px);
+  padding: 4px 2px;
+  display: flex;
+  justify-content: center;
+
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 999px;
+  }
+}
+
+// ==========================================
+// AUTHENTIC MALL / STORE THERMAL RECEIPT
+// ==========================================
+.thermal-paper {
+  position: relative;
+  width: 100%;
+  max-width: 330px;
+  background: #ffffff;
+  color: #111827;
+  padding: 20px 18px;
+  box-shadow: 
+    0 18px 36px -10px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(0, 0, 0, 0.08);
+  font-family: 'Courier New', Courier, 'Lucida Console', Monaco, monospace;
+  font-size: 11px;
+  line-height: 1.35;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+// Jagged Tear at top and bottom (simulates register cutter)
+.thermal-tear {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background-size: 10px 5px;
+  pointer-events: none;
+
+  &.top-tear {
+    top: 0;
+    background-image: radial-gradient(circle at 5px 0, transparent 3px, #ffffff 3.5px);
+  }
+
+  &.bottom-tear {
+    bottom: 0;
+    background-image: radial-gradient(circle at 5px 5px, transparent 3px, #ffffff 3.5px);
+  }
+}
+
+// Dividers
+.thermal-rule-double {
+  text-align: center;
+  color: #4b5563;
+  font-size: 10.5px;
+  letter-spacing: -1px;
+  margin: 3px 0;
+  overflow: hidden;
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.thermal-rule-dashed {
+  text-align: center;
+  color: #6b7280;
+  font-size: 10.5px;
+  letter-spacing: -1px;
+  margin: 3px 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+// Header
+.thermal-header {
+  text-align: center;
+
+  .store-brand {
+    font-size: 12.5px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: #111827;
+  }
+
+  .store-sub {
+    font-size: 10px;
+    font-weight: 600;
+    color: #4b5563;
+  }
+
+  .store-loc,
+  .store-tax,
+  .store-tel {
+    font-size: 10px;
+    color: #4b5563;
+  }
+
+  .receipt-title {
+    font-size: 11.5px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #111827;
+    margin: 2px 0;
+  }
+}
+
+// Meta Section
+.thermal-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5px;
+
+  .meta-line {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10.5px;
+
+    .lbl {
+      color: #4b5563;
+      white-space: nowrap;
+    }
+
+    .val {
+      font-weight: 600;
+      color: #111827;
+      text-align: right;
+
+      &.highlight {
+        font-weight: 800;
+        color: #000000;
+      }
+
+      &.bold {
+        font-weight: 800;
+      }
+
+      &.mono {
+        font-size: 10px;
+      }
+    }
+  }
+}
+
+// Table Header
+.thermal-table-head {
+  display: flex;
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #374151;
+
+  .col-item { flex: 1.6; }
+  .col-qty { width: 32px; text-align: center; }
+  .col-price { width: 62px; text-align: right; }
+  .col-total { width: 66px; text-align: right; }
+}
+
+// Items List
+.thermal-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  .thermal-row {
+    font-size: 10.5px;
+
+    .row-desc {
+      font-weight: 700;
+      color: #111827;
+      word-break: break-word;
+    }
+
+    .row-calc {
+      display: flex;
+      justify-content: space-between;
+      color: #374151;
+
+      .col-qty { width: 32px; text-align: center; }
+      .col-price { width: 62px; text-align: right; }
+      .col-total { width: 66px; text-align: right; font-weight: 700; color: #111827; }
+    }
+  }
+}
+
+// Totals
+.thermal-totals {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5px;
+
+  .tot-line {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10.5px;
+    color: #374151;
+
+    .val {
+      font-weight: 700;
+      color: #111827;
+    }
+
+    &.subtle {
+      color: #6b7280;
+      font-size: 9.5px;
+    }
+
+    &.grand-total-line {
+      font-size: 12.5px;
+      font-weight: 900;
+      color: #111827;
+      margin: 3px 0;
+
+      .grand-val {
+        font-size: 13.5px;
+        color: #15803d;
+      }
+    }
+
+    &.tender-line {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: #1f2937;
+    }
+  }
+}
+
+// Status Box
+.thermal-status-box {
+  text-align: center;
+  padding: 4px 0;
+
+  .status-badge {
+    font-weight: 900;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: #15803d;
+  }
+
+  .status-sub {
+    font-size: 9.5px;
+    font-weight: 700;
+    color: #4b5563;
+    margin-top: 1px;
+  }
+}
+
+// Barcode
+.thermal-barcode {
+  text-align: center;
+  margin: 4px 0 2px;
+
+  .barcode-graphic {
+    height: 32px;
+    width: 72%;
+    margin: 0 auto;
+    background: repeating-linear-gradient(
+      90deg,
+      #111827 0px,
+      #111827 2px,
+      transparent 2px,
+      transparent 3px,
+      #111827 3px,
+      #111827 5px,
+      transparent 5px,
+      transparent 7px,
+      #111827 7px,
+      #111827 9px,
+      transparent 9px,
+      transparent 11px,
+      #111827 11px,
+      #111827 13px,
+      transparent 13px,
+      transparent 15px,
+      #111827 15px,
+      #111827 18px,
+      transparent 18px,
+      transparent 20px
+    );
+  }
+
+  .barcode-ref {
+    font-size: 10.5px;
+    letter-spacing: 3px;
+    font-weight: 700;
+    color: #374151;
+    margin-top: 2px;
+  }
+}
+
+// Footnotes
+.thermal-footer {
+  text-align: center;
+  margin-top: 4px;
+
+  .foot-title {
+    font-size: 10px;
+    font-weight: 800;
+    color: #1f2937;
+  }
+
+  .foot-legal {
+    font-size: 8.5px;
+    color: #6b7280;
+    margin-top: 2px;
+    line-height: 1.25;
+  }
+
+  .foot-gym {
+    font-size: 10px;
+    font-weight: 700;
+    color: #111827;
+    margin-top: 4px;
+  }
+}
+
+// Bottom Action Bar
+.receipt-action-bar {
+  display: flex;
+  gap: 8px;
+  padding: 10px 4px 2px;
+
+  .receipt-btn {
+    border-radius: 9px;
+    padding: 9px 12px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    transition: all 0.15s ease;
+    border: none;
+
+    &.download {
+      flex: 1.4;
+      background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+      color: #0f172a;
+      box-shadow: 0 4px 12px rgba(234, 179, 8, 0.35);
+
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(234, 179, 8, 0.45);
+      }
+    }
+
+    &.print {
+      flex: 1;
+      background: #1e293b;
+      color: #f1f5f9;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+
+      &:hover {
+        background: #334155;
+      }
+    }
+
+    &.close-btn {
+      padding: 9px 14px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #cbd5e1;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.15);
+        color: #ffffff;
+      }
+    }
+
+    ion-icon {
+      font-size: 0.95rem;
+    }
+  }
+}
+
+// Animations
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes popIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(16px) scale(0.96); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0) scale(1); 
+  }
+}
+
+// Print Stylesheet
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .receipt-overlay {
+    position: static;
+    background: none;
+    padding: 0;
+  }
+
+  .receipt-top-actions,
+  .receipt-action-bar {
+    display: none !important;
+  }
+
+  #printable-receipt,
+  #printable-receipt * {
+    visibility: visible;
+  }
+
+  #printable-receipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 320px !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 8px !important;
+  }
+}

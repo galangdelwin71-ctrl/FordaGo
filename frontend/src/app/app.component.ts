@@ -166,13 +166,14 @@ const TAB_NAVIGATION_PATHS = new Set([
 import { OnboardingGuideComponent } from './shared/onboarding-guide/onboarding-guide.component';
 import { OnboardingService } from './services/onboarding.service';
 import { ChatToastComponent } from './shared/chat-toast/chat-toast.component';
+import { ReceiptModalComponent } from './shared/receipt-modal/receipt-modal.component';
 
 const EXIT_CONFIRM_WINDOW_MS = 2000;
 
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
-  imports: [IonApp, IonRouterOutlet, ChatToastComponent, OnboardingGuideComponent],
+  imports: [IonApp, IonRouterOutlet, ChatToastComponent, OnboardingGuideComponent, ReceiptModalComponent],
 })
 export class AppComponent implements OnDestroy {
   // Populated once Capacitor resolves the listener registration (see

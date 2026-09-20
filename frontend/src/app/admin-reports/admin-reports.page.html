@@ -534,6 +534,14 @@
             <button class="fg-btn" [class.active]="statusFilter === 'paid'" (click)="statusFilter = 'paid'">Paid / Active</button>
             <button class="fg-btn" [class.active]="statusFilter === 'pending'" (click)="statusFilter = 'pending'">Pending</button>
           </div>
+
+          <div class="filter-group">
+            <span class="fg-lbl">Channel:</span>
+            <button class="fg-btn" [class.active]="channelFilter === 'all'" (click)="channelFilter = 'all'">All</button>
+            <button class="fg-btn" [class.active]="channelFilter === 'gcash'" (click)="channelFilter = 'gcash'">GCash</button>
+            <button class="fg-btn" [class.active]="channelFilter === 'maya'" (click)="channelFilter = 'maya'">Maya</button>
+            <button class="fg-btn" [class.active]="channelFilter === 'cash'" (click)="channelFilter = 'cash'">Cash</button>
+          </div>
         </div>
       </div>
 
@@ -562,8 +570,12 @@
             </div>
             <div class="tx-meta-row">
               <span class="tx-date">{{ tx.transaction_date | date:'MMM d, yyyy · h:mm a' }}</span>
-              <span class="tx-paymethod" *ngIf="tx.payment_method">{{ tx.payment_method | uppercase }}</span>
-              <span class="tx-email">{{ tx.email }}</span>
+              <span class="tx-paymethod" [class]="'ch-' + (tx.payment_channel || tx.payment_method || 'cash')">
+                {{ (tx.payment_channel || tx.payment_method || 'Cash') | uppercase }}
+              </span>
+              <span class="tx-email" *ngIf="tx.email">{{ tx.email }}</span>
+              <span class="tx-receipt-tag" *ngIf="tx.receipt_number">{{ tx.receipt_number }}</span>
+              <span class="tx-ref" *ngIf="tx.reference_number">Ref: {{ tx.reference_number }}</span>
             </div>
           </div>
           <div class="tx-right">
@@ -571,6 +583,10 @@
               {{ tx.amount > 0 ? ('₱' + (tx.amount | number:'1.2-2')) : 'Included' }}
             </div>
             <div class="tx-status" [class]="'st-' + getStatusKey(tx)">{{ getStatusLabel(tx) }}</div>
+            <button class="tx-receipt-action-btn" (click)="openReceipt(tx)" title="View Official Receipt">
+              <ion-icon name="receipt-outline"></ion-icon>
+              <span>Receipt</span>
+            </button>
           </div>
         </div>
       </div>

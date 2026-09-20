@@ -349,12 +349,17 @@ class InventoryController extends Controller
      * is what lets the frontend show/cancel the checkout as a single packed
      * group instead of unrelated rows.
      *
-     * Body: { items: [{ product_id, quantity }], payment_method: 'cash'|'gcash' }
+     * Body: { items: [{ product_id, quantity }], payment_method: 'cash'|'gcash'|'paymaya' }
      */
     public function checkout(Request $request)
     {
         $items = $request->input('items');
-        $paymentMethod = $request->input('payment_method') === 'gcash' ? 'gcash' : 'cash';
+        $rawMethod = strtolower((string) $request->input('payment_method', 'cash'));
+        if (in_array($rawMethod, ['gcash', 'paymaya', 'maya', 'card'])) {
+            $paymentMethod = ($rawMethod === 'maya') ? 'paymaya' : $rawMethod;
+        } else {
+            $paymentMethod = 'cash';
+        }
 
         if (! is_array($items) || count($items) === 0) {
             return response()->json(['message' => 'Your cart is empty.'], 400);

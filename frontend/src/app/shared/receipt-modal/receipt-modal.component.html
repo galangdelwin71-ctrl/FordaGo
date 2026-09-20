@@ -1,0 +1,171 @@
+<div class="receipt-overlay" *ngIf="isOpen && receipt" (click)="close()">
+  <div class="receipt-modal-wrapper" (click)="$event.stopPropagation()">
+    
+    <!-- Top Close Bar -->
+    <div class="receipt-top-actions">
+      <span class="modal-label">Store Sales Receipt</span>
+      <button class="receipt-close-btn" (click)="close()" aria-label="Close receipt">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+
+    <!-- Scrollable container for the thermal paper -->
+    <div class="paper-scroll-wrap">
+      <!-- Authentic Mall / Store Thermal Receipt -->
+      <div class="receipt-paper thermal-paper" id="printable-receipt">
+        <!-- Top Jagged Paper Tear -->
+        <div class="thermal-tear top-tear"></div>
+
+        <!-- Store Header -->
+        <div class="thermal-header">
+          <div class="store-brand">FORDAGO FITNESS &amp; WELLNESS</div>
+          <div class="store-sub">SUPPLEMENTS &amp; MERCHANDISE</div>
+          <div class="store-loc">Poblacion, Bustos, Bulacan</div>
+          <div class="store-tax">VAT Reg. TIN: 421-890-332-000</div>
+          <div class="store-tel">Tel: (044) 762-1849</div>
+          
+          <div class="thermal-rule-double">================================</div>
+          <div class="receipt-title">OFFICIAL SALES SLIP</div>
+          <div class="thermal-rule-dashed">--------------------------------</div>
+        </div>
+
+        <!-- Meta Info (POS Register Style) -->
+        <div class="thermal-meta">
+          <div class="meta-line">
+            <span class="lbl">RCVD REF :</span>
+            <span class="val highlight">{{ receipt.receipt_number }}</span>
+          </div>
+          <div class="meta-line">
+            <span class="lbl">DATE/TIME:</span>
+            <span class="val">{{ (receipt.transaction_date || receipt.paid_at) | date:'MM/dd/yy hh:mm a' }}</span>
+          </div>
+          <div class="meta-line">
+            <span class="lbl">TERMINAL :</span>
+            <span class="val">POS-SHOP #01</span>
+          </div>
+          <div class="meta-line">
+            <span class="lbl">CUSTOMER :</span>
+            <span class="val">{{ receipt.customer_name || 'Valued Member' }}</span>
+          </div>
+          <div class="meta-line">
+            <span class="lbl">PAY METH :</span>
+            <span class="val bold">{{ (receipt.payment_channel || 'GCash') | uppercase }} (ONLINE)</span>
+          </div>
+          <div class="meta-line" *ngIf="receipt.gateway_ref">
+            <span class="lbl">GATEWAY  :</span>
+            <span class="val mono">{{ receipt.gateway_ref }}</span>
+          </div>
+        </div>
+
+        <div class="thermal-rule-dashed">--------------------------------</div>
+
+        <!-- Table Columns Header -->
+        <div class="thermal-table-head">
+          <span class="col-item">ITEM</span>
+          <span class="col-qty">QTY</span>
+          <span class="col-price">PRICE</span>
+          <span class="col-total">TOTAL</span>
+        </div>
+        <div class="thermal-rule-dashed">--------------------------------</div>
+
+        <!-- Item Rows -->
+        <div class="thermal-items-list">
+          <div class="thermal-row" *ngFor="let item of (receipt.items && receipt.items.length ? receipt.items : [{ name: receipt.payment_for || 'Gym Item', quantity: 1, price: receipt.grand_total || receipt.amount || receipt.total || 0 }])">
+            <div class="row-desc">{{ item.name }}</div>
+            <div class="row-calc">
+              <span class="col-qty">{{ item.quantity || 1 }}</span>
+              <span class="col-price">{{ (item.price ?? item.unit_price ?? item.amount ?? 0) | number:'1.2-2' }}</span>
+              <span class="col-total">{{ (item.subtotal ?? item.total ?? (((item.price ?? item.unit_price ?? item.amount ?? 0) * (item.quantity || 1)))) | number:'1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="thermal-rule-dashed">--------------------------------</div>
+
+        <!-- Totals & Taxes Breakdown -->
+        <div class="thermal-totals">
+          <div class="tot-line">
+            <span>SUBTOTAL:</span>
+            <span class="val">₱{{ (receipt.subtotal ?? receipt.amount ?? receipt.total ?? receipt.total_amount ?? 0) | number:'1.2-2' }}</span>
+          </div>
+          <div class="tot-line" *ngIf="receipt.fee && receipt.fee > 0">
+            <span>GATEWAY FEE:</span>
+            <span class="val">₱{{ receipt.fee | number:'1.2-2' }}</span>
+          </div>
+          <div class="tot-line" *ngIf="receipt.discount && receipt.discount > 0">
+            <span>DISCOUNT:</span>
+            <span class="val">-₱{{ receipt.discount | number:'1.2-2' }}</span>
+          </div>
+          <div class="tot-line subtle">
+            <span>VAT INCLUSIVE (12%):</span>
+            <span class="val">₱{{ (((receipt.grand_total ?? receipt.total ?? receipt.amount ?? 0) * 0.12) / 1.12) | number:'1.2-2' }}</span>
+          </div>
+          <div class="tot-line subtle">
+            <span>VAT EXEMPT SALE:</span>
+            <span class="val">₱0.00</span>
+          </div>
+          
+          <div class="thermal-rule-double">================================</div>
+          
+          <div class="tot-line grand-total-line">
+            <span class="grand-lbl">TOTAL AMOUNT:</span>
+            <span class="grand-val">₱{{ (receipt.grand_total ?? receipt.total ?? receipt.total_amount ?? receipt.amount ?? 0) | number:'1.2-2' }}</span>
+          </div>
+          
+          <div class="tot-line tender-line">
+            <span>PAID VIA {{ (receipt.payment_channel || 'GCASH') | uppercase }}:</span>
+            <span class="val">₱{{ (receipt.grand_total ?? receipt.total ?? receipt.total_amount ?? receipt.amount ?? 0) | number:'1.2-2' }}</span>
+          </div>
+          <div class="tot-line tender-line">
+            <span>CHANGE:</span>
+            <span class="val">₱0.00</span>
+          </div>
+        </div>
+
+        <div class="thermal-rule-double">================================</div>
+
+        <!-- Mall Stamp Verification Block -->
+        <div class="thermal-status-box">
+          <div class="status-badge">*** PAID ONLINE ***</div>
+          <div class="status-sub">RECORDED IN ADMIN MONITOR</div>
+        </div>
+
+        <div class="thermal-rule-double">================================</div>
+
+        <!-- Barcode Strip -->
+        <div class="thermal-barcode">
+          <div class="barcode-graphic"></div>
+          <div class="barcode-ref">*{{ receipt.receipt_number }}*</div>
+        </div>
+
+        <div class="thermal-rule-dashed">--------------------------------</div>
+
+        <!-- Standard Mall Receipt Footnotes -->
+        <div class="thermal-footer">
+          <div class="foot-title">THIS SERVES AS YOUR OFFICIAL RECEIPT</div>
+          <div class="foot-legal">BIR Registered under R.A. No. 8792 (E-Commerce Act)</div>
+          <div class="foot-gym">Thank you for training with FordaGO!</div>
+        </div>
+
+        <!-- Bottom Jagged Paper Tear -->
+        <div class="thermal-tear bottom-tear"></div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="receipt-action-bar">
+      <button class="receipt-btn download" (click)="downloadPDF()">
+        <ion-icon name="download-outline"></ion-icon>
+        <span>Download PDF</span>
+      </button>
+      <button class="receipt-btn print" (click)="printReceipt()">
+        <ion-icon name="print-outline"></ion-icon>
+        <span>Print</span>
+      </button>
+      <button class="receipt-btn close-btn" (click)="close()">
+        <span>Done</span>
+      </button>
+    </div>
+
+  </div>
+</div>

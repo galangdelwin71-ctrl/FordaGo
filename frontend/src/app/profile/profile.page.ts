@@ -63,8 +63,10 @@ import {
   statsChartOutline,
   timeOutline,
   trophyOutline,
+  walletOutline,
 } from 'ionicons/icons';
 import { ToastService } from '../services/toast.service';
+import { PaymentService } from '../services/payment.service';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
 import { ProfileService, UserProfile } from '../services/profile.service';
@@ -465,6 +467,7 @@ export class ProfilePage implements OnInit {
     private fcmService: FcmService,
     private workoutTracker: WorkoutTrackerService,
     public biometricService: BiometricService,
+    private paymentService: PaymentService,
   ) {
     addIcons({
       'alert-circle-outline': alertCircleOutline,
@@ -475,6 +478,7 @@ export class ProfilePage implements OnInit {
       'call-outline': callOutline,
       'card-outline': cardOutline,
       'cash-outline': cashOutline,
+      'wallet-outline': walletOutline,
       'chatbubble-ellipses-outline': chatbubbleEllipsesOutline,
       'chatbubbles-outline': chatbubblesOutline,
       'checkmark-circle': checkmarkCircle,
@@ -1733,7 +1737,7 @@ export class ProfilePage implements OnInit {
 
   // ── Membership Renewal & Upgrade ──────────────────────
   selectedPlan: 'daily' | 'premium' = 'premium';
-  selectedPaymentMethod: 'gcash' | 'cash' = 'gcash';
+  selectedPaymentMethod: 'gcash' | 'paymaya' | 'cash' = 'gcash';
   isProcessingRenewal = false;
 
   openRenewal(): void {
@@ -1752,9 +1756,65 @@ export class ProfilePage implements OnInit {
     if (this.isProcessingRenewal) return;
     this.isProcessingRenewal = true;
 
+    // Online payment flow via PayMongo (GCash / Maya)
+    if (this.selectedPaymentMethod === 'gcash' || this.selectedPaymentMethod === 'paymaya') {
+      this.paymentService.createCheckout({
+        payment_for: 'membership',
+        amount: 500,
+        payment_channel: this.selectedPaymentMethod,
+        description: 'FordaGO 1-Month Premium Membership Renewal/Upgrade',
+        items_breakdown: [{
+          name: '1-Month Premium Access',
+          quantity: 1,
+          price: 500,
+        }],
+      }).subscribe({
+        next: (payRes) => {
+          this.isProcessingRenewal = false;
+          this.closeRenewal();
+
+          if (payRes.is_mock) {
+            // Instant mock in dev
+            this.paymentService.verifySession(payRes.session_id!, payRes.receipt_number).subscribe({
+              next: (verifyRes) => {
+                void this.showMobileToast('Premium membership successfully activated!');
+                this.loadProfile();
+                const rec = verifyRes?.receipt || payRes.receipt;
+                if (rec) {
+                  this.paymentService.openReceiptModal(rec);
+                } else if (payRes.receipt_number) {
+                  this.paymentService.openReceipt(payRes.receipt_number);
+                }
+              },
+              error: () => {
+                this.loadProfile();
+                if (payRes.receipt) {
+                  this.paymentService.openReceiptModal(payRes.receipt);
+                } else if (payRes.receipt_number) {
+                  this.paymentService.openReceipt(payRes.receipt_number);
+                }
+              }
+            });
+          } else if (payRes.checkout_url) {
+            // Redirect to PayMongo hosted checkout page
+            window.location.href = payRes.checkout_url;
+          } else {
+            void this.showMobileToast('Payment request created. Please complete in payment gateway.');
+          }
+        },
+        error: (err) => {
+          this.isProcessingRenewal = false;
+          const msg = err?.error?.message || 'Failed to initiate online payment. Please try again.';
+          void this.showMobileToast(msg, true);
+        }
+      });
+      return;
+    }
+
+    // Cash at gym counter flow
     this.http.post<any>(`${this.api}/users/membership/renew`, {
       plan: this.selectedPlan,
-      payment_method: this.selectedPaymentMethod,
+      payment_method: 'cash',
     }).subscribe({
       next: (res) => {
         this.isProcessingRenewal = false;

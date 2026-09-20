@@ -73,7 +73,12 @@
           <div class="tx-type">{{ tx.type_label }}</div>
           <div class="tx-sub" *ngIf="tx.product_name">{{ tx.product_name }}</div>
           <div class="tx-date">{{ tx.transaction_date | date:'MMM d, yyyy · h:mm a' }}</div>
-          <div class="tx-status" [class]="'st-' + getStatusKey(tx)">{{ getStatusLabel(tx) }}</div>
+          <div class="tx-tags">
+            <span class="tx-status" [class]="'st-' + getStatusKey(tx)">{{ getStatusLabel(tx) }}</span>
+            <span class="tx-channel-badge" [class]="'ch-' + (tx.payment_channel || tx.payment_method || 'cash')">
+              {{ (tx.payment_channel || tx.payment_method || 'Cash') | uppercase }}
+            </span>
+          </div>
         </div>
 
         <!-- Right amount -->
@@ -81,7 +86,10 @@
           <div class="tx-amount" [class.free]="tx.amount == 0">
             {{ tx.amount > 0 ? ('₱' + (tx.amount | number:'1.2-2')) : 'Included' }}
           </div>
-          <div class="tx-source-badge">{{ tx.source === 'attendance' ? 'Gym' : (tx.source === 'membership' ? 'Plan' : 'Shop') }}</div>
+          <button class="tx-receipt-btn" (click)="openReceipt(tx)" title="View E-Receipt">
+            <ion-icon name="receipt-outline"></ion-icon>
+            <span>Receipt</span>
+          </button>
         </div>
       </div>
     </div>

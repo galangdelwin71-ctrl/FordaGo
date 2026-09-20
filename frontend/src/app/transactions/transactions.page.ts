@@ -9,9 +9,11 @@ import {
   IonSpinner,
   IonIcon,
 } from '@ionic/angular/standalone';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
+import { PaymentService, OfficialReceipt } from '../services/payment.service';
+import { ToastService } from '../services/toast.service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { API_URL } from '../config/api.config';
@@ -51,11 +53,106 @@ export class TransactionsPage implements OnInit {
     private http: HttpClient,
     private auth: AuthService,
     public router: Router,
+    private route: ActivatedRoute,
     private decimalPipe: DecimalPipe,
     private datePipe: DatePipe,
+    public paymentService: PaymentService,
+    private toast: ToastService,
   ) {}
 
-  ngOnInit() { this.load(); }
+  ngOnInit() {
+    this.load();
+    this.checkReturnPaymentStatus();
+  }
+
+  checkReturnPaymentStatus() {
+    this.route.queryParams.subscribe(params => {
+      const sessionId = params['session_id'];
+      const paymentId = params['payment_id'];
+      const status = params['status'];
+
+      if (sessionId) {
+        this.isLoading = true;
+        this.paymentService.verifySession(sessionId).subscribe({
+          next: res => {
+            this.isLoading = false;
+            if (res?.receipt) {
+              this.paymentService.openReceipt(res.receipt);
+              this.toast.success('Payment verified successfully!');
+              this.load();
+            }
+          },
+          error: () => {
+            this.isLoading = false;
+          }
+        });
+      } else if (status === 'paid' && paymentId) {
+        this.paymentService.getReceipt(paymentId).subscribe({
+          next: receipt => {
+            if (receipt) {
+              this.paymentService.openReceipt(receipt);
+              this.toast.success('Payment receipt retrieved!');
+            }
+          }
+        });
+      }
+    });
+  }
+
+  openReceipt(tx: any) {
+    if (tx.payment_id) {
+      this.paymentService.getReceipt(tx.payment_id).subscribe({
+        next: receipt => this.paymentService.openReceipt(receipt),
+        error: () => this.openFallbackReceipt(tx)
+      });
+    } else {
+      this.openFallbackReceipt(tx);
+    }
+  }
+
+  openFallbackReceipt(tx: any) {
+    const user = this.currentUser;
+    const rawChannel = tx.payment_channel || tx.payment_method || 'cash';
+    const channel = rawChannel === 'paymaya' || rawChannel === 'maya' ? 'Maya' : (rawChannel === 'gcash' ? 'GCash' : rawChannel.toUpperCase());
+    const amt = Number(tx.amount || tx.total || 0);
+    const txDate = tx.transaction_date || tx.created_at || new Date().toISOString();
+
+    const fallbackReceipt: OfficialReceipt = {
+      club_name: 'FORDAGO FITNESS & WELLNESS CLUB',
+      club_address: 'Bustos, Bulacan, Philippines',
+      receipt_number: tx.receipt_number || `REC-${(tx.source || 'TX').toUpperCase()}-${tx.id || Math.floor(100000 + Math.random() * 900000)}`,
+      payment_channel: channel,
+      gateway: tx.gateway || (rawChannel === 'cash' ? 'counter' : 'paymongo'),
+      payment_for: tx.source === 'membership' ? '1-Month Gym Membership Plan' : (tx.source === 'order' ? 'Shop Supplements & Merchandise' : (tx.source || 'Gym Service')),
+      status: 'PAID',
+      amount: amt,
+      subtotal: amt,
+      fee: 0,
+      tax: 0,
+      discount: 0,
+      total: amt,
+      grand_total: amt,
+      total_amount: amt,
+      currency: 'PHP',
+      paid_at: txDate,
+      transaction_date: txDate,
+      customer_name: user?.name || user?.username || 'Valued Member',
+      customer_email: user?.email || 'member@fordago.ph',
+      customer_phone: user?.phone || '',
+      items: [
+        {
+          name: tx.product_name || tx.type_label || (tx.source === 'membership' ? '1-Month Premium Access' : 'Gym Service/Product'),
+          quantity: Number(tx.quantity || 1),
+          price: amt,
+          unit_price: amt,
+          amount: amt,
+          subtotal: amt,
+        }
+      ],
+      notes: tx.reference_number ? `Ref No: ${tx.reference_number}` : undefined
+    };
+    this.paymentService.openReceipt(fallbackReceipt);
+  }
 
   setPeriod(p: typeof this.period) {
     this.period = p;

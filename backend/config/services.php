@@ -69,5 +69,11 @@ return [
         'project_id'           => env('FIREBASE_PROJECT_ID', ''),
         'service_account_json' => env('FIREBASE_SERVICE_ACCOUNT_JSON', ''),
     ],
+
+    // PayMongo Online Payment (GCash, Maya, Cards)
+    'paymongo' => [
+        'public_key' => env('PAYMONGO_PUBLIC_KEY', ''),
+        'secret_key' => env('PAYMONGO_SECRET_KEY', ''),
+    ],
 ];
 

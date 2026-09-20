@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\FeedbackController;
 use App\Http\Controllers\Api\InventoryController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PersonalRecordController;
 use App\Http\Controllers\Api\ProgramBookingController;
 use App\Http\Controllers\Api\ProposalController;
@@ -58,6 +59,12 @@ Route::prefix('auth')->group(function () {
         Route::post('/biometric/toggle',         [AuthController::class, 'biometricToggle']);
     });
 });
+
+// ── Payments & PayMongo Webhook (Public / Token-optional) ──────────────────────────────────
+Route::post('/payments/checkout',                  [PaymentController::class, 'checkout']);
+Route::post('/payments/verify-session/{sessionId}', [PaymentController::class, 'verifySession']);
+Route::post('/payments/paymongo/webhook',          [PaymentController::class, 'webhook']);
+Route::get('/payments/receipt/{receiptNumber}',     [PaymentController::class, 'getReceipt']);
 
 // Convenience: return the authenticated user (used by frontend on app boot)
 Route::middleware('auth:sanctum')->get('/user', fn (\Illuminate\Http\Request $r) => $r->user());
@@ -269,6 +276,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/public/{id}',       [ProgramBookingController::class, 'publicShow'])->whereNumber('id');
         Route::post('/{id}/book',        [ProgramBookingController::class, 'book'])->whereNumber('id');
         Route::post('/{id}/book/cancel', [ProgramBookingController::class, 'cancel'])->whereNumber('id');
+    });
+
+    // ── Payments & Online Checkout (PayMongo GCash/Maya/Cash) ───────────────
+    Route::prefix('payments')->group(function () {
+        Route::post('/checkout',                  [PaymentController::class, 'checkout']);
+        Route::post('/verify-session/{sessionId}', [PaymentController::class, 'verifySession']);
     });
 
 });

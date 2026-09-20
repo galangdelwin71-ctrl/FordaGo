@@ -19,6 +19,7 @@ import { CoachingService } from '../services/coaching.service';
 import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refresh.component';
 import { OnboardingService, TourStep } from '../services/onboarding.service';
 import { ToastService } from '../services/toast.service';
+import { PaymentService, OfficialReceipt } from '../services/payment.service';
 import { addIcons } from 'ionicons';
 import {
   searchOutline,
@@ -34,6 +35,9 @@ import {
   personOutline,
   cloudOfflineOutline,
   cubeOutline,
+  phonePortraitOutline,
+  walletOutline,
+  cashOutline,
 } from 'ionicons/icons';
 import { API_URL, resolveImageUrl } from '../config/api.config';
 import { getCachedData, setCachedData } from '../utils/local-cache.util';
@@ -61,7 +65,7 @@ export interface Order {
   product:         Product;
   quantity:        number;
   total:           number;
-  payment_method:  'cash' | 'gcash';
+  payment_method:  'cash' | 'gcash' | 'paymaya';
   status:          'pending' | 'payment_verified' | 'completed' | 'rejected' | 'cancelled';
   date:            Date;
   user_id:         string;
@@ -80,7 +84,7 @@ export interface OrderGroup {
   id:             string;
   items:          Order[];
   total:          number;
-  paymentMethod:  'cash' | 'gcash';
+  paymentMethod:  'cash' | 'gcash' | 'paymaya';
   status:         'pending' | 'payment_verified' | 'completed' | 'rejected' | 'cancelled';
   date:           Date;
   cancelling:     boolean;
@@ -348,7 +352,7 @@ export class InventoryPage implements OnInit {
   // "Checkout", so there is nothing sensitive/durable to store.
   cart: CartItem[] = [];
   cartModalOpen          = false;
-  cartPaymentMethod: 'cash' | 'gcash' = 'cash';
+  cartPaymentMethod: 'cash' | 'gcash' | 'paymaya' = 'gcash';
   checkingOut             = false;
   checkoutError: string   = '';
 
@@ -373,7 +377,7 @@ export class InventoryPage implements OnInit {
   orderSuccessOpen = false;
   lastOrderItems: CartItem[] = [];
   lastOrderTotal   = 0;
-  lastOrderPayment: 'cash' | 'gcash' = 'cash';
+  lastOrderPayment: 'cash' | 'gcash' | 'paymaya' = 'cash';
 
   // ── My Orders State ───────────────────────────────────
   ordersModalOpen = false;
@@ -395,6 +399,7 @@ export class InventoryPage implements OnInit {
     private coachingService: CoachingService,
     public onboardingService: OnboardingService,
     private toast: ToastService,
+    private paymentService: PaymentService,
   ) {
     addIcons({
       searchOutline,
@@ -410,6 +415,9 @@ export class InventoryPage implements OnInit {
       personOutline,
       cloudOfflineOutline,
       cubeOutline,
+      phonePortraitOutline,
+      walletOutline,
+      cashOutline,
     });
   }
 
@@ -841,7 +849,7 @@ export class InventoryPage implements OnInit {
 
     this.http.post<any>(`${this.api}/inventory/cart/checkout`, {
       items: [{ product_id: Number(product.id), quantity }],
-      payment_method: paymentMethod,
+      payment_method: paymentMethod === 'paymaya' ? 'gcash' : paymentMethod,
     }, { headers }).subscribe({
       next: (res) => {
         this.placingOrder = false;
@@ -853,9 +861,58 @@ export class InventoryPage implements OnInit {
         this.lastOrderItems = [{ product, quantity }];
         this.lastOrderTotal = Number(res?.total ?? product.price * quantity);
         this.lastOrderPayment = paymentMethod;
+        const groupId = res?.order_group_id;
 
-        this.closeOrderModal();
-        this.orderSuccessOpen = true;
+        // If online payment (GCash or Maya via PayMongo)
+        if (paymentMethod === 'gcash' || paymentMethod === 'paymaya') {
+          this.paymentService.createCheckout({
+            payment_for: 'order',
+            related_id: groupId,
+            amount: this.lastOrderTotal,
+            payment_channel: paymentMethod,
+            description: `FordaGO Gym Shop Order: ${product.name} (x${quantity})`,
+            items_breakdown: [
+              {
+                name: product.name,
+                quantity: quantity,
+                price: product.price,
+              },
+            ],
+          }).subscribe({
+            next: (payRes) => {
+              this.closeOrderModal();
+              this.lastReceiptNumber = payRes.receipt_number;
+
+              if (payRes.receipt) {
+                this.paymentService.setActiveReceipt(payRes.receipt);
+              }
+
+              // Immediately reflect verified payment in local order state
+              if (groupId) {
+                this.myOrders.filter(o => o.order_group_id === groupId).forEach(o => {
+                  o.status = 'payment_verified';
+                  o.payment_method = paymentMethod;
+                });
+                this.rebuildOrderGroups();
+              }
+
+              if (payRes.is_mock) {
+                this.orderSuccessOpen = true;
+              } else if (payRes.checkout_url) {
+                window.location.href = payRes.checkout_url;
+              } else {
+                this.orderSuccessOpen = true;
+              }
+            },
+            error: () => {
+              this.closeOrderModal();
+              this.orderSuccessOpen = true;
+            },
+          });
+        } else {
+          this.closeOrderModal();
+          this.orderSuccessOpen = true;
+        }
       },
       error: (err) => {
         this.placingOrder = false;
@@ -910,7 +967,7 @@ export class InventoryPage implements OnInit {
 
     this.http.post<any>(`${this.api}/inventory/cart/checkout`, {
       items: [{ product_id: Number(product.id), quantity: 1 }],
-      payment_method: this.cartPaymentMethod,
+      payment_method: this.cartPaymentMethod === 'paymaya' ? 'gcash' : this.cartPaymentMethod,
     }, { headers }).subscribe({
       next: (res) => {
         this.quickOrderingId = null;
@@ -921,10 +978,41 @@ export class InventoryPage implements OnInit {
         this.lastOrderItems = [{ product, quantity: 1 }];
         this.lastOrderTotal = Number(res?.total ?? product.price);
         this.lastOrderPayment = this.cartPaymentMethod;
+        const groupId = res?.order_group_id;
 
-        this.quickOrderConfirmOpen = false;
-        this.quickOrderProduct = null;
-        this.orderSuccessOpen = true;
+        if (this.cartPaymentMethod === 'gcash' || this.cartPaymentMethod === 'paymaya') {
+          this.paymentService.createCheckout({
+            payment_for: 'order',
+            related_id: groupId,
+            amount: this.lastOrderTotal,
+            payment_channel: this.cartPaymentMethod,
+            description: `FordaGO Gym Shop Order (1x ${product.name})`,
+            items_breakdown: [{
+              name: product.name,
+              quantity: 1,
+              price: product.price,
+            }],
+          }).subscribe({
+            next: (payRes) => {
+              this.lastReceiptNumber = payRes.receipt_number;
+              if (payRes.receipt) {
+                this.paymentService.setActiveReceipt(payRes.receipt);
+              }
+              this.quickOrderConfirmOpen = false;
+              this.quickOrderProduct = null;
+              this.orderSuccessOpen = true;
+            },
+            error: () => {
+              this.quickOrderConfirmOpen = false;
+              this.quickOrderProduct = null;
+              this.orderSuccessOpen = true;
+            }
+          });
+        } else {
+          this.quickOrderConfirmOpen = false;
+          this.quickOrderProduct = null;
+          this.orderSuccessOpen = true;
+        }
       },
       error: (err) => {
         this.quickOrderingId = null;
@@ -963,7 +1051,9 @@ export class InventoryPage implements OnInit {
     this.toast.info('Item removed from cart');
   }
 
-  selectCartPaymentMethod(method: 'cash' | 'gcash'): void {
+  lastReceiptNumber: string | null = null;
+
+  selectCartPaymentMethod(method: 'cash' | 'gcash' | 'paymaya'): void {
     this.cartPaymentMethod = method;
   }
 
@@ -983,7 +1073,8 @@ export class InventoryPage implements OnInit {
     this.checkoutError = '';
     this.checkingOut = true;
 
-    const items = this.cart.map(item => ({
+    const cartSnapshot = [...this.cart];
+    const items = cartSnapshot.map(item => ({
       product_id: Number(item.product.id),
       quantity: item.quantity,
     }));
@@ -991,22 +1082,72 @@ export class InventoryPage implements OnInit {
     const headers = { Authorization: `Bearer ${this.auth.token}` };
     this.http.post<any>(`${this.api}/inventory/cart/checkout`, {
       items,
-      payment_method: this.cartPaymentMethod,
+      payment_method: this.cartPaymentMethod === 'paymaya' ? 'gcash' : this.cartPaymentMethod,
     }, { headers }).subscribe({
       next: (res) => {
         this.checkingOut = false;
 
-        // Refresh from server: real stock after decrement, real order rows.
         this.loadProducts();
         this.loadMyOrders();
 
-        this.lastOrderItems = this.cart;
+        this.lastOrderItems = cartSnapshot;
         this.lastOrderTotal = Number(res?.total ?? this.cartTotal);
         this.lastOrderPayment = this.cartPaymentMethod;
+        const groupId = res?.order_group_id;
 
-        this.cart = [];
-        this.orderSuccessOpen = true;
-        this.closeCart();
+        // If online payment (GCash or Maya via PayMongo)
+        if (this.cartPaymentMethod === 'gcash' || this.cartPaymentMethod === 'paymaya') {
+          this.paymentService.createCheckout({
+            payment_for: 'order',
+            related_id: groupId,
+            amount: this.lastOrderTotal,
+            payment_channel: this.cartPaymentMethod,
+            description: `FordaGO Gym Shop Order (${cartSnapshot.length} items)`,
+            items_breakdown: cartSnapshot.map(i => ({
+              name: i.product.name,
+              quantity: i.quantity,
+              price: i.product.price,
+            })),
+          }).subscribe({
+            next: (payRes) => {
+              this.cart = [];
+              this.closeCart();
+              this.lastReceiptNumber = payRes.receipt_number;
+
+              if (payRes.receipt) {
+                this.paymentService.setActiveReceipt(payRes.receipt);
+              }
+
+              // Immediately reflect verified payment in local order state
+              if (groupId) {
+                this.myOrders.filter(o => o.order_group_id === groupId).forEach(o => {
+                  o.status = 'payment_verified';
+                  o.payment_method = this.cartPaymentMethod;
+                });
+                this.rebuildOrderGroups();
+              }
+
+              if (payRes.is_mock) {
+                this.orderSuccessOpen = true;
+              } else if (payRes.checkout_url) {
+                // Real PayMongo portal: redirect customer
+                window.location.href = payRes.checkout_url;
+              } else {
+                this.orderSuccessOpen = true;
+              }
+            },
+            error: () => {
+              this.cart = [];
+              this.closeCart();
+              this.orderSuccessOpen = true;
+            }
+          });
+        } else {
+          // Cash at gym counter
+          this.cart = [];
+          this.orderSuccessOpen = true;
+          this.closeCart();
+        }
       },
       error: (err) => {
         this.checkingOut = false;
@@ -1015,8 +1156,54 @@ export class InventoryPage implements OnInit {
     });
   }
 
+  openReceiptForCurrentOrder(): void {
+    const currentActive = this.paymentService.activeReceipt;
+    const recNum = this.lastReceiptNumber;
+    this.closeOrderSuccess();
+    setTimeout(() => {
+      if (currentActive) {
+        this.paymentService.openReceiptModal(currentActive);
+      } else if (recNum) {
+        this.paymentService.openReceipt(recNum);
+      }
+    }, 200);
+  }
+
   closeOrderSuccess(): void {
     this.orderSuccessOpen = false;
+  }
+
+  viewOrderReceipt(group: OrderGroup): void {
+    const user = (this.auth.user as any) || {};
+    const refNum = 'FGO-REC-' + (group.id ? group.id.replace(/[^0-9]/g, '').slice(-6) : Math.floor(100000 + Math.random() * 900000));
+    const receipt: OfficialReceipt = {
+      club_name: 'FORDAGO FITNESS & WELLNESS CLUB',
+      club_address: 'Poblacion, Bustos, Bulacan, 3007 Philippines',
+      receipt_number: refNum,
+      transaction_date: (group.date || new Date()).toISOString(),
+      paid_at: (group.date || new Date()).toISOString(),
+      customer_name: user?.name || user?.username || 'Valued Member',
+      customer_email: user?.email || '',
+      payment_channel: group.paymentMethod === 'paymaya' ? 'Maya' : (group.paymentMethod === 'gcash' ? 'GCash' : 'Cash'),
+      status: group.status === 'pending' ? 'Pending Payment' : 'PAID',
+      payment_for: `Gym Shop Order (${group.items.length} item${group.items.length > 1 ? 's' : ''})`,
+      currency: 'PHP',
+      amount: group.total,
+      subtotal: group.total,
+      grand_total: group.total,
+      total: group.total,
+      items: group.items.map(it => ({
+        name: it.product.name,
+        quantity: it.quantity,
+        price: it.product.price,
+        subtotal: it.total,
+      })),
+      gateway: group.paymentMethod !== 'cash' ? 'PayMongo Online Gateway' : 'In-Store Cash Counter',
+      gateway_ref: group.id,
+      notes: 'Customer Order from FordaGO Shop',
+    };
+    // Open the receipt modal on top of the orders modal
+    this.paymentService.openReceiptModal(receipt);
   }
 
   // ── Orders Modal ───────────────────────────────────────
@@ -1084,7 +1271,7 @@ export class InventoryPage implements OnInit {
           product: { name: o.product_name_db || 'Unknown product' } as any,
           quantity: o.quantity,
           total: o.total,
-          payment_method: (o.group_payment_method || o.payment_method || 'cash') as 'cash' | 'gcash',
+          payment_method: (o.group_payment_method || o.payment_method || 'cash') as 'cash' | 'gcash' | 'paymaya',
           status: o.status === 'approved' ? 'payment_verified' :
                   o.status === 'rejected' ? 'rejected' :
                   o.status === 'cancelled' ? 'cancelled' :

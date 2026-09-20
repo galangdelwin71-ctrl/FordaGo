@@ -441,7 +441,11 @@ class AuthController extends Controller
 
         $username                = $this->buildUniqueUsername($firstName, $lastName);
         $normalizedMembershipType = $membershipType === 'daily' ? 'daily' : 'premium';
-        $normalizedPaymentMethod  = $paymentMethod  === 'gcash' ? 'gcash' : 'cash';
+        $normalizedPaymentMethod  = match ($paymentMethod) {
+            'gcash'           => 'gcash',
+            'paymaya', 'maya' => 'paymaya',
+            default           => 'cash',
+        };
 
         $rawHeight = $request->input('height');
         $rawWeight = $request->input('weight');
@@ -520,10 +524,14 @@ class AuthController extends Controller
             : ['sent' => false, 'skippedReason' => 'No phone number provided'];
 
         return response()->json([
-            'message'     => 'Registration submitted. Please wait for admin verification before login.',
-            'smsSent'     => (bool) ($smsResult['sent'] ?? false),
-            'smsProvider' => $smsResult['provider'] ?? null,
-            'smsReason'   => ($smsResult['sent'] ?? false) ? null : ($smsResult['skippedReason'] ?? $smsResult['error'] ?? 'SMS not sent'),
+            'message'        => 'Registration submitted. Please wait for admin verification before login.',
+            'userId'         => $user->id,
+            'username'       => $user->username,
+            'membershipType' => $normalizedMembershipType,
+            'paymentMethod'  => $normalizedPaymentMethod,
+            'smsSent'        => (bool) ($smsResult['sent'] ?? false),
+            'smsProvider'    => $smsResult['provider'] ?? null,
+            'smsReason'      => ($smsResult['sent'] ?? false) ? null : ($smsResult['skippedReason'] ?? $smsResult['error'] ?? 'SMS not sent'),
         ]);
     }
 

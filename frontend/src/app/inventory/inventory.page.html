@@ -137,11 +137,11 @@
             </button>
             <button
               class="order-btn place-btn"
-              [disabled]="product.stock === 0 || quickOrderingId === product.id"
-              (click)="openQuickOrderConfirm(product, $event)"
+              [disabled]="product.stock === 0"
+              (click)="openOrderModal(product); $event.stopPropagation()"
             >
               <ion-icon name="flash-outline"></ion-icon>
-              Order
+              Buy
             </button>
           </div>
         </div>
@@ -185,8 +185,8 @@
 <ion-modal
   [isOpen]="orderModalOpen"
   (didDismiss)="closeOrderModal()"
-  [breakpoints]="[0, 0.78, 1]"
-  [initialBreakpoint]="0.78"
+  [breakpoints]="[0, 1]"
+  [initialBreakpoint]="1"
   [handle]="true"
   class="bottom-sheet-modal"
 >
@@ -235,23 +235,62 @@
 
       <!-- Total Amount -->
       <div class="total-box">
-        <span class="total-label">Order Total</span>
+        <span class="total-label">Total Amount</span>
         <span class="total-price">₱{{ selectedProduct.price * orderQty }}</span>
       </div>
 
       <!-- Payment Method -->
       <div class="payment-section">
         <div class="section-title">Payment Method</div>
-        <div class="payment-options single-option">
-          <div class="payment-option selected single" style="cursor: default; width: 100%;">
-            <span class="payment-icon"><ion-icon name="card-outline"></ion-icon></span>
-            <span class="payment-label">Cash / Online Payment</span>
-            <span class="payment-desc">Pay at gym counter upon pickup</span>
+        <div class="payment-options">
+          <div
+            class="payment-option"
+            [class.selected]="cartPaymentMethod === 'gcash'"
+            (click)="selectCartPaymentMethod('gcash')"
+          >
+            <span class="payment-icon gcash-icon">
+              <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="28" height="28">
+                <rect width="64" height="64" rx="14" fill="#007DFE"/>
+                <path d="M32 14C22.06 14 14 22.06 14 32s8.06 18 18 18 18-8.06 18-18H32V32h12c0 6.63-5.37 12-12 12S20 38.63 20 32s5.37-12 12-12c3.1 0 5.91 1.17 8.04 3.1l4.25-4.25C40.57 16.44 36.47 14 32 14z" fill="white"/>
+              </svg>
+            </span>
+            <span class="payment-label">GCash</span>
+            <span class="payment-desc">Online payment</span>
+          </div>
+
+          <div
+            class="payment-option"
+            [class.selected]="cartPaymentMethod === 'paymaya'"
+            (click)="selectCartPaymentMethod('paymaya')"
+          >
+            <span class="payment-icon maya-icon">
+              <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="28" height="28">
+                <rect width="64" height="64" rx="14" fill="#00C373"/>
+                <text x="32" y="40" text-anchor="middle" font-size="22" font-weight="900" font-family="Arial,sans-serif" fill="white">Maya</text>
+              </svg>
+            </span>
+            <span class="payment-label">Maya</span>
+            <span class="payment-desc">Online payment</span>
+          </div>
+
+          <div
+            class="payment-option"
+            [class.selected]="cartPaymentMethod === 'cash'"
+            (click)="selectCartPaymentMethod('cash')"
+          >
+            <span class="payment-icon">
+              <ion-icon name="cash-outline" style="font-size:28px"></ion-icon>
+            </span>
+            <span class="payment-label">Cash</span>
+            <span class="payment-desc">Pay at counter</span>
           </div>
         </div>
       </div>
 
       </div><!-- end modal-scroll-body -->
+
+      <!-- Flex spacer: absorbs leftover height, max 32px, keeps buttons snug -->
+      <div class="flex-modal-spacer"></div>
 
       <!-- Order Error -->
       <div class="order-error-box" *ngIf="orderError" role="alert">
@@ -279,56 +318,21 @@
           (click)="placeOrderNow()"
         >
           <ion-icon name="flash-outline"></ion-icon>
-          {{ placingOrder ? 'Placing Order…' : 'Place Order Now' }}
+          {{ placingOrder ? 'Processing…' : 'Buy Now' }}
         </button>
       </div>
     </div>
   </ng-template>
 </ion-modal>
 
-<!-- Quick Order Confirm Modal -->
-<ion-modal
-  [isOpen]="quickOrderConfirmOpen"
-  (didDismiss)="closeQuickOrderConfirm()"
-  [breakpoints]="[0, 0.45, 1]"
-  [initialBreakpoint]="0.45"
-  [handle]="true"
-  class="bottom-sheet-modal"
->
-  <ng-template>
-    <div class="modal-sheet quick-confirm-sheet" *ngIf="quickOrderProduct as p">
-      <div class="modal-handle"></div>
 
-      <div class="quick-confirm-body">
-        <div class="quick-confirm-img-wrap">
-          <img *ngIf="p.image_url" [src]="resolveImg(p.image_url)" [alt]="p.name" />
-          <span *ngIf="!p.image_url" class="quick-confirm-fallback">{{ p.icon }}</span>
-        </div>
-        <div class="quick-confirm-title">Order {{ p.name }}?</div>
-        <div class="quick-confirm-sub">1 unit &middot; ₱{{ p.price }}</div>
-      </div>
-
-      <div class="order-error-box" *ngIf="quickOrderConfirmError" role="alert">
-        <ion-icon name="alert-circle-outline"></ion-icon>
-        <span>{{ quickOrderConfirmError }}</span>
-      </div>
-
-      <div class="modal-actions">
-        <button class="action-btn cancel" [disabled]="quickOrderingId === p.id" (click)="closeQuickOrderConfirm()">Cancel</button>
-        <button class="action-btn confirm" [disabled]="quickOrderingId === p.id" (click)="confirmQuickOrder()">
-          {{ quickOrderingId === p.id ? 'Placing…' : 'Yes, Order' }}
-        </button>
-      </div>
-    </div>
-  </ng-template>
-</ion-modal>
 
 <!-- Cart Modal -->
 <ion-modal
   [isOpen]="cartModalOpen"
   (didDismiss)="closeCart()"
-  [breakpoints]="[0, 0.75, 1]"
-  [initialBreakpoint]="0.75"
+  [breakpoints]="[0, 1]"
+  [initialBreakpoint]="1"
   [handle]="true"
   class="bottom-sheet-modal cart-sheet-modal"
 >
@@ -389,15 +393,54 @@
 
         <div class="payment-section" *ngIf="cart.length > 0">
           <div class="section-title">Payment Method</div>
-          <div class="payment-options single-option">
-            <div class="payment-option selected single" style="cursor: default; width: 100%;">
-              <span class="payment-icon"><ion-icon name="card-outline"></ion-icon></span>
-              <span class="payment-label">Cash / Online Payment</span>
-              <span class="payment-desc">Pay at gym counter upon pickup</span>
+          <div class="payment-options">
+            <div
+              class="payment-option"
+              [class.selected]="cartPaymentMethod === 'gcash'"
+              (click)="selectCartPaymentMethod('gcash')"
+            >
+              <span class="payment-icon gcash-icon">
+                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="28" height="28">
+                  <rect width="64" height="64" rx="14" fill="#007DFE"/>
+                  <path d="M32 14C22.06 14 14 22.06 14 32s8.06 18 18 18 18-8.06 18-18H32V32h12c0 6.63-5.37 12-12 12S20 38.63 20 32s5.37-12 12-12c3.1 0 5.91 1.17 8.04 3.1l4.25-4.25C40.57 16.44 36.47 14 32 14z" fill="white"/>
+                </svg>
+              </span>
+              <span class="payment-label">GCash</span>
+              <span class="payment-desc">Online payment</span>
+            </div>
+
+            <div
+              class="payment-option"
+              [class.selected]="cartPaymentMethod === 'paymaya'"
+              (click)="selectCartPaymentMethod('paymaya')"
+            >
+              <span class="payment-icon maya-icon">
+                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="28" height="28">
+                  <rect width="64" height="64" rx="14" fill="#00C373"/>
+                  <text x="32" y="40" text-anchor="middle" font-size="22" font-weight="900" font-family="Arial,sans-serif" fill="white">Maya</text>
+                </svg>
+              </span>
+              <span class="payment-label">Maya</span>
+              <span class="payment-desc">Online payment</span>
+            </div>
+
+            <div
+              class="payment-option"
+              [class.selected]="cartPaymentMethod === 'cash'"
+              (click)="selectCartPaymentMethod('cash')"
+            >
+              <span class="payment-icon">
+                <ion-icon name="cash-outline" style="font-size:28px"></ion-icon>
+              </span>
+              <span class="payment-label">Cash</span>
+              <span class="payment-desc">Pay at counter</span>
             </div>
           </div>
         </div>
       </div><!-- end modal-scroll-body -->
+
+      <!-- Flex spacer -->
+      <div class="flex-modal-spacer"></div>
 
       <!-- Sticky footer: error + action buttons always visible at bottom -->
       <div class="cart-sticky-footer">
@@ -413,7 +456,7 @@
             [disabled]="cart.length === 0 || checkingOut"
             (click)="checkoutCart()"
           >
-            {{ checkingOut ? 'Placing Order…' : 'Checkout (' + cartItemCount + ')' }}
+            {{ checkingOut ? 'Processing…' : 'Buy Now (' + cartItemCount + ')' }}
           </button>
         </div>
       </div>
@@ -421,68 +464,93 @@
   </ng-template>
 </ion-modal>
 
-<!-- Order Success Modal -->
+<!-- Order Success Modal (Ultra-Clean Modern Aesthetic Fintech Style - Centered Dialog, Always 100% Visible) -->
 <ion-modal
   [isOpen]="orderSuccessOpen"
   (didDismiss)="closeOrderSuccess()"
-  [breakpoints]="[0, 0.7, 1]"
-  [initialBreakpoint]="0.7"
-  [handle]="true"
-  class="bottom-sheet-modal"
+  class="centered-dialog-modal modern-success-modal"
+  [backdropDismiss]="false"
 >
   <ng-template>
-    <div class="modal-sheet">
-      <div class="modal-handle"></div>
+    <div class="modal-sheet modern-success-dialog">
       
-      <div class="modal-scroll-body">
-      <div class="success-wrap">
-        <div class="success-icon">✅</div>
-        <div class="success-title">Order Placed!</div>
-        <div class="success-message">Proceed to counter for payment & pickup</div>
+      <div class="modal-scroll-body modern-success-body">
         
-        <div class="order-summary-box">
-          <div class="summary-item" *ngFor="let item of lastOrderItems">
-            <span class="summary-label">{{ item.product.name }} × {{ item.quantity }}</span>
-            <span class="summary-value">₱{{ item.product.price * item.quantity }}</span>
+        <!-- Hero Header with Glowing Modern Checkmark -->
+        <div class="modern-hero-header">
+          <div class="modern-badge-glow" [class.cash-badge]="lastOrderPayment === 'cash'">
+            <ion-icon name="checkmark-circle"></ion-icon>
           </div>
-          <div class="summary-divider"></div>
-          <div class="summary-item">
-            <span class="summary-label">Total Amount</span>
-            <span class="summary-value price">₱{{ lastOrderTotal }}</span>
+          <h2 class="modern-hero-title">
+            {{ lastOrderPayment === 'cash' ? 'Order Placed!' : 'Payment Confirmed!' }}
+          </h2>
+          <p class="modern-hero-sub">
+            <span *ngIf="lastOrderPayment !== 'cash'">Paid via {{ lastOrderPayment === 'paymaya' ? 'Maya' : 'GCash' }} • </span>
+            <span>Recorded on Admin Monitor</span>
+          </p>
+        </div>
+
+        <!-- Glass Order Summary Card -->
+        <div class="modern-summary-card">
+          <div class="card-items-wrap">
+            <div class="card-item-row" *ngFor="let item of lastOrderItems">
+              <div class="card-item-info">
+                <span class="card-item-name">{{ item.product.name }}</span>
+                <span class="card-item-qty">×{{ item.quantity }}</span>
+              </div>
+              <span class="card-item-price">₱{{ (item.product.price * item.quantity) | number:'1.2-2' }}</span>
+            </div>
           </div>
-          <div class="summary-item">
-            <span class="summary-label">Payment Method</span>
-            <span class="summary-value">Cash or Online at Counter</span>
-          </div>
-          <div class="summary-item">
-            <span class="summary-label">Status</span>
-            <span class="summary-value status-pending">⏳ Waiting Payment</span>
+
+          <div class="card-divider"></div>
+
+          <!-- Total & Reference -->
+          <div class="card-meta-grid">
+            <div class="card-meta-line">
+              <span class="meta-lbl">Total Paid</span>
+              <span class="meta-val grand-price">₱{{ lastOrderTotal | number:'1.2-2' }}</span>
+            </div>
+            <div class="card-meta-line">
+              <span class="meta-lbl">Order Ref No.</span>
+              <span class="meta-val ref-badge" *ngIf="lastReceiptNumber">{{ lastReceiptNumber }}</span>
+            </div>
           </div>
         </div>
 
-        <div class="instruction-box">
-          <div class="instruction-title">What's Next?</div>
-          <div class="instruction-steps">
-            <div class="step">
-              <span class="step-num">1</span>
-              <span class="step-text">Go to counter with this order</span>
+        <!-- Modern Pickup Instruction Card (English) -->
+        <div class="modern-pickup-card" [class.cash-mode]="lastOrderPayment === 'cash'">
+          <div class="pickup-card-icon">📍</div>
+          <div class="pickup-card-content">
+            <div class="pickup-title">
+              {{ lastOrderPayment === 'cash' ? 'Counter Payment & Pickup' : 'Ready for Counter Pickup' }}
             </div>
-            <div class="step">
-              <span class="step-num">2</span>
-              <span class="step-text">Pay ₱{{ lastOrderTotal }} (Cash or Online Payment) to the cashier/admin</span>
+            <div class="pickup-desc" *ngIf="lastOrderPayment !== 'cash'">
+              Already verified as <strong>PAID</strong> on the counter terminal. Just state your <strong>Name</strong> or <strong>Ref #{{ lastReceiptNumber }}</strong> to claim.
             </div>
-            <div class="step">
-              <span class="step-num">3</span>
-              <span class="step-text">Admin confirms payment & gives your order</span>
+            <div class="pickup-desc" *ngIf="lastOrderPayment === 'cash'">
+              Please proceed to the counter and pay <strong>₱{{ lastOrderTotal | number:'1.2-2' }}</strong> to collect your item.
             </div>
           </div>
         </div>
-      </div>
+
       </div><!-- end modal-scroll-body -->
 
-      <div class="modal-actions">
-        <button class="action-btn confirm" style="grid-column: 1 / -1;" (click)="closeOrderSuccess()">Done</button>
+      <!-- Sticky Bottom Action Footer: 100% Always Visible Without Scrolling -->
+      <div class="modern-sticky-footer">
+        <button
+          *ngIf="lastReceiptNumber"
+          type="button"
+          class="modern-btn receipt-btn"
+          (click)="openReceiptForCurrentOrder()"
+        >
+          <ion-icon name="receipt-outline"></ion-icon>
+          <span>View E-Receipt</span>
+        </button>
+        <button type="button" class="modern-btn done-btn" (click)="closeOrderSuccess()">
+          <span>Done</span>
+        </button>
       </div>
+
     </div>
   </ng-template>
 </ion-modal>
@@ -491,8 +559,8 @@
 <ion-modal
   [isOpen]="ordersModalOpen"
   (didDismiss)="closeOrders()"
-  [breakpoints]="[0, 0.78, 1]"
-  [initialBreakpoint]="0.78"
+  [breakpoints]="[0, 1]"
+  [initialBreakpoint]="1"
   [handle]="true"
   class="bottom-sheet-modal"
 >
@@ -549,18 +617,27 @@
               </div>
               <div class="detail-item">
                 <span class="detail-label">Payment</span>
-                <span class="detail-value">{{ group.paymentMethod === 'cash' ? 'Cash' : 'GCash' }}</span>
+                <span class="detail-value">{{ group.paymentMethod === 'cash' ? 'Cash' : (group.paymentMethod === 'paymaya' ? 'Maya' : 'GCash') }}</span>
               </div>
             </div>
 
-            <button
-              class="cancel-order-btn"
-              *ngIf="group.status === 'pending'"
-              [disabled]="group.cancelling"
-              (click)="cancelOrder(group)"
-            >
-              {{ group.cancelling ? 'Cancelling…' : 'Cancel Order' }}
-            </button>
+            <div class="order-card-actions" style="display: flex; gap: 8px; margin-top: 10px;">
+              <button
+                class="view-order-receipt-btn"
+                (click)="viewOrderReceipt(group)"
+              >
+                <ion-icon name="receipt-outline"></ion-icon>
+                <span>Receipt</span>
+              </button>
+              <button
+                class="cancel-order-btn"
+                *ngIf="group.status === 'pending'"
+                [disabled]="group.cancelling"
+                (click)="cancelOrder(group)"
+              >
+                {{ group.cancelling ? 'Cancelling…' : 'Cancel' }}
+              </button>
+            </div>
           </div>
         </div>
       </div><!-- end modal-scroll-body -->

@@ -162,6 +162,10 @@ export class AuthService {
     return this.userSubject.value;
   }
 
+  get currentUser() {
+    return this.userSubject.value;
+  }
+
   isAdmin() {
     return this.user && this.user.role === 'admin';
   }

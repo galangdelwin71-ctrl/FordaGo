@@ -684,20 +684,53 @@
         </div>
 
         <div *ngIf="reg.membership_type === 'premium'" class="payment-section">
-          <span class="section-lbl">Payment Details</span>
+          <span class="section-lbl">Choose Payment Method (₱500)</span>
 
-          <div class="payment-options single-option">
-            <div class="pay-opt active single">
+          <div class="payment-options channel-options">
+            <button
+              type="button"
+              class="pay-opt"
+              [class.active]="reg.payment_method === 'gcash'"
+              (click)="reg.payment_method = 'gcash'"
+            >
+              <ion-icon name="flash-outline" aria-hidden="true"></ion-icon>
+              <span>GCash (Online)</span>
+            </button>
+
+            <button
+              type="button"
+              class="pay-opt"
+              [class.active]="reg.payment_method === 'paymaya'"
+              (click)="reg.payment_method = 'paymaya'"
+            >
+              <ion-icon name="card-outline" aria-hidden="true"></ion-icon>
+              <span>Maya (Online)</span>
+            </button>
+
+            <button
+              type="button"
+              class="pay-opt"
+              [class.active]="reg.payment_method === 'cash'"
+              (click)="reg.payment_method = 'cash'"
+            >
               <ion-icon name="cash-outline" aria-hidden="true"></ion-icon>
-              <span>Cash / Online Payment (Pay at Counter)</span>
-            </div>
+              <span>Cash (Counter)</span>
+            </button>
           </div>
 
-          <div class="info-box">
+          <div class="info-box" *ngIf="reg.payment_method === 'gcash' || reg.payment_method === 'paymaya'">
+            <ion-icon name="flash-outline" aria-hidden="true"></ion-icon>
+            <p>
+              <strong>Instant Online Activation (₱500 via {{ reg.payment_method === 'gcash' ? 'GCash' : 'Maya' }}):</strong>
+              You will be able to complete payment securely via PayMongo right after registration and receive an official electronic receipt.
+            </p>
+          </div>
+
+          <div class="info-box" *ngIf="reg.payment_method === 'cash'">
             <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
             <p>
-              <strong>Premium membership requires payment before activation.</strong>
-              Please proceed to the front desk / gym counter to pay ₱500 (via Cash or Counter QR/Online Payment). The admin will confirm your payment and activate your account.
+              <strong>Pay Cash at Gym Counter (₱500):</strong>
+              Please proceed to the gym front desk upon your visit to settle payment with staff and activate your account.
             </p>
           </div>
         </div>
@@ -807,10 +840,14 @@
           </div>
 
           <div class="summary-row" *ngIf="reg.membership_type === 'premium'">
-            <span class="summary-icon"><ion-icon name="cash-outline"></ion-icon></span>
+            <span class="summary-icon">
+              <ion-icon [name]="reg.payment_method === 'cash' ? 'cash-outline' : (reg.payment_method === 'paymaya' ? 'card-outline' : 'flash-outline')"></ion-icon>
+            </span>
             <span class="summary-copy">
               <small>Payment</small>
-              <strong>Cash or Online Payment at Counter</strong>
+              <strong>
+                {{ reg.payment_method === 'gcash' ? 'GCash (₱500 Online via PayMongo)' : (reg.payment_method === 'paymaya' ? 'Maya (₱500 Online via PayMongo)' : 'Cash at Gym Counter (₱500)') }}
+              </strong>
             </span>
           </div>
         </div>
@@ -822,10 +859,17 @@
           </p>
         </div>
 
-        <div class="info-box" *ngIf="reg.membership_type === 'premium'">
+        <div class="info-box" *ngIf="reg.membership_type === 'premium' && (reg.payment_method === 'gcash' || reg.payment_method === 'paymaya')">
+          <ion-icon name="flash-outline" aria-hidden="true"></ion-icon>
+          <p>
+            After clicking <strong>Create Account</strong>, you can instantly pay ₱500 via {{ reg.payment_method === 'gcash' ? 'GCash' : 'Maya' }} (PayMongo) for immediate account activation and official E-Receipt.
+          </p>
+        </div>
+
+        <div class="info-box" *ngIf="reg.membership_type === 'premium' && reg.payment_method === 'cash'">
           <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
           <p>
-            After registration, pay ₱500 at the gym counter (Cash or Online Payment). Your account becomes available after admin approval.
+            After registration, pay ₱500 at the gym counter (Cash). Your account will be activated upon staff verification.
           </p>
         </div>
 
@@ -856,19 +900,61 @@
 
       <!-- REGISTRATION SUCCESS -->
       <section *ngIf="regSuccess" class="view-panel success-box">
-        <span class="success-icon pending-icon">
-          <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+        <span class="success-icon" [class.pending-icon]="!regOnlinePaid">
+          <ion-icon [name]="regOnlinePaid ? 'checkmark-circle' : 'time-outline'" aria-hidden="true"></ion-icon>
         </span>
 
-        <h2>Registration Submitted</h2>
+        <h2>{{ regOnlinePaid ? 'Account Activated & Paid!' : 'Registration Submitted' }}</h2>
 
         <p *ngIf="regSuccessMembershipType === 'daily'">
           Your Daily Pass account is waiting for admin verification. After approval, you can sign in and pay ₱40 for each verified visit.
         </p>
 
-        <p *ngIf="regSuccessMembershipType === 'premium'">
-          Your Premium registration is waiting for admin verification. Please pay ₱500 at the gym counter (Cash or Online Payment) before activation.
+        <!-- Premium + Cash -->
+        <p *ngIf="regSuccessMembershipType === 'premium' && regSuccessPaymentMethod === 'cash'">
+          Your Premium registration has been submitted. Please proceed to the gym counter to pay ₱500 (Cash) and activate your account.
         </p>
+
+        <!-- Premium + Online Paid (Instant or Return Trip) -->
+        <div *ngIf="regSuccessMembershipType === 'premium' && regOnlinePaid" class="online-pay-success-card">
+          <div class="paid-badge-chip">
+            <ion-icon name="checkmark-circle"></ion-icon>
+            <span>PAID & ACTIVATED</span>
+          </div>
+          <p class="paid-desc">
+            Your 1-Month Premium Membership is now active! Official Receipt: <strong>#{{ regReceiptNumber }}</strong>
+          </p>
+          <button type="button" class="view-receipt-btn" (click)="openRegistrationReceipt()">
+            <ion-icon name="receipt-outline"></ion-icon>
+            <span>View Official E-Receipt</span>
+          </button>
+        </div>
+
+        <!-- Premium + Online Unpaid Action Card -->
+        <div *ngIf="regSuccessMembershipType === 'premium' && !regOnlinePaid && (regSuccessPaymentMethod === 'gcash' || regSuccessPaymentMethod === 'paymaya')" class="online-pay-action-card">
+          <div class="pay-card-header">
+            <ion-icon [name]="regSuccessPaymentMethod === 'paymaya' ? 'card-outline' : 'flash-outline'"></ion-icon>
+            <div>
+              <strong>1-Month Premium Membership</strong>
+              <span class="pay-amount">₱500.00 via {{ regSuccessPaymentMethod === 'paymaya' ? 'Maya' : 'GCash' }}</span>
+            </div>
+          </div>
+          <p class="pay-card-note">
+            Pay online now to activate your account instantly with zero waiting time at the counter!
+          </p>
+          <button
+            type="button"
+            class="pay-now-btn"
+            [class.pay-gcash]="regSuccessPaymentMethod === 'gcash'"
+            [class.pay-maya]="regSuccessPaymentMethod === 'paymaya'"
+            [disabled]="regPaymentLoading"
+            (click)="payOnlineRegistration()"
+          >
+            <ion-spinner *ngIf="regPaymentLoading" name="crescent"></ion-spinner>
+            <ion-icon *ngIf="!regPaymentLoading" [name]="regSuccessPaymentMethod === 'paymaya' ? 'card-outline' : 'flash-outline'"></ion-icon>
+            <span>{{ regPaymentLoading ? 'Connecting to PayMongo...' : ('Pay ₱500 Online via ' + (regSuccessPaymentMethod === 'paymaya' ? 'Maya' : 'GCash')) }}</span>
+          </button>
+        </div>
 
         <div class="status-note" *ngIf="regSuccessPhone && regSuccessSmsSent">
           <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>

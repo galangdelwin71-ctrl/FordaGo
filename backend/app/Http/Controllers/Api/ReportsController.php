@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Feedback;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Ported from server/routes/reports.js.
@@ -91,9 +92,41 @@ class ReportsController extends Controller
             ORDER BY u.created_at DESC
         ", [$userId]);
 
-        $combined = collect(array_merge($attendance, $orders, $memberships))
+        $payments = [];
+        if (Schema::hasTable('payments')) {
+            $payWhere = $period !== 'all' ? 'AND ' . $this->periodWhere($period, 'pay.created_at') : '';
+            $payments = DB::select("
+                SELECT
+                    pay.id,
+                    'online_payment' AS source,
+                    pay.created_at AS transaction_date,
+                    pay.payment_channel AS sub_type,
+                    pay.status AS payment_status,
+                    pay.payment_channel AS payment_method,
+                    pay.amount,
+                    CASE
+                        WHEN pay.payment_for = 'membership' THEN 'Premium Membership (Online)'
+                        WHEN pay.payment_for = 'order' THEN 'Shop Purchase (Online)'
+                        WHEN pay.payment_for = 'program' THEN 'Class Booking (Online)'
+                        WHEN pay.payment_for = 'attendance' THEN 'Daily Pass (Online)'
+                        ELSE 'Online Payment'
+                    END AS type_label,
+                    NULL AS confirmed_at,
+                    CONCAT(UPPER(pay.payment_channel), ' • Ref: ', pay.receipt_number) AS product_name,
+                    1 AS quantity,
+                    pay.receipt_number
+                FROM payments pay
+                WHERE pay.user_id = ? {$payWhere}
+                ORDER BY pay.created_at DESC
+            ", [$userId]);
+        }
+
+        $combined = collect(array_merge($payments, $attendance, $orders, $memberships))
             ->map(function ($row) {
                 $row->amount = (float) $row->amount;
+                if (! isset($row->receipt_number)) {
+                    $row->receipt_number = null;
+                }
                 return $row;
             })
             ->sortByDesc('transaction_date')
@@ -179,9 +212,45 @@ class ReportsController extends Controller
             ORDER BY u.created_at DESC
         ");
 
-        $combined = collect(array_merge($attendance, $orders, $memberships))
+        $payments = [];
+        if (Schema::hasTable('payments')) {
+            $payWhere = $period !== 'all' ? 'WHERE ' . $this->periodWhere($period, 'pay.created_at') : '';
+            $payments = DB::select("
+                SELECT
+                    pay.id,
+                    'online_payment' AS source,
+                    u.id AS user_id,
+                    COALESCE(u.username, pay.customer_details->>'$.username', 'Member') AS username,
+                    COALESCE(u.email, pay.customer_details->>'$.email', '') AS email,
+                    u.profile_image,
+                    pay.created_at AS transaction_date,
+                    pay.payment_channel AS sub_type,
+                    pay.status AS payment_status,
+                    pay.payment_channel AS payment_method,
+                    pay.amount,
+                    CASE
+                        WHEN pay.payment_for = 'membership' THEN 'Premium Membership (Online)'
+                        WHEN pay.payment_for = 'order' THEN 'Shop Purchase (Online)'
+                        WHEN pay.payment_for = 'program' THEN 'Class Booking (Online)'
+                        WHEN pay.payment_for = 'attendance' THEN 'Daily Pass (Online)'
+                        ELSE 'Online Payment'
+                    END AS type_label,
+                    CONCAT(UPPER(pay.payment_channel), ' • Ref: ', pay.receipt_number) AS product_name,
+                    1 AS quantity,
+                    pay.receipt_number
+                FROM payments pay
+                LEFT JOIN users u ON pay.user_id = u.id
+                {$payWhere}
+                ORDER BY pay.created_at DESC
+            ");
+        }
+
+        $combined = collect(array_merge($payments, $attendance, $orders, $memberships))
             ->map(function ($row) {
                 $row->amount = (float) $row->amount;
+                if (! isset($row->receipt_number)) {
+                    $row->receipt_number = null;
+                }
                 return $row;
             })
             ->sortByDesc('transaction_date')

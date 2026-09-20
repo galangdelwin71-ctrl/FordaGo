@@ -384,12 +384,27 @@
           </div>
         </div>
 
+        <!-- Instant Online Payment Options -->
+        <div class="online-pay-section">
+          <div class="online-pay-title">Instant Online Payment</div>
+          <div class="online-pay-grid">
+            <button type="button" class="btn-online-channel gcash" (click)="payOnlineDailyPass('gcash')" [disabled]="isProcessingPayment">
+              <span class="channel-badge gcash">GCASH</span>
+              <span class="channel-text">Pay ₱100</span>
+            </button>
+            <button type="button" class="btn-online-channel maya" (click)="payOnlineDailyPass('maya')" [disabled]="isProcessingPayment">
+              <span class="channel-badge maya">MAYA</span>
+              <span class="channel-text">Pay ₱100</span>
+            </button>
+          </div>
+        </div>
+
         <div class="pending-btn-row">
-          <button type="button" class="btn-check-status-gold" (click)="checkMyLatestAttendanceStatus(true)" [disabled]="isVerifyingPayment">
+          <button type="button" class="btn-check-status-gold" (click)="checkMyLatestAttendanceStatus(true)" [disabled]="isVerifyingPayment || isProcessingPayment">
             <ion-spinner *ngIf="isVerifyingPayment" name="dots"></ion-spinner>
             <ng-container *ngIf="!isVerifyingPayment">
-              <ion-icon name="refresh-outline"></ion-icon>
-              <span>I've Paid at the Counter</span>
+              <ion-icon name="cash-outline"></ion-icon>
+              <span>I've Paid Cash at Counter</span>
             </ng-container>
           </button>
           <button type="button" class="btn-dismiss-text" (click)="closePendingModal()">
@@ -448,10 +463,16 @@
           </div>
         </div>
 
-        <button class="gold-cta-btn" (click)="closePendingModal()">
-          <span>Done · Start Workout</span>
-          <ion-icon name="arrow-forward-outline"></ion-icon>
-        </button>
+        <div class="confirmed-action-col">
+          <button type="button" class="receipt-cta-btn" (click)="viewDailyReceipt()">
+            <ion-icon name="receipt-outline"></ion-icon>
+            <span>View Official E-Receipt</span>
+          </button>
+          <button class="gold-cta-btn" (click)="closePendingModal()">
+            <span>Done · Start Workout</span>
+            <ion-icon name="arrow-forward-outline"></ion-icon>
+          </button>
+        </div>
       </ng-container>
 
     </div>

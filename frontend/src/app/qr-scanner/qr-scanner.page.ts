@@ -23,6 +23,7 @@ import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refres
 import { OnboardingService, TourStep } from '../services/onboarding.service';
 import { API_URL, resolveImageUrl } from '../config/api.config';
 import { ToastService } from '../services/toast.service';
+import { PaymentService, OfficialReceipt } from '../services/payment.service';
 import { EquipmentGuideService } from '../services/equipment-guide.service';
 import { EquipmentFullGuide, ExerciseVariation } from '../data/equipment-guides.data';
 
@@ -281,7 +282,85 @@ export class QrScannerPage implements OnInit, OnDestroy {
     public onboardingService: OnboardingService,
     public guideService: EquipmentGuideService,
     private sanitizer: DomSanitizer,
+    public paymentService: PaymentService,
   ) {}
+
+  isProcessingPayment = false;
+  latestPaymentReceipt: OfficialReceipt | null = null;
+
+  payOnlineDailyPass(channel: 'gcash' | 'maya'): void {
+    if (!this.pendingAttendanceId) return;
+    this.isProcessingPayment = true;
+
+    this.paymentService.createCheckout({
+      payment_for: 'attendance',
+      payment_channel: channel,
+      amount: 100,
+      currency: 'PHP',
+      items: [
+        {
+          name: 'Daily Gym Pass Access',
+          quantity: 1,
+          unit_price: 100,
+          amount: 100
+        }
+      ],
+      metadata: {
+        attendance_id: this.pendingAttendanceId,
+        user_id: this.auth.user?.id
+      }
+    }).subscribe({
+      next: (res) => {
+        this.isProcessingPayment = false;
+        if (res.status === 'paid') {
+          this.toast.success(`Daily pass paid via ${channel.toUpperCase()}!`);
+          if (res.receipt) {
+            this.latestPaymentReceipt = res.receipt;
+          }
+          this.handlePaymentConfirmed();
+        } else if (res.checkout_url) {
+          window.location.href = res.checkout_url;
+        }
+      },
+      error: (err) => {
+        this.isProcessingPayment = false;
+        this.toast.error(err.error?.message || 'Payment initiation failed. Please try again or pay at counter.');
+      }
+    });
+  }
+
+  viewDailyReceipt(): void {
+    if (this.latestPaymentReceipt) {
+      this.paymentService.openReceipt(this.latestPaymentReceipt);
+    } else {
+      const user = this.auth.user;
+      const nowIso = new Date().toISOString();
+      this.paymentService.openReceipt({
+        club_name: 'FORDAGO FITNESS & WELLNESS CLUB',
+        club_address: 'Bustos, Bulacan, Philippines',
+        receipt_number: `REC-PASS-${Date.now().toString().slice(-6)}`,
+        payment_channel: 'Cash',
+        gateway: 'counter',
+        payment_for: 'Daily Gym Pass Access',
+        status: 'PAID',
+        amount: 100,
+        subtotal: 100,
+        fee: 0,
+        tax: 0,
+        discount: 0,
+        total: 100,
+        grand_total: 100,
+        total_amount: 100,
+        currency: 'PHP',
+        paid_at: nowIso,
+        transaction_date: nowIso,
+        customer_name: this.currentUserName || 'Gym Visitor',
+        customer_email: user?.email || 'member@fordago.ph',
+        customer_phone: user?.phone || '',
+        items: [{ name: 'Daily Gym Pass Access', quantity: 1, price: 100, unit_price: 100, amount: 100, subtotal: 100 }]
+      });
+    }
+  }
 
   // ── Header avatar ─────────────────────────────────────
   initials     = '';

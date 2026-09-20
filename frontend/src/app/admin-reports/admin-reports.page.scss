@@ -1156,6 +1156,43 @@ ion-content.reports-content {
     padding: 1px 6px;
     border-radius: 4px;
     border: 1px solid #E2E8F0;
+
+    &.ch-gcash {
+      background: rgba(0, 114, 255, 0.12);
+      color: #0072ff;
+      border-color: rgba(0, 114, 255, 0.25);
+    }
+
+    &.ch-maya, &.ch-paymaya {
+      background: rgba(0, 209, 115, 0.14);
+      color: #00a85d;
+      border-color: rgba(0, 209, 115, 0.28);
+    }
+
+    &.ch-cash {
+      background: #F1F5F9;
+      color: var(--text-secondary);
+      border-color: #E2E8F0;
+    }
+  }
+
+  .tx-receipt-tag {
+    font-size: 9.5px;
+    font-family: monospace;
+    font-weight: 700;
+    color: var(--accent-gold-dark);
+    background: var(--accent-gold-soft);
+    padding: 1px 6px;
+    border-radius: 4px;
+    border: 1px solid rgba(234, 179, 8, 0.3);
+  }
+
+  .tx-ref {
+    font-size: 9.5px;
+    color: var(--text-muted);
+    background: #F8FAFC;
+    padding: 1px 5px;
+    border-radius: 4px;
   }
 
   .tx-email {
@@ -1207,6 +1244,34 @@ ion-content.reports-content {
     &.st-neutral {
       background: #F1F5F9;
       color: var(--text-muted);
+    }
+  }
+
+  .tx-receipt-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    background: var(--accent-gold-soft);
+    border: 1px solid rgba(234, 179, 8, 0.4);
+    border-radius: 6px;
+    color: var(--accent-gold-dark);
+    font-size: 10px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    ion-icon {
+      font-size: 12px;
+    }
+
+    &:hover {
+      background: rgba(234, 179, 8, 0.25);
+      border-color: var(--accent-gold-dark);
+    }
+
+    &:active {
+      transform: scale(0.96);
     }
   }
 }

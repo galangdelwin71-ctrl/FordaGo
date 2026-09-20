@@ -2,6 +2,7 @@ import { Component, HostListener, OnDestroy } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { BiometricService, BiometricAccount } from '../services/biometric.service';
+import { PaymentService } from '../services/payment.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonContent, IonIcon, IonSpinner } from '@ionic/angular/standalone';
@@ -51,6 +52,7 @@ import {
   speedometerOutline,
   timeOutline,
   timerOutline,
+  receiptOutline,
 } from 'ionicons/icons';
 import {
   FITNESS_GOAL_OPTIONS,
@@ -175,7 +177,7 @@ export class LoginPage implements OnDestroy {
     fitness_goal: 'muscle_gain' as FitnessGoalKey,
     preferred_workout_time: '17:00',
     membership_type: 'premium' as 'daily' | 'premium',
-    payment_method: 'cash' as '' | 'cash' | 'gcash',
+    payment_method: 'gcash' as '' | 'cash' | 'gcash' | 'paymaya',
   };
   showRegisterPassword = false;
   showRegisterConfirm = false;
@@ -183,7 +185,11 @@ export class LoginPage implements OnDestroy {
   regLoading = false;
   regSuccess = false;
   regSuccessMembershipType: 'daily' | 'premium' = 'daily';
-  regSuccessPaymentMethod: '' | 'cash' | 'gcash' = '';
+  regSuccessPaymentMethod: '' | 'cash' | 'gcash' | 'paymaya' = '';
+  regSuccessUserId: number | null = null;
+  regOnlinePaid = false;
+  regReceiptNumber = '';
+  regPaymentLoading = false;
   regSuccessPhone = '';
   regSuccessSmsSent = false;
   regSuccessSmsReason = '';
@@ -226,7 +232,8 @@ export class LoginPage implements OnDestroy {
     private auth: AuthService,
     private router: Router,
     private route: ActivatedRoute,
-    public biometricService: BiometricService
+    public biometricService: BiometricService,
+    private paymentService: PaymentService
   ) {
     // Register every icon used by this standalone page.
     // This prevents blank icons in production builds or offline installs.
@@ -274,6 +281,18 @@ export class LoginPage implements OnDestroy {
       'flash-outline': flashOutline,
       'body-outline': bodyOutline,
       'fitness-outline': fitnessOutline,
+      'receipt-outline': receiptOutline,
+    });
+
+    this.route.queryParams.subscribe((params) => {
+      if (params['payment'] === 'success' && params['ref']) {
+        this.segment = 'register';
+        this.regSuccess = true;
+        this.regOnlinePaid = true;
+        this.regReceiptNumber = params['ref'];
+        this.regSuccessMembershipType = 'premium';
+        this.paymentService.openReceipt(params['ref']);
+      }
     });
   }
 
@@ -441,7 +460,7 @@ export class LoginPage implements OnDestroy {
       fitness_goal: 'muscle_gain' as FitnessGoalKey,
       preferred_workout_time: '17:00',
       membership_type: 'premium' as 'daily' | 'premium',
-      payment_method: 'cash' as '' | 'cash' | 'gcash',
+      payment_method: 'gcash' as '' | 'cash' | 'gcash' | 'paymaya',
     };
   }
 
@@ -1406,6 +1425,7 @@ export class LoginPage implements OnDestroy {
       )
       .subscribe({
         next: (res: any) => {
+          this.regSuccessUserId = res?.userId || null;
           this.regSuccessMembershipType = this.reg.membership_type;
           this.regSuccessPaymentMethod = this.reg.payment_method;
           this.regSuccessPhone = this.reg.phone.trim();
@@ -1420,5 +1440,53 @@ export class LoginPage implements OnDestroy {
           this.regError = err?.error?.message || 'Registration failed.';
         },
       });
+  }
+
+  payOnlineRegistration(): void {
+    if (!this.regSuccessUserId) {
+      alert('Unable to initiate online payment: Member ID not found. Please log in or contact front desk.');
+      return;
+    }
+    const channel = this.regSuccessPaymentMethod === 'paymaya' ? 'paymaya' : 'gcash';
+    this.regPaymentLoading = true;
+
+    this.paymentService.createCheckout({
+      payment_for: 'membership',
+      amount: 500,
+      payment_channel: channel,
+      user_id: this.regSuccessUserId,
+      description: 'FordaGO 1-Month Premium Membership (New Member Activation)',
+      return_url: window.location.origin + '/login',
+      items_breakdown: [
+        {
+          name: '1-Month Premium Gym Membership Plan',
+          amount: 50000,
+          quantity: 1,
+        },
+      ],
+    }).subscribe({
+      next: (res) => {
+        this.regPaymentLoading = false;
+        if (res.success) {
+          this.regReceiptNumber = res.receipt_number;
+          if (res.is_mock) {
+            this.regOnlinePaid = true;
+            this.paymentService.openReceipt(res.receipt_number);
+          } else if (res.checkout_url) {
+            window.location.href = res.checkout_url;
+          }
+        }
+      },
+      error: (err) => {
+        this.regPaymentLoading = false;
+        alert(err?.error?.message || 'Failed to connect to online payment service.');
+      },
+    });
+  }
+
+  openRegistrationReceipt(): void {
+    if (this.regReceiptNumber) {
+      this.paymentService.openReceipt(this.regReceiptNumber);
+    }
   }
 }

@@ -43,6 +43,7 @@ import {
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
+import { PaymentService, OfficialReceipt } from '../services/payment.service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { API_URL, resolveImageUrl } from '../config/api.config';
@@ -131,6 +132,7 @@ export class AdminReportsPage implements OnInit {
   searchQuery = '';
   sourceFilter: 'all' | 'membership' | 'attendance' | 'order' = 'all';
   statusFilter: 'all' | 'paid' | 'pending' | 'rejected' = 'all';
+  channelFilter: 'all' | 'cash' | 'gcash' | 'maya' = 'all';
   membershipFilter: 'all' | 'premium' | 'coach' | 'daily' | 'expiring' | 'pending' = 'all';
 
   // ── Memberships ───────────────────────────────────────
@@ -177,6 +179,15 @@ export class AdminReportsPage implements OnInit {
         const key = this.getStatusKey(tx);
         if (key !== this.statusFilter) return false;
       }
+      // Channel filter
+      if (this.channelFilter !== 'all') {
+        const ch = (tx.payment_channel || tx.payment_method || '').toLowerCase();
+        if (this.channelFilter === 'maya') {
+          if (ch !== 'maya' && ch !== 'paymaya') return false;
+        } else if (ch !== this.channelFilter) {
+          return false;
+        }
+      }
       // Search query
       if (this.searchQuery.trim()) {
         const q = this.searchQuery.toLowerCase();
@@ -184,7 +195,8 @@ export class AdminReportsPage implements OnInit {
         const email = (tx.email || '').toLowerCase();
         const prod = (tx.product_name || '').toLowerCase();
         const type = (tx.type_label || '').toLowerCase();
-        return name.includes(q) || email.includes(q) || prod.includes(q) || type.includes(q);
+        const ref = (tx.reference_number || tx.receipt_number || '').toLowerCase();
+        return name.includes(q) || email.includes(q) || prod.includes(q) || type.includes(q) || ref.includes(q);
       }
       return true;
     });
@@ -261,6 +273,7 @@ export class AdminReportsPage implements OnInit {
     public router: Router,
     private decimalPipe: DecimalPipe,
     private datePipe: DatePipe,
+    public paymentService: PaymentService,
   ) {
     addIcons({
       arrowBackOutline,
@@ -705,6 +718,63 @@ export class AdminReportsPage implements OnInit {
       neutral: '—',
     };
     return map[key] ?? key;
+  }
+
+  openReceipt(tx: any) {
+    if (tx.payment_id) {
+      this.paymentService.getReceipt(tx.payment_id).subscribe({
+        next: receipt => {
+          if (receipt) this.paymentService.openReceipt(receipt);
+          else this.openFallbackReceipt(tx);
+        },
+        error: () => this.openFallbackReceipt(tx)
+      });
+    } else {
+      this.openFallbackReceipt(tx);
+    }
+  }
+
+  openFallbackReceipt(tx: any) {
+    const rawChannel = tx.payment_channel || tx.payment_method || 'cash';
+    const channel = rawChannel === 'paymaya' || rawChannel === 'maya' ? 'Maya' : (rawChannel === 'gcash' ? 'GCash' : rawChannel.toUpperCase());
+    const amt = Number(tx.amount || tx.total || 0);
+    const txDate = tx.transaction_date || tx.created_at || new Date().toISOString();
+
+    const fallbackReceipt: OfficialReceipt = {
+      club_name: 'FORDAGO FITNESS & WELLNESS CLUB',
+      club_address: 'Bustos, Bulacan, Philippines',
+      receipt_number: tx.receipt_number || `REC-${(tx.source || 'TX').toUpperCase()}-${tx.id || Math.floor(100000 + Math.random() * 900000)}`,
+      payment_channel: channel,
+      gateway: tx.gateway || (rawChannel === 'cash' ? 'counter' : 'paymongo'),
+      payment_for: tx.source === 'membership' ? '1-Month Gym Membership Plan' : (tx.source === 'order' ? 'Shop Supplements & Merchandise' : (tx.source || 'Gym Service')),
+      status: 'PAID',
+      amount: amt,
+      subtotal: amt,
+      fee: 0,
+      tax: 0,
+      discount: 0,
+      total: amt,
+      grand_total: amt,
+      total_amount: amt,
+      currency: 'PHP',
+      paid_at: txDate,
+      transaction_date: txDate,
+      customer_name: tx.username || 'Valued Member',
+      customer_email: tx.email || 'member@fordago.ph',
+      customer_phone: tx.phone || '',
+      items: [
+        {
+          name: tx.product_name || tx.type_label || (tx.source === 'membership' ? '1-Month Premium Access' : 'Gym Service/Product'),
+          quantity: Number(tx.quantity || 1),
+          price: amt,
+          unit_price: amt,
+          amount: amt,
+          subtotal: amt,
+        }
+      ],
+      notes: tx.reference_number ? `Ref No: ${tx.reference_number}` : undefined
+    };
+    this.paymentService.openReceipt(fallbackReceipt);
   }
 
   getInitials(name: string): string {

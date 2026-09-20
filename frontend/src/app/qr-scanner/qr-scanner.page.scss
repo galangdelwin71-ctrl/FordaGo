@@ -1150,6 +1150,121 @@ ion-modal.bottom-sheet-modal {
   }
 }
 
+.online-pay-section {
+  width: 100%;
+  margin-top: 14px;
+  margin-bottom: 6px;
+
+  .online-pay-title {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 8px;
+    text-align: center;
+  }
+
+  .online-pay-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .btn-online-channel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    .channel-badge {
+      font-size: 9px;
+      font-weight: 900;
+      padding: 2px 6px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+
+      &.gcash {
+        background: #0072ff;
+        color: #fff;
+      }
+
+      &.maya {
+        background: #00d173;
+        color: #0b0e1a;
+      }
+    }
+
+    .channel-text {
+      font-size: 12px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    &.gcash {
+      background: rgba(0, 114, 255, 0.12);
+      border-color: rgba(0, 114, 255, 0.35);
+
+      &:active {
+        background: rgba(0, 114, 255, 0.25);
+        transform: scale(0.98);
+      }
+    }
+
+    &.maya {
+      background: rgba(0, 209, 115, 0.12);
+      border-color: rgba(0, 209, 115, 0.35);
+
+      &:active {
+        background: rgba(0, 209, 115, 0.25);
+        transform: scale(0.98);
+      }
+    }
+  }
+}
+
+.confirmed-action-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  margin-top: 10px;
+
+  .receipt-cta-btn {
+    width: 100%;
+    height: 46px;
+    border-radius: 14px;
+    background: rgba(255, 214, 0, 0.12);
+    border: 1.5px solid rgba(255, 214, 0, 0.4);
+    color: #ffd600;
+    font-size: 13.5px;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.15s ease;
+
+    ion-icon {
+      font-size: 18px;
+    }
+
+    &:hover {
+      background: rgba(255, 214, 0, 0.2);
+    }
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
+}
+
 .pending-btn-row {
   display: flex;
   flex-direction: column;

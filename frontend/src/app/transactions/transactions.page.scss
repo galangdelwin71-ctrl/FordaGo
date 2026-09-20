@@ -273,6 +273,41 @@ ion-content {
   margin-bottom: 4px;
 }
 
+.tx-tags {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tx-channel-badge {
+  display: inline-block;
+  font-size: 8.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 2px 7px;
+  border-radius: 6px;
+
+  &.ch-gcash {
+    background: rgba(0, 114, 255, 0.15);
+    color: #0072ff;
+    border: 1px solid rgba(0, 114, 255, 0.3);
+  }
+
+  &.ch-maya, &.ch-paymaya {
+    background: rgba(0, 209, 115, 0.15);
+    color: #00d173;
+    border: 1px solid rgba(0, 209, 115, 0.3);
+  }
+
+  &.ch-cash {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+}
+
 .tx-status {
   display: inline-block;
   font-size: 9px;
@@ -292,18 +327,50 @@ ion-content {
 .tx-amount-wrap {
   text-align: right;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
 }
 
 .tx-amount {
   font-size: 15px;
   font-weight: 800;
   color: #fff;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 
   &.free {
     font-size: 12px;
     color: rgba(255,255,255,0.35);
     font-weight: 600;
+  }
+}
+
+.tx-receipt-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: rgba(255, 214, 0, 0.1);
+  border: 1px solid rgba(255, 214, 0, 0.35);
+  border-radius: 8px;
+  color: #ffd600;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  ion-icon {
+    font-size: 13px;
+  }
+
+  &:hover {
+    background: rgba(255, 214, 0, 0.2);
+    border-color: #ffd600;
+  }
+
+  &:active {
+    transform: scale(0.96);
   }
 }
 
@@ -418,6 +485,34 @@ ion-content {
   .tx-source-badge {
     color: rgba(15, 23, 42, 0.4);
     background: rgba(15, 23, 42, 0.06);
+  }
+
+  .tx-channel-badge {
+    &.ch-gcash {
+      background: rgba(0, 114, 255, 0.12);
+      color: #0052cc;
+      border-color: rgba(0, 114, 255, 0.25);
+    }
+    &.ch-maya, &.ch-paymaya {
+      background: rgba(0, 209, 115, 0.15);
+      color: #029452;
+      border-color: rgba(0, 209, 115, 0.3);
+    }
+    &.ch-cash {
+      background: rgba(15, 23, 42, 0.06);
+      color: rgba(15, 23, 42, 0.65);
+      border-color: rgba(15, 23, 42, 0.12);
+    }
+  }
+
+  .tx-receipt-btn {
+    background: rgba(217, 119, 6, 0.1);
+    border-color: rgba(217, 119, 6, 0.4);
+    color: #b45309;
+    &:hover {
+      background: rgba(217, 119, 6, 0.18);
+      border-color: #b45309;
+    }
   }
 }
 
