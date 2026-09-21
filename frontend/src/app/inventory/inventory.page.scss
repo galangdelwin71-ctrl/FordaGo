@@ -2487,6 +2487,23 @@ ion-modal.centered-dialog-modal {
     }
   }
 
+  // Order actions row buttons (Receipt + Cancel)
+  .view-order-receipt-btn {
+    background: rgba(202, 138, 4, 0.12);
+    border-color: rgba(202, 138, 4, 0.4);
+    color: #92400e;
+
+    &:hover { background: rgba(202, 138, 4, 0.2); }
+  }
+
+  .cancel-order-btn {
+    background: rgba(220, 38, 38, 0.08);
+    border-color: rgba(220, 38, 38, 0.25);
+    color: #dc2626;
+
+    &:hover { background: rgba(220, 38, 38, 0.14); }
+  }
+
   .order-group-items-list {
     background: #f1f5f9;
     border-color: rgba(15,23,42,0.08);
@@ -2513,7 +2530,83 @@ ion-modal.centered-dialog-modal {
     .tab-label  { color: rgba(15,23,42,0.45); }
     ion-tab-button { --color: rgba(15,23,42,0.45); --color-selected: #f59e0b; }
   }
+
+  // ── Payment Success Modal ─────────────────────────────
+  .modern-success-dialog {
+    background: #ffffff;
+    border: 1.5px solid rgba(15, 23, 42, 0.1);
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.05);
+  }
+
+  .modern-hero-title {
+    color: #0f172a;
+  }
+
+  .modern-hero-sub {
+    color: #64748b;
+  }
+
+  .modern-summary-card {
+    background: #f8fafc;
+    border: 1px solid rgba(15, 23, 42, 0.09);
+    backdrop-filter: none;
+
+    .card-item-name  { color: #0f172a; }
+    .card-item-qty   { color: #64748b; }
+    .card-item-price { color: #0f172a; }
+    .card-divider    { background: rgba(15, 23, 42, 0.07); }
+    .meta-lbl        { color: #64748b; }
+    .meta-val        { color: #0f172a; }
+    .grand-price     { color: #15803d; }
+    .ref-badge {
+      color: #92400e;
+      background: rgba(202, 138, 4, 0.1);
+      border-color: rgba(202, 138, 4, 0.3);
+    }
+    .chip-method {
+      background: rgba(15, 23, 42, 0.06);
+      color: #475569;
+      border-color: rgba(15, 23, 42, 0.12);
+    }
+  }
+
+  .modern-pickup-card {
+    background: #f1f5f9;
+    border: 1px solid rgba(15, 23, 42, 0.09);
+
+    .pickup-title { color: #0f172a; }
+    .pickup-desc  {
+      color: #475569;
+      strong { color: #0f172a; }
+    }
+
+    &.cash-mode {
+      background: rgba(202, 138, 4, 0.06);
+      border-color: rgba(202, 138, 4, 0.2);
+      .pickup-title { color: #92400e; }
+    }
+  }
+
+  .modern-sticky-footer {
+    background: #ffffff;
+    border-top: 1px solid rgba(15, 23, 42, 0.09);
+
+    .modern-btn {
+      &.receipt-btn {
+        background: rgba(202, 138, 4, 0.1);
+        color: #92400e;
+        border-color: rgba(202, 138, 4, 0.35);
+        ion-icon { color: #92400e; }
+        &:hover { background: rgba(202, 138, 4, 0.18); }
+      }
+      &.done-btn {
+        background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+        color: #0f172a;
+      }
+    }
+  }
 }
+
 
 @keyframes slideUp {
   from { transform: translateY(20px); opacity: 0; }

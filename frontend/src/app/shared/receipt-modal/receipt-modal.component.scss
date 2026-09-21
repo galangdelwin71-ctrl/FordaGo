@@ -467,6 +467,79 @@
   }
 }
 
+// ── Light Mode Overrides ─────────────────────────────────
+:host-context(body.light-theme) {
+  .receipt-overlay {
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .receipt-top-actions {
+    .modal-label {
+      color: #b45309;
+    }
+
+    .receipt-close-btn {
+      background: rgba(15, 23, 42, 0.08);
+      color: #0f172a;
+      border: 1px solid rgba(15, 23, 42, 0.12);
+
+      &:hover {
+        background: rgba(15, 23, 42, 0.14);
+      }
+    }
+  }
+
+  .paper-scroll-wrap {
+    &::-webkit-scrollbar-thumb {
+      background: rgba(15, 23, 42, 0.2);
+    }
+  }
+
+  // The thermal paper itself is already white — just soften shadow for light bg
+  .thermal-paper {
+    box-shadow:
+      0 12px 32px -8px rgba(15, 23, 42, 0.18),
+      0 0 0 1px rgba(15, 23, 42, 0.07);
+  }
+
+  // Action bar at the bottom
+  .receipt-action-bar {
+    .receipt-btn {
+      // Download / PDF button — stays gold, looks great in both modes
+      &.download {
+        background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+        color: #0f172a;
+        box-shadow: 0 4px 12px rgba(202, 138, 4, 0.3);
+      }
+
+      // Print button — was dark (#1e293b) with white text — swap to light card style
+      &.print {
+        background: #f1f5f9;
+        color: #0f172a;
+        border: 1px solid rgba(15, 23, 42, 0.14);
+
+        &:hover {
+          background: #e2e8f0;
+        }
+      }
+
+      // Close button — was ghost-white on dark — make it a visible grey pill
+      &.close-btn {
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+
+        &:hover {
+          background: #e2e8f0;
+          color: #0f172a;
+        }
+      }
+    }
+  }
+}
+
 // Print Stylesheet
 @media print {
   body * {

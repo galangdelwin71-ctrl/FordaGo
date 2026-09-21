@@ -1620,6 +1620,100 @@ body.light-theme {
     /* Scan page success modal */
     .modal-sub    { color: rgba(15,23,42,0.5) !important; }
     .success-icon-ring { background: rgba(16,185,129,0.1) !important; border-color: rgba(16,185,129,0.2) !important; }
+
+    /* Payment/order success modal */
+    .success-wrap {
+      .success-title   { color: #0f172a !important; font-weight: 850 !important; }
+      .success-message { color: rgba(15,23,42,0.55) !important; }
+    }
+    .order-summary-box {
+      background: #f1f5f9 !important;
+      border: 1px solid rgba(15,23,42,0.09) !important;
+      border-radius: 14px !important;
+      box-shadow: 0 2px 8px rgba(15,23,42,0.04) !important;
+      .summary-label  { color: rgba(15,23,42,0.55) !important; font-weight: 700 !important; }
+      .summary-value  { color: #0f172a !important; font-weight: 800 !important; }
+      .summary-divider { background: rgba(15,23,42,0.08) !important; }
+    }
+    .instruction-box {
+      background: #f1f5f9 !important;
+      border: 1px solid rgba(15,23,42,0.08) !important;
+      border-radius: 14px !important;
+      .instruction-title { color: #0f172a !important; font-weight: 800 !important; }
+      .step {
+        color: #334155 !important;
+        .step-num { background: rgba(15,23,42,0.08) !important; color: #0f172a !important; }
+      }
+    }
+    /* Receipt & Cancel buttons inside order rows / success modal */
+    .view-order-receipt-btn {
+      background: rgba(202, 138, 4, 0.12) !important;
+      border-color: rgba(202, 138, 4, 0.4) !important;
+      color: #92400e !important;
+    }
+    .order-card-actions .cancel-order-btn {
+      background: rgba(220, 38, 38, 0.08) !important;
+      border-color: rgba(220, 38, 38, 0.25) !important;
+      color: #dc2626 !important;
+    }
+    /* Gold action button (View E-Receipt / Done) */
+    .gold-cta-btn,
+    .action-btn.primary,
+    .action-btn.place {
+      background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%) !important;
+      color: #0f172a !important;
+      border: none !important;
+    }
+
+    /* ── Payment Success Modal (modern-success-modal) ── */
+    .modern-success-dialog {
+      background: #ffffff !important;
+      border: 1.5px solid rgba(15, 23, 42, 0.1) !important;
+      box-shadow: 0 20px 60px rgba(15, 23, 42, 0.16) !important;
+    }
+    .modern-hero-title  { color: #0f172a !important; }
+    .modern-hero-sub    { color: #64748b !important; }
+
+    .modern-summary-card {
+      background: #f8fafc !important;
+      border: 1px solid rgba(15, 23, 42, 0.09) !important;
+      backdrop-filter: none !important;
+    }
+    .card-item-name  { color: #0f172a !important; font-weight: 700 !important; }
+    .card-item-qty   { color: #64748b !important; }
+    .card-item-price { color: #0f172a !important; font-weight: 800 !important; }
+    .card-divider    { background: rgba(15, 23, 42, 0.07) !important; }
+    .meta-lbl        { color: #64748b !important; }
+    .meta-val        { color: #0f172a !important; font-weight: 700 !important; }
+    .grand-price     { color: #15803d !important; font-weight: 900 !important; }
+    .ref-badge {
+      color: #92400e !important;
+      background: rgba(202, 138, 4, 0.1) !important;
+      border-color: rgba(202, 138, 4, 0.3) !important;
+    }
+
+    .modern-pickup-card {
+      background: #f1f5f9 !important;
+      border: 1px solid rgba(15, 23, 42, 0.09) !important;
+    }
+    .pickup-title { color: #0f172a !important; font-weight: 750 !important; }
+    .pickup-desc  { color: #475569 !important; }
+    .pickup-desc strong { color: #0f172a !important; }
+
+    .modern-sticky-footer {
+      background: #ffffff !important;
+      border-top: 1px solid rgba(15, 23, 42, 0.09) !important;
+    }
+    .modern-btn.receipt-btn {
+      background: rgba(202, 138, 4, 0.1) !important;
+      color: #92400e !important;
+      border-color: rgba(202, 138, 4, 0.35) !important;
+    }
+    .modern-btn.receipt-btn ion-icon { color: #92400e !important; }
+    .modern-btn.done-btn {
+      background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%) !important;
+      color: #0f172a !important;
+    }
   }
 
   /* Full-screen notification modal toolbar — light mode: dark back button */
