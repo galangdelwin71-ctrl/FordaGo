@@ -169,6 +169,8 @@ class UserController extends Controller
     {
         $creatorRole  = $request->user()->role;
         $username     = trim((string) $request->input('username', ''));
+        $firstName    = trim((string) ($request->input('first_name') ?? $request->input('firstName') ?? ''));
+        $lastName     = trim((string) ($request->input('last_name') ?? $request->input('lastName') ?? ''));
         $rawEmail     = strtolower(trim((string) $request->input('email', '')));
         $password     = is_string($request->input('password')) ? $request->input('password') : '';
         $rawPhone     = trim((string) $request->input('phone', ''));
@@ -212,6 +214,8 @@ class UserController extends Controller
 
         $user = User::create([
             'username'          => $username,
+            'first_name'        => $firstName ?: null,
+            'last_name'         => $lastName ?: null,
             'email'             => $rawEmail,
             'password'          => Hash::make($password),
             'role'              => $assignedRole,
@@ -293,16 +297,17 @@ class UserController extends Controller
 
         $username = trim((string) $request->input('username', ''));
         if ($username === '') {
-            $username = trim("{$firstName} {$lastName}") ?: $user->username;
-        }
-
-        // Check if username is already taken by another user
-        if ($username && $username !== $user->username) {
-            $taken = User::where('username', $username)->where('id', '!=', $user->id)->exists();
-            if ($taken) {
-                // If username derived from name collides, fallback to keeping original username
-                $username = $user->username;
+            $username = $user->username;
+        } elseif ($username !== $user->username) {
+            $cleanedUsername = ltrim($username, '@');
+            if (! preg_match('/^[a-zA-Z0-9_.]{3,30}$/', $cleanedUsername)) {
+                return response()->json(['message' => 'Username must be 3-30 characters and contain only letters, numbers, underscores, or periods.'], 400);
             }
+            $taken = User::where('username', $cleanedUsername)->where('id', '!=', $user->id)->exists();
+            if ($taken) {
+                return response()->json(['message' => 'That username is already taken. Please choose another.'], 409);
+            }
+            $username = $cleanedUsername;
         }
 
         // Check if email is already in use by another user

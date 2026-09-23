@@ -817,13 +817,55 @@ export class AdminReportsPage implements OnInit {
     return this.datePipe.transform(date, 'MMM d, yyyy h:mm a') ?? fallback;
   }
 
-  // ── Print ─────────────────────────────────────────────
+  // ── Native PDF Direct Print ────────────────────────────
   printCurrent() {
-    window.print();
+    try {
+      const { doc } = this.buildPDFDoc(this.activeTab);
+      const blob = doc.output('blob');
+      const blobUrl = URL.createObjectURL(blob);
+
+      // Create a hidden iframe to trigger native browser PDF print dialog
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = '0';
+      iframe.src = blobUrl;
+
+      iframe.onload = () => {
+        try {
+          iframe.contentWindow?.focus();
+          iframe.contentWindow?.print();
+        } catch (e) {
+          // Fallback if browser security blocks iframe.contentWindow.print()
+          window.open(blobUrl, '_blank');
+        } finally {
+          setTimeout(() => {
+            if (document.body.contains(iframe)) {
+              document.body.removeChild(iframe);
+            }
+            URL.revokeObjectURL(blobUrl);
+          }, 60000);
+        }
+      };
+
+      document.body.appendChild(iframe);
+    } catch (err) {
+      console.error('Error generating PDF for printing:', err);
+    }
   }
 
-  // ── Professional Executive PDF Generator ──────────────
+  // ── Download PDF Document ──────────────────────────────
   downloadPDF(tabToExport?: Tab) {
+    const targetTab: Tab = tabToExport || this.activeTab;
+    const { doc, filename } = this.buildPDFDoc(targetTab);
+    doc.save(filename);
+  }
+
+  // ── Professional Executive PDF Document Builder ─────────
+  buildPDFDoc(tabToExport?: Tab): { doc: jsPDF; filename: string } {
     const targetTab: Tab = tabToExport || this.activeTab;
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
@@ -849,7 +891,7 @@ export class AdminReportsPage implements OnInit {
     const genTimestamp = this.formatDateTime(new Date());
     const reportRef = `FDG-${targetTab.toUpperCase().slice(0, 3)}-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(1000 + Math.random() * 9000)}`;
 
-    let startY = 44;
+    let startY = 48;
 
     // ───────────────────────────────────────────────────────
     // TAB 1: INVENTORY & EXPIRATION AUDIT
@@ -889,7 +931,7 @@ export class AdminReportsPage implements OnInit {
           this.formatCurrency(totalCogs),
         ],
         [
-          { content: 'Net Merchandise Tubo (Profit)', styles: { fontStyle: 'bold', fillColor: [241, 245, 249], textColor: [5, 150, 105] } },
+          { content: 'Net Merchandise Profit', styles: { fontStyle: 'bold', fillColor: [241, 245, 249], textColor: [5, 150, 105] } },
           { content: this.formatCurrency(totalProfit), styles: { fontStyle: 'bold', textColor: [5, 150, 105] } },
           { content: 'Units Sold (Lifetime)', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
           `${totalSold} units purchased`,
@@ -897,7 +939,7 @@ export class AdminReportsPage implements OnInit {
         [
           { content: 'Asset Valuation (Retail)', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
           this.formatCurrency(inventoryValue),
-          { content: 'Capital Asset Cost (Puhunan)', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          { content: 'Total Capital Cost Valuation', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
           this.formatCurrency(inventoryCostValue),
         ],
         [
@@ -910,7 +952,7 @@ export class AdminReportsPage implements OnInit {
 
       autoTable(doc, {
         startY,
-        margin: { top: 44, bottom: 22, left: 14, right: 14 },
+        margin: { top: 18, bottom: 20, left: 14, right: 14 },
         head: [[{ content: 'INVENTORY & PERISHABLES EXECUTIVE SUMMARY', colSpan: 4, styles: { halign: 'center', fillColor: [15, 23, 42], textColor: [234, 179, 8], fontStyle: 'bold' } }]],
         body: invKpis as any,
         styles: { fontSize: 8, cellPadding: 2.2 },
@@ -953,7 +995,7 @@ export class AdminReportsPage implements OnInit {
 
         autoTable(doc, {
           startY,
-          margin: { top: 44, bottom: 22, left: 14, right: 14 },
+          margin: { top: 18, bottom: 20, left: 14, right: 14 },
           head: [[
             { content: 'URGENT SPOILAGE & SHELF-LIFE AUDIT REGISTER', colSpan: 10, styles: { fillColor: [185, 28, 28], textColor: [255, 255, 255], fontStyle: 'bold' } },
           ], [
@@ -985,13 +1027,13 @@ export class AdminReportsPage implements OnInit {
 
         startY = (doc as any).lastAutoTable.finalY + 7;
       } else {
-        // Safe Banner
+        // Safe Banner (No glyph corruption)
         autoTable(doc, {
           startY,
-          margin: { top: 44, bottom: 22, left: 14, right: 14 },
+          margin: { top: 18, bottom: 20, left: 14, right: 14 },
           body: [[
             {
-              content: '✓ PERISHABLES AUDIT: All inventory batches are fresh and strictly within approved shelf-life limits (0 expired, 0 near-expiry).',
+              content: '[SAFE AUDIT] All inventory batches are fresh and strictly within approved shelf-life limits (0 expired, 0 near-expiry).',
               styles: { halign: 'center', fillColor: [236, 253, 245], textColor: [4, 120, 87], fontStyle: 'bold', fontSize: 8.5 },
             },
           ]],
@@ -1027,11 +1069,11 @@ export class AdminReportsPage implements OnInit {
 
       autoTable(doc, {
         startY,
-        margin: { top: 44, bottom: 22, left: 14, right: 14 },
+        margin: { top: 18, bottom: 20, left: 14, right: 14 },
         head: [[
           { content: 'COMPLETE PRODUCT INVENTORY, COSTING & PROFITABILITY MASTER', colSpan: 12, styles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' } },
         ], [
-          '#', 'Product Name', 'Brand', 'Unit Cost', 'Retail', 'Margin', 'Stock', 'Sold', 'Sales Rev', 'Net Tubo', 'Expiry Date', 'Shelf-Life Status',
+          '#', 'Product Name', 'Brand', 'Unit Cost', 'Retail', 'Margin', 'Stock', 'Sold', 'Sales Rev', 'Net Profit', 'Expiry Date', 'Shelf-Life Status',
         ]],
         body: masterRows,
         headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.2 },
@@ -1096,7 +1138,7 @@ export class AdminReportsPage implements OnInit {
 
       autoTable(doc, {
         startY,
-        margin: { top: 44, bottom: 22, left: 14, right: 14 },
+        margin: { top: 18, bottom: 20, left: 14, right: 14 },
         head: [[{ content: 'EXECUTIVE PERFORMANCE AUDIT SCORECARD', colSpan: 4, styles: { halign: 'center', fillColor: [15, 23, 42], textColor: [234, 179, 8], fontStyle: 'bold' } }]],
         body: kpis as any,
         styles: { fontSize: 8, cellPadding: 2.2 },
@@ -1114,7 +1156,7 @@ export class AdminReportsPage implements OnInit {
 
       autoTable(doc, {
         startY,
-        margin: { top: 44, bottom: 22, left: 14, right: 14 },
+        margin: { top: 18, bottom: 20, left: 14, right: 14 },
         head: [[
           { content: 'REVENUE STREAM CONTRIBUTION BREAKDOWN', colSpan: 5, styles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold' } },
         ], ['Revenue Stream', 'Collected Realized', 'Share of Total', 'Pending Receivables', 'Payment Channels']],
@@ -1151,7 +1193,7 @@ export class AdminReportsPage implements OnInit {
 
         autoTable(doc, {
           startY,
-          margin: { top: 44, bottom: 22, left: 14, right: 14 },
+          margin: { top: 18, bottom: 20, left: 14, right: 14 },
           head: [[
             { content: 'CRITICAL EXPIRATION & RETENTION ALERTS (ATTENTION REQUIRED)', colSpan: 6, styles: { fillColor: [185, 28, 28], textColor: [255, 255, 255], fontStyle: 'bold' } },
           ], ['Category', 'Target Item / Member', 'Contact / Quantity', 'Expiry Date', 'Risk / Days Left', 'Required Follow-up Action']],
@@ -1172,7 +1214,7 @@ export class AdminReportsPage implements OnInit {
 
       autoTable(doc, {
         startY,
-        margin: { top: 44, bottom: 22, left: 14, right: 14 },
+        margin: { top: 18, bottom: 20, left: 14, right: 14 },
         head: [[
           { content: 'GYM TRAFFIC & FACILITY UTILIZATION SCHEDULE', colSpan: 4, styles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold' } },
         ], ['Time Interval', 'Visits Count', 'Traffic Share', 'Capacity Status']],
@@ -1211,7 +1253,7 @@ export class AdminReportsPage implements OnInit {
 
       autoTable(doc, {
         startY,
-        margin: { top: 44, bottom: 22, left: 14, right: 14 },
+        margin: { top: 18, bottom: 20, left: 14, right: 14 },
         head: [[{ content: 'MEMBERSHIP & SUBSCRIPTION AUDIT SUMMARY', colSpan: 4, styles: { halign: 'center', fillColor: [15, 23, 42], textColor: [234, 179, 8], fontStyle: 'bold' } }]],
         body: memKpis as any,
         styles: { fontSize: 8, cellPadding: 2.2 },
@@ -1237,7 +1279,7 @@ export class AdminReportsPage implements OnInit {
 
         autoTable(doc, {
           startY,
-          margin: { top: 44, bottom: 22, left: 14, right: 14 },
+          margin: { top: 18, bottom: 20, left: 14, right: 14 },
           head: [[
             { content: 'PRIORITY RETENTION & RENEWAL REGISTER (EXPIRING SOON & EXPIRED)', colSpan: 9, styles: { fillColor: [180, 83, 9], textColor: [255, 255, 255], fontStyle: 'bold' } },
           ], ['#', 'Member Name', 'Email', 'Phone', 'Plan', 'Expiry Date', 'Lifespan', 'Account Status', 'Required Retention Action']],
@@ -1282,7 +1324,7 @@ export class AdminReportsPage implements OnInit {
 
       autoTable(doc, {
         startY,
-        margin: { top: 44, bottom: 22, left: 14, right: 14 },
+        margin: { top: 18, bottom: 20, left: 14, right: 14 },
         head: [[
           { content: 'COMPLETE MEMBERSHIP & COACH AUDIT ROSTER', colSpan: 9, styles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' } },
         ], ['#', 'Member Name', 'Type', 'Email', 'Plan', 'Payment', 'Expiry Date', 'Remaining', 'Status']],
@@ -1313,7 +1355,7 @@ export class AdminReportsPage implements OnInit {
 
       autoTable(doc, {
         startY,
-        margin: { top: 44, bottom: 22, left: 14, right: 14 },
+        margin: { top: 18, bottom: 20, left: 14, right: 14 },
         head: [[{ content: 'TRANSACTION AUDIT LEDGER SUMMARY', colSpan: 4, styles: { halign: 'center', fillColor: [15, 23, 42], textColor: [234, 179, 8], fontStyle: 'bold' } }]],
         body: txKpis as any,
         styles: { fontSize: 8, cellPadding: 2.2 },
@@ -1335,7 +1377,7 @@ export class AdminReportsPage implements OnInit {
 
       autoTable(doc, {
         startY,
-        margin: { top: 44, bottom: 22, left: 14, right: 14 },
+        margin: { top: 18, bottom: 20, left: 14, right: 14 },
         head: [[
           { content: 'DETAILED FINANCIAL AUDIT LOG', colSpan: 8, styles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' } },
         ], ['#', 'Date & Time', 'Member / Payer', 'Type', 'Description / Details', 'Amount', 'Channel', 'Audit Status']],
@@ -1366,7 +1408,7 @@ export class AdminReportsPage implements OnInit {
 
       autoTable(doc, {
         startY,
-        margin: { top: 44, bottom: 22, left: 14, right: 14 },
+        margin: { top: 18, bottom: 20, left: 14, right: 14 },
         head: [[{ content: 'ATTENDANCE & TRAFFIC AUDIT SUMMARY', colSpan: 4, styles: { halign: 'center', fillColor: [15, 23, 42], textColor: [234, 179, 8], fontStyle: 'bold' } }]],
         body: attKpis as any,
         styles: { fontSize: 8, cellPadding: 2.2 },
@@ -1387,7 +1429,7 @@ export class AdminReportsPage implements OnInit {
 
       autoTable(doc, {
         startY,
-        margin: { top: 44, bottom: 22, left: 14, right: 14 },
+        margin: { top: 18, bottom: 20, left: 14, right: 14 },
         head: [[
           { content: 'CHRONOLOGICAL GYM ATTENDANCE LOG', colSpan: 7, styles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' } },
         ], ['#', 'Check-in Date & Time', 'Member Name', 'Email Address', 'Plan Type', 'Fee Paid', 'Payment Status']],
@@ -1430,7 +1472,7 @@ export class AdminReportsPage implements OnInit {
 
       autoTable(doc, {
         startY,
-        margin: { top: 44, bottom: 22, left: 14, right: 14 },
+        margin: { top: 18, bottom: 20, left: 14, right: 14 },
         head: [[{ content: 'FINANCIAL SALES & REVENUE AUDIT SUMMARY', colSpan: 4, styles: { halign: 'center', fillColor: [15, 23, 42], textColor: [234, 179, 8], fontStyle: 'bold' } }]],
         body: salesKpis as any,
         styles: { fontSize: 8, cellPadding: 2.2 },
@@ -1450,7 +1492,7 @@ export class AdminReportsPage implements OnInit {
 
         autoTable(doc, {
           startY,
-          margin: { top: 44, bottom: 22, left: 14, right: 14 },
+          margin: { top: 18, bottom: 20, left: 14, right: 14 },
           head: [[
             { content: 'GYM DAILY WALK-IN PASSES (REVENUE BY DATE)', colSpan: 4, styles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold' } },
           ], ['Date', 'Day of Week', 'Paid Check-ins', 'Collected Revenue']],
@@ -1474,7 +1516,7 @@ export class AdminReportsPage implements OnInit {
 
         autoTable(doc, {
           startY,
-          margin: { top: 44, bottom: 22, left: 14, right: 14 },
+          margin: { top: 18, bottom: 20, left: 14, right: 14 },
           head: [[
             { content: 'SHOP MERCHANDISE SALES (REVENUE BY DATE)', colSpan: 4, styles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold' } },
           ], ['Date', 'Day of Week', 'Completed Orders', 'Collected Revenue']],
@@ -1498,7 +1540,7 @@ export class AdminReportsPage implements OnInit {
 
         autoTable(doc, {
           startY,
-          margin: { top: 44, bottom: 22, left: 14, right: 14 },
+          margin: { top: 18, bottom: 20, left: 14, right: 14 },
           head: [[
             { content: 'PREMIUM MEMBERSHIP SUBSCRIPTIONS (REVENUE BY DATE)', colSpan: 4, styles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold' } },
           ], ['Date', 'Day of Week', 'New / Renewed Subscriptions', 'Collected Revenue']],
@@ -1520,53 +1562,59 @@ export class AdminReportsPage implements OnInit {
       doc.setPage(p);
 
       if (p === 1) {
-        // Page 1 Luxury Header Banner
-        doc.setFillColor(15, 23, 42); // Deep Navy Slate #0F172A
-        doc.rect(0, 0, 210, 24, 'F');
+        // Page 1 Luxury Header Banner (Deep Navy Slate #0F172A)
+        doc.setFillColor(15, 23, 42);
+        doc.rect(0, 0, 210, 22, 'F');
 
         // Gold Accent Bar
         doc.setFillColor(234, 179, 8); // Gold #EAB308
-        doc.rect(0, 24, 210, 2, 'F');
+        doc.rect(0, 22, 210, 1.5, 'F');
 
-        // Brand Text
-        doc.setFontSize(13);
+        // Brand Text (Left)
+        doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(234, 179, 8);
-        doc.text('FORDAGO FITNESS & WELLNESS CLUB', 14, 11);
+        doc.text('FORDAGO FITNESS & WELLNESS CLUB', 14, 9.5);
 
-        doc.setFontSize(7.5);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(226, 232, 240);
-        doc.text('MANAGEMENT INFORMATION SYSTEM • OFFICIAL AUDIT REPORT', 14, 18);
-
-        // Header Right Metadata
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(255, 255, 255);
-        doc.text(reportTitle.toUpperCase(), 196, 11, { align: 'right' });
-
-        doc.setFontSize(7);
+        doc.setFontSize(7.2);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(203, 213, 225);
-        doc.text(`CONFIDENTIAL • REF: ${reportRef}`, 196, 18, { align: 'right' });
+        doc.text('MANAGEMENT INFORMATION SYSTEM • AUDIT & COMPLIANCE DIVISION', 14, 16.5);
 
-        // Metadata Sub-Strip Card
+        // Header Right Info
+        doc.setFontSize(7.5);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(255, 255, 255);
+        doc.text('EXECUTIVE AUDIT REPORT', 196, 9.5, { align: 'right' });
+
+        doc.setFontSize(6.8);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(203, 213, 225);
+        doc.text(`REF: ${reportRef}  |  CONFIDENTIAL`, 196, 16.5, { align: 'right' });
+
+        // Report Title Bar (Dedicated row below Gold stripe)
+        doc.setFontSize(10.5);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(15, 23, 42);
+        doc.text(reportTitle.toUpperCase(), 14, 28.5);
+
+        // Metadata Sub-Strip Card (32mm to 44mm)
         doc.setFillColor(248, 250, 252);
         doc.setDrawColor(226, 232, 240);
         doc.setLineWidth(0.3);
-        doc.rect(14, 28, 182, 12, 'FD');
+        doc.rect(14, 32, 182, 12, 'FD');
 
-        doc.setFontSize(7.5);
+        doc.setFontSize(7.2);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(71, 85, 105);
 
-        doc.text(`Audit Scope: ${periodLabel[currentPeriod] ?? 'All Time'}`, 17, 33);
-        doc.text(`Generated: ${genTimestamp}`, 70, 33);
-        doc.text('Classification: STRICTLY CONFIDENTIAL', 132, 33);
+        doc.text(`Audit Scope: ${periodLabel[currentPeriod] ?? 'All Time'}`, 17, 36.5);
+        doc.text(`Generated: ${genTimestamp}`, 76, 36.5);
+        doc.text('Security: STRICTLY CONFIDENTIAL', 138, 36.5);
 
-        doc.text(`Module: ${targetTab.toUpperCase()}`, 17, 37.5);
-        doc.text('Database Sync: 100% Verified Live', 70, 37.5);
-        doc.text('Prepared By: FordaGO Administration', 132, 37.5);
+        doc.text(`Module: ${targetTab.toUpperCase()}`, 17, 41);
+        doc.text('Data Source: 100% Live Verified Sync', 76, 41);
+        doc.text('Audited By: FordaGO Administration', 138, 41);
 
       } else {
         // Pages 2+ Compact Header
@@ -1584,24 +1632,24 @@ export class AdminReportsPage implements OnInit {
         doc.setFontSize(7);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(203, 213, 225);
-        doc.text(`Generated: ${genTimestamp} | CONFIDENTIAL`, 196, 7, { align: 'right' });
+        doc.text(`CONFIDENTIAL  |  Generated: ${genTimestamp}`, 196, 7, { align: 'right' });
       }
 
-      // Bottom Footer on Every Page
+      // Bottom Footer on Every Page (Cleanly Spaced)
       doc.setDrawColor(203, 213, 225);
       doc.setLineWidth(0.2);
       doc.line(14, 285, 196, 285);
 
-      doc.setFontSize(7);
+      doc.setFontSize(6.8);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(100, 116, 139);
-      doc.text('FordaGO Management Information System • Official Administrative Audit Report', 14, 289.5);
+      doc.text('FordaGO MIS • Official Administrative Audit Report', 14, 289.5);
       doc.text('CONFIDENTIAL — FOR INTERNAL AUDIT ONLY', 105, 289.5, { align: 'center' });
       doc.text(`Page ${p} of ${totalPages}`, 196, 289.5, { align: 'right' });
 
       // Official Sign-off on Last Page if room permits
-      if (p === totalPages && finalTableY <= 242) {
-        const signY = Math.max(finalTableY + 8, 245);
+      if (p === totalPages && finalTableY <= 245) {
+        const signY = Math.max(finalTableY + 8, 248);
         doc.setFontSize(7.5);
         doc.setTextColor(100, 116, 139);
         doc.setFont('helvetica', 'normal');
@@ -1627,6 +1675,7 @@ export class AdminReportsPage implements OnInit {
       }
     }
 
-    doc.save(`FordaGO_Audit_${targetTab.toUpperCase()}_${currentPeriod}_${new Date().toISOString().slice(0, 10)}.pdf`);
+    const filename = `FordaGO_Audit_${targetTab.toUpperCase()}_${currentPeriod}_${new Date().toISOString().slice(0, 10)}.pdf`;
+    return { doc, filename };
   }
 }

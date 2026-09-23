@@ -220,8 +220,8 @@ class ReportsController extends Controller
                     pay.id,
                     'online_payment' AS source,
                     u.id AS user_id,
-                    COALESCE(u.username, pay.customer_details->>'$.username', 'Member') AS username,
-                    COALESCE(u.email, pay.customer_details->>'$.email', '') AS email,
+                    COALESCE(u.username, JSON_UNQUOTE(JSON_EXTRACT(pay.customer_details, '$.username')), 'Member') AS username,
+                    COALESCE(u.email, JSON_UNQUOTE(JSON_EXTRACT(pay.customer_details, '$.email')), '') AS email,
                     u.profile_image,
                     pay.created_at AS transaction_date,
                     pay.payment_channel AS sub_type,
@@ -613,6 +613,8 @@ class ReportsController extends Controller
         $totalProfit        = collect($rows)->sum('total_profit');
         $lowStockCount      = collect($rows)->where('stock_status', 'low_stock')->count();
         $outOfStockCount    = collect($rows)->where('stock_status', 'out_of_stock')->count();
+        $expiringSoonCount  = collect($rows)->where('expiry_status', 'expiring_soon')->count();
+        $expiredCount       = collect($rows)->where('expiry_status', 'expired')->count();
         $expiredLossRisk    = (float) collect($rows)->where('expiry_status', 'expired')->sum(fn ($r) => (float)$r->cost_price * (int)$r->current_stock);
         $expiringSoonRisk   = (float) collect($rows)->where('expiry_status', 'expiring_soon')->sum(fn ($r) => (float)$r->cost_price * (int)$r->current_stock);
         $inventoryValue     = (float) collect($rows)->sum(fn ($r) => (float)$r->price * (int)$r->current_stock);

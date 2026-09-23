@@ -658,6 +658,7 @@ export class NotificationCenterService {
       const isStaff = this.auth.hasAdminAccess();
       const defaultTargetRoute = isStaff ? '/admin' : '/dashboard';
       let hasNewDelivered = false;
+      const batchDeliveredTitles = new Set<string>();
 
       const serverNotifications: AppNotificationItem[] = list.map((item) => {
         const unread = !item.is_read && !readServerIds.has(item.id);
@@ -675,11 +676,11 @@ export class NotificationCenterService {
         if (unread && !deliveredIds.has(item.id)) {
           deliveredIds.add(item.id);
           hasNewDelivered = true;
-          // Skip if the local notifyMissedWorkout() flow already showed a
-          // device banner for this exact title moments ago (see
-          // recentlyDeliveredTitles) — still marked "delivered" above so it
-          // is never retried, just not re-shown as a second banner.
-          if (!this.wasRecentlyDelivered(appItem.title)) {
+          // Guard against duplicate banners within the batch or within the recent delivery cooldown window
+          const normalizedTitle = appItem.title.trim().toLowerCase();
+          if (!batchDeliveredTitles.has(normalizedTitle) && !this.wasRecentlyDelivered(appItem.title)) {
+            batchDeliveredTitles.add(normalizedTitle);
+            this.markTitleDelivered(appItem.title);
             // Trigger native notification with sound & vibration
             void this.sendDeviceNotification(appItem, defaultTargetRoute, 'fordago-alerts-v3');
           }
@@ -692,7 +693,19 @@ export class NotificationCenterService {
         this.writeDeliveredServerNotifications(Array.from(deliveredIds));
       }
 
-      return this.sortNotifications([...localNotifications, ...serverNotifications]);
+      // Deduplicate notifications by id or (title + message + timestamp minute) for clean UI presentation
+      const seenFingerprints = new Set<string>();
+      const dedupedServerNotifications = serverNotifications.filter((n) => {
+        const minute = n.createdAt ? n.createdAt.slice(0, 16) : '';
+        const fingerprint = `${n.title}|${n.message}|${minute}`;
+        if (seenFingerprints.has(fingerprint)) {
+          return false;
+        }
+        seenFingerprints.add(fingerprint);
+        return true;
+      });
+
+      return this.sortNotifications([...localNotifications, ...dedupedServerNotifications]);
     } catch {
       return this.sortNotifications(localNotifications);
     }
@@ -853,21 +866,25 @@ export class NotificationCenterService {
     ));
   }
 
-  /** Records that a device banner for this exact notification title was just sent, so a near-duplicate from another code path can be suppressed for a short window (see recentlyDeliveredTitles). */
+  /** Records that a device banner for this notification title was just sent, so duplicate banners are suppressed across cooldown window. */
   private markTitleDelivered(title: string): void {
-    this.recentlyDeliveredTitles.set(title, Date.now());
+    const key = (title || '').trim().toLowerCase();
+    if (!key) return;
+    this.recentlyDeliveredTitles.set(key, Date.now());
     // Opportunistic cleanup so this map never grows unbounded across a long session.
     const cutoff = Date.now() - this.DUPLICATE_BANNER_WINDOW_MS;
-    this.recentlyDeliveredTitles.forEach((timestamp, key) => {
+    this.recentlyDeliveredTitles.forEach((timestamp, k) => {
       if (timestamp < cutoff) {
-        this.recentlyDeliveredTitles.delete(key);
+        this.recentlyDeliveredTitles.delete(k);
       }
     });
   }
 
-  /** True if a device banner for this exact title was sent within the last DUPLICATE_BANNER_WINDOW_MS. */
+  /** True if a device banner for this title was sent within the last DUPLICATE_BANNER_WINDOW_MS. */
   private wasRecentlyDelivered(title: string): boolean {
-    const timestamp = this.recentlyDeliveredTitles.get(title);
+    const key = (title || '').trim().toLowerCase();
+    if (!key) return false;
+    const timestamp = this.recentlyDeliveredTitles.get(key);
     if (!timestamp) {
       return false;
     }

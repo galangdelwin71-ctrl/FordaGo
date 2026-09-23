@@ -54,6 +54,20 @@ class User extends Authenticatable
     // DB column default (useCurrent()) on insert, not by Eloquent.
     public $timestamps = false;
 
+    protected $appends = [
+        'full_name',
+    ];
+
+    public function getFullNameAttribute(): string
+    {
+        $first = trim((string) $this->first_name);
+        $last = trim((string) $this->last_name);
+        if ($first !== '' || $last !== '') {
+            return trim($first . ' ' . $last);
+        }
+        return (string) ($this->username ?? '');
+    }
+
     /**
      * Get the attributes that should be cast.
      *

@@ -59,18 +59,19 @@
         </header>
 
         <div class="field">
-          <label class="field-lbl" for="login-email">Email</label>
+          <label class="field-lbl" for="login-email">Username or Email</label>
           <div class="input-shell">
-            <ion-icon name="mail-outline" aria-hidden="true"></ion-icon>
+            <ion-icon name="person-outline" aria-hidden="true"></ion-icon>
             <input
               id="login-email"
               class="field-input"
-              type="email"
+              type="text"
               [(ngModel)]="email"
               name="email"
-              placeholder="Enter your email"
-              autocomplete="email"
-              inputmode="email"
+              placeholder="Enter username or email address"
+              autocomplete="username"
+              autocapitalize="none"
+              spellcheck="false"
             />
           </div>
         </div>
@@ -209,6 +210,27 @@
               autocomplete="family-name"
             />
           </div>
+        </div>
+
+        <div class="field">
+          <label class="field-lbl" for="reg-username">Username</label>
+          <div class="input-shell">
+            <ion-icon name="at-outline" aria-hidden="true"></ion-icon>
+            <input
+              id="reg-username"
+              class="field-input"
+              type="text"
+              [(ngModel)]="reg.username"
+              placeholder="Choose a username (e.g. delwin_26)"
+              autocomplete="username"
+              autocapitalize="none"
+              spellcheck="false"
+              maxlength="30"
+            />
+          </div>
+          <small class="field-hint" style="display:block;margin-top:4px;font-size:0.75rem;color:var(--text-muted, #94a3b8);">
+            Used for signing in and your profile handle.
+          </small>
         </div>
 
         <div class="field">
@@ -1008,11 +1030,11 @@
 
           <header class="panel-heading centered-heading">
             <h2>Find Your Account</h2>
-            <p>Enter the email address or phone number associated with your FordaGO account to receive an OTP.</p>
+            <p>Enter your username, email address, or mobile number associated with your FordaGO account to receive an OTP.</p>
           </header>
 
           <div class="field">
-            <label class="field-lbl" for="fp-identifier">Email or Phone Number</label>
+            <label class="field-lbl" for="fp-identifier">Username, Email, or Phone</label>
             <div class="input-shell">
               <ion-icon name="search-outline" aria-hidden="true"></ion-icon>
               <input
@@ -1020,8 +1042,10 @@
                 class="field-input"
                 type="text"
                 [(ngModel)]="fpIdentifier"
-                placeholder="e.g. name@gmail.com or 09171234567"
+                placeholder="e.g. username, name@gmail.com, or 09171234567"
                 autocomplete="username"
+                autocapitalize="none"
+                spellcheck="false"
                 (keydown.enter)="fpLookupEmail()"
               />
             </div>

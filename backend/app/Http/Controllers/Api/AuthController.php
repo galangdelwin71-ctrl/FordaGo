@@ -112,26 +112,31 @@ class AuthController extends Controller
             && (bool) preg_match('/[^A-Za-z0-9]/', $password);
     }
 
-    /** @return array{type:string,email:string,phone:string,value:string} */
+    /** @return array{type:string,email:string,phone:string,username:string,value:string} */
     private function parseAccountIdentifier(?string $value): array
     {
         $raw = trim((string) $value);
         if ($raw === '') {
-            return ['type' => 'unknown', 'email' => '', 'phone' => '', 'value' => ''];
+            return ['type' => 'unknown', 'email' => '', 'phone' => '', 'username' => '', 'value' => ''];
         }
         if (str_contains($raw, '@')) {
             $email = $this->normalizeEmail($raw);
-            return ['type' => 'email', 'email' => $email, 'phone' => '', 'value' => $email];
+            return ['type' => 'email', 'email' => $email, 'phone' => '', 'username' => '', 'value' => $email];
         }
         $digits = preg_replace('/\D/', '', $raw);
-        if (str_starts_with($digits, '63') && strlen($digits) === 12) {
-            $phone = '0'.substr($digits, 2);
-        } elseif (strlen($digits) === 10 && str_starts_with($digits, '9')) {
-            $phone = '0'.$digits;
-        } else {
-            $phone = $digits;
+        if ($digits !== '' && strlen($digits) >= 10 && strlen($digits) <= 12 && preg_match('/^(\+?63|0)?9\d{9}$/', $raw)) {
+            if (str_starts_with($digits, '63') && strlen($digits) === 12) {
+                $phone = '0'.substr($digits, 2);
+            } elseif (strlen($digits) === 10 && str_starts_with($digits, '9')) {
+                $phone = '0'.$digits;
+            } else {
+                $phone = $digits;
+            }
+            return ['type' => 'phone', 'email' => '', 'phone' => $phone, 'username' => '', 'value' => $phone];
         }
-        return ['type' => 'phone', 'email' => '', 'phone' => $phone, 'value' => $phone];
+
+        $cleanUsername = ltrim($raw, '@');
+        return ['type' => 'username', 'email' => '', 'phone' => '', 'username' => $cleanUsername, 'value' => $cleanUsername];
     }
 
     private function findAllUsersByIdentifier(?string $identifierInput): \Illuminate\Database\Eloquent\Collection
@@ -160,6 +165,13 @@ class AuthController extends Controller
                 ->orWhere('phone', $rawIntl)
                 ->orWhere('phone', $digits)
                 ->orWhere('phone', 'like', '%'.$last10)
+                ->get();
+        }
+
+        if ($identifier['type'] === 'username') {
+            $un = $identifier['username'];
+            return User::where('username', $un)
+                ->orWhere('username', '@'.$un)
                 ->get();
         }
 
@@ -244,18 +256,27 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $email    = $this->normalizeEmail($request->input('email'));
-        $password = is_string($request->input('password')) ? $request->input('password') : '';
+        $loginInput = trim((string) ($request->input('email') ?? $request->input('identifier') ?? $request->input('username') ?? ''));
+        $password   = is_string($request->input('password')) ? $request->input('password') : '';
 
-        if ($email === '' || $password === '') {
-            return response()->json(['message' => 'Email and password are required.'], 400);
+        if ($loginInput === '' || $password === '') {
+            return response()->json(['message' => 'Username or email, and password are required.'], 400);
         }
         if (strlen($password) > 128) {
-            return response()->json(['message' => 'Invalid email or password.'], 400);
+            return response()->json(['message' => 'Invalid username/email or password.'], 400);
         }
 
-        $strikeKey = 'login:strikes:'.$email;
-        $lockKey   = 'login:lock:'.$email;
+        $cleanUsername = ltrim($loginInput, '@');
+        // Find user by email OR username OR phone
+        $user = User::where('email', strtolower($loginInput))
+            ->orWhere('username', $loginInput)
+            ->orWhere('username', $cleanUsername)
+            ->orWhere('phone', $loginInput)
+            ->first();
+
+        $rateLimitId = $user ? "user:{$user->id}" : strtolower($cleanUsername);
+        $strikeKey = 'login:strikes:'.$rateLimitId;
+        $lockKey   = 'login:lock:'.$rateLimitId;
 
         // Check Tier 3: Hard Lockout / Mandatory OTP Verification
         $currentStrikes = RateLimiter::attempts($strikeKey);
@@ -280,8 +301,6 @@ class AuthController extends Controller
                 'retry_after'   => $secondsRemaining,
             ], 429);
         }
-
-        $user = User::where('email', $email)->first();
 
         $loginFailed = false;
         if (! $user) {
@@ -321,7 +340,7 @@ class AuthController extends Controller
             }
 
             return response()->json([
-                'message' => 'Invalid email or password.',
+                'message' => 'Invalid username/email or password.',
             ], 401);
         }
 
@@ -412,6 +431,7 @@ class AuthController extends Controller
     {
         $firstName      = $this->normalizeName($request->input('firstName', $request->input('first_name')));
         $lastName       = $this->normalizeName($request->input('lastName',  $request->input('last_name')));
+        $rawUsername    = trim((string) ($request->input('username') ?? ''));
         $email          = $this->normalizeEmail($request->input('email'));
         $password       = is_string($request->input('password')) ? $request->input('password') : '';
         $rawPhone       = trim((string) $request->input('phone', ''));
@@ -423,6 +443,19 @@ class AuthController extends Controller
         if ($firstName === '' || $lastName === '' || $email === '' || $password === '') {
             return response()->json(['message' => 'First name, last name, email, and password are required.'], 400);
         }
+
+        // Dedicated custom username validation
+        $cleanUsername = ltrim($rawUsername, '@');
+        if ($cleanUsername === '') {
+            return response()->json(['message' => 'Username is required.'], 400);
+        }
+        if (! preg_match('/^[a-zA-Z0-9_.]{3,30}$/', $cleanUsername)) {
+            return response()->json(['message' => 'Username must be 3-30 characters long and can only contain letters, numbers, underscores, and periods.'], 400);
+        }
+        if (User::where('username', $cleanUsername)->exists()) {
+            return response()->json(['message' => 'The username "' . $cleanUsername . '" is already taken. Please choose another username.'], 409);
+        }
+
         if (! $this->isValidEmail($email)) {
             return response()->json(['message' => 'Invalid email format.'], 400);
         }
@@ -439,7 +472,7 @@ class AuthController extends Controller
             return response()->json(['message' => 'Email already exists.'], 409);
         }
 
-        $username                = $this->buildUniqueUsername($firstName, $lastName);
+        $username = $cleanUsername;
         $normalizedMembershipType = $membershipType === 'daily' ? 'daily' : 'premium';
         $normalizedPaymentMethod  = match ($paymentMethod) {
             'gcash'           => 'gcash',
@@ -627,10 +660,10 @@ class AuthController extends Controller
         $channel = $request->input('channel') === 'sms' ? 'sms' : ($request->input('channel') === 'email' ? 'email' : '');
         $targetUserId = $request->input('userId') ?? $request->input('user_id');
 
-        if (($parsed['type'] === 'email' && ! $this->isValidEmail($parsed['email']))
-            || ($parsed['type'] === 'phone' && ! $this->isValidPhone($parsed['phone']))
-            || $parsed['type'] === 'unknown' || $channel === '') {
-            return response()->json(['message' => 'Identifier and a valid delivery channel are required.'], 400);
+        if ($channel === '' || $parsed['type'] === 'unknown'
+            || ($parsed['type'] === 'email' && ! $this->isValidEmail($parsed['email']))
+            || ($parsed['type'] === 'phone' && ! $this->isValidPhone($parsed['phone']))) {
+            return response()->json(['message' => 'Valid identifier and delivery channel are required.'], 400);
         }
 
         $limitKey = 'reset-send:'.$request->ip().':'.$parsed['value'];
@@ -1147,11 +1180,14 @@ class AuthController extends Controller
 
     private function formatUserData(User $user): array
     {
+        $fullName = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')) ?: ($user->username ?? 'Member');
         return [
             'id'                    => $user->id,
             'username'              => $user->username,
             'first_name'            => $user->first_name ?? '',
             'last_name'             => $user->last_name  ?? '',
+            'name'                  => $fullName,
+            'full_name'             => $fullName,
             'email'                 => $user->email,
             'role'                  => $user->role,
             'phone'                 => $user->phone,

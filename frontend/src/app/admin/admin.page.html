@@ -849,7 +849,8 @@
             </div>
             <div class="member-card-details">
               <div class="member-card-name-row">
-                <span class="member-name">{{ m.username }}</span>
+                <span class="member-name">{{ m.full_name || (m.first_name ? (m.first_name + ' ' + (m.last_name || '')) : m.username) }}</span>
+                <span class="member-handle" *ngIf="m.username" style="font-size: 0.8rem; color: #94a3b8; font-weight: 500;">@{{ m.username }}</span>
                 <span class="role-badge">{{ m.role }}</span>
               </div>
               <div class="member-meta">{{ m.email }}</div>
@@ -924,7 +925,8 @@
           </div>
           <div class="member-card-details">
             <div class="member-card-name-row">
-              <span class="member-name">{{ m.username }}</span>
+              <span class="member-name">{{ m.full_name || (m.first_name ? (m.first_name + ' ' + (m.last_name || '')) : m.username) }}</span>
+              <span class="member-handle" *ngIf="m.username" style="font-size: 0.8rem; color: #94a3b8; font-weight: 500;">@{{ m.username }}</span>
               <span class="role-badge">{{ m.role }}</span>
               <span class="newest-chip" *ngIf="m.id === latestMemberId">
                 <ion-icon name="sparkles"></ion-icon> Newly Created

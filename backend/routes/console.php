@@ -8,3 +8,5 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 \Illuminate\Support\Facades\Schedule::command('workouts:check-notifications')->everyMinute()->withoutOverlapping();
+\Illuminate\Support\Facades\Schedule::command('memberships:check-expirations')->hourly()->withoutOverlapping();
+

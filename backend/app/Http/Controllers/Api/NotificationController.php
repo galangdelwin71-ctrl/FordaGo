@@ -59,8 +59,12 @@ class NotificationController extends Controller
         try {
             $rows = Cache::remember($cacheKey, 30, function () use ($user, $isStaff) {
                 if ($isStaff) {
-                    return Notification::with('user:id,username,email,role')
+                    $items = Notification::with('user:id,username,email,role')
                         ->select('id', 'user_id', 'title', 'message', 'is_read', 'session_key', 'created_at')
+                        ->where(fn ($q) => $q
+                            ->where('user_id', $user->id)
+                            ->orWhereNull('user_id')
+                        )
                         ->where('created_at', '>=', now()->subDays(30))   // cap to last 30 days
                         ->where('title', 'NOT LIKE', 'Missed Workout%')   // Never show workout reminders in Admin feed
                         ->where('title', 'NOT LIKE', '%Workout Session%')
@@ -69,9 +73,15 @@ class NotificationController extends Controller
                         ->limit(100)   // cap rows to prevent large payloads
                         ->get()
                         ->toArray();
+
+                    // Deduplicate identical title/message pairs within the same minute to eliminate redundancy
+                    return collect($items)->unique(function ($item) {
+                        $minute = substr((string) ($item['created_at'] ?? ''), 0, 16);
+                        return trim($item['title'] ?? '') . '|' . trim($item['message'] ?? '') . '|' . $minute;
+                    })->values()->all();
                 }
 
-                return Notification::select('id', 'user_id', 'title', 'message', 'is_read', 'session_key', 'created_at')
+                $items = Notification::select('id', 'user_id', 'title', 'message', 'is_read', 'session_key', 'created_at')
                     ->where(fn ($q) => $q
                         ->where('user_id', $user->id)
                         ->orWhere(fn ($broadcast) => $broadcast
@@ -83,6 +93,11 @@ class NotificationController extends Controller
                     ->limit(100)   // cap at 100 to prevent large payloads
                     ->get()
                     ->toArray();
+
+                return collect($items)->unique(function ($item) {
+                    $minute = substr((string) ($item['created_at'] ?? ''), 0, 16);
+                    return trim($item['title'] ?? '') . '|' . trim($item['message'] ?? '') . '|' . $minute;
+                })->values()->all();
             });
 
             return response()->json($rows);
@@ -222,6 +237,9 @@ class NotificationController extends Controller
                 ->orWhereNull('user_id')
                 ->update(['is_read' => true]);
 
+            Cache::forget("notifications.user.{$userId}.staff");
+            Cache::forget("notifications.user.{$userId}.member");
+
             return response()->json(['message' => 'All notifications marked as read']);
         }
 
@@ -232,18 +250,26 @@ class NotificationController extends Controller
             )
             ->update(['is_read' => true]);
 
+        Cache::forget("notifications.user.{$userId}.staff");
+        Cache::forget("notifications.user.{$userId}.member");
+
         return response()->json(['message' => 'Marked as read']);
     }
 
     /**
      * DELETE /api/notifications/{id}
      */
-    public function destroy(int $id)
+    public function destroy(Request $request, int $id)
     {
+        $userId = $request->user()->id;
         $notification = Notification::find($id);
         if ($notification) {
             $notification->delete();
         }
+
+        Cache::forget("notifications.user.{$userId}.staff");
+        Cache::forget("notifications.user.{$userId}.member");
+
         return response()->json(['message' => 'Notification deleted']);
     }
 }

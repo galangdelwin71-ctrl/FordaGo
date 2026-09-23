@@ -13,6 +13,7 @@ import {
   alertCircleOutline,
   arrowBackOutline,
   arrowForwardOutline,
+  atOutline,
   barbellOutline,
   bodyOutline,
   calendarOutline,
@@ -42,6 +43,7 @@ import {
   mailOutline,
   peopleOutline,
   personAddOutline,
+  personCircleOutline,
   personOutline,
   phonePortraitOutline,
   scaleOutline,
@@ -165,6 +167,7 @@ export class LoginPage implements OnDestroy {
   reg = {
     firstName: '',
     lastName: '',
+    username: '',
     email: '',
     phone: '',
     gender: '',
@@ -241,6 +244,7 @@ export class LoginPage implements OnDestroy {
       'alert-circle-outline': alertCircleOutline,
       'arrow-back-outline': arrowBackOutline,
       'arrow-forward-outline': arrowForwardOutline,
+      'at-outline': atOutline,
       'barbell-outline': barbellOutline,
       'calendar-outline': calendarOutline,
       'call-outline': callOutline,
@@ -267,6 +271,7 @@ export class LoginPage implements OnDestroy {
       'mail-outline': mailOutline,
       'people-outline': peopleOutline,
       'person-add-outline': personAddOutline,
+      'person-circle-outline': personCircleOutline,
       'person-outline': personOutline,
       'phone-portrait-outline': phonePortraitOutline,
       'scale-outline': scaleOutline,
@@ -448,6 +453,7 @@ export class LoginPage implements OnDestroy {
     return {
       firstName: '',
       lastName: '',
+      username: '',
       email: '',
       phone: '',
       gender: '',
@@ -679,21 +685,22 @@ export class LoginPage implements OnDestroy {
     this.fpError = '';
     const raw = this.fpIdentifier.trim();
     if (!raw) {
-      this.fpError = 'Please enter your registered email or phone number.';
+      this.fpError = 'Please enter your registered username, email, or phone number.';
       return;
     }
 
     const isEmail = raw.includes('@');
     const digits = raw.replace(/\D/g, '');
     const validEmail = isEmail && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(raw.toLowerCase());
-    const validPhone = !isEmail && digits.length >= 10;
+    const validPhone = !isEmail && digits.length >= 10 && /^\d+$/.test(raw);
+    const validUsername = !isEmail && !validPhone && /^[a-zA-Z0-9_.]{3,30}$/.test(raw.replace(/^@/, ''));
 
-    if (!validEmail && !validPhone) {
-      this.fpError = 'Please enter a valid email address or phone number (e.g. 09171234567).';
+    if (!validEmail && !validPhone && !validUsername) {
+      this.fpError = 'Please enter a valid username, email address, or phone number.';
       return;
     }
 
-    const normalized = isEmail ? raw.toLowerCase() : digits;
+    const normalized = isEmail ? raw.toLowerCase() : (validPhone ? digits : raw.replace(/^@/, '').toLowerCase());
     this.fpIdentifier = normalized;
     this.fpLoading = true;
     this.fpAccounts = [];
@@ -869,6 +876,19 @@ export class LoginPage implements OnDestroy {
         this.regError = 'Last name is required.';
         return;
       }
+
+      const usernameVal = (this.reg.username || '').trim().toLowerCase().replace(/^@/, '');
+      if (!usernameVal) {
+        this.regError = 'Please choose a username.';
+        return;
+      }
+
+      if (!/^[a-zA-Z0-9_.]{3,30}$/.test(usernameVal)) {
+        this.regError = 'Username must be 3-30 characters and contain only letters, numbers, underscores, or periods.';
+        return;
+      }
+
+      this.reg.username = usernameVal;
 
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(this.reg.email)) {
         this.regError = 'A valid email is required.';
@@ -1350,16 +1370,24 @@ export class LoginPage implements OnDestroy {
   }
 
   private validateLoginInputs(): boolean {
-    const trimmedEmail = this.email.trim().toLowerCase();
+    const trimmedIdentifier = this.email.trim().toLowerCase();
 
-    if (!trimmedEmail) {
-      this.error = 'Please enter your email.';
+    if (!trimmedIdentifier) {
+      this.error = 'Please enter your username or email.';
       return false;
     }
 
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(trimmedEmail)) {
-      this.error = 'Please enter a valid email address.';
-      return false;
+    if (trimmedIdentifier.includes('@')) {
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(trimmedIdentifier)) {
+        this.error = 'Please enter a valid email address.';
+        return false;
+      }
+    } else {
+      const cleanUsername = trimmedIdentifier.replace(/^@/, '');
+      if (!/^[a-zA-Z0-9_.]{3,30}$/.test(cleanUsername)) {
+        this.error = 'Please enter a valid username (3-30 characters) or email address.';
+        return false;
+      }
     }
 
     if (!this.password) {
@@ -1421,7 +1449,8 @@ export class LoginPage implements OnDestroy {
         this.reg.membership_type,
         this.reg.payment_method,
         fitnessProfile,
-        this.reg.dateOfBirth
+        this.reg.dateOfBirth,
+        this.reg.username
       )
       .subscribe({
         next: (res: any) => {

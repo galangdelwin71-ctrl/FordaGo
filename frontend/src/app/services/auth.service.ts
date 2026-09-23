@@ -57,11 +57,13 @@ export class AuthService {
       fitness_goal?: string | null;
       preferred_workout_time?: string | null;
     },
-    dateOfBirth?: string
+    dateOfBirth?: string,
+    username = ''
   ) {
     const payload: Record<string, any> = {
       firstName,
       lastName,
+      username: username ? username.trim() : undefined,
       email,
       password,
       phone,
@@ -82,8 +84,8 @@ export class AuthService {
     );
   }
 
-  login(email: string, password: string) {
-    return this.http.post<any>(`${this.apiUrl}/login`, { email, password }).pipe(
+  login(identifier: string, password: string) {
+    return this.http.post<any>(`${this.apiUrl}/login`, { email: identifier, identifier, password }).pipe(
       tap(res => {
         if (res && res.token && res.user) {
           localStorage.setItem('token', res.token);

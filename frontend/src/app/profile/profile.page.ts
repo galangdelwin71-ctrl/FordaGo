@@ -99,6 +99,7 @@ import {
 export interface MemberProfile {
   firstName:            string;
   lastName:             string;
+  username?:            string;
   email:                string;
   phone:                string;
   dateOfBirth:          string;
@@ -704,6 +705,7 @@ export class ProfilePage implements OnInit {
       ...this.profile,
       firstName:            first,
       lastName:             last,
+      username:             (user as any).username || '',
       email:                user.email || '',
       phone:                safePhone,
       dateOfBirth:          formattedDob,
@@ -764,6 +766,7 @@ export class ProfilePage implements OnInit {
           ...this.profile,
           firstName:            fFirst,
           lastName:             fLast,
+          username:             freshUser.username || '',
           email:                freshUser.email || '',
           phone:                this.normalizePhone(freshUser.phone || ''),
           dateOfBirth:          fFormattedDob,
