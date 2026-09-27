@@ -6,7 +6,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     background: #ffffff;
-    font-family: 'Segoe UI', Arial, sans-serif;
+    font-family: 'Times New Roman', Times, serif;
     color: #000000;
     padding: 25px;
     width: 2000px;
@@ -65,7 +65,7 @@
         <tr><td>profile_image</td><td>LONGTEXT</td><td>NULLABLE</td><td>Base64 encoded or asset avatar URL</td></tr>
         <tr><td>membership_type</td><td>ENUM</td><td>NOT NULL</td><td>'daily' (₱100 pass) or 'premium' (₱500 monthly)</td></tr>
         <tr><td>membership_status</td><td>ENUM</td><td>NOT NULL</td><td>'active' or 'pending' payment</td></tr>
-        <tr><td>payment_method</td><td>ENUM</td><td>NULLABLE</td><td>'cash' (Counter) or 'gcash' (Online Audit)</td></tr>
+        <tr><td>payment_method</td><td>ENUM</td><td>NULLABLE</td><td>'cash' (Counter POS), 'gcash', 'paymaya', 'card' (Cashless / PayMongo)</td></tr>
         <tr><td>membership_expiry</td><td>DATE</td><td>NULLABLE</td><td>30-day expiration date for premium members</td></tr>
       </table>
     </div>

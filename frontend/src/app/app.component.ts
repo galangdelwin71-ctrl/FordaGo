@@ -324,6 +324,34 @@ export class AppComponent implements OnDestroy {
       this.auth.fetchCurrentUser().subscribe({ error: () => {} });
     }
 
+    // Return to FordaGO APK directly from GCash / Online Payment Gateway
+    App.addListener('appUrlOpen', (event: any) => {
+      this.zone.run(() => {
+        try {
+          if (!event?.url) return;
+          const urlStr = event.url;
+          let pathname = '/inventory';
+          const queryParams: any = {};
+
+          if (urlStr.startsWith('fordago://')) {
+            const parts = urlStr.replace('fordago://', '').split('?');
+            pathname = '/' + (parts[0] || 'inventory');
+            if (parts[1]) {
+              new URLSearchParams(parts[1]).forEach((v, k) => queryParams[k] = v);
+            }
+          } else {
+            const parsed = new URL(urlStr);
+            pathname = parsed.pathname || '/inventory';
+            parsed.searchParams.forEach((v, k) => queryParams[k] = v);
+          }
+
+          this.router.navigate([pathname], { queryParams, replaceUrl: true });
+        } catch (e) {
+          console.error('Error handling deep link:', e);
+        }
+      });
+    });
+
     // Automatically poll and listen for real-time notifications for any logged-in user.
     // Also register FCM token on login so backend can send background push notifications.
     this.auth.user$.pipe(

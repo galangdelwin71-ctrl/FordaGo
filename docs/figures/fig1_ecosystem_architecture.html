@@ -2,288 +2,297 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Figure 1. FordaGO System Ecosystem Architecture</title>
+<title>Figure 1. FordaGO Tri-Tier Ecosystem Architecture</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     background: #ffffff;
     font-family: 'Times New Roman', Times, serif;
+    color: #000000;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 20px 20px 15px;
-    width: 1400px;
-    height: 960px;
+    padding: 25px 25px 30px;
+    width: 1440px;
+    height: 1880px;
+    margin: 0 auto;
   }
-  .header-box {
-    border: 2.5px solid #000000;
-    padding: 16px 36px;
+
+  /* Root Header Box */
+  .top-box {
+    border: 3.5px solid #000000;
+    padding: 20px 40px;
     background: #ffffff;
     text-align: center;
-    border-radius: 6px;
-    width: 660px;
-    box-shadow: 3px 3px 0px #000;
+    width: 1040px;
   }
-  .header-box h2 {
-    font-size: 27px;
-    font-weight: bold;
+  .top-box h1 {
+    font-size: 40px;
+    font-weight: 900;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    margin-bottom: 5px;
+    color: #000000;
+    margin-bottom: 6px;
+    line-height: 1.2;
   }
-  .header-box p {
-    font-size: 17px;
-    color: #222;
+  .top-box p {
+    font-size: 28px;
+    color: #000000;
+    font-weight: 700;
     font-style: italic;
   }
+
+  /* Connector Tree */
   .tree-svg {
-    width: 1320px;
-    height: 60px;
+    width: 1380px;
+    height: 70px;
+    display: block;
+    margin: 0;
   }
+
+  /* 3 Columns Container */
   .columns-container {
     display: flex;
     justify-content: space-between;
-    width: 1360px;
-    gap: 22px;
-  }
-  .col-card {
+    width: 1380px;
+    gap: 28px;
     flex: 1;
-    border: 2.5px solid #000000;
-    border-radius: 6px;
+  }
+
+  /* Column Box */
+  .tier-col {
+    flex: 1;
+    border: 3.5px solid #000000;
     background: #ffffff;
     display: flex;
     flex-direction: column;
-    box-shadow: 3px 3px 0px #000;
   }
-  .col-header {
-    border-bottom: 2px solid #000000;
-    background: #f4f4f4;
-    padding: 14px 10px;
+
+  /* Header inside each column */
+  .tier-header {
     text-align: center;
+    padding: 18px 12px;
+    border-bottom: 3.5px solid #000000;
+    background: #ffffff;
   }
-  .col-header h3 {
-    font-size: 22px;
-    font-weight: bold;
+  .tier-header h2 {
+    font-size: 32px;
+    font-weight: 900;
     text-transform: uppercase;
+    color: #000000;
     letter-spacing: 0.5px;
+    margin-bottom: 4px;
   }
-  .col-header .sub {
-    font-size: 15px;
+  .tier-header .sub {
+    font-size: 24px;
+    font-weight: 700;
     font-style: italic;
-    color: #333;
-    margin-top: 3px;
+    color: #000000;
   }
-  .col-header .role-tag {
-    display: inline-block;
-    margin-top: 8px;
-    padding: 4px 12px;
-    background: #000000;
-    color: #ffffff;
-    font-size: 15px;
-    font-weight: bold;
-    border-radius: 4px;
-  }
-  .feature-list {
-    padding: 18px 18px;
+
+  /* Tier Content */
+  .tier-content {
+    padding: 24px 22px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    justify-content: space-between;
     flex: 1;
   }
-  .feature-item {
+
+  .item {
     display: flex;
     align-items: flex-start;
-    font-size: 16.5px;
     line-height: 1.35;
   }
-  .feature-bullet {
-    font-weight: bold;
-    font-size: 18px;
-    margin-right: 8px;
-    color: #000;
+  .bullet {
+    font-size: 38px;
+    color: #000000;
+    margin-right: 12px;
+    line-height: 0.9;
     flex-shrink: 0;
+    margin-top: 2px;
   }
-  .feature-text strong {
-    font-weight: bold;
-    color: #000;
-    font-size: 17px;
+  .item-text {
+    flex: 1;
   }
-  .feature-text span {
-    color: #222;
-    font-size: 16px;
+  .item-title {
+    font-size: 28px;
+    font-weight: 900;
+    color: #000000;
+    display: block;
+    margin-bottom: 4px;
+    line-height: 1.25;
   }
-  .role-pill {
-    display: inline-block;
-    font-size: 13px;
-    font-weight: bold;
-    background: #e4e4e4;
-    border: 1.5px solid #555;
-    padding: 1px 6px;
-    border-radius: 4px;
-    margin-left: 4px;
-    white-space: nowrap;
-  }
-  .caption {
-    margin-top: 24px;
-    font-size: 22px;
-    font-weight: bold;
-    font-style: italic;
-    text-align: center;
+  .item-desc {
+    font-size: 23px;
+    font-weight: 600;
+    color: #000000;
+    display: block;
+    line-height: 1.35;
   }
 </style>
 </head>
 <body>
 
 <!-- Central Top Box -->
-<div class="header-box">
-  <h2>FordaGO Gym Ecosystem</h2>
-  <p>Mobile-Based Gym Database Management System &bull; AFFORDA Gym</p>
+<div class="top-box">
+  <h1>FORDAGO: TRI-TIER ECOSYSTEM ARCHITECTURE</h1>
+  <p>for AFFORDA Gym – Cabiao Branch</p>
 </div>
 
-<!-- Connector SVG Tree -->
-<svg class="tree-svg" viewBox="0 0 1320 60">
-  <!-- Center top vertical line from header -->
-  <line x1="660" y1="0" x2="660" y2="30" stroke="#000" stroke-width="2.5" />
-  <!-- Horizontal branching bar -->
-  <line x1="215" y1="30" x2="1105" y2="30" stroke="#000" stroke-width="2.5" />
-  <!-- Vertical down to Col 1 -->
-  <line x1="215" y1="30" x2="215" y2="60" stroke="#000" stroke-width="2.5" marker-end="url(#arrow)" />
-  <!-- Vertical down to Col 2 -->
-  <line x1="660" y1="30" x2="660" y2="60" stroke="#000" stroke-width="2.5" marker-end="url(#arrow)" />
-  <!-- Vertical down to Col 3 -->
-  <line x1="1105" y1="30" x2="1105" y2="60" stroke="#000" stroke-width="2.5" marker-end="url(#arrow)" />
+<!-- Connector SVG: Top down to 3 tiers with arrows -->
+<svg class="tree-svg" viewBox="0 0 1380 70">
   <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 1 L 10 5 L 0 9 z" fill="#000" />
+    <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#000000"/>
     </marker>
   </defs>
+  <line x1="690" y1="0" x2="690" y2="34" stroke="#000000" stroke-width="3.5" />
+  <line x1="225" y1="34" x2="1155" y2="34" stroke="#000000" stroke-width="3.5" />
+  <line x1="225" y1="34" x2="225" y2="68" stroke="#000000" stroke-width="3.5" marker-end="url(#arrow)" />
+  <line x1="690" y1="34" x2="690" y2="68" stroke="#000000" stroke-width="3.5" marker-end="url(#arrow)" />
+  <line x1="1155" y1="34" x2="1155" y2="68" stroke="#000000" stroke-width="3.5" marker-end="url(#arrow)" />
 </svg>
 
-<!-- 3 Columns -->
+<!-- 3 Tier Columns -->
 <div class="columns-container">
 
-  <!-- Column 1: Member Mobile Portal -->
-  <div class="col-card">
-    <div class="col-header">
-      <h3>Member Mobile Portal</h3>
-      <div class="sub">Cross-Platform Ionic / Angular Client</div>
-      <div class="role-tag">Primary Actor: Gym Member</div>
+  <!-- TIER 1: CLIENT PRESENTATION TIER -->
+  <div class="tier-col">
+    <div class="tier-header">
+      <h2>TIER 1: PRESENTATION</h2>
+      <div class="sub">(Ionic 8 &amp; Angular Mobile / Web)</div>
     </div>
-    <div class="feature-list">
-      <div class="feature-item">
-        <span class="feature-bullet">&#9658;</span>
-        <div class="feature-text"><strong>Dynamic QR Member Pass:</strong> <span>Entrance turnstile verification with auto-refreshing security tokens.</span></div>
+    <div class="tier-content">
+      <div class="item">
+        <span class="bullet">&bull;</span>
+        <div class="item-text">
+          <span class="item-title">Member Mobile Client &amp; PWA</span>
+          <span class="item-desc">Dynamic QR pass display, workout split logging, 1RM personal records, optical QR machine video guides, and supplement cart checkout.</span>
+        </div>
       </div>
-      <div class="feature-item">
-        <span class="feature-bullet">&#9658;</span>
-        <div class="feature-text"><strong>Equipment QR Placard Scanner:</strong> <span>Scan machine QR tags to view video execution guides & muscle maps.</span></div>
+      <div class="item">
+        <span class="bullet">&bull;</span>
+        <div class="item-text">
+          <span class="item-title">Trainer Studio &amp; Scheduling Suite</span>
+          <span class="item-desc">Trainee client roster management, customized workout plan creation, coaching session calendar, and duplex consultation messaging.</span>
+        </div>
       </div>
-      <div class="feature-item">
-        <span class="feature-bullet">&#9658;</span>
-        <div class="feature-text"><strong>PR & Benchmark Tracker:</strong> <span>Log 1RM strength records (Bench, Squat, Deadlift) with history.</span></div>
+      <div class="item">
+        <span class="bullet">&bull;</span>
+        <div class="item-text">
+          <span class="item-title">Administrative Command &amp; POS</span>
+          <span class="item-desc">Walk-in registrations, POS counter cashiering, inventory stock replenishments, revenue audits, and vector PDF/Excel analytics exports.</span>
+        </div>
       </div>
-      <div class="feature-item">
-        <span class="feature-bullet">&#9658;</span>
-        <div class="feature-text"><strong>Custom Split Routine Planner:</strong> <span>Structure daily targeted muscle splits, exercises, sets, and rep logs.</span></div>
+      <div class="item">
+        <span class="bullet">&bull;</span>
+        <div class="item-text">
+          <span class="item-title">Turnstile Scanner Kiosk Station</span>
+          <span class="item-desc">Front-desk camera optical scanner scanning dynamic QR passes with instant turnstile verification and visual validity status alerts.</span>
+        </div>
       </div>
-      <div class="feature-item">
-        <span class="feature-bullet">&#9658;</span>
-        <div class="feature-text"><strong>Supplement Store & Cart:</strong> <span>Browse inventory catalog, submit orders, and upload GCash receipt proof.</span></div>
-      </div>
-      <div class="feature-item">
-        <span class="feature-bullet">&#9658;</span>
-        <div class="feature-text"><strong>1-on-1 Coach Consultation:</strong> <span>Live WebSocket duplex chat and 1-tap workout plan proposal acceptance.</span></div>
-      </div>
-      <div class="feature-item">
-        <span class="feature-bullet">&#9658;</span>
-        <div class="feature-text"><strong>Interactive Feature Tour:</strong> <span>Guided onboarding walkthrough introducing core app features.</span></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Column 2: Coach Studio -->
-  <div class="col-card">
-    <div class="col-header">
-      <h3>Coach Studio</h3>
-      <div class="sub">Dedicated Personal Trainer Hub</div>
-      <div class="role-tag">Primary Actor: Gym Coach</div>
-    </div>
-    <div class="feature-list">
-      <div class="feature-item">
-        <span class="feature-bullet">&#9658;</span>
-        <div class="feature-text"><strong>Trainee Roster Management:</strong> <span>Direct oversight of assigned gym members, active goals, and progress.</span></div>
-      </div>
-      <div class="feature-item">
-        <span class="feature-bullet">&#9658;</span>
-        <div class="feature-text"><strong>Real-Time Duplex Messaging:</strong> <span>Instant WebSocket chat channels via Laravel Reverb for trainee coaching.</span></div>
-      </div>
-      <div class="feature-item">
-        <span class="feature-bullet">&#9658;</span>
-        <div class="feature-text"><strong>Structured Workout Proposals:</strong> <span>Author & dispatch interactive workout plans with custom exercises & pricing.</span></div>
-      </div>
-      <div class="feature-item">
-        <span class="feature-bullet">&#9658;</span>
-        <div class="feature-text"><strong>Weekly Availability Slots:</strong> <span>Define working shift hours and client consultation booking windows.</span></div>
-      </div>
-      <div class="feature-item">
-        <span class="feature-bullet">&#9658;</span>
-        <div class="feature-text"><strong>Trainee Benchmark Monitoring:</strong> <span>Review client lifting records and workout routine consistency histories.</span></div>
-      </div>
-      <div class="feature-item">
-        <span class="feature-bullet">&#9658;</span>
-        <div class="feature-text"><strong>Group Class Scheduling:</strong> <span>Create public group workout sessions and track attendance rosters.</span></div>
-      </div>
-      <div class="feature-item">
-        <span class="feature-bullet">&#9658;</span>
-        <div class="feature-text"><strong>Coaching Earnings Summary:</strong> <span>Transparent breakdown of completed personal training packages.</span></div>
+      <div class="item">
+        <span class="bullet">&bull;</span>
+        <div class="item-text">
+          <span class="item-title">Capacitor Native Hardware Bridge</span>
+          <span class="item-desc">Cross-platform camera stream access, biometric fingerprint/FaceID authentication, offline caching, and push notification services.</span>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Column 3: Multi-Role Admin Hub -->
-  <div class="col-card">
-    <div class="col-header">
-      <h3>Admin Command Center</h3>
-      <div class="sub">Management & Front-Desk Staff Terminal</div>
-      <div class="role-tag">Actors: Super Admin &bull; Gym Admin &bull; Employee</div>
+  <!-- TIER 2: APPLICATION & LOGIC TIER -->
+  <div class="tier-col">
+    <div class="tier-header">
+      <h2>TIER 2: APPLICATION &amp; LOGIC</h2>
+      <div class="sub">(Laravel 11 REST API Services)</div>
     </div>
-    <div class="feature-list">
-      <div class="feature-item">
-        <span class="feature-bullet">&#9658;</span>
-        <div class="feature-text"><strong>Front-Desk Turnstile QR Scanner:</strong> <span>High-speed entrance validation with anti-pass-sharing debounce. <span class="role-pill">Employee / Admin</span></span></div>
+    <div class="tier-content">
+      <div class="item">
+        <span class="bullet">&bull;</span>
+        <div class="item-text">
+          <span class="item-title">Sanctum Authentication &amp; RBAC</span>
+          <span class="item-desc">Stateful API bearer tokens, 5-tier role-based access middleware guards, TOTP 2FA engine, and encrypted credential handlers.</span>
+        </div>
       </div>
-      <div class="feature-item">
-        <span class="feature-bullet">&#9658;</span>
-        <div class="feature-text"><strong>Walk-In Registration & Renewal:</strong> <span>Fast account lookup, pass tier assignment, and walk-in entry. <span class="role-pill">Employee / Admin</span></span></div>
+      <div class="item">
+        <span class="bullet">&bull;</span>
+        <div class="item-text">
+          <span class="item-title">Real-Time Reverb WebSocket Gateway</span>
+          <span class="item-desc">High-throughput Laravel Reverb server on Port 8080 delivering instant duplex chat broadcasting, live typing status, and administrative alerts.</span>
+        </div>
       </div>
-      <div class="feature-item">
-        <span class="feature-bullet">&#9658;</span>
-        <div class="feature-text"><strong>Counter POS Supplement Sales:</strong> <span>Cash checkout register with atomic stock deductions and receipts. <span class="role-pill">Employee / Admin</span></span></div>
+      <div class="item">
+        <span class="bullet">&bull;</span>
+        <div class="item-text">
+          <span class="item-title">Multi-Channel Payment Processing</span>
+          <span class="item-desc">PayMongo payment gateway webhook verification for GCash, Maya, and card payments, alongside front-desk counter cash register tracking.</span>
+        </div>
       </div>
-      <div class="feature-item">
-        <span class="feature-bullet">&#9658;</span>
-        <div class="feature-text"><strong>Inventory & GCash Order Approvals:</strong> <span>Manage supplement catalog, batch restocks, and GCash audit. <span class="role-pill">Admin / Super Admin</span></span></div>
+      <div class="item">
+        <span class="bullet">&bull;</span>
+        <div class="item-text">
+          <span class="item-title">Attendance &amp; Verification Controllers</span>
+          <span class="item-desc">Encrypted dynamic QR token parsing, anti-passback security validation, entrance logging, and automated member pass renewal calculations.</span>
+        </div>
       </div>
-      <div class="feature-item">
-        <span class="feature-bullet">&#9658;</span>
-        <div class="feature-text"><strong>Equipment QR Placard Generator:</strong> <span>Generate and print high-resolution scannable QR placards. <span class="role-pill">Admin / Super Admin</span></span></div>
+      <div class="item">
+        <span class="bullet">&bull;</span>
+        <div class="item-text">
+          <span class="item-title">Inventory &amp; Vector Report Engine</span>
+          <span class="item-desc">Automated low-stock threshold triggers, multi-table financial aggregations, DomPDF vector document rendering, and Excel spreadsheet exports.</span>
+        </div>
       </div>
-      <div class="feature-item">
-        <span class="feature-bullet">&#9658;</span>
-        <div class="feature-text"><strong>Vector PDF & Excel Export Engines:</strong> <span>Generate formal attendance logs, revenue charts, and sales audits. <span class="role-pill">Admin / Super Admin</span></span></div>
+    </div>
+  </div>
+
+  <!-- TIER 3: DATA & PERSISTENCE TIER -->
+  <div class="tier-col">
+    <div class="tier-header">
+      <h2>TIER 3: DATA &amp; STORAGE</h2>
+      <div class="sub">(MySQL 8.0 &amp; Cloud Asset Storage)</div>
+    </div>
+    <div class="tier-content">
+      <div class="item">
+        <span class="bullet">&bull;</span>
+        <div class="item-text">
+          <span class="item-title">Relational Database Engine</span>
+          <span class="item-desc">MySQL 8.0 relational database with InnoDB storage engine enforcing ACID transaction compliance, foreign keys, and cascade rules.</span>
+        </div>
       </div>
-      <div class="feature-item">
-        <span class="feature-bullet">&#9658;</span>
-        <div class="feature-text"><strong>5-Tier Role & Infrastructure Governance:</strong> <span>Manage staff accounts, RBAC policies, and 3-hour backup tasks. <span class="role-pill">Super Admin Only</span></span></div>
+      <div class="item">
+        <span class="bullet">&bull;</span>
+        <div class="item-text">
+          <span class="item-title">3NF Normalized Relational Schema</span>
+          <span class="item-desc">Normalized schemas for users, memberships, attendances, equipment, workout_sessions, products, orders, and payment records.</span>
+        </div>
+      </div>
+      <div class="item">
+        <span class="bullet">&bull;</span>
+        <div class="item-text">
+          <span class="item-title">Cloud Media &amp; Tutorial Storage</span>
+          <span class="item-desc">Secure cloud repository hosting high-definition equipment video tutorials, machine instruction placards, profile media, and receipts.</span>
+        </div>
+      </div>
+      <div class="item">
+        <span class="bullet">&bull;</span>
+        <div class="item-text">
+          <span class="item-title">Immutable Audit Trails &amp; Logs</span>
+          <span class="item-desc">Persistent system activity logs recording administrative modifications, financial transactions, security events, and turnstile access histories.</span>
+        </div>
+      </div>
+      <div class="item">
+        <span class="bullet">&bull;</span>
+        <div class="item-text">
+          <span class="item-title">Automated Backup &amp; Recovery</span>
+          <span class="item-desc">Scheduled daily mysqldump database snapshots, transaction log retention, and disaster recovery replication for data durability.</span>
+        </div>
       </div>
     </div>
   </div>
 
 </div>
-
-<!-- Caption -->
-<div class="caption">Figure 1. FordaGO System Ecosystem Architecture</div>
 
 </body>
 </html>

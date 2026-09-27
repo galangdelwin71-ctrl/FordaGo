@@ -2,232 +2,316 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Figure 2. IPO Model of FordaGO</title>
+<title>Figure 2. Conceptual Framework (IPO Model) of FordaGO</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     background: #ffffff;
     font-family: 'Times New Roman', Times, serif;
+    color: #000000;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 20px 20px 15px;
-    width: 1400px;
-    height: 1040px;
+    padding: 20px 25px 25px;
+    width: 1440px;
+    height: 1920px;
+    margin: 0 auto;
   }
-  .title-block {
+
+  /* Central Top Box */
+  .top-box {
+    border: 3.5px solid #000000;
+    padding: 18px 40px;
+    background: #ffffff;
     text-align: center;
-    margin-bottom: 20px;
+    width: 1040px;
   }
-  .title-block h1 {
-    font-size: 28px;
-    font-weight: bold;
-    letter-spacing: 0.5px;
+  .top-box h1 {
+    font-size: 38px;
+    font-weight: 900;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #000000;
+    margin-bottom: 6px;
+    line-height: 1.2;
   }
-  .title-block p {
-    font-size: 18px;
+  .top-box p {
+    font-size: 26px;
+    color: #000000;
+    font-weight: 700;
     font-style: italic;
-    color: #222;
-    margin-top: 4px;
   }
-  .ipo-wrapper {
+
+  /* Connector Tree SVG */
+  .tree-svg {
+    width: 1380px;
+    height: 65px;
+    display: block;
+    margin: 0;
+  }
+
+  /* 3 Columns Container */
+  .ipo-container {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    width: 1360px;
+    width: 1380px;
+    gap: 28px;
+    flex: 1;
   }
-  .ipo-col {
-    width: 410px;
-    height: 870px;
-    border: 2.5px solid #000000;
-    border-radius: 6px;
+
+  /* Each IPO Box */
+  .ipo-box {
+    flex: 1;
+    border: 3.5px solid #000000;
     background: #ffffff;
     display: flex;
     flex-direction: column;
-    box-shadow: 3px 3px 0px #000;
   }
-  .ipo-header {
-    background: #f4f4f4;
-    border-bottom: 2.5px solid #000000;
-    padding: 12px 10px;
+
+  /* Box Header */
+  .box-header {
     text-align: center;
+    padding: 16px 10px;
+    border-bottom: 3.5px solid #000000;
+    background: #ffffff;
   }
-  .ipo-header h2 {
-    font-size: 24px;
-    font-weight: bold;
+  .box-header h2 {
+    font-size: 34px;
+    font-weight: 900;
     text-transform: uppercase;
+    color: #000000;
     letter-spacing: 1px;
+    margin-bottom: 4px;
   }
-  .ipo-header .subtitle {
-    font-size: 15px;
+  .box-header .sub {
+    font-size: 23px;
+    font-weight: 700;
     font-style: italic;
-    color: #333;
-    margin-top: 3px;
+    color: #000000;
   }
-  .ipo-content {
-    padding: 16px 16px;
+
+  /* Box Content */
+  .box-content {
+    padding: 22px 20px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    font-size: 15.5px;
-    line-height: 1.35;
+    justify-content: space-between;
     flex: 1;
   }
-  .section-title {
-    font-weight: bold;
-    text-decoration: underline;
-    font-size: 16.5px;
-    margin-top: 3px;
-    color: #000;
-  }
-  .bullet-item {
+
+  .item {
     display: flex;
     align-items: flex-start;
+    line-height: 1.35;
   }
-  .bullet-sym {
-    font-weight: bold;
-    margin-right: 8px;
-    font-size: 16px;
+  .bullet {
+    font-size: 38px;
+    color: #000000;
+    margin-right: 12px;
+    line-height: 0.9;
     flex-shrink: 0;
+    margin-top: 2px;
   }
-  .bullet-item strong {
-    font-size: 16px;
-    color: #000;
+  .item-text {
+    flex: 1;
   }
-  .bullet-item span {
-    color: #222;
-    font-size: 15.5px;
+  .item-title {
+    font-size: 28px;
+    font-weight: 900;
+    color: #000000;
+    display: block;
+    margin-bottom: 3px;
+    line-height: 1.25;
   }
-  .arrow-connector {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 45px;
+  .item-desc {
+    font-size: 23px;
+    font-weight: 600;
+    color: #000000;
+    display: block;
+    line-height: 1.35;
   }
-  .arrow-connector svg {
-    width: 40px;
-    height: 60px;
-  }
-  .caption {
-    margin-top: 22px;
-    font-size: 22px;
-    font-weight: bold;
-    font-style: italic;
-    text-align: center;
+
+  /* Bottom Feedback Loop SVG */
+  .feedback-svg {
+    width: 1380px;
+    height: 75px;
+    display: block;
+    margin-top: 12px;
   }
 </style>
 </head>
 <body>
 
-<div class="title-block">
-  <h1>Conceptual Framework (IPO Model)</h1>
-  <p>FordaGO: Mobile-Based Gym Database Management System</p>
+<!-- Central Top Box -->
+<div class="top-box">
+  <h1>FORDAGO: MOBILE-BASED GYM DATABASE<br>MANAGEMENT SYSTEM</h1>
+  <p>for AFFORDA Gym – Cabiao Branch</p>
 </div>
 
-<div class="ipo-wrapper">
+<!-- Connector SVG: Top down to 3 boxes with arrows -->
+<svg class="tree-svg" viewBox="0 0 1380 65">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#000000"/>
+    </marker>
+  </defs>
+  <line x1="690" y1="0" x2="690" y2="32" stroke="#000000" stroke-width="3.5" />
+  <line x1="225" y1="32" x2="1155" y2="32" stroke="#000000" stroke-width="3.5" />
+  <line x1="225" y1="32" x2="225" y2="63" stroke="#000000" stroke-width="3.5" marker-end="url(#arrow)" />
+  <line x1="690" y1="32" x2="690" y2="63" stroke="#000000" stroke-width="3.5" marker-end="url(#arrow)" />
+  <line x1="1155" y1="32" x2="1155" y2="63" stroke="#000000" stroke-width="3.5" marker-end="url(#arrow)" />
+</svg>
 
-  <!-- INPUT COLUMN -->
-  <div class="ipo-col">
-    <div class="ipo-header">
-      <h2>Input</h2>
-      <div class="subtitle">System Data, Requirements, & Evaluation Criteria</div>
+<!-- 3 Columns Container -->
+<div class="ipo-container">
+
+  <!-- INPUT BOX -->
+  <div class="ipo-box">
+    <div class="box-header">
+      <h2>INPUT</h2>
+      <div class="sub">(System Data, Assets &amp; Specifications)</div>
     </div>
-    <div class="ipo-content">
-      <div class="section-title">User & Account Profiles:</div>
-      <div class="bullet-item"><span class="bullet-sym">&bull;</span><div><strong>5-Tier Authenticated Roles:</strong> <span>Super Admin, Gym Admin, Employee (Front-Desk), Coach, and Member credentials & profiles.</span></div></div>
-      
-      <div class="section-title">Gym Operations & Business Rules:</div>
-      <div class="bullet-item"><span class="bullet-sym">&bull;</span><div><strong>Membership Passes:</strong> <span>Tier durations (Daily, 30-Day, 90-Day, Annual), rates, and active pass policies.</span></div></div>
-      <div class="bullet-item"><span class="bullet-sym">&bull;</span><div><strong>Equipment Catalog:</strong> <span>Machine names, specs, targeted muscle groups, and movement video URLs.</span></div></div>
-
-      <div class="section-title">Optical Hardware & Sensor Inputs:</div>
-      <div class="bullet-item"><span class="bullet-sym">&bull;</span><div><strong>QR Optical Telemetry:</strong> <span>Smartphone camera video stream for QR attendance & equipment placard scanning.</span></div></div>
-
-      <div class="section-title">Fitness & Consultation Data:</div>
-      <div class="bullet-item"><span class="bullet-sym">&bull;</span><div><strong>Workouts & Benchmarks:</strong> <span>Personal Record (PR) lifting metrics and customized weekly split routines.</span></div></div>
-      <div class="bullet-item"><span class="bullet-sym">&bull;</span><div><strong>Trainer Availability & Chat:</strong> <span>Coach working slots, duplex messages, and structured workout proposals.</span></div></div>
-
-      <div class="section-title">Inventory & Point-of-Sale Data:</div>
-      <div class="bullet-item"><span class="bullet-sym">&bull;</span><div><strong>Supplements & Transactions:</strong> <span>Product stock counts, cart orders, and GCash reference numbers/receipts.</span></div></div>
-
-      <div class="section-title">Evaluation Parameters:</div>
-      <div class="bullet-item"><span class="bullet-sym">&bull;</span><div><strong>ISO/IEC 25010 Quality Model:</strong> <span>8 software criteria evaluated by 10 Purposively Sampled Respondents (5 IT Experts and 5 Active Gym Members) via 5-Point Likert Scale.</span></div></div>
+    <div class="box-content">
+      <div class="item">
+        <span class="bullet">&bull;</span>
+        <div class="item-text">
+          <span class="item-title">Member &amp; Account Information</span>
+          <span class="item-desc">User profiles, membership pass tiers, encrypted login credentials, dynamic QR entrance pass tokens, and biometric parameters.</span>
+        </div>
+      </div>
+      <div class="item">
+        <span class="bullet">&bull;</span>
+        <div class="item-text">
+          <span class="item-title">Hardware Telemetry &amp; Placards</span>
+          <span class="item-desc">Front-desk camera optical video streams, turnstile trigger signals, and optical machine placard QR identifiers for equipment guidance.</span>
+        </div>
+      </div>
+      <div class="item">
+        <span class="bullet">&bull;</span>
+        <div class="item-text">
+          <span class="item-title">Operational POS &amp; Inventory Data</span>
+          <span class="item-desc">Supplement retail catalog, stock quantities, unit costs, pricing matrices, walk-in cash payments, and PayMongo transaction receipts.</span>
+        </div>
+      </div>
+      <div class="item">
+        <span class="bullet">&bull;</span>
+        <div class="item-text">
+          <span class="item-title">Coaching &amp; Training Records</span>
+          <span class="item-desc">Trainer profiles, bespoke workout plan proposals, consultation chat feeds, daily split routines, and 1RM personal benchmarks.</span>
+        </div>
+      </div>
+      <div class="item">
+        <span class="bullet">&bull;</span>
+        <div class="item-text">
+          <span class="item-title">Evaluation Metrics &amp; Standards</span>
+          <span class="item-desc">ISO/IEC 25010 software quality characteristics, Likert scale evaluation forms, and empirical usability assessment questionnaires.</span>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- ARROW 1 -->
-  <div class="arrow-connector">
-    <svg viewBox="0 0 50 60">
-      <defs>
-        <marker id="arr1" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-          <path d="M 0 1 L 10 5 L 0 9 z" fill="#000" />
-        </marker>
-      </defs>
-      <line x1="0" y1="30" x2="38" y2="30" stroke="#000" stroke-width="4" marker-end="url(#arr1)" />
-    </svg>
+  <!-- PROCESS BOX -->
+  <div class="ipo-box">
+    <div class="box-header">
+      <h2>PROCESS</h2>
+      <div class="sub">(Iterative Development &amp; Engineering)</div>
+    </div>
+    <div class="box-content">
+      <div class="item">
+        <span class="bullet">&bull;</span>
+        <div class="item-text">
+          <span class="item-title">Planning &amp; Feasibility Analysis</span>
+          <span class="item-desc">Investigating gym bottlenecks, stakeholder interviews, operational delay audits, risk mitigation plans, and agile work breakdown.</span>
+        </div>
+      </div>
+      <div class="item">
+        <span class="bullet">&bull;</span>
+        <div class="item-text">
+          <span class="item-title">Architecture &amp; 3NF Database Design</span>
+          <span class="item-desc">Formulating Use Case diagrams, Context Diagram Level 0, DFD Level 1, and 3NF normalized schema across users, attendances, and orders.</span>
+        </div>
+      </div>
+      <div class="item">
+        <span class="bullet">&bull;</span>
+        <div class="item-text">
+          <span class="item-title">Full-Stack Application Development</span>
+          <span class="item-desc">Building Laravel 11 REST API, Ionic 8/Angular standalone mobile client, Reverb WebSocket channels, and turnstile verification logic.</span>
+        </div>
+      </div>
+      <div class="item">
+        <span class="bullet">&bull;</span>
+        <div class="item-text">
+          <span class="item-title">Multi-Channel Payment Integration</span>
+          <span class="item-desc">Connecting PayMongo gateway for online GCash, Maya, and card transactions, alongside counter POS cash register operations.</span>
+        </div>
+      </div>
+      <div class="item">
+        <span class="bullet">&bull;</span>
+        <div class="item-text">
+          <span class="item-title">Verification &amp; Quality Assessment</span>
+          <span class="item-desc">Unit and functional testing, pilot deployment at AFFORDA Gym, and empirical ISO/IEC 25010 evaluation with statistical analysis.</span>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- PROCESS COLUMN -->
-  <div class="ipo-col">
-    <div class="ipo-header">
-      <h2>Process</h2>
-      <div class="subtitle">System Engineering, Architecture, & Evaluation Phases</div>
+  <!-- OUTPUT BOX -->
+  <div class="ipo-box">
+    <div class="box-header">
+      <h2>OUTPUT</h2>
+      <div class="sub">(Deployed System &amp; Strategic Deliverables)</div>
     </div>
-    <div class="ipo-content">
-      <div class="bullet-item"><span class="bullet-sym">1.</span><div><strong>Requirements Engineering:</strong> <span>Stakeholder interviews at AFFORDA Gym, bottleneck analysis, and Agile SDLC planning.</span></div></div>
-      <div class="bullet-item"><span class="bullet-sym">2.</span><div><strong>Architectural Modeling:</strong> <span>Decoupled Client-Server framework, 5-actor Use Case diagram, Context Diagram, and DFD Level 1.</span></div></div>
-      <div class="bullet-item"><span class="bullet-sym">3.</span><div><strong>Database 3NF Normalization:</strong> <span>Eliminating data redundancy and anomalies into normalized relational tables (MySQL 8.0).</span></div></div>
-      <div class="bullet-item"><span class="bullet-sym">4.</span><div><strong>Backend REST API Engineering:</strong> <span>Laravel 11 (PHP 8.2+) controllers, Eloquent ORM, Sanctum token authentication, & 5-tier RBAC.</span></div></div>
-      <div class="bullet-item"><span class="bullet-sym">5.</span><div><strong>Real-Time WebSocket Server:</strong> <span>Laravel Reverb server (Port 8080) for high-speed duplex chat and live proposal alerts.</span></div></div>
-      <div class="bullet-item"><span class="bullet-sym">6.</span><div><strong>Mobile Client Construction:</strong> <span>Cross-platform Ionic 8 + Angular 18 client with Capacitor camera barcode scanner plugins.</span></div></div>
-      <div class="bullet-item"><span class="bullet-sym">7.</span><div><strong>Turnstile & Attendance Logic:</strong> <span>Dynamic QR verification with debounced anti-pass-sharing timestamp guards.</span></div></div>
-      <div class="bullet-item"><span class="bullet-sym">8.</span><div><strong>POS & Atomic Deductions:</strong> <span>ACID inventory stock deductions and multi-item GCash payment proof auditing.</span></div></div>
-      <div class="bullet-item"><span class="bullet-sym">9.</span><div><strong>Dynamic Report Generation:</strong> <span>jsPDF & AutoTable client engines rendering vector PDF revenue summaries and Excel logs.</span></div></div>
-      <div class="bullet-item"><span class="bullet-sym">10.</span><div><strong>Cloud VPS Deployment & Testing:</strong> <span>Podman container stack, automated 3-hour backup tasks, and ISO/IEC 25010 survey analysis.</span></div></div>
-    </div>
-  </div>
-
-  <!-- ARROW 2 -->
-  <div class="arrow-connector">
-    <svg viewBox="0 0 50 60">
-      <defs>
-        <marker id="arr2" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-          <path d="M 0 1 L 10 5 L 0 9 z" fill="#000" />
-        </marker>
-      </defs>
-      <line x1="0" y1="30" x2="38" y2="30" stroke="#000" stroke-width="4" marker-end="url(#arr2)" />
-    </svg>
-  </div>
-
-  <!-- OUTPUT COLUMN -->
-  <div class="ipo-col">
-    <div class="ipo-header">
-      <h2>Output</h2>
-      <div class="subtitle">Operational Platforms, Records, Reports, & Evaluation</div>
-    </div>
-    <div class="ipo-content">
-      <div class="section-title">Deployed Client Platforms:</div>
-      <div class="bullet-item"><span class="bullet-sym">&bull;</span><div><strong>Member Mobile Portal:</strong> <span>Cross-platform mobile app for workout, attendance, tutorial, and shop access.</span></div></div>
-      <div class="bullet-item"><span class="bullet-sym">&bull;</span><div><strong>Coach Studio Hub:</strong> <span>Workspace for trainee management, duplex messaging, and in-chat proposals.</span></div></div>
-      <div class="bullet-item"><span class="bullet-sym">&bull;</span><div><strong>Admin Command Center:</strong> <span>Multi-tier web/terminal hub for Super Admin, Admin, and Front-Desk staff.</span></div></div>
-
-      <div class="section-title">Operational Records & Automation:</div>
-      <div class="bullet-item"><span class="bullet-sym">&bull;</span><div><strong>Digital Turnstile Attendance Logs:</strong> <span>Automated entrance traffic logs with pass expiration auditing.</span></div></div>
-      <div class="bullet-item"><span class="bullet-sym">&bull;</span><div><strong>Machine Movement Tutorials:</strong> <span>On-demand optical equipment guides and muscle engagement animations.</span></div></div>
-      <div class="bullet-item"><span class="bullet-sym">&bull;</span><div><strong>PR & Workout Progression:</strong> <span>Benchmark lifting records, strength histories, and custom split routines.</span></div></div>
-      <div class="bullet-item"><span class="bullet-sym">&bull;</span><div><strong>POS Orders & Sales Records:</strong> <span>Point-of-sale inventory transaction receipts and GCash approval logs.</span></div></div>
-
-      <div class="section-title">Management Analytics & System Evaluation:</div>
-      <div class="bullet-item"><span class="bullet-sym">&bull;</span><div><strong>Dynamic Vector PDF/Excel Reports:</strong> <span>Attendance, revenue, and inventory analytics ready for export.</span></div></div>
-      <div class="bullet-item"><span class="bullet-sym">&bull;</span><div><strong>Empirical Quality Report:</strong> <span>Highly acceptable ISO/IEC 25010 rating (3.75 IT Experts, 3.82 Active Gym Members).</span></div></div>
+    <div class="box-content">
+      <div class="item">
+        <span class="bullet">&bull;</span>
+        <div class="item-text">
+          <span class="item-title">FordaGO Mobile Application</span>
+          <span class="item-desc">Deployed cross-platform app providing dynamic QR entry passes, workout logging, PR benchmarks, and supplement cart checkout.</span>
+        </div>
+      </div>
+      <div class="item">
+        <span class="bullet">&bull;</span>
+        <div class="item-text">
+          <span class="item-title">Central Administrative Web Portal</span>
+          <span class="item-desc">Management console for walk-in member onboarding, pass renewals, POS counter sales, inventory tracking, and vector PDF/Excel reports.</span>
+        </div>
+      </div>
+      <div class="item">
+        <span class="bullet">&bull;</span>
+        <div class="item-text">
+          <span class="item-title">Coach Studio &amp; Consultation Suite</span>
+          <span class="item-desc">Dedicated trainer web workspace managing trainee client rosters, custom workout proposals, and real-time consultation messaging.</span>
+        </div>
+      </div>
+      <div class="item">
+        <span class="bullet">&bull;</span>
+        <div class="item-text">
+          <span class="item-title">Automated Turnstile QR Station</span>
+          <span class="item-desc">Operational optical QR scanning kiosk confirming member attendance entries, verifying pass validity, and preventing passback.</span>
+        </div>
+      </div>
+      <div class="item">
+        <span class="bullet">&bull;</span>
+        <div class="item-text">
+          <span class="item-title">ISO/IEC 25010 Quality Report</span>
+          <span class="item-desc">Validated assessment findings establishing high software quality, system reliability, operational efficiency, and user satisfaction.</span>
+        </div>
+      </div>
     </div>
   </div>
 
 </div>
 
-<div class="caption">Figure 2. IPO Model of FordaGO</div>
+<!-- Bottom Feedback Loop SVG -->
+<svg class="feedback-svg" viewBox="0 0 1380 75">
+  <defs>
+    <marker id="arrow-back" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 10 1.5 L 0 5 L 10 8.5 z" fill="#000000"/>
+    </marker>
+  </defs>
+  <path d="M 1155 5 L 1155 48 L 225 48 L 225 15" stroke="#000000" stroke-width="3.5" fill="none" marker-end="url(#arrow-back)" />
+  <text x="690" y="38" font-family="'Times New Roman', Times, serif" font-size="24" font-weight="900" text-anchor="middle" fill="#000000" letter-spacing="0.5">CONTINUOUS EVALUATION &amp; SYSTEM FEEDBACK LOOP</text>
+</svg>
 
 </body>
 </html>

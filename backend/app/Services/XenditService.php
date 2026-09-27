@@ -64,7 +64,17 @@ class XenditService
                 'email'       => ! empty($params['customer']['email']) ? $params['customer']['email'] : 'customer@fordago.fit',
             ];
             if (! empty($params['customer']['phone'])) {
-                $payload['customer']['mobile_number'] = $params['customer']['phone'];
+                $rawPhone = preg_replace('/[^0-9]/', '', $params['customer']['phone']);
+                if (str_starts_with($rawPhone, '09') && strlen($rawPhone) === 11) {
+                    $e164 = '+63' . substr($rawPhone, 1);
+                } elseif (str_starts_with($rawPhone, '639') && strlen($rawPhone) === 12) {
+                    $e164 = '+' . $rawPhone;
+                } else {
+                    $e164 = '+63' . ltrim($rawPhone, '0');
+                }
+                if (preg_match('/^\+639\d{9}$/', $e164)) {
+                    $payload['customer']['mobile_number'] = $e164;
+                }
             }
         }
 

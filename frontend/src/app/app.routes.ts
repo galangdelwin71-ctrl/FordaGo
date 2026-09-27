@@ -51,9 +51,21 @@ const memberGuard: CanActivateFn = () => {
 // with guestGuard below (on the login route itself) so a logged-in member
 // can never be routed back to /login, which is what let the hardware back
 // button repeatedly bounce a logged-in user to the login screen.
-const authGuard: CanActivateFn = () => {
+const authGuard: CanActivateFn = (route) => {
   const token = localStorage.getItem('token');
   if (token) return true;
+
+  // If returning from an online payment (GCash / Maya gateway), do not bounce to /login.
+  // Instead, attempt deep-link back to FordaGO APK and allow inventory to show confirmation.
+  if (route.queryParams && route.queryParams['payment'] === 'success') {
+    const ref = route.queryParams['ref'] || '';
+    const sess = route.queryParams['session_id'] || '';
+    const deepLink = `fordago://inventory?payment=success&ref=${encodeURIComponent(ref)}&session_id=${encodeURIComponent(sess)}`;
+    try {
+      window.location.href = deepLink;
+    } catch {}
+    return true;
+  }
 
   const router = inject(Router);
   // replaceUrl: true -- same reasoning as login.page.ts/logout()'s fix:

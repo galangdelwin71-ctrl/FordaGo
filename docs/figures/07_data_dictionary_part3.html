@@ -6,7 +6,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     background: #ffffff;
-    font-family: 'Segoe UI', Arial, sans-serif;
+    font-family: 'Times New Roman', Times, serif;
     color: #000000;
     padding: 25px;
     width: 2000px;
@@ -64,7 +64,7 @@
 
     <!-- Table 10: orders -->
     <div class="table-card">
-      <div class="table-title"><span>Table 10: orders</span><span>Shop POS & GCash Transactions</span></div>
+      <div class="table-title"><span>Table 10: orders</span><span>Shop POS & Multi-Channel Transactions</span></div>
       <table>
         <tr><th>Field Name</th><th>Data Type</th><th>Key / Constraint</th><th>Description</th></tr>
         <tr><td>id</td><td>INT(11)</td><td>PK, Auto Increment</td><td>Order line item transaction ID</td></tr>
@@ -74,8 +74,8 @@
         <tr><td>total</td><td>DECIMAL(10,2)</td><td>NOT NULL</td><td>Line item total amount in Pesos (₱)</td></tr>
         <tr><td>status</td><td>ENUM</td><td>NOT NULL DEFAULT 'pending'</td><td>'pending', 'approved', 'rejected', 'cancelled'</td></tr>
         <tr><td>order_group_id</td><td>VARCHAR(100)</td><td>NOT NULL</td><td>UUID grouping multi-item cart checkouts</td></tr>
-        <tr><td>payment_method</td><td>ENUM</td><td>NOT NULL DEFAULT 'cash'</td><td>'cash' (Counter POS) or 'gcash' (GCash Audit)</td></tr>
-        <tr><td>gcash_reference_number</td><td>VARCHAR(100)</td><td>NULLABLE</td><td>13-digit GCash transaction reference</td></tr>
+        <tr><td>payment_method</td><td>ENUM</td><td>NOT NULL DEFAULT 'cash'</td><td>'cash' (Counter POS), 'gcash', 'paymaya', 'card' (Online / PayMongo)</td></tr>
+        <tr><td>gcash_reference_number</td><td>VARCHAR(100)</td><td>NULLABLE</td><td>Electronic transaction reference (GCash / Maya / PayMongo)</td></tr>
       </table>
     </div>
 

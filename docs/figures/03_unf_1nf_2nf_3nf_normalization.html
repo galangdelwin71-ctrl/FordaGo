@@ -6,7 +6,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     background: #ffffff;
-    font-family: 'Segoe UI', Arial, sans-serif;
+    font-family: 'Times New Roman', Times, serif;
     color: #000000;
     padding: 25px;
     width: 2000px;
@@ -50,7 +50,7 @@
   .table-box th, .table-box td { border: 1px solid #000000; padding: 4px 6px; text-align: left; }
   .table-box th { background: #f0f0f0; font-weight: bold; }
   .unf-text {
-    font-family: 'Consolas', monospace;
+    font-family: 'Times New Roman', Times, serif;
     font-size: 10px;
     background: #f5f5f5;
     padding: 8px;
@@ -86,7 +86,7 @@
       <div class="norm-desc">All attributes across user profiles, attendance check-ins, coach programs, workout splits, POS orders, and real-time chat stored in a single flat structure.</div>
       <div class="unf-text">
         <strong>UNF ATTRIBUTE POOL:</strong><br>
-        [user_id, username, first_name, last_name, email, password, role, phone, gender, profile_image, membership_type, membership_status, payment_method, membership_expiry, attendance_id, check_in_time, att_payment_status, confirmed_by, coach_profile_id, coach_specialty, coach_rate, coach_bio, is_active, coach_day_of_week, start_time, end_time, program_id, program_title, program_desc, program_price, duration_weeks, sessions_per_week, booking_id, booking_amount, booking_status, pr_id, exercise_name, max_weight, reps, workout_session_id, session_date, split_day, exercises_json, conversation_id, message_id, message_body, proposal_id, proposal_title, proposal_price, product_id, product_name, brand, product_price, stock, order_id, order_group_id, quantity, order_total, gcash_reference, order_status, notification_id, feedback_id, rating]
+        [user_id, username, first_name, last_name, email, password, role, phone, gender, profile_image, membership_type, membership_status, payment_method, membership_expiry, attendance_id, check_in_time, att_payment_status, confirmed_by, coach_profile_id, coach_specialty, coach_rate, coach_bio, is_active, coach_day_of_week, start_time, end_time, program_id, program_title, program_desc, program_price, duration_weeks, sessions_per_week, booking_id, booking_amount, booking_status, pr_id, exercise_name, max_weight, reps, workout_session_id, session_date, split_day, exercises_json, conversation_id, message_id, message_body, proposal_id, proposal_title, proposal_price, product_id, product_name, brand, product_price, stock, order_id, order_group_id, quantity, order_total, payment_reference, receipt_number, order_status, notification_id, feedback_id, rating]
       </div>
     </div>
 
@@ -136,7 +136,8 @@
       <div class="norm-desc">All non-key attributes depend solely and directly on the primary key (No non-key &rarr; non-key dependencies). Ensures zero update/deletion anomalies.</div>
       <table class="table-box">
         <tr><th>Final 3NF Table</th><th>PK / FK</th><th>Directly Dependent Attributes (Zero Redundancy)</th></tr>
-        <tr><td><strong>orders</strong></td><td>id (PK)</td><td>user_id (FK), product_id (FK), quantity, total, status, order_group_id, payment_method, gcash_reference_number</td></tr>
+        <tr><td><strong>orders</strong></td><td>id (PK)</td><td>user_id (FK), product_id (FK), quantity, total, status, order_group_id, payment_method, payment_reference</td></tr>
+        <tr><td><strong>payments</strong></td><td>id (PK)</td><td>user_id (FK), receipt_number, payment_for, related_id, amount, payment_channel, status, gateway, paid_at</td></tr>
         <tr><td><strong>equipment_scan_logs</strong></td><td>id (PK)</td><td>user_id (FK), equipment_id (FK), scanned_at</td></tr>
         <tr><td><strong>notifications</strong></td><td>id (PK)</td><td>user_id (FK), title, message, is_read, created_at</td></tr>
         <tr><td><strong>feedbacks</strong></td><td>id (PK)</td><td>user_id (FK), rating, comments, created_at</td></tr>

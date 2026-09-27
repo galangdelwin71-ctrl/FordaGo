@@ -430,15 +430,66 @@ export class InventoryPage implements OnInit {
 
     this.route.queryParams.subscribe((params) => {
       if (params['payment'] === 'success') {
-        const ref = params['ref'];
-        if (ref) {
-          this.lastReceiptNumber = ref;
-          this.paymentService.openReceipt(ref);
-        }
-        this.toast.success('Online payment completed successfully!');
-        this.loadMyOrders();
+        this.checkAndTriggerOrderSuccess(params['ref']);
       }
     });
+  }
+
+  checkAndTriggerOrderSuccess(refParam?: string): void {
+    const isPaymentConfirmed = localStorage.getItem('fordago_payment_confirmed') === 'true';
+    const queryPayment = this.route.snapshot.queryParams['payment'];
+    const activeRef = refParam || this.route.snapshot.queryParams['ref'];
+
+    if (queryPayment === 'success' || isPaymentConfirmed) {
+      localStorage.removeItem('fordago_payment_confirmed');
+
+      // Restore saved order snapshot
+      try {
+        const savedStr = localStorage.getItem('fordago_last_order');
+        if (savedStr) {
+          const saved = JSON.parse(savedStr);
+          if (saved.items && saved.items.length > 0) {
+            this.lastOrderItems = saved.items;
+          }
+          if (saved.total) {
+            this.lastOrderTotal = Number(saved.total);
+          }
+          if (saved.payment) {
+            this.lastOrderPayment = saved.payment;
+          }
+          if (saved.receiptNumber && !activeRef) {
+            this.lastReceiptNumber = saved.receiptNumber;
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to restore saved order snapshot:', e);
+      }
+
+      if (activeRef) {
+        this.lastReceiptNumber = activeRef;
+      }
+      this.lastOrderPayment = this.lastOrderPayment || 'gcash';
+
+      // Close all other modals so the success modal is 100% visible
+      this.orderModalOpen = false;
+      this.cartModalOpen = false;
+      this.quickOrderConfirmOpen = false;
+      this.ordersModalOpen = false;
+
+      // Pop open the exact Order Success Modal!
+      setTimeout(() => {
+        this.orderSuccessOpen = true;
+        this.toast.success('Online payment completed successfully!');
+        this.loadMyOrders();
+      }, 50);
+
+      // Clean query parameters so back button does not re-trigger
+      this.router.navigate([], {
+        queryParams: { payment: null, ref: null, session_id: null },
+        queryParamsHandling: 'merge',
+        replaceUrl: true
+      });
+    }
   }
 
   retryLoadProducts(): void {
@@ -491,6 +542,7 @@ export class InventoryPage implements OnInit {
     // instance and only fires ionViewWillEnter(), never ngOnInit() again.
     // See applyPendingCoachingReopen() / DashboardPage's identical helper.
     this.applyPendingCoachingReopen();
+    this.checkAndTriggerOrderSuccess();
 
     // Re-fetch on every re-entry, mirroring EquipmentPage. Previously this
     // only ran once from ngOnInit(), so if that very first load ever failed
@@ -860,6 +912,14 @@ export class InventoryPage implements OnInit {
     const paymentMethod = this.cartPaymentMethod;
     const headers = { Authorization: `Bearer ${this.auth.token}` };
 
+    // Close modals immediately for GCash/Maya so the sheet disappears
+    // the moment Buy Now is tapped — don't wait for the API round-trip.
+    if (paymentMethod === 'gcash' || paymentMethod === 'paymaya') {
+      this.orderModalOpen = false;
+      this.cartModalOpen = false;
+      this.quickOrderConfirmOpen = false;
+    }
+
     this.http.post<any>(`${this.api}/inventory/cart/checkout`, {
       items: [{ product_id: Number(product.id), quantity }],
       payment_method: paymentMethod === 'paymaya' ? 'gcash' : paymentMethod,
@@ -884,7 +944,7 @@ export class InventoryPage implements OnInit {
             amount: this.lastOrderTotal,
             payment_channel: paymentMethod,
             description: `FordaGO Gym Shop Order: ${product.name} (x${quantity})`,
-            return_url: window.location.origin + '/inventory',
+            return_url: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://168.144.141.27/inventory' : (window.location.origin + '/inventory'),
             items_breakdown: [
               {
                 name: product.name,
@@ -894,7 +954,8 @@ export class InventoryPage implements OnInit {
             ],
           }).subscribe({
             next: (payRes) => {
-              this.closeOrderModal();
+              // Modal already closed above — no-op here but keep for safety
+              this.orderModalOpen = false;
               this.lastReceiptNumber = payRes.receipt_number;
 
               if (payRes.receipt) {
@@ -910,8 +971,18 @@ export class InventoryPage implements OnInit {
                 this.rebuildOrderGroups();
               }
 
+              try {
+                localStorage.setItem('fordago_last_order', JSON.stringify({
+                  items: this.lastOrderItems,
+                  total: this.lastOrderTotal,
+                  payment: paymentMethod,
+                  receiptNumber: payRes.receipt_number,
+                  groupId: groupId,
+                }));
+              } catch (e) {}
+
               if (payRes.checkout_url) {
-                window.location.href = payRes.checkout_url;
+                this.navigateToCheckout(payRes.checkout_url, payRes.session_id, payRes.receipt_number, this.lastOrderTotal);
               } else {
                 this.orderSuccessOpen = true;
               }
@@ -931,6 +1002,26 @@ export class InventoryPage implements OnInit {
         this.orderError = err?.error?.message || 'Could not place order. Please try again.';
       },
     });
+  }
+
+  private navigateToCheckout(checkoutUrl?: string, sessionId?: string, receiptNumber?: string, amount?: number): void {
+    // Safety net: ensure ALL modals are closed before navigating away
+    // so nothing bleeds through underneath the gcash-checkout page.
+    this.orderModalOpen = false;
+    this.cartModalOpen = false;
+    this.quickOrderConfirmOpen = false;
+    this.ordersModalOpen = false;
+
+    const qParams: any = {
+      session_id: sessionId || ('cs_' + Date.now()),
+      amount: amount || this.lastOrderTotal,
+      ref: receiptNumber || this.lastReceiptNumber,
+      desc: 'FordaGO Gym Shop Order',
+      return_url: '/inventory'
+    };
+
+    // ALWAYS open inside the FordaGO app — never redirect to external browser.
+    this.router.navigate(['/gcash-checkout'], { queryParams: qParams });
   }
 
   cartQtyFor(productId: string): number {
@@ -977,6 +1068,14 @@ export class InventoryPage implements OnInit {
     this.quickOrderingId = product.id;
     const headers = { Authorization: `Bearer ${this.auth.token}` };
 
+    // Close the confirm sheet immediately for GCash/Maya so it dismisses
+    // the moment the user confirms — don't wait for the API round-trip.
+    if (this.cartPaymentMethod === 'gcash' || this.cartPaymentMethod === 'paymaya') {
+      this.quickOrderConfirmOpen = false;
+      this.orderModalOpen = false;
+      this.cartModalOpen = false;
+    }
+
     this.http.post<any>(`${this.api}/inventory/cart/checkout`, {
       items: [{ product_id: Number(product.id), quantity: 1 }],
       payment_method: this.cartPaymentMethod === 'paymaya' ? 'gcash' : this.cartPaymentMethod,
@@ -993,13 +1092,14 @@ export class InventoryPage implements OnInit {
         const groupId = res?.order_group_id;
 
         if (this.cartPaymentMethod === 'gcash' || this.cartPaymentMethod === 'paymaya') {
+
           this.paymentService.createCheckout({
             payment_for: 'order',
             related_id: groupId,
             amount: this.lastOrderTotal,
             payment_channel: this.cartPaymentMethod,
             description: `FordaGO Gym Shop Order (1x ${product.name})`,
-            return_url: window.location.origin + '/inventory',
+            return_url: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://168.144.141.27/inventory' : (window.location.origin + '/inventory'),
             items_breakdown: [{
               name: product.name,
               quantity: 1,
@@ -1013,8 +1113,18 @@ export class InventoryPage implements OnInit {
               }
               this.quickOrderConfirmOpen = false;
               this.quickOrderProduct = null;
+              try {
+                localStorage.setItem('fordago_last_order', JSON.stringify({
+                  items: this.lastOrderItems,
+                  total: this.lastOrderTotal,
+                  payment: this.cartPaymentMethod,
+                  receiptNumber: payRes.receipt_number,
+                  groupId: groupId,
+                }));
+              } catch (e) {}
+
               if (payRes.checkout_url) {
-                window.location.href = payRes.checkout_url;
+                this.navigateToCheckout(payRes.checkout_url, payRes.session_id, payRes.receipt_number, this.lastOrderTotal);
               } else {
                 this.orderSuccessOpen = true;
               }
@@ -1120,7 +1230,7 @@ export class InventoryPage implements OnInit {
             amount: this.lastOrderTotal,
             payment_channel: this.cartPaymentMethod,
             description: `FordaGO Gym Shop Order (${cartSnapshot.length} items)`,
-            return_url: window.location.origin + '/inventory',
+            return_url: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://168.144.141.27/inventory' : (window.location.origin + '/inventory'),
             items_breakdown: cartSnapshot.map(i => ({
               name: i.product.name,
               quantity: i.quantity,
@@ -1145,9 +1255,18 @@ export class InventoryPage implements OnInit {
                 this.rebuildOrderGroups();
               }
 
+              try {
+                localStorage.setItem('fordago_last_order', JSON.stringify({
+                  items: cartSnapshot,
+                  total: this.lastOrderTotal,
+                  payment: this.cartPaymentMethod,
+                  receiptNumber: payRes.receipt_number,
+                  groupId: groupId,
+                }));
+              } catch (e) {}
+
               if (payRes.checkout_url) {
-                // Real PayMongo portal / GCash Checkout: redirect customer
-                window.location.href = payRes.checkout_url;
+                this.navigateToCheckout(payRes.checkout_url, payRes.session_id, payRes.receipt_number, this.lastOrderTotal);
               } else {
                 this.orderSuccessOpen = true;
               }

@@ -11,524 +11,439 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
-.gcash-container {
+.gcash-wrapper {
   max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  padding: 0 16px 32px;
 }
 
-// ── Header ──
-.gcash-header {
+.step-container {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 4px 16px;
-
-  .header-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .gcash-logo-text {
-    font-size: 26px;
-    font-weight: 900;
-    color: #005ce6;
-    letter-spacing: -0.5px;
-
-    .cash {
-      color: #0073e6;
-    }
-  }
-
-  .secure-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    background: rgba(0, 92, 230, 0.08);
-    color: #005ce6;
-    font-size: 10px;
-    font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 12px;
-    letter-spacing: 0.5px;
-
-    ion-icon {
-      font-size: 13px;
-    }
-  }
-
-  .btn-cancel-top {
-    background: transparent;
-    border: none;
-    font-size: 24px;
-    color: #64748b;
-    cursor: pointer;
-    padding: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: color 0.2s;
-
-    &:hover {
-      color: #0f172a;
-    }
-  }
+  flex-direction: column;
+  min-height: 100vh;
 }
 
-// ── Merchant Banner Card ──
-.merchant-banner {
-  background: linear-gradient(135deg, #005ce6 0%, #0040b3 100%);
+// ── Blue Top Header ──
+.gcash-blue-header {
+  background: #005ce6;
+  padding: max(36px, env(safe-area-inset-top, 36px)) 16px 40px;
   color: #ffffff;
-  border-radius: 20px;
-  padding: 20px 22px;
-  margin-bottom: 16px;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  box-shadow: 0 8px 24px rgba(0, 92, 230, 0.25);
+  position: relative;
 
-  .merchant-meta {
+  .header-top-actions {
+    width: 100%;
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
 
-    .merchant-label {
-      font-size: 10px;
-      font-weight: 700;
-      color: rgba(255, 255, 255, 0.7);
-      letter-spacing: 0.5px;
+    .header-placeholder {
+      width: 32px;
     }
 
-    .merchant-name {
-      font-size: 17px;
-      font-weight: 800;
-      margin: 0;
+    .btn-header-close {
+      background: transparent;
+      border: none;
       color: #ffffff;
-    }
+      font-size: 26px;
+      padding: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.9;
+      transition: opacity 0.2s;
 
-    .payment-desc {
-      font-size: 12px;
-      color: rgba(255, 255, 255, 0.85);
-      max-width: 220px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      &:active {
+        opacity: 0.7;
+      }
     }
   }
 
-  .amount-badge {
-    text-align: right;
+  .gcash-logo-brand {
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    gap: 10px;
 
-    .currency {
-      font-size: 10px;
-      font-weight: 700;
-      color: rgba(255, 255, 255, 0.7);
+    .gcash-mark-svg {
+      width: 34px;
+      height: 34px;
     }
 
-    .amount-val {
-      font-size: 22px;
-      font-weight: 900;
+    .gcash-text-white {
+      font-size: 26px;
+      font-weight: 800;
+      color: #ffffff;
       letter-spacing: -0.5px;
     }
   }
+
+  &.confirm-header {
+    padding-bottom: 34px;
+
+    .confirm-top-bar {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+
+      .btn-back-white {
+        background: transparent;
+        border: none;
+        color: #ffffff;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 0;
+
+        ion-icon {
+          font-size: 20px;
+        }
+
+        &:active {
+          opacity: 0.7;
+        }
+      }
+    }
+  }
+
+  &.success-header {
+    padding-bottom: 32px;
+  }
 }
 
-// ── Main Card ──
-.gcash-card {
-  background: #ffffff;
-  border-radius: 20px;
-  padding: 24px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+// ── Main Content Body with Overlapping Card ──
+.gcash-content-body {
+  padding: 0 16px 32px;
+  margin-top: -24px;
   flex: 1;
-}
-
-.step-panel {
   display: flex;
   flex-direction: column;
 }
 
-.step-header {
-  margin-bottom: 20px;
+.gcash-white-card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 24px 20px;
+  box-shadow: 0 8px 24px rgba(0, 92, 230, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
 
-  .btn-back-step {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    background: transparent;
-    border: none;
-    color: #005ce6;
-    font-size: 13px;
+// ── Step 1: QR Card ──
+.qr-card {
+  text-align: center;
+
+  .qr-heading {
+    font-size: 16px;
     font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 20px;
+    line-height: 1.4;
+  }
+
+  .btn-open-gcash {
+    width: 100%;
+    height: 48px;
+    border-radius: 24px;
+    background: #005ce6;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 700;
+    border: none;
     cursor: pointer;
-    padding: 0 0 12px;
-  }
-
-  .step-indicator {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 700;
-    color: #005ce6;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 4px;
-  }
-
-  .step-title {
-    font-size: 20px;
-    font-weight: 800;
-    color: #0f172a;
-    margin: 0 0 6px;
-    letter-spacing: -0.3px;
-  }
-
-  .step-subtitle {
-    font-size: 13px;
-    color: #64748b;
-    margin: 0;
-    line-height: 1.5;
-
-    .masked-num {
-      color: #005ce6;
-    }
-  }
-}
-
-// ── Form Elements ──
-.gcash-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.input-label {
-  font-size: 12px;
-  font-weight: 700;
-  color: #334155;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.phone-input-wrap {
-  display: flex;
-  align-items: center;
-  background: #f8fafc;
-  border: 1.5px solid #cbd5e1;
-  border-radius: 12px;
-  padding: 4px 14px;
-  transition: all 0.2s;
-
-  &:focus-within {
-    border-color: #005ce6;
-    box-shadow: 0 0 0 3px rgba(0, 92, 230, 0.15);
-    background: #ffffff;
-  }
-
-  &.has-error {
-    border-color: #ef4444;
-    background: #fef2f2;
-  }
-
-  .phone-prefix {
-    font-size: 16px;
-    font-weight: 700;
-    color: #0f172a;
-    padding-right: 10px;
-    border-right: 1px solid #cbd5e1;
-    margin-right: 10px;
-  }
-
-  .phone-field {
-    flex: 1;
-    border: none;
-    background: transparent;
-    font-size: 16px;
-    font-weight: 600;
-    color: #0f172a;
-    outline: none;
-    padding: 10px 0;
-    letter-spacing: 0.5px;
-
-    &::placeholder {
-      color: #94a3b8;
-      font-weight: 400;
-    }
-  }
-}
-
-.error-msg {
-  color: #ef4444;
-  font-size: 12px;
-  font-weight: 600;
-  margin-top: 4px;
-}
-
-.security-notice {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  color: #166534;
-  padding: 10px 12px;
-  border-radius: 10px;
-  font-size: 11px;
-  line-height: 1.4;
-
-  ion-icon {
-    font-size: 16px;
-    flex-shrink: 0;
-    margin-top: 1px;
-  }
-}
-
-// ── Primary Buttons ──
-.btn-gcash-primary {
-  background: #005ce6;
-  color: #ffffff;
-  border: none;
-  border-radius: 14px;
-  padding: 14px 20px;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  box-shadow: 0 4px 12px rgba(0, 92, 230, 0.25);
-
-  &:hover:not(:disabled) {
-    background: #0040b3;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(0, 92, 230, 0.35);
-  }
-
-  &:active:not(:disabled) {
-    transform: translateY(0);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  ion-spinner {
-    width: 22px;
-    height: 22px;
-    --color: #ffffff;
-  }
-}
-
-// ── OTP Boxes ──
-.otp-inputs-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  margin: 16px 0;
-
-  .otp-box {
-    width: 48px;
-    height: 54px;
-    border-radius: 12px;
-    border: 1.5px solid #cbd5e1;
-    background: #f8fafc;
-    text-align: center;
-    font-size: 22px;
-    font-weight: 800;
-    color: #0f172a;
-    outline: none;
+    box-shadow: 0 4px 12px rgba(0, 92, 230, 0.25);
     transition: all 0.2s;
 
-    &:focus {
-      border-color: #005ce6;
-      background: #ffffff;
-      box-shadow: 0 0 0 3px rgba(0, 92, 230, 0.15);
+    &:active {
+      transform: scale(0.98);
+      background: #0047b3;
     }
   }
-}
 
-.demo-helper {
-  text-align: center;
-  margin: 8px 0;
+  .qr-instruction {
+    font-size: 13px;
+    color: #334155;
+    font-weight: 600;
+    margin: 24px 0 16px;
+    line-height: 1.4;
+  }
 
-  .btn-demo-otp {
-    background: rgba(0, 92, 230, 0.08);
-    border: 1px dashed #005ce6;
-    color: #005ce6;
-    font-size: 12px;
-    font-weight: 700;
-    padding: 6px 14px;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: background 0.2s;
+  .qr-box {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    padding: 12px;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    margin-bottom: 20px;
 
-    &:hover {
-      background: rgba(0, 92, 230, 0.15);
+    .qr-image {
+      width: 220px;
+      height: 220px;
+      display: block;
+      border-radius: 8px;
     }
   }
-}
 
-.resend-wrap {
-  text-align: center;
-  margin: 14px 0 20px;
-  font-size: 12px;
+  .qr-alt-action {
+    margin-top: 8px;
 
-  .resend-timer {
-    color: #64748b;
-  }
-
-  .btn-resend {
-    background: transparent;
-    border: none;
-    color: #005ce6;
-    font-weight: 700;
-    cursor: pointer;
-    text-decoration: underline;
-  }
-}
-
-// ── MPIN Section ──
-.gcash-balance-box {
-  background: #f0f7ff;
-  border: 1px solid #bfdbfe;
-  border-radius: 12px;
-  padding: 12px 14px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-
-  .balance-left {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    .acc-label {
-      font-size: 10px;
-      font-weight: 700;
+    .btn-proceed-web {
+      background: rgba(0, 92, 230, 0.08);
       color: #005ce6;
-      letter-spacing: 0.5px;
-    }
-    .acc-phone {
-      font-size: 13px;
+      border: 1.5px solid rgba(0, 92, 230, 0.2);
+      border-radius: 24px;
+      width: 100%;
+      height: 46px;
+      font-size: 14px;
       font-weight: 700;
-      color: #0f172a;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+
+      ion-icon {
+        font-size: 16px;
+      }
+
+      &:active {
+        background: rgba(0, 92, 230, 0.16);
+      }
     }
   }
+}
 
-  .balance-right {
-    text-align: right;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    .bal-label {
-      font-size: 10px;
-      font-weight: 600;
-      color: #64748b;
-    }
-    .bal-amount {
-      font-size: 14px;
+// ── Step 2: Confirm Payment Card ──
+.confirm-card {
+  .confirm-merchant-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #0047b3;
+    text-align: center;
+    margin: 0 0 20px;
+    letter-spacing: -0.2px;
+  }
+
+  .confirm-section {
+    margin-bottom: 20px;
+
+    .section-label-blue {
+      display: block;
+      font-size: 11px;
       font-weight: 800;
       color: #005ce6;
+      letter-spacing: 0.8px;
+      margin-bottom: 10px;
     }
   }
-}
 
-.mpin-bubbles-wrap {
-  display: flex;
-  justify-content: center;
-  gap: 18px;
-  margin: 20px 0 24px;
+  .pay-method-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
 
-  .mpin-bubble {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    border: 2px solid #94a3b8;
-    background: transparent;
-    transition: all 0.2s ease;
+    .pm-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
 
-    &.filled {
-      background: #005ce6;
-      border-color: #005ce6;
-      transform: scale(1.1);
+      .pm-brand {
+        font-size: 15px;
+        font-weight: 700;
+        color: #0f172a;
+      }
+
+      .pm-sublink {
+        font-size: 12px;
+        color: #005ce6;
+        font-weight: 600;
+      }
+    }
+
+    .pm-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .pm-bal-info {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 2px;
+
+        .pm-bal-val {
+          font-size: 14px;
+          font-weight: 700;
+          color: #0f172a;
+        }
+
+        .pm-bal-label {
+          font-size: 11px;
+          color: #64748b;
+        }
+      }
+
+      .pm-radio-selected {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        border: 2px solid #005ce6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .radio-dot {
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          background: #005ce6;
+        }
+      }
     }
   }
-}
 
-.mpin-keypad {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-bottom: 24px;
+  .cost-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    font-size: 14px;
 
-  .keypad-btn {
-    height: 52px;
-    border-radius: 12px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    font-size: 20px;
-    font-weight: 700;
-    color: #0f172a;
+    .cost-label {
+      color: #475569;
+    }
+
+    .cost-val {
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    &.voucher-row {
+      .voucher-label {
+        color: #005ce6;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+      }
+
+      .voucher-status {
+        color: #64748b;
+      }
+    }
+
+    &.total-row {
+      padding-top: 12px;
+
+      .total-label {
+        font-size: 17px;
+        font-weight: 800;
+        color: #0f172a;
+      }
+
+      .total-val {
+        font-size: 20px;
+        font-weight: 900;
+        color: #0f172a;
+      }
+    }
+  }
+
+  .cost-divider {
+    height: 1px;
+    background: #e2e8f0;
+    margin: 8px 0;
+  }
+
+  .confirm-disclaimer {
+    font-size: 11px;
+    color: #64748b;
+    text-align: center;
+    line-height: 1.4;
+    margin: 16px 0 20px;
+  }
+
+  .btn-pay-blue {
+    width: 100%;
+    height: 50px;
+    border-radius: 25px;
+    background: #005ce6;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 800;
+    border: none;
     cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0, 92, 230, 0.3);
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.15s;
+    gap: 8px;
+    transition: all 0.2s;
 
-    &:active {
-      background: #e2e8f0;
+    &:active:not(:disabled) {
+      transform: scale(0.98);
+      background: #0047b3;
     }
 
-    &.empty {
-      background: transparent;
-      border: none;
-      cursor: default;
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
-    &.backspace {
-      font-size: 22px;
-      color: #64748b;
+    ion-spinner {
+      width: 22px;
+      height: 22px;
+      --color: #ffffff;
     }
   }
 }
 
-// ── Success State ──
-.success-panel {
+// ── Step 3: Success Card ──
+.success-card {
   text-align: center;
-  padding: 16px 0;
+  padding: 28px 20px;
 
-  .success-icon-wrap {
+  .success-icon-halo {
     ion-icon {
       font-size: 72px;
       color: #10b981;
     }
     margin-bottom: 12px;
+    animation: successPulse 0.5s ease-out;
   }
 
-  .success-title {
+  .success-heading {
     font-size: 22px;
     font-weight: 800;
     color: #0f172a;
-    margin: 0 0 6px;
+    margin: 0 0 8px;
   }
 
-  .success-subtitle {
+  .success-desc {
     font-size: 13px;
     color: #64748b;
     line-height: 1.5;
     margin: 0 0 20px;
+
+    strong {
+      color: #0f172a;
+    }
   }
 
-  .receipt-summary-box {
+  .success-receipt-box {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
     border-radius: 14px;
@@ -536,31 +451,46 @@
     margin-bottom: 20px;
     text-align: left;
 
-    .summary-row {
+    .receipt-item {
       display: flex;
       justify-content: space-between;
       padding: 6px 0;
       font-size: 13px;
 
-      .label {
+      .r-label {
         color: #64748b;
       }
-      .value {
+
+      .r-val {
         color: #0f172a;
+        font-weight: 600;
+
+        &.font-mono {
+          font-family: monospace;
+          font-weight: 700;
+        }
+
+        &.text-gcash {
+          color: #005ce6;
+          font-weight: 700;
+        }
+
+        &.font-bold {
+          font-weight: 800;
+          font-size: 15px;
+          color: #0f172a;
+        }
       }
-      .font-mono {
-        font-family: monospace;
-      }
-      .font-bold {
-        font-weight: 700;
-      }
-      .text-blue {
-        color: #005ce6;
+
+      &.total-item {
+        border-top: 1px dashed #cbd5e1;
+        margin-top: 6px;
+        padding-top: 10px;
       }
     }
   }
 
-  .redirecting-notice {
+  .success-auto-notice {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -568,18 +498,96 @@
     color: #005ce6;
     font-size: 12px;
     font-weight: 600;
-    margin-bottom: 12px;
+    margin-bottom: 16px;
 
     ion-spinner {
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
       --color: #005ce6;
+    }
+  }
+
+  .btn-return-app {
+    width: 100%;
+    border: none;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #005ce6 0%, #003d99 100%);
+    color: #ffffff;
+    padding: 14px 18px;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(0, 92, 230, 0.35);
+    margin: 18px 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:active {
+      transform: scale(0.98);
+      box-shadow: 0 3px 10px rgba(0, 92, 230, 0.25);
+    }
+
+    .return-btn-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-align: left;
+    }
+
+    .return-icon {
+      font-size: 28px;
+      flex-shrink: 0;
+      color: #ffffff;
+    }
+
+    .return-btn-labels {
+      display: flex;
+      flex-direction: column;
+
+      .return-primary {
+        font-size: 15px;
+        font-weight: 800;
+        letter-spacing: 0.2px;
+        line-height: 1.2;
+      }
+
+      .return-secondary {
+        font-size: 11px;
+        font-weight: 500;
+        opacity: 0.85;
+        margin-top: 2px;
+      }
+    }
+  }
+
+  .manual-return-hint {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.4;
+    margin: 8px 0 4px;
+    text-align: center;
+  }
+
+  .btn-pay-blue {
+    width: 100%;
+    height: 48px;
+    border-radius: 24px;
+    background: #005ce6;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:active {
+      background: #0047b3;
     }
   }
 }
 
-// ── Footer ──
-.gcash-footer {
+// ── Footer Cancel ──
+.gcash-page-footer {
   text-align: center;
   margin-top: 20px;
 
@@ -591,18 +599,16 @@
     font-weight: 600;
     cursor: pointer;
     text-decoration: underline;
-    padding: 8px 12px;
-    transition: color 0.2s;
+    padding: 6px 12px;
 
     &:hover {
       color: #ef4444;
     }
   }
+}
 
-  .footer-fineprint {
-    margin-top: 12px;
-    font-size: 10px;
-    color: #94a3b8;
-    line-height: 1.4;
-  }
+@keyframes successPulse {
+  0% { transform: scale(0.6); opacity: 0; }
+  70% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); }
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -8,12 +8,18 @@ import {
   shieldCheckmark,
   checkmarkCircle,
   arrowBackOutline,
+  arrowBackCircleOutline,
+  arrowForwardOutline,
   lockClosedOutline,
   phonePortraitOutline,
   keypadOutline,
   closeOutline,
-  checkmarkOutline
+  checkmarkOutline,
+  openOutline,
+  chevronForwardOutline,
+  radioButtonOnOutline
 } from 'ionicons/icons';
+import QRCode from 'qrcode';
 import { PaymentService } from '../services/payment.service';
 
 @Component({
@@ -24,35 +30,23 @@ import { PaymentService } from '../services/payment.service';
   imports: [CommonModule, FormsModule, IonContent, IonIcon, IonSpinner],
   providers: [DecimalPipe]
 })
-export class GcashCheckoutPage implements OnInit {
+export class GcashCheckoutPage implements OnInit, OnDestroy {
   // Query parameters
   sessionId = '';
   amount = 0;
   refNumber = '';
-  description = 'FordaGO Gym Payment';
+  description = 'FordaGO Gym Shop Order';
   returnUrl = '';
   cancelUrl = '';
 
-  // Form Wizard State: 1 = Phone Input, 2 = OTP Code, 3 = MPIN, 4 = Success Processing
-  step: 1 | 2 | 3 | 4 = 1;
+  // Wizard state: 1 = Scan QR / Open in GCash, 2 = Confirm Payment, 3 = Payment Successful
+  step: 1 | 2 | 3 = 1;
 
-  // Step 1: Mobile Number
-  phoneNumber = '';
-  phoneError = '';
-
-  // Step 2: OTP
-  otpDigits: string[] = ['', '', '', '', '', ''];
-  otpError = '';
-  resendCountdown = 30;
-  private timer: any = null;
-
-  // Step 3: MPIN
-  mpinDigits: string[] = ['', '', '', ''];
-  mpinError = '';
+  // QR Code
+  qrDataUrl = '';
   isProcessingPay = false;
-
-  // Step 4: Success
-  redirectCountdown = 2;
+  redirectCountdown = 6;
+  private redirectTimer: any = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -64,31 +58,37 @@ export class GcashCheckoutPage implements OnInit {
       'shield-checkmark': shieldCheckmark,
       'checkmark-circle': checkmarkCircle,
       'arrow-back-outline': arrowBackOutline,
+      'arrow-forward-outline': arrowForwardOutline,
       'lock-closed-outline': lockClosedOutline,
       'phone-portrait-outline': phonePortraitOutline,
       'keypad-outline': keypadOutline,
       'close-outline': closeOutline,
       'checkmark-outline': checkmarkOutline,
+      'open-outline': openOutline,
+      'chevron-forward-outline': chevronForwardOutline,
+      'radio-button-on-outline': radioButtonOnOutline,
+      'arrow-back-circle-outline': arrowBackCircleOutline,
     });
+  }
+
+  ngOnDestroy(): void {
+    if (this.redirectTimer) {
+      clearInterval(this.redirectTimer);
+      this.redirectTimer = null;
+    }
   }
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
       this.sessionId = params['session_id'] || ('cs_mock_' + Date.now());
-      this.amount = Number(params['amount'] || 500);
+      this.amount = Number(params['amount'] || 15);
       this.refNumber = params['ref'] || ('FGO-REC-' + Math.floor(100000 + Math.random() * 900000));
-      this.description = params['desc'] || params['name'] || 'FordaGO Gym Payment';
+      this.description = params['desc'] || params['name'] || 'FordaGO Fitness & Wellness';
       this.returnUrl = params['return_url'] || '';
       this.cancelUrl = params['cancel_url'] || '';
-    });
-  }
 
-  get maskedPhone(): string {
-    const raw = this.phoneNumber.replace(/\D/g, '');
-    if (raw.length >= 10) {
-      return `+63 ${raw.slice(0, 3)} *** ${raw.slice(-4)}`;
-    }
-    return '+63 9** *** ****';
+      this.generateQrCode();
+    });
   }
 
   formatAmount(): string {
@@ -96,138 +96,127 @@ export class GcashCheckoutPage implements OnInit {
   }
 
   getAvailableBalance(): string {
-    const bal = Math.max(2850, this.amount + 1750);
+    const bal = Math.max(2850, this.amount + 1250);
     return this.decimalPipe.transform(bal, '1.2-2') || '2,850.00';
   }
 
-  // Step 1: Submit Phone Number
-  submitPhone(): void {
-    const clean = this.phoneNumber.replace(/\D/g, '');
-    if (clean.length < 10) {
-      this.phoneError = 'Please enter a valid 11-digit GCash mobile number (e.g., 0917 123 4567)';
-      return;
+  getCurrentDateTime(): string {
+    return new Date().toLocaleString('en-PH', {
+      dateStyle: 'medium',
+      timeStyle: 'short'
+    });
+  }
+
+  // Deep-link to open installed GCash app on phone
+  openRealGcashApp(): void {
+    try {
+      window.location.href = 'gcash://';
+    } catch {
+      window.open('gcash://', '_system');
     }
-    this.phoneError = '';
+  }
+
+  async generateQrCode(): Promise<void> {
+    try {
+      const payload = `gcash://pay?merchant=FordaGO&ref=${encodeURIComponent(this.refNumber)}&amount=${encodeURIComponent(this.amount)}`;
+      this.qrDataUrl = await QRCode.toDataURL(payload, {
+        width: 260,
+        margin: 1,
+        color: {
+          dark: '#0f172a',
+          light: '#ffffff'
+        }
+      });
+    } catch (err) {
+      console.error('Error generating QR code:', err);
+    }
+  }
+
+  goToConfirm(): void {
     this.step = 2;
-    this.startResendTimer();
   }
 
-  // Step 2: Handle OTP input
-  onOtpInput(event: any, index: number): void {
-    const val = event.target.value.slice(-1);
-    this.otpDigits[index] = val;
-    this.otpError = '';
-
-    if (val && index < 5) {
-      const nextInput = document.getElementById('otp-box-' + (index + 1));
-      if (nextInput) (nextInput as HTMLInputElement).focus();
-    }
-  }
-
-  onOtpKeyDown(event: KeyboardEvent, index: number): void {
-    if (event.key === 'Backspace' && !this.otpDigits[index] && index > 0) {
-      const prevInput = document.getElementById('otp-box-' + (index - 1));
-      if (prevInput) (prevInput as HTMLInputElement).focus();
-    }
-  }
-
-  autoFillDemoOtp(): void {
-    this.otpDigits = ['1', '2', '3', '4', '5', '6'];
-    this.submitOtp();
-  }
-
-  submitOtp(): void {
-    const code = this.otpDigits.join('');
-    if (code.length < 6) {
-      this.otpError = 'Please enter all 6 digits of the authentication code';
-      return;
-    }
-    this.otpError = '';
-    this.step = 3;
-  }
-
-  startResendTimer(): void {
-    this.resendCountdown = 30;
-    if (this.timer) clearInterval(this.timer);
-    this.timer = setInterval(() => {
-      if (this.resendCountdown > 0) {
-        this.resendCountdown--;
-      } else {
-        clearInterval(this.timer);
-      }
-    }, 1000);
-  }
-
-  // Step 3: Handle MPIN Input
-  appendMpin(digit: number): void {
-    const emptyIndex = this.mpinDigits.findIndex(d => d === '');
-    if (emptyIndex !== -1) {
-      this.mpinDigits[emptyIndex] = String(digit);
-      this.mpinError = '';
-    }
-  }
-
-  backspaceMpin(): void {
-    for (let i = this.mpinDigits.length - 1; i >= 0; i--) {
-      if (this.mpinDigits[i] !== '') {
-        this.mpinDigits[i] = '';
-        break;
-      }
-    }
-  }
-
-  // Step 3 -> 4: Submit Payment
   confirmPayment(): void {
-    const mpin = this.mpinDigits.join('');
-    if (mpin.length < 4) {
-      this.mpinError = 'Please enter your 4-digit GCash MPIN';
-      return;
-    }
-
     this.isProcessingPay = true;
-    this.mpinError = '';
 
-    // Verify session in FordaGO backend
+    // Verify session and record payment in FordaGO backend
     this.paymentService.verifySession(this.sessionId, this.refNumber).subscribe({
-      next: (res) => {
+      next: () => {
         this.isProcessingPay = false;
-        this.step = 4;
-        this.startRedirectCountdown();
+        this.step = 3;
+        // Do NOT auto-redirect: let user review their receipt and tap "Bumalik sa FordaGO App"
       },
       error: () => {
         this.isProcessingPay = false;
-        this.step = 4;
-        this.startRedirectCountdown();
+        this.step = 3;
       }
     });
   }
 
-  startRedirectCountdown(): void {
-    this.redirectCountdown = 2;
-    const interval = setInterval(() => {
-      this.redirectCountdown--;
-      if (this.redirectCountdown <= 0) {
-        clearInterval(interval);
-        this.completeRedirect();
-      }
-    }, 1000);
+  returnToApp(): void {
+    if (this.redirectTimer) {
+      clearInterval(this.redirectTimer);
+      this.redirectTimer = null;
+    }
+
+    // Persist order snapshot & explicit payment confirmed flag so app displays in-app confirmation modal immediately
+    try {
+      localStorage.setItem('fordago_payment_confirmed', 'true');
+      localStorage.setItem('fordago_last_order', JSON.stringify({
+        total: this.amount,
+        payment: 'gcash',
+        receiptNumber: this.refNumber,
+        sessionId: this.sessionId,
+        description: this.description
+      }));
+    } catch {}
+
+    const ref = encodeURIComponent(this.refNumber);
+    const session = encodeURIComponent(this.sessionId);
+    const deepLink = `fordago://inventory?payment=success&ref=${ref}&session_id=${session}`;
+
+    // 1. If running on Android or launched via external browser, trigger native deep-link
+    try {
+      window.location.href = deepLink;
+    } catch (e) {
+      console.warn('Deep-link failed:', e);
+    }
+
+    // 2. Also navigate via standard router / window.location
+    setTimeout(() => {
+      this.completeRedirect();
+    }, 100);
   }
 
   completeRedirect(): void {
+    let targetPath = '/inventory';
     if (this.returnUrl) {
-      // Add payment=success & ref if not already there
-      const sep = this.returnUrl.includes('?') ? '&' : '?';
-      let target = this.returnUrl;
-      if (!target.includes('payment=success')) {
-        target += `${sep}payment=success&ref=${encodeURIComponent(this.refNumber)}&session_id=${encodeURIComponent(this.sessionId)}`;
+      try {
+        if (this.returnUrl.startsWith('http')) {
+          targetPath = new URL(this.returnUrl).pathname;
+        } else {
+          targetPath = this.returnUrl.split('?')[0];
+        }
+      } catch {
+        targetPath = '/inventory';
       }
-      window.location.href = target;
-    } else {
-      this.router.navigate(['/transactions'], {
-        queryParams: { payment: 'success', ref: this.refNumber, session_id: this.sessionId },
-        replaceUrl: true
-      });
     }
+    targetPath = targetPath || '/inventory';
+
+    // 1. Try internal Angular router navigation
+    this.router.navigate([targetPath], {
+      queryParams: { payment: 'success', ref: this.refNumber, session_id: this.sessionId },
+      replaceUrl: true
+    }).then((navigated) => {
+      if (!navigated) {
+        // 2. Fallback to VPS public host, NEVER localhost
+        const publicBase = 'http://168.144.141.27';
+        window.location.href = `${publicBase}${targetPath}?payment=success&ref=${encodeURIComponent(this.refNumber)}&session_id=${encodeURIComponent(this.sessionId)}`;
+      }
+    }).catch(() => {
+      const publicBase = 'http://168.144.141.27';
+      window.location.href = `${publicBase}${targetPath}?payment=success&ref=${encodeURIComponent(this.refNumber)}&session_id=${encodeURIComponent(this.sessionId)}`;
+    });
   }
 
   cancelPayment(): void {
@@ -237,7 +226,7 @@ export class GcashCheckoutPage implements OnInit {
       const sep = this.returnUrl.includes('?') ? '&' : '?';
       window.location.href = `${this.returnUrl}${sep}payment=cancelled&ref=${encodeURIComponent(this.refNumber)}`;
     } else {
-      this.router.navigate(['/dashboard'], { replaceUrl: true });
+      this.router.navigate(['/inventory'], { replaceUrl: true });
     }
   }
 }

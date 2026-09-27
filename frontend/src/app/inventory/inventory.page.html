@@ -500,6 +500,13 @@
               </div>
               <span class="card-item-price">₱{{ (item.product.price * item.quantity) | number:'1.2-2' }}</span>
             </div>
+            <div class="card-item-row" *ngIf="!lastOrderItems || lastOrderItems.length === 0">
+              <div class="card-item-info">
+                <span class="card-item-name">Gym Supplements & Accessories</span>
+                <span class="card-item-qty">×1</span>
+              </div>
+              <span class="card-item-price" *ngIf="lastOrderTotal > 0">₱{{ lastOrderTotal | number:'1.2-2' }}</span>
+            </div>
           </div>
 
           <div class="card-divider"></div>

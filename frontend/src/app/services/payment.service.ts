@@ -136,18 +136,37 @@ export class PaymentService {
    */
   createCheckout(payload: CheckoutPayload): Observable<CheckoutResponse> {
     const channelKey = payload.payment_channel === 'paymaya' || payload.payment_channel === 'maya' ? 'Maya' : (payload.payment_channel === 'gcash' ? 'GCash' : payload.payment_channel.toUpperCase());
-    const customer = (this.auth.user as any) || {};
-    const customerName = customer.name || customer.username || 'FordaGO Member';
-    const customerEmail = customer.email || 'member@fordago.ph';
-    const customerPhone = customer.phone || '';
+    const user = (this.auth.user as any) || {};
+    let savedUser: any = null;
+    try {
+      const rawUser = localStorage.getItem('user');
+      if (rawUser) savedUser = JSON.parse(rawUser);
+    } catch {}
+
+    const resolvedUser = user?.id ? user : (savedUser?.id ? savedUser : {});
+    const customerName = resolvedUser.name || resolvedUser.username || 'FordaGO Member';
+    const customerEmail = resolvedUser.email || 'member@fordago.ph';
+    const customerPhone = resolvedUser.phone || '';
+    let sanitizedReturnUrl = payload.return_url || '';
+    if (!sanitizedReturnUrl || sanitizedReturnUrl.includes('localhost') || sanitizedReturnUrl.includes('127.0.0.1')) {
+      const path = sanitizedReturnUrl ? (sanitizedReturnUrl.startsWith('http') ? new URL(sanitizedReturnUrl).pathname : sanitizedReturnUrl) : '/inventory';
+      sanitizedReturnUrl = `http://168.144.141.27${path}`;
+    }
+
+    const body: CheckoutPayload = {
+      ...payload,
+      return_url: sanitizedReturnUrl,
+      user_id: payload.user_id || resolvedUser.id || null,
+    };
 
     return this.http.post<CheckoutResponse>(
       `${this.api}/payments/checkout`,
-      payload,
+      body,
       this.getAuthHeaders()
     ).pipe(
       timeout(30000),
-      catchError(() => {
+      catchError((err) => {
+        console.warn('Online checkout API request error, activating transparent fallback:', err);
         // Transparent client-side sandbox fallback if remote server is unreachable
         const refNumber = 'FGO-REC-' + Math.floor(100000 + Math.random() * 900000);
         const nowIso = new Date().toISOString();

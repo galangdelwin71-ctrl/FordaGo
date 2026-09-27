@@ -1,239 +1,210 @@
 <ion-content class="gcash-page" [fullscreen]="true">
-  <div class="gcash-container">
+  <div class="gcash-wrapper">
 
-    <!-- GCash Top Bar -->
-    <header class="gcash-header">
-      <div class="header-left">
-        <span class="gcash-logo-text">G<span class="cash">Cash</span></span>
-        <span class="secure-badge">
-          <ion-icon name="shield-checkmark"></ion-icon>
-          <span>SECURE CHECKOUT</span>
-        </span>
-      </div>
-      <button class="btn-cancel-top" (click)="cancelPayment()" type="button" aria-label="Cancel">
-        <ion-icon name="close-outline"></ion-icon>
-      </button>
-    </header>
+    <!-- STEP 1: Scan QR / Open in GCash (Matches Screenshot 1) -->
+    <div class="step-container" *ngIf="step === 1">
+      <!-- Blue Top Banner -->
+      <header class="gcash-blue-header">
+        <div class="header-top-actions">
+          <div class="header-placeholder"></div>
+          <button type="button" class="btn-header-close" (click)="cancelPayment()" aria-label="Cancel">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+        </div>
+        <div class="gcash-logo-brand">
+          <svg class="gcash-mark-svg" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="45" stroke="#ffffff" stroke-width="8" fill="none"/>
+            <path d="M68 36 A 22 22 0 1 0 68 64 H 50 V 50 H 62" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+          <span class="gcash-text-white">GCash</span>
+        </div>
+      </header>
 
-    <!-- Merchant Info Header Card -->
-    <div class="merchant-banner">
-      <div class="merchant-meta">
-        <span class="merchant-label">MERCHANT</span>
-        <h2 class="merchant-name">FordaGO Fitness & Wellness</h2>
-        <span class="payment-desc">{{ description }}</span>
-      </div>
-      <div class="amount-badge">
-        <span class="currency">PHP</span>
-        <span class="amount-val">₱{{ formatAmount() }}</span>
-      </div>
-    </div>
+      <!-- Main White Card -->
+      <main class="gcash-content-body">
+        <div class="gcash-white-card qr-card">
+          <h2 class="qr-heading">Securely complete the payment with your GCash app</h2>
 
-    <!-- Wizard Body Card -->
-    <div class="gcash-card">
+          <!-- Big Blue Button: Open in GCash -->
+          <button type="button" class="btn-open-gcash" (click)="openRealGcashApp()">
+            Open in GCash
+          </button>
 
-      <!-- STEP 1: Phone Number Input -->
-      <div class="step-panel" *ngIf="step === 1">
-        <div class="step-header">
-          <span class="step-indicator">Step 1 of 3</span>
-          <h3 class="step-title">Login with GCash</h3>
-          <p class="step-subtitle">Enter your 11-digit GCash mobile number to proceed with your payment.</p>
+          <p class="qr-instruction">
+            or Log in to GCash and scan this QR with the QR Scanner.
+          </p>
+
+          <!-- Crisp Scannable QR Code -->
+          <div class="qr-box" *ngIf="qrDataUrl">
+            <img [src]="qrDataUrl" alt="GCash Scannable QR Code" class="qr-image" />
+          </div>
+
+          <div class="qr-alt-action">
+            <button type="button" class="btn-proceed-web" (click)="goToConfirm()">
+              <span>Pay on Web (PHP {{ formatAmount() }})</span>
+              <ion-icon name="arrow-forward-outline"></ion-icon>
+            </button>
+          </div>
         </div>
 
-        <form (ngSubmit)="submitPhone()" class="gcash-form">
-          <label class="input-label" for="phoneInput">GCash Mobile Number</label>
-          <div class="phone-input-wrap" [class.has-error]="phoneError">
-            <span class="phone-prefix">+63</span>
-            <input
-              id="phoneInput"
-              type="tel"
-              name="phoneNumber"
-              [(ngModel)]="phoneNumber"
-              placeholder="9XX XXX XXXX"
-              maxlength="13"
-              autocomplete="tel"
-              class="phone-field"
-              autofocus
-            />
-          </div>
-          <div class="error-msg" *ngIf="phoneError">
-            {{ phoneError }}
-          </div>
-
-          <div class="security-notice">
-            <ion-icon name="lock-closed-outline"></ion-icon>
-            <span>Your GCash credentials are encrypted and protected under Bangko Sentral ng Pilipinas (BSP) security guidelines.</span>
-          </div>
-
-          <button type="submit" class="btn-gcash-primary">
-            Next
+        <div class="gcash-page-footer">
+          <button type="button" class="btn-cancel-link" (click)="cancelPayment()">
+            Cancel & Return to FordaGO
           </button>
-        </form>
-      </div>
+        </div>
+      </main>
+    </div>
 
-      <!-- STEP 2: 6-Digit OTP Code -->
-      <div class="step-panel" *ngIf="step === 2">
-        <div class="step-header">
-          <button class="btn-back-step" (click)="step = 1" type="button">
-            <ion-icon name="arrow-back-outline"></ion-icon> Back
+    <!-- STEP 2: Confirm Payment (Matches Screenshot 2) -->
+    <div class="step-container" *ngIf="step === 2">
+      <!-- Blue Top Banner with Back Arrow -->
+      <header class="gcash-blue-header confirm-header">
+        <div class="confirm-top-bar">
+          <button type="button" class="btn-back-white" (click)="step = 1">
+            <ion-icon name="arrow-back-outline"></ion-icon>
+            <span>Confirm Payment</span>
           </button>
-          <span class="step-indicator">Step 2 of 3</span>
-          <h3 class="step-title">Authentication Code</h3>
-          <p class="step-subtitle">
-            We sent a 6-digit authentication code to <strong class="masked-num">{{ maskedPhone }}</strong>.
+        </div>
+        <div class="gcash-logo-brand confirm-brand">
+          <svg class="gcash-mark-svg" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="45" stroke="#ffffff" stroke-width="8" fill="none"/>
+            <path d="M68 36 A 22 22 0 1 0 68 64 H 50 V 50 H 62" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+          <span class="gcash-text-white">GCash</span>
+        </div>
+      </header>
+
+      <!-- Main White Card -->
+      <main class="gcash-content-body">
+        <div class="gcash-white-card confirm-card">
+          <!-- Merchant Name -->
+          <h2 class="confirm-merchant-title">{{ description }}</h2>
+
+          <!-- PAY WITH SECTION -->
+          <div class="confirm-section">
+            <span class="section-label-blue">PAY WITH</span>
+            <div class="pay-method-row">
+              <div class="pm-left">
+                <span class="pm-brand">GCash</span>
+                <span class="pm-sublink">Pay now</span>
+              </div>
+              <div class="pm-right">
+                <div class="pm-bal-info">
+                  <span class="pm-bal-val">PHP {{ getAvailableBalance() }}</span>
+                  <span class="pm-bal-label">Available Balance</span>
+                </div>
+                <div class="pm-radio-selected">
+                  <div class="radio-dot"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- YOU ARE ABOUT TO PAY SECTION -->
+          <div class="confirm-section">
+            <span class="section-label-blue">YOU ARE ABOUT TO PAY</span>
+
+            <div class="cost-row">
+              <span class="cost-label">Amount</span>
+              <span class="cost-val">PHP {{ formatAmount() }}</span>
+            </div>
+
+            <div class="cost-row voucher-row">
+              <span class="voucher-label">Discount <ion-icon name="chevron-forward-outline"></ion-icon></span>
+              <span class="voucher-status">No available voucher</span>
+            </div>
+
+            <div class="cost-divider"></div>
+
+            <div class="cost-row total-row">
+              <span class="total-label">Total</span>
+              <span class="total-val">PHP {{ formatAmount() }}</span>
+            </div>
+          </div>
+
+          <p class="confirm-disclaimer">
+            Please review to ensure that the details are correct before you proceed.
+          </p>
+
+          <!-- Big Blue Button: PAY PHP XX.XX -->
+          <button
+            type="button"
+            class="btn-pay-blue"
+            [disabled]="isProcessingPay"
+            (click)="confirmPayment()"
+          >
+            <ion-spinner *ngIf="isProcessingPay" name="crescent"></ion-spinner>
+            <span *ngIf="!isProcessingPay">PAY PHP {{ formatAmount() }}</span>
+          </button>
+        </div>
+
+        <div class="gcash-page-footer">
+          <button type="button" class="btn-cancel-link" (click)="cancelPayment()">
+            Cancel & Return to FordaGO
+          </button>
+        </div>
+      </main>
+    </div>
+
+    <!-- STEP 3: Payment Successful! (KAPAG KAYARI MAG BAYAD) -->
+    <div class="step-container" *ngIf="step === 3">
+      <header class="gcash-blue-header success-header">
+        <div class="gcash-logo-brand">
+          <svg class="gcash-mark-svg" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="45" stroke="#ffffff" stroke-width="8" fill="none"/>
+            <path d="M68 36 A 22 22 0 1 0 68 64 H 50 V 50 H 62" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+          <span class="gcash-text-white">GCash</span>
+        </div>
+      </header>
+
+      <main class="gcash-content-body">
+        <div class="gcash-white-card success-card">
+          <div class="success-icon-halo">
+            <ion-icon name="checkmark-circle"></ion-icon>
+          </div>
+
+          <h2 class="success-heading">Payment Successful!</h2>
+          <p class="success-desc">
+            Your payment of <strong>PHP {{ formatAmount() }}</strong> to <strong>FordaGO Fitness & Wellness</strong> has been processed successfully.
+          </p>
+
+          <!-- Receipt Details Box -->
+          <div class="success-receipt-box">
+            <div class="receipt-item">
+              <span class="r-label">Reference No.</span>
+              <span class="r-val font-mono">{{ refNumber }}</span>
+            </div>
+            <div class="receipt-item">
+              <span class="r-label">Payment Channel</span>
+              <span class="r-val text-gcash">GCash</span>
+            </div>
+            <div class="receipt-item">
+              <span class="r-label">Date & Time</span>
+              <span class="r-val">{{ getCurrentDateTime() }}</span>
+            </div>
+            <div class="receipt-item total-item">
+              <span class="r-label">Total Amount</span>
+              <span class="r-val font-bold">PHP {{ formatAmount() }}</span>
+            </div>
+          </div>
+
+          <!-- EXPLICIT RETURN TO APP BUTTON -->
+          <button type="button" class="btn-return-app" (click)="returnToApp()">
+            <div class="return-btn-content">
+              <ion-icon name="arrow-back-circle-outline" class="return-icon"></ion-icon>
+              <div class="return-btn-labels">
+                <span class="return-primary">Bumalik sa FordaGO App</span>
+                <span class="return-secondary">I-tap ito upang makita ang iyong Confirmation at Resibo</span>
+              </div>
+            </div>
+          </button>
+
+          <p class="manual-return-hint">
+            Matagumpay ang iyong bayad! Pindutin ang asul na button sa itaas upang bumalik sa FordaGO app.
           </p>
         </div>
-
-        <div class="otp-inputs-row">
-          <input
-            *ngFor="let digit of otpDigits; let i = index"
-            [id]="'otp-box-' + i"
-            type="tel"
-            maxlength="1"
-            class="otp-box"
-            [value]="digit"
-            (input)="onOtpInput($event, i)"
-            (keydown)="onOtpKeyDown($event, i)"
-          />
-        </div>
-
-        <div class="error-msg" *ngIf="otpError">
-          {{ otpError }}
-        </div>
-
-        <div class="demo-helper">
-          <button type="button" class="btn-demo-otp" (click)="autoFillDemoOtp()">
-            ⚡ Quick-fill Test OTP (123456)
-          </button>
-        </div>
-
-        <div class="resend-wrap">
-          <span *ngIf="resendCountdown > 0" class="resend-timer">
-            Resend code in {{ resendCountdown }}s
-          </span>
-          <button
-            *ngIf="resendCountdown === 0"
-            type="button"
-            class="btn-resend"
-            (click)="startResendTimer()"
-          >
-            Resend Authentication Code
-          </button>
-        </div>
-
-        <button type="button" class="btn-gcash-primary" (click)="submitOtp()">
-          Submit Code
-        </button>
-      </div>
-
-      <!-- STEP 3: 4-Digit MPIN -->
-      <div class="step-panel" *ngIf="step === 3">
-        <div class="step-header">
-          <button class="btn-back-step" (click)="step = 2" type="button">
-            <ion-icon name="arrow-back-outline"></ion-icon> Back
-          </button>
-          <span class="step-indicator">Step 3 of 3</span>
-          <h3 class="step-title">Enter your 4-Digit MPIN</h3>
-          <p class="step-subtitle">Authorize payment of <strong>₱{{ formatAmount() }}</strong> to FordaGO.</p>
-        </div>
-
-        <!-- Account Balance Box (like real GCash Topup / Merchant Pay) -->
-        <div class="gcash-balance-box">
-          <div class="balance-left">
-            <span class="acc-label">PAY WITH GCASH</span>
-            <span class="acc-phone">{{ maskedPhone }}</span>
-          </div>
-          <div class="balance-right">
-            <span class="bal-label">AVAILABLE BALANCE</span>
-            <span class="bal-amount">₱{{ getAvailableBalance() }}</span>
-          </div>
-        </div>
-
-        <!-- Masked MPIN Bubbles -->
-        <div class="mpin-bubbles-wrap">
-          <div
-            *ngFor="let digit of mpinDigits"
-            class="mpin-bubble"
-            [class.filled]="digit !== ''"
-          ></div>
-        </div>
-
-        <div class="error-msg" *ngIf="mpinError">
-          {{ mpinError }}
-        </div>
-
-        <!-- Numeric Keypad -->
-        <div class="mpin-keypad">
-          <button
-            *ngFor="let num of [1,2,3,4,5,6,7,8,9]"
-            type="button"
-            class="keypad-btn"
-            (click)="appendMpin(num)"
-          >
-            {{ num }}
-          </button>
-          <button type="button" class="keypad-btn empty" disabled></button>
-          <button type="button" class="keypad-btn" (click)="appendMpin(0)">0</button>
-          <button type="button" class="keypad-btn backspace" (click)="backspaceMpin()" aria-label="Backspace">
-            ⌫
-          </button>
-        </div>
-
-        <button
-          type="button"
-          class="btn-gcash-primary pay-btn"
-          [disabled]="isProcessingPay || mpinDigits.join('').length < 4"
-          (click)="confirmPayment()"
-        >
-          <ion-spinner *ngIf="isProcessingPay" name="crescent"></ion-spinner>
-          <span *ngIf="!isProcessingPay">Pay ₱{{ formatAmount() }}</span>
-        </button>
-      </div>
-
-      <!-- STEP 4: Success & Returning -->
-      <div class="step-panel success-panel" *ngIf="step === 4">
-        <div class="success-icon-wrap">
-          <ion-icon name="checkmark-circle"></ion-icon>
-        </div>
-        <h3 class="success-title">Payment Successful!</h3>
-        <p class="success-subtitle">
-          Your payment of <strong>₱{{ formatAmount() }}</strong> to <strong>FordaGO Fitness & Wellness</strong> has been approved.
-        </p>
-
-        <div class="receipt-summary-box">
-          <div class="summary-row">
-            <span class="label">Reference No.</span>
-            <span class="value font-mono">{{ refNumber }}</span>
-          </div>
-          <div class="summary-row">
-            <span class="label">Payment Channel</span>
-            <span class="value font-bold text-blue">GCash</span>
-          </div>
-          <div class="summary-row">
-            <span class="label">Total Paid</span>
-            <span class="value font-bold">₱{{ formatAmount() }}</span>
-          </div>
-        </div>
-
-        <div class="redirecting-notice">
-          <ion-spinner name="dots"></ion-spinner>
-          <span>Redirecting to FordaGO with your official E-Receipt...</span>
-        </div>
-
-        <button type="button" class="btn-gcash-primary mt-3" (click)="completeRedirect()">
-          Return to FordaGO Now
-        </button>
-      </div>
-
-    </div>
-
-    <!-- Footer Cancel Option -->
-    <div class="gcash-footer">
-      <button type="button" class="btn-cancel-link" (click)="cancelPayment()">
-        Cancel Payment & Return to FordaGO
-      </button>
-      <div class="footer-fineprint">
-        Official Partner Gateway • Powered by PayMongo GCash API • PCI-DSS Compliant
-      </div>
+      </main>
     </div>
 
   </div>

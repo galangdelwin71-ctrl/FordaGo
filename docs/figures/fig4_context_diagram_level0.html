@@ -2,187 +2,195 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Figure 4. Context Diagram Level 0 of FordaGO</title>
+<title>Context Diagram Level 0 of FordaGO</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     background: #ffffff;
     font-family: 'Times New Roman', Times, serif;
+    color: #000000;
     display: flex;
-    flex-direction: column;
-    align-items: center;
     justify-content: center;
-    padding: 10px;
-    width: 1260px;
-    height: 840px;
+    align-items: center;
+    padding: 25px;
+    width: 1440px;
+    height: 1880px;
+    margin: 0 auto;
   }
   .diagram-container {
-    width: 1240px;
-    height: 820px;
+    width: 1390px;
+    height: 1830px;
+    position: relative;
   }
   svg {
     width: 100%;
     height: 100%;
+    display: block;
   }
+
   /* Entity Boxes */
   .entity-box {
     fill: #ffffff;
     stroke: #000000;
-    stroke-width: 2.8;
+    stroke-width: 4;
   }
   .entity-text-title {
     font-family: 'Times New Roman', Times, serif;
-    font-size: 18px;
-    font-weight: bold;
+    font-size: 36px;
+    font-weight: 900;
     text-anchor: middle;
     fill: #000000;
+    letter-spacing: 0.5px;
   }
   .entity-text-sub {
     font-family: 'Times New Roman', Times, serif;
-    font-size: 14px;
-    font-weight: bold;
+    font-size: 26px;
+    font-weight: 700;
+    font-style: italic;
     text-anchor: middle;
-    fill: #333333;
+    fill: #000000;
   }
+
   /* Process Box (Rounded) */
   .process-box {
     fill: #ffffff;
     stroke: #000000;
-    stroke-width: 3.2;
+    stroke-width: 4.5;
   }
   .process-num {
     font-family: 'Times New Roman', Times, serif;
-    font-size: 26px;
-    font-weight: bold;
+    font-size: 48px;
+    font-weight: 900;
     text-anchor: middle;
     fill: #000000;
   }
   .process-name-bold {
     font-family: 'Times New Roman', Times, serif;
-    font-size: 21px;
-    font-weight: bold;
+    font-size: 40px;
+    font-weight: 900;
     text-anchor: middle;
     fill: #000000;
+    letter-spacing: 0.5px;
   }
   .process-name-sub {
     font-family: 'Times New Roman', Times, serif;
-    font-size: 17.5px;
-    font-weight: bold;
+    font-size: 33px;
+    font-weight: 800;
     text-anchor: middle;
     fill: #000000;
   }
+  .process-branch {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 27px;
+    font-weight: 700;
+    font-style: italic;
+    text-anchor: middle;
+    fill: #000000;
+  }
+
   /* Flow Lines and Text */
   .flow-line {
     stroke: #000000;
-    stroke-width: 2.2;
+    stroke-width: 3.5;
     fill: none;
     marker-end: url(#arrow);
   }
   .flow-text {
     font-family: 'Times New Roman', Times, serif;
-    font-size: 14.5px;
-    font-weight: bold;
+    font-size: 24px;
+    font-weight: 800;
     fill: #000000;
+    line-height: 1.3;
   }
 </style>
 </head>
 <body>
 
 <div class="diagram-container">
-<svg viewBox="0 0 1240 820" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 1390 1830" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+    <marker id="arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#000000"/>
     </marker>
   </defs>
 
   <!-- ================= CENTRAL PROCESS (0) ================= -->
-  <!-- Center: cx=620, cy=410, w=360, h=210 -> x=440, y=305 -->
-  <rect x="440" y="305" width="360" height="210" rx="28" class="process-box" />
-  <line x1="440" y1="355" x2="800" y2="355" stroke="#000000" stroke-width="2.5" />
-  <text x="620" y="340" class="process-num">0</text>
-  <text x="620" y="392" class="process-name-bold">FordaGO:</text>
-  <text x="620" y="420" class="process-name-sub">Mobile-Based Gym Database</text>
-  <text x="620" y="446" class="process-name-sub">Management System</text>
-  <text x="620" y="476" style="font-family:'Times New Roman',serif; font-size:13.5px; font-weight:bold; fill:#555; text-anchor:middle;">AFFORDA Gym – Cabiao Branch</text>
+  <rect x="485" y="715" width="420" height="400" rx="30" class="process-box" />
+  <line x1="485" y1="800" x2="905" y2="800" stroke="#000000" stroke-width="3.5" />
+  <text x="695" y="775" class="process-num">0</text>
+  <text x="695" y="855" class="process-name-bold">FORDAGO:</text>
+  <text x="695" y="905" class="process-name-sub">Mobile-Based Gym Database</text>
+  <text x="695" y="955" class="process-name-sub">Management System</text>
+  <text x="695" y="1030" class="process-branch">AFFORDA Gym &ndash; Cabiao Branch</text>
 
 
   <!-- ================= TOP ENTITY: GYM MEMBER ================= -->
-  <rect x="465" y="25" width="310" height="70" class="entity-box" />
-  <text x="620" y="53" class="entity-text-title">GYM MEMBER</text>
-  <text x="620" y="75" class="entity-text-sub">(Active Member / Gym-Goer)</text>
+  <rect x="415" y="40" width="560" height="150" class="entity-box" />
+  <text x="695" y="100" class="entity-text-title">GYM MEMBER</text>
+  <text x="695" y="145" class="entity-text-sub">(Active Member / Gym-Goer Client)</text>
 
   <!-- Flows between Member and Process 0 -->
-  <!-- Line 1: Member -> Process 0 (Downwards, x=540) -->
-  <line x1="540" y1="95" x2="540" y2="305" class="flow-line" />
-  <text x="525" y="185" class="flow-text" text-anchor="end">Login Credentials,</text>
-  <text x="525" y="205" class="flow-text" text-anchor="end">QR Pass Telemetry,</text>
-  <text x="525" y="225" class="flow-text" text-anchor="end">PR Metrics & Orders</text>
+  <line x1="565" y1="190" x2="565" y2="715" class="flow-line" />
+  <text x="545" y="380" class="flow-text" text-anchor="end">Login Credentials,</text>
+  <text x="545" y="415" class="flow-text" text-anchor="end">Dynamic QR Pass Telemetry,</text>
+  <text x="545" y="450" class="flow-text" text-anchor="end">PR Benchmarks &amp; Store Orders</text>
 
-  <!-- Line 2: Process 0 -> Member (Upwards, x=700) -->
-  <line x1="700" y1="305" x2="700" y2="95" class="flow-line" />
-  <text x="715" y="185" class="flow-text" text-anchor="start">Digital QR Pass,</text>
-  <text x="715" y="205" class="flow-text" text-anchor="start">Exercise Guides,</text>
-  <text x="715" y="225" class="flow-text" text-anchor="start">Workouts & Alerts</text>
+  <line x1="825" y1="715" x2="825" y2="190" class="flow-line" />
+  <text x="845" y="380" class="flow-text" text-anchor="start">Dynamic QR Pass Status,</text>
+  <text x="845" y="415" class="flow-text" text-anchor="start">Machine Video Tutorials,</text>
+  <text x="845" y="450" class="flow-text" text-anchor="start">Workouts &amp; Notifications</text>
 
 
   <!-- ================= BOTTOM ENTITY: FRONT-DESK EMPLOYEE ================= -->
-  <rect x="465" y="725" width="310" height="70" class="entity-box" />
-  <text x="620" y="753" class="entity-text-title">EMPLOYEE</text>
-  <text x="620" y="775" class="entity-text-sub">(Front-Desk Staff / Turnstile Scanner)</text>
+  <rect x="385" y="1640" width="620" height="150" class="entity-box" />
+  <text x="695" y="1700" class="entity-text-title">EMPLOYEE / FRONT-DESK</text>
+  <text x="695" y="1745" class="entity-text-sub">(Turnstile Scanner &amp; POS Cashier Staff)</text>
 
   <!-- Flows between Employee and Process 0 -->
-  <!-- Line 1: Employee -> Process 0 (Upwards, x=540) -->
-  <line x1="540" y1="725" x2="540" y2="515" class="flow-line" />
-  <text x="525" y="605" class="flow-text" text-anchor="end">Turnstile Camera QR Scan,</text>
-  <text x="525" y="625" class="flow-text" text-anchor="end">Manual Override Check-in,</text>
-  <text x="525" y="645" class="flow-text" text-anchor="end">POS Counter Cash Payments</text>
+  <line x1="565" y1="1640" x2="565" y2="1115" class="flow-line" />
+  <text x="545" y="1340" class="flow-text" text-anchor="end">Turnstile Camera QR Scan,</text>
+  <text x="545" y="1375" class="flow-text" text-anchor="end">Manual Override Attendance,</text>
+  <text x="545" y="1410" class="flow-text" text-anchor="end">POS Counter Cash Sales</text>
 
-  <!-- Line 2: Process 0 -> Employee (Downwards, x=700) -->
-  <line x1="700" y1="515" x2="700" y2="725" class="flow-line" />
-  <text x="715" y="605" class="flow-text" text-anchor="start">Attendance Visual Status Cues,</text>
-  <text x="715" y="625" class="flow-text" text-anchor="start">Member Profile Validation,</text>
-  <text x="715" y="645" class="flow-text" text-anchor="start">Inventory Stock Deductions</text>
+  <line x1="825" y1="1115" x2="825" y2="1640" class="flow-line" />
+  <text x="845" y="1340" class="flow-text" text-anchor="start">Visual Pass Validity Status,</text>
+  <text x="845" y="1375" class="flow-text" text-anchor="start">Member Profile Validation,</text>
+  <text x="845" y="1410" class="flow-text" text-anchor="start">Stock Deductions &amp; Receipts</text>
 
 
   <!-- ================= LEFT ENTITY: ADMIN & SUPER ADMIN ================= -->
-  <!-- Box: x=25, y=345, w=215, h=130 -->
-  <rect x="25" y="345" width="215" height="130" class="entity-box" />
-  <text x="132" y="380" class="entity-text-title">ADMIN & SUPER ADMIN</text>
-  <text x="132" y="404" class="entity-text-sub">(Branch & System Management)</text>
-  <text x="132" y="428" style="font-family:'Times New Roman',serif; font-size:12px; font-weight:bold; fill:#555; text-anchor:middle;">Command Center &</text>
-  <text x="132" y="448" style="font-family:'Times New Roman',serif; font-size:12px; font-weight:bold; fill:#555; text-anchor:middle;">VPS Host Infrastructure</text>
+  <rect x="40" y="735" width="270" height="360" class="entity-box" />
+  <text x="175" y="805" class="entity-text-title">ADMIN &amp;</text>
+  <text x="175" y="845" class="entity-text-title">SUPER ADMIN</text>
+  <text x="175" y="895" class="entity-text-sub">(Branch &amp; System Managers)</text>
+  <text x="175" y="960" class="flow-text" style="font-size:19px; text-anchor:middle; font-weight:700;">Command Center Console</text>
+  <text x="175" y="995" class="flow-text" style="font-size:19px; text-anchor:middle; font-weight:700;">&amp; Cloud VPS Server Host</text>
 
   <!-- Flows between Admin and Process 0 -->
-  <!-- Line 1: Admin -> Process 0 (Rightwards, y=390, x: 240 to 440) -->
-  <line x1="240" y1="390" x2="440" y2="390" class="flow-line" />
-  <text x="340" y="365" class="flow-text" text-anchor="middle">CRUD Operations &amp;</text>
-  <text x="340" y="382" class="flow-text" text-anchor="middle">System Configurations</text>
+  <line x1="310" y1="835" x2="485" y2="835" class="flow-line" />
+  <text x="397" y="795" class="flow-text" text-anchor="middle">CRUD Operations</text>
+  <text x="397" y="822" class="flow-text" text-anchor="middle">&amp; System Roles</text>
 
-  <!-- Line 2: Process 0 -> Admin (Leftwards, y=445, x: 440 to 240) -->
-  <line x1="440" y1="445" x2="240" y2="445" class="flow-line" />
-  <text x="340" y="468" class="flow-text" text-anchor="middle">Vector PDF Exports &amp;</text>
-  <text x="340" y="485" class="flow-text" text-anchor="middle">Consolidated Reports</text>
+  <line x1="485" y1="995" x2="310" y2="995" class="flow-line" />
+  <text x="397" y="1030" class="flow-text" text-anchor="middle">Vector PDF &amp;</text>
+  <text x="397" y="1055" class="flow-text" text-anchor="middle">Excel Reports</text>
 
 
   <!-- ================= RIGHT ENTITY: COACH ================= -->
-  <!-- Box: x=1000, y=345, w=215, h=130 -->
-  <rect x="1000" y="345" width="215" height="130" class="entity-box" />
-  <text x="1107" y="380" class="entity-text-title">COACH</text>
-  <text x="1107" y="404" class="entity-text-sub">(Personal Fitness Trainer)</text>
-  <text x="1107" y="428" style="font-family:'Times New Roman',serif; font-size:12px; font-weight:bold; fill:#555; text-anchor:middle;">Coach Studio Workspace &</text>
-  <text x="1107" y="448" style="font-family:'Times New Roman',serif; font-size:12px; font-weight:bold; fill:#555; text-anchor:middle;">Client Consultation</text>
+  <rect x="1080" y="735" width="270" height="360" class="entity-box" />
+  <text x="1215" y="815" class="entity-text-title">GYM COACH</text>
+  <text x="1215" y="865" class="entity-text-sub">(Personal Fitness Trainer)</text>
+  <text x="1215" y="930" class="flow-text" style="font-size:19px; text-anchor:middle; font-weight:700;">Coach Studio Workspace</text>
+  <text x="1215" y="965" class="flow-text" style="font-size:19px; text-anchor:middle; font-weight:700;">&amp; Client Consultations</text>
 
   <!-- Flows between Coach and Process 0 -->
-  <!-- Line 1: Coach -> Process 0 (Leftwards, y=390, x: 1000 to 800) -->
-  <line x1="1000" y1="390" x2="800" y2="390" class="flow-line" />
-  <text x="900" y="365" class="flow-text" text-anchor="middle">Workout Proposals,</text>
-  <text x="900" y="382" class="flow-text" text-anchor="middle">Routines &amp; Chat</text>
+  <line x1="1080" y1="835" x2="905" y2="835" class="flow-line" />
+  <text x="992" y="795" class="flow-text" text-anchor="middle">Workout Proposals</text>
+  <text x="992" y="822" class="flow-text" text-anchor="middle">&amp; Trainee Chat</text>
 
-  <!-- Line 2: Process 0 -> Coach (Rightwards, y=445, x: 800 to 1000) -->
-  <line x1="800" y1="445" x2="1000" y2="445" class="flow-line" />
-  <text x="900" y="468" class="flow-text" text-anchor="middle">Trainee Roster,</text>
-  <text x="900" y="485" class="flow-text" text-anchor="middle">Metrics &amp; Progress</text>
+  <line x1="905" y1="995" x2="1080" y2="995" class="flow-line" />
+  <text x="992" y="1030" class="flow-text" text-anchor="middle">Trainee Roster &amp;</text>
+  <text x="992" y="1055" class="flow-text" text-anchor="middle">Client Metrics</text>
 
 </svg>
 </div>

@@ -1,215 +1,461 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Figure 2. Implementation Tools, IDEs, Languages, & System Architecture of FordaGO</title>
+<title>Figure 2. FordaGO Full-Stack Architectural Framework</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     background: #ffffff;
     font-family: 'Times New Roman', Times, serif;
     color: #000000;
-    padding: 15px 20px 10px;
-    width: 1500px;
-    height: 860px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    padding: 22px 25px 25px;
+    width: 1440px;
+    height: 1880px;
+    margin: 0 auto;
   }
-  .title { 
-    font-size: 25px; 
-    font-weight: bold; 
-    text-align: center; 
-    margin-bottom: 4px; 
-    text-transform: uppercase;
-  }
-  .subtitle { 
-    font-size: 16px; 
-    font-style: italic; 
-    color: #222222; 
-    text-align: center; 
-    margin-bottom: 16px; 
-  }
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    width: 1460px;
-  }
-  .card {
-    border: 2px solid #000000;
-    border-radius: 6px;
-    padding: 14px;
-    background: #ffffff;
-    box-shadow: 2px 2px 0px #000;
-  }
-  .card-header {
-    border-bottom: 2px solid #000000;
-    padding-bottom: 6px;
-    margin-bottom: 10px;
-    font-size: 17px;
-    font-weight: bold;
+
+  /* Top 3 Cards Grid */
+  .tools-grid {
     display: flex;
     justify-content: space-between;
-    background: #f4f4f4;
-    padding: 6px 10px;
-    border-radius: 4px 4px 0 0;
+    width: 1390px;
+    gap: 24px;
+    margin-bottom: 22px;
+    height: 1040px;
   }
-  .item-row {
-    display: flex;
-    margin-bottom: 7px;
-    font-size: 14.5px;
-    line-height: 1.35;
-  }
-  .item-label { 
-    width: 170px; 
-    font-weight: bold; 
-    flex-shrink: 0; 
-    color: #000;
-  }
-  .item-val { 
-    color: #222222; 
-  }
-  .arch-box {
-    grid-column: span 3;
-    border: 2px solid #000000;
-    border-radius: 6px;
-    padding: 14px 16px;
-    background: #fafafa;
-    box-shadow: 2px 2px 0px #000;
-  }
-  .arch-title { 
-    font-size: 17px; 
-    font-weight: bold; 
-    border-bottom: 2px solid #000000; 
-    padding-bottom: 6px; 
-    margin-bottom: 10px; 
-    text-transform: uppercase;
-  }
-  .arch-flow {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-  }
-  .tier-box {
+
+  .tool-card {
     flex: 1;
-    border: 1.5px solid #000000;
+    border: 4px solid #000000;
     background: #ffffff;
-    padding: 10px 8px;
-    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .tool-header {
+    background: #ffffff;
+    border-bottom: 4px solid #000000;
+    padding: 18px 12px 14px;
     text-align: center;
   }
-  .tier-name { 
-    font-weight: bold; 
-    font-size: 15px; 
-    margin-bottom: 4px; 
-    color: #000;
+  .tool-header h2 {
+    font-size: 35px;
+    font-weight: 900;
+    text-transform: uppercase;
+    color: #000000;
+    letter-spacing: 0.5px;
   }
-  .tier-tech { 
-    font-size: 13.5px; 
-    color: #222222; 
-    line-height: 1.35; 
+  .tool-header .subtitle {
+    font-size: 24px;
+    color: #000000;
+    font-weight: 800;
+    margin-top: 4px;
+    font-style: italic;
   }
-  .arrow { 
-    font-size: 22px; 
-    font-weight: bold; 
+
+  .tool-content {
+    padding: 22px 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex: 1;
   }
-  .desc-box {
-    margin-top: 14px;
-    width: 1460px;
-    border: 1.5px solid #000000;
-    border-radius: 6px;
-    background: #fafafa;
-    padding: 12px 16px;
-    font-size: 14.5px;
-    line-height: 1.45;
-    color: #111111;
-    box-shadow: 2px 2px 0px #000;
+
+  .tool-item {
+    display: flex;
+    align-items: flex-start;
+    line-height: 1.35;
   }
-  .desc-title { 
-    font-weight: bold; 
-    font-size: 15.5px; 
-    margin-bottom: 4px; 
-    color: #000000; 
+  .tool-bullet {
+    font-size: 40px;
+    color: #000000;
+    margin-right: 12px;
+    line-height: 0.9;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .tool-item div {
+    flex: 1;
+    font-size: 23px;
+    color: #000000;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  .tool-item strong {
+    font-size: 27px;
+    font-weight: 900;
+    color: #000000;
+    display: block;
+    margin-bottom: 3px;
+    line-height: 1.25;
+  }
+
+  /* Bottom Architecture Section */
+  .arch-section {
+    width: 1390px;
+    border: 4px solid #000000;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .arch-header {
+    border-bottom: 4px solid #000000;
+    padding: 16px 12px 14px;
+    text-align: center;
+    background: #ffffff;
+  }
+  .arch-header h2 {
+    font-size: 34px;
+    font-weight: 900;
+    text-transform: uppercase;
+    color: #000000;
+    letter-spacing: 0.5px;
+  }
+  .arch-header .subtitle {
+    font-size: 23px;
+    color: #000000;
+    font-weight: 800;
+    margin-top: 4px;
+    font-style: italic;
+  }
+
+  .arch-flow-wrapper {
+    padding: 22px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex: 1;
+    gap: 16px;
+  }
+
+  .flow-row {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .tier-card {
+    flex: 1;
+    border: 3.5px solid #000000;
+    background: #ffffff;
+    padding: 18px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    justify-content: center;
+  }
+  .tier-num {
+    font-size: 25px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #000000;
+    margin-bottom: 4px;
+  }
+  .tier-title {
+    font-size: 26px;
+    font-weight: 900;
+    text-transform: uppercase;
+    color: #000000;
+    margin-bottom: 6px;
+    border-bottom: 2.5px solid #000000;
+    padding-bottom: 4px;
+    width: 100%;
+  }
+  .tier-tech {
+    font-size: 24px;
+    font-weight: 900;
+    color: #000000;
+    margin-bottom: 6px;
+  }
+  .tier-desc {
+    font-size: 21px;
+    font-weight: 700;
+    color: #000000;
+    line-height: 1.35;
+  }
+
+  .arrow-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    flex-shrink: 0;
+  }
+  .arrow-box svg {
+    width: 44px;
+    height: 52px;
+  }
+
+  /* 3 Pipeline Details Sub-boxes */
+  .pipeline-details {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+  }
+  .pipeline-box {
+    flex: 1;
+    border: 2.5px solid #000000;
+    padding: 12px 14px;
+    background: #ffffff;
+  }
+  .pipeline-box-title {
+    font-size: 22px;
+    font-weight: 900;
+    text-transform: uppercase;
+    color: #000000;
+    margin-bottom: 4px;
+    border-bottom: 1.5px solid #000000;
+    padding-bottom: 2px;
+  }
+  .pipeline-box-text {
+    font-size: 20px;
+    font-weight: 600;
+    color: #000000;
+    line-height: 1.35;
+  }
+
+  .arch-summary {
+    border-top: 3px solid #000000;
+    padding-top: 14px;
+    font-size: 22px;
+    font-weight: 600;
+    color: #000000;
+    line-height: 1.4;
+    text-align: center;
+  }
+  .arch-summary strong {
+    font-weight: 900;
   }
 </style>
 </head>
 <body>
-  <div class="title">Figure 2. Implementation Tools, IDEs, Languages, & System Architecture of FordaGO</div>
-  <div class="subtitle">Complete Full-Stack Engineering Environment &middot; Google Antigravity &middot; AFFORDA Gym – Cabiao Branch</div>
 
-  <div class="grid">
-    <!-- Card 1: Languages -->
-    <div class="card">
-      <div class="card-header">
-        <span>Programming Languages</span>
-        <span>Layer 1</span>
-      </div>
-      <div class="item-row"><div class="item-label">PHP 8.2+</div><div class="item-val">Backend RESTful API & Server-side Business Logic</div></div>
-      <div class="item-row"><div class="item-label">TypeScript</div><div class="item-val">Strict-typed Frontend Client Logic (Angular 18)</div></div>
-      <div class="item-row"><div class="item-label">JavaScript (ES6+)</div><div class="item-val">Capacitor Native Hardware Plugin Interoperability</div></div>
-      <div class="item-row"><div class="item-label">SQL (MySQL 8.0)</div><div class="item-val">3NF Relational Database Queries & Transactions</div></div>
-      <div class="item-row"><div class="item-label">HTML5 & SCSS</div><div class="item-val">Responsive Layouts & Dark/Light Adaptive Theming</div></div>
+<!-- Top Grid: Tools & Technologies -->
+<div class="tools-grid">
+
+  <!-- Card 1: Languages -->
+  <div class="tool-card">
+    <div class="tool-header">
+      <h2>LANGUAGES</h2>
+      <div class="subtitle">Core Syntaxes &amp; Data Protocols</div>
     </div>
-
-    <!-- Card 2: Frameworks -->
-    <div class="card">
-      <div class="card-header">
-        <span>Frameworks & Engines</span>
-        <span>Layer 2</span>
+    <div class="tool-content">
+      <div class="tool-item">
+        <span class="tool-bullet">&bull;</span>
+        <div><strong>PHP 8.2+</strong>Server-side controllers, REST API routes, Eloquent ORM, and backend business logic.</div>
       </div>
-      <div class="item-row"><div class="item-label">Laravel 11</div><div class="item-val">Backend Framework, Eloquent ORM, Sanctum Auth</div></div>
-      <div class="item-row"><div class="item-label">Ionic 8 + Angular</div><div class="item-val">Cross-Platform Hybrid Mobile Client Framework</div></div>
-      <div class="item-row"><div class="item-label">Laravel Reverb</div><div class="item-val">Dedicated High-Throughput WebSocket Server (:8080)</div></div>
-      <div class="item-row"><div class="item-label">Capacitor Native Core</div><div class="item-val">Native Camera QR Scanner & Local Push Notifications</div></div>
-      <div class="item-row"><div class="item-label">jsPDF & AutoTable</div><div class="item-val">Client-Side Vector PDF & Sales Export Engine</div></div>
-    </div>
-
-    <!-- Card 3: IDEs & Tools -->
-    <div class="card">
-      <div class="card-header">
-        <span>IDEs & Development Tools</span>
-        <span>Layer 3</span>
+      <div class="tool-item">
+        <span class="tool-bullet">&bull;</span>
+        <div><strong>TypeScript 5+</strong>Strict-typed frontend state management, Ionic component models, and reactive services.</div>
       </div>
-      <div class="item-row"><div class="item-label">Google Antigravity</div><div class="item-val">Agentic AI IDE & Pair Programmer for Full-Stack Dev</div></div>
-      <div class="item-row"><div class="item-label">Visual Studio Code</div><div class="item-val">Source Code Editor with Intelephense & Angular LSP</div></div>
-      <div class="item-row"><div class="item-label">Docker & Nginx</div><div class="item-val">Containerized Reverse Proxy & Web Server Hosting</div></div>
-      <div class="item-row"><div class="item-label">Postman</div><div class="item-val">RESTful API Endpoint Validation & Token Auth Testing</div></div>
-      <div class="item-row"><div class="item-label">Android Studio & Git</div><div class="item-val">Gradle APK Builds, Emulation, & GitHub Version Control</div></div>
-    </div>
-
-    <!-- Architecture Box -->
-    <div class="arch-box">
-      <div class="arch-title">Decoupled Tri-Tier System Architecture of FordaGO</div>
-      <div class="arch-flow">
-        <div class="tier-box">
-          <div class="tier-name">1. Presentation Tier (Client)</div>
-          <div class="tier-tech">Ionic 8 + Angular 18 (Android APK & Web PWA)<br>Member Hub &middot; Coach Studio &middot; Admin Turnstile Terminal</div>
-        </div>
-        <div class="arrow">&harr;</div>
-        <div class="tier-box">
-          <div class="tier-name">2. Application Logic Tier (API)</div>
-          <div class="tier-tech">Laravel 11 RESTful API Server<br>Sanctum Auth &middot; 5-Tier RBAC &middot; GCash Audit &middot; POS Logic</div>
-        </div>
-        <div class="arrow">&harr;</div>
-        <div class="tier-box">
-          <div class="tier-name">3. Real-Time WebSocket Tier</div>
-          <div class="tier-tech">Laravel Reverb Server (TCP Port 8080)<br>Live Bidirectional Chat &middot; Turnstile Check-In Signals</div>
-        </div>
-        <div class="arrow">&harr;</div>
-        <div class="tier-box">
-          <div class="tier-name">4. Data Persistence Tier</div>
-          <div class="tier-tech">MySQL 8.0 Relational Database<br>3NF Schema &middot; ACID Atomic Transactions &middot; Row-Level Locks</div>
-        </div>
+      <div class="tool-item">
+        <span class="tool-bullet">&bull;</span>
+        <div><strong>SQL (MySQL 8.0)</strong>Relational 3NF schemas, foreign keys, cascade constraints, and indexed transactions.</div>
+      </div>
+      <div class="tool-item">
+        <span class="tool-bullet">&bull;</span>
+        <div><strong>JavaScript (ES6+)</strong>Capacitor hardware camera bridge, async fetch pipelines, and dynamic QR generators.</div>
+      </div>
+      <div class="tool-item">
+        <span class="tool-bullet">&bull;</span>
+        <div><strong>HTML5 &amp; SCSS</strong>Responsive mobile view layouts, utility classes, turnstile UI, and gym branding theme.</div>
+      </div>
+      <div class="tool-item">
+        <span class="tool-bullet">&bull;</span>
+        <div><strong>JSON &amp; REST Protocols</strong>Standardized serialized data payloads for API communication and client synchronization.</div>
       </div>
     </div>
   </div>
 
-  <div class="desc-box">
-    <div class="desc-title">Technical Architectural Explanation:</div>
-    FordaGO utilizes a modern, decoupled Tri-Tier System Architecture designed for scalability, zero hardware lock-in, and rapid response times. The <strong>Presentation Tier</strong> is engineered using Ionic 8 and Angular 18 to deliver a unified cross-platform mobile experience on Android devices as well as responsive desktop administration. The <strong>Application Tier</strong> is powered by Laravel 11, orchestrating role-based access control (RBAC), POS inventory logic, and QR token validation. A dedicated <strong>Real-Time WebSocket Tier</strong> (Laravel Reverb running on port 8080) handles instant bi-directional messaging and live turnstile check-in event broadcasts without polling overhead. Development and testing are accelerated using <strong>Google Antigravity</strong> as the advanced agentic AI pair programming IDE alongside Visual Studio Code, Docker, and Postman.
+  <!-- Card 2: Frameworks & Engines -->
+  <div class="tool-card">
+    <div class="tool-header">
+      <h2>FRAMEWORKS</h2>
+      <div class="subtitle">Engines &amp; Core Middleware</div>
+    </div>
+    <div class="tool-content">
+      <div class="tool-item">
+        <span class="tool-bullet">&bull;</span>
+        <div><strong>Laravel 11</strong>Backend MVC framework, Eloquent ORM, Sanctum security guards, and event broadcaster.</div>
+      </div>
+      <div class="tool-item">
+        <span class="tool-bullet">&bull;</span>
+        <div><strong>Ionic 8 + Angular 18</strong>Cross-platform mobile UI framework, standalone components, and responsive router.</div>
+      </div>
+      <div class="tool-item">
+        <span class="tool-bullet">&bull;</span>
+        <div><strong>Laravel Reverb</strong>High-throughput WebSocket server on Port 8080 for duplex chat and live alerts.</div>
+      </div>
+      <div class="tool-item">
+        <span class="tool-bullet">&bull;</span>
+        <div><strong>Capacitor 6</strong>Native Android runtime bridge for optical QR camera barcode scanning and biometric auth.</div>
+      </div>
+      <div class="tool-item">
+        <span class="tool-bullet">&bull;</span>
+        <div><strong>PayMongo API</strong>Fintech payment gateway integration for online GCash, Maya, and credit/debit cards.</div>
+      </div>
+      <div class="tool-item">
+        <span class="tool-bullet">&bull;</span>
+        <div><strong>DomPDF &amp; PhpSpreadsheet</strong>Engine for generating vector PDF administrative analytical reports and Excel sheets.</div>
+      </div>
+    </div>
   </div>
+
+  <!-- Card 3: IDEs & Infrastructure -->
+  <div class="tool-card">
+    <div class="tool-header">
+      <h2>IDEs &amp; INFRA</h2>
+      <div class="subtitle">Development &amp; Cloud Hosting</div>
+    </div>
+    <div class="tool-content">
+      <div class="tool-item">
+        <span class="tool-bullet">&bull;</span>
+        <div><strong>Visual Studio Code</strong>Primary IDE for PHP, TypeScript, Angular components, and SCSS development.</div>
+      </div>
+      <div class="tool-item">
+        <span class="tool-bullet">&bull;</span>
+        <div><strong>Android Studio &amp; Gradle</strong>Android SDK compilation, emulator testing, ADB debugging, and release APK builds.</div>
+      </div>
+      <div class="tool-item">
+        <span class="tool-bullet">&bull;</span>
+        <div><strong>Ubuntu Linux Cloud VPS</strong>Production server host with Nginx reverse proxy, SSL/TLS, and daemon supervisor.</div>
+      </div>
+      <div class="tool-item">
+        <span class="tool-bullet">&bull;</span>
+        <div><strong>Postman &amp; Swagger</strong>RESTful API endpoint regression testing, bearer token validation, and documentation.</div>
+      </div>
+      <div class="tool-item">
+        <span class="tool-bullet">&bull;</span>
+        <div><strong>Git &amp; GitHub</strong>Decoupled mono-repository branching, team version control, and release milestones.</div>
+      </div>
+      <div class="tool-item">
+        <span class="tool-bullet">&bull;</span>
+        <div><strong>Composer &amp; npm</strong>Package managers orchestrating PHP backend dependencies and Angular libraries.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Bottom Section: System Architecture Flow -->
+<div class="arch-section">
+  <div class="arch-header">
+    <h2>MULTI-TIER FULL-STACK SYSTEM ARCHITECTURE</h2>
+    <div class="subtitle">End-to-End Operational Pipeline &amp; Data Communication Channels</div>
+  </div>
+
+  <div class="arch-flow-wrapper">
+    <div class="flow-row">
+
+      <!-- Tier 1 -->
+      <div class="tier-card">
+        <div class="tier-num">TIER 1</div>
+        <div class="tier-title">PRESENTATION TIER</div>
+        <div class="tier-tech">Ionic 8 + Angular 18 Client</div>
+        <div class="tier-desc">Member Mobile App &bull; Coach Studio Hub &bull; Admin POS Terminal &bull; Turnstile Scanner</div>
+      </div>
+
+      <!-- Arrow 1 -->
+      <div class="arrow-box">
+        <svg viewBox="0 0 44 48">
+          <defs>
+            <marker id="arrB1" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#000" />
+            </marker>
+            <marker id="arrB2" viewBox="0 0 10 10" refX="4" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#000" />
+            </marker>
+          </defs>
+          <line x1="6" y1="24" x2="38" y2="24" stroke="#000" stroke-width="4.5" marker-end="url(#arrB1)" marker-start="url(#arrB2)" />
+        </svg>
+      </div>
+
+      <!-- Tier 2 -->
+      <div class="tier-card">
+        <div class="tier-num">TIER 2</div>
+        <div class="tier-title">APPLICATION TIER</div>
+        <div class="tier-tech">Laravel 11 RESTful API</div>
+        <div class="tier-desc">Sanctum Token Auth &bull; 5-Tier RBAC &bull; POS Logic &bull; Optical QR Verifier</div>
+      </div>
+
+      <!-- Arrow 2 -->
+      <div class="arrow-box">
+        <svg viewBox="0 0 44 48">
+          <defs>
+            <marker id="arrB3" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#000" />
+            </marker>
+            <marker id="arrB4" viewBox="0 0 10 10" refX="4" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#000" />
+            </marker>
+          </defs>
+          <line x1="6" y1="24" x2="38" y2="24" stroke="#000" stroke-width="4.5" marker-end="url(#arrB3)" marker-start="url(#arrB4)" />
+        </svg>
+      </div>
+
+      <!-- Tier 3 -->
+      <div class="tier-card">
+        <div class="tier-num">TIER 3</div>
+        <div class="tier-title">REAL-TIME TIER</div>
+        <div class="tier-tech">Laravel Reverb WebSocket</div>
+        <div class="tier-desc">Bidirectional Live Chat &bull; Real-Time Turnstile Broadcasts &bull; Alert Feeds</div>
+      </div>
+
+      <!-- Arrow 3 -->
+      <div class="arrow-box">
+        <svg viewBox="0 0 44 48">
+          <defs>
+            <marker id="arrB5" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#000" />
+            </marker>
+            <marker id="arrB6" viewBox="0 0 10 10" refX="4" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#000" />
+            </marker>
+          </defs>
+          <line x1="6" y1="24" x2="38" y2="24" stroke="#000" stroke-width="4.5" marker-end="url(#arrB5)" marker-start="url(#arrB6)" />
+        </svg>
+      </div>
+
+      <!-- Tier 4 -->
+      <div class="tier-card">
+        <div class="tier-num">TIER 4</div>
+        <div class="tier-title">DATA PERSISTENCE</div>
+        <div class="tier-tech">MySQL 8.0 Database</div>
+        <div class="tier-desc">3NF Normalized Schema &bull; ACID Transactions &bull; Foreign Keys &bull; Cloud Assets</div>
+      </div>
+
+    </div>
+
+    <!-- 3 Pipeline Channel Details (fills the previously empty void with rich academic content) -->
+    <div class="pipeline-details">
+      <div class="pipeline-box">
+        <div class="pipeline-box-title">Client-to-API Channel</div>
+        <div class="pipeline-box-text">HTTPS REST endpoints with Sanctum bearer authorization, input validation, and structured JSON responses.</div>
+      </div>
+      <div class="pipeline-box">
+        <div class="pipeline-box-title">Real-Time Duplex Channel</div>
+        <div class="pipeline-box-text">WebSocket protocol (Port 8080) broadcasting instant coach-client chat messages, typing events, and turnstile alerts.</div>
+      </div>
+      <div class="pipeline-box">
+        <div class="pipeline-box-title">Data Integrity Channel</div>
+        <div class="pipeline-box-text">Eloquent ORM managing transactional database operations, foreign key cascades, and daily automated cloud snapshots.</div>
+      </div>
+    </div>
+
+    <div class="arch-summary">
+      <strong>Full-Stack Architecture Overview:</strong> The Presentation Tier interfaces with the Application Tier via secure HTTPS REST APIs while maintaining continuous duplex WebSocket connectivity through Laravel Reverb. The Application Tier validates business rules, manages RBAC authorization, and executes ACID-compliant relational transactions across MySQL 8.0.
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
