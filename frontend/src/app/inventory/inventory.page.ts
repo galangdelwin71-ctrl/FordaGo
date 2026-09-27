@@ -1,6 +1,6 @@
 // inventory.page.ts
 import { Component, OnInit, ViewEncapsulation } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -393,6 +393,7 @@ export class InventoryPage implements OnInit {
 
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
     private http: HttpClient,
     private auth: AuthService,
     private coachingNav: CoachingNavService,
@@ -426,6 +427,18 @@ export class InventoryPage implements OnInit {
     this.coachingService.unreadCount$.subscribe((count) => { this.coachUnreadCount = count; });
     void this.loadProductsWithHydration();
     this.loadMyOrders();
+
+    this.route.queryParams.subscribe((params) => {
+      if (params['payment'] === 'success') {
+        const ref = params['ref'];
+        if (ref) {
+          this.lastReceiptNumber = ref;
+          this.paymentService.openReceipt(ref);
+        }
+        this.toast.success('Online payment completed successfully!');
+        this.loadMyOrders();
+      }
+    });
   }
 
   retryLoadProducts(): void {
@@ -871,6 +884,7 @@ export class InventoryPage implements OnInit {
             amount: this.lastOrderTotal,
             payment_channel: paymentMethod,
             description: `FordaGO Gym Shop Order: ${product.name} (x${quantity})`,
+            return_url: window.location.origin + '/inventory',
             items_breakdown: [
               {
                 name: product.name,
@@ -896,9 +910,7 @@ export class InventoryPage implements OnInit {
                 this.rebuildOrderGroups();
               }
 
-              if (payRes.is_mock) {
-                this.orderSuccessOpen = true;
-              } else if (payRes.checkout_url) {
+              if (payRes.checkout_url) {
                 window.location.href = payRes.checkout_url;
               } else {
                 this.orderSuccessOpen = true;
@@ -987,6 +999,7 @@ export class InventoryPage implements OnInit {
             amount: this.lastOrderTotal,
             payment_channel: this.cartPaymentMethod,
             description: `FordaGO Gym Shop Order (1x ${product.name})`,
+            return_url: window.location.origin + '/inventory',
             items_breakdown: [{
               name: product.name,
               quantity: 1,
@@ -1000,7 +1013,11 @@ export class InventoryPage implements OnInit {
               }
               this.quickOrderConfirmOpen = false;
               this.quickOrderProduct = null;
-              this.orderSuccessOpen = true;
+              if (payRes.checkout_url) {
+                window.location.href = payRes.checkout_url;
+              } else {
+                this.orderSuccessOpen = true;
+              }
             },
             error: () => {
               this.quickOrderConfirmOpen = false;
@@ -1103,6 +1120,7 @@ export class InventoryPage implements OnInit {
             amount: this.lastOrderTotal,
             payment_channel: this.cartPaymentMethod,
             description: `FordaGO Gym Shop Order (${cartSnapshot.length} items)`,
+            return_url: window.location.origin + '/inventory',
             items_breakdown: cartSnapshot.map(i => ({
               name: i.product.name,
               quantity: i.quantity,
@@ -1127,10 +1145,8 @@ export class InventoryPage implements OnInit {
                 this.rebuildOrderGroups();
               }
 
-              if (payRes.is_mock) {
-                this.orderSuccessOpen = true;
-              } else if (payRes.checkout_url) {
-                // Real PayMongo portal: redirect customer
+              if (payRes.checkout_url) {
+                // Real PayMongo portal / GCash Checkout: redirect customer
                 window.location.href = payRes.checkout_url;
               } else {
                 this.orderSuccessOpen = true;

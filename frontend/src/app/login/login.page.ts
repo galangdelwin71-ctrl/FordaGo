@@ -1498,11 +1498,11 @@ export class LoginPage implements OnDestroy {
         this.regPaymentLoading = false;
         if (res.success) {
           this.regReceiptNumber = res.receipt_number;
-          if (res.is_mock) {
+          if (res.checkout_url) {
+            window.location.href = res.checkout_url;
+          } else if (res.is_mock) {
             this.regOnlinePaid = true;
             this.paymentService.openReceipt(res.receipt_number);
-          } else if (res.checkout_url) {
-            window.location.href = res.checkout_url;
           }
         }
       },

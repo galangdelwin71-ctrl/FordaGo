@@ -75,5 +75,10 @@ return [
         'public_key' => env('PAYMONGO_PUBLIC_KEY', ''),
         'secret_key' => env('PAYMONGO_SECRET_KEY', ''),
     ],
+
+    // Xendit Online Payment (GCash, Maya, QR Ph)
+    'xendit' => [
+        'secret_key' => env('XENDIT_SECRET_KEY', ''),
+    ],
 ];
 

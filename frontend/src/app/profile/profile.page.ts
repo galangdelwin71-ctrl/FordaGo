@@ -1,6 +1,6 @@
 // profile.page.ts
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -455,6 +455,7 @@ export class ProfilePage implements OnInit {
 
   constructor(
     public router: Router,
+    private route: ActivatedRoute,
     private auth: AuthService,
     private http: HttpClient,
     private profileService: ProfileService,
@@ -589,6 +590,17 @@ export class ProfilePage implements OnInit {
     this.isActiveStatus = this.userStatusService.isActive;
     // Keep coach badge in sync on this page
     this.coachingService.unreadCount$.subscribe((count) => { this.coachUnreadCount = count; });
+
+    this.route.queryParams.subscribe((params) => {
+      if (params['payment'] === 'success') {
+        const ref = params['ref'];
+        if (ref) {
+          this.paymentService.openReceipt(ref);
+        }
+        this.loadProfile();
+        void this.showMobileToast('Premium membership activated successfully!');
+      }
+    });
   }
 
   ionViewWillEnter(): void {
@@ -1766,6 +1778,7 @@ export class ProfilePage implements OnInit {
         amount: 500,
         payment_channel: this.selectedPaymentMethod,
         description: 'FordaGO 1-Month Premium Membership Renewal/Upgrade',
+        return_url: window.location.origin + '/profile',
         items_breakdown: [{
           name: '1-Month Premium Access',
           quantity: 1,
@@ -1776,7 +1789,10 @@ export class ProfilePage implements OnInit {
           this.isProcessingRenewal = false;
           this.closeRenewal();
 
-          if (payRes.is_mock) {
+          if (payRes.checkout_url) {
+            // Direct to GCash checkout portal
+            window.location.href = payRes.checkout_url;
+          } else if (payRes.is_mock) {
             // Instant mock in dev
             this.paymentService.verifySession(payRes.session_id!, payRes.receipt_number).subscribe({
               next: (verifyRes) => {
@@ -1798,9 +1814,6 @@ export class ProfilePage implements OnInit {
                 }
               }
             });
-          } else if (payRes.checkout_url) {
-            // Redirect to PayMongo hosted checkout page
-            window.location.href = payRes.checkout_url;
           } else {
             void this.showMobileToast('Payment request created. Please complete in payment gateway.');
           }

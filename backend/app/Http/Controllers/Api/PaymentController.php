@@ -13,6 +13,7 @@ use App\Models\WorkoutPlanProposal;
 use App\Services\ActivityLogger;
 use App\Services\FcmService;
 use App\Services\PayMongoService;
+use App\Services\XenditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -20,10 +21,12 @@ use Illuminate\Support\Facades\Log;
 class PaymentController extends Controller
 {
     private PayMongoService $payMongo;
+    private XenditService $xendit;
 
-    public function __construct(PayMongoService $payMongo)
+    public function __construct(PayMongoService $payMongo, XenditService $xendit)
     {
         $this->payMongo = $payMongo;
+        $this->xendit   = $xendit;
     }
 
     /**
@@ -108,7 +111,7 @@ class PaymentController extends Controller
             ]);
         }
 
-        // 2. ONLINE PAYMENT FLOW (GCash, Maya, Card via PayMongo)
+        // 2. ONLINE PAYMENT FLOW (GCash, Maya, Card)
         $frontendOrigin = $request->header('Origin') ?: url('/');
         $baseReturnUrl = $request->input('return_url') ?: "{$frontendOrigin}/transactions";
         $sep = str_contains($baseReturnUrl, '?') ? '&' : '?';
@@ -116,20 +119,72 @@ class PaymentController extends Controller
         $successUrl = "{$baseReturnUrl}{$sep}payment=success&ref={$receiptNumber}";
         $cancelUrl  = "{$baseReturnUrl}{$sep}payment=cancelled&ref={$receiptNumber}";
 
+        $lineItems = ! empty($itemsBreakdown) ? $itemsBreakdown : [
+            [
+                'name'     => $request->input('description') ?: ('FordaGO ' . ucfirst($paymentFor)),
+                'amount'   => (int) round($amount * 100),
+                'price'    => $amount,
+                'quantity' => 1,
+            ],
+        ];
+
+        // 2A. PRIORITY: XENDIT GATEWAY (Direct GCash Deep-Link & Official Checkout)
+        if ($this->xendit->isConfigured()) {
+            try {
+                $xenditMethods = match ($channel) {
+                    'gcash'   => ['GCASH'],
+                    'paymaya' => ['PAYMAYA'],
+                    default   => ['GCASH', 'PAYMAYA'],
+                };
+
+                $session = $this->xendit->createInvoice([
+                    'amount'               => $amount,
+                    'external_id'          => $receiptNumber,
+                    'description'          => "FordaGO " . ucfirst($paymentFor) . " - Ref: {$receiptNumber}",
+                    'payment_methods'      => $xenditMethods,
+                    'success_redirect_url' => $successUrl,
+                    'failure_redirect_url' => $cancelUrl,
+                    'customer'             => $customerDetails,
+                    'items'                => $lineItems,
+                ]);
+
+                $payment = Payment::create([
+                    'user_id'            => $user->id,
+                    'receipt_number'     => $receiptNumber,
+                    'payment_for'        => $paymentFor,
+                    'related_id'         => $relatedId,
+                    'amount'             => $amount,
+                    'fee'                => 0.00,
+                    'currency'           => 'PHP',
+                    'payment_channel'    => $channel,
+                    'status'             => 'pending',
+                    'gateway'            => 'xendit',
+                    'gateway_session_id' => $session['session_id'],
+                    'items_breakdown'    => $itemsBreakdown,
+                    'customer_details'   => $customerDetails,
+                ]);
+
+                return response()->json([
+                    'success'        => true,
+                    'payment_id'     => $payment->id,
+                    'receipt_number' => $receiptNumber,
+                    'session_id'     => $session['session_id'],
+                    'checkout_url'   => $session['checkout_url'],
+                    'is_mock'        => false,
+                    'payment_channel'=> $channel,
+                ]);
+            } catch (\Throwable $e) {
+                Log::warning('Xendit checkout attempt failed, falling back to alternative: ' . $e->getMessage());
+            }
+        }
+
+        // 2B. SECONDARY: PAYMONGO / SECURE MOCK GATEWAY
         $methodsForGateway = match ($channel) {
             'gcash'   => ['gcash'],
             'paymaya' => ['paymaya'],
             'card'    => ['card'],
             default   => ['gcash', 'paymaya'],
         };
-
-        $lineItems = ! empty($itemsBreakdown) ? $itemsBreakdown : [
-            [
-                'name'     => $request->input('description') ?: ('FordaGO ' . ucfirst($paymentFor)),
-                'amount'   => (int) round($amount * 100),
-                'quantity' => 1,
-            ],
-        ];
 
         try {
             $session = $this->payMongo->createCheckoutSession([
@@ -175,7 +230,7 @@ class PaymentController extends Controller
                 'payment_channel'=> $channel,
             ]);
         } catch (\Throwable $e) {
-            Log::error('Failed to initiate PayMongo checkout: ' . $e->getMessage());
+            Log::error('Failed to initiate online checkout: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Unable to connect to online payment service: ' . $e->getMessage(),
@@ -207,6 +262,23 @@ class PaymentController extends Controller
                 'payment' => $payment,
                 'receipt' => $this->formatReceipt($payment),
             ]);
+        }
+
+        // Check Xendit if gateway is xendit
+        if ($payment->gateway === 'xendit') {
+            $invoice = $this->xendit->retrieveInvoice($sessionId);
+            if ($invoice && ($invoice['status'] === 'paid' || $invoice['status'] === 'settled')) {
+                $this->fulfillPayment($payment, [
+                    'payment_id'      => $invoice['session_id'],
+                    'payment_channel' => $invoice['payment_channel'] ?? $payment->payment_channel,
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'payment' => $payment->fresh(),
+                    'receipt' => $this->formatReceipt($payment->fresh()),
+                ]);
+            }
         }
 
         // Query PayMongo status
@@ -259,6 +331,32 @@ class PaymentController extends Controller
                 $this->fulfillPayment($payment, [
                     'payment_id'      => $paymentId,
                     'payment_channel' => $channel,
+                ]);
+            }
+        }
+
+        return response()->json(['status' => 'acknowledged']);
+    }
+
+    /**
+     * POST /api/payments/xendit/webhook
+     * Webhook receiver for Xendit events (Invoice paid).
+     */
+    public function xenditWebhook(Request $request)
+    {
+        $payload = $request->all();
+        Log::info('Xendit Webhook Received', ['status' => $payload['status'] ?? 'unknown', 'external_id' => $payload['external_id'] ?? '']);
+
+        $status = strtolower($payload['status'] ?? '');
+        $externalId = $payload['external_id'] ?? null;
+
+        if (($status === 'paid' || $status === 'settled') && $externalId) {
+            $payment = Payment::where('receipt_number', $externalId)->first();
+            if ($payment && ! $payment->isPaid()) {
+                $channel = strtolower($payload['payment_channel'] ?? $payload['payment_method'] ?? 'gcash');
+                $this->fulfillPayment($payment, [
+                    'payment_id'      => $payload['id'] ?? null,
+                    'payment_channel' => str_contains($channel, 'maya') ? 'paymaya' : 'gcash',
                 ]);
             }
         }

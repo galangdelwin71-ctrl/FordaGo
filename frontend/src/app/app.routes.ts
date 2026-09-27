@@ -174,4 +174,8 @@ export const routes: Routes = [
     loadComponent: () => import('./admin-reports/admin-reports.page').then(m => m.AdminReportsPage),
     canActivate: [managerGuard],
   },
+  {
+    path: 'gcash-checkout',
+    loadComponent: () => import('./gcash-checkout/gcash-checkout.page').then(m => m.GcashCheckoutPage),
+  },
 ];

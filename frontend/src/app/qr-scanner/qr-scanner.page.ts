@@ -1,7 +1,7 @@
 // qr-scanner.page.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { getExerciseSvgHtml } from '../data/exercise-svgs.data';
 import { CommonModule } from '@angular/common';
 import {
@@ -273,6 +273,7 @@ export class QrScannerPage implements OnInit, OnDestroy {
   // ── Lifecycle ─────────────────────────────────────────
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
     private http: HttpClient,
     public auth: AuthService,
     private echoService: EchoService,
@@ -297,6 +298,7 @@ export class QrScannerPage implements OnInit, OnDestroy {
       payment_channel: channel,
       amount: 100,
       currency: 'PHP',
+      return_url: window.location.origin + '/qr-scanner',
       items: [
         {
           name: 'Daily Gym Pass Access',
@@ -312,14 +314,14 @@ export class QrScannerPage implements OnInit, OnDestroy {
     }).subscribe({
       next: (res) => {
         this.isProcessingPayment = false;
-        if (res.status === 'paid') {
+        if (res.checkout_url) {
+          window.location.href = res.checkout_url;
+        } else if (res.status === 'paid') {
           this.toast.success(`Daily pass paid via ${channel.toUpperCase()}!`);
           if (res.receipt) {
             this.latestPaymentReceipt = res.receipt;
           }
           this.handlePaymentConfirmed();
-        } else if (res.checkout_url) {
-          window.location.href = res.checkout_url;
         }
       },
       error: (err) => {
@@ -418,6 +420,17 @@ export class QrScannerPage implements OnInit, OnDestroy {
       : 'U';
     this.profileImage = resolveImageUrl((user as any)?.profile_image);
     void this.checkCameraPermission();
+
+    this.route.queryParams.subscribe((params) => {
+      if (params['payment'] === 'success') {
+        const ref = params['ref'];
+        if (ref) {
+          this.paymentService.openReceipt(ref);
+        }
+        this.handlePaymentConfirmed();
+        this.toast.success('Daily Gym Pass paid online! Access confirmed.');
+      }
+    });
   }
 
   /**

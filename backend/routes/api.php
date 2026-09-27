@@ -64,6 +64,7 @@ Route::prefix('auth')->group(function () {
 Route::post('/payments/checkout',                  [PaymentController::class, 'checkout']);
 Route::post('/payments/verify-session/{sessionId}', [PaymentController::class, 'verifySession']);
 Route::post('/payments/paymongo/webhook',          [PaymentController::class, 'webhook']);
+Route::post('/payments/xendit/webhook',            [PaymentController::class, 'xenditWebhook']);
 Route::get('/payments/receipt/{receiptNumber}',     [PaymentController::class, 'getReceipt']);
 
 // Convenience: return the authenticated user (used by frontend on app boot)
@@ -277,11 +278,4 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{id}/book',        [ProgramBookingController::class, 'book'])->whereNumber('id');
         Route::post('/{id}/book/cancel', [ProgramBookingController::class, 'cancel'])->whereNumber('id');
     });
-
-    // ── Payments & Online Checkout (PayMongo GCash/Maya/Cash) ───────────────
-    Route::prefix('payments')->group(function () {
-        Route::post('/checkout',                  [PaymentController::class, 'checkout']);
-        Route::post('/verify-session/{sessionId}', [PaymentController::class, 'verifySession']);
-    });
-
 });

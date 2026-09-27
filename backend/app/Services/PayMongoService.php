@@ -43,16 +43,30 @@ class PayMongoService
         $amountInPesos = (float) ($params['amount'] ?? 0);
         $amountInCentavos = (int) round($amountInPesos * 100);
 
-        // If no real PayMongo key is configured, provide seamless developer mock checkout
+        // If no real PayMongo key is configured, direct to FordaGO's high-fidelity GCash checkout interface
         if (! $this->isConfigured()) {
             $mockSessionId = 'cs_mock_' . bin2hex(random_bytes(10));
             $successUrl = $params['success_url'] ?? '';
-            $separator = str_contains($successUrl, '?') ? '&' : '?';
-            $mockCheckoutUrl = $successUrl . $separator . 'payment=success&session_id=' . $mockSessionId . '&is_mock=1';
+            $cancelUrl = $params['cancel_url'] ?? '';
+            $ref = $params['reference_number'] ?? ('FGO-REC-' . rand(100000, 999999));
+            $desc = $params['description'] ?? ($params['name'] ?? 'FordaGO Gym Payment');
 
-            Log::info('PayMongo: Generated mock checkout session', [
-                'session_id' => $mockSessionId,
-                'amount'     => $amountInPesos,
+            $parsedUrl = parse_url($successUrl);
+            $baseUrl = '';
+            if (isset($parsedUrl['scheme']) && isset($parsedUrl['host'])) {
+                $baseUrl = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] . (isset($parsedUrl['port']) ? ':' . $parsedUrl['port'] : '');
+            }
+
+            $mockCheckoutUrl = "{$baseUrl}/gcash-checkout?session_id={$mockSessionId}&amount=" . urlencode((string)$amountInPesos)
+                . "&ref=" . urlencode($ref)
+                . "&desc=" . urlencode($desc)
+                . "&return_url=" . urlencode($successUrl)
+                . "&cancel_url=" . urlencode($cancelUrl);
+
+            Log::info('PayMongo: Generated mock checkout session directing to GCash', [
+                'session_id'   => $mockSessionId,
+                'amount'       => $amountInPesos,
+                'checkout_url' => $mockCheckoutUrl,
             ]);
 
             return [
@@ -76,18 +90,46 @@ class PayMongoService
             ],
         ];
 
-        // Format line items to ensure centavos
-        $formattedLineItems = array_map(function ($item) {
-            $amt = isset($item['amount']) ? (int) $item['amount'] : 0;
-            // If already in centavos (> 1000 for normal items or explicitly flagged)
-            return [
+        // Format line items to guarantee centavos match total amount
+        $formattedLineItems = [];
+        $runningTotalCentavos = 0;
+        foreach ($lineItems as $item) {
+            $qty = max(1, (int) ($item['quantity'] ?? 1));
+            if (isset($item['price'])) {
+                $unitCentavos = (int) round(((float) $item['price']) * 100);
+            } elseif (isset($item['unit_price'])) {
+                $unitCentavos = (int) round(((float) $item['unit_price']) * 100);
+            } elseif (isset($item['amount'])) {
+                $rawAmt = (float) $item['amount'];
+                $unitCentavos = ($rawAmt >= 1000 && (int) round($rawAmt) === (int) round($amountInCentavos / $qty))
+                    ? (int) round($rawAmt)
+                    : (int) round($rawAmt * 100);
+            } else {
+                $unitCentavos = (int) round($amountInCentavos / $qty);
+            }
+
+            $formattedLineItems[] = [
                 'name'        => (string) ($item['name'] ?? 'Item'),
-                'quantity'    => (int) ($item['quantity'] ?? 1),
-                'amount'      => $amt > 10000 && !str_contains($amt, '.') ? $amt : (int) round(((float) ($item['price'] ?? $amt)) * 100),
+                'quantity'    => $qty,
+                'amount'      => $unitCentavos,
                 'currency'    => 'PHP',
                 'description' => (string) ($item['description'] ?? $item['name'] ?? 'Item'),
             ];
-        }, $lineItems);
+            $runningTotalCentavos += ($unitCentavos * $qty);
+        }
+
+        // If breakdown sum doesn't match total, fallback to single clean line item to avoid 400 Bad Request
+        if ($runningTotalCentavos !== $amountInCentavos && $amountInCentavos > 0) {
+            $formattedLineItems = [
+                [
+                    'name'        => $params['name'] ?? 'FordaGO Gym Payment',
+                    'quantity'    => 1,
+                    'amount'      => $amountInCentavos,
+                    'currency'    => 'PHP',
+                    'description' => $params['description'] ?? 'Payment for FordaGO Gym',
+                ],
+            ];
+        }
 
         $payload = [
             'data' => [

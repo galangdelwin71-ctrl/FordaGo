@@ -42,6 +42,11 @@ echo "🔄 Copying updated files to fordago_backend container..."
 
 podman cp backend/app/Services/SmsService.php fordago_backend:/var/www/html/app/Services/SmsService.php 2>/dev/null || true
 podman cp backend/app/Services/MailService.php fordago_backend:/var/www/html/app/Services/MailService.php 2>/dev/null || true
+podman cp backend/app/Services/PayMongoService.php fordago_backend:/var/www/html/app/Services/PayMongoService.php 2>/dev/null || true
+podman cp backend/app/Services/XenditService.php fordago_backend:/var/www/html/app/Services/XenditService.php 2>/dev/null || true
+podman cp backend/app/Http/Controllers/Api/PaymentController.php fordago_backend:/var/www/html/app/Http/Controllers/Api/PaymentController.php 2>/dev/null || true
+podman cp backend/config/services.php fordago_backend:/var/www/html/config/services.php 2>/dev/null || true
+podman cp backend/routes/api.php fordago_backend:/var/www/html/routes/api.php 2>/dev/null || true
 podman cp backend/.env fordago_backend:/var/www/html/.env 2>/dev/null || true
 
 echo "🔄 Restarting backend container..."

@@ -146,7 +146,7 @@ export class PaymentService {
       payload,
       this.getAuthHeaders()
     ).pipe(
-      timeout(3000),
+      timeout(30000),
       catchError(() => {
         // Transparent client-side sandbox fallback if remote server is unreachable
         const refNumber = 'FGO-REC-' + Math.floor(100000 + Math.random() * 900000);
@@ -199,14 +199,18 @@ export class PaymentService {
         this.saveReceiptLocally(receipt);
         this.activeReceiptSubject.next(receipt);
 
+        const returnUrl = payload.return_url || (typeof window !== 'undefined' ? window.location.href : '/transactions');
+        const gcashCheckoutUrl = `/gcash-checkout?session_id=cs_mock_${Date.now()}&amount=${encodeURIComponent(payload.amount)}&ref=${encodeURIComponent(refNumber)}&desc=${encodeURIComponent(payload.description || 'FordaGO Gym Payment')}&return_url=${encodeURIComponent(returnUrl)}`;
+
         return of({
           success: true,
           payment_id: Date.now(),
           receipt_number: refNumber,
           session_id: 'mock_sess_' + Date.now(),
+          checkout_url: gcashCheckoutUrl,
           is_mock: true,
           payment_channel: payload.payment_channel,
-          status: 'paid',
+          status: 'pending',
           receipt,
         });
       })
