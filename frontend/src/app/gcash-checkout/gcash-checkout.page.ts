@@ -40,7 +40,7 @@ export class GcashCheckoutPage implements OnInit, OnDestroy {
   cancelUrl = '';
 
   // Wizard state: 1 = Scan QR / Open in GCash, 2 = Confirm Payment, 3 = Payment Successful
-  step: 1 | 2 | 3 = 1;
+  step: 1 | 2 | 3 = 2;
 
   // QR Code
   qrDataUrl = '';
@@ -144,7 +144,6 @@ export class GcashCheckoutPage implements OnInit, OnDestroy {
       next: () => {
         this.isProcessingPay = false;
         this.step = 3;
-        // Do NOT auto-redirect: let user review their receipt and tap "Bumalik sa FordaGO App"
       },
       error: () => {
         this.isProcessingPay = false;
@@ -171,21 +170,7 @@ export class GcashCheckoutPage implements OnInit, OnDestroy {
       }));
     } catch {}
 
-    const ref = encodeURIComponent(this.refNumber);
-    const session = encodeURIComponent(this.sessionId);
-    const deepLink = `fordago://inventory?payment=success&ref=${ref}&session_id=${session}`;
-
-    // 1. If running on Android or launched via external browser, trigger native deep-link
-    try {
-      window.location.href = deepLink;
-    } catch (e) {
-      console.warn('Deep-link failed:', e);
-    }
-
-    // 2. Also navigate via standard router / window.location
-    setTimeout(() => {
-      this.completeRedirect();
-    }, 100);
+    this.completeRedirect();
   }
 
   completeRedirect(): void {
@@ -203,30 +188,31 @@ export class GcashCheckoutPage implements OnInit, OnDestroy {
     }
     targetPath = targetPath || '/inventory';
 
-    // 1. Try internal Angular router navigation
+    // Pure in-app Angular router navigation — always stays inside the APK!
     this.router.navigate([targetPath], {
       queryParams: { payment: 'success', ref: this.refNumber, session_id: this.sessionId },
       replaceUrl: true
-    }).then((navigated) => {
-      if (!navigated) {
-        // 2. Fallback to VPS public host, NEVER localhost
-        const publicBase = 'http://168.144.141.27';
-        window.location.href = `${publicBase}${targetPath}?payment=success&ref=${encodeURIComponent(this.refNumber)}&session_id=${encodeURIComponent(this.sessionId)}`;
-      }
-    }).catch(() => {
-      const publicBase = 'http://168.144.141.27';
-      window.location.href = `${publicBase}${targetPath}?payment=success&ref=${encodeURIComponent(this.refNumber)}&session_id=${encodeURIComponent(this.sessionId)}`;
     });
   }
 
   cancelPayment(): void {
-    if (this.cancelUrl) {
-      window.location.href = this.cancelUrl;
-    } else if (this.returnUrl) {
-      const sep = this.returnUrl.includes('?') ? '&' : '?';
-      window.location.href = `${this.returnUrl}${sep}payment=cancelled&ref=${encodeURIComponent(this.refNumber)}`;
-    } else {
-      this.router.navigate(['/inventory'], { replaceUrl: true });
+    let targetPath = '/inventory';
+    if (this.returnUrl) {
+      try {
+        if (this.returnUrl.startsWith('http')) {
+          targetPath = new URL(this.returnUrl).pathname;
+        } else {
+          targetPath = this.returnUrl.split('?')[0];
+        }
+      } catch {
+        targetPath = '/inventory';
+      }
     }
+    targetPath = targetPath || '/inventory';
+
+    this.router.navigate([targetPath], {
+      queryParams: { payment: 'cancelled', ref: this.refNumber },
+      replaceUrl: true
+    });
   }
 }

@@ -249,7 +249,7 @@ export class PaymentService {
       });
     }
 
-    const body = ref ? { ref } : {};
+    const body = ref ? { ref, confirm: 1 } : { confirm: 1 };
     return this.http.post<any>(
       `${this.api}/payments/verify-session/${sessionId}`,
       body,

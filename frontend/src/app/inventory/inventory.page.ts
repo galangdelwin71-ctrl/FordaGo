@@ -481,14 +481,8 @@ export class InventoryPage implements OnInit {
         this.orderSuccessOpen = true;
         this.toast.success('Online payment completed successfully!');
         this.loadMyOrders();
+        this.loadProducts();
       }, 50);
-
-      // Clean query parameters so back button does not re-trigger
-      this.router.navigate([], {
-        queryParams: { payment: null, ref: null, session_id: null },
-        queryParamsHandling: 'merge',
-        replaceUrl: true
-      });
     }
   }
 
@@ -1306,6 +1300,11 @@ export class InventoryPage implements OnInit {
 
   closeOrderSuccess(): void {
     this.orderSuccessOpen = false;
+    this.router.navigate([], {
+      queryParams: { payment: null, ref: null, session_id: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
   }
 
   viewOrderReceipt(group: OrderGroup): void {

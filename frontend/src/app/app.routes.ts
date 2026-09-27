@@ -55,15 +55,8 @@ const authGuard: CanActivateFn = (route) => {
   const token = localStorage.getItem('token');
   if (token) return true;
 
-  // If returning from an online payment (GCash / Maya gateway), do not bounce to /login.
-  // Instead, attempt deep-link back to FordaGO APK and allow inventory to show confirmation.
-  if (route.queryParams && route.queryParams['payment'] === 'success') {
-    const ref = route.queryParams['ref'] || '';
-    const sess = route.queryParams['session_id'] || '';
-    const deepLink = `fordago://inventory?payment=success&ref=${encodeURIComponent(ref)}&session_id=${encodeURIComponent(sess)}`;
-    try {
-      window.location.href = deepLink;
-    } catch {}
+  // If returning from an online payment (GCash / Maya gateway), allow entry to show confirmation.
+  if (route.queryParams && (route.queryParams['payment'] === 'success' || localStorage.getItem('fordago_payment_confirmed') === 'true')) {
     return true;
   }
 
