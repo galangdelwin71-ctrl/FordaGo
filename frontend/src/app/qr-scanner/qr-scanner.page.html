@@ -362,7 +362,7 @@
             </div>
             <div class="pass-item">
               <span class="pass-lbl">AMOUNT DUE</span>
-              <span class="pass-val fee-highlight">₱100.00</span>
+              <span class="pass-val fee-highlight">₱40.00</span>
             </div>
             <div class="pass-item right">
               <span class="pass-lbl">STATUS</span>
@@ -375,7 +375,7 @@
 
           <div class="pending-notice-box">
             <ion-icon name="information-circle"></ion-icon>
-            <span>{{ checkInMessage || 'Please proceed to the admin or front desk counter to pay ₱100 and activate your day pass.' }}</span>
+            <span>{{ checkInMessage || 'Please proceed to the admin or front desk counter to pay ₱40 and activate your day pass.' }}</span>
           </div>
 
           <div class="pending-live-sync-indicator">
@@ -390,11 +390,11 @@
           <div class="online-pay-grid">
             <button type="button" class="btn-online-channel gcash" (click)="payOnlineDailyPass('gcash')" [disabled]="isProcessingPayment">
               <span class="channel-badge gcash">GCASH</span>
-              <span class="channel-text">Pay ₱100</span>
+              <span class="channel-text">Pay ₱40</span>
             </button>
             <button type="button" class="btn-online-channel maya" (click)="payOnlineDailyPass('maya')" [disabled]="isProcessingPayment">
               <span class="channel-badge maya">MAYA</span>
-              <span class="channel-text">Pay ₱100</span>
+              <span class="channel-text">Pay ₱40</span>
             </button>
           </div>
         </div>
@@ -454,7 +454,7 @@
             </div>
             <div class="pass-item">
               <span class="pass-lbl">PAYMENT</span>
-              <span class="pass-val fee-paid">₱100.00 Paid</span>
+              <span class="pass-val fee-paid">₱40.00 Paid</span>
             </div>
             <div class="pass-item right">
               <span class="pass-lbl">ACCESS</span>

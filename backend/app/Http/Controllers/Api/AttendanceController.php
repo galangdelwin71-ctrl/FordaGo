@@ -83,7 +83,7 @@ class AttendanceController extends Controller
                     Notification::create([
                         'user_id' => $staff->id,
                         'title'   => "Payment Pending: {$displayName}",
-                        'message' => "{$displayName} (@{$user->username}) scanned the gym QR. Please collect ₱100 daily pass payment to confirm attendance.",
+                        'message' => "{$displayName} (@{$user->username}) scanned the gym QR. Please collect ₱40 daily pass payment to confirm attendance.",
                         'is_read' => false,
                     ]);
                 } else {
@@ -99,7 +99,7 @@ class AttendanceController extends Controller
             // Push to Admin mobile & tablet devices
             $fcmTitle = $user->membership_type === 'daily' ? "Daily Pass Payment Pending 💵" : "Member Checked In 🏋️";
             $fcmBody = $user->membership_type === 'daily'
-                ? "{$displayName} scanned QR. Please collect ₱100 daily pass payment."
+                ? "{$displayName} scanned QR. Please collect ₱40 daily pass payment."
                 : "{$displayName} checked into the gym (Premium Member).";
 
             app(FcmService::class)->sendToAdmins($fcmTitle, $fcmBody, [
@@ -205,7 +205,7 @@ class AttendanceController extends Controller
             $notif = Notification::create([
                 'user_id' => $attendance->user_id,
                 'title'   => 'Check-in Confirmed! ✅',
-                'message' => 'Your ₱100 daily pass payment has been confirmed by the admin. Your attendance has been recorded. Enjoy your workout! 💪',
+                'message' => 'Your ₱40 daily pass payment has been confirmed by the admin. Your attendance has been recorded. Enjoy your workout! 💪',
                 'is_read' => false,
             ]);
 
@@ -220,7 +220,7 @@ class AttendanceController extends Controller
                 app(FcmService::class)->sendToToken(
                     $member->fcm_token,
                     'Check-in Confirmed! ✅',
-                    'Your ₱100 daily pass payment has been confirmed. Have a great workout! 💪',
+                    'Your ₱40 daily pass payment has been confirmed. Have a great workout! 💪',
                     [
                         'type'          => 'attendance_confirmed',
                         'attendance_id' => (string) $attendance->id,
@@ -239,7 +239,7 @@ class AttendanceController extends Controller
                 $request->user(),
                 'attendance_confirm',
                 "Confirmed Check-in: {$memberName}",
-                "Confirmed attendance check-in and ₱100 payment for {$memberName}.",
+                "Confirmed attendance check-in and ₱40 payment for {$memberName}.",
                 'attendance',
                 $attendance->id,
                 ['user_id' => $attendance->user_id, 'membership_type' => $attendance->membership_type]

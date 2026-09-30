@@ -196,7 +196,7 @@ export class PaymentService {
 
         const receipt: OfficialReceipt = {
           club_name: 'FORDAGO FITNESS & WELLNESS CLUB',
-          club_address: 'Bustos, Bulacan, Philippines',
+          club_address: 'Cabiao, Nueva Ecija, Philippines',
           receipt_number: refNumber,
           payment_channel: channelKey,
           amount: payload.amount,
@@ -283,7 +283,7 @@ export class PaymentService {
         const customer = (this.auth.user as any) || {};
         const fallback: OfficialReceipt = {
           club_name: 'FORDAGO FITNESS & WELLNESS CLUB',
-          club_address: 'Bustos, Bulacan, Philippines',
+          club_address: 'Cabiao, Nueva Ecija, Philippines',
           receipt_number: receiptNumber,
           payment_channel: 'GCash',
           amount: 1599,
@@ -351,7 +351,7 @@ export class PaymentService {
           const customer = (this.auth.user as any) || {};
           const fallback: OfficialReceipt = {
             club_name: 'FORDAGO FITNESS & WELLNESS CLUB',
-            club_address: 'Poblacion, Bustos, Bulacan, Philippines',
+            club_address: 'Poblacion, Cabiao, Nueva Ecija, Philippines',
             receipt_number: receiptOrNumber,
             payment_channel: 'GCash',
             amount: 1599,

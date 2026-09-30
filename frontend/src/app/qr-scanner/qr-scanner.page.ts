@@ -296,15 +296,15 @@ export class QrScannerPage implements OnInit, OnDestroy {
     this.paymentService.createCheckout({
       payment_for: 'attendance',
       payment_channel: channel,
-      amount: 100,
+      amount: 40,
       currency: 'PHP',
       return_url: window.location.origin + '/qr-scanner',
       items: [
         {
           name: 'Daily Gym Pass Access',
           quantity: 1,
-          unit_price: 100,
-          amount: 100
+          unit_price: 40,
+          amount: 40
         }
       ],
       metadata: {
@@ -339,27 +339,27 @@ export class QrScannerPage implements OnInit, OnDestroy {
       const nowIso = new Date().toISOString();
       this.paymentService.openReceipt({
         club_name: 'FORDAGO FITNESS & WELLNESS CLUB',
-        club_address: 'Bustos, Bulacan, Philippines',
+        club_address: 'Cabiao, Nueva Ecija, Philippines',
         receipt_number: `REC-PASS-${Date.now().toString().slice(-6)}`,
         payment_channel: 'Cash',
         gateway: 'counter',
         payment_for: 'Daily Gym Pass Access',
         status: 'PAID',
-        amount: 100,
-        subtotal: 100,
+        amount: 40,
+        subtotal: 40,
         fee: 0,
         tax: 0,
         discount: 0,
-        total: 100,
-        grand_total: 100,
-        total_amount: 100,
+        total: 40,
+        grand_total: 40,
+        total_amount: 40,
         currency: 'PHP',
         paid_at: nowIso,
         transaction_date: nowIso,
         customer_name: this.currentUserName || 'Gym Visitor',
         customer_email: user?.email || 'member@fordago.ph',
         customer_phone: user?.phone || '',
-        items: [{ name: 'Daily Gym Pass Access', quantity: 1, price: 100, unit_price: 100, amount: 100, subtotal: 100 }]
+        items: [{ name: 'Daily Gym Pass Access', quantity: 1, price: 40, unit_price: 40, amount: 40, subtotal: 40 }]
       });
     }
   }
@@ -876,7 +876,7 @@ export class QrScannerPage implements OnInit, OnDestroy {
         if (res.payment_status === 'pending') {
           this.pendingAttendanceId = res.attendance_id || null;
           this.isPendingPaymentConfirmed = false;
-          this.checkInMessage = res.message || 'Please proceed to the cashier counter to pay your ₱100 Daily Pass fee.';
+          this.checkInMessage = res.message || 'Please proceed to the cashier counter to pay your ₱40 Daily Pass fee.';
           this.pendingModalOpen = true;
 
           this.myLogs = [

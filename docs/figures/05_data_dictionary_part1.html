@@ -63,7 +63,7 @@
         <tr><td>phone</td><td>VARCHAR(20)</td><td>NULLABLE</td><td>11-digit mobile contact number</td></tr>
         <tr><td>gender</td><td>ENUM</td><td>NULLABLE</td><td>'male','female','other'</td></tr>
         <tr><td>profile_image</td><td>LONGTEXT</td><td>NULLABLE</td><td>Base64 encoded or asset avatar URL</td></tr>
-        <tr><td>membership_type</td><td>ENUM</td><td>NOT NULL</td><td>'daily' (₱100 pass) or 'premium' (₱500 monthly)</td></tr>
+        <tr><td>membership_type</td><td>ENUM</td><td>NOT NULL</td><td>'daily' (₱40 pass) or 'premium' (₱500 monthly)</td></tr>
         <tr><td>membership_status</td><td>ENUM</td><td>NOT NULL</td><td>'active' or 'pending' payment</td></tr>
         <tr><td>payment_method</td><td>ENUM</td><td>NULLABLE</td><td>'cash' (Counter POS), 'gcash', 'paymaya', 'card' (Cashless / PayMongo)</td></tr>
         <tr><td>membership_expiry</td><td>DATE</td><td>NULLABLE</td><td>30-day expiration date for premium members</td></tr>
@@ -72,12 +72,12 @@
 
     <!-- Table 2: attendance -->
     <div class="table-card">
-      <div class="table-title"><span>Table 2: attendance</span><span>QR Turnstile Check-In Logs</span></div>
+      <div class="table-title"><span>Table 2: attendance</span><span>QR Entrance Attendance Logs</span></div>
       <table>
         <tr><th>Field Name</th><th>Data Type</th><th>Key / Constraint</th><th>Description</th></tr>
         <tr><td>id</td><td>INT(11)</td><td>PK, Auto Increment</td><td>Unique attendance record identifier</td></tr>
         <tr><td>user_id</td><td>INT(11)</td><td>FK (users.id)</td><td>Reference to attending member</td></tr>
-        <tr><td>check_in_time</td><td>DATETIME</td><td>DEFAULT CURRENT_TIMESTAMP</td><td>Exact timestamp of turnstile check-in</td></tr>
+        <tr><td>check_in_time</td><td>DATETIME</td><td>DEFAULT CURRENT_TIMESTAMP</td><td>Exact timestamp of gym entrance check-in</td></tr>
         <tr><td>membership_type</td><td>ENUM</td><td>NOT NULL DEFAULT 'premium'</td><td>Pass category ('daily' or 'premium')</td></tr>
         <tr><td>payment_status</td><td>ENUM</td><td>NOT NULL DEFAULT 'paid'</td><td>Payment state ('pending' or 'paid')</td></tr>
         <tr><td>confirmed_by</td><td>INT(11)</td><td>FK (users.id), NULLABLE</td><td>Staff member verifying walk-in fee</td></tr>
@@ -121,7 +121,7 @@
 
   <div class="desc-box">
     <div class="desc-title">Data Schema & Integrity Constraints Narrative (Part 1):</div>
-    Part 1 of the Data Dictionary defines the foundational user, attendance, and fitness trainer tables. The <code>users</code> table establishes role-based identity across five distinct system roles (<code>member</code>, <code>coach</code>, <code>employee</code>, <code>admin</code>, <code>super_admin</code>) and manages pass lifecycle states. The <code>attendance</code> entity logs real-time turnstile check-in timestamps, pass types, and staff confirmations with foreign key linkage to <code>users.id</code>. Trainer profiles, duty availability schedules, and packaged training programs are modeled across <code>coach_profiles</code>, <code>coach_availability</code>, and <code>coach_programs</code> to maintain referential integrity and support on-demand booking.
+    Part 1 of the Data Dictionary defines the foundational user, attendance, and fitness trainer tables. The <code>users</code> table establishes role-based identity across five distinct system roles (<code>member</code>, <code>coach</code>, <code>employee</code>, <code>admin</code>, <code>super_admin</code>) and manages pass lifecycle states. The <code>attendance</code> entity logs real-time gym entrance check-in timestamps, pass types, and staff confirmations with foreign key linkage to <code>users.id</code>. Trainer profiles, duty availability schedules, and packaged training programs are modeled across <code>coach_profiles</code>, <code>coach_availability</code>, and <code>coach_programs</code> to maintain referential integrity and support on-demand booking.
   </div>
 </body>
 </html>

@@ -1312,7 +1312,7 @@ export class InventoryPage implements OnInit {
     const refNum = 'FGO-REC-' + (group.id ? group.id.replace(/[^0-9]/g, '').slice(-6) : Math.floor(100000 + Math.random() * 900000));
     const receipt: OfficialReceipt = {
       club_name: 'FORDAGO FITNESS & WELLNESS CLUB',
-      club_address: 'Poblacion, Bustos, Bulacan, 3007 Philippines',
+      club_address: 'Poblacion, Cabiao, Nueva Ecija, 3107 Philippines',
       receipt_number: refNum,
       transaction_date: (group.date || new Date()).toISOString(),
       paid_at: (group.date || new Date()).toISOString(),

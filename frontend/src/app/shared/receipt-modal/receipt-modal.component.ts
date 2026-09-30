@@ -1,4 +1,4 @@
-﻿import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule, DecimalPipe, DatePipe } from '@angular/common';
 import { IonIcon } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
@@ -147,7 +147,7 @@ export class ReceiptModalComponent implements OnInit, OnDestroy {
     doc.setFontSize(7.5);
     doc.setTextColor(50, 50, 50);
     doc.text('SUPPLEMENTS & MERCHANDISE',      CTR, y, { align: 'center' }); y += 4;
-    doc.text('Poblacion, Bustos, Bulacan 3007', CTR, y, { align: 'center' }); y += 4;
+    doc.text('Poblacion, Cabiao, Nueva Ecija 3107', CTR, y, { align: 'center' }); y += 4;
     doc.text('VAT Reg. TIN: 421-890-332-000',  CTR, y, { align: 'center' }); y += 4;
     doc.text('Tel: (044) 762-1849',             CTR, y, { align: 'center' }); y += 5;
 

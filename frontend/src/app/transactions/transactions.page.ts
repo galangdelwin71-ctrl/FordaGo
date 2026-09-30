@@ -119,7 +119,7 @@ export class TransactionsPage implements OnInit {
 
     const fallbackReceipt: OfficialReceipt = {
       club_name: 'FORDAGO FITNESS & WELLNESS CLUB',
-      club_address: 'Bustos, Bulacan, Philippines',
+      club_address: 'Cabiao, Nueva Ecija, Philippines',
       receipt_number: tx.receipt_number || `REC-${(tx.source || 'TX').toUpperCase()}-${tx.id || Math.floor(100000 + Math.random() * 900000)}`,
       payment_channel: channel,
       gateway: tx.gateway || (rawChannel === 'cash' ? 'counter' : 'paymongo'),

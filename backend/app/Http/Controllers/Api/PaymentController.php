@@ -53,7 +53,7 @@ class PaymentController extends Controller
             $user = User::where('email', $request->input('email'))->first();
         }
         if (! $user) {
-            $user = User::where('role', 'member')->first() ?: User::first();
+            $user = User::whereIn('role', ['user', 'member'])->first() ?: User::first();
         }
 
         $amount = (float) $request->input('amount');
@@ -538,7 +538,7 @@ class PaymentController extends Controller
 
         return [
             'club_name'        => 'FORDAGO FITNESS & WELLNESS CLUB',
-            'club_address'     => 'Bustos, Bulacan, Philippines',
+            'club_address'     => 'Cabiao, Nueva Ecija, Philippines',
             'receipt_number'   => $payment->receipt_number,
             'transaction_date' => $payment->paid_at ? $payment->paid_at->toIso8601String() : $payment->created_at->toIso8601String(),
             'paid_at'          => $payment->paid_at ? $payment->paid_at->toIso8601String() : $payment->created_at->toIso8601String(),
