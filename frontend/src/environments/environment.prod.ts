@@ -1,7 +1,8 @@
 export const environment = {
   production: true,
-  apiUrl: 'http://168.144.141.27:8000/api',
-  apiBaseUrl: 'http://168.144.141.27:8000',
-  reverbHost: '168.144.141.27',
-  reverbPort: 8080,
+  apiUrl: 'https://fordago.online/api',
+  apiBaseUrl: 'https://fordago.online',
+  reverbHost: 'fordago.online',
+  reverbPort: 443,
+  reverbScheme: 'https',
 };

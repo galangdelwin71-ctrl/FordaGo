@@ -938,7 +938,7 @@ export class InventoryPage implements OnInit {
             amount: this.lastOrderTotal,
             payment_channel: paymentMethod,
             description: `FordaGO Gym Shop Order: ${product.name} (x${quantity})`,
-            return_url: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://168.144.141.27/inventory' : (window.location.origin + '/inventory'),
+            return_url: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'https://fordago.online/inventory' : (window.location.origin + '/inventory'),
             items_breakdown: [
               {
                 name: product.name,
@@ -1093,7 +1093,7 @@ export class InventoryPage implements OnInit {
             amount: this.lastOrderTotal,
             payment_channel: this.cartPaymentMethod,
             description: `FordaGO Gym Shop Order (1x ${product.name})`,
-            return_url: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://168.144.141.27/inventory' : (window.location.origin + '/inventory'),
+            return_url: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'https://fordago.online/inventory' : (window.location.origin + '/inventory'),
             items_breakdown: [{
               name: product.name,
               quantity: 1,
@@ -1224,7 +1224,7 @@ export class InventoryPage implements OnInit {
             amount: this.lastOrderTotal,
             payment_channel: this.cartPaymentMethod,
             description: `FordaGO Gym Shop Order (${cartSnapshot.length} items)`,
-            return_url: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://168.144.141.27/inventory' : (window.location.origin + '/inventory'),
+            return_url: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'https://fordago.online/inventory' : (window.location.origin + '/inventory'),
             items_breakdown: cartSnapshot.map(i => ({
               name: i.product.name,
               quantity: i.quantity,

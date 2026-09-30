@@ -15,10 +15,10 @@
  * Configurable target host for Native Capacitor APK builds.
  * For production mobile APK release, point this to your VPS Domain or Public IP (e.g., 'gym.yourdomain.com' or '203.0.113.5').
  */
-export const NATIVE_SERVER_HOST = '168.144.141.27';
-export const NATIVE_SERVER_PROTOCOL = 'http'; // 'http' or 'https'
-export const NATIVE_SERVER_PORT = '8000'; // port 8000 on VPS
-export const REVERB_SERVER_PORT = '8080'; // port 8080 on VPS
+export const NATIVE_SERVER_HOST = 'fordago.online';
+export const NATIVE_SERVER_PROTOCOL = 'https'; // 'http' or 'https'
+export const NATIVE_SERVER_PORT = ''; // standard HTTPS port 443
+export const REVERB_SERVER_PORT = ''; // standard HTTPS port 443
 
 /**
  * WSL/Podman backend host for local development.

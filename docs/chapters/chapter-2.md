@@ -119,18 +119,31 @@ A total of **fifteen (15) respondents** were selected, categorized into two eval
 
 ## 2.5 Research Instrument
 
-The primary research instrument used to evaluate the system was a structured survey questionnaire adapted from the **ISO/IEC 25010 Systems and Software Quality Requirements and Evaluation (SQuaRE)** model (ISO, 2011) and standardized by the College of Information and Communications Technology (CICT) for IT Expert capstone evaluations.
+The primary research instrument used to evaluate the system was a structured survey questionnaire adapted from the **ISO/IEC 25010 Systems and Software Quality Requirements and Evaluation (SQuaRE)** model (ISO, 2011) and standardized by the College of Information and Communications Technology (CICT) for capstone project evaluations.
 
+To ensure rigorous and appropriate evaluation across diverse respondent classifications, two distinct instruments were employed:
+
+### 1. IT Experts Technical Evaluation Instrument
 The evaluation instrument for IT Experts comprehensively assessed all eight (8) software product quality characteristics through thirty-three (33) standardized parameter indicators:
 
-1. **Functional Suitability (3 items):** Evaluates the degree to which system features (QR turnstile attendance, equipment tutorial scanner, PR milestone tracker, split routine planner, in-chat workout proposals, supplement POS, and PDF/Excel report export) completely, correctly, and appropriately satisfy gym operational requirements.
-2. **Performance Efficiency (3 items):** Evaluates transaction response times, system resource utilization (CPU, memory, database storage, and network bandwidth), and operational capacity under concurrent user traffic.
-3. **Compatibility (2 items):** Assesses the degree to which the system co-exists harmoniously with other applications and exhibits cross-platform interoperability across mobile operating systems and modern desktop browsers.
-4. **Usability (6 items):** Measures appropriateness recognizability, learnability for novice and experienced users, operability, user error protection, interface aesthetics, and system accessibility.
-5. **Reliability (4 items):** Assesses system maturity, high service availability, fault tolerance during network disruptions, and recoverability of transactional records following failures.
-6. **Security (6 items):** Evaluates data confidentiality, data integrity, fault resistance, non-repudiation of transactions, user accountability and audit logging, and token authenticity (Sanctum authentication and Bcrypt password hashing).
-7. **Maintainability (6 items):** Assesses modularity of Angular components and Laravel controllers, component availability, code reusability, fault analyzability, update modifiability, and testability.
-8. **Portability (3 items):** Measures environment adaptability, ease of client APK and web installation, and component replaceability across computing platforms.
+1. **Functional Suitability (3 items):** Evaluates Functional Completeness, Functional Correctness, and Functional Appropriateness across gym operational workflows.
+2. **Performance Efficiency (3 items):** Evaluates Time-behavior, Resource Utilization (CPU, memory, storage, and network bandwidth), and operational Capacity under concurrent user traffic.
+3. **Compatibility (2 items):** Assesses Co-existence with host operating systems and Interoperability across mobile and web platforms.
+4. **Usability (6 items):** Measures Appropriateness Recognizability, Learnability, Operability, User Error Protection, User Interface Aesthetics, and Accessibility.
+5. **Reliability (4 items):** Assesses Maturity, Availability, Fault Tolerance during network disruptions, and Recoverability of transactions.
+6. **Security (6 items):** Evaluates Confidentiality, Integrity, Non-repudiation, Accountability, and Authenticity (Bcrypt hashing, Sanctum tokens, and RBAC).
+7. **Maintainability (6 items):** Assesses Modularity, Reusability, Analyzability, Modifiability, and Testability of the code architecture.
+8. **Portability (3 items):** Measures Adaptability, Installability, and Replaceability across computing platforms.
+
+### 2. End-User System Evaluation Instrument
+For gym end-users (administrators, front-desk staff, coaches, and members), the evaluation instrument preserved the original ISO/IEC 25010 sub-characteristic **Parameters** while omitting developer-only criteria that require source-code or infrastructure inspection (such as *Maintainability*, *Portability*, internal *Resource Utilization*, and low-level *Co-existence*). 
+
+The instrument is formatted with the formal **Parameter** name alongside a clear **Descriptor / Indicator** column that translates each standard parameter into operational gym system functions:
+1. **Functional Suitability (3 items):** Preserves original parameters *Functional Completeness*, *Functional Correctness*, and *Functional Appropriateness*, described through attendance check-in, equipment guides, PR tracking, and POS checkout.
+2. **Usability (6 items):** Preserves *Appropriateness Recognizability*, *Learnability*, *Operability*, *User Error Protection*, *User Interface Aesthetics*, and *Accessibility*, described through navigation ease, dark-theme visual design, and interactive tour guides.
+3. **Reliability (4 items):** Preserves *Maturity*, *Availability*, *Fault Tolerance*, and *Recoverability*, described through daily operational uptime, handling of network drops, and cart/data preservation.
+4. **Security (5 items):** Preserves *Confidentiality*, *Integrity*, *Non-repudiation*, *Accountability*, and *Authenticity*, described through personal data privacy, tamper-proof logs, and secure login verification.
+5. **Performance Efficiency (1 item):** Preserves user-observable *Time-behavior*, described through screen loading responsiveness and optical QR camera decoding speed.
 
 A **5-Point Likert Scale** was utilized across all questionnaire items, consistent with the standard evaluation rubrics established by the College of Information and Communications Technology (CICT).
 

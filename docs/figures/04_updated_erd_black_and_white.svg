@@ -109,7 +109,7 @@
     <rect width="280" height="210" class="table-box" />
     <rect width="280" height="34" class="th-box" />
     <text x="14" y="22" class="th-txt">attendance</text>
-    <text x="266" y="22" class="th-sub">Turnstile Check-In</text>
+    <text x="266" y="22" class="th-sub">Gym Attendance Check-In</text>
     <g transform="translate(14, 52)">
       <text y="0" class="f-type">INT</text><text x="95" y="0" class="f-name">id</text><text x="235" y="0" class="pk-txt">[PK]</text>
       <text y="18" class="f-type">INT</text><text x="95" y="18" class="f-name">user_id</text><text x="235" y="18" class="fk-txt">[FK]</text>

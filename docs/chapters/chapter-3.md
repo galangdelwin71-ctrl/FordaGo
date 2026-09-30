@@ -213,6 +213,10 @@ The Entity-Relationship Diagram illustrates the logical tables, primary keys, fo
 | **`products`** | **1 : N** | **`order_items`** | `order_items.product_id` ➔ `products.product_id` | Product catalog linkage and atomic stock deductions |
 <p align="center"><b>Figure 9.</b> <i>Entity-Relationship Diagram (ERD) of FordaGO</i></p>
 
+<p align="center">
+  <img src="../figures/clean_masters/fig09_erd_model.png" alt="Figure 9. Entity-Relationship Diagram (ERD) of FordaGO" width="100%">
+</p>
+
 ---
 
 #### Data Dictionary
@@ -533,12 +537,13 @@ Gym end-users ($n = 10$, comprising front-desk staff, accredited coaches, and ac
 
 | Quality Criteria | Weighted Mean ($\overline{X}$) | Qualitative Rating |
 | :--- | :---: | :---: |
-| **1. Usability** (Ease of Use, PR Tracker, Equipment Tutorial Scanner) | 4.82 | Very Usable (Excellent) |
-| **2. Reliability** (Instant QR Generation, Stable Chat, Cart Persistence) | 4.80 | Very Reliable (Excellent) |
-| **3. Security** (Confidentiality of Personal Logs & GCash Proofs) | 4.85 | Very Secure (Excellent) |
-| **OVERALL GRAND MEAN** | **4.82** | **VERY STRONG EVIDENCE / EXCELLENT** |
+| **1. Functional Suitability** (QR Check-in, PR Tracker, Workout Splits, POS) | 4.85 | Very Functional (Excellent) |
+| **2. Usability** (Ease of Use, Dark Aesthetics, Equipment Scanner) | 4.82 | Very Usable (Excellent) |
+| **3. Reliability** (Instant QR Generation, Stable Chat, Cart Persistence) | 4.80 | Very Reliable (Excellent) |
+| **4. Security** (Confidentiality of Personal Logs & GCash Proofs) | 4.85 | Very Secure (Excellent) |
+| **OVERALL GRAND MEAN** | **4.83** | **VERY STRONG EVIDENCE / EXCELLENT** |
 
-Gym members rated the application with an overall Grand Mean of **4.82 (Very Strong Evidence / Excellent)**. Members emphasized the tremendous benefit of scanning equipment QR placards to immediately watch proper execution guides and view targeted muscles, as well as the convenience of 1-tap acceptance of coach workout proposals and tracking PR strength milestones.
+Gym members rated the application with an overall Grand Mean of **4.83 (Very Strong Evidence / Excellent)**. Members emphasized the tremendous benefit of scanning equipment QR placards to immediately watch proper execution guides and view targeted muscles, as well as the convenience of 1-tap acceptance of coach workout proposals, tracking PR strength milestones, and seamless digital check-in.
 
 ---
 

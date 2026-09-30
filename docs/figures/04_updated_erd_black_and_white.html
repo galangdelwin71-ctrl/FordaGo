@@ -2,16 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Figure 6. Entity-Relationship Diagram (ERD) of FordaGO</title>
+<title>Figure 9. Entity-Relationship Diagram (ERD) of FordaGO</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     background: #ffffff;
     font-family: 'Times New Roman', Times, serif;
     color: #000000;
-    padding: 15px;
-    width: 2680px;
-    height: 1460px;
+    padding: 20px;
+    width: 2280px;
+    height: 2600px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -19,10 +19,10 @@
   }
   .diagram-box {
     position: relative;
-    width: 2640px;
-    height: 1420px;
+    width: 2240px;
+    height: 2560px;
     background: #ffffff;
-    border: 3.5px solid #000000;
+    border: 4.5px solid #000000;
     overflow: hidden;
   }
   svg.canvas {
@@ -40,48 +40,51 @@
     border: 4px solid #000000;
     z-index: 2;
     overflow: hidden;
+    width: 480px;
   }
   .entity-th {
     background: #ffffff;
     border-bottom: 4px solid #000000;
-    padding: 8px 14px;
+    padding: 10px 14px;
     display: flex;
     flex-direction: column;
     gap: 3px;
   }
   .main-th {
-    font-size: 26px;
+    font-size: 27px;
     font-weight: 900;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     color: #000000;
+    white-space: nowrap;
   }
   .sub-th {
-    font-size: 18px;
-    color: #222222;
+    font-size: 18.5px;
+    color: #111111;
     font-style: italic;
     font-weight: 800;
     text-transform: none;
   }
   .entity-body {
-    padding: 4px 0;
+    padding: 2px 0;
     background: #ffffff;
   }
   .row {
     display: flex;
     align-items: center;
-    padding: 4px 12px;
+    padding: 5.5px 12px;
     font-family: 'Times New Roman', Times, serif;
-    font-size: 19.5px;
+    font-size: 21px;
     font-weight: 900;
-    border-bottom: 1.8px solid #000000;
+    border-bottom: 2px solid #000000;
+    line-height: 1.25;
   }
   .row:last-child {
     border-bottom: none;
   }
   .type {
-    width: 140px;
-    color: #222222;
+    width: 175px;
+    color: #111111;
     flex-shrink: 0;
     font-weight: 900;
   }
@@ -92,131 +95,300 @@
   }
   .badge {
     font-weight: 900;
-    font-size: 17px;
-    margin-left: 6px;
-  }
-  .pk { color: #000000; }
-  .fk { color: #000000; }
-
-  .legend {
-    position: absolute;
-    bottom: 20px;
-    left: 25px;
-    background: #ffffff;
-    border: 3.5px solid #000000;
-    padding: 10px 20px;
-    display: flex;
-    gap: 25px;
     font-size: 18px;
-    font-weight: 800;
+    margin-left: 6px;
+    color: #000000;
+  }
+  .legend-box {
+    position: absolute;
+    bottom: 25px;
+    left: 45px;
+    width: 2150px;
+    height: 125px;
+    background: #ffffff;
+    border: 4px solid #000000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 25px;
+    font-size: 20px;
+    font-weight: 900;
     z-index: 10;
   }
-  .leg-item { display: flex; align-items: center; gap: 8px; }
-
-  .desc-box {
-    margin-top: 25px;
-    width: 2640px;
-    border: 4px solid #000000;
-    background: #ffffff;
-    padding: 18px 24px;
-    font-size: 17px;
-    line-height: 1.6;
-    color: #000000;
+  .legend-row-top {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
   }
-  .desc-title {
-    font-weight: 900;
-    font-size: 20px;
-    margin-bottom: 6px;
-    color: #000000;
-    text-transform: uppercase;
+  .legend-row-bottom {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    color: #222222;
+    border-top: 1.5px solid #666666;
+    padding-top: 6px;
+  }
+  .leg-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .leg-badge {
+    border: 2px solid #000;
+    padding: 2px 8px;
+    font-size: 18px;
   }
 </style>
 </head>
 <body>
 
-
   <div class="diagram-box">
     <svg class="canvas">
       <defs>
-        <marker id="cf" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
-          <path d="M 0 1 L 12 7 L 0 13 M 12 0 L 12 14" stroke="#000000" stroke-width="2.5" fill="none" />
+        <!-- Crow's Foot Marker (Many side) -->
+        <marker id="cf" viewBox="0 0 16 16" refX="14" refY="8" markerWidth="12" markerHeight="12" orient="auto-start-reverse">
+          <path d="M 0 2 L 14 8 L 0 14 M 14 0 L 14 16" stroke="#000000" stroke-width="3" fill="none" />
         </marker>
       </defs>
 
-      <!-- 1. USERS -> ATTENDANCE (user_id) -->
-      <path d="M 1370 735 L 1370 780" stroke="#000000" stroke-width="3" fill="none" marker-end="url(#cf)" />
-      
-      <!-- 2. USERS -> NOTIFICATIONS (user_id) -->
-      <path d="M 1520 180 L 1740 180" stroke="#000000" stroke-width="3" fill="none" marker-end="url(#cf)" />
-      
-      <!-- 3. USERS -> COACH_PROFILES (user_id) -->
-      <path d="M 1120 180 L 1000 180" stroke="#000000" stroke-width="3" fill="none" marker-end="url(#cf)" />
-      
-      <!-- 4. USERS -> PERSONAL_RECORDS (user_id) -->
-      <path d="M 1120 420 L 760 420 L 760 540" stroke="#000000" stroke-width="3" fill="none" marker-end="url(#cf)" />
-      
-      <!-- 5. USERS -> WORKOUT_SESSIONS (user_id) -->
-      <path d="M 1200 735 L 1200 780" stroke="#000000" stroke-width="3" fill="none" marker-end="url(#cf)" />
-      
-      <!-- 6. USERS -> PAYMENTS (user_id) -->
-      <path d="M 1520 400 L 1630 400 L 1630 540 L 1740 540" stroke="#000000" stroke-width="3" fill="none" marker-end="url(#cf)" />
+      <!-- ================= CORRIDOR 1 & COLUMN 1 CONNECTORS ================= -->
+      <!-- 1. USERS -> COACH_PROGRAMS (coach_id) -->
+      <path d="M 1145 140 L 525 140" stroke="#000000" stroke-width="3.5" stroke-dasharray="8,8" fill="none" marker-end="url(#cf)" />
 
-      <!-- 7. PAYMENTS -> ORDERS (related_id / payment_for) -->
-      <path d="M 1920 840 L 1920 920" stroke="#000000" stroke-width="3" stroke-dasharray="6,6" fill="none" marker-end="url(#cf)" />
+      <!-- 2. COACH_PROGRAMS -> PROGRAM_BOOKINGS (program_id) -->
+      <path d="M 285 430 L 285 500" stroke="#000000" stroke-width="3.5" fill="none" marker-end="url(#cf)" />
 
-      <!-- 8. USERS -> ORDERS (user_id) -->
-      <path d="M 1520 460 L 1600 460 L 1600 950 L 1740 950" stroke="#000000" stroke-width="3" fill="none" marker-end="url(#cf)" />
-      
-      <!-- 9. PRODUCTS -> ORDERS (product_id) -->
-      <path d="M 2180 970 L 2110 970" stroke="#000000" stroke-width="3" fill="none" marker-end="url(#cf)" />
-      
-      <!-- 10. COACH_PROFILES -> CONVERSATIONS (coach_id) -->
-      <path d="M 820 450 L 820 480 L 330 480 L 330 520" stroke="#000000" stroke-width="3" fill="none" marker-end="url(#cf)" />
-      
-      <!-- 11. USERS -> CONVERSATIONS (client_id) -->
-      <path d="M 1120 260 L 540 260 L 540 640 L 500 640" stroke="#000000" stroke-width="3" stroke-dasharray="6,6" fill="none" marker-end="url(#cf)" />
-      
-      <!-- 12. CONVERSATIONS -> MESSAGES (conversation_id) -->
-      <path d="M 330 790 L 330 910" stroke="#000000" stroke-width="3" fill="none" marker-end="url(#cf)" />
-      
-      <!-- 13. CONVERSATIONS -> WORKOUT_PLAN_PROPOSALS (conversation_id) -->
-      <path d="M 440 790 L 440 850 L 720 850 L 720 910" stroke="#000000" stroke-width="3" fill="none" marker-end="url(#cf)" />
-      
-      <!-- 14. WORKOUT_PLAN_PROPOSALS -> MESSAGES (proposal_id) -->
-      <path d="M 570 1060 L 520 1060" stroke="#000000" stroke-width="3" stroke-dasharray="6,6" fill="none" marker-end="url(#cf)" />
-      
-      <!-- 15. WORKOUT_PLAN_PROPOSALS -> WORKOUT_SESSIONS (proposal_id) -->
-      <path d="M 940 1020 L 970 1020" stroke="#000000" stroke-width="3" stroke-dasharray="6,6" fill="none" marker-end="url(#cf)" />
+      <!-- 3. USERS -> PROGRAM_BOOKINGS (user_id) - Track B (x=560) -->
+      <path d="M 1145 300 L 560 300 L 560 620 L 525 620" stroke="#000000" stroke-width="3.5" fill="none" marker-end="url(#cf)" />
 
-      <!-- 16. USERS -> FEEDBACKS (user_id) -->
-      <path d="M 1480 735 L 1480 1130" stroke="#000000" stroke-width="3" fill="none" marker-end="url(#cf)" />
-      
-      <!-- 17. EQUIPMENT -> EQUIPMENT_SCAN_LOGS (equipment_id) -->
-      <path d="M 2390 450 L 2390 510" stroke="#000000" stroke-width="3" fill="none" marker-end="url(#cf)" />
-      
-      <!-- 18. USERS -> EQUIPMENT_SCAN_LOGS (user_id) -->
-      <path d="M 1520 280 L 2160 280 L 2160 620 L 2220 620" stroke="#000000" stroke-width="3" stroke-dasharray="6,6" fill="none" marker-end="url(#cf)" />
-    
-      <!-- 19. USERS -> ACTIVITY_LOGS (user_id) -->
-      <path d="M 1250 735 L 1250 1080 L 1150 1080 L 1150 1100" stroke="#000000" stroke-width="3" stroke-dasharray="6,6" fill="none" marker-end="url(#cf)" />
+      <!-- 4. COACH_PROFILES -> CONVERSATIONS (coach_id) - Track A (x=545) -->
+      <path d="M 595 680 L 545 680 L 545 1280 L 285 1280 L 285 1320" stroke="#000000" stroke-width="3.5" fill="none" marker-end="url(#cf)" />
 
-      <!-- 20. USERS -> COACH_PROGRAMS (coach_id) -->
-      <path d="M 1120 140 L 510 140" stroke="#000000" stroke-width="3" stroke-dasharray="6,6" fill="none" marker-end="url(#cf)" />
+      <!-- 5. USERS -> CONVERSATIONS (client_id) -->
+      <path d="M 1145 420 L 530 420 L 530 1360 L 525 1360" stroke="#000000" stroke-width="3.5" stroke-dasharray="8,8" fill="none" marker-end="url(#cf)" />
 
-    
-      <!-- 21. COACH_PROGRAMS -> PROGRAM_BOOKINGS (program_id) -->
-      <path d="M 340 300 L 340 320" stroke="#000000" stroke-width="3" fill="none" marker-end="url(#cf)" />
+      <!-- 6. CONVERSATIONS -> MESSAGES (conversation_id) -->
+      <path d="M 285 1580 L 285 1660" stroke="#000000" stroke-width="3.5" fill="none" marker-end="url(#cf)" />
+
+      <!-- 7. CONVERSATIONS -> WORKOUT_PLAN_PROPOSALS (conversation_id) -->
+      <path d="M 525 1420 L 595 1420" stroke="#000000" stroke-width="3.5" fill="none" marker-end="url(#cf)" />
+
+      <!-- 8. WORKOUT_PLAN_PROPOSALS -> MESSAGES (proposal_id) - Track C (x=575) -->
+      <path d="M 595 1560 L 575 1560 L 575 1800 L 525 1800" stroke="#000000" stroke-width="3.5" stroke-dasharray="8,8" fill="none" marker-end="url(#cf)" />
+
+
+      <!-- ================= CORRIDOR 2 & COLUMN 2 CONNECTORS ================= -->
+      <!-- 9. USERS -> COACH_PROFILES (user_id) -->
+      <path d="M 1145 570 L 1075 570" stroke="#000000" stroke-width="3.5" fill="none" marker-end="url(#cf)" />
+
+      <!-- 10. USERS -> PERSONAL_RECORDS (user_id) - Track A (x=1100) -->
+      <path d="M 1145 710 L 1100 710 L 1100 1020 L 1075 1020" stroke="#000000" stroke-width="3.5" fill="none" marker-end="url(#cf)" />
+
+      <!-- 11. WORKOUT_PLAN_PROPOSALS -> WORKOUT_SESSIONS (proposal_id) -->
+      <path d="M 835 1690 L 835 1770" stroke="#000000" stroke-width="3.5" stroke-dasharray="8,8" fill="none" marker-end="url(#cf)" />
+
+      <!-- 12. USERS -> WORKOUT_SESSIONS (user_id) - Track B (x=1120) -->
+      <path d="M 1145 755 L 1120 755 L 1120 1860 L 1075 1860" stroke="#000000" stroke-width="3.5" fill="none" marker-end="url(#cf)" />
+
+
+      <!-- ================= CENTER SPINE (COLUMN 3) CONNECTORS ================= -->
+      <!-- 13. USERS -> ATTENDANCE (user_id) -->
+      <path d="M 1385 795 L 1385 890" stroke="#000000" stroke-width="3.5" fill="none" marker-end="url(#cf)" />
+
+      <!-- 14. USERS -> ACTIVITY_LOGS (user_id) - Track B (x=1660) -->
+      <path d="M 1550 795 L 1550 840 L 1660 840 L 1660 1430 L 1625 1430" stroke="#000000" stroke-width="3.5" stroke-dasharray="8,8" fill="none" marker-end="url(#cf)" />
+
+      <!-- 15. USERS -> FEEDBACKS (user_id) -->
+      <path d="M 1385 1673 L 1385 1770" stroke="#000000" stroke-width="3.5" fill="none" marker-end="url(#cf)" />
+
+
+      <!-- ================= CORRIDOR 3 & COLUMN 4 CONNECTORS ================= -->
+      <!-- 16. USERS -> NOTIFICATIONS (user_id) -->
+      <path d="M 1625 180 L 1695 180" stroke="#000000" stroke-width="3.5" fill="none" marker-end="url(#cf)" />
+
+      <!-- 17. USERS -> PAYMENTS (user_id) -->
+      <path d="M 1625 510 L 1695 510" stroke="#000000" stroke-width="3.5" fill="none" marker-end="url(#cf)" />
+
+      <!-- 18. PAYMENTS -> ORDERS (related_id / payment_for) -->
+      <path d="M 1935 833 L 1935 900" stroke="#000000" stroke-width="3.5" stroke-dasharray="8,8" fill="none" marker-end="url(#cf)" />
+
+      <!-- 19. USERS -> ORDERS (user_id) - Track A (x=1645) -->
+      <path d="M 1625 680 L 1645 680 L 1645 1010 L 1695 1010" stroke="#000000" stroke-width="3.5" fill="none" marker-end="url(#cf)" />
+
+      <!-- 20. PRODUCTS -> ORDERS (product_id) -->
+      <path d="M 1935 1340 L 1935 1270" stroke="#000000" stroke-width="3.5" fill="none" marker-end="url(#cf)" />
+
+      <!-- 21. EQUIPMENT -> EQUIPMENT_SCAN_LOGS (equipment_id) -->
+      <path d="M 1935 2067 L 1935 2130" stroke="#000000" stroke-width="3.5" fill="none" marker-end="url(#cf)" />
+
+      <!-- 22. USERS -> EQUIPMENT_SCAN_LOGS (user_id) - Track C (x=1675) -->
+      <path d="M 1625 730 L 1675 730 L 1675 2210 L 1695 2210" stroke="#000000" stroke-width="3.5" stroke-dasharray="8,8" fill="none" marker-end="url(#cf)" />
 
     </svg>
 
-    <!-- 1. CENTRAL TABLE: USERS -->
-    <div class="entity" style="left: 1120px; top: 80px; width: 400px;">
+    <!-- ======================================================== -->
+    <!-- COLUMN 1: COACHING & MESSAGING (x = 45px, width = 480px)  -->
+    <!-- ======================================================== -->
+
+    <!-- 1. COACH_PROGRAMS -->
+    <div class="entity" style="left: 45px; top: 60px;">
+      <div class="entity-th">
+        <div class="main-th">coach_programs</div>
+        <div class="sub-th">Structured Coaching Packages</div>
+      </div>
+      <div class="entity-body">
+        <div class="row"><span class="type">BIGINT</span><span class="name">id</span><span class="badge">[PK]</span></div>
+        <div class="row"><span class="type">BIGINT</span><span class="name">coach_id</span><span class="badge">[FK]</span></div>
+        <div class="row"><span class="type">VARCHAR(150)</span><span class="name">title</span></div>
+        <div class="row"><span class="type">TEXT</span><span class="name">description</span></div>
+        <div class="row"><span class="type">DECIMAL(10,2)</span><span class="name">price</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">duration_weeks</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">sessions_per_week</span></div>
+        <div class="row"><span class="type">BOOLEAN</span><span class="name">is_active</span></div>
+      </div>
+    </div>
+
+    <!-- 2. PROGRAM_BOOKINGS -->
+    <div class="entity" style="left: 45px; top: 500px;">
+      <div class="entity-th">
+        <div class="main-th">program_bookings</div>
+        <div class="sub-th">Member Coaching Subscriptions</div>
+      </div>
+      <div class="entity-body">
+        <div class="row"><span class="type">BIGINT</span><span class="name">id</span><span class="badge">[PK]</span></div>
+        <div class="row"><span class="type">BIGINT</span><span class="name">user_id</span><span class="badge">[FK]</span></div>
+        <div class="row"><span class="type">BIGINT</span><span class="name">program_id</span><span class="badge">[FK]</span></div>
+        <div class="row"><span class="type">ENUM</span><span class="name">status</span></div>
+        <div class="row"><span class="type">ENUM</span><span class="name">payment_method</span></div>
+        <div class="row"><span class="type">DECIMAL(10,2)</span><span class="name">amount_paid</span></div>
+        <div class="row"><span class="type">TIMESTAMP</span><span class="name">created_at</span></div>
+      </div>
+    </div>
+
+    <!-- 3. CONVERSATIONS -->
+    <div class="entity" style="left: 45px; top: 1320px;">
+      <div class="entity-th">
+        <div class="main-th">conversations</div>
+        <div class="sub-th">1-on-1 Chat Channels</div>
+      </div>
+      <div class="entity-body">
+        <div class="row"><span class="type">INT</span><span class="name">id</span><span class="badge">[PK]</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">coach_id</span><span class="badge">[FK]</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">client_id</span><span class="badge">[FK]</span></div>
+        <div class="row"><span class="type">ENUM</span><span class="name">status</span></div>
+        <div class="row"><span class="type">TIMESTAMP</span><span class="name">created_at</span></div>
+      </div>
+    </div>
+
+    <!-- 4. MESSAGES -->
+    <div class="entity" style="left: 45px; top: 1660px;">
+      <div class="entity-th">
+        <div class="main-th">messages</div>
+        <div class="sub-th">Live Chat History</div>
+      </div>
+      <div class="entity-body">
+        <div class="row"><span class="type">INT</span><span class="name">id</span><span class="badge">[PK]</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">conversation_id</span><span class="badge">[FK]</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">sender_id</span><span class="badge">[FK]</span></div>
+        <div class="row"><span class="type">TEXT</span><span class="name">body</span></div>
+        <div class="row"><span class="type">ENUM</span><span class="name">type</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">proposal_id</span><span class="badge">[FK]</span></div>
+        <div class="row"><span class="type">DATETIME</span><span class="name">read_at</span></div>
+        <div class="row"><span class="type">TIMESTAMP</span><span class="name">created_at</span></div>
+      </div>
+    </div>
+
+
+    <!-- ======================================================== -->
+    <!-- COLUMN 2: WORKOUTS & PROPOSALS (x = 595px, width = 480px) -->
+    <!-- ======================================================== -->
+
+    <!-- 5. COACH_PROFILES -->
+    <div class="entity" style="left: 595px; top: 500px;">
+      <div class="entity-th">
+        <div class="main-th">coach_profiles</div>
+        <div class="sub-th">Trainer Credentials</div>
+      </div>
+      <div class="entity-body">
+        <div class="row"><span class="type">INT</span><span class="name">id</span><span class="badge">[PK]</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">user_id</span><span class="badge">[FK]</span></div>
+        <div class="row"><span class="type">TEXT</span><span class="name">specialties</span></div>
+        <div class="row"><span class="type">DECIMAL(10,2)</span><span class="name">rate</span></div>
+        <div class="row"><span class="type">TEXT</span><span class="name">bio</span></div>
+        <div class="row"><span class="type">LONGTEXT</span><span class="name">photo_url</span></div>
+        <div class="row"><span class="type">BOOLEAN</span><span class="name">is_active</span></div>
+        <div class="row"><span class="type">DATE</span><span class="name">contract_expiry</span></div>
+      </div>
+    </div>
+
+    <!-- 6. PERSONAL_RECORDS -->
+    <div class="entity" style="left: 595px; top: 940px;">
+      <div class="entity-th">
+        <div class="main-th">personal_records</div>
+        <div class="sub-th">PR Milestones</div>
+      </div>
+      <div class="entity-body">
+        <div class="row"><span class="type">INT</span><span class="name">id</span><span class="badge">[PK]</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">user_id</span><span class="badge">[FK]</span></div>
+        <div class="row"><span class="type">VARCHAR(100)</span><span class="name">exercise_name</span></div>
+        <div class="row"><span class="type">DECIMAL(8,2)</span><span class="name">max_weight</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">reps</span></div>
+        <div class="row"><span class="type">DATE</span><span class="name">achieved_at</span></div>
+      </div>
+    </div>
+
+    <!-- 7. WORKOUT_PLAN_PROPOSALS -->
+    <div class="entity" style="left: 595px; top: 1320px;">
+      <div class="entity-th">
+        <div class="main-th">workout_plan_proposals</div>
+        <div class="sub-th">Coach Proposals</div>
+      </div>
+      <div class="entity-body">
+        <div class="row"><span class="type">INT</span><span class="name">id</span><span class="badge">[PK]</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">conversation_id</span><span class="badge">[FK]</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">coach_id</span><span class="badge">[FK]</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">client_id</span><span class="badge">[FK]</span></div>
+        <div class="row"><span class="type">VARCHAR(255)</span><span class="name">title</span></div>
+        <div class="row"><span class="type">DECIMAL(10,2)</span><span class="name">price</span></div>
+        <div class="row"><span class="type">DATE</span><span class="name">scheduled_date</span></div>
+        <div class="row"><span class="type">ENUM</span><span class="name">status</span></div>
+      </div>
+    </div>
+
+    <!-- 8. WORKOUT_SESSIONS -->
+    <div class="entity" style="left: 595px; top: 1770px;">
+      <div class="entity-th">
+        <div class="main-th">workout_sessions</div>
+        <div class="sub-th">Daily Split Logs</div>
+      </div>
+      <div class="entity-body">
+        <div class="row"><span class="type">INT</span><span class="name">id</span><span class="badge">[PK]</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">user_id</span><span class="badge">[FK]</span></div>
+        <div class="row"><span class="type">VARCHAR(100)</span><span class="name">client_session_id</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">coach_id</span><span class="badge">[FK]</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">proposal_id</span><span class="badge">[FK]</span></div>
+        <div class="row"><span class="type">DATE</span><span class="name">session_date</span></div>
+        <div class="row"><span class="type">VARCHAR(50)</span><span class="name">split_day</span></div>
+        <div class="row"><span class="type">JSON</span><span class="name">exercises</span></div>
+        <div class="row"><span class="type">DATETIME</span><span class="name">completed_at</span></div>
+      </div>
+    </div>
+
+
+    <!-- ======================================================== -->
+    <!-- COLUMN 3: CORE USER & AUDIT (x = 1145px, width = 480px)   -->
+    <!-- ======================================================== -->
+
+    <!-- 9. USERS (Central Table) -->
+    <div class="entity" style="left: 1145px; top: 60px;">
       <div class="entity-th">
         <div class="main-th">users</div>
         <div class="sub-th">Core User Account</div>
       </div>
       <div class="entity-body">
-        <div class="row"><span class="type">INT</span><span class="name">id</span><span class="badge pk">[PK]</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">id</span><span class="badge">[PK]</span></div>
         <div class="row"><span class="type">VARCHAR(100)</span><span class="name">username</span></div>
         <div class="row"><span class="type">VARCHAR(100)</span><span class="name">first_name</span></div>
         <div class="row"><span class="type">VARCHAR(100)</span><span class="name">last_name</span></div>
@@ -237,137 +409,84 @@
       </div>
     </div>
 
-    <!-- 2. ATTENDANCE -->
-    <div class="entity" style="left: 1330px; top: 780px; width: 360px;">
+    <!-- 10. ATTENDANCE -->
+    <div class="entity" style="left: 1145px; top: 890px;">
       <div class="entity-th">
         <div class="main-th">attendance</div>
         <div class="sub-th">Turnstile Check-In</div>
       </div>
       <div class="entity-body">
-        <div class="row"><span class="type">INT</span><span class="name">id</span><span class="badge pk">[PK]</span></div>
-        <div class="row"><span class="type">INT</span><span class="name">user_id</span><span class="badge fk">[FK]</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">id</span><span class="badge">[PK]</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">user_id</span><span class="badge">[FK]</span></div>
         <div class="row"><span class="type">DATETIME</span><span class="name">check_in_time</span></div>
         <div class="row"><span class="type">ENUM</span><span class="name">membership_type</span></div>
         <div class="row"><span class="type">ENUM</span><span class="name">payment_status</span></div>
-        <div class="row"><span class="type">INT</span><span class="name">confirmed_by</span><span class="badge fk">[FK]</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">confirmed_by</span><span class="badge">[FK]</span></div>
         <div class="row"><span class="type">DATETIME</span><span class="name">confirmed_at</span></div>
         <div class="row"><span class="type">TEXT</span><span class="name">notes</span></div>
       </div>
     </div>
 
-    <!-- 3. COACH_PROFILES -->
-    <div class="entity" style="left: 640px; top: 120px; width: 360px;">
+    <!-- 11. ACTIVITY_LOGS -->
+    <div class="entity" style="left: 1145px; top: 1340px;">
       <div class="entity-th">
-        <div class="main-th">coach_profiles</div>
-        <div class="sub-th">Trainer Credentials</div>
+        <div class="main-th">activity_logs</div>
+        <div class="sub-th">Administrative Security Audit Trail</div>
       </div>
       <div class="entity-body">
-        <div class="row"><span class="type">INT</span><span class="name">id</span><span class="badge pk">[PK]</span></div>
-        <div class="row"><span class="type">INT</span><span class="name">user_id</span><span class="badge fk">[FK]</span></div>
-        <div class="row"><span class="type">TEXT</span><span class="name">specialties</span></div>
-        <div class="row"><span class="type">DECIMAL(10,2)</span><span class="name">rate</span></div>
-        <div class="row"><span class="type">TEXT</span><span class="name">bio</span></div>
-        <div class="row"><span class="type">LONGTEXT</span><span class="name">photo_url</span></div>
-        <div class="row"><span class="type">BOOLEAN</span><span class="name">is_active</span></div>
-        <div class="row"><span class="type">DATE</span><span class="name">contract_expiry</span></div>
-      </div>
-    </div>
-
-    <!-- 4. CONVERSATIONS -->
-    <div class="entity" style="left: 170px; top: 520px; width: 330px;">
-      <div class="entity-th">
-        <div class="main-th">conversations</div>
-        <div class="sub-th">1-on-1 Chat Channels</div>
-      </div>
-      <div class="entity-body">
-        <div class="row"><span class="type">INT</span><span class="name">id</span><span class="badge pk">[PK]</span></div>
-        <div class="row"><span class="type">INT</span><span class="name">coach_id</span><span class="badge fk">[FK]</span></div>
-        <div class="row"><span class="type">INT</span><span class="name">client_id</span><span class="badge fk">[FK]</span></div>
-        <div class="row"><span class="type">ENUM</span><span class="name">status</span></div>
+        <div class="row"><span class="type">BIGINT</span><span class="name">id</span><span class="badge">[PK]</span></div>
+        <div class="row"><span class="type">BIGINT</span><span class="name">user_id</span><span class="badge">[FK]</span></div>
+        <div class="row"><span class="type">VARCHAR(100)</span><span class="name">action</span></div>
+        <div class="row"><span class="type">VARCHAR(50)</span><span class="name">module</span></div>
+        <div class="row"><span class="type">TEXT</span><span class="name">description</span></div>
+        <div class="row"><span class="type">VARCHAR(45)</span><span class="name">ip_address</span></div>
         <div class="row"><span class="type">TIMESTAMP</span><span class="name">created_at</span></div>
       </div>
     </div>
 
-    <!-- 5. MESSAGES -->
-    <div class="entity" style="left: 140px; top: 920px; width: 370px;">
+    <!-- 12. FEEDBACKS -->
+    <div class="entity" style="left: 1145px; top: 1770px;">
       <div class="entity-th">
-        <div class="main-th">messages</div>
-        <div class="sub-th">Live Chat History</div>
+        <div class="main-th">feedbacks</div>
+        <div class="sub-th">Member Ratings</div>
       </div>
       <div class="entity-body">
-        <div class="row"><span class="type">INT</span><span class="name">id</span><span class="badge pk">[PK]</span></div>
-        <div class="row"><span class="type">INT</span><span class="name">conversation_id</span><span class="badge fk">[FK]</span></div>
-        <div class="row"><span class="type">INT</span><span class="name">sender_id</span><span class="badge fk">[FK]</span></div>
-        <div class="row"><span class="type">TEXT</span><span class="name">body</span></div>
-        <div class="row"><span class="type">ENUM</span><span class="name">type</span></div>
-        <div class="row"><span class="type">INT</span><span class="name">proposal_id</span><span class="badge fk">[FK]</span></div>
-        <div class="row"><span class="type">DATETIME</span><span class="name">read_at</span></div>
-        <div class="row"><span class="type">TIMESTAMP</span><span class="name">created_at</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">id</span><span class="badge">[PK]</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">user_id</span><span class="badge">[FK]</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">rating</span></div>
+        <div class="row"><span class="type">TEXT</span><span class="name">comments</span></div>
       </div>
     </div>
 
-    <!-- 6. WORKOUT_PLAN_PROPOSALS -->
-    <div class="entity" style="left: 570px; top: 920px; width: 370px;">
+
+    <!-- ======================================================== -->
+    <!-- COLUMN 4: BILLING, SHOP & IoT (x = 1695px, width = 480px)  -->
+    <!-- ======================================================== -->
+
+    <!-- 13. NOTIFICATIONS -->
+    <div class="entity" style="left: 1695px; top: 60px;">
       <div class="entity-th">
-        <div class="main-th">workout_plan_proposals</div>
-        <div class="sub-th">Coach Proposals</div>
+        <div class="main-th">notifications</div>
+        <div class="sub-th">Push Alerts</div>
       </div>
       <div class="entity-body">
-        <div class="row"><span class="type">INT</span><span class="name">id</span><span class="badge pk">[PK]</span></div>
-        <div class="row"><span class="type">INT</span><span class="name">conversation_id</span><span class="badge fk">[FK]</span></div>
-        <div class="row"><span class="type">INT</span><span class="name">coach_id</span><span class="badge fk">[FK]</span></div>
-        <div class="row"><span class="type">INT</span><span class="name">client_id</span><span class="badge fk">[FK]</span></div>
-        <div class="row"><span class="type">VARCHAR(255)</span><span class="name">title</span></div>
-        <div class="row"><span class="type">DECIMAL(10,2)</span><span class="name">price</span></div>
-        <div class="row"><span class="type">DATE</span><span class="name">scheduled_date</span></div>
-        <div class="row"><span class="type">ENUM</span><span class="name">status</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">id</span><span class="badge">[PK]</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">user_id</span><span class="badge">[FK]</span></div>
+        <div class="row"><span class="type">VARCHAR(150)</span><span class="name">title</span></div>
+        <div class="row"><span class="type">TEXT</span><span class="name">message</span></div>
+        <div class="row"><span class="type">BOOLEAN</span><span class="name">is_read</span></div>
       </div>
     </div>
 
-    <!-- 7. PERSONAL_RECORDS -->
-    <div class="entity" style="left: 580px; top: 550px; width: 350px;">
-      <div class="entity-th">
-        <div class="main-th">personal_records</div>
-        <div class="sub-th">PR Milestones</div>
-      </div>
-      <div class="entity-body">
-        <div class="row"><span class="type">INT</span><span class="name">id</span><span class="badge pk">[PK]</span></div>
-        <div class="row"><span class="type">INT</span><span class="name">user_id</span><span class="badge fk">[FK]</span></div>
-        <div class="row"><span class="type">VARCHAR(100)</span><span class="name">exercise_name</span></div>
-        <div class="row"><span class="type">DECIMAL(8,2)</span><span class="name">max_weight</span></div>
-        <div class="row"><span class="type">INT</span><span class="name">reps</span></div>
-        <div class="row"><span class="type">DATE</span><span class="name">achieved_at</span></div>
-      </div>
-    </div>
-
-    <!-- 8. WORKOUT_SESSIONS -->
-    <div class="entity" style="left: 980px; top: 780px; width: 330px;">
-      <div class="entity-th">
-        <div class="main-th">workout_sessions</div>
-        <div class="sub-th">Daily Split Logs</div>
-      </div>
-      <div class="entity-body">
-        <div class="row"><span class="type">INT</span><span class="name">id</span><span class="badge pk">[PK]</span></div>
-        <div class="row"><span class="type">INT</span><span class="name">user_id</span><span class="badge fk">[FK]</span></div>
-        <div class="row"><span class="type">VARCHAR(100)</span><span class="name">client_session_id</span></div>
-        <div class="row"><span class="type">INT</span><span class="name">coach_id</span><span class="badge fk">[FK]</span></div>
-        <div class="row"><span class="type">INT</span><span class="name">proposal_id</span><span class="badge fk">[FK]</span></div>
-        <div class="row"><span class="type">DATE</span><span class="name">session_date</span></div>
-        <div class="row"><span class="type">VARCHAR(50)</span><span class="name">split_day</span></div>
-        <div class="row"><span class="type">JSON</span><span class="name">exercises</span></div>
-        <div class="row"><span class="type">DATETIME</span><span class="name">completed_at</span></div>
-      </div>
-    </div>
-
-    <!-- 9. PAYMENTS (PayMongo Cashless Gateway) -->
-    <div class="entity" style="left: 1740px; top: 480px; width: 360px;">
+    <!-- 14. PAYMENTS -->
+    <div class="entity" style="left: 1695px; top: 390px;">
       <div class="entity-th">
         <div class="main-th">payments</div>
         <div class="sub-th">Cashless Billing / PayMongo</div>
       </div>
       <div class="entity-body">
-        <div class="row"><span class="type">INT</span><span class="name">id</span><span class="badge pk">[PK]</span></div>
-        <div class="row"><span class="type">INT</span><span class="name">user_id</span><span class="badge fk">[FK]</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">id</span><span class="badge">[PK]</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">user_id</span><span class="badge">[FK]</span></div>
         <div class="row"><span class="type">VARCHAR(50)</span><span class="name">receipt_number</span></div>
         <div class="row"><span class="type">ENUM</span><span class="name">payment_for</span></div>
         <div class="row"><span class="type">VARCHAR(100)</span><span class="name">related_id</span></div>
@@ -379,16 +498,16 @@
       </div>
     </div>
 
-    <!-- 10. ORDERS -->
-    <div class="entity" style="left: 1740px; top: 920px; width: 360px;">
+    <!-- 15. ORDERS -->
+    <div class="entity" style="left: 1695px; top: 900px;">
       <div class="entity-th">
         <div class="main-th">orders</div>
         <div class="sub-th">Shop POS Orders</div>
       </div>
       <div class="entity-body">
-        <div class="row"><span class="type">INT</span><span class="name">id</span><span class="badge pk">[PK]</span></div>
-        <div class="row"><span class="type">INT</span><span class="name">user_id</span><span class="badge fk">[FK]</span></div>
-        <div class="row"><span class="type">INT</span><span class="name">product_id</span><span class="badge fk">[FK]</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">id</span><span class="badge">[PK]</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">user_id</span><span class="badge">[FK]</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">product_id</span><span class="badge">[FK]</span></div>
         <div class="row"><span class="type">INT</span><span class="name">quantity</span></div>
         <div class="row"><span class="type">DECIMAL(10,2)</span><span class="name">total</span></div>
         <div class="row"><span class="type">ENUM</span><span class="name">status</span></div>
@@ -397,14 +516,14 @@
       </div>
     </div>
 
-    <!-- 11. PRODUCTS -->
-    <div class="entity" style="left: 2180px; top: 880px; width: 360px;">
+    <!-- 16. PRODUCTS -->
+    <div class="entity" style="left: 1695px; top: 1340px;">
       <div class="entity-th">
         <div class="main-th">products</div>
         <div class="sub-th">Supplement Catalog</div>
       </div>
       <div class="entity-body">
-        <div class="row"><span class="type">INT</span><span class="name">id</span><span class="badge pk">[PK]</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">id</span><span class="badge">[PK]</span></div>
         <div class="row"><span class="type">VARCHAR(150)</span><span class="name">name</span></div>
         <div class="row"><span class="type">VARCHAR(100)</span><span class="name">brand</span></div>
         <div class="row"><span class="type">DECIMAL(10,2)</span><span class="name">price</span></div>
@@ -415,43 +534,14 @@
       </div>
     </div>
 
-    <!-- 12. NOTIFICATIONS -->
-    <div class="entity" style="left: 1740px; top: 120px; width: 350px;">
-      <div class="entity-th">
-        <div class="main-th">notifications</div>
-        <div class="sub-th">Push Alerts</div>
-      </div>
-      <div class="entity-body">
-        <div class="row"><span class="type">INT</span><span class="name">id</span><span class="badge pk">[PK]</span></div>
-        <div class="row"><span class="type">INT</span><span class="name">user_id</span><span class="badge fk">[FK]</span></div>
-        <div class="row"><span class="type">VARCHAR(150)</span><span class="name">title</span></div>
-        <div class="row"><span class="type">TEXT</span><span class="name">message</span></div>
-        <div class="row"><span class="type">BOOLEAN</span><span class="name">is_read</span></div>
-      </div>
-    </div>
-
-    <!-- 13. FEEDBACKS -->
-    <div class="entity" style="left: 1330px; top: 1140px; width: 360px;">
-      <div class="entity-th">
-        <div class="main-th">feedbacks</div>
-        <div class="sub-th">Member Ratings</div>
-      </div>
-      <div class="entity-body">
-        <div class="row"><span class="type">INT</span><span class="name">id</span><span class="badge pk">[PK]</span></div>
-        <div class="row"><span class="type">INT</span><span class="name">user_id</span><span class="badge fk">[FK]</span></div>
-        <div class="row"><span class="type">INT</span><span class="name">rating</span></div>
-        <div class="row"><span class="type">TEXT</span><span class="name">comments</span></div>
-      </div>
-    </div>
-
-    <!-- 13. EQUIPMENT -->
-    <div class="entity" style="left: 2220px; top: 140px; width: 350px;">
+    <!-- 17. EQUIPMENT -->
+    <div class="entity" style="left: 1695px; top: 1770px;">
       <div class="entity-th">
         <div class="main-th">equipment</div>
         <div class="sub-th">Optical Placards</div>
       </div>
       <div class="entity-body">
-        <div class="row"><span class="type">INT</span><span class="name">id</span><span class="badge pk">[PK]</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">id</span><span class="badge">[PK]</span></div>
         <div class="row"><span class="type">VARCHAR(150)</span><span class="name">name</span></div>
         <div class="row"><span class="type">VARCHAR(100)</span><span class="name">category</span></div>
         <div class="row"><span class="type">VARCHAR(100)</span><span class="name">muscle_group</span></div>
@@ -460,83 +550,38 @@
       </div>
     </div>
 
-    <!-- 14. EQUIPMENT_SCAN_LOGS -->
-    <div class="entity" style="left: 2220px; top: 510px; width: 350px;">
+    <!-- 18. EQUIPMENT_SCAN_LOGS -->
+    <div class="entity" style="left: 1695px; top: 2130px;">
       <div class="entity-th">
         <div class="main-th">equipment_scan_logs</div>
         <div class="sub-th">QR Analytics</div>
       </div>
       <div class="entity-body">
-        <div class="row"><span class="type">INT</span><span class="name">id</span><span class="badge pk">[PK]</span></div>
-        <div class="row"><span class="type">INT</span><span class="name">user_id</span><span class="badge fk">[FK]</span></div>
-        <div class="row"><span class="type">INT</span><span class="name">equipment_id</span><span class="badge fk">[FK]</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">id</span><span class="badge">[PK]</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">user_id</span><span class="badge">[FK]</span></div>
+        <div class="row"><span class="type">INT</span><span class="name">equipment_id</span><span class="badge">[FK]</span></div>
         <div class="row"><span class="type">DATETIME</span><span class="name">scanned_at</span></div>
       </div>
     </div>
 
-    <!-- Legend -->
-    <div class="legend">
-      <div class="leg-item"><strong>LEGEND / NOTATION:</strong></div>
-      <div class="leg-item"><strong>[PK]</strong> Primary Key</div>
-      <div class="leg-item"><strong>[FK]</strong> Foreign Key</div>
-      <div class="leg-item"><span style="display:inline-block; width:28px; height:3px; background:#000;"></span> 1-to-Many Cardinality (1:N)</div>
-      <div class="leg-item"><span style="display:inline-block; width:28px; height:3px; border-top:3px dashed #000;"></span> Direct Foreign Key Reference</div>
-    </div>
-  
-    <!-- 16. ACTIVITY_LOGS TABLE -->
-    <div class="entity" style="left: 980px; top: 1100px; width: 330px;">
-      <div class="entity-th">
-        <div class="main-th">activity_logs</div>
-        <div class="sub-th">Administrative Security Audit Trail</div>
+    <!-- ======================================================== -->
+    <!-- MAJESTIC BOTTOM ARCHITECTURAL LEGEND BAR                 -->
+    <!-- ======================================================== -->
+    <div class="legend-box">
+      <div class="legend-row-top">
+        <div class="leg-item"><span style="font-size: 21px; text-transform: uppercase;"><strong>Legend / ERD Notation:</strong></span></div>
+        <div class="leg-item"><span class="leg-badge"><strong>[PK]</strong></span> Primary Key</div>
+        <div class="leg-item"><span class="leg-badge"><strong>[FK]</strong></span> Foreign Key</div>
+        <div class="leg-item"><span style="display:inline-block; width:35px; height:4px; background:#000;"></span> 1-to-Many Cardinality (1:N)</div>
+        <div class="leg-item"><span style="display:inline-block; width:35px; height:4px; border-top:4px dashed #000;"></span> Direct Foreign Key Reference</div>
+        <div class="leg-item"><svg width="22" height="18" style="vertical-align: middle;"><path d="M 0 2 L 14 9 L 0 16 M 14 0 L 14 18" stroke="#000" stroke-width="2.5" fill="none"/></svg> Crow's Foot (Many Side)</div>
       </div>
-      <div class="entity-body">
-        <div class="row"><span class="type">BIGINT</span><span class="name">id</span><span class="badge pk">[PK]</span></div>
-        <div class="row"><span class="type">BIGINT</span><span class="name">user_id</span><span class="badge fk">[FK]</span></div>
-        <div class="row"><span class="type">VARCHAR(100)</span><span class="name">action</span></div>
-        <div class="row"><span class="type">VARCHAR(50)</span><span class="name">module</span></div>
-        <div class="row"><span class="type">TEXT</span><span class="name">description</span></div>
-        <div class="row"><span class="type">VARCHAR(45)</span><span class="name">ip_address</span></div>
-        <div class="row"><span class="type">TIMESTAMP</span><span class="name">created_at</span></div>
+      <div class="legend-row-bottom">
+        <span>FordaGO Normalized Database Model (MySQL 8.0 InnoDB) &bull; 18 Normalized System Entities &bull; Third Normal Form (3NF/BCNF) Standard</span>
       </div>
     </div>
 
-    <!-- 17. COACH_PROGRAMS TABLE -->
-    <div class="entity" style="left: 170px; top: 120px; width: 340px;">
-      <div class="entity-th">
-        <div class="main-th">coach_programs</div>
-        <div class="sub-th">Structured Coaching Packages</div>
-      </div>
-      <div class="entity-body">
-        <div class="row"><span class="type">BIGINT</span><span class="name">id</span><span class="badge pk">[PK]</span></div>
-        <div class="row"><span class="type">BIGINT</span><span class="name">coach_id</span><span class="badge fk">[FK]</span></div>
-        <div class="row"><span class="type">VARCHAR(150)</span><span class="name">title</span></div>
-        <div class="row"><span class="type">TEXT</span><span class="name">description</span></div>
-        <div class="row"><span class="type">DECIMAL(10,2)</span><span class="name">price</span></div>
-        <div class="row"><span class="type">INT</span><span class="name">duration_weeks</span></div>
-        <div class="row"><span class="type">INT</span><span class="name">sessions_per_week</span></div>
-        <div class="row"><span class="type">BOOLEAN</span><span class="name">is_active</span></div>
-      </div>
-    </div>
-
-
-    <!-- 18. PROGRAM_BOOKINGS TABLE -->
-    <div class="entity" style="left: 170px; top: 320px; width: 340px;">
-      <div class="entity-th">
-        <div class="main-th">program_bookings</div>
-        <div class="sub-th">Member Coaching Subscriptions</div>
-      </div>
-      <div class="entity-body">
-        <div class="row"><span class="type">BIGINT</span><span class="name">id</span><span class="badge pk">[PK]</span></div>
-        <div class="row"><span class="type">BIGINT</span><span class="name">user_id</span><span class="badge fk">[FK]</span></div>
-        <div class="row"><span class="type">BIGINT</span><span class="name">program_id</span><span class="badge fk">[FK]</span></div>
-        <div class="row"><span class="type">ENUM</span><span class="name">status</span></div>
-        <div class="row"><span class="type">ENUM</span><span class="name">payment_method</span></div>
-        <div class="row"><span class="type">DECIMAL(10,2)</span><span class="name">amount_paid</span></div>
-        <div class="row"><span class="type">TIMESTAMP</span><span class="name">created_at</span></div>
-      </div>
-    </div>
-
-</div>
+  </div>
 
 </body>
 </html>

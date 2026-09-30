@@ -150,7 +150,10 @@ export class PaymentService {
     let sanitizedReturnUrl = payload.return_url || '';
     if (!sanitizedReturnUrl || sanitizedReturnUrl.includes('localhost') || sanitizedReturnUrl.includes('127.0.0.1')) {
       const path = sanitizedReturnUrl ? (sanitizedReturnUrl.startsWith('http') ? new URL(sanitizedReturnUrl).pathname : sanitizedReturnUrl) : '/inventory';
-      sanitizedReturnUrl = `http://168.144.141.27${path}`;
+      const base = (typeof window !== 'undefined' && window.location?.origin && !window.location.origin.includes('localhost') && !window.location.origin.includes('127.0.0.1'))
+        ? window.location.origin
+        : 'https://fordago.online';
+      sanitizedReturnUrl = `${base}${path}`;
     }
 
     const body: CheckoutPayload = {
