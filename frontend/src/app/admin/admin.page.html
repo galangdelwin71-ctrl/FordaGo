@@ -841,7 +841,7 @@
           <ion-icon name="time-outline"></ion-icon>
           <span>Pending Verification ({{ pendingMembers.length }})</span>
         </div>
-        <div class="member-card pending-card" *ngFor="let m of pendingMembers">
+        <div class="member-card pending-card" *ngFor="let m of pendingMembers" [class.newest-card]="isNewlyCreated(m)">
           <div class="member-card-main">
             <div class="member-avatar pending-avatar">
               <img *ngIf="m.profile_image" [src]="resolveImg(m.profile_image)" [alt]="m.username" (error)="m.profile_image = null" />
@@ -852,6 +852,9 @@
                 <span class="member-name">{{ m.full_name || (m.first_name ? (m.first_name + ' ' + (m.last_name || '')) : m.username) }}</span>
                 <span class="member-handle" *ngIf="m.username" style="font-size: 0.8rem; color: #94a3b8; font-weight: 500;">@{{ m.username }}</span>
                 <span class="role-badge">{{ m.role }}</span>
+                <span class="newest-chip" *ngIf="isNewlyCreated(m)">
+                  <ion-icon name="sparkles"></ion-icon> Newly Created
+                </span>
               </div>
               <div class="member-meta">{{ m.email }}</div>
               <div class="card-chips-row">
@@ -862,6 +865,14 @@
                 <ion-icon name="star-outline" class="badge-star-icon"></ion-icon>
                 <span class="status-pill pending">
                   <ion-icon name="time-outline"></ion-icon> Awaiting Verification
+                </span>
+                <span class="payment-method-pill" [ngClass]="getPaymentMethodClass(m.payment_method, m.membership_type)">
+                  <ion-icon [name]="getPaymentMethodIcon(m.payment_method, m.membership_type)"></ion-icon>
+                  {{ getPaymentMethodLabel(m.payment_method, m.membership_type) }}
+                </span>
+                <span class="applied-date-pill" [class.urgent]="isLongPending(m.created_at)" *ngIf="m.created_at">
+                  <ion-icon name="calendar-outline"></ion-icon> Applied: {{ formatAppliedDate(m.created_at) }}
+                  <span class="pending-duration">({{ getPendingDuration(m.created_at) }})</span>
                 </span>
               </div>
             </div>
@@ -917,7 +928,7 @@
       <div class="empty-state" *ngIf="!membersLoading && !membersError && filteredMembers.length === 0">No members found.</div>
 
       <!-- Member Cards matching Reference Image -->
-      <div *ngFor="let m of displayedMembers" class="member-card" [class.pending-card]="m.membership_status !== 'active'" [class.newest-card]="m.id === latestMemberId">
+      <div *ngFor="let m of displayedMembers" class="member-card" [class.pending-card]="m.membership_status !== 'active'" [class.newest-card]="isNewlyCreated(m)">
         <div class="member-card-main">
           <div class="member-avatar">
             <img *ngIf="m.profile_image" [src]="resolveImg(m.profile_image)" [alt]="m.username" (error)="m.profile_image = null" />
@@ -928,7 +939,7 @@
               <span class="member-name">{{ m.full_name || (m.first_name ? (m.first_name + ' ' + (m.last_name || '')) : m.username) }}</span>
               <span class="member-handle" *ngIf="m.username" style="font-size: 0.8rem; color: #94a3b8; font-weight: 500;">@{{ m.username }}</span>
               <span class="role-badge">{{ m.role }}</span>
-              <span class="newest-chip" *ngIf="m.id === latestMemberId">
+              <span class="newest-chip" *ngIf="isNewlyCreated(m)">
                 <ion-icon name="sparkles"></ion-icon> Newly Created
               </span>
             </div>
@@ -942,6 +953,11 @@
               <span class="status-pill" [class.active]="m.membership_status === 'active'" [class.pending]="m.membership_status !== 'active'">
                 <ion-icon [name]="m.membership_status === 'active' ? 'checkmark-circle-outline' : 'time-outline'"></ion-icon>
                 {{ m.membership_status === 'active' ? 'Verified' : 'Pending' }}
+              </span>
+              <span class="applied-date-pill" [class.urgent]="m.membership_status !== 'active' && isLongPending(m.created_at)" *ngIf="m.created_at">
+                <ion-icon name="calendar-outline"></ion-icon>
+                {{ m.membership_status === 'active' ? 'Joined: ' : 'Applied: ' }}{{ formatAppliedDate(m.created_at) }}
+                <span class="pending-duration" *ngIf="m.membership_status !== 'active'">({{ getPendingDuration(m.created_at) }})</span>
               </span>
               <span class="payment-note-pill" *ngIf="m.membership_expiry">Exp: {{ m.membership_expiry | date:'MMM d, yyyy' }}</span>
             </div>

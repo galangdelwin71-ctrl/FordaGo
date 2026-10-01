@@ -340,7 +340,176 @@ export const exerciseDatabase: Record<string, WorkoutTemplateExercise[]> = {
     { name: 'Dip / Leg Raise Station (Knee Tucks)', sets: 3, reps: '12' },
   ],
 
-  // ── Rest Day ───────────────────────────────────────────
+  // ── Obese Cardio & Stamina Targets (BMI >= 30, tone_endurance) ──
+  'Cardio & Core|Obese Aerobic Conditioning & Incline Walk': [
+    { name: 'Treadmill (Flat/Gentle Incline Walk)', sets: 1, reps: '25 min' },
+    { name: 'Multi-Function Cable Column (Seated Cable Rotations)', sets: 3, reps: '12 each' },
+    { name: 'Gentle Full-Body Stretching', sets: 1, reps: '10 min' },
+  ],
+  'Upper Body|Obese Seated Upper Stamina': [
+    { name: 'Selectorized Chest Press Machine', sets: 3, reps: '15' },
+    { name: 'Lat Pulldown Machine', sets: 3, reps: '15' },
+    { name: 'Dual Adjustable Pulley Machine (Tricep Pushdown)', sets: 3, reps: '15' },
+    { name: '45-Degree Hyperextension Bench (Supported Back Alignment)', sets: 3, reps: '10' },
+  ],
+  'Lower Body / Leg Day|Obese Lower Machine Stamina': [
+    { name: 'Plate-Loaded 45-Degree Leg Press Machine', sets: 3, reps: '15' },
+    { name: 'Seated Calf Raise Machine', sets: 3, reps: '15-20' },
+    { name: 'Hip Abductor / Adductor Machine', sets: 3, reps: '15' },
+    { name: 'Treadmill (Steady-Pace Flat Walk)', sets: 1, reps: '15 min' },
+  ],
+  'Cardio & Core|Obese Low-Impact Cardio & Posture': [
+    { name: 'Treadmill (Flat/Gentle Incline Walk)', sets: 1, reps: '20 min' },
+    { name: 'Dual Adjustable Pulley Machine (Face Pulls)', sets: 3, reps: '15' },
+    { name: 'Seated Row Machine / Low Row Machine', sets: 3, reps: '12-15' },
+    { name: 'Full Body Stretching & Cooldown', sets: 1, reps: '10 min' },
+  ],
+  'Full Body|Obese Seated Conditioning Finisher': [
+    { name: 'Selectorized Chest Press Machine', sets: 3, reps: '12' },
+    { name: 'Lat Pulldown Machine', sets: 3, reps: '12' },
+    { name: 'Dip / Leg Raise Station (Assisted Knee Tucks)', sets: 3, reps: '10' },
+    { name: 'Treadmill (Cooldown Walk)', sets: 1, reps: '15 min' },
+  ],
+
+  // ── Obese Core Stability & Functional Mobility (BMI >= 30, strength) ──
+  'Cardio & Core|Obese Core & Spine Stabilization': [
+    { name: 'Multi-Function Cable Column (Seated Cable Rotations)', sets: 3, reps: '12 each' },
+    { name: '45-Degree Hyperextension Bench (Supported Back Alignment)', sets: 3, reps: '10-12' },
+    { name: 'Functional Trainer Cable Crossover Machine (Core Hold)', sets: 3, reps: '12' },
+    { name: 'Gentle Full-Body Stretching', sets: 1, reps: '10 min' },
+  ],
+  'Lower Body / Leg Day|Obese Seated Lower Functional Strength': [
+    { name: 'Plate-Loaded 45-Degree Leg Press Machine', sets: 3, reps: '10-12' },
+    { name: 'Leg Extension Machine', sets: 3, reps: '12' },
+    { name: 'Seated Calf Raise Machine', sets: 3, reps: '15' },
+    { name: 'Hip Abductor / Adductor Machine', sets: 3, reps: '12-15' },
+  ],
+  'Upper Body|Obese Seated Upper Strength & Posture': [
+    { name: 'Plate-Loaded Incline Chest Press Machine', sets: 3, reps: '10-12' },
+    { name: 'Seated Row Machine / Low Row Machine', sets: 3, reps: '10-12' },
+    { name: 'Pin-Selected Standing Lateral Raise Machine', sets: 3, reps: '12' },
+    { name: 'Dual Adjustable Pulley Machine (Face Pulls)', sets: 3, reps: '12-15' },
+  ],
+  'Full Body|Obese Functional Balance & Mobility': [
+    { name: 'Dip / Leg Raise Station (Assisted Knee Tucks)', sets: 3, reps: '10' },
+    { name: 'Treadmill (Steady-Pace Flat Walk)', sets: 1, reps: '20 min' },
+    { name: 'Gentle Full-Body Stretching', sets: 1, reps: '15 min' },
+  ],
+
+  // ── Overweight Recomposition Targets (25 <= BMI < 30, muscle_gain) ──
+  'Upper Body|Overweight Recomp Push Power': [
+    { name: 'Plate-Loaded Incline Chest Press Machine', sets: 3, reps: '10-12' },
+    { name: 'Selectorized Chest Press Machine', sets: 3, reps: '12' },
+    { name: 'Dual Adjustable Pulley Machine (Tricep Pushdown)', sets: 3, reps: '12' },
+    { name: 'Dip / Leg Raise Station (Knee Tucks)', sets: 3, reps: '12' },
+  ],
+  'Upper Body|Overweight Recomp Pull & Lats': [
+    { name: 'Plate-Loaded Lat Pulldown Machine', sets: 3, reps: '10-12' },
+    { name: 'Seated Row Machine / Low Row Machine', sets: 3, reps: '10-12' },
+    { name: 'Preacher Curl Bench (EZ Bar Curls)', sets: 3, reps: '10-12' },
+    { name: 'Dual Adjustable Pulley Machine (Face Pulls)', sets: 3, reps: '15' },
+  ],
+  'Lower Body / Leg Day|Overweight Recomp Leg Hypertrophy': [
+    { name: 'Plate-Loaded 45-Degree Leg Press Machine', sets: 4, reps: '10-12' },
+    { name: 'Hip Thrust Machine', sets: 3, reps: '12' },
+    { name: 'Leg Extension / Leg Curl Machine', sets: 3, reps: '12' },
+    { name: 'Seated Calf Raise Machine', sets: 3, reps: '15' },
+  ],
+  'Upper Body|Overweight Recomp Shoulder & Arms': [
+    { name: 'Pin-Selected Standing Lateral Raise Machine', sets: 3, reps: '12-15' },
+    { name: 'Seated Bicep Curl / Preacher Curl Machine', sets: 3, reps: '12' },
+    { name: 'Dual Adjustable Pulley Machine (Rope Extensions)', sets: 3, reps: '12' },
+    { name: 'Multi-Function Cable Column (Cable Crunches)', sets: 3, reps: '15' },
+  ],
+  'Full Body|Overweight Metabolic Recomp Finisher': [
+    { name: 'Selectorized Squat Machine', sets: 3, reps: '12' },
+    { name: 'Lat Pulldown Machine', sets: 3, reps: '12' },
+    { name: 'Kettlebells (Goblet Squats & Swings)', sets: 3, reps: '12' },
+    { name: 'Treadmill (Incline Cooldown Walk)', sets: 1, reps: '15 min' },
+  ],
+
+  // ── Overweight Athletic Tone Targets (25 <= BMI < 30, tone_endurance) ──
+  'Full Body|Overweight Functional Tone Circuit': [
+    { name: 'Functional Trainer Cable Crossover Machine', sets: 3, reps: '15' },
+    { name: 'Selectorized Chest Press Machine', sets: 3, reps: '12-15' },
+    { name: 'Lat Pulldown Machine', sets: 3, reps: '15' },
+    { name: 'Kettlebells (Kettlebell Swings)', sets: 3, reps: '15-20' },
+  ],
+  'Cardio & Core|Overweight Incline Interval & Core': [
+    { name: 'Treadmill (Interval Incline Walk)', sets: 1, reps: '25 min' },
+    { name: 'Dip / Leg Raise Station (Captain’s Chair Leg Raises)', sets: 3, reps: '15' },
+    { name: 'Multi-Function Cable Column (Cable Crunches)', sets: 3, reps: '15' },
+  ],
+  'Lower Body / Leg Day|Overweight Glutes & Leg Toning': [
+    { name: 'Hip Thrust Machine', sets: 3, reps: '15' },
+    { name: 'Plate-Loaded 45-Degree Leg Press Machine', sets: 3, reps: '12-15' },
+    { name: 'Hip Abductor / Adductor Machine', sets: 3, reps: '15-20' },
+    { name: 'Seated Calf Raise Machine', sets: 3, reps: '15' },
+  ],
+  'Upper Body|Overweight Upper Cable Sculpt': [
+    { name: 'Plate-Loaded Incline Chest Press Machine', sets: 3, reps: '12' },
+    { name: 'Seated Row Machine / Low Row Machine', sets: 3, reps: '12-15' },
+    { name: 'Pin-Selected Standing Lateral Raise Machine', sets: 3, reps: '15' },
+    { name: 'Dual Adjustable Pulley Machine (Tricep Pushdown)', sets: 3, reps: '15' },
+  ],
+  'Cardio & Core|Overweight Athletic Conditioning Finisher': [
+    { name: 'Treadmill (Interval Incline Walk)', sets: 1, reps: '20 min' },
+    { name: '45-Degree Hyperextension Bench', sets: 3, reps: '12-15' },
+    { name: 'Functional Trainer Cable Crossover (Torso Twists)', sets: 3, reps: '15 each' },
+    { name: 'Full Body Stretching & Cooldown', sets: 1, reps: '10 min' },
+  ],
+
+  // ── Underweight Strength Targets (BMI < 18.5, strength) ──
+  'Lower Body / Leg Day|Underweight Heavy Compound Lower': [
+    { name: 'Hack Squat Machine', sets: 4, reps: '6-8' },
+    { name: 'Plate-Loaded 45-Degree Leg Press Machine', sets: 4, reps: '6-8' },
+    { name: 'Seated Calf Raise Machine', sets: 3, reps: '10-12' },
+    { name: '45-Degree Hyperextension Bench', sets: 3, reps: '10' },
+  ],
+  'Upper Body|Underweight Heavy Push/Pull Strength': [
+    { name: 'Plate-Loaded Incline Chest Press Machine', sets: 4, reps: '6-8' },
+    { name: 'Plate-Loaded Lat Pulldown Machine', sets: 4, reps: '6-8' },
+    { name: 'Seated Row Machine / Low Row Machine', sets: 3, reps: '8' },
+    { name: 'Dual Adjustable Pulley Machine (Heavy Tricep Pushdown)', sets: 3, reps: '8' },
+  ],
+  'Lower Body / Leg Day|Underweight Posterior & Leg Power': [
+    { name: 'Plate-Loaded 45-Degree Leg Press Machine', sets: 4, reps: '6-8' },
+    { name: 'Leg Extension / Leg Curl Machine (Hamstrings)', sets: 3, reps: '8' },
+    { name: 'Hack Squat Machine', sets: 3, reps: '6-8' },
+    { name: 'Seated Calf Raise Machine', sets: 3, reps: '10' },
+  ],
+  'Upper Body|Underweight Upper Density & Arm Power': [
+    { name: 'Selectorized Chest Press Machine', sets: 3, reps: '6-8' },
+    { name: 'Wide Grip Lat Pulldown', sets: 3, reps: '8' },
+    { name: 'Preacher Curl Bench (EZ Bar Curls)', sets: 3, reps: '8' },
+    { name: 'Dip / Leg Raise Station (Knee Tucks)', sets: 3, reps: '10' },
+  ],
+
+  // ── Underweight Frame Sculpt Targets (BMI < 18.5, tone_endurance) ──
+  'Upper Body|Underweight Shoulder & Lat Width': [
+    { name: 'Plate-Loaded Lat Pulldown Machine', sets: 4, reps: '8-10' },
+    { name: 'Pin-Selected Standing Lateral Raise Machine', sets: 4, reps: '10-12' },
+    { name: 'Plate-Loaded Incline Chest Press Machine', sets: 3, reps: '10' },
+    { name: 'Dual Adjustable Pulley Machine (Face Pulls)', sets: 3, reps: '12' },
+  ],
+  'Lower Body / Leg Day|Underweight Leg & Glute Proportion': [
+    { name: 'Plate-Loaded 45-Degree Leg Press Machine', sets: 3, reps: '10' },
+    { name: 'Hip Thrust Machine', sets: 3, reps: '10-12' },
+    { name: 'Leg Extension Machine', sets: 3, reps: '10-12' },
+    { name: 'Seated Calf Raise Machine', sets: 3, reps: '12' },
+  ],
+  'Upper Body|Underweight Chest & Bicep Sculpt': [
+    { name: 'Selectorized Chest Press Machine', sets: 3, reps: '10' },
+    { name: 'Seated Bicep Curl / Preacher Curl Machine', sets: 3, reps: '10' },
+    { name: 'Pec Fly / Rear Delt Machine', sets: 3, reps: '10-12' },
+    { name: 'Dual Adjustable Pulley Machine (Tricep Pushdown)', sets: 3, reps: '10-12' },
+  ],
+  'Full Body|Underweight Symmetry & Frame Finisher': [
+    { name: 'Lat Pulldown Machine', sets: 3, reps: '10' },
+    { name: '45-Degree Leg Press Machine', sets: 3, reps: '10' },
+    { name: 'Pin-Selected Standing Lateral Raise Machine', sets: 3, reps: '12' },
+    { name: 'Dip / Leg Raise Station (Knee Tucks)', sets: 3, reps: '12' },
+  ],
   'Rest Day': [
     { name: 'Light Walk',             sets: 1, reps: '20 min' },
     { name: 'Foam Rolling',           sets: 1, reps: '10 min' },
@@ -362,15 +531,6 @@ export interface FitnessGoalOption {
 }
 
 export const FITNESS_GOAL_OPTIONS: FitnessGoalOption[] = [
-  {
-    id: 'weight_loss',
-    title: 'Weight Loss & Fat Burn',
-    tagline: 'Burn calories & shed fat with metabolic conditioning',
-    description: 'High-energy circuits, functional cables, kettlebells, and joint-friendly machine exercises designed to maximize caloric burn and protect joints.',
-    icon: 'flame-outline',
-    badge: 'Burn Fat',
-    recommendedDays: '4 days / week (Afternoon 5:00 PM)',
-  },
   {
     id: 'muscle_gain',
     title: 'Muscle Building & Hypertrophy',
@@ -398,88 +558,141 @@ export const FITNESS_GOAL_OPTIONS: FitnessGoalOption[] = [
     badge: 'Tone & Stamina',
     recommendedDays: '4-5 days / week (Afternoon 5:00 PM)',
   },
+  {
+    id: 'weight_loss',
+    title: 'Body Fat Trimming & Definition',
+    tagline: 'Shred body fat and reveal deep muscular definition',
+    description: 'Metabolic conditioning, HIIT intervals, and resistance circuits to maintain muscle mass while dropping body fat percentage for a sharp, ripped look.',
+    icon: 'flame-outline',
+    badge: 'Cut & Define',
+    recommendedDays: '4 days / week (Afternoon 5:00 PM)',
+  },
 ];
 
 /**
- * Returns fitness goal options tailored to the user's BMI category.
- * - Underweight (BMI < 18.5)      → ONLY Underweight Mass Building routine
- * - Overweight (25 <= BMI < 30)   → ONLY Overweight Metabolic Fat Burn routine
- * - Obese (BMI >= 30)             → ONLY Obese Safe Low-Impact routine
- * - Normal Weight (18.5 - 24.9)   → Standard healthy baseline goals
+ * Tailored body goals for Underweight members (BMI < 18.5):
+ * All goals focus on healthy weight gain, muscle mass, skeletal density, and frame expansion.
+ */
+export const UNDERWEIGHT_GOAL_OPTIONS: FitnessGoalOption[] = [
+  {
+    id: 'muscle_gain',
+    title: 'Lean Mass Building & Caloric Surplus',
+    tagline: 'Build dense muscle mass & healthy body weight safely',
+    description: 'Specifically calibrated for underweight members (BMI < 18.5): High-efficiency hypertrophy splits to build dense muscle, increase body mass safely, and avoid burning excess calories.',
+    icon: 'barbell-outline',
+    badge: 'Underweight • Mass Gain',
+    recommendedDays: '4 days / week (Afternoon 5:00 PM)',
+  },
+  {
+    id: 'strength',
+    title: 'Progressive Strength & Bone Density',
+    tagline: 'Stimulate skeletal density and raw power with controlled compound lifts',
+    description: 'Controlled compound lifts on plate-loaded machines with lower reps and full rest intervals to maximize muscle recruitment and bone density without burning excessive calories.',
+    icon: 'flash-outline',
+    badge: 'Underweight • Strength',
+    recommendedDays: '3-4 days / week (Afternoon 5:00 PM)',
+  },
+  {
+    id: 'tone_endurance',
+    title: 'Full-Body Frame Sculpt & Hypertrophy',
+    tagline: 'Widen your frame and sculpt full-body symmetry with targeted machines',
+    description: 'Focused shoulder broadening, lat width, and glute/leg volume to build an aesthetic, proportioned muscular frame while maintaining optimal recovery.',
+    icon: 'body-outline',
+    badge: 'Underweight • Frame Sculpt',
+    recommendedDays: '4 days / week (Afternoon 5:00 PM)',
+  },
+];
+
+/**
+ * Tailored body goals for Overweight members (25 <= BMI < 30):
+ * All goals focus on joint-friendly fat burning, body recomposition, and metabolic conditioning.
+ */
+export const OVERWEIGHT_GOAL_OPTIONS: FitnessGoalOption[] = [
+  {
+    id: 'weight_loss',
+    title: 'Active Metabolic Fat Burn & Conditioning',
+    tagline: 'Joint-friendly metabolic circuits & calorie-burning splits',
+    description: 'Specifically designed for overweight members (BMI 25–29.9): Calorie-burning machine circuits, functional cardio intervals, and low-impact movements to melt fat while protecting knee joints.',
+    icon: 'flame-outline',
+    badge: 'Overweight • Fat Burn',
+    recommendedDays: '4-5 days / week (Afternoon 5:00 PM)',
+  },
+  {
+    id: 'muscle_gain',
+    title: 'Body Recomposition & Muscle Sculpting',
+    tagline: 'Build lean muscle while burning fat simultaneously (Recomp)',
+    description: 'Targeted hypertrophy and plate-loaded compound machines combined with metabolic tempo to stimulate muscle growth while utilizing stored body fat as fuel.',
+    icon: 'barbell-outline',
+    badge: 'Overweight • Recomp',
+    recommendedDays: '4-5 days / week (Afternoon 5:00 PM)',
+  },
+  {
+    id: 'tone_endurance',
+    title: 'Aerobic Stamina & Athletic Toning',
+    tagline: 'Sculpt muscle definition, increase stamina & enhance agility',
+    description: 'Cable sculpting, moderate-rep compound isolation, functional core circuits, and brisk cardio pacing to tighten muscles and improve athletic conditioning.',
+    icon: 'body-outline',
+    badge: 'Overweight • Athletic Tone',
+    recommendedDays: '4 days / week (Afternoon 5:00 PM)',
+  },
+];
+
+/**
+ * Tailored body goals for Obese members (BMI >= 30):
+ * 100% low-impact, joint-safe seated machine exercises, cardiovascular stamina, and core stabilization.
+ */
+export const OBESE_GOAL_OPTIONS: FitnessGoalOption[] = [
+  {
+    id: 'weight_loss',
+    title: 'Safe Low-Impact Fat Loss & Joint Protection',
+    tagline: 'Zero joint-strain selectorized machine circuits & incline walks',
+    description: 'Specifically calibrated for obesity (BMI ≥ 30): 100% seated selectorized machine exercises and flat/gentle incline treadmill walks with ZERO knee/spine impact to safely burn fat and protect joints.',
+    icon: 'shield-checkmark-outline',
+    badge: 'Obese • Joint Safe',
+    recommendedDays: '4 days / week (Afternoon 5:00 PM)',
+  },
+  {
+    id: 'tone_endurance',
+    title: 'Cardiovascular Health & Stamina Building',
+    tagline: 'Improve heart health, lower blood pressure & build steady aerobic stamina',
+    description: 'Low-strain cardio pacing, steady incline walks, seated arm movements, and breathing endurance routines to strengthen your cardiovascular system and boost energy safely.',
+    icon: 'heart-outline',
+    badge: 'Obese • Cardio & Stamina',
+    recommendedDays: '3-4 days / week (Afternoon 5:00 PM)',
+  },
+  {
+    id: 'strength',
+    title: 'Core Stability & Functional Mobility',
+    tagline: 'Enhance daily movement, spinal support & posture',
+    description: 'Seated core engagement, cable stabilizing movements, and supported hyperextensions designed to strengthen back muscles, reduce lower back pain, and improve overall balance.',
+    icon: 'fitness-outline',
+    badge: 'Obese • Core & Mobility',
+    recommendedDays: '3-4 days / week (Afternoon 5:00 PM)',
+  },
+];
+
+/**
+ * Returns fitness goal options strictly tailored to the user's BMI category.
+ * - Underweight (BMI < 18.5)      → Dedicated Underweight goal set (Mass Gain, Strength, Frame Sculpt)
+ * - Obese (BMI >= 30)             → Dedicated Obese goal set (Joint-Safe Fat Loss, Cardio Stamina, Core Mobility)
+ * - Overweight (25 <= BMI < 30)   → Dedicated Overweight goal set (Metabolic Fat Burn, Recomp, Athletic Tone)
+ * - Normal Weight (18.5 - 24.9)   → Full baseline goal set (Muscle Building, Raw Power, Tone, Cut & Define)
  */
 export function getGoalOptionsForBmi(bmi?: number | null): FitnessGoalOption[] {
   if (!bmi || bmi <= 0) {
     return FITNESS_GOAL_OPTIONS;
   }
   if (bmi < 18.5) {
-    return [
-      {
-        id: 'muscle_gain',
-        title: 'Underweight: Muscle Building & Mass Gain',
-        tagline: 'Build healthy mass & lean muscle in caloric surplus',
-        description: 'Specifically designed for underweight members (BMI < 18.5): High-efficiency hypertrophy splits to build dense muscle, increase body mass safely, and avoid burning excess calories.',
-        icon: 'barbell-outline',
-        badge: 'Underweight Routine',
-        recommendedDays: '4 days / week (Afternoon 5:00 PM)',
-      },
-    ];
+    return UNDERWEIGHT_GOAL_OPTIONS;
   }
   if (bmi >= 30) {
-    return [
-      {
-        id: 'weight_loss',
-        title: 'Obese: Safe Low-Impact Fat Loss & Mobility',
-        tagline: 'Zero joint-strain selectorized machine circuits & incline walks',
-        description: 'Specifically calibrated for obesity (BMI ≥ 30): 100% seated selectorized machine exercises and flat/incline treadmill walks with ZERO knee/spine impact to safely burn fat and protect joints.',
-        icon: 'shield-checkmark-outline',
-        badge: 'Obese Routine',
-        recommendedDays: '4 days / week (Afternoon 5:00 PM)',
-      },
-    ];
+    return OBESE_GOAL_OPTIONS;
   }
   if (bmi >= 25) {
-    return [
-      {
-        id: 'weight_loss',
-        title: 'Overweight: Active Fat Burn & Conditioning',
-        tagline: 'Joint-friendly metabolic circuits & fat-burning splits',
-        description: 'Specifically designed for overweight members (BMI 25–29.9): Calorie-burning machine circuits, functional cardio intervals, and low-impact movements to melt fat while protecting knee joints.',
-        icon: 'flame-outline',
-        badge: 'Overweight Routine',
-        recommendedDays: '4-5 days / week (Afternoon 5:00 PM)',
-      },
-    ];
+    return OVERWEIGHT_GOAL_OPTIONS;
   }
   // Normal Weight (18.5 <= BMI < 25): Healthy baseline goals
-  return [
-    {
-      id: 'muscle_gain',
-      title: 'Muscle Building & Hypertrophy',
-      tagline: 'Pack on lean muscle mass with targeted splits',
-      description: 'Progressive Push/Pull/Legs volume utilizing Afforda Gym plate-loaded presses, hack squats, and cable isolations.',
-      icon: 'barbell-outline',
-      badge: 'Build Muscle',
-      recommendedDays: '5 days / week (Afternoon 5:00 PM)',
-    },
-    {
-      id: 'strength',
-      title: 'Strength & Heavy Power',
-      tagline: 'Lift heavier and build maximum raw power',
-      description: 'Compound lifts on Olympic power racks, heavy leg presses, and posterior chain stabilization for peak strength progression.',
-      icon: 'flash-outline',
-      badge: 'Raw Power',
-      recommendedDays: '4 days / week (Afternoon 5:00 PM)',
-    },
-    {
-      id: 'tone_endurance',
-      title: 'Lean Tone & Endurance',
-      tagline: 'Sculpt your body, tone muscles & boost stamina',
-      description: 'Higher-rep isolation, hip thrusts, functional cable sculpting, and core endurance to stay lean, fit, and conditioned.',
-      icon: 'body-outline',
-      badge: 'Tone & Stamina',
-      recommendedDays: '4-5 days / week (Afternoon 5:00 PM)',
-    },
-  ];
+  return FITNESS_GOAL_OPTIONS;
 }
 
 export interface WeekPlanTemplateDay {
@@ -552,10 +765,7 @@ export function formatTime24to12(time24: string): { time: string; ampm: 'AM' | '
 
 /**
  * Builds a tailored 7-day workout plan (index 0 = Mon … 6 = Sun) based on
- * the member's physical stats (BMI), chosen body goal, and preferred afternoon time.
- * If the member has a specific BMI category (Obese, Overweight, Underweight),
- * the plan is strictly calibrated to their physical category so that all routines
- * are 100% matched to their body requirements.
+ * the member's physical stats (BMI), chosen body goal, and preferred workout time.
  */
 export function buildGoalWeekPlan(
   goal?: string | null,
@@ -565,8 +775,231 @@ export function buildGoalWeekPlan(
   const normTime = preferredTime?.trim() || '17:00';
   const normalizedGoal = (goal?.toLowerCase()?.trim() || 'muscle_gain') as FitnessGoalKey;
 
-  // 1. OBESE (BMI >= 30): Strict safe low-impact machine circuits and gentle walking
+  // 1. OBESE (BMI >= 30): 100% joint-safe, low-impact routines tailored to chosen goal
   if (typeof bmi === 'number' && bmi >= 30) {
+    if (normalizedGoal === 'tone_endurance') {
+      return [
+        // Mon (0): Obese Aerobic Conditioning & Incline Walk
+        {
+          title: 'Cardio & Core',
+          customTarget: 'Obese Aerobic Conditioning & Incline Walk',
+          duration: '40 min',
+          coach: 'Coach Ryza',
+          location: 'Cardio Area',
+          time: normTime,
+          isRest: false,
+          exercises: [
+            { name: 'Treadmill (Flat/Gentle Incline Walk)', sets: 1, reps: '25 min' },
+            { name: 'Multi-Function Cable Column (Seated Cable Rotations)', sets: 3, reps: '12 each' },
+            { name: 'Gentle Full-Body Stretching', sets: 1, reps: '10 min' },
+          ],
+        },
+        // Tue (1): Obese Seated Upper Stamina
+        {
+          title: 'Upper Body',
+          customTarget: 'Obese Seated Upper Stamina',
+          duration: '40 min',
+          coach: 'Coach Marco',
+          location: 'Gym Floor B',
+          time: normTime,
+          isRest: false,
+          exercises: [
+            { name: 'Selectorized Chest Press Machine', sets: 3, reps: '15' },
+            { name: 'Lat Pulldown Machine', sets: 3, reps: '15' },
+            { name: 'Dual Adjustable Pulley Machine (Tricep Pushdown)', sets: 3, reps: '15' },
+            { name: '45-Degree Hyperextension Bench (Supported Back Alignment)', sets: 3, reps: '10' },
+          ],
+        },
+        // Wed (2): Rest & Joint Decompression
+        {
+          title: 'Rest Day',
+          customTarget: 'Active Recovery & Circulation',
+          duration: '15 min',
+          coach: '',
+          location: 'Home / Recovery',
+          time: normTime,
+          isRest: true,
+          exercises: [
+            { name: 'Gentle Mobility & Joint Rotations', sets: 1, reps: '15 min' },
+            { name: 'Hydrate & Electrolytes', sets: 1, reps: '2-3 Liters' },
+          ],
+        },
+        // Thu (3): Obese Lower Machine Stamina
+        {
+          title: 'Lower Body / Leg Day',
+          customTarget: 'Obese Lower Machine Stamina',
+          duration: '40 min',
+          coach: 'Coach Ethan',
+          location: 'Weights Area',
+          time: normTime,
+          isRest: false,
+          exercises: [
+            { name: 'Plate-Loaded 45-Degree Leg Press Machine', sets: 3, reps: '15' },
+            { name: 'Seated Calf Raise Machine', sets: 3, reps: '15-20' },
+            { name: 'Hip Abductor / Adductor Machine', sets: 3, reps: '15' },
+            { name: 'Treadmill (Steady-Pace Flat Walk)', sets: 1, reps: '15 min' },
+          ],
+        },
+        // Fri (4): Obese Low-Impact Cardio & Posture
+        {
+          title: 'Cardio & Core',
+          customTarget: 'Obese Low-Impact Cardio & Posture',
+          duration: '40 min',
+          coach: 'Coach Ryza',
+          location: 'Cardio Area',
+          time: normTime,
+          isRest: false,
+          exercises: [
+            { name: 'Treadmill (Flat/Gentle Incline Walk)', sets: 1, reps: '20 min' },
+            { name: 'Dual Adjustable Pulley Machine (Face Pulls)', sets: 3, reps: '15' },
+            { name: 'Seated Row Machine / Low Row Machine', sets: 3, reps: '12-15' },
+            { name: 'Full Body Stretching & Cooldown', sets: 1, reps: '10 min' },
+          ],
+        },
+        // Sat (5): Obese Seated Conditioning Finisher
+        {
+          title: 'Full Body',
+          customTarget: 'Obese Seated Conditioning Finisher',
+          duration: '35 min',
+          coach: 'Coach Ethan',
+          location: 'Gym Floor B',
+          time: normTime,
+          isRest: false,
+          exercises: [
+            { name: 'Selectorized Chest Press Machine', sets: 3, reps: '12' },
+            { name: 'Lat Pulldown Machine', sets: 3, reps: '12' },
+            { name: 'Dip / Leg Raise Station (Assisted Knee Tucks)', sets: 3, reps: '10' },
+            { name: 'Treadmill (Cooldown Walk)', sets: 1, reps: '15 min' },
+          ],
+        },
+        // Sun (6): Full Rest Day
+        {
+          title: 'Rest Day',
+          customTarget: 'Full Recovery & Joint Rest',
+          duration: '0 min',
+          coach: '',
+          location: 'Home',
+          time: normTime,
+          isRest: true,
+          exercises: [
+            { name: 'Rest & Full Joint Recovery', sets: 1, reps: 'Full Day' },
+            { name: 'Hydrate', sets: 1, reps: '2-3L' },
+          ],
+        },
+      ];
+    }
+
+    if (normalizedGoal === 'strength') {
+      return [
+        // Mon (0): Obese Core & Spine Stabilization
+        {
+          title: 'Cardio & Core',
+          customTarget: 'Obese Core & Spine Stabilization',
+          duration: '45 min',
+          coach: 'Coach Ryza',
+          location: 'Functional Zone',
+          time: normTime,
+          isRest: false,
+          exercises: [
+            { name: 'Multi-Function Cable Column (Seated Cable Rotations)', sets: 3, reps: '12 each' },
+            { name: '45-Degree Hyperextension Bench (Supported Back Alignment)', sets: 3, reps: '10-12' },
+            { name: 'Functional Trainer Cable Crossover Machine (Core Hold)', sets: 3, reps: '12' },
+            { name: 'Gentle Full-Body Stretching', sets: 1, reps: '10 min' },
+          ],
+        },
+        // Tue (1): Rest & Spine Decompression
+        {
+          title: 'Rest Day',
+          customTarget: 'Spine & Joint Decompression',
+          duration: '15 min',
+          coach: '',
+          location: 'Home / Recovery',
+          time: normTime,
+          isRest: true,
+          exercises: [
+            { name: 'Gentle Mobility & Joint Rotations', sets: 1, reps: '15 min' },
+            { name: 'Hydrate & Electrolytes', sets: 1, reps: '2-3 Liters' },
+          ],
+        },
+        // Wed (2): Obese Seated Lower Functional Strength
+        {
+          title: 'Lower Body / Leg Day',
+          customTarget: 'Obese Seated Lower Functional Strength',
+          duration: '45 min',
+          coach: 'Coach Ethan',
+          location: 'Weights Area',
+          time: normTime,
+          isRest: false,
+          exercises: [
+            { name: 'Plate-Loaded 45-Degree Leg Press Machine', sets: 3, reps: '10-12' },
+            { name: 'Leg Extension Machine', sets: 3, reps: '12' },
+            { name: 'Seated Calf Raise Machine', sets: 3, reps: '15' },
+            { name: 'Hip Abductor / Adductor Machine', sets: 3, reps: '12-15' },
+          ],
+        },
+        // Thu (3): Rest Day
+        {
+          title: 'Rest Day',
+          customTarget: 'Active Recovery & Hydrate',
+          duration: '0 min',
+          coach: '',
+          location: 'Home',
+          time: normTime,
+          isRest: true,
+          exercises: [
+            { name: 'Light Walk', sets: 1, reps: '15 min' },
+            { name: 'Hydrate', sets: 1, reps: '2-3L' },
+          ],
+        },
+        // Fri (4): Obese Seated Upper Strength & Posture
+        {
+          title: 'Upper Body',
+          customTarget: 'Obese Seated Upper Strength & Posture',
+          duration: '45 min',
+          coach: 'Coach Marco',
+          location: 'Gym Floor B',
+          time: normTime,
+          isRest: false,
+          exercises: [
+            { name: 'Plate-Loaded Incline Chest Press Machine', sets: 3, reps: '10-12' },
+            { name: 'Seated Row Machine / Low Row Machine', sets: 3, reps: '10-12' },
+            { name: 'Pin-Selected Standing Lateral Raise Machine', sets: 3, reps: '12' },
+            { name: 'Dual Adjustable Pulley Machine (Face Pulls)', sets: 3, reps: '12-15' },
+          ],
+        },
+        // Sat (5): Obese Functional Balance & Mobility
+        {
+          title: 'Full Body',
+          customTarget: 'Obese Functional Balance & Mobility',
+          duration: '35 min',
+          coach: 'Coach Ryza',
+          location: 'Functional Zone',
+          time: normTime,
+          isRest: false,
+          exercises: [
+            { name: 'Dip / Leg Raise Station (Assisted Knee Tucks)', sets: 3, reps: '10' },
+            { name: 'Treadmill (Steady-Pace Flat Walk)', sets: 1, reps: '20 min' },
+            { name: 'Gentle Full-Body Stretching', sets: 1, reps: '15 min' },
+          ],
+        },
+        // Sun (6): Full Rest Day
+        {
+          title: 'Rest Day',
+          customTarget: 'Full Recovery & Joint Rest',
+          duration: '0 min',
+          coach: '',
+          location: 'Home',
+          time: normTime,
+          isRest: true,
+          exercises: [
+            { name: 'Rest & Full Joint Recovery', sets: 1, reps: 'Full Day' },
+            { name: 'Hydrate', sets: 1, reps: '2-3L' },
+          ],
+        },
+      ];
+    }
+
+    // Default for Obese (weight_loss): Safe Low-Impact Fat Loss & Joint Protection
     return [
       // Mon (0): Obese Safe Full Body Circuit
       {
@@ -682,8 +1115,236 @@ export function buildGoalWeekPlan(
     ];
   }
 
-  // 2. OVERWEIGHT (25 <= BMI < 30): Calorie burn & joint-friendly conditioning
+  // 2. OVERWEIGHT (25 <= BMI < 30): Calorie burn, recomposition & athletic tone
   if (typeof bmi === 'number' && bmi >= 25) {
+    if (normalizedGoal === 'muscle_gain') {
+      return [
+        // Mon (0): Overweight Recomp Push Power
+        {
+          title: 'Upper Body',
+          customTarget: 'Overweight Recomp Push Power',
+          duration: '50 min',
+          coach: 'Coach Ethan',
+          location: 'Gym Floor B',
+          time: normTime,
+          isRest: false,
+          exercises: [
+            { name: 'Plate-Loaded Incline Chest Press Machine', sets: 3, reps: '10-12' },
+            { name: 'Selectorized Chest Press Machine', sets: 3, reps: '12' },
+            { name: 'Dual Adjustable Pulley Machine (Tricep Pushdown)', sets: 3, reps: '12' },
+            { name: 'Dip / Leg Raise Station (Knee Tucks)', sets: 3, reps: '12' },
+          ],
+        },
+        // Tue (1): Overweight Recomp Pull & Lats
+        {
+          title: 'Upper Body',
+          customTarget: 'Overweight Recomp Pull & Lats',
+          duration: '50 min',
+          coach: 'Coach Marco',
+          location: 'Gym Floor B',
+          time: normTime,
+          isRest: false,
+          exercises: [
+            { name: 'Plate-Loaded Lat Pulldown Machine', sets: 3, reps: '10-12' },
+            { name: 'Seated Row Machine / Low Row Machine', sets: 3, reps: '10-12' },
+            { name: 'Preacher Curl Bench (EZ Bar Curls)', sets: 3, reps: '10-12' },
+            { name: 'Dual Adjustable Pulley Machine (Face Pulls)', sets: 3, reps: '15' },
+          ],
+        },
+        // Wed (2): Rest & Recovery
+        {
+          title: 'Rest Day',
+          customTarget: 'Active Recovery & Hydrate',
+          duration: '20 min',
+          coach: '',
+          location: 'Home / Recovery',
+          time: normTime,
+          isRest: true,
+          exercises: [
+            { name: 'Light Walk', sets: 1, reps: '20 min' },
+            { name: 'Hydrate & Electrolytes', sets: 1, reps: '2-3 Liters' },
+            { name: 'Gentle Full-Body Stretching', sets: 1, reps: '10 min' },
+          ],
+        },
+        // Thu (3): Overweight Recomp Leg Hypertrophy
+        {
+          title: 'Lower Body / Leg Day',
+          customTarget: 'Overweight Recomp Leg Hypertrophy',
+          duration: '50 min',
+          coach: 'Coach Ethan',
+          location: 'Weights Area',
+          time: normTime,
+          isRest: false,
+          exercises: [
+            { name: 'Plate-Loaded 45-Degree Leg Press Machine', sets: 4, reps: '10-12' },
+            { name: 'Hip Thrust Machine', sets: 3, reps: '12' },
+            { name: 'Leg Extension / Leg Curl Machine', sets: 3, reps: '12' },
+            { name: 'Seated Calf Raise Machine', sets: 3, reps: '15' },
+          ],
+        },
+        // Fri (4): Overweight Recomp Shoulder & Arms
+        {
+          title: 'Upper Body',
+          customTarget: 'Overweight Recomp Shoulder & Arms',
+          duration: '45 min',
+          coach: 'Coach Marco',
+          location: 'Gym Floor B',
+          time: normTime,
+          isRest: false,
+          exercises: [
+            { name: 'Pin-Selected Standing Lateral Raise Machine', sets: 3, reps: '12-15' },
+            { name: 'Seated Bicep Curl / Preacher Curl Machine', sets: 3, reps: '12' },
+            { name: 'Dual Adjustable Pulley Machine (Rope Extensions)', sets: 3, reps: '12' },
+            { name: 'Multi-Function Cable Column (Cable Crunches)', sets: 3, reps: '15' },
+          ],
+        },
+        // Sat (5): Overweight Metabolic Recomp Finisher
+        {
+          title: 'Full Body',
+          customTarget: 'Overweight Metabolic Recomp Finisher',
+          duration: '45 min',
+          coach: 'Coach Ryza',
+          location: 'Functional Zone',
+          time: normTime,
+          isRest: false,
+          exercises: [
+            { name: 'Selectorized Squat Machine', sets: 3, reps: '12' },
+            { name: 'Lat Pulldown Machine', sets: 3, reps: '12' },
+            { name: 'Kettlebells (Goblet Squats & Swings)', sets: 3, reps: '12' },
+            { name: 'Treadmill (Incline Cooldown Walk)', sets: 1, reps: '15 min' },
+          ],
+        },
+        // Sun (6): Rest Day
+        {
+          title: 'Rest Day',
+          customTarget: 'Full Rest & Recovery',
+          duration: '0 min',
+          coach: '',
+          location: 'Home',
+          time: normTime,
+          isRest: true,
+          exercises: [
+            { name: 'Rest & Muscle Recovery', sets: 1, reps: 'Full Day' },
+            { name: 'Hydrate', sets: 1, reps: '2-3L' },
+          ],
+        },
+      ];
+    }
+
+    if (normalizedGoal === 'tone_endurance') {
+      return [
+        // Mon (0): Overweight Functional Tone Circuit
+        {
+          title: 'Full Body',
+          customTarget: 'Overweight Functional Tone Circuit',
+          duration: '45 min',
+          coach: 'Coach Ethan',
+          location: 'Functional Zone',
+          time: normTime,
+          isRest: false,
+          exercises: [
+            { name: 'Functional Trainer Cable Crossover Machine', sets: 3, reps: '15' },
+            { name: 'Selectorized Chest Press Machine', sets: 3, reps: '12-15' },
+            { name: 'Lat Pulldown Machine', sets: 3, reps: '15' },
+            { name: 'Kettlebells (Kettlebell Swings)', sets: 3, reps: '15-20' },
+          ],
+        },
+        // Tue (1): Overweight Incline Interval & Core
+        {
+          title: 'Cardio & Core',
+          customTarget: 'Overweight Incline Interval & Core',
+          duration: '45 min',
+          coach: 'Coach Ryza',
+          location: 'Cardio Area',
+          time: normTime,
+          isRest: false,
+          exercises: [
+            { name: 'Treadmill (Interval Incline Walk)', sets: 1, reps: '25 min' },
+            { name: 'Dip / Leg Raise Station (Captain’s Chair Leg Raises)', sets: 3, reps: '15' },
+            { name: 'Multi-Function Cable Column (Cable Crunches)', sets: 3, reps: '15' },
+          ],
+        },
+        // Wed (2): Rest Day
+        {
+          title: 'Rest Day',
+          customTarget: 'Active Recovery & Hydrate',
+          duration: '20 min',
+          coach: '',
+          location: 'Home / Recovery',
+          time: normTime,
+          isRest: true,
+          exercises: [
+            { name: 'Light Walk', sets: 1, reps: '20 min' },
+            { name: 'Hydrate & Electrolytes', sets: 1, reps: '2-3 Liters' },
+            { name: 'Gentle Full-Body Stretching', sets: 1, reps: '10 min' },
+          ],
+        },
+        // Thu (3): Overweight Glutes & Leg Toning
+        {
+          title: 'Lower Body / Leg Day',
+          customTarget: 'Overweight Glutes & Leg Toning',
+          duration: '45 min',
+          coach: 'Coach Ethan',
+          location: 'Weights Area',
+          time: normTime,
+          isRest: false,
+          exercises: [
+            { name: 'Hip Thrust Machine', sets: 3, reps: '15' },
+            { name: 'Plate-Loaded 45-Degree Leg Press Machine', sets: 3, reps: '12-15' },
+            { name: 'Hip Abductor / Adductor Machine', sets: 3, reps: '15-20' },
+            { name: 'Seated Calf Raise Machine', sets: 3, reps: '15' },
+          ],
+        },
+        // Fri (4): Overweight Upper Cable Sculpt
+        {
+          title: 'Upper Body',
+          customTarget: 'Overweight Upper Cable Sculpt',
+          duration: '45 min',
+          coach: 'Coach Marco',
+          location: 'Gym Floor B',
+          time: normTime,
+          isRest: false,
+          exercises: [
+            { name: 'Plate-Loaded Incline Chest Press Machine', sets: 3, reps: '12' },
+            { name: 'Seated Row Machine / Low Row Machine', sets: 3, reps: '12-15' },
+            { name: 'Pin-Selected Standing Lateral Raise Machine', sets: 3, reps: '15' },
+            { name: 'Dual Adjustable Pulley Machine (Tricep Pushdown)', sets: 3, reps: '15' },
+          ],
+        },
+        // Sat (5): Overweight Athletic Conditioning Finisher
+        {
+          title: 'Cardio & Core',
+          customTarget: 'Overweight Athletic Conditioning Finisher',
+          duration: '40 min',
+          coach: 'Coach Ryza',
+          location: 'Functional Zone',
+          time: normTime,
+          isRest: false,
+          exercises: [
+            { name: 'Treadmill (Interval Incline Walk)', sets: 1, reps: '20 min' },
+            { name: '45-Degree Hyperextension Bench', sets: 3, reps: '12-15' },
+            { name: 'Functional Trainer Cable Crossover (Torso Twists)', sets: 3, reps: '15 each' },
+            { name: 'Full Body Stretching & Cooldown', sets: 1, reps: '10 min' },
+          ],
+        },
+        // Sun (6): Rest Day
+        {
+          title: 'Rest Day',
+          customTarget: 'Full Rest & Recovery',
+          duration: '0 min',
+          coach: '',
+          location: 'Home',
+          time: normTime,
+          isRest: true,
+          exercises: [
+            { name: 'Rest & Muscle Recovery', sets: 1, reps: 'Full Day' },
+            { name: 'Hydrate', sets: 1, reps: '2-3L' },
+          ],
+        },
+      ];
+    }
+
+    // Default for Overweight (weight_loss): Active Metabolic Fat Burn & Conditioning
     return [
       // Mon (0): Full Body Metabolic Fat Burn
       {
@@ -800,8 +1461,229 @@ export function buildGoalWeekPlan(
     ];
   }
 
-  // 3. UNDERWEIGHT (BMI < 18.5): Caloric surplus, lean mass building, muscle hypertrophy
+  // 3. UNDERWEIGHT (BMI < 18.5): Caloric surplus, mass building & bone density
   if (typeof bmi === 'number' && bmi > 0 && bmi < 18.5) {
+    if (normalizedGoal === 'strength') {
+      return [
+        // Mon (0): Underweight Heavy Compound Lower
+        {
+          title: 'Lower Body / Leg Day',
+          customTarget: 'Underweight Heavy Compound Lower',
+          duration: '50 min',
+          coach: 'Coach Ethan',
+          location: 'Weights Area',
+          time: normTime,
+          isRest: false,
+          exercises: [
+            { name: 'Hack Squat Machine', sets: 4, reps: '6-8' },
+            { name: 'Plate-Loaded 45-Degree Leg Press Machine', sets: 4, reps: '6-8' },
+            { name: 'Seated Calf Raise Machine', sets: 3, reps: '10-12' },
+            { name: '45-Degree Hyperextension Bench', sets: 3, reps: '10' },
+          ],
+        },
+        // Tue (1): Rest Day (Skeletal Remodeling)
+        {
+          title: 'Rest Day',
+          customTarget: 'Skeletal Remodeling & Rest',
+          duration: '0 min',
+          coach: '',
+          location: 'Home / Recovery',
+          time: normTime,
+          isRest: true,
+          exercises: [
+            { name: 'Hydrate & High Protein Nutrition', sets: 1, reps: 'Full Day' },
+            { name: 'Light Walk & Muscle Rest', sets: 1, reps: '15 min' },
+          ],
+        },
+        // Wed (2): Underweight Heavy Push/Pull Strength
+        {
+          title: 'Upper Body',
+          customTarget: 'Underweight Heavy Push/Pull Strength',
+          duration: '50 min',
+          coach: 'Coach Marco',
+          location: 'Gym Floor B',
+          time: normTime,
+          isRest: false,
+          exercises: [
+            { name: 'Plate-Loaded Incline Chest Press Machine', sets: 4, reps: '6-8' },
+            { name: 'Plate-Loaded Lat Pulldown Machine', sets: 4, reps: '6-8' },
+            { name: 'Seated Row Machine / Low Row Machine', sets: 3, reps: '8' },
+            { name: 'Dual Adjustable Pulley Machine (Heavy Tricep Pushdown)', sets: 3, reps: '8' },
+          ],
+        },
+        // Thu (3): Rest Day
+        {
+          title: 'Rest Day',
+          customTarget: 'Caloric Surplus & Recovery',
+          duration: '0 min',
+          coach: '',
+          location: 'Home / Recovery',
+          time: normTime,
+          isRest: true,
+          exercises: [
+            { name: 'Nutrition & Muscle Synthesis', sets: 1, reps: 'Full Day' },
+          ],
+        },
+        // Fri (4): Underweight Posterior & Leg Power
+        {
+          title: 'Lower Body / Leg Day',
+          customTarget: 'Underweight Posterior & Leg Power',
+          duration: '50 min',
+          coach: 'Coach Ethan',
+          location: 'Weights Area',
+          time: normTime,
+          isRest: false,
+          exercises: [
+            { name: 'Plate-Loaded 45-Degree Leg Press Machine', sets: 4, reps: '6-8' },
+            { name: 'Leg Extension / Leg Curl Machine (Hamstrings)', sets: 3, reps: '8' },
+            { name: 'Hack Squat Machine', sets: 3, reps: '6-8' },
+            { name: 'Seated Calf Raise Machine', sets: 3, reps: '10' },
+          ],
+        },
+        // Sat (5): Underweight Upper Density & Arm Power
+        {
+          title: 'Upper Body',
+          customTarget: 'Underweight Upper Density & Arm Power',
+          duration: '45 min',
+          coach: 'Coach Ryza',
+          location: 'Gym Floor B',
+          time: normTime,
+          isRest: false,
+          exercises: [
+            { name: 'Selectorized Chest Press Machine', sets: 3, reps: '6-8' },
+            { name: 'Wide Grip Lat Pulldown', sets: 3, reps: '8' },
+            { name: 'Preacher Curl Bench (EZ Bar Curls)', sets: 3, reps: '8' },
+            { name: 'Dip / Leg Raise Station (Knee Tucks)', sets: 3, reps: '10' },
+          ],
+        },
+        // Sun (6): Full Rest Day
+        {
+          title: 'Rest Day',
+          customTarget: 'Full Growth Recovery',
+          duration: '0 min',
+          coach: '',
+          location: 'Home',
+          time: normTime,
+          isRest: true,
+          exercises: [
+            { name: 'Sleep & Full Muscular Growth', sets: 1, reps: '8 Hours' },
+            { name: 'Hydrate', sets: 1, reps: '2-3L' },
+          ],
+        },
+      ];
+    }
+
+    if (normalizedGoal === 'tone_endurance') {
+      return [
+        // Mon (0): Underweight Shoulder & Lat Width
+        {
+          title: 'Upper Body',
+          customTarget: 'Underweight Shoulder & Lat Width',
+          duration: '50 min',
+          coach: 'Coach Marco',
+          location: 'Gym Floor B',
+          time: normTime,
+          isRest: false,
+          exercises: [
+            { name: 'Plate-Loaded Lat Pulldown Machine', sets: 4, reps: '8-10' },
+            { name: 'Pin-Selected Standing Lateral Raise Machine', sets: 4, reps: '10-12' },
+            { name: 'Plate-Loaded Incline Chest Press Machine', sets: 3, reps: '10' },
+            { name: 'Dual Adjustable Pulley Machine (Face Pulls)', sets: 3, reps: '12' },
+          ],
+        },
+        // Tue (1): Underweight Leg & Glute Proportion
+        {
+          title: 'Lower Body / Leg Day',
+          customTarget: 'Underweight Leg & Glute Proportion',
+          duration: '50 min',
+          coach: 'Coach Ethan',
+          location: 'Weights Area',
+          time: normTime,
+          isRest: false,
+          exercises: [
+            { name: 'Plate-Loaded 45-Degree Leg Press Machine', sets: 3, reps: '10' },
+            { name: 'Hip Thrust Machine', sets: 3, reps: '10-12' },
+            { name: 'Leg Extension Machine', sets: 3, reps: '10-12' },
+            { name: 'Seated Calf Raise Machine', sets: 3, reps: '12' },
+          ],
+        },
+        // Wed (2): Rest Day
+        {
+          title: 'Rest Day',
+          customTarget: 'Nutrient Absorption & Rest',
+          duration: '0 min',
+          coach: '',
+          location: 'Home / Recovery',
+          time: normTime,
+          isRest: true,
+          exercises: [
+            { name: 'Hydrate & High Protein Nutrition', sets: 1, reps: 'Full Day' },
+            { name: 'Light Walk', sets: 1, reps: '15 min' },
+          ],
+        },
+        // Thu (3): Underweight Chest & Bicep Sculpt
+        {
+          title: 'Upper Body',
+          customTarget: 'Underweight Chest & Bicep Sculpt',
+          duration: '50 min',
+          coach: 'Coach Marco',
+          location: 'Gym Floor B',
+          time: normTime,
+          isRest: false,
+          exercises: [
+            { name: 'Selectorized Chest Press Machine', sets: 3, reps: '10' },
+            { name: 'Seated Bicep Curl / Preacher Curl Machine', sets: 3, reps: '10' },
+            { name: 'Pec Fly / Rear Delt Machine', sets: 3, reps: '10-12' },
+            { name: 'Dual Adjustable Pulley Machine (Tricep Pushdown)', sets: 3, reps: '10-12' },
+          ],
+        },
+        // Fri (4): Rest Day
+        {
+          title: 'Rest Day',
+          customTarget: 'Muscle Growth & Recovery',
+          duration: '0 min',
+          coach: '',
+          location: 'Home / Recovery',
+          time: normTime,
+          isRest: true,
+          exercises: [
+            { name: 'Rest & Nutrient Absorption', sets: 1, reps: 'Full Day' },
+          ],
+        },
+        // Sat (5): Underweight Symmetry & Frame Finisher
+        {
+          title: 'Full Body',
+          customTarget: 'Underweight Symmetry & Frame Finisher',
+          duration: '45 min',
+          coach: 'Coach Ryza',
+          location: 'Functional Zone',
+          time: normTime,
+          isRest: false,
+          exercises: [
+            { name: 'Lat Pulldown Machine', sets: 3, reps: '10' },
+            { name: '45-Degree Leg Press Machine', sets: 3, reps: '10' },
+            { name: 'Pin-Selected Standing Lateral Raise Machine', sets: 3, reps: '12' },
+            { name: 'Dip / Leg Raise Station (Knee Tucks)', sets: 3, reps: '12' },
+          ],
+        },
+        // Sun (6): Full Rest Day
+        {
+          title: 'Rest Day',
+          customTarget: 'Full Growth Recovery',
+          duration: '0 min',
+          coach: '',
+          location: 'Home',
+          time: normTime,
+          isRest: true,
+          exercises: [
+            { name: 'Sleep & Full Muscular Growth', sets: 1, reps: '8 Hours' },
+            { name: 'Hydrate', sets: 1, reps: '2-3L' },
+          ],
+        },
+      ];
+    }
+
+    // Default for Underweight (muscle_gain): Lean Mass Building & Caloric Surplus
     return [
       // Mon (0): Underweight Upper Body Mass
       {

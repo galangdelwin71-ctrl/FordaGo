@@ -43,6 +43,7 @@ class UserController extends Controller
             'id', 'username', 'first_name', 'last_name', 'email', 'role',
             'phone', 'gender', 'date_of_birth', 'profile_image', 'membership_type',
             'membership_status', 'payment_method', 'membership_expiry',
+            'created_at',
         ])->get();
 
         return response()->json($users);
@@ -66,7 +67,7 @@ class UserController extends Controller
         $user = User::select([
             'id', 'username', 'first_name', 'last_name', 'email', 'role',
             'phone', 'gender', 'date_of_birth', 'profile_image', 'membership_type',
-            'membership_status', 'payment_method', 'membership_expiry',
+            'membership_status', 'payment_method', 'membership_expiry', 'created_at',
             'height', 'weight', 'bmi', 'fitness_goal', 'preferred_workout_time',
             'two_factor_enabled', 'two_factor_channel', 'biometric_enabled', 'biometric_device_name', 'has_seen_guide',
         ])->find($request->user()->id);
@@ -82,7 +83,7 @@ class UserController extends Controller
         $user = User::select([
             'id', 'username', 'first_name', 'last_name', 'email', 'role',
             'phone', 'gender', 'date_of_birth', 'profile_image', 'membership_type',
-            'membership_status', 'payment_method', 'membership_expiry',
+            'membership_status', 'payment_method', 'membership_expiry', 'created_at',
             'height', 'weight', 'bmi', 'fitness_goal', 'preferred_workout_time',
             'two_factor_enabled', 'two_factor_channel', 'biometric_enabled', 'biometric_device_name', 'has_seen_guide',
         ])->find($request->user()->id);

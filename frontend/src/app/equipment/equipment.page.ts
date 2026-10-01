@@ -1,6 +1,6 @@
 // equipment.page.ts
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -61,7 +61,7 @@ export interface EquipmentItem {
     PullToRefreshComponent,
   ],
 })
-export class EquipmentPage implements OnInit {
+export class EquipmentPage implements OnInit, OnDestroy {
 
   /** Resolves relative /storage/... paths to full backend URL. */
   resolveImg(path: string | null | undefined): string {
@@ -274,11 +274,37 @@ export class EquipmentPage implements OnInit {
     this.checkAndStartEquipmentTour();
   }
 
+  private equipTourTimeout: any = null;
+
+  ionViewWillLeave(): void {
+    if (this.equipTourTimeout) {
+      clearTimeout(this.equipTourTimeout);
+      this.equipTourTimeout = null;
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.equipTourTimeout) {
+      clearTimeout(this.equipTourTimeout);
+      this.equipTourTimeout = null;
+    }
+  }
+
   private checkAndStartEquipmentTour(): void {
     const user = this.auth.user;
     if (!user || user.role === 'admin' || user.role === 'coach') return;
 
-    setTimeout(() => {
+    if (this.equipTourTimeout) {
+      clearTimeout(this.equipTourTimeout);
+      this.equipTourTimeout = null;
+    }
+
+    this.equipTourTimeout = setTimeout(() => {
+      this.equipTourTimeout = null;
+      // Strict safety verification: user must still be on /equipment and logged in
+      const currentUrl = (this.router.url || '').split('?')[0];
+      if (currentUrl !== '/equipment') return;
+      if (!this.auth.token || !this.auth.user) return;
       if (this.onboardingService.isRunning || this.coachingPanelOpen) return;
 
       const steps: TourStep[] = [
@@ -305,7 +331,10 @@ export class EquipmentPage implements OnInit {
         },
       ];
 
-      const available = steps.filter((s) => !!document.querySelector(s.targetId));
+      const available = steps.filter((s) => {
+        const el = document.querySelector(s.targetId) as HTMLElement;
+        return el && !el.closest('.ion-page-hidden') && !el.closest('[aria-hidden="true"]');
+      });
       if (available.length > 0) {
         this.onboardingService.startTour('equipment_main', available, false, user.id);
       }

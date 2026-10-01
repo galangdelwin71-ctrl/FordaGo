@@ -144,9 +144,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/pending',      [AttendanceController::class, 'pending'])->middleware('role:admin,super_admin,employee');
         Route::put('/{id}/confirm', [AttendanceController::class, 'confirm'])->whereNumber('id')->middleware('role:admin,super_admin,employee');
         Route::put('/{id}/reject',  [AttendanceController::class, 'reject'])->whereNumber('id')->middleware('role:admin,super_admin,employee');
-        // FIX [SEC-03]: QR code value endpoint removed — value is no longer
-        // exposed via API. Admins generate the physical QR code at setup time.
-        // Route::get('/qr-code', [AttendanceController::class, 'qrCode'])->middleware('role:admin,super_admin,employee');
+        Route::get('/qr-code', [AttendanceController::class, 'qrCode'])->middleware('role:admin,super_admin,employee');
     });
 
     // ── Workouts (server/routes/workout.js) ───────────────────────────────

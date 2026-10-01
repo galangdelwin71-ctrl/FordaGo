@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { Router, NavigationStart } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
 import { API_BASE_URL } from '../config/api.config';
 
@@ -40,8 +41,32 @@ export class OnboardingService {
     'chat_main',
   ];
 
-  constructor() {
+  /** Route mapping: Each tour is strictly permitted ONLY on its dedicated page */
+  private readonly tourRouteMap: Record<string, string[]> = {
+    dashboard_main: ['/dashboard'],
+    schedule_main: ['/schedule'],
+    schedule_add_modal: ['/schedule'],
+    schedule_week_plan_modal: ['/schedule'],
+    scanner_main: ['/qr-scanner'],
+    shop_main: ['/inventory'],
+    equipment_main: ['/equipment'],
+    profile_main: ['/profile'],
+    chat_main: ['/coaching/chat'],
+    coach_studio_main: ['/dashboard', '/schedule', '/equipment', '/inventory', '/profile', '/coaching'],
+    coaching_member_main: ['/dashboard', '/schedule', '/equipment', '/inventory', '/profile', '/coaching'],
+  };
+
+  constructor(private router: Router) {
     this.cleanupLegacyUnscopedKeys();
+
+    // Auto-dismiss any active tour whenever navigating to ANY new page (especially /login or /register)
+    this.router.events.subscribe((event) => {
+      if (event instanceof NavigationStart) {
+        if (this.isVisibleSubject.value) {
+          this.dismissActiveTour();
+        }
+      }
+    });
   }
 
   get isRunning(): boolean {
@@ -234,9 +259,49 @@ export class OnboardingService {
   }
 
   /**
+   * Immediately clears active tour state without persisting completion.
+   */
+  dismissActiveTour(): void {
+    this.isVisibleSubject.next(false);
+    this.activeTourSubject.next(null);
+    this.currentStepIndexSubject.next(0);
+    this.currentTourId = null;
+    this.currentTourUserId = null;
+  }
+
+  /**
    * Starts a tour with provided steps.
    */
   startTour(tourId: string, steps: TourStep[], force = false, userId?: string | number): boolean {
+    // 1. Strict Auth Check: Never start tour if unauthenticated
+    const token = localStorage.getItem('token');
+    const user = this.getCurrentUser();
+    if (!token || !user) {
+      this.dismissActiveTour();
+      return false;
+    }
+
+    // 2. Strict Route Check: Never start tour on login, register, or auth routes
+    const currentUrl = (this.router.url || window.location.pathname || '').split('?')[0];
+    if (
+      !currentUrl ||
+      currentUrl === '/' ||
+      currentUrl === '/login' ||
+      currentUrl.startsWith('/login') ||
+      currentUrl.startsWith('/register') ||
+      currentUrl.startsWith('/forgot')
+    ) {
+      this.dismissActiveTour();
+      return false;
+    }
+
+    // 3. Strict Tour-to-Route validation: Tour can only run on its matching page
+    const allowedRoutes = this.tourRouteMap[tourId];
+    if (allowedRoutes && !allowedRoutes.some((r) => currentUrl.startsWith(r))) {
+      this.dismissActiveTour();
+      return false;
+    }
+
     const resolvedUserId = userId || this.getCurrentUserId();
 
     if (!force && this.hasUserSeenTour(tourId, resolvedUserId || undefined)) {
@@ -247,9 +312,21 @@ export class OnboardingService {
       return false;
     }
 
+    // 4. Verify that step targets are NOT inside an inactive/hidden Ionic page
+    const activeSteps = steps.filter((step) => {
+      const el = document.querySelector(step.targetId) as HTMLElement;
+      if (!el) return false;
+      if (el.closest('.ion-page-hidden') || el.closest('[aria-hidden="true"]')) return false;
+      return true;
+    });
+
+    if (activeSteps.length === 0) {
+      return false;
+    }
+
     this.currentTourId = tourId;
     this.currentTourUserId = resolvedUserId;
-    this.activeTourSubject.next(steps);
+    this.activeTourSubject.next(activeSteps);
     this.currentStepIndexSubject.next(0);
     this.isVisibleSubject.next(true);
     return true;
@@ -280,11 +357,7 @@ export class OnboardingService {
     if (this.currentTourId) {
       this.markTourSeen(this.currentTourId, this.currentTourUserId || undefined);
     }
-    this.isVisibleSubject.next(false);
-    this.activeTourSubject.next(null);
-    this.currentStepIndexSubject.next(0);
-    this.currentTourId = null;
-    this.currentTourUserId = null;
+    this.dismissActiveTour();
   }
 
   private getCurrentUser(): any | null {

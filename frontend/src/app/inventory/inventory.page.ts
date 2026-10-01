@@ -1,5 +1,5 @@
 // inventory.page.ts
-import { Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewEncapsulation } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -109,7 +109,7 @@ export interface OrderGroup {
     PullToRefreshComponent,
   ],
 })
-export class InventoryPage implements OnInit {
+export class InventoryPage implements OnInit, OnDestroy {
 
   /** Resolves relative /storage/... paths to full backend URL. */
   resolveImg(path: string | null | undefined): string {
@@ -562,11 +562,37 @@ export class InventoryPage implements OnInit {
     this.checkAndStartShopTour();
   }
 
+  private shopTourTimeout: any = null;
+
+  ionViewWillLeave(): void {
+    if (this.shopTourTimeout) {
+      clearTimeout(this.shopTourTimeout);
+      this.shopTourTimeout = null;
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.shopTourTimeout) {
+      clearTimeout(this.shopTourTimeout);
+      this.shopTourTimeout = null;
+    }
+  }
+
   private checkAndStartShopTour(): void {
     const user = this.auth.user;
     if (!user || user.role === 'admin' || user.role === 'coach') return;
 
-    setTimeout(() => {
+    if (this.shopTourTimeout) {
+      clearTimeout(this.shopTourTimeout);
+      this.shopTourTimeout = null;
+    }
+
+    this.shopTourTimeout = setTimeout(() => {
+      this.shopTourTimeout = null;
+      // Strict safety verification: user must still be on /inventory and logged in
+      const currentUrl = (this.router.url || '').split('?')[0];
+      if (currentUrl !== '/inventory') return;
+      if (!this.auth.token || !this.auth.user) return;
       if (this.onboardingService.isRunning || this.coachingPanelOpen) return;
 
       const steps: TourStep[] = [
@@ -600,7 +626,10 @@ export class InventoryPage implements OnInit {
         },
       ];
 
-      const available = steps.filter((s) => !!document.querySelector(s.targetId));
+      const available = steps.filter((s) => {
+        const el = document.querySelector(s.targetId) as HTMLElement;
+        return el && !el.closest('.ion-page-hidden') && !el.closest('[aria-hidden="true"]');
+      });
       if (available.length > 0) {
         this.onboardingService.startTour('shop_main', available, false, user.id);
       }
@@ -1194,16 +1223,24 @@ export class InventoryPage implements OnInit {
     this.checkoutError = '';
     this.checkingOut = true;
 
+    const paymentMethod = this.cartPaymentMethod;
     const cartSnapshot = [...this.cart];
     const items = cartSnapshot.map(item => ({
       product_id: Number(item.product.id),
       quantity: item.quantity,
     }));
 
+    // Dismiss the cart bottom-sheet modal immediately for online payments (GCash / Maya)
+    // so on mobile devices it never lingers over or blocks the GCash/Maya checkout screen.
+    if (paymentMethod === 'gcash' || paymentMethod === 'paymaya') {
+      this.closeCart();
+      this.toast.info('Opening secure online payment…');
+    }
+
     const headers = { Authorization: `Bearer ${this.auth.token}` };
     this.http.post<any>(`${this.api}/inventory/cart/checkout`, {
       items,
-      payment_method: this.cartPaymentMethod === 'paymaya' ? 'gcash' : this.cartPaymentMethod,
+      payment_method: paymentMethod === 'paymaya' ? 'gcash' : paymentMethod,
     }, { headers }).subscribe({
       next: (res) => {
         this.checkingOut = false;
@@ -1213,16 +1250,16 @@ export class InventoryPage implements OnInit {
 
         this.lastOrderItems = cartSnapshot;
         this.lastOrderTotal = Number(res?.total ?? this.cartTotal);
-        this.lastOrderPayment = this.cartPaymentMethod;
+        this.lastOrderPayment = paymentMethod;
         const groupId = res?.order_group_id;
 
         // If online payment (GCash or Maya via PayMongo)
-        if (this.cartPaymentMethod === 'gcash' || this.cartPaymentMethod === 'paymaya') {
+        if (paymentMethod === 'gcash' || paymentMethod === 'paymaya') {
           this.paymentService.createCheckout({
             payment_for: 'order',
             related_id: groupId,
             amount: this.lastOrderTotal,
-            payment_channel: this.cartPaymentMethod,
+            payment_channel: paymentMethod,
             description: `FordaGO Gym Shop Order (${cartSnapshot.length} items)`,
             return_url: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'https://fordago.online/inventory' : (window.location.origin + '/inventory'),
             items_breakdown: cartSnapshot.map(i => ({
@@ -1244,7 +1281,7 @@ export class InventoryPage implements OnInit {
               if (groupId) {
                 this.myOrders.filter(o => o.order_group_id === groupId).forEach(o => {
                   o.status = 'payment_verified';
-                  o.payment_method = this.cartPaymentMethod;
+                  o.payment_method = paymentMethod;
                 });
                 this.rebuildOrderGroups();
               }
@@ -1253,7 +1290,7 @@ export class InventoryPage implements OnInit {
                 localStorage.setItem('fordago_last_order', JSON.stringify({
                   items: cartSnapshot,
                   total: this.lastOrderTotal,
-                  payment: this.cartPaymentMethod,
+                  payment: paymentMethod,
                   receiptNumber: payRes.receipt_number,
                   groupId: groupId,
                 }));
@@ -1281,6 +1318,9 @@ export class InventoryPage implements OnInit {
       error: (err) => {
         this.checkingOut = false;
         this.checkoutError = err?.error?.message || 'Could not place order. Please try again.';
+        if (paymentMethod === 'gcash' || paymentMethod === 'paymaya') {
+          this.cartModalOpen = true; // Reopen cart so member can see the issue or retry
+        }
       },
     });
   }

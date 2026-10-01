@@ -8,6 +8,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { IonIcon } from '@ionic/angular/standalone';
 import { Subscription } from 'rxjs';
 import { OnboardingService, TourStep } from '../../services/onboarding.service';
@@ -65,16 +66,49 @@ export class OnboardingGuideComponent implements OnInit, OnDestroy {
 
   constructor(
     public onboardingService: OnboardingService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private router: Router
   ) {}
+
+  private isSafeRoute(): boolean {
+    const url = (this.router.url || window.location.pathname || '').split('?')[0];
+    const token = localStorage.getItem('token');
+    if (!token) return false;
+    if (
+      url === '/login' ||
+      url.startsWith('/login') ||
+      url === '/' ||
+      url.startsWith('/register') ||
+      url.startsWith('/forgot')
+    ) {
+      return false;
+    }
+    return true;
+  }
+
+  private isElementVisible(el: HTMLElement | null): boolean {
+    if (!el) return false;
+    if (el.closest('.ion-page-hidden') || el.closest('[aria-hidden="true"]')) return false;
+    const style = window.getComputedStyle(el);
+    if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return false;
+    const rect = el.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return false;
+    return true;
+  }
 
   ngOnInit(): void {
     this.subs.push(
       this.onboardingService.isVisible$.subscribe((visible) => {
-        this.isVisible = visible;
         if (visible) {
+          if (!this.isSafeRoute()) {
+            this.isVisible = false;
+            this.onboardingService.dismissActiveTour();
+            return;
+          }
+          this.isVisible = true;
           this.syncCurrentStep();
         } else {
+          this.isVisible = false;
           this.spotlight.visible = false;
         }
         this.cdr.detectChanges();
@@ -85,6 +119,11 @@ export class OnboardingGuideComponent implements OnInit, OnDestroy {
       this.onboardingService.currentStepIndex$.subscribe((index) => {
         this.stepIndex = index;
         if (this.isVisible) {
+          if (!this.isSafeRoute()) {
+            this.isVisible = false;
+            this.onboardingService.dismissActiveTour();
+            return;
+          }
           this.syncCurrentStep();
         }
         this.cdr.detectChanges();
@@ -213,12 +252,20 @@ export class OnboardingGuideComponent implements OnInit, OnDestroy {
   calculatePositions(): void {
     if (!this.currentStep) return;
 
+    if (!this.isSafeRoute()) {
+      this.isVisible = false;
+      this.onboardingService.dismissActiveTour();
+      return;
+    }
+
     const targetEl = document.querySelector(this.currentStep.targetId) as HTMLElement;
     const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
 
-    if (!targetEl) {
-      // Fallback: center in viewport if target not found
+    const isTargetVisible = this.isElementVisible(targetEl);
+
+    if (!targetEl || !isTargetVisible) {
+      // Fallback: center in viewport if target not found or belongs to a hidden page
       this.spotlight = {
         top: viewportHeight / 2 - 40,
         left: viewportWidth / 2 - 40,

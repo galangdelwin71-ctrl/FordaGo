@@ -3,6 +3,7 @@ import { AuthService } from '../services/auth.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { BiometricService, BiometricAccount } from '../services/biometric.service';
 import { PaymentService } from '../services/payment.service';
+import { OnboardingService } from '../services/onboarding.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonContent, IonIcon, IonSpinner } from '@ionic/angular/standalone';
@@ -56,11 +57,13 @@ import {
   timeOutline,
   timerOutline,
   receiptOutline,
+  heartOutline,
 } from 'ionicons/icons';
 import {
   FITNESS_GOAL_OPTIONS,
   FitnessGoalOption,
   FitnessGoalKey,
+  WeekPlanTemplateDay,
   buildGoalWeekPlan,
   computeBmi,
   getBmiCategory,
@@ -239,8 +242,12 @@ export class LoginPage implements OnDestroy {
     private router: Router,
     private route: ActivatedRoute,
     public biometricService: BiometricService,
-    private paymentService: PaymentService
+    private paymentService: PaymentService,
+    private onboardingService: OnboardingService
   ) {
+    // Guarantees no lingering tour can ever show or block interactions on the login screen
+    this.onboardingService.dismissActiveTour();
+
     // Register every icon used by this standalone page.
     // This prevents blank icons in production builds or offline installs.
     addIcons({
@@ -290,6 +297,7 @@ export class LoginPage implements OnDestroy {
       'body-outline': bodyOutline,
       'fitness-outline': fitnessOutline,
       'receipt-outline': receiptOutline,
+      'heart-outline': heartOutline,
     });
 
     this.route.queryParams.subscribe((params) => {
@@ -302,6 +310,7 @@ export class LoginPage implements OnDestroy {
         this.paymentService.openReceipt(params['ref']);
       }
     });
+    this.updatePreviewGoalPlan();
   }
 
   ngOnDestroy(): void {
@@ -334,6 +343,7 @@ export class LoginPage implements OnDestroy {
   selectWorkoutTime(time: string): void {
     this.reg.preferred_workout_time = time;
     this.timeDropdownOpen = false;
+    this.updatePreviewGoalPlan();
   }
 
   get preferredTimeLabel(): string {
@@ -351,8 +361,7 @@ export class LoginPage implements OnDestroy {
     } else {
       this.reg.bmi = null;
     }
-    // Auto-select the tailored goal whenever BMI changes
-    this.reg.fitness_goal = this.recommendedGoalForBmi;
+    this.updateBmiDerivedState();
   }
 
   onPhoneInput(event: Event): void {
@@ -362,54 +371,80 @@ export class LoginPage implements OnDestroy {
     this.reg.phone = clean;
   }
 
-  get recommendedGoalForBmi(): FitnessGoalKey {
-    const bmi = this.reg.bmi;
-    if (!bmi) return 'muscle_gain';
-    if (bmi >= 30) {
-      // Obese: strictly weight loss with low-impact
-      return 'weight_loss';
-    } else if (bmi >= 25) {
-      // Overweight: weight loss
-      return 'weight_loss';
-    } else if (bmi < 18.5) {
-      // Underweight: muscle gain for caloric surplus
-      return 'muscle_gain';
-    } else {
-      // Normal: tone & endurance as default healthy goal
-      return 'tone_endurance';
-    }
-  }
+  // ── Cached BMI-Derived State ─────────────────────────────────
+  // These are plain properties (NOT getters) so Angular change detection
+  // does NOT trigger re-renders on every CD cycle.
+
+  recommendedGoalForBmi: FitnessGoalKey = 'muscle_gain';
+  filteredGoalOptions: FitnessGoalOption[] = getGoalOptionsForBmi(null);
+  currentBmiCategory = getBmiCategory(null);
+  selectedGoalDetails: FitnessGoalOption = this.filteredGoalOptions[0] || this.goalOptions[0];
+  previewGoalPlan: WeekPlanTemplateDay[] = [];
 
   /**
-   * Returns only the fitness goal options tailored to the user's BMI category.
-   * - Underweight  → Underweight Mass Building only
-   * - Overweight   → Overweight Metabolic Fat Burn only
-   * - Obese        → Obese Safe Low-Impact only
-   * - Normal / No BMI → Normal healthy options
+   * Recompute all BMI-derived state in one place and cache the results.
+   * Call whenever BMI, fitness_goal, or preferred_workout_time changes.
    */
-  get filteredGoalOptions(): FitnessGoalOption[] {
-    return getGoalOptionsForBmi(this.reg.bmi);
+  updateBmiDerivedState(): void {
+    const bmi = this.reg.bmi;
+
+    // 1. Recommended goal for this BMI
+    if (!bmi) {
+      this.recommendedGoalForBmi = 'muscle_gain';
+    } else if (bmi >= 25) {
+      this.recommendedGoalForBmi = 'weight_loss';
+    } else if (bmi < 18.5) {
+      this.recommendedGoalForBmi = 'muscle_gain';
+    } else {
+      this.recommendedGoalForBmi = 'muscle_gain';
+    }
+
+    // 2. BMI category label/color/advice
+    this.currentBmiCategory = getBmiCategory(bmi);
+
+    // 3. Filtered goal options for this BMI
+    this.filteredGoalOptions = getGoalOptionsForBmi(bmi);
+
+    // 4. Auto-select recommended goal if current goal is not available
+    if (!this.filteredGoalOptions.some((g) => g.id === this.reg.fitness_goal)) {
+      this.reg.fitness_goal = this.recommendedGoalForBmi;
+    }
+
+    // 5. Selected goal details
+    this.selectedGoalDetails =
+      this.filteredGoalOptions.find((g) => g.id === this.reg.fitness_goal) ||
+      this.filteredGoalOptions[0] ||
+      this.goalOptions[0];
+
+    // 6. Weekly preview plan
+    this.previewGoalPlan = buildGoalWeekPlan(
+      this.reg.fitness_goal,
+      bmi,
+      this.reg.preferred_workout_time
+    );
   }
 
-  get currentBmiCategory() {
-    return getBmiCategory(this.reg.bmi);
+  /** @deprecated Use updateBmiDerivedState() instead */
+  updatePreviewGoalPlan(): void {
+    this.updateBmiDerivedState();
   }
 
-  get selectedGoalDetails(): FitnessGoalOption {
-    const options = this.filteredGoalOptions;
-    return options.find((g) => g.id === this.reg.fitness_goal) || options[0] || this.goalOptions[0];
+  trackByDay(index: number, day: WeekPlanTemplateDay): number {
+    return index;
   }
 
-  get previewGoalPlan() {
-    return buildGoalWeekPlan(this.reg.fitness_goal, this.reg.bmi, this.reg.preferred_workout_time);
+  trackByGoalId(index: number, opt: FitnessGoalOption): string {
+    return opt.id;
   }
 
   selectGoal(goalId: FitnessGoalKey): void {
     this.userHasManuallySelectedGoal = true;
     this.reg.fitness_goal = goalId;
+    this.updateBmiDerivedState();
   }
 
   async ionViewWillEnter(): Promise<void> {
+    this.onboardingService.dismissActiveTour();
     this.resetLoginInputs();
     this.resetForgotPasswordInputs();
     this.showPasswordFallback = false;
@@ -512,6 +547,7 @@ export class LoginPage implements OnDestroy {
     this.regError = '';
     this.showRegisterPassword = false;
     this.showRegisterConfirm = false;
+    this.updatePreviewGoalPlan();
   }
 
   submitLogin(event?: Event): void {
@@ -983,8 +1019,9 @@ export class LoginPage implements OnDestroy {
         return;
       }
 
+      // updateBmiDerivedState() is already called inside onHeightOrWeightChange,
+      // which also handles the auto-select of the recommended goal.
       this.onHeightOrWeightChange();
-      this.reg.fitness_goal = this.recommendedGoalForBmi;
 
       this.regStep = 3;
       return;
@@ -1156,6 +1193,15 @@ export class LoginPage implements OnDestroy {
       return;
     }
 
+    // Dismiss virtual keyboard on mobile devices
+    (document.activeElement as HTMLElement)?.blur();
+
+    // Reset 2FA and segment state so OTP boxes are cleaned up
+    this.clearTwoFactorTimer();
+    this.segment = 'login';
+    this.twoFactorOtpDigits = ['', '', '', '', '', ''];
+    this.twoFactorCode = '';
+
     // If device has biometric sensor and user has not linked biometrics yet on this device, prompt for consent!
     if (this.hasBiometricHardware) {
       this.biometricService.isAccountBiometricEnabled(user.email).then((alreadyEnabled) => {
@@ -1312,6 +1358,9 @@ export class LoginPage implements OnDestroy {
       this.twoFactorError = 'Please enter all 6 digits of the code.';
       return;
     }
+
+    // Dismiss keyboard immediately on mobile
+    (document.activeElement as HTMLElement)?.blur();
 
     this.twoFactorLoading = true;
     this.twoFactorError = '';

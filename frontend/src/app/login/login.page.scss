@@ -3090,6 +3090,22 @@ ion-content.login-bg::part(scroll) {
 }
 
 /* ── Post-Login Consent Prompt & Fresh Install Alert ── */
+.bio-picker-overlay.bio-consent-overlay {
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 16px !important;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 16px) !important;
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px) !important;
+
+  .bio-consent-card {
+    border-radius: 24px !important;
+    margin: auto !important;
+    max-height: min(85vh, calc(100vh - 40px));
+    overflow-y: auto;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.75) !important;
+  }
+}
+
 .bio-consent-card {
   max-width: 380px !important;
   text-align: center;

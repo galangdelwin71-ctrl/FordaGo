@@ -535,12 +535,12 @@
 
         <!-- Body Goal Selection Cards -->
         <div class="field goal-selection-field">
-          <label class="field-lbl">Target Body Goal</label>
+          <label class="field-lbl">Target Body Goal ({{ currentBmiCategory.label }})</label>
           <div class="goal-cards">
             <button
               type="button"
               class="goal-card"
-              *ngFor="let opt of filteredGoalOptions"
+              *ngFor="let opt of filteredGoalOptions; trackBy: trackByGoalId"
               [class.selected]="reg.fitness_goal === opt.id"
               (click)="selectGoal(opt.id)"
             >
@@ -640,7 +640,7 @@
             Tailored 7-Day Routine ({{ currentBmiCategory.label }})
           </label>
           <div class="schedule-preview-card">
-            <div class="preview-day-row" *ngFor="let day of previewGoalPlan; let idx = index">
+            <div class="preview-day-row" *ngFor="let day of previewGoalPlan; let idx = index; trackBy: trackByDay">
               <span class="preview-day-badge">{{ dayNames[idx] }}</span>
               <div class="preview-day-details">
                 <strong class="preview-day-title">{{ day.customTarget || day.title }}</strong>
@@ -1624,7 +1624,7 @@
   </div>
 
   <!-- ── Post-Login Biometric Permission / Activation Modal ───────── -->
-  <div class="bio-picker-overlay" *ngIf="showPostLoginBioPromptModal" (click)="skipPostLoginBio()">
+  <div class="bio-picker-overlay bio-consent-overlay" *ngIf="showPostLoginBioPromptModal" (click)="skipPostLoginBio()">
     <div class="bio-picker-card bio-consent-card" (click)="$event.stopPropagation()">
       <div class="bio-consent-icon-ring">
         <ion-icon name="finger-print-outline"></ion-icon>
@@ -1676,7 +1676,7 @@
   </div>
 
   <!-- ── No Accounts Linked Alert Modal ─────────────────── -->
-  <div class="bio-picker-overlay" *ngIf="showNoAccountsLinkedModal" (click)="closeNoAccountsLinkedModal()">
+  <div class="bio-picker-overlay bio-consent-overlay" *ngIf="showNoAccountsLinkedModal" (click)="closeNoAccountsLinkedModal()">
     <div class="bio-picker-card bio-consent-card" (click)="$event.stopPropagation()">
       <div class="bio-consent-icon-ring alert-ring">
         <ion-icon name="finger-print-outline"></ion-icon>
