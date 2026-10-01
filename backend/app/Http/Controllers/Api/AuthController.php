@@ -444,6 +444,13 @@ class AuthController extends Controller
             return response()->json(['message' => 'First name, last name, email, and password are required.'], 400);
         }
 
+        if (preg_match('/[0-9]/', $firstName)) {
+            return response()->json(['message' => 'First name must contain letters only, no numbers.'], 400);
+        }
+        if (preg_match('/[0-9]/', $lastName)) {
+            return response()->json(['message' => 'Last name must contain letters only, no numbers.'], 400);
+        }
+
         // Dedicated custom username validation
         $cleanUsername = ltrim($rawUsername, '@');
         if ($cleanUsername === '') {
@@ -462,8 +469,8 @@ class AuthController extends Controller
         if (! $this->isStrongPassword($password)) {
             return response()->json(['message' => 'Password must be 8+ chars with uppercase, lowercase, number, and special character.'], 400);
         }
-        if ($rawPhone !== '' && ! $this->isValidPhone($phone)) {
-            return response()->json(['message' => 'Phone number must be exactly 11 digits (e.g. 09171234567).'], 400);
+        if ($rawPhone !== '' && (! $this->isValidPhone($phone) || ! str_starts_with($phone, '09'))) {
+            return response()->json(['message' => 'Phone number must start with 09 and be exactly 11 digits (e.g. 09171234567).'], 400);
         }
         if ($gender !== '' && ! in_array($gender, ['male', 'female', 'other'], true)) {
             return response()->json(['message' => 'Invalid gender selection.'], 400);

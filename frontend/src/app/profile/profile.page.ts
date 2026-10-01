@@ -77,6 +77,7 @@ import { CoachingService } from '../services/coaching.service';
 import { WorkoutTrackerService } from '../services/workout-tracker.service';
 import { BiometricService, BiometricStatus } from '../services/biometric.service';
 import { NoNegativeDirective } from '../directives/no-negative.directive';
+import { LettersOnlyDirective } from '../directives/letters-only.directive';
 import { HeaderComponent } from '../shared/header/header.component';
 import { NotificationPanelComponent } from '../shared/notification-panel/notification-panel.component';
 import { CoachingPanelComponent } from '../shared/coaching-panel/coaching-panel.component';
@@ -93,6 +94,7 @@ import {
   computeBmi,
   getBmiCategory,
   buildGoalWeekPlan,
+  getGoalOptionsForBmi,
 } from '../data/workout-templates';
 
 // ── Interfaces ────────────────────────────────────────
@@ -148,6 +150,7 @@ export interface ProgressHistoryItem {
     IonToggle,
     IonSpinner,
     NoNegativeDirective,
+    LettersOnlyDirective,
     HeaderComponent,
     NotificationPanelComponent,
     CoachingPanelComponent,
@@ -246,10 +249,18 @@ export class ProfilePage implements OnInit {
     return getBmiCategory(this.editBmi);
   }
 
+  get availableGoalOptionsForProfile(): FitnessGoalOption[] {
+    return getGoalOptionsForBmi(this.editBmi ?? this.profile.bmi);
+  }
+
   onEditStatsChange(): void {
     const h = Number(this.editForm.height);
     const w = Number(this.editForm.weight);
     this.editBmi = computeBmi(h > 0 ? h : null, w > 0 ? w : null);
+    const available = this.availableGoalOptionsForProfile;
+    if (available.length > 0 && !available.some((g) => g.id === this.editForm.fitnessGoal)) {
+      this.editForm.fitnessGoal = available[0].id;
+    }
   }
 
   // ── Password Form ─────────────────────────────────────
@@ -800,6 +811,12 @@ export class ProfilePage implements OnInit {
   }
 
   openEdit(): void {
+    this.editBmi = this.profile.bmi ?? computeBmi(this.profile.height, this.profile.weight);
+    const available = getGoalOptionsForBmi(this.editBmi);
+    let initialGoal = this.profile.fitnessGoal || 'muscle_gain';
+    if (available.length > 0 && !available.some((g) => g.id === initialGoal)) {
+      initialGoal = available[0].id;
+    }
     this.editForm = {
       firstName:            this.profile.firstName,
       lastName:             this.profile.lastName,
@@ -809,10 +826,9 @@ export class ProfilePage implements OnInit {
       profileImage:         this.profile.profileImage,
       height:               this.profile.height,
       weight:               this.profile.weight,
-      fitnessGoal:          this.profile.fitnessGoal || 'muscle_gain',
+      fitnessGoal:          initialGoal,
       preferredWorkoutTime: this.profile.preferredWorkoutTime || '17:00',
     };
-    this.editBmi = this.profile.bmi ?? computeBmi(this.profile.height, this.profile.weight);
     this.phoneInvalid = false;
     this.editModalOpen = true;
   }
@@ -832,8 +848,17 @@ export class ProfilePage implements OnInit {
       return;
     }
 
-    if (this.phoneInvalid || !this.isValidPhone(safePhone)) {
-      void this.showMobileToast('Invalid input: Phone number must contain digits only and be exactly 11 digits long.', true);
+    if (/[0-9]/.test(this.editForm.firstName || '')) {
+      void this.showMobileToast('First name must contain letters only, no numbers.', true);
+      return;
+    }
+    if (/[0-9]/.test(this.editForm.lastName || '')) {
+      void this.showMobileToast('Last name must contain letters only, no numbers.', true);
+      return;
+    }
+
+    if (this.phoneInvalid || !this.isValidPhone(safePhone) || !safePhone.startsWith('09')) {
+      void this.showMobileToast('Invalid phone number: Must start with 09 and be exactly 11 digits.', true);
       return;
     }
 

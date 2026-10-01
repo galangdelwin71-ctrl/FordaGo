@@ -2584,6 +2584,73 @@ ion-content.login-bg::part(scroll) {
   }
 }
 
+.tailored-schedule-preview {
+  margin-top: 14px;
+}
+
+.schedule-preview-card {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-top: 6px;
+}
+
+.preview-day-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.preview-day-badge {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--brand, #ffd600);
+  background: rgba(255, 214, 0, 0.12);
+  border: 1px solid rgba(255, 214, 0, 0.25);
+  border-radius: 5px;
+  padding: 2px 6px;
+  min-width: 36px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.preview-day-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.preview-day-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.preview-day-sub {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.55);
+
+  &.rest-sub {
+    color: #94a3b8;
+    font-style: italic;
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════════════
 // GCASH-STYLE BIOMETRIC QUICK TRIGGER
 // ═══════════════════════════════════════════════════════════════════════

@@ -183,14 +183,20 @@ class UserController extends Controller
         if (! $username || ! $rawEmail || ! $password) {
             return response()->json(['message' => 'Username, email and password are required.'], 400);
         }
+        if ($firstName !== '' && preg_match('/[0-9]/', $firstName)) {
+            return response()->json(['message' => 'First name must contain letters only, no numbers.'], 400);
+        }
+        if ($lastName !== '' && preg_match('/[0-9]/', $lastName)) {
+            return response()->json(['message' => 'Last name must contain letters only, no numbers.'], 400);
+        }
         if (! preg_match('/^[^@\s]+@[^@\s]+\.[^@\s]+$/', $rawEmail)) {
             return response()->json(['message' => 'Invalid email format.'], 400);
         }
         if (strlen($password) < 8 || strlen($password) > 128) {
             return response()->json(['message' => 'Password must be 8-128 characters.'], 400);
         }
-        if ($rawPhone !== '' && ! $this->isValidPhone($phone)) {
-            return response()->json(['message' => 'Phone number must be exactly 11 digits (e.g. 09171234567).'], 400);
+        if ($rawPhone !== '' && (! $this->isValidPhone($phone) || ! str_starts_with($phone, '09'))) {
+            return response()->json(['message' => 'Phone number must start with 09 and be exactly 11 digits (e.g. 09171234567).'], 400);
         }
         if ($gender && ! in_array($gender, ['male', 'female', 'other'], true)) {
             return response()->json(['message' => 'Invalid gender.'], 400);
@@ -290,6 +296,13 @@ class UserController extends Controller
         $rawEmail  = $request->input('email');
         $email     = $rawEmail ? strtolower(trim((string) $rawEmail)) : null;
 
+        if ($firstName !== '' && preg_match('/[0-9]/', $firstName)) {
+            return response()->json(['message' => 'First name must contain letters only, no numbers.'], 400);
+        }
+        if ($lastName !== '' && preg_match('/[0-9]/', $lastName)) {
+            return response()->json(['message' => 'Last name must contain letters only, no numbers.'], 400);
+        }
+
         $user = User::find($id);
         if (! $user) {
             return response()->json(['message' => 'User not found'], 404);
@@ -322,8 +335,8 @@ class UserController extends Controller
         $phoneProvided   = ! is_null($rawPhone) && trim((string) $rawPhone) !== '';
         $normalizedPhone = $phoneProvided ? $this->normalizePhone($rawPhone) : ($rawPhone === '' ? null : $user->phone);
 
-        if ($phoneProvided && ! $this->isValidPhone($normalizedPhone)) {
-            return response()->json(['message' => 'Phone number must be exactly 11 digits (e.g. 09171234567).'], 400);
+        if ($phoneProvided && (! $this->isValidPhone($normalizedPhone) || ! str_starts_with($normalizedPhone, '09'))) {
+            return response()->json(['message' => 'Phone number must start with 09 and be exactly 11 digits (e.g. 09171234567).'], 400);
         }
 
         // Normalize gender to valid lowercase enum ('male', 'female', 'other')

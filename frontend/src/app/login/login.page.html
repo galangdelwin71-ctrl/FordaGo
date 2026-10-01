@@ -191,8 +191,10 @@
               class="field-input"
               type="text"
               [(ngModel)]="reg.firstName"
+              name="reg-first-name"
               placeholder="Enter first name"
               autocomplete="given-name"
+              appLettersOnly
             />
           </div>
         </div>
@@ -206,8 +208,10 @@
               class="field-input"
               type="text"
               [(ngModel)]="reg.lastName"
+              name="reg-last-name"
               placeholder="Enter last name"
               autocomplete="family-name"
+              appLettersOnly
             />
           </div>
         </div>
@@ -258,6 +262,7 @@
               class="field-input"
               type="tel"
               [(ngModel)]="reg.phone"
+              (input)="onPhoneInput($event)"
               placeholder="09171234567"
               autocomplete="tel"
               appNoNegative
@@ -535,7 +540,7 @@
             <button
               type="button"
               class="goal-card"
-              *ngFor="let opt of goalOptions"
+              *ngFor="let opt of filteredGoalOptions"
               [class.selected]="reg.fitness_goal === opt.id"
               (click)="selectGoal(opt.id)"
             >
@@ -627,6 +632,27 @@
           <small class="field-subhint">
             Afforda Gym is open daily from 9:00 AM to 9:00 PM. Your personalized equipment schedule will automatically be set for your selected time.
           </small>
+        </div>
+
+        <!-- Tailored Weekly Routine Preview for BMI -->
+        <div class="field tailored-schedule-preview" *ngIf="previewGoalPlan?.length">
+          <label class="field-lbl">
+            Tailored 7-Day Routine ({{ currentBmiCategory.label }})
+          </label>
+          <div class="schedule-preview-card">
+            <div class="preview-day-row" *ngFor="let day of previewGoalPlan; let idx = index">
+              <span class="preview-day-badge">{{ dayNames[idx] }}</span>
+              <div class="preview-day-details">
+                <strong class="preview-day-title">{{ day.customTarget || day.title }}</strong>
+                <span class="preview-day-sub" *ngIf="!day.isRest">
+                  {{ day.exercises.length }} exercises · {{ day.duration }}
+                </span>
+                <span class="preview-day-sub rest-sub" *ngIf="day.isRest">
+                  Rest & Muscle Recovery
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="err-msg" *ngIf="regError" role="alert">

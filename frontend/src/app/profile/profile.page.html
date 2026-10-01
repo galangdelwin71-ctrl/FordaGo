@@ -289,6 +289,7 @@
             type="text"
             [(ngModel)]="editForm.firstName"
             placeholder="First name"
+            appLettersOnly
             class="form-input">
           </ion-input>
         </div>
@@ -298,6 +299,7 @@
             type="text"
             [(ngModel)]="editForm.lastName"
             placeholder="Last name"
+            appLettersOnly
             class="form-input">
           </ion-input>
         </div>
@@ -389,7 +391,7 @@
           <select
             [(ngModel)]="editForm.fitnessGoal"
             class="edit-select-custom">
-            <option *ngFor="let g of fitnessGoalOptions" [value]="g.id">
+            <option *ngFor="let g of availableGoalOptionsForProfile" [value]="g.id">
               {{ g.title }} ({{ g.badge }})
             </option>
           </select>

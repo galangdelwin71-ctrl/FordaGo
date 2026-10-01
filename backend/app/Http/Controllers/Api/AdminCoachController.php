@@ -138,14 +138,20 @@ class AdminCoachController extends Controller
                     if ($firstName === '' || $lastName === '') {
                         abort(400, 'First name and last name are required for a new coach account.');
                     }
+                    if (preg_match('/[0-9]/', $firstName)) {
+                        abort(400, 'First name must contain letters only, no numbers.');
+                    }
+                    if (preg_match('/[0-9]/', $lastName)) {
+                        abort(400, 'Last name must contain letters only, no numbers.');
+                    }
                     if (! preg_match('/^[^@\s]+@[^@\s]+\.[^@\s]+$/', $rawEmail)) {
                         abort(400, 'Invalid email format.');
                     }
                     if (strlen($password) < 8 || strlen($password) > 128) {
                         abort(400, 'Password must be 8-128 characters.');
                     }
-                    if ($rawPhone !== '' && ! $this->isValidPhone($phone)) {
-                        abort(400, 'Phone number must be exactly 11 digits (e.g. 09171234567).');
+                    if ($rawPhone !== '' && (! $this->isValidPhone($phone) || ! str_starts_with($phone, '09'))) {
+                        abort(400, 'Phone number must start with 09 and be exactly 11 digits (e.g. 09171234567).');
                     }
                     if ($gender && ! in_array($gender, ['male', 'female', 'other'], true)) {
                         abort(400, 'Invalid gender.');

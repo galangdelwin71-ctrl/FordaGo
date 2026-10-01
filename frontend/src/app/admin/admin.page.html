@@ -3307,18 +3307,18 @@
         <div class="form-grid-2">
           <div>
             <label class="field-lbl">First Name</label>
-            <input class="field-input" type="text" placeholder="First Name" [(ngModel)]="newCoach.first_name" />
+            <input class="field-input" type="text" placeholder="First Name" [(ngModel)]="newCoach.first_name" appLettersOnly />
           </div>
           <div>
             <label class="field-lbl">Last Name</label>
-            <input class="field-input" type="text" placeholder="Last Name" [(ngModel)]="newCoach.last_name" />
+            <input class="field-input" type="text" placeholder="Last Name" [(ngModel)]="newCoach.last_name" appLettersOnly />
           </div>
         </div>
 
         <div class="form-grid-2">
           <div>
             <label class="field-lbl">Phone Number</label>
-            <input class="field-input" type="tel" placeholder="Phone" [(ngModel)]="newCoach.phone" />
+            <input class="field-input" type="tel" placeholder="09171234567" [(ngModel)]="newCoach.phone" maxlength="11" (input)="onCoachPhoneInput($event)" />
           </div>
           <div>
             <label class="field-lbl">Gender</label>

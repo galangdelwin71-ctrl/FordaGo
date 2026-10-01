@@ -7,6 +7,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonContent, IonIcon, IonSpinner } from '@ionic/angular/standalone';
 import { NoNegativeDirective } from '../directives/no-negative.directive';
+import { LettersOnlyDirective } from '../directives/letters-only.directive';
 import { resolveImageUrl } from '../config/api.config';
 import { addIcons } from 'ionicons';
 import {
@@ -63,6 +64,7 @@ import {
   buildGoalWeekPlan,
   computeBmi,
   getBmiCategory,
+  getGoalOptionsForBmi,
   formatTime24to12,
 } from '../data/workout-templates';
 
@@ -72,7 +74,7 @@ import {
   styleUrls: ['./login.page.scss'],
   standalone: true,
   host: { class: 'ion-page fordago-page' },
-  imports: [CommonModule, FormsModule, IonContent, IonIcon, IonSpinner, NoNegativeDirective],
+  imports: [CommonModule, FormsModule, IonContent, IonIcon, IonSpinner, NoNegativeDirective, LettersOnlyDirective],
 })
 export class LoginPage implements OnDestroy {
   segment: 'login' | 'register' | 'forgot' | '2fa' = 'login';
@@ -191,6 +193,7 @@ export class LoginPage implements OnDestroy {
   regSuccessPaymentMethod: '' | 'cash' | 'gcash' | 'paymaya' = '';
   regSuccessUserId: number | null = null;
   regOnlinePaid = false;
+  readonly dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   regReceiptNumber = '';
   regPaymentLoading = false;
   regSuccessPhone = '';
@@ -348,18 +351,44 @@ export class LoginPage implements OnDestroy {
     } else {
       this.reg.bmi = null;
     }
+    // Auto-select the tailored goal whenever BMI changes
+    this.reg.fitness_goal = this.recommendedGoalForBmi;
+  }
+
+  onPhoneInput(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const clean = (target?.value || '').replace(/[^0-9]/g, '').slice(0, 11);
+    if (target) target.value = clean;
+    this.reg.phone = clean;
   }
 
   get recommendedGoalForBmi(): FitnessGoalKey {
     const bmi = this.reg.bmi;
     if (!bmi) return 'muscle_gain';
-    if (bmi >= 25) {
+    if (bmi >= 30) {
+      // Obese: strictly weight loss with low-impact
+      return 'weight_loss';
+    } else if (bmi >= 25) {
+      // Overweight: weight loss
       return 'weight_loss';
     } else if (bmi < 18.5) {
+      // Underweight: muscle gain for caloric surplus
       return 'muscle_gain';
     } else {
+      // Normal: tone & endurance as default healthy goal
       return 'tone_endurance';
     }
+  }
+
+  /**
+   * Returns only the fitness goal options tailored to the user's BMI category.
+   * - Underweight  → Underweight Mass Building only
+   * - Overweight   → Overweight Metabolic Fat Burn only
+   * - Obese        → Obese Safe Low-Impact only
+   * - Normal / No BMI → Normal healthy options
+   */
+  get filteredGoalOptions(): FitnessGoalOption[] {
+    return getGoalOptionsForBmi(this.reg.bmi);
   }
 
   get currentBmiCategory() {
@@ -367,7 +396,8 @@ export class LoginPage implements OnDestroy {
   }
 
   get selectedGoalDetails(): FitnessGoalOption {
-    return this.goalOptions.find((g) => g.id === this.reg.fitness_goal) || this.goalOptions[1];
+    const options = this.filteredGoalOptions;
+    return options.find((g) => g.id === this.reg.fitness_goal) || options[0] || this.goalOptions[0];
   }
 
   get previewGoalPlan() {
@@ -867,13 +897,23 @@ export class LoginPage implements OnDestroy {
     this.regError = '';
 
     if (this.regStep === 1) {
+      // Validate first name — letters only, no numbers
       if (!this.reg.firstName.trim()) {
         this.regError = 'First name is required.';
         return;
       }
+      if (/[0-9]/.test(this.reg.firstName)) {
+        this.regError = 'First name must contain letters only, no numbers.';
+        return;
+      }
 
+      // Validate last name — letters only, no numbers
       if (!this.reg.lastName.trim()) {
         this.regError = 'Last name is required.';
+        return;
+      }
+      if (/[0-9]/.test(this.reg.lastName)) {
+        this.regError = 'Last name must contain letters only, no numbers.';
         return;
       }
 
@@ -897,8 +937,8 @@ export class LoginPage implements OnDestroy {
 
       const phoneDigits = this.reg.phone.replace(/\D/g, '');
 
-      if (phoneDigits && !/^\d{11}$/.test(phoneDigits)) {
-        this.regError = 'Phone number must be exactly 11 digits, for example 09171234567.';
+      if (phoneDigits && (!/^\d{11}$/.test(phoneDigits) || !phoneDigits.startsWith('09'))) {
+        this.regError = 'Phone number must be numbers only, exactly 11 digits starting with 09 (e.g. 09171234567).';
         return;
       }
 
@@ -933,20 +973,18 @@ export class LoginPage implements OnDestroy {
       const h = Number(this.reg.height);
       const w = Number(this.reg.weight);
 
-      if (!h || h <= 0 || h > 260) {
-        this.regError = 'Please enter a valid height in centimeters (e.g. 170 cm).';
+      if (!h || h <= 0 || h < 50 || h > 260) {
+        this.regError = 'Please enter a valid height in centimeters (50 - 260 cm).';
         return;
       }
 
-      if (!w || w <= 0 || w > 350) {
-        this.regError = 'Please enter a valid weight in kilograms (e.g. 68 kg).';
+      if (!w || w <= 0 || w < 20 || w > 350) {
+        this.regError = 'Please enter a valid weight in kilograms (20 - 350 kg).';
         return;
       }
 
       this.onHeightOrWeightChange();
-      if (!this.userHasManuallySelectedGoal) {
-        this.reg.fitness_goal = this.recommendedGoalForBmi;
-      }
+      this.reg.fitness_goal = this.recommendedGoalForBmi;
 
       this.regStep = 3;
       return;

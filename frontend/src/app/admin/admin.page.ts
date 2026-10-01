@@ -91,6 +91,7 @@ import { BiometricService } from '../services/biometric.service';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { NoNegativeDirective } from '../directives/no-negative.directive';
+import { LettersOnlyDirective } from '../directives/letters-only.directive';
 import QRCode from 'qrcode';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -106,7 +107,7 @@ import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refres
   styleUrls: ['./admin.page.scss'],
   standalone: true,
   host: { class: 'ion-page fordago-page' },
-  imports: [IonHeader, IonToolbar, IonContent, IonIcon, IonSpinner, CommonModule, FormsModule, NoNegativeDirective, PullToRefreshComponent],
+  imports: [IonHeader, IonToolbar, IonContent, IonIcon, IonSpinner, CommonModule, FormsModule, NoNegativeDirective, LettersOnlyDirective, PullToRefreshComponent],
 })
 export class AdminPage implements OnInit, OnDestroy {
   /** Resolves relative /storage/... avatar paths to the correct backend URL. */
@@ -2185,6 +2186,18 @@ export class AdminPage implements OnInit, OnDestroy {
       this.toast.warning('First name and last name are required for a new coach account.');
       return;
     }
+    if (!isPromote && /[0-9]/.test(this.newCoach.first_name)) {
+      this.toast.warning('First name must contain letters only, no numbers.');
+      return;
+    }
+    if (!isPromote && /[0-9]/.test(this.newCoach.last_name)) {
+      this.toast.warning('Last name must contain letters only, no numbers.');
+      return;
+    }
+    if (!isPromote && this.newCoach.phone && (!/^\d{11}$/.test(this.newCoach.phone) || !this.newCoach.phone.startsWith('09'))) {
+      this.toast.warning('Phone number must start with 09 and be exactly 11 digits.');
+      return;
+    }
 
     const rate = Number(this.newCoach.rate) || 0;
     if (rate < 0) {
@@ -2221,6 +2234,13 @@ export class AdminPage implements OnInit, OnDestroy {
       },
       error: (e) => this.toast.error(e?.error?.message || 'Failed to create coach')
     });
+  }
+
+  onCoachPhoneInput(event: any): void {
+    const raw = String(event?.target?.value || '');
+    const clean = raw.replace(/\D/g, '').slice(0, 11);
+    this.newCoach.phone = clean;
+    if (event?.target) event.target.value = clean;
   }
 
   updateCoach() {
