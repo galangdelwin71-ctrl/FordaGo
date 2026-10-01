@@ -37,7 +37,8 @@ class PaymentController extends Controller
     {
         $request->validate([
             'payment_for'      => 'required|in:membership,order,attendance,program,proposal',
-            'amount'           => 'required|numeric|min:1',
+            // FIX [SEC-04]: max:50000 prevents amount-manipulation attacks.
+            'amount'           => 'required|numeric|min:1|max:50000',
             'payment_channel'  => 'required|in:gcash,paymaya,maya,card,cash',
             'related_id'       => 'nullable|string|max:100',
             'description'      => 'nullable|string|max:255',
@@ -45,18 +46,19 @@ class PaymentController extends Controller
             'items_breakdown'  => 'nullable|array',
         ]);
 
+        // FIX [SEC-01]: Route now requires auth:sanctum — $request->user() is
+        // guaranteed to be the authenticated member. The old unsafe fallbacks
+        // (lookup by user_id param, email param, or first DB user) are removed.
         $user = $request->user();
-        if (! $user && $request->input('user_id')) {
-            $user = User::find($request->input('user_id'));
-        }
-        if (! $user && $request->input('email')) {
-            $user = User::where('email', $request->input('email'))->first();
-        }
         if (! $user) {
-            $user = User::whereIn('role', ['user', 'member'])->first() ?: User::first();
+            return response()->json(['message' => 'Unauthenticated.'], 401);
         }
 
         $amount = (float) $request->input('amount');
+        // FIX [SEC-04]: Hard server-side cap — even if validator is bypassed.
+        if ($amount > 50000) {
+            return response()->json(['message' => 'Amount exceeds the maximum allowed transaction limit.'], 422);
+        }
         $channel = $request->input('payment_channel');
         if ($channel === 'maya') {
             $channel = 'paymaya';

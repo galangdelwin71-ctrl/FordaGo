@@ -1,10 +1,14 @@
 import { inject } from '@angular/core';
 import { Routes, CanActivateFn, Router } from '@angular/router';
 
-// Guard: allow admin, super_admin, and employee into the admin panel
+// FIX [SEC-05]: Guards now require BOTH a valid token AND the correct role.
+// Even if a user edits their localStorage 'role' to 'admin', they still need
+// a real Sanctum token — all API calls will return 401 from the backend.
+// This is defense-in-depth: frontend guard + backend middleware('role:...')
 const adminGuard: CanActivateFn = () => {
-  const user = localStorage.getItem('user');
-  if (!user) return false;
+  const token = localStorage.getItem('token');
+  const user  = localStorage.getItem('user');
+  if (!token || !user) return false;
   try {
     const parsed = JSON.parse(user);
     return ['admin', 'super_admin', 'employee'].includes(parsed.role);
@@ -15,8 +19,9 @@ const adminGuard: CanActivateFn = () => {
 
 // Guard: allow admin and super_admin only (excluding employees) into management reports
 const managerGuard: CanActivateFn = () => {
-  const user = localStorage.getItem('user');
-  if (!user) return false;
+  const token = localStorage.getItem('token');
+  const user  = localStorage.getItem('user');
+  if (!token || !user) return false;
   try {
     const parsed = JSON.parse(user);
     return ['admin', 'super_admin'].includes(parsed.role);

@@ -60,18 +60,22 @@ Route::prefix('auth')->group(function () {
     });
 });
 
-// ── Payments & PayMongo Webhook (Public / Token-optional) ──────────────────────────────────
-Route::post('/payments/checkout',                  [PaymentController::class, 'checkout']);
-Route::post('/payments/verify-session/{sessionId}', [PaymentController::class, 'verifySession']);
-Route::post('/payments/paymongo/webhook',          [PaymentController::class, 'webhook']);
-Route::post('/payments/xendit/webhook',            [PaymentController::class, 'xenditWebhook']);
-Route::get('/payments/receipt/{receiptNumber}',     [PaymentController::class, 'getReceipt']);
+// ── Payments Webhooks (Public — required by payment gateways, no token) ──────
+Route::post('/payments/paymongo/webhook', [PaymentController::class, 'webhook']);
+Route::post('/payments/xendit/webhook',   [PaymentController::class, 'xenditWebhook']);
+Route::get('/payments/receipt/{receiptNumber}', [PaymentController::class, 'getReceipt']);
 
 // Convenience: return the authenticated user (used by frontend on app boot)
 Route::middleware('auth:sanctum')->get('/user', fn (\Illuminate\Http\Request $r) => $r->user());
 
 // ── All routes below require a valid Sanctum token ─────────────────────────
 Route::middleware('auth:sanctum')->group(function () {
+
+    // ── Payments (Authenticated) ───────────────────────────────────────────
+    // FIX [SEC-01]: checkout now requires a valid Sanctum token.
+    // FIX [SEC-02]: throttle limits abuse (10 requests per minute per user).
+    Route::post('/payments/checkout',                   [PaymentController::class, 'checkout'])->middleware('throttle:10,1');
+    Route::post('/payments/verify-session/{sessionId}', [PaymentController::class, 'verifySession'])->middleware('throttle:20,1');
 
     Route::post('/auth/logout', [AuthController::class, 'logout']);
 
@@ -140,7 +144,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/pending',      [AttendanceController::class, 'pending'])->middleware('role:admin,super_admin,employee');
         Route::put('/{id}/confirm', [AttendanceController::class, 'confirm'])->whereNumber('id')->middleware('role:admin,super_admin,employee');
         Route::put('/{id}/reject',  [AttendanceController::class, 'reject'])->whereNumber('id')->middleware('role:admin,super_admin,employee');
-        Route::get('/qr-code',      [AttendanceController::class, 'qrCode'])->middleware('role:admin,super_admin,employee');
+        // FIX [SEC-03]: QR code value endpoint removed — value is no longer
+        // exposed via API. Admins generate the physical QR code at setup time.
+        // Route::get('/qr-code', [AttendanceController::class, 'qrCode'])->middleware('role:admin,super_admin,employee');
     });
 
     // ── Workouts (server/routes/workout.js) ───────────────────────────────
