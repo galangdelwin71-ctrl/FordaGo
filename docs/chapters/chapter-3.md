@@ -28,7 +28,7 @@ Economic Feasibility: Eliminating physical paper ledgers and automating inventor
 
 Resource Allocation and Risk Management
 
-The researchers identified the necessary software tools (Laravel 11, Ionic 8, Angular, MySQL, Laravel Reverb, Visual Studio Code), hardware and cloud assets (Linux Cloud Virtual Private Server, member Android smartphones, front-desk Android tablet kiosks, and optional administrative PC web browsers via live domain DNS), and potential deployment risks. Mitigation strategies included implementing offline cached UI views for temporary network drops, Bcrypt encryption and Sanctum token guards for data security, and conducting user onboarding orientations.
+The researchers identified the necessary software tools (Laravel 11, Ionic 8, Angular, MySQL, Laravel Reverb, Visual Studio Code), hardware and cloud assets (Linux Cloud Virtual Private Server, member Android smartphones, front-desk Android tablet kiosks, and optional administrative PC web browsers via live domain DNS), and potential deployment risks. Mitigation strategies included implementing local storage fallback and inlined vector exercise guides to handle transient network interruptions, Bcrypt password hashing and Sanctum token guards for data security, and conducting user onboarding orientations.
 
 Project Schedule and Timeline
 
@@ -48,7 +48,7 @@ The system architecture follows a decoupled Client-Server Model consisting of:
 
 1. Presentation Layer (Frontend):
 
-Engineered using Ionic 8 and Angular standalone components to deliver a unified, cross-platform client architecture. This layer accommodates three primary operational touchpoints: (a) the native Android mobile application distributed via APK for gym members and accredited coaches, (b) the front-desk digital kiosk interface operating on touch-screen Android tablets (or reception PCs) at the front desk, and (c) the responsive web application portal accessible to desktop PCs, laptops, and Apple iOS devices (via Apple Safari or Google Chrome) over the live domain DNS (https://fordago.online). Due to academic capstone budget constraints, the requirement for an annual $99 USD Apple Developer Program subscription, and Apple's strict policies prohibiting direct sideloading of iOS packages outside the App Store, iOS users utilize this live responsive web interface, achieving complete functional equivalence without requiring native App Store deployment.
+Engineered using Ionic 8 and Angular standalone components to deliver a unified, cross-platform client architecture. This layer accommodates three primary operational touchpoints: (a) the native Android mobile application distributed via APK for gym members and accredited coaches, (b) the front-desk digital kiosk interface operating on touch-screen Android tablets (or reception PCs) at the front desk, and (c) the responsive web application portal accessible to desktop PCs, laptops, and Apple iOS devices (via Apple Safari or Google Chrome) over the live domain DNS (https://fordago.online). Due to academic capstone budget constraints, the requirement for an annual $99 USD Apple Developer Program subscription, and Apple's strict policies prohibiting direct sideloading of iOS packages outside the App Store, iOS users utilize this live responsive web interface, providing responsive browser access to core gym workflows without requiring native App Store deployment.
 
 2. Application Logic Layer (Backend):
 
@@ -207,7 +207,7 @@ The testing phase executed rigorous quality assurance across multiple operationa
 
 1. Functional Black-Box & System Integration Testing: Individual controller endpoints (e.g., AttendanceController::checkin, InventoryController::checkout) were rigorously verified through black-box test matrices, Postman API collections, and end-to-end integration workflows, confirming accurate input validation, membership status checks, and transactional database persistence without relying on automated unit test suites.
 
-2. Integration Testing: Verified real-time WebSocket channel subscriptions via Laravel Echo and Reverb. In-chat message dispatches and workout plan proposal notifications demonstrated sub-second latency across mobile Android devices and desktop web browsers.
+2. Integration Testing: Verified real-time WebSocket channel subscriptions via Laravel Echo and Reverb. In-chat message dispatches and workout plan proposal notifications exhibited prompt, low-latency delivery across mobile Android devices and desktop web browsers during interactive testing.
 
 3. Security & Vulnerability Testing: Verified role-based route middleware. Unauthorized access attempts to administrative routes (/admin, /reports) by member tokens were successfully intercepted and blocked with HTTP 403 Forbidden responses.
 
@@ -253,7 +253,7 @@ Standardized automated server error logging (storage/logs/laravel.log) for rapid
 
 Adaptive Maintenance:
 
-Database migration scripts ensure that future gym expansion (e.g., adding automated electromechanical front-desk QR camera scanners, multi-branch scaling, or integrated biometric gateways) can be integrated without data corruption.
+Database migration scripts ensure that future gym expansion (e.g., adding dedicated front-desk optical QR kiosk terminals, multi-branch scaling, or integrated door access gateways) can be integrated without data corruption.
 
 Automated Cloud Backup & Disaster Recovery Protocols:
 
@@ -273,7 +273,7 @@ The Functional Suitability of FordaGO obtained a grand mean of 4.73 (Very Functi
 
 > **Table 19. Results of IT Experts’ Assessment on Performance Efficiency**
 
-Performance Efficiency garnered a grand mean of 4.73 (Very Efficient). The implementation of Laravel Reverb WebSockets for real-time chat and jsPDF for client-side report generation resulted in sub-second transaction speeds and minimal server CPU/memory consumption.
+Performance Efficiency garnered a grand mean of 4.73 (Very Efficient). The implementation of Laravel Reverb WebSockets for real-time chat and jsPDF for client-side report generation yielded highly responsive interactions, rapid report rendering, and smooth system responsiveness as evaluated by the IT experts.
 
 2.3. Compatibility
 
@@ -315,13 +315,13 @@ Portability was rated 4.80 (Very Portable), validating the ease of building, dis
 
 > **Table 26. Summary of IT Experts’ Evaluation on ISO/IEC 25010 Software Quality**
 
-Overall, the IT Experts gave FordaGO an overall Composite Grand Mean of 4.78 (Very Strong Evidence / Excellent), confirming that the engineered system adheres strictly to international software engineering standards.
+Overall, the IT Experts gave FordaGO an overall Composite Grand Mean of 4.78 (Very Strong Evidence / Excellent), confirming that the engineered system demonstrates high software quality and operational suitability aligned with the ISO/IEC 25010 evaluation framework.
 
 3. Assessment of the System Quality by End-Users (Gym-Goers / Active Members)
 
-Gym end-users (n = 15), comprising the gym owner (n = 1), front-desk administrative staff member (n = 1), and active gym members (n = 13) of AFFORDA Gym – Cabiao Branch, evaluated the live mobile application across four (4) core software quality and usability criteria:
+Gym end-users (n = 15), comprising two (2) gym owners/administrators, one (1) front-desk administrative staff member, and twelve (12) active gym members of AFFORDA Gym – Cabiao Branch, evaluated the live mobile application across four (4) core software quality and usability criteria:
 
 > **Table 27. Results of End-Users’ (Gym-Goers) Assessment on FordaGO**
 
-The evaluation yielded an overall Grand Mean of 4.82 (Very Strong Evidence / Excellent). Gym members highlighted the speed and convenience of digital QR attendance check-in, the tremendous benefit of scanning equipment printed QR code labels to immediately view exercise execution guides and targeted muscle groups, the seamless 1-tap acceptance of coach workout proposals, and the reliable tracking of personal record (PR) strength milestones.
+The evaluation yielded an overall Grand Mean of 4.84 (Very Strong Evidence / Excellent). Gym members highlighted the speed and convenience of digital QR attendance check-in, the tremendous benefit of scanning equipment printed QR code labels to immediately view exercise execution guides and targeted muscle groups, the seamless 1-tap acceptance of coach workout proposals, and the reliable tracking of personal record (PR) strength milestones.
 

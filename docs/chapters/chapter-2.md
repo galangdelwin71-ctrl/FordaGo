@@ -53,7 +53,7 @@ Frontend Mobile & Web Client: Engineered using Ionic 8 and Angular (TypeScript, 
 
 Backend Application Server: Developed using Laravel 11 (PHP 8.2+) implementing the Model-View-Controller (MVC) architectural pattern, Eloquent ORM, Sanctum authentication tokens, Bcrypt password hashing, and custom role-based route middleware (member, coach, admin, employee, super_admin).
 
-Real-Time Communication Layer: Powered by Laravel Reverb and Laravel Echo, establishing continuous TCP WebSocket connections for sub-second in-chat messaging, live typing status broadcasts, and real-time proposal notifications.
+Real-Time Communication Layer: Powered by Laravel Reverb and Laravel Echo, establishing continuous TCP WebSocket connections for responsive, low-latency in-chat messaging, live typing status broadcasts, and real-time proposal notifications.
 
 Database Layer: Configured in MySQL 8.0, leveraging structured database migrations, database seeders, and atomic transaction rollbacks for concurrent point-of-sale orders and attendance check-ins.
 
@@ -63,7 +63,7 @@ Phase 4: Integration and System Testing
 
 The system underwent rigorous multi-level verification to ensure functional correctness and system stability:
 
-Unit Testing: Verified individual controller logic, authentication token generation, password recovery verification, and inventory deduction calculations.
+Component & API Endpoint Testing: Verified individual API route responses, authentication token generation, password recovery verification, and inventory deduction calculations through structured Postman API test collections and manual endpoint verification.
 
 Integration Testing: Verified end-to-end data synchronization between the Ionic Angular frontend, Laravel REST API, MySQL database, and Reverb WebSocket server.
 
