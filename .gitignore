@@ -85,6 +85,8 @@ _archive/
 # Scratch & local developer test scripts / files
 scratch/
 # Documents and Backups
-**/*.docx
-*.docx
 backups/
+*.docx
+**/*.docx
+!docs/chapters/FORDAGO_MOBILE-BASED_GYM_DATABASE_MANAGEMENT_SYSTEM.docx
+!docs/chapters/FORDAGO_MOBILE-BASED_GYM_DATABASE_MANAGEMENT_SYSTEM_backup_pre_fix.docx

@@ -1,341 +1,388 @@
-# FordaGO: Mobile-Based Gym Database Management System for AFFORDA Gym – Cabiao Branch
+# Chapter I: The Problem and Its Background
 
-**A Capstone Project Proposal**
+## Chapter I
 
-**Researchers / Group Members:**
-* BERNALDO, CARL ANDREW B.
-* GALANG, DELWIN F.
-* JAVIER, JAYLEE T.
-* MEDINA, ETHAN JEROME G.
-* PONGCO, RYZA MAE M.
+The Problem and Its Background
 
-**Academic Program & Institution:**
-Bachelor of Science in Information Technology  
-College of Information and Communications Technology  
-Nueva Ecija University of Science and Technology (NEUST)  
-San Isidro Campus, San Isidro, Nueva Ecija  
+This chapter serves as the foundation upon which the entire study is built. It introduces the readers to the situation that led to the development of the project and explains why the study was conducted in the first place. This section establishes the context by describing the current situation, identifying the gaps or challenges in existing systems, and presenting the real-world issues that the project seeks to address.
 
----
-
-# CHAPTER I: INTRODUCTION
-
-## 1.1 Background of the Study
+### Introduction
 
 Fitness centers and commercial gyms play an indispensable role in promoting physical health, athletic conditioning, and active lifestyles by providing communities with exercise machinery, conditioning spaces, and professional fitness instruction. As public consciousness regarding physical well-being continues to rise, fitness centers experience a steady influx of members who require systematic management of registration, attendance logging, personal workout tracking, equipment orientation, coaching consultation, and inventory management. To maintain operational efficiency, financial transparency, and high customer retention, modern fitness establishments must transition from traditional, manual workflows to integrated, database-driven digital platforms.
 
-At present, **AFFORDA Gym – Cabiao Branch**, situated in the municipality of Cabiao, Nueva Ecija, operates primarily through manual and semi-manual administrative procedures. One of the most pronounced operational bottlenecks in the facility is attendance monitoring. The gym currently utilizes physical paper logbooks positioned at the front desk where entering members must queue, manually write down their full names, log their arrival timestamps, and append their signatures. During peak workout hours (early morning and late afternoon), this manual procedure causes severe front-desk congestion, introduces recording delays, and produces illegible or incomplete entries. Furthermore, paper logbooks are vulnerable to physical wear and tear, moisture damage, and unauthorized viewing of member names, while historical attendance retrieval for audit or capacity planning requires tedious manual leafing through stacks of past records.
+At present, AFFORDA Gym – Cabiao Branch, situated in the municipality of Cabiao, Nueva Ecija, operates primarily through manual and semi-manual administrative procedures. One of the most pronounced operational bottlenecks in the facility is attendance monitoring. The gym currently utilizes physical paper logbooks positioned at the front desk where entering members must queue, manually write down their full names, log their arrival timestamps, and append their signatures. During peak workout hours (early morning and late afternoon), this manual procedure causes severe front-desk congestion, introduces recording delays, and produces illegible or incomplete entries. Furthermore, paper logbooks are vulnerable to physical wear and tear, moisture damage, and unauthorized viewing of member names, while historical attendance retrieval for audit, membership verification, or capacity planning requires tedious, time-consuming manual leafing through stacks of past paper records.
 
-In addition to attendance difficulties, managing membership plans and daily visit passes on physical ledgers or fragmented spreadsheets presents significant administrative challenges. Gym staff face difficulty in instantly verifying whether an entering patron possesses an active 30-day Premium Pass, an unexpired session pass, or an outstanding payment balance. Similarly, the gym’s inventory—consisting of protein powders, pre-workout supplements, energy drinks, and gym merchandise—is tracked through manual stock counts, frequently leading to discrepancies between recorded sales and physical shelf inventory.
+In addition to attendance difficulties, managing membership plans and daily visit passes on physical ledgers or fragmented spreadsheets presents significant administrative challenges. Gym staff face difficulty in instantly verifying whether an entering patron possesses an active 30-day Premium Pass, an unexpired session pass, or an outstanding payment balance. Similarly, the gym’s inventory—consisting of protein powders, pre-workout supplements, energy drinks, and gym merchandise is tracked through manual stock counts, frequently leading to discrepancies between recorded sales and physical shelf inventory.
 
 Another critical concern inside AFFORDA Gym – Cabiao Branch involves member onboarding and exercise guidance. Novice gym-goers and casual members often struggle with understanding the proper mechanics, safety adjustments, and targeted muscle groups of specialized exercise machines and free-weight equipment. Without immediate instructional guidance from on-duty staff, beginners risk improper exercise execution, muscular strain, and workout discouragement. While certified fitness coaches operate within the gym, there is no centralized, structured digital platform to connect members with trainers for private consultation, customized workout plan dispatching, scheduling, or group fitness class enrollment.
 
-To solve these compounding operational and customer-support challenges, modern mobile computing and web technologies offer an efficient, scalable, and centralized solution. By leveraging **Quick Response (QR) code technology**, mobile applications, real-time WebSocket communication, and relational database systems, gym operations can be completely digitized into a paperless, interactive fitness ecosystem.
+To solve these compounding operational and customer-support challenges, modern mobile computing and web technologies offer an efficient, scalable, and centralized solution. By leveraging Quick Response (QR) code technology, mobile applications, real-time WebSocket communication, and relational database systems, gym operations can be completely digitized into a paperless, interactive fitness ecosystem.
 
-The proposed system, **FordaGO: Mobile-Based Gym Database Management System for AFFORDA Gym – Cabiao Branch**, is specifically engineered to resolve these operational deficiencies. FordaGO establishes an interconnected, tri-tier digital platform linking **Members**, **Coaches**, and **Administrators**:
+Review of Related Literature
 
-1. **Member Mobile Portal:** Provides members with a personal QR code for instant attendance check-in, an interactive camera-based equipment QR scanner for exercise execution tutorials, a Personal Record (PR) milestone tracker with automated gain calculators, a customizable weekly workout split routine planner (Monday–Sunday), an in-app supplement catalog with shopping cart and GCash reference verification, and real-time private messaging with certified coaches.
-2. **Coach Studio (Trainer Hub):** Equips certified fitness coaches with tools to manage their client roster, publish recurring weekly availability hours, broadcast public group fitness classes, and transmit structured in-chat **Workout Plan Proposals** that members can accept with a single tap.
-3. **Admin Command Center:** Provides gym administrators and front-desk staff with a digital turnstile camera scanner with anti-pass-sharing timestamp verification, pass status monitoring, supplement point-of-sale (POS) order audit and automated stock deduction, equipment QR placard generation, coach account administration, and instant PDF/Excel export engines for operational reporting.
+Gym Management Systems and Digital Transformation
 
-Through the implementation of FordaGO, AFFORDA Gym – Cabiao Branch can modernize its operational infrastructure, eliminate paper logbooks, safeguard member data, enhance workout safety and consistency, and establish a data-driven standard for local gym management.
+Information technology has significantly influenced the management and operation of various organizations, including fitness centers and gyms. As the number of gym members and services offered by fitness facilities continues to increase, traditional methods such as paper-based records, spreadsheets, and manual transactions are gradually being replaced by computerized management systems. These systems improve the efficiency, accuracy, accessibility, and security of organizational information.
 
----
+Traditional gym operations that rely heavily on manual records may result in administrative delays, data duplication, human error, and difficulties in retrieving information. A Gym Management System (GMS) provides a centralized platform for managing essential gym activities, including member registration, membership monitoring, attendance recording, payment transactions, scheduling, and report generation. By automating these processes, gym personnel can manage daily operations more efficiently while providing members with improved access to their information and services.
 
-## 1.2 Theoretical Framework
+Database Management Systems
 
-The development and evaluation of the FordaGO system are anchored on several foundational theories in Information Systems, Computer Science, and Human-Computer Interaction:
+Database Management Systems (DBMS) serve as an essential component of modern information systems because they provide an organized method for storing, managing, and retrieving large amounts of data. A DBMS enables organizations to structure information through tables, relationships, queries, and other database mechanisms. In a gym management environment, the database can store member profiles, account credentials, membership plans, attendance records, workout information, payment transactions, equipment records, and inventory data.
 
-| Theoretical Foundation | Key Concept & Application in FordaGO |
-| :--- | :--- |
-| **1. Technology Acceptance Model (TAM)** *(Davis, 1989)* | Perceived Usefulness (PU) & Perceived Ease of Use (PEOU) in mobile UI/UX and QR workflows |
-| **2. Relational Database Theory** *(Codd, 1970)* | Schema normalization (3NF/BCNF), referential integrity, and ACID transaction guarantees |
-| **3. Client-Server & Real-Time Event Architecture** *(Fielding, 2000)* | Decoupled RESTful API (Laravel 11) and persistent full-duplex WebSockets (Laravel Reverb) |
-| **4. ISO/IEC 25010 Software Quality Model** *(ISO, 2011)* | Empirical quality benchmarks: Functional Suitability, Usability, Reliability, Security, and Performance |
+Relational Database Management Systems (RDBMS) organize information into related tables connected through primary and foreign keys. Proper relational database design helps minimize data redundancy while maintaining data integrity and consistency. For a gym management system, an RDBMS such as MySQL can establish relationships among members, subscriptions, attendance records, transactions, equipment, and inventory. This allows information to be stored systematically and retrieved efficiently when needed.
 
-1. **Technology Acceptance Model (TAM) (Davis, 1989):** TAM posits that the adoption and utilization of an information system depend fundamentally on two user beliefs: *Perceived Usefulness (PU)*—the degree to which a user believes the system enhances their task performance—and *Perceived Ease of Use (PEOU)*—the degree to which using the system is free of cognitive effort. In FordaGO, TAM guides the user interface (UI/UX) design, ensuring that QR attendance scanning, equipment guides, and mobile coaching are intuitive, fast, and accessible for both non-technical gym members and administrative personnel.
-2. **Relational Database Theory (Codd, 1970):** Formulated by Edgar F. Codd, this theory dictates that data must be organized into normalized, two-dimensional relation tables linked through primary and foreign keys to prevent data redundancy and maintain referential integrity. FordaGO applies Boyce-Codd Normal Form (BCNF) / Third Normal Form (3NF) within MySQL to guarantee ACID (Atomicity, Consistency, Isolation, Durability) transaction compliance during concurrent check-ins and point-of-sale inventory deductions.
-3. **Architectural Styles and the Design of Network-based Software Architectures (Fielding, 2000):** Governs the decoupled RESTful API design implemented via Laravel 11. Complementing REST, modern WebSocket event-driven communication (RFC 6455) maintains persistent, full-duplex TCP channels via Laravel Reverb to facilitate sub-second in-chat messaging and real-time proposal notifications without server-polling overhead.
-4. **ISO/IEC 25010 Software Quality Standards (ISO, 2011):** Provides the formal theoretical and empirical criteria for evaluating the engineered software product across five essential quality dimensions: Functional Suitability, Usability, Reliability, Security, and Performance Efficiency.
+Attendance Monitoring and QR Code Technology
 
----
+Attendance monitoring is an important function in organizations that need to track user presence and participation. Traditional attendance methods, such as paper logbooks, can result in inaccurate entries, lost records, and delays in retrieving attendance information. Digital attendance systems provide a more efficient approach by automatically recording user check-ins and storing attendance data in a centralized database.
 
-## 1.3 Conceptual Framework
+QR code technology has become widely used for identification, authentication, payment, ticketing, and attendance monitoring. QR codes allow information to be encoded into a machine-readable format that can be quickly scanned using compatible devices. In a gym environment, QR codes can be assigned to members to facilitate faster attendance recording. QR codes can also be placed on gym equipment to provide members with digital access to equipment instructions, workout guides, and targeted muscle information. This functionality reduces reliance on manual procedures while improving accessibility to fitness-related resources.
 
-The conceptual model of this study is structured using the **Input-Process-Output (IPO)** framework, illustrating the transformation of raw operational gym inputs into structured digital outputs through iterative software engineering and quality evaluation.
+Mobile-Based Application
 
-| INPUT | PROCESS | OUTPUT |
-| :--- | :--- | :--- |
-| **1. User & Account Data:**<br>• Member, Coach, Admin Profiles & Encrypted Credentials<br><br>**2. Gym Operational Data:**<br>• Membership Pass Types, Durations & Pricing<br>• Equipment Records, Specs & Muscle Target Media<br>• Personal Records (PR) & Weekly Split Routines<br>• Supplement Products, Stock Counts & POS Orders<br><br>**3. Hardware / Sensor Data:**<br>• Mobile Camera Optical Data Streams for QR Codes<br><br>**4. Evaluation Parameters:**<br>• ISO/IEC 25010 Criteria & 5-Point Likert Instrument | **1.** Requirements Analysis & Agile Sprint Planning<br>**2.** System Architecture & UI/UX Wireframing<br>**3.** Database Modeling & Schema Normalization (MySQL 3NF)<br>**4.** Backend REST API & Sanctum Auth Development (Laravel 11)<br>**5.** Real-Time WebSocket Event Broadcasting (Laravel Reverb)<br>**6.** Mobile Cross-Platform Client Development (Ionic 8 / Angular)<br>**7.** Optical Camera Barcode/QR Code Decoding<br>**8.** POS Cart Atomic Inventory Deductions<br>**9.** Dynamic Vector PDF/Excel Export Generation<br>**10.** ISO/IEC 25010 System Testing & Statistical Evaluation | **1. Deployed FordaGO Multi-Tier System:**<br>• Member Mobile Portal<br>• Coach Studio Hub<br>• Admin Command Center<br><br>**2.** Digital QR Attendance Check-In & Traffic Logs<br>**3.** Interactive Equipment QR Tutorial & Media Catalog<br>**4.** Personal Record (PR) & Weekly Split Workout Plans<br>**5.** Real-Time Coach-Trainee Chat & In-Chat Workout Proposals<br>**6.** Supplement POS Transactions & Verified Receipts<br>**7.** Dynamic Vector PDF/Excel Administrative Reports<br>**8.** Standardized Software Quality Assessment Report |
-| 🡑 | ⮜─── **FEEDBACK & ITERATIVE REFINEMENT LOOP** ─── | 🡓 |
-<p align="center"><b>Figure 1.</b> <i>Conceptual Framework of the Study (Input-Process-Output Model)</i></p>
+The widespread use of smartphones has contributed to the development of mobile-based information systems that allow users to access services conveniently. Mobile applications can provide gym members with access to their profiles, membership information, attendance history, workout schedules, fitness records, notifications, and instructional materials. These features allow members to interact with gym services without relying solely on physical or desktop-based transactions.
 
-### Narrative Description of the IPO Components
+Hybrid mobile application frameworks such as Ionic and Angular allow developers to build applications using web technologies while supporting deployment across multiple platforms. This approach provides a unified development environment while allowing access to device capabilities such as cameras and local storage. In the proposed system, mobile technology supports member access to gym services while also providing administrators and coaches with convenient tools for managing member activities.
 
-* **Input:**
-  - *User Information:* Account profiles, encrypted credentials, contact details, and role assignments (`member`, `coach`, `admin`, `employee`, `super_admin`).
-  - *Gym Operational Data:* Membership plans (30-Day Premium, Daily Passes), active pass dates, equipment technical specifications, muscle group classifications, exercise tutorial media, personal record (PR) lift data, daily routine schedules, coach availability timeframes, supplement stock quantities, item prices, and GCash payment references.
-  - *Hardware Input:* Optical data streams captured via mobile and webcam camera sensors for QR code decoding.
-  - *Evaluation Input:* ISO/IEC 25010 software quality metrics administered to technical experts and gym respondents.
+Real-Time Communication and Notification Systems
 
-* **Process:**
-  - *Requirements & Modeling:* On-site workflow analysis at AFFORDA Gym – Cabiao Branch, database normalization in MySQL, and architectural design.
-  - *Backend & API Engineering:* Construction of secure RESTful API endpoints in Laravel 11, token-based Sanctum authentication, role-based route middleware, and atomic database transactions.
-  - *Real-Time Layer:* Implementation of bidirectional WebSocket channels via Laravel Reverb and Laravel Echo for live chat messaging, instant typing indicators, and proposal notifications.
-  - *Frontend & Device Interfacing:* Developing responsive standalone components in Ionic 8 and Angular, utilizing Capacitor Camera/Barcode Scanner plugins for native hardware camera access.
-  - *Business Logic Processing:* Automated anti-pass-sharing timestamp verification, PR gain calculations, cart checkout with automated inventory stock deduction, and client-side vector PDF/Excel generation using jsPDF and AutoTable.
-  - *Testing & Evaluation:* Unit testing, integration testing, black-box functional testing, and ISO/IEC 25010 quality evaluation.
+Real-time communication is an important feature for applications that require immediate interaction between users. Traditional request-and-response methods may require repeated requests or page refreshing to retrieve updated information. WebSocket technology addresses this limitation by enabling persistent, bidirectional communication between clients and servers.
 
-* **Output:**
-  - A fully functional, production-ready **FordaGO Mobile-Based Gym Database Management System** featuring the Member Mobile Portal, Coach Studio, and Admin Command Center.
-  - Automated digital attendance logs with exact timestamps and active gym traffic statistics.
-  - Interactive equipment orientation catalog accessible via machine-level QR code scanning.
-  - Personalized workout tracking records and weekly split routines.
-  - Real-time coaching consultations and formal in-chat workout plan proposals.
-  - Digital supplement POS sales logs and GCash payment verification audit trails.
-  - Formatted administrative PDF summaries and Excel spreadsheets for business reporting.
-  - An empirical ISO/IEC 25010 software quality evaluation report validating system acceptability.
+In a gym management environment, real-time communication can be used for coach–trainee messaging, workout proposal notifications, and other activity updates. Notification features can also remind members about scheduled workouts, activities, or other important updates. These functions can improve communication between gym members and coaches while supporting more consistent participation in fitness activities.
 
----
+Inventory Management and Point-of-Sale Integration
 
-## 1.4 Statement of the Problem
+Inventory management is another important component of gym operations, particularly for facilities that sell supplements and other fitness-related products. An inventory management system allows administrators to monitor product availability, stock quantities, and transaction records. Maintaining accurate inventory information helps prevent stock discrepancies and supports more efficient management of available resources.
 
-### General Problem Statement
+Point-of-Sale (POS) integration further improves inventory and transaction management by connecting customer purchases with inventory records. POS transactions can automatically update product stock after an approved purchase while maintaining transaction records and verified receipts. Front-desk transaction logging and payment reference verification support accurate bookkeeping, eliminate physical ledger reconciliation errors, and improve financial record management.
+
+Information Security and Data Privacy
+
+Data security is an essential consideration in the development of information systems because these systems handle personal, financial, and operational information. Gym management systems may store information such as member profiles, account credentials, attendance records, payment information, and fitness-related records. Therefore, appropriate security measures must be implemented to prevent unauthorized access, data loss, and misuse of information.
+
+Information systems can support data protection through mechanisms such as role-based access control, secure password hashing, user authentication, access restrictions, and secure data storage. These measures help maintain the confidentiality, integrity, and availability of information stored within the system while ensuring that users can only access information appropriate to their roles.
+
+Data Analytics and Reporting
+
+Information systems also support organizational decision-making through data analytics and report generation. By collecting and organizing operational data, systems can generate reports that provide administrators with useful information regarding attendance patterns, membership activities, transactions, inventory, and fitness progress. These reports can help administrators identify trends, monitor operations, and make informed management decisions.
+
+For the proposed Gym Management System, automated reporting can generate attendance records, transaction histories, fitness progress summaries, inventory information, and administrative reports. Dynamic PDF and Excel exports can further improve the accessibility and usability of these records for documentation, monitoring, and evaluation.
+
+System Development Methodology
+
+The development of an information system requires a systematic approach to ensure that its requirements, functionality, usability, and reliability are properly addressed. The System Development Life Cycle (SDLC) provides a structured process for planning, analyzing, designing, developing, testing, implementing, and maintaining software systems.
+
+For systems requiring continuous improvement and user feedback, Agile development practices can also be incorporated into the development process. Requirements can be analyzed and prioritized through iterative development cycles, allowing system features to be tested and refined based on identified requirements and evaluation results. In the proposed system, software development includes requirements analysis, system architecture and UI/UX design, database modeling, backend API development, mobile application development, system integration, testing, and quality evaluation.
+
+Gaps in the Literature
+
+Despite significant commercial advancements in fitness club software, several critical operational and research gaps remain evident in the existing literature and market solutions. First, most established platforms such as Virtuagym, Mindbody, and Glofox are architected as monolithic, high-cost enterprise SaaS systems designed for corporate franchise gyms with extensive front-desk QR scanner hardware and recurring subscription budgets. Consequently, independent and community-level gyms in emerging municipalities such as AFFORDA Gym – Cabiao Branch in Nueva Ecija remain unserved due to prohibitive subscription fees and complex hardware dependencies. Second, current gym solutions frequently maintain isolated functional silos: attendance tracking is segregated from inventory management, and equipment orientation lacks direct, interactive linkage with member routine planners. There is an absence of an affordable, mobile-centric ecosystem that integrates digital QR code attendance, real-time equipment visual guidance via direct machine scanning, certified coach-client consultation, and point-of-sale inventory tracking into a unified database architecture. These documented gaps substantiate the pressing necessity for FordaGO: a localized, responsive, and robust Mobile-Based Gym Database Management System engineered to address the specific socioeconomic and administrative requirements of local fitness enterprises.
+
+Review of Related System
+
+1. Virtuagym Fitness Management System
+
+Virtuagym is a comprehensive fitness management platform designed for gyms, fitness centers, and personal trainers. It provides features such as membership management, workout tracking, scheduling, payment management, and mobile application access. Through its mobile platform, members can monitor their workouts and fitness progress, while coaches can provide training programs and guidance. Administrators can also manage member profiles, attendance, and subscriptions through a centralized system.
+
+One of the major strengths of Virtuagym is its integration of fitness management and workout tracking within a single platform. However, its features are primarily designed for general fitness management and may not fully address localized workflows specific to smaller Philippine gyms.
+
+Relation to the Proposed System:
+
+Virtuagym is related to the proposed FordaGO system because both aim to digitalize gym operations and provide members with access to membership and workout-related information. However, FordaGO is specifically designed for AFFORDA Gym – Cabiao Branch and incorporates QR code attendance monitoring and equipment QR scanning for accessing machine instructions and media guides.
+
+2. Zen Planner Gym Management Software
+
+Zen Planner is a gym management platform designed to help fitness businesses manage memberships, attendance, scheduling, billing, and member activities. It provides administrators with tools for tracking member information, managing classes, processing payments, and generating operational reports.
+
+The system reduces administrative workload by automating several tasks, including membership management, payment tracking, and notifications. However, its broad range of features may require staff training. It also does not specifically focus on equipment-level QR tutorials or integrated real-time coaching communication.
+
+Relation to the Proposed System:
+
+Zen Planner is similar to FordaGO in terms of membership management, attendance monitoring, payment processing, and reporting. However, FordaGO extends these functions through QR-based attendance, equipment information access, real-time coach–trainee communication, and workout proposal features designed for the specific needs of the target gym.
+
+3. Mindbody Gym Management Software
+
+Mindbody is a comprehensive business management platform used by fitness centers, wellness facilities, gyms, and other service-based businesses. Its features include membership management, class scheduling, payment processing, customer profiles, attendance tracking, and business reporting.
+
+The platform provides a wide range of management tools that can help businesses organize their daily operations. However, its general-purpose design may require customization or additional services to accommodate specific local workflows.
+
+Relation to the Proposed System:
+
+Mindbody and FordaGO both aim to replace manual record-keeping with digital management systems. However, FordaGO focuses specifically on the operational requirements of AFFORDA Gym – Cabiao Branch. It incorporates QR-based attendance, equipment scanning, personal fitness records, real-time trainer communication, and localized payment verification.
+
+4. Glofox Gym Management System
+
+Glofox is a gym and fitness studio management platform designed to simplify membership management, class scheduling, digital check-ins, payment processing, and member engagement. It also provides mobile functionality that allows members to manage memberships, view schedules, and interact with gym services.
+
+Glofox provides an organized digital environment for managing gym operations and monitoring member participation. However, some functionalities may depend on integrations with other services or hardware. It also does not primarily focus on equipment-level QR instructional content and integrated coaching proposals.
+
+Relation to the Proposed System:
+
+Glofox is comparable to FordaGO because both use digital and mobile technologies to manage gym operations and member activities. FordaGO, however, adds QR scanning for both attendance and equipment information, allowing members to access instructional content directly through their mobile devices.
+
+5. TeamUp Fitness Management System
+
+TeamUp is a cloud-based fitness management platform designed to help gyms and fitness studios manage memberships, schedules, bookings, attendance, and payments. Its digital dashboard provides administrators with tools for organizing member information and monitoring daily operations.
+
+The platform provides a straightforward approach to managing memberships and group activities. However, its primary focus is on scheduling and customer management rather than personalized fitness tracking, equipment assistance, and real-time trainer communication.
+
+Relation to the Proposed System:
+
+TeamUp is related to FordaGO because both systems provide digital membership management and attendance monitoring. However, FordaGO expands these capabilities through QR-based attendance, equipment scanning, personal record tracking, real-time trainer communication, workout proposals, and localized transaction management.
+
+### Conceptual Framework
+
+The proposed Gym Management System follows the Input–Process–Output (IPO) model, which illustrates how data enters the system, undergoes various processes, and produces useful outputs. The inputs include user and account information, gym operational data, membership plans, attendance records, workout and fitness progress data, supplement and POS transaction records, hardware specifications, and evaluation parameters. These inputs are processed through system functions such as requirements analysis, system architecture and UI/UX design, database management, backend API development, real-time communication, mobile application development, optical QR code verification and scanning, POS transactions, report generation, and system testing and evaluation. The system then produces outputs such as deployed member and administrative platforms, digital QR attendance and traffic logs, personal workout records, real-time coach–trainee communication, verified POS transaction records and receipts, dynamic PDF/Excel reports, and administrative quality assessment reports. Overall, the framework provides a structured approach to managing gym data and operations while supporting efficient monitoring, automation, and evaluation of the system, as illustrated in the research paradigm in Figure 1.
+
+
+> **Figure 1. Research Paradigm of FordaGO (IPO Model)**
+
+### Statement of the Problem
+
+General Problem Statement
+
 AFFORDA Gym – Cabiao Branch provides fitness facilities and wellness services to fitness enthusiasts in Cabiao, Nueva Ecija. However, daily operations are severely hindered by manual paper logbooks for attendance tracking, disorganized membership pass monitoring, lack of accessible on-demand equipment instructions for beginners, manual supplement inventory logging, and the absence of a structured digital communication channel between gym coaches and trainees. These manual processes result in operational inefficiencies, data inaccuracies, front-desk congestion, security vulnerabilities, and suboptimal member engagement.
 
-### Specific Problem Statements
+Specific Problem Statements
+
 Specifically, this study seeks to answer the following research questions:
 
-1. What are the operational problems and limitations encountered in the current gym management workflow of AFFORDA Gym – Cabiao Branch in terms of:
-   - a. Member registration, account management, and membership pass verification;
-   - b. Attendance recording and monitoring through manual paper logbooks;
-   - c. Availability of instructional guidance and safety information for gym equipment;
-   - d. Personal workout tracking, routine scheduling, and coach-client consultations;
-   - e. Inventory management, supplement sales recording, and payment verification; and
-   - f. Generation of administrative, financial, and operational summaries?
+What are the operational problems and limitations encountered in the current gym management workflow of AFFORDA Gym – Cabiao Branch in terms of:
 
-2. What functional modules, system architecture, database design, and user interface features must be engineered in the proposed **FordaGO: Mobile-Based Gym Database Management System** to address the identified operational problems?
+a. Member registration, account management, and membership pass verification;
 
-3. What is the technical quality of the developed FordaGO system as evaluated by IT professionals based on the **ISO/IEC 25010** software quality standards in terms of:
-   - a. Functional Suitability;
-   - b. Performance Efficiency;
-   - c. Compatibility;
-   - d. Usability;
-   - e. Reliability;
-   - f. Security;
-   - g. Maintainability; and
-   - h. Portability?
+b. Attendance recording, monitoring, and historical record retrieval through physical paper logbooks;
 
-4. What is the level of user acceptability of the system as evaluated by gym end-users (administrators, front-desk personnel, accredited coaches, and active members) in terms of:
-   - a. Functional Suitability;
-   - b. Usability;
-   - c. Reliability; and
-   - d. Security?
+c. Availability of instructional guidance and safety information for gym equipment;
 
----
+d. Personal workout tracking, routine scheduling, and coach-client consultations;
 
-## 1.5 Objectives of the Study
+e. Inventory management, supplement sales recording, and payment verification; and
 
-### General Objective
-The general objective of this capstone project is to design, develop, and evaluate **FordaGO: Mobile-Based Gym Database Management System for AFFORDA Gym – Cabiao Branch**, providing a centralized, secure, and interactive mobile and web platform that automates attendance tracking, membership management, equipment orientation, workout tracking, coaching consultation, supplement inventory, and administrative reporting.
+f. Generation of administrative, financial, and operational summaries?
 
-### Specific Objectives
-To achieve the general objective, the study will accomplish the following specific targets:
+What functional modules, system architecture, database design, and user interface features must be engineered in the proposed FordaGO: Mobile-Based Gym Database Management System to address the identified operational problems?
 
-1. To investigate, analyze, and document the existing operational workflows, manual procedures, and administrative challenges of AFFORDA Gym – Cabiao Branch through interviews, direct observations, and process mapping.
-2. To design the system architecture, entity-relationship database models (ERD), WebSocket event schemas, and user interfaces (UI/UX) tailored for Members, Coaches, and Administrators.
-3. To develop and implement the core functional modules of the FordaGO system, namely:
-   - a. **User Authentication & Role-Based Access Control Module:** Implementing Laravel Sanctum token security, password recovery mechanisms, and route guarding for five user tiers (`member`, `coach`, `admin`, `employee`, `super_admin`);
-   - b. **Digital QR Code Attendance Module:** Providing an administrative camera turnstile scanner, member QR check-in, anti-pass-sharing timestamp verification, and real-time attendance traffic logging;
-   - c. **Interactive Equipment QR Guidance Module:** Providing mobile camera QR scanning of physical machine placards, displaying targeted muscle highlights, photos, and step-by-step exercise execution tutorials, alongside an administrative printable QR placard generator;
-   - d. **Personal Workout Tracker & Split Routine Module:** Enabling members to log Personal Record (PR) lifting metrics with automated percentage gain calculators and construct custom weekly workout splits (Monday–Sunday);
-   - e. **Coach Studio & Real-Time Consultation Module:** Providing certified coaches with client roster management, recurring availability scheduling, public group fitness class publishing, and real-time WebSocket private chat with in-chat **Workout Plan Proposals** featuring one-tap client acceptance;
-   - f. **Gym Inventory & Supplement POS Module:** Delivering a multi-item shopping cart, Over-the-Counter Cash and GCash reference verification workflows, administrative order approvals, and atomic inventory stock deduction;
-   - g. **Membership Pass & Billing Management Module:** Tracking 30-Day Premium Passes and Daily Visit Passes, monitoring expiration dates, logging renewal requests, and maintaining transaction audit trails;
-   - h. **Notification & Communication Module:** Dispatching real-time in-app alerts and notifications for proposal submissions, order status changes, chat messages, and schedule updates; and
-   - i. **Administrative Reporting & Analytics Module:** Generating dynamic, client-side vector PDF documents and Excel/CSV spreadsheets for attendance records, sales revenue, inventory stock, and membership lists.
-4. To test and evaluate the technical performance, reliability, and usability of the developed FordaGO system using the ISO/IEC 25010 Software Quality Evaluation model through assessments administered to IT professionals and target gym respondents.
+What is the technical quality of the developed FordaGO system as evaluated by IT professionals based on the ISO/IEC 25010 software quality standards in terms of:
 
----
+a. Functional Suitability;
 
-## 1.6 Scope and Delimitations of the Study
+b. Performance Efficiency;
 
-### Scope of the Study
-This study encompasses the full design, development, integration, and empirical evaluation of **FordaGO: Mobile-Based Gym Database Management System for AFFORDA Gym – Cabiao Branch**. The system serves three primary user groups:
+c. Compatibility;
 
-| Member Mobile App *(Mobile Portal)* | Coach Studio *(Trainer Hub)* | Admin Command Center *(Administrative Panel)* |
-| :--- | :--- | :--- |
-| • Digital QR Attendance Pass<br>• Personal Record (PR) Metric Tracker<br>• 7-Day Split Routine Builder<br>• Equipment QR Scanner & Media Guides<br>• Supplement Shop & Cart Checkout<br>• In-Chat Coaching Proposal Acceptance<br>• Interactive Feature Walkthrough Guides | • Trainee Roster Management<br>• 1-on-1 Real-Time WebSocket Chat<br>• In-Chat Workout Plan Proposals<br>• Public Group Fitness Class Publishing<br>• Weekly Availability Slot Scheduler<br>• Trainer Consultation Earnings Tracker | • Digital Optical QR Turnstile Scanner<br>• Membership Pass Verification & Renewal<br>• Supplement POS & Counter Sales Audit Logs<br>• Equipment Catalog & Placard Generator<br>• Coach Account & Profile Administration<br>• Client-Side Vector PDF & Excel Reports |
-<p align="center"><b>Figure 2.</b> <i>FordaGO Tri-Tier Ecosystem Architecture</i></p>
+d. Usability;
 
-The system's functional scope is divided into eleven (11) major modules:
-1. **User Authentication & Role-Based Access Control Module:** Provides secure token-based authentication using Laravel Sanctum, encrypted password hashing (Bcrypt), role-based middleware access control, and self-service password recovery via security verification.
-2. **QR Code Attendance Monitoring Module:** Replaces physical paper logbooks with camera-based QR code verification. Front-desk staff scan member QR codes using the digital turnstile scanner to instantly verify active pass validity, enforce anti-pass-sharing timestamp rules, and log check-in timestamps.
-3. **Interactive Equipment QR Information & Guidance Module:** Members scan physical QR placards affixed to gym machines using their smartphone cameras to immediately view high-resolution equipment photos, targeted muscle group diagrams, and step-by-step exercise execution instructions. Admins can generate and download printable QR placards directly from the system.
-4. **Personal Record (PR) Tracker & Weekly Split Routine Builder:** Allows members to log personal record milestones (e.g., Bench Press, Squat, Deadlift) with automated percentage gain calculators, while enabling users to build custom daily workout splits (Monday to Sunday) with target durations and gym floor selections.
-5. **Coach Studio & Real-Time Consultation Module:** Accredited gym coaches manage their trainee roster, configure weekly working hours, publish public group fitness classes with participant seat limits, and engage in real-time private messaging powered by WebSockets. Coaches can compose and send structured in-chat **Workout Plan Proposals** (specifying dates, target muscles, routines, and pricing) that members can accept with a single tap.
-6. **Supplement Shop & Point-of-Sale (POS) Module:** Members browse gym supplements, energy drinks, and apparel, adding items to a multi-item cart and checking out via Counter Cash or GCash reference verification. Administrators review pending orders, verify payment proofs, approve sales, and trigger atomic inventory stock deductions.
-7. **Membership Pass & Billing Management Module:** Tracks active membership passes (30-Day Premium Pass and Daily Visit Passes), monitors expiration dates, handles pass extension requests, and logs transparent transaction audit trails.
-8. **Real-Time Notification System:** Dispatches live WebSocket events and visual badge notifications for order approvals, workout proposals, chat messages, and administrative announcements.
-9. **Administrative Analytics & Export Engine:** Provides administrative dashboards with graphical operational summaries and vector PDF/Excel export engines for attendance traffic, sales revenues, inventory stock, and membership lists.
+e. Reliability;
 
-**Technical Architecture & Development Stack:**
-* **Frontend Mobile & Web Client:** Ionic 8 with Angular standalone components, TypeScript, and SCSS.
-* **Backend Application Server:** Laravel 11 (PHP 8.2+) RESTful API architecture with Laravel Sanctum authentication.
-* **Real-Time WebSockets:** Laravel Reverb WebSocket server integrated with Laravel Echo.
-* **Database Management System:** MySQL relational database with strict foreign key constraints and transactional integrity.
-* **Hardware Interfacing:** Capacitor Camera and Barcode Scanner plugins for mobile device camera integration.
-* **Reporting Engine:** jsPDF and AutoTable for client-side formatted PDF generation and Excel export utilities.
+f. Security;
 
-### Delimitations of the Study
-To maintain technical feasibility and ensure the study remains aligned with academic capstone parameters, the following explicit delimitations are established:
+g. Maintainability; and
 
-1. **Single-Branch Implementation:** The system is engineered exclusively for **AFFORDA Gym – Cabiao Branch** in Cabiao, Nueva Ecija. Distributed, multi-branch database synchronization across other branches (such as the San Isidro or Muñoz branches) is not included in this version.
-2. **Optical Camera Scanning vs. Hardware Turnstiles:** Attendance check-in and equipment lookup operate entirely through camera-based optical QR code decoding on smartphones and webcams. The system does not interface with physical electromechanical turnstiles, magnetic door latches, RFID card readers, or biometric fingerprint scanners.
-3. **Smart Wearables and Biometric Sensors:** The system does not integrate with external wearable hardware (e.g., Apple Watch, Fitbit, Garmin) or operating system health APIs (e.g., Apple HealthKit, Google Health Connect) for automated heart rate, pulse, or metabolic calorie tracking.
-4. **Exclusive Over-the-Counter (OTC) Cash Payment Mode:** All financial transactions—including membership pass issuance, walk-in day pass renewals, and supplement store orders—are strictly delimited to manual physical cash payments received and audited at the front-desk counter. Third-party online payment gateways, automated merchant aggregators (e.g., PayMongo, Maya, Xendit), and automated digital e-wallet APIs (e.g., automated GCash integration) are delimited from this release.
+h. Portability?
 
-5. **Computer Vision & AI Motion Coaching:** Equipment guidance is provided through pre-configured instructional media, descriptive execution steps, and anatomical diagrams. Real-time AI pose estimation and camera-based form-correction coaching are not included in this release.
-6. **Network Connectivity Dependency:** The application requires an active local wireless network (LAN) or internet connection to communicate with the centralized Laravel API server and Reverb WebSocket server. Offline capability is delimited to displaying locally cached view states.
-7. **User Base Restriction:** System access is restricted to registered members, accredited coaches, and authorized administrative staff of AFFORDA Gym – Cabiao Branch. Public social media feeds or open unauthenticated forums are excluded.
+What is the level of user acceptability of the system as evaluated by gym end-users (administrators, front-desk personnel, accredited coaches, and members) in terms of:
 
----
+a. Functional Suitability;
 
-### Limitations of the Study
-While the delimitations represent deliberate scope boundaries established by the researchers, the study is subject to several inherent technical, environmental, behavioral, and operational limitations that are beyond the complete control of the developers:
+b. Usability;
 
-1. **Hardware and Camera Sensor Variance:** The optical QR code decoding speed and responsiveness are subject to the camera sensor specifications, autofocus capabilities, optical resolution, and physical lens cleanliness of individual user smartphones and the front-desk tablet or webcam.
-2. **Ambient and Environmental Gym Lighting Conditions:** Optical recognition of QR code placards affixed to gym machines and member screens is subject to ambient illumination within the gym floor. Shadows cast by bulky equipment, localized dimness in free-weight sections, or intense reflective glare from overhead fluorescent lighting on smartphone glass screens can occasionally prolong barcode decode acquisition times.
-3. **Centralized Cloud Network Dependency and ISP Latency:** Because FordaGO operates on a live centralized Linux Cloud Virtual Private Server (VPS) architecture using real-time WebSockets (Laravel Reverb) and secure REST APIs, system performance is inherently dependent on the stability and bandwidth of local Internet Service Providers (ISPs) and cellular telecommunications networks (4G/5G).
-4. **Mobile Operating System Background Execution Policies:** Aggressive battery optimization and background app memory termination policies implemented by proprietary Android OEM operating systems (e.g., Xiaomi MIUI/HyperOS, Oppo ColorOS, and Vivo FuntouchOS) may suspend background WebSocket listeners or delay push notification broadcasts when user devices enter deep sleep or experience extreme low-RAM conditions.
-5. **Subjectivity of Self-Logged Fitness Progress:** Workout performance metrics, Personal Record (PR) milestone weights, repetition counts, and daily routine completions rely entirely on user honesty and accurate self-reporting. In the absence of integrated mechanical barbell load-cell sensors or computer-vision pose tracking, the system cannot objectively verify whether an exercise was executed with full biomechanical range of motion or completed as logged.
-6. **Front-Desk Counter Verification Latency:** While digital order placement and attendance scanning are automated, manual payment confirmations and physical cash handovers at the reception counter necessitate human physical verification by front-desk personnel. Consequently, transaction reconciliation throughput is subject to staff availability and attentiveness during peak gym rush hours (5:00 PM to 8:00 PM).
-7. **Evaluation Sample Size and Contextual Generalizability:** The empirical evaluation of the system was conducted specifically within AFFORDA Gym – Cabiao Branch, involving ten (10) gym end-users (encompassing front-desk personnel, accredited coaches, and active gym members) and five (5) IT professionals. While statistically and methodologically sound for an academic capstone evaluation following ISO/IEC 25010 protocols, the evaluative findings reflect the operational dynamics, member volume, and demographic characteristics of a suburban local fitness center and may not fully represent high-volume, multi-facility commercial gym conglomerates in metropolitan environments.
+c. Reliability; and
 
----
+d. Security?
 
-## 1.7 Significance of the Study
+### Significance of the Study
 
 The development, deployment, and evaluation of FordaGO will deliver direct practical and academic value to the following beneficiaries:
 
-1. **AFFORDA Gym – Cabiao Branch Management:** Modernizes the facility’s business infrastructure by eliminating manual logbooks, preventing revenue leakage through automated pass verification, maintaining live stock inventory, and providing accurate data-driven business reports.
-2. **Gym Administrators and Front-Desk Staff:** Significantly reduces administrative workload by automating member check-ins, eliminating manual attendance handwriting, streamlining supplement point-of-sale audits, and providing one-click PDF/Excel report exports.
-3. **Gym Coaches and Personal Trainers:** Provides a professional digital workspace (Coach Studio) to showcase credentials, publish workout routines, establish availability hours, organize group classes, and communicate in real time with trainees through structured workout plan proposals.
-4. **Gym Members and Fitness Enthusiasts:** Enhances the workout experience through frictionless QR check-in, on-demand equipment usage tutorials via QR scanning, personal record and routine tracking, easy supplement ordering, and direct access to professional coaching consultations.
-5. **Researchers:** Serves as a comprehensive practical application of integrating modern full-stack web and mobile technologies (Ionic, Angular, Laravel, WebSockets, and MySQL) in solving real-world business and health-management challenges.
-6. **Future Developers and Academics:** Provides an architectural foundation and empirical benchmark for future research into fitness digitalization, real-time sports informatics, and automated sports facility management systems.
+To AFFORDA Gym – Cabiao Branch Management: Modernizes the facility’s business infrastructure by eliminating manual logbooks, preventing revenue leakage through automated pass verification, maintaining live stock inventory, and providing accurate data-driven business reports.
 
----
+To Gym Administrators and Front-Desk Staff: Significantly reduces administrative workload by automating member check-ins, eliminating manual attendance handwriting, streamlining supplement point-of-sale audits, and providing one-click PDF/Excel report exports.
 
-## 1.8 Review of Related Literature
+To Gym Coaches and Personal Trainers: Provides a professional digital workspace (Coach Studio) to showcase credentials, publish workout routines, establish availability hours, organize group classes, and communicate in real time with trainees through structured workout plan proposals.
 
-The integration of information systems into sports, physical conditioning, and fitness facility management represents a growing domain in enterprise informatics. Modern gyms require automated workflows to maintain operational efficiency and customer retention.
+To Gym Members and Fitness Enthusiasts: Enhances the workout experience through frictionless QR check-in, on-demand equipment usage tutorials via QR scanning, personal record and routine tracking, easy supplement ordering, and direct access to professional coaching consultations.
 
-### Gym Management Systems and Digital Transformation
-Traditional gym operations reliant on paper logs, static spreadsheets, and verbal agreements suffer from high administrative friction, data duplication, and security vulnerabilities (Laudon & Laudon, 2021). According to Baechle and Earle (2020), operational consistency in fitness facilities directly influences member adherence and satisfaction. Modern Gym Management Systems (GMS) consolidate membership records, attendance logs, and financial transactions into unified database platforms, minimizing human error and providing real-time operational insights.
+To Researchers: Serves as a comprehensive practical application of integrating modern full-stack web and mobile technologies (Ionic, Angular, Laravel, WebSockets, and MySQL) in solving real-world fitness facility operations, database management, and mobile attendance tracking challenges.
 
-### Relational Database Management Systems (RDBMS)
-Database management systems form the backbone of modern enterprise applications. Silberschatz et al. (2019) emphasize that relational databases utilizing structured schemas, primary/foreign key constraints, and ACID (Atomicity, Consistency, Isolation, Durability) transaction properties ensure high data integrity, prevent duplicate records, and support complex query operations. In a gym environment, an RDBMS such as MySQL efficiently correlates user profiles, membership durations, daily attendance entries, equipment records, coaching proposals, and inventory stocks (Hoffer et al., 2020).
+To Future Developers and Academics: Provides an architectural foundation and empirical benchmark for future research into fitness digitalization, real-time sports informatics, and automated sports facility management systems.
 
-### Quick Response (QR) Code Technology
-Originally developed by Denso Wave in 1994, QR code technology has become ubiquitous in contactless identification, asset tracking, and authentication systems (Denso Wave, 2023). In facility access control, QR codes provide rapid optical machine-readable data transfer. Applied to gym attendance, QR code scanning replaces slow manual logbooks with sub-second digital verification. Furthermore, attaching QR code placards to gym equipment allows members to instantly retrieve digital instructional manuals and targeted muscle guides directly on their personal mobile devices.
+### Scope, Delimitations, and Limitations of the Study
 
-### Mobile Hybrid Application Architecture
-The rapid proliferation of mobile devices has shifted enterprise applications toward mobile-first architectures (Pressman & Maxim, 2020). Hybrid mobile frameworks such as Ionic combined with Angular leverage web standards (HTML5, SCSS, TypeScript) compiled into native mobile containers via Capacitor. This architecture ensures unified codebase maintenance across Android, iOS, and Web platforms while providing direct access to native device hardware, including the camera and local storage.
+Scope of the Study
 
-### Real-Time WebSockets Communication in Collaborative Systems
-Real-time bi-directional communication is critical for modern interactive applications. Unlike traditional HTTP polling, which introduces significant latency and server overhead, WebSockets maintain persistent full-duplex TCP connections between clients and servers. Laravel Reverb provides high-throughput WebSocket event broadcasting, enabling instant chat message delivery, live typing indicators, and immediate workout proposal notifications between coaches and members without requiring manual page refreshes.
+This study encompasses the architectural design, full-stack software engineering, cloud VPS deployment, and empirical software quality evaluation of FordaGO: A Mobile-Based Gym Database Management System tailored exclusively for AFFORDA Gym – Cabiao Branch in Cabiao, Nueva Ecija. The system establishes an integrated operational ecosystem serving three distinct user classifications: Gym Members (Mobile Application / PWA Portal), Accredited Fitness Coaches (Trainer Studio), and Gym Administrators / Front-Desk Staff (Administrative Command Center).
 
-### Inventory Control and Point-of-Sale (POS) Integration
-Effective inventory management ensures optimal stock availability and financial transparency (Heizer et al., 2020). Automated POS systems link customer orders with live inventory levels, deducting product stock atomically upon transaction approval. Providing support for digital payment verification (such as GCash reference logging) caters to the growing preference for cashless transactions in commercial establishments.
+The system’s functional scope is divided into eleven (11) major modules:
 
-### Information Security and Data Privacy (Republic Act No. 10173)
-Managing personal health and customer records necessitates strict compliance with data privacy regulations. In the Philippines, Republic Act No. 10173, known as the Data Privacy Act of 2012, mandates that personal information controllers implement organizational, physical, and technical measures to protect user data. Systems must enforce role-based access control (RBAC), password hashing (e.g., Bcrypt), and secure token authentication to safeguard user records against unauthorized access.
+1. User Authentication & Role-Based Access Control Module:
 
----
+Provides secure token-based authentication using Laravel Sanctum, encrypted password hashing (Bcrypt), role-based middleware access control, and self-service password recovery via security verification.
 
-## 1.9 Review of Related Systems
+2. QR Code Attendance Monitoring Module:
 
-To establish a comparative baseline, five existing commercial gym management platforms were examined alongside the proposed FordaGO system:
+Replaces physical paper logbooks with camera-based QR code verification. Front-desk staff utilize a recommended Android tablet kiosk (or reception PC/laptop web browser) to scan entering members' dynamic QR passes in real time, validating membership validity status within 500 milliseconds and automatically logging entry timestamps without requiring manual pen-and-paper writing.
 
-| Feature / Capability | Virtuagym | Zen Planner | Mindbody | Glofox | TeamUp | **FordaGO (Proposed)** |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Target Environment** | Int'l Gym | Boutique Studio | Spa / Yoga | Boutique Studio | Small Gym | **AFFORDA Gym – Cabiao** |
-| **Mobile Member App** | Yes | Yes | Yes | Yes | Yes | **Yes (Ionic / Angular)** |
-| **Optical QR Attendance Scanner** | Partial | Partial | Barcode only | Barcode only | No | **Yes (Camera Turnstile)** |
-| **Equipment QR Guidance Scanner** | No | No | No | No | No | **Yes (Muscle Highlights)** |
-| **Personal Record (PR) Tracker** | Yes | Yes | No | No | No | **Yes (Milestones & % Gains)** |
-| **Weekly Split Routine Planner** | Yes | Partial | No | No | No | **Yes (Monday – Sunday)** |
-| **In-Chat Workout Plan Proposals** | No | No | No | No | No | **Yes (1-Tap Accept)** |
-| **Real-Time WebSocket Chat** | No (Email only) | No | No | No | No | **Yes (Laravel Reverb)** |
-| **Local Supplement POS & GCash Audit** | No | No | Add-on | No | No | **Yes (Cart & GCash Verify)** |
-| **Client-Side Vector PDF / Excel Engine** | No (SaaS only) | No (SaaS only) | No (SaaS only) | No (SaaS only) | No (SaaS only) | **Yes (jsPDF / AutoTable)** |
-| **Pricing Model** | High SaaS Fee | High SaaS Fee | High SaaS Fee | High SaaS Fee | High SaaS Fee | **Custom / Standalone (Free)** |
+3. Interactive Equipment QR Information & Guidance Module:
 
-### 1. Virtuagym
-Virtuagym is a fitness management system offering membership tracking and workout builders. While comprehensive, it targets large enterprise gym chains with high monthly SaaS fees. It lacks localized Philippine payment workflows (GCash verification) and does not provide an equipment QR scanner for on-premise machine tutorials.
+Members scan physical printed QR code labels affixed to gym machines using their smartphone cameras to immediately view high-resolution equipment photos, targeted muscle group diagrams, and step-by-step exercise execution instructions. Admins can generate and download printable printed QR code labels directly from the system.
 
-### 2. Zen Planner
-Zen Planner delivers scheduling, billing, and workout tracking for boutique fitness studios. However, its user interface is complex and requires specialized staff training. It lacks integrated real-time WebSocket coaching chat and machine-level equipment QR tutorials.
+4. Personal Record (PR) Tracker & Weekly Split Routine Builder:
 
-### 3. Mindbody
-Mindbody is an enterprise-level wellness platform geared toward high-end spas and yoga studios. Its expensive subscription model and high transaction surcharge make it impractical for independent local fitness centers like AFFORDA Gym – Cabiao Branch.
+Allows members to log personal record milestones (e.g., Bench Press, Squat, Deadlift) with automated percentage gain calculators, while enabling users to build custom daily workout splits (Monday to Sunday) with target durations and gym floor selections.
 
-### 4. Glofox
-Glofox serves boutique fitness studios with class booking and member check-in. However, it relies heavily on third-party hardware for check-ins, lacks in-chat coaching proposals, and does not provide an interactive equipment tutorial catalog.
+5. Coach Studio & Real-Time Consultation Module:
 
-### 5. TeamUp
-TeamUp focuses on customer management and group class schedules. It provides clean booking interfaces but lacks personal record milestone tracking, real-time trainer chat, and equipment scanning capabilities.
+Accredited gym coaches manage their trainee roster, configure weekly working hours, publish public group fitness classes with participant seat limits, and engage in real-time private messaging powered by WebSockets. Coaches can compose and send structured in-chat Workout Plan Proposals (specifying dates, target muscles, routines, and pricing) that members can accept with a single tap.
 
-### Synthesis and Differentiation of FordaGO
-Existing commercial gym systems are predominantly cloud SaaS platforms built for large international franchises, characterized by high recurring subscription fees, complex interfaces, and a lack of support for local Philippine operational workflows (e.g., GCash payment verification). 
+6. Supplement Shop & Point-of-Sale (POS) Module:
 
-FordaGO bridges this gap by delivering a purpose-built, cost-effective, and fully customized platform for **AFFORDA Gym – Cabiao Branch**. It uniquely synthesizes **digital camera turnstile QR attendance**, **equipment QR video/media guidance**, **real-time WebSocket trainer chat with in-chat workout proposals**, **personal record milestone analytics**, **local supplement POS with GCash audit**, and **offline-capable vector PDF/Excel reporting** into a unified, lightweight ecosystem.
+Members browse gym supplements, energy drinks, and apparel, adding items to a multi-item cart and checking out via Over-the-Counter (OTC) Cash payment verification at the reception desk. Administrators review pending orders, verify physical cash payments, approve sales, and trigger atomic inventory stock deductions.
 
----
+7. Membership Pass & Billing Management Module:
 
-## 1.10 Definition of Terms
+Tracks active membership passes (30-Day Premium Pass and Daily Visit Passes), monitors expiration dates, handles pass extension requests, and logs transparent transaction audit trails.
 
-To ensure conceptual clarity, the following technical and operational terms are defined conceptually and operationally:
+8. Real-Time Notification System:
 
-* **Access Control:** *(Conceptual)* A security technique that regulates who can view or use resources in a computing environment. *(Operational)* The role-based permissions in FordaGO restricting access across `member`, `coach`, `admin`, `employee`, and `super_admin` tiers.
-* **AFFORDA Gym – Cabiao Branch:** *(Operational)* The physical commercial fitness facility located in Cabiao, Nueva Ecija, Philippines serving as the primary client, case environment, and deployment locale of this study.
-* **Authentication:** *(Conceptual)* The process of verifying the identity of a user or device. *(Operational)* The validation of user credentials in FordaGO via Laravel Sanctum, issuing secure bearer tokens for mobile and web API requests.
-* **Capacitor:** *(Conceptual)* A cross-platform native runtime for web applications. *(Operational)* The runtime tool used to deploy FordaGO’s Ionic Angular codebase to native Android devices with direct hardware camera access.
-* **Coach Studio (Trainer Hub):** *(Operational)* The specialized mobile module in FordaGO where accredited coaches manage client rosters, publish group classes, set availability hours, and send custom workout plan proposals.
-* **Database Management System (DBMS):** *(Conceptual)* Software used to store, retrieve, and manage data in databases. *(Operational)* MySQL 8.0, utilized in FordaGO to maintain relational schemas for users, passes, check-ins, workouts, messages, products, and sales.
-* **Equipment Guidance:** *(Operational)* On-demand multimedia, safety instructions, and targeted muscle group graphics presented to a member upon scanning an equipment QR placard.
-* **FordaGO:** *(Operational)* The official title of the developed Mobile-Based Gym Database Management System for AFFORDA Gym – Cabiao Branch.
-* **Ionic Framework:** *(Conceptual)* An open-source UI software development kit for cross-platform applications. *(Operational)* The frontend framework paired with Angular standalone components to build FordaGO's user interface.
-* **ISO/IEC 25010:** *(Conceptual)* An international standard for evaluating software product quality. *(Operational)* The evaluation framework assessing FordaGO across Functional Suitability, Usability, Reliability, Security, and Performance Efficiency.
-* **Laravel 11:** *(Conceptual)* An open-source PHP web framework following the MVC pattern. *(Operational)* The backend application framework hosting FordaGO’s RESTful API, business logic, and database migrations.
-* **Laravel Reverb:** *(Conceptual)* A first-party, high-performance WebSocket server for Laravel. *(Operational)* The real-time messaging engine powering FordaGO’s instant 1-on-1 coach chat, live typing indicators, and proposal notifications.
-* **Personal Record (PR):** *(Operational)* Maximum lifting metrics recorded by members for core lifts (Bench Press, Squat, Deadlift) with automated percentage gain calculators.
-* **Point-of-Sale (POS):** *(Operational)* The digital supplement and merchandise storefront in FordaGO managing shopping carts, GCash reference verification, cash checkout, and automated inventory deduction.
-* **Quick Response (QR) Code:** *(Conceptual)* A two-dimensional optical barcode capable of storing alphanumeric data. *(Operational)* The QR codes used in FordaGO for rapid member turnstile check-ins and equipment tutorial retrieval.
-* **Workout Plan Proposal:** *(Operational)* A formal, structured routine schedule dispatched by a coach within a real-time chat conversation containing targeted exercises, time, and pricing for one-tap client acceptance.
+Dispatches live WebSocket events and visual badge notifications for order approvals, workout proposals, chat messages, and administrative announcements.
 
----
+9. Administrative Analytics & Export Engine:
 
-## 1.11 References
+Provides administrative dashboards with graphical operational summaries and vector PDF/Excel export engines for attendance traffic, sales revenues, inventory stock, and membership lists.
 
-* Baechle, T. R., & Earle, R. W. (2020). *Essentials of strength training and conditioning* (4th ed.). Human Kinetics.
-* Codd, E. F. (1970). A relational model of data for large shared data banks. *Communications of the ACM*, 13(6), 377–387. https://doi.org/10.1145/362384.362685
-* Creswell, J. W., & Creswell, J. D. (2018). *Research design: Qualitative, quantitative, and mixed methods approaches* (5th ed.). SAGE Publications.
-* Davis, F. D. (1989). Perceived usefulness, perceived ease of use, and user acceptance of information technology. *MIS Quarterly*, 13(3), 319–340. https://doi.org/10.2307/249008
-* Denso Wave. (2023). *QR code essentials and optical barcode scanning*. Retrieved from https://www.qrcode.com/en/about/
-* Fielding, R. T. (2000). *Architectural styles and the design of network-based software architectures* (Doctoral dissertation). University of California, Irvine.
-* Glofox. (2024). *Gym management software and boutique studio systems*. Retrieved from https://www.glofox.com/gym-management-software
-* Heizer, J., Render, B., & Munson, C. (2020). *Operations management: Sustainability and supply chain management* (13th ed.). Pearson Education.
-* Hoffer, J. A., Ramesh, V., & Topi, H. (2020). *Modern database management* (13th ed.). Pearson Education.
-* International Organization for Standardization. (2011). *ISO/IEC 25010: Systems and software engineering — Systems and software Quality Requirements and Evaluation (SQuaRE) — System and software quality models*. ISO/IEC.
-* Laudon, K. C., & Laudon, J. P. (2021). *Management information systems: Managing the digital firm* (17th ed.). Pearson Education.
-* Mindbody. (2024). *Fitness and wellness enterprise management software*. Retrieved from https://www.mindbodyonline.com/business/fitness/gym-software
-* National Academy of Sports Medicine (NASM). (2022). *NASM essentials of personal fitness training* (7th ed.). Jones & Bartlett Learning.
-* Pressman, R. S., & Maxim, B. R. (2020). *Software engineering: A practitioner's approach* (9th ed.). McGraw-Hill Education.
-* Republic Act No. 10173. (2012). *Data Privacy Act of 2012*. Republic of the Philippines.
-* Richey, R. C. (1994). *Developmental research: The definition and scope*. Association for Educational Communications and Technology (AECT).
-* Silberschatz, A., Korth, H. F., & Sudarshan, S. (2019). *Database system concepts* (7th ed.). McGraw-Hill Education.
-* Sommerville, I. (2019). *Software engineering* (10th ed.). Pearson Education.
-* TeamUp. (2024). *Fitness management and member scheduling software*. Retrieved from https://goteamup.com
-* Virtuagym. (2024). *Gym management software and coaching mobile solutions*. Retrieved from https://business.virtuagym.com/gym-software
-* Zen Planner. (2023). *Boutique gym management software guide*. Retrieved from https://zenplanner.com/gymowner/gym-management-software-guide
+10. Administrative Activity Logs & Security Audit Trail Module:
+
+Provides a real-time, immutable audit trail of administrator and staff actions within the system. It automatically logs staff login and logout timestamps, calculates exact active session durations, and tracks all data modifications including member approvals and removals, supplement inventory stock and pricing adjustments, equipment status updates, and daily attendance verifications storing associated JSON payloads, client IP addresses, and user-agent metadata for heightened institutional governance and accountability.
+
+11. Member Feedback & Net Promoter Score (NPS) Evaluation Engine:
+
+Facilitates continuous service quality monitoring by prompting member evaluations after active gym participation. Members submit 0–10 numerical ratings and qualitative commentary, enabling the system to automatically compute the gym's Net Promoter Score (NPS), categorize feedback into Promoters (9–10), Passives (7–8), and Detractors (0–6), and stream real-time satisfaction analytics directly into the administrative control center.
+
+Technical Architecture and Implementation Environment
+
+
+> **Table 1. Technical Architecture & Development Stack**
+
+The proposed system was implemented and tested at AFFORDA Gym – Cabiao Branch during the Academic Year 2025–2026 as part of the Bachelor of Science in Information Technology capstone project.
+
+### Delimitations of the Study
+
+To maintain technical feasibility and ensure the study remains aligned with academic capstone parameters, the following explicit delimitations are established:
+
+1. Single-Branch Implementation. The system is engineered exclusively for AFFORDA Gym – Cabiao Branch in Cabiao, Nueva Ecija. Centralized database schemas, role configurations, inventory catalogs, and operational parameters are tailored to this single physical facility, excluding multi-branch enterprise federation or cross-location data warehousing.
+
+2. Optical Camera Scanning vs. Physical Turnstiles and Dedicated Workstations. Attendance check-in and machine lookup operate entirely through camera-based optical QR code scanning using member smartphone cameras and front-desk device webcams or tablet cameras. To accommodate the practical operational reality of AFFORDA Gym – Cabiao Branch where no permanent front-desk desktop PC is installed, the front-desk terminal is engineered and recommended to operate as a compact digital kiosk on an Android tablet positioned at the reception counter. Furthermore, the system remains cross-platform and fully accessible via web browser on any desktop PC or laptop through its live domain DNS (e.g., app.affordagym.com). Physical motorized turnstiles, magnetic RFID cards, and biometric hardware are excluded from this release.
+
+3. Smart Wearables and Biometric Sensors. The system does not integrate with external wearable hardware (e.g., Apple Watch, Fitbit, Garmin) or real-time physiological telemetry sensors. Heart rate monitoring, caloric expenditure modeling, and sleep tracking are excluded from the system's operational boundaries.
+
+4. Payment Transactions and Financial Gateway Budget Delimitation. The primary and official payment fulfillment for all gym services (membership passes, day visits, and supplement purchases) is conducted via physical Over-the-Counter (OTC) cash payment directly at the gym reception desk with manual staff receipt issuance and verification. To demonstrate modern digital transaction workflows and user experience, the mobile application features an interactive GCash checkout prototype where members can select a digital payment option, view the gym's official payment QR/account details, and submit a reference number or upload a proof-of-payment screenshot. However, this feature is strictly an interactive demonstration prototype and does NOT deduct actual monetary funds from member e-wallets, bank accounts, or financial gateways. Integrating fully automated commercial payment gateway APIs (such as PayMongo, Maya Business, or GCash for Business with real-time webhook clearing) requires formal commercial merchant accreditation, corporate SEC or DTI registration documents, corporate merchant bank accounts, and recurring per-transaction clearing fees. Due to the financial budget constraints and academic nature of this student capstone project, live commercial financial API integrations were deliberately excluded, preserving physical front-desk counter cash auditing as the authoritative transaction protocol.
+
+5. Computer Vision & AI Motion Coaching. Equipment guidance is provided through pre-configured instructional media, descriptive exercise guides, and anatomical muscle diagrams. Automated computer vision motion tracking, sensor-based repetition counting, and real-time posture correction algorithms are excluded from this release.
+
+6. Network Connectivity and Cloud VPS Accessibility. The application is deployed and hosted live on a production Linux Cloud Virtual Private Server (VPS) architecture. The mobile application and administrative portal require an active internet connection (Wi-Fi or cellular data) to synchronize attendance, process orders, and exchange messages with the centralized MySQL database.
+
+7. User Base Restriction. System access is strictly restricted to registered gym members, accredited fitness coaches, front-desk staff, gym administrators, and super administrators authorized by AFFORDA Gym – Cabiao Branch. Public open access and unauthenticated operations are prevented through token authentication.
+
+8. Facility Scope and Environmental Boundary. The application is optimized for indoor training operations within the physical premises of AFFORDA Gym – Cabiao Branch. External outdoor fitness tracking, GPS route mapping, and community-wide social feeds are excluded from the scope.
+
+9. Medical Diagnosis and Nutritional Prescription. While the system collects standard health declarations (Physical Activity Readiness Questionnaire - PAR-Q) and fitness metrics, it does not provide clinical medical diagnosis or automated therapeutic dietary prescriptions. All exercise routines and coaching proposals serve solely as fitness guidelines.
+
+10. Mobile Platform Deployment and iOS Operating System Delimitation. The native mobile application package is compiled and distributed exclusively as an Android Application Package (APK) for Android mobile phones and tablet devices. Unlike the Android platform, which allows straightforward direct installation and sideloading of compiled APK packages generated through Android Studio and Gradle without requiring paid developer distribution services, the Apple iOS ecosystem strictly prohibits unauthorized direct application sideloading or manual package installation on consumer devices without an active enterprise certificate or official Apple App Store distribution. Furthermore, publishing an official native iOS application to the Apple App Store requires an annual Apple Developer Program enrollment fee ($99 USD per annum), dedicated macOS compilation hardware (Apple Macintosh/MacBook computers), and formal organizational entity verification, which are beyond the financial budget constraints and technical resources of this undergraduate capstone study. Nevertheless, to ensure that gym members and stakeholders utilizing Apple iPhone or iPad devices are not excluded from system benefits, the FordaGO platform is engineered upon responsive Ionic 8 and Angular web technologies and hosted live on a public domain DNS (https://app.affordagym.com). Consequently, iOS users can seamlessly access and operate all member functionalities (including profile management, attendance logs, workout logging, equipment exercise guides, supplement store browsing, and coach consultations) directly through standard mobile web browsers such as Apple Safari and Google Chrome without requiring native App Store installation.
+
+These delimitations define the operational boundaries of the study and ensure that the project remains technically sound, cost-effective, and fully achievable within academic capstone constraints.
+
+### Limitations of the Study
+
+While the delimitations represent deliberate scope boundaries established by the researchers, the study is subject to several inherent technical, environmental, behavioral, and operational limitations that are beyond the complete control of the developers:
+
+1. Hardware and Camera Sensor Variance. The optical QR code decoding speed and responsiveness are subject to the camera sensor specifications, focal capabilities, and autofocus speeds of individual member smartphones and front-desk webcams. Devices with low-resolution camera modules or scratched lenses may experience slight scanning latency.
+
+2. Ambient and Environmental Gym Lighting Conditions. Optical recognition of printed QR code labels affixed to gym machines and member digital screens is subject to ambient illumination within the facility. In areas with significant glare or dim lighting, scanning may require angle adjustments or smartphone flashlight activation.
+
+3. Centralized Cloud Network Dependency and ISP Latency. Because FordaGO operates on a live centralized Linux Cloud Virtual Private Server (VPS) architecture, system responsiveness, attendance synchronization, and media streaming are dependent on external Internet Service Provider (ISP) uptime and local network bandwidth.
+
+4. Mobile Operating System Background Execution Policies. Aggressive battery optimization and background app memory termination policies implemented by certain mobile operating systems (e.g., customized Android distributions) may occasionally delay local push notifications if the application is killed in the background.
+
+5. Subjectivity of Self-Logged Fitness Progress. Workout performance metrics, Personal Record (PR) milestone weights, repetition counts, and routine completion statuses rely on manual user logging and self-reporting by gym members, which may introduce subjective variances or entry delays.
+
+6. Front-Desk Counter Verification Latency. While digital order placement and attendance scanning are automated, manual payment confirmation and physical cash handling require active verification by front-desk personnel, introducing minor operational delays during peak arrival periods.
+
+7. Evaluation Sample Size and Contextual Generalizability. The empirical evaluation of the system was conducted specifically within AFFORDA Gym – Cabiao Branch involving 5 IT experts and 30 gym end-users. The findings reflect the specific operational workflows of this facility and may vary in larger commercial fitness chains.
+
+8. Physical Queuing and Terminal Concurrency. The physical check-in throughput during peak arrival hours is bounded by the number of active camera scanning stations operating at the front-desk counter.
+
+9. Absence of Direct Electronic Medical Record (EMR) Integration. Member health declarations and PAR-Q screening records rely on self-disclosure by gym-goers rather than automated verification against clinical hospital or healthcare databases.
+
+10. Native iOS Mobile Installation and Ecosystem Policy Constraint. Due to Apple Inc.'s closed sandbox and security policies that prohibit direct executable package (IPA) installations without App Store review and publishing, iOS users must access the system via mobile web browsers (e.g., Apple Safari or Google Chrome) rather than a standalone native application installed from an APK file. While the responsive web application provides full functional parity with the Android APK, native platform features such as background push notification persistence may exhibit slight behavioral differences on iOS web browsers compared to the native Android operating system environment.
+
+These limitations are acknowledged as practical operational and technical boundaries of modern web and mobile information systems in fitness environments.
+
+Terms and Definition
+
+Angular – A web application framework used to develop the frontend interface of the FordaGO system.
+
+API (Application Programming Interface) – A set of rules and protocols that allows the frontend application to communicate with the backend server and exchange data.
+
+Attendance Monitoring – The process of recording and tracking gym members’ visits and check-ins.
+
+Backend – The server-side component of the system responsible for processing requests, managing business logic, authentication, and database operations.
+
+QR Code Scanner – A system feature that uses a device camera to scan machine-readable codes for identifying or accessing information.
+
+Capacitor – A native runtime that enables web-based applications to access mobile device features such as the camera.
+
+Database – An organized collection of data used to store and manage information such as member profiles, attendance records, transactions, and inventory.
+
+Database Management System (DBMS) – Software used to create, store, organize, retrieve, and manage data within a database.
+
+FordaGO – The proposed mobile-based gym database management system developed for AFFORDA Gym – Cabiao Branch.
+
+Frontend – The user-facing part of the system through which administrators, coaches, and members interact with its features and services.
+
+Gym Management System – A computerized system designed to manage gym operations such as membership, attendance, scheduling, transactions, inventory, and reports.
+
+Ionic – A framework used to develop cross-platform mobile and web applications using web technologies.
+
+Laravel – A PHP-based backend framework used to develop the RESTful API and server-side functions of the FordaGO system.
+
+Laravel Echo – A JavaScript library used to interact with WebSocket channels and receive real-time updates from the server.
+
+Laravel Reverb – A WebSocket server used by the system to provide real-time communication between the server and connected users.
+
+Laravel Sanctum – An authentication system used to secure API access and manage authenticated users.
+
+Member – A registered gym user who can access authorized features such as attendance monitoring, workout tracking, equipment information, and product ordering.
+
+MySQL – A relational database management system used to store and manage the data of the FordaGO system.
+
+QR Code (Quick Response Code) – A two-dimensional machine-readable code that can be scanned using a camera to access or process encoded information.
+
+RESTful API – A web service architecture that enables applications to communicate with a server using standard HTTP methods for requesting and managing data.
+
+SCSS (Sassy CSS) – A stylesheet language used to create and organize the visual design and styling of the system interface.
+
+TypeScript – A programming language used in the development of the system’s frontend, providing typed features for JavaScript-based applications.
+
+WebSocket – A communication protocol that enables continuous, two-way communication between a client and server for real-time data updates.
+
+Workout Tracking – A system feature that allows members to record completed workouts, personal records, routines, and fitness progress.
+
+Inventory Management – The process of monitoring, recording, and managing gym equipment, supplies, and products available for sale.
+
+Point-of-Sale (POS) – A system function used to record product purchases, update inventory, and maintain transaction records.
+
+Report Generation – The process of producing organized reports from system data, such as attendance, transactions, sales, and inventory records.
+
+Functional Suitability – The degree to which the system provides functions that meet the specified requirements and intended user needs.
+
+Usability – The degree to which users can effectively, efficiently, and satisfactorily use the system.
+
+Reliability – The ability of the system to perform consistently and correctly under specified conditions.
+
+Security – The capability of the system to protect data and prevent unauthorized access or actions.
+
+Performance Efficiency – The ability of the system to provide appropriate performance in relation to the amount of resources used.
+
+ISO/IEC 25010 – An international software quality model used to evaluate software based on defined quality characteristics, including functional suitability, usability, reliability, security, and performance efficiency.
+

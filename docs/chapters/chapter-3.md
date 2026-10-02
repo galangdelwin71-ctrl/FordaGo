@@ -1,553 +1,331 @@
-# FordaGO: Mobile-Based Gym Database Management System for AFFORDA Gym – Cabiao Branch
+# Chapter III: Results and Discussion
 
-**A Capstone Project Proposal**
+## Chapter III
 
-**Researchers / Group Members:**
-* BERNALDO, CARL ANDREW B.
-* GALANG, DELWIN F.
-* JAVIER, JAYLEE T.
-* MEDINA, ETHAN JEROME G.
-* PONGCO, RYZA MAE M.
+Results and Discussions
 
-**Academic Program & Institution:**
-Bachelor of Science in Information Technology  
-College of Information and Communications Technology  
-Nueva Ecija University of Science and Technology (NEUST)  
-San Isidro Campus, San Isidro, Nueva Ecija  
+This chapter presents the comprehensive results, technical outcomes, and empirical findings obtained from the design, development, and evaluation of FordaGO: Mobile-Based Gym Database Management System for AFFORDA Gym – Cabiao Branch. It details the execution of the Agile Software Development Life Cycle (SDLC), the complete system models (Use Case, Context Diagrams, Normalization, ERD, and Data Dictionary), and the statistical analysis of the software quality evaluation based on the ISO/IEC 25010 standard administered to IT experts, gym staff, coaches, and members.
 
----
-
-# CHAPTER III: RESULTS AND DISCUSSIONS
-
-This chapter presents the comprehensive results, technical outcomes, and empirical findings obtained from the design, development, and evaluation of **FordaGO: Mobile-Based Gym Database Management System for AFFORDA Gym – Cabiao Branch**. It details the execution of the Agile Software Development Life Cycle (SDLC), the complete system models (Use Case, Context Diagrams, Normalization, ERD, and Data Dictionary), and the statistical analysis of the software quality evaluation based on the ISO/IEC 25010 standard administered to IT experts, gym staff, coaches, and members.
-
----
-
-## 1. Development of FordaGO: Mobile-Based Gym Database Management System for AFFORDA Gym – Cabiao Branch
+1. Development of FordaGO: Mobile-Based Gym Database Management System for AFFORDA Gym – Cabiao Branch
 
 The design and development of the FordaGO system followed the structured stages of the Agile System Development Life Cycle (SDLC), ensuring that all functional, technical, and operational requirements of AFFORDA Gym – Cabiao Branch were systematically implemented and verified.
 
----
+1.1. Planning Phase
 
-### 1.1. Planning Phase
+The planning phase established the foundational scope, feasibility, and technical direction of the FordaGO project. The researchers conducted preliminary site visits, workflow evaluations, and stakeholder consultations at AFFORDA Gym – Cabiao Branch in Cabiao, Nueva Ecija.
 
-The planning phase established the foundational scope, feasibility, and technical direction of the FordaGO project. The researchers conducted preliminary site visits, workflow evaluations, and stakeholder consultations at **AFFORDA Gym – Cabiao Branch** in Cabiao, Nueva Ecija.
+Problem Identification and Feasibility
 
-#### Problem Identification and Feasibility
 The investigation confirmed that the gym was experiencing severe operational delays due to manual paper logbooks for attendance tracking, difficulty in tracking membership pass expirations, absence of on-demand equipment orientation for beginner gym members, manual supplement inventory tracking, and lack of a structured digital channel connecting personal trainers and trainees.
 
 The technical, operational, and economic feasibility of the proposed mobile-based solution was established:
-* **Technical Feasibility:** Modern smartphones equipped with cameras and web browsers provide the necessary hardware environment for optical QR code scanning, real-time WebSocket communication, and responsive mobile interfaces without requiring expensive specialized hardware.
-* **Operational Feasibility:** Gym staff, personal trainers, and members expressed strong readiness to adopt a mobile application that simplifies daily check-in, routine management, supplement ordering, and coaching consultations.
-* **Economic Feasibility:** Eliminating physical paper ledgers and automating inventory records prevents revenue leakage, reduces administrative supply costs, and maximizes staff efficiency.
 
-#### Resource Allocation and Risk Management
-The researchers identified the necessary software tools (Laravel 11, Ionic 8, Angular, MySQL, Laravel Reverb, Visual Studio Code), hardware assets (mobile Android devices, PC workstations, and local wireless networking equipment), and potential deployment risks. Mitigation strategies included implementing offline cached UI views for temporary network drops, Bcrypt encryption and Sanctum token guards for data security, and conducting user onboarding orientations.
+Technical Feasibility: Modern Android smartphones and front-desk tablet devices equipped with cameras and web browsers provide the necessary hardware environment for optical QR code scanning, real-time WebSocket communication, and responsive kiosk/mobile interfaces without requiring expensive specialized desktop workstations or physical turnstiles. Furthermore, because FordaGO is hosted live on a Linux Cloud VPS with configured domain DNS, the administrative portal can be accessed seamlessly across mobile tablets and desktop web browsers alike.
 
-#### Project Schedule and Timeline
-The project was structured across a 20-week (5-month) timeline following the Agile SDLC framework.
+Operational Feasibility: Gym staff, personal trainers, and members expressed strong readiness to adopt a mobile application that simplifies daily check-in, routine management, supplement ordering, and coaching consultations.
 
-<p align="center"><b>Table 1.</b> <i>Gantt Chart of Activities for the Development of FordaGO</i></p>
+Economic Feasibility: Eliminating physical paper ledgers and automating inventory records prevents revenue leakage, reduces administrative supply costs, and maximizes staff efficiency.
 
-| Activities | Month 1 (Aug) | Month 2 (Sep) | Month 3 (Oct) | Month 4 (Nov) | Month 5 (Dec) |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| **1. Requirements Gathering & Planning** | [██████] | | | | |
-| **2. Architectural & Database Design** | | [██████] | | | |
-| **3. Full-Stack System Development** | | [██████] | [██████] | | |
-| **4. Integration & System Testing** | | | [██████] | [██████] | |
-| **5. Pilot Deployment & User Training** | | | | [██████] | |
-| **6. ISO 25010 Evaluation & Data Analysis**| | | | [██████] | [██████] |
-| **7. Final Documentation & Defense** | | | | | [██████] |
+Resource Allocation and Risk Management
 
----
+The researchers identified the necessary software tools (Laravel 11, Ionic 8, Angular, MySQL, Laravel Reverb, Visual Studio Code), hardware and cloud assets (Linux Cloud Virtual Private Server, member Android smartphones, front-desk Android tablet kiosks, and optional administrative PC web browsers via live domain DNS), and potential deployment risks. Mitigation strategies included implementing offline cached UI views for temporary network drops, Bcrypt encryption and Sanctum token guards for data security, and conducting user onboarding orientations.
 
-### 1.2. Designing Phase
+Project Schedule and Timeline
+
+The project was structured around a 9-month Iterative Agile Software Development Life Cycle (SDLC) for Afforda Gym – Cabiao Branch, NEUST San Isidro Campus, following the Agile SDLC framework, as outlined in the developmental timeline and Gantt chart presented in Figure 4.
+
+
+> **Figure 4. Gantt Chart of Activities for FordaGO System Development**
+
+(January–October 2026)
+
+1.2. Designing Phase
 
 The designing phase transformed the functional requirements gathered during planning into technical architecture diagrams, entity-relationship models, process flows, and user interface wireframes.
 
-#### System Architecture
-The system architecture follows a decoupled **Client-Server Model** consisting of:
-1. **Presentation Layer (Frontend):** Cross-platform mobile and web client engineered in **Ionic 8 + Angular** with standalone components, SCSS styling, and Capacitor native camera plugins.
-2. **Application Logic Layer (Backend):** **Laravel 11 (PHP 8.2+)** RESTful API server implementing MVC design patterns, Eloquent ORM, and Sanctum token middleware.
-3. **Real-Time Communication Layer:** **Laravel Reverb WebSocket Server** integrated with Laravel Echo for instant duplex messaging, live typing status, and proposal notifications.
-4. **Data Persistence Layer:** **MySQL 8.0** relational database management system enforcing foreign key referential integrity and atomic transaction processing.
+### System Architecture
 
-| Layer / Tier | Core Technology & Framework | Architectural Role & Responsibilities |
-| :--- | :--- | :--- |
-| **Presentation Tier (Frontend)** | **Ionic 8 + Angular** *(TypeScript, SCSS)* | Cross-platform responsive client, Member Mobile Portal, Coach Studio, Admin Web/Mobile Hub, Capacitor Camera plugin |
-| **Application Tier (Backend API)** | **Laravel 11 RESTful API** *(PHP 8.2+)* | Business logic controllers, Eloquent ORM, Sanctum token authentication, RBAC middleware guards, vector PDF/Excel engine |
-| **Real-Time Communication Tier** | **Laravel Reverb WebSocket Server** | High-throughput duplex WebSocket channels (Port 8080), instant chat broadcasting, live typing status, real-time proposal alerts |
-| **Data Persistence Tier (Database)** | **MySQL 8.0 Relational DB** | 3NF normalized tables (`users`, `memberships`, `attendances`, `equipment`, `products`, `orders`), ACID transaction compliance |
-<p align="center"><b>Figure 5.</b> <i>FordaGO Full-Stack Architectural Framework</i></p>
+The system architecture follows a decoupled Client-Server Model consisting of:
 
----
+1. Presentation Layer (Frontend):
 
-#### Use Case Diagram
-The Use Case Diagram illustrates the functional capabilities available to the three primary actors: **Gym Member**, **Gym Coach**, and **Gym Administrator / Front-Desk Staff**.
+Engineered using Ionic 8 and Angular standalone components to deliver a unified, cross-platform client architecture. This layer accommodates three primary operational touchpoints: (a) the native Android mobile application distributed via APK for gym members and accredited coaches, (b) the front-desk digital kiosk interface operating on touch-screen Android tablets (or reception PCs) at the front desk, and (c) the responsive web application portal accessible to desktop PCs, laptops, and Apple iOS devices (via Apple Safari or Google Chrome) over the live domain DNS (https://app.affordagym.com). Due to academic capstone budget constraints, the requirement for an annual $99 USD Apple Developer Program subscription, and Apple's strict policies prohibiting direct sideloading of iOS packages outside the App Store, iOS users utilize this live responsive web interface, achieving complete functional equivalence without requiring native App Store deployment.
 
-| Functional Capability / Use Case | Gym Member | Gym Coach | Gym Administrator / Staff |
-| :--- | :---: | :---: | :---: |
-| **Account Login & Sanctum Token Auth** | ✓ | ✓ | ✓ |
-| **Optical QR Attendance Check-In** | ✓ | — | — |
-| **Digital Camera Turnstile Verification** | — | — | ✓ |
-| **Scan Equipment QR & View Muscle Guides** | ✓ | — | — |
-| **Log Personal Records (PR) & Split Plans** | ✓ | — | — |
-| **Browse Supplements & Cart Checkout** | ✓ | — | — |
-| **1-on-1 Real-Time WebSocket Chat** | ✓ | ✓ | — |
-| **Create & Propose In-Chat Workout Plans** | — | ✓ | — |
-| **Manage Availability Slots & Group Classes** | — | ✓ | — |
-| **Verify Membership Passes & Renewals** | — | — | ✓ |
-| **Supplement POS & GCash Stock Audit** | — | — | ✓ |
-| **Generate & Print Equipment Placard QRs** | — | — | ✓ |
-| **Export Dynamic PDF / Excel Business Reports** | — | — | ✓ |
-<p align="center"><b>Figure 6.</b> <i>Use Case Diagram of FordaGO</i></p>
+2. Application Logic Layer (Backend):
 
----
+Laravel 11 (PHP 8.2+) RESTful API server implementing MVC design patterns, Eloquent ORM, and Sanctum token middleware.
 
-#### Context Diagrams (Level 0 and Level 1)
+3. Real-Time Communication Layer:
 
-##### Context Diagram Level 0
-The Level 0 Context Diagram establishes the global boundary of FordaGO, illustrating data input and information feedback between the system and its primary external entities.
+Laravel Reverb WebSocket Server integrated with Laravel Echo for instant duplex messaging, live typing status, and proposal notifications.
 
-| External Entity | Primary Data Inputs to FordaGO | Information Outputs from FordaGO |
-| :--- | :--- | :--- |
-| **Gym Member** | Login credentials, attendance QR scans, supplement orders, PR metrics, chat messages | Check-in confirmations, exercise guides, routine schedules, coaching proposals, order invoices |
-| **Gym Coach** | Login credentials, class schedules, weekly availability slots, workout proposals | Trainee consultation inquiries, booking rosters, direct chat messages, earnings insights |
-| **Gym Administrator / Staff** | Admin credentials, command overrides, pass approvals, product stock updates, equipment specs | Real-time traffic summaries, turnstile scan logs, sales & inventory audits, PDF/Excel reports |
-<p align="center"><b>Figure 7.</b> <i>Context Diagram Level 0 of FordaGO</i></p>
+4. Data Persistence Layer:
 
----
+MySQL 8.0 relational database management system enforcing strict referential integrity and automated backup protocols:   Scheduled automated daily MySQL database dumps (mysqldump) to preserve member transaction histories and attendance audit records. The comprehensive software engineering stack, integrated libraries, and cloud infrastructure powering the system are presented in the Full-Stack Architectural Framework in Figure 5.
 
-##### Context Diagram Level 1 (Data Flow Diagram)
-The Level 1 Diagram decomposes the system into its primary functional subprocesses and database stores.
 
-| Process ID | Functional Subprocess | Primary Input Entity | Target Database Store | Key Generated Output |
-| :---: | :--- | :--- | :--- | :--- |
-| **1.0** | **Authentication & Authorization** | All User Roles | `users` | Sanctum Bearer Tokens & Secure Sessions |
-| **2.0** | **QR Turnstile Attendance** | Member / Admin Turnstile | `attendances` | Confirmed Attendance Stamp & Traffic Logs |
-| **3.0** | **Equipment QR Information** | Member Camera Sensor | `equipment` | Targeted Muscle Diagram & Step Guide |
-| **4.0** | **PR & Split Routine Planner** | Member | `personal_records`, `workout_splits` | Strength Milestone Metrics & Workout Routine |
-| **5.0** | **WebSocket Chat & Proposals** | Member / Coach | `chat_messages`, `workout_proposals` | Instant Message Broadcast & 1-Tap Accept |
-| **6.0** | **Supplement POS & Inventory** | Member / Admin Staff | `products`, `orders`, `order_items` | Verified GCash Receipt & Atomic Stock Deduct |
-| **7.0** | **PDF / Excel Export Engine** | Admin Staff | Aggregated Relational Queries | Dynamic Vector PDF & CSV/Excel Spreadsheets |
-<p align="center"><b>Figure 8.</b> <i>Context Diagram Level 1 (Data Flow Diagram) of FordaGO</i></p>
+> **Figure 5. FordaGO Full-Stack Architectural Framework**
 
----
+### Use Case Diagram
 
-### 1.3. Development Phase
+Role-Based Access Control and System Actors
+
+The FordaGO system implements a rigorous Role-Based Access Control (RBAC) architecture designed to enforce the principle of least privilege across all mobile and web interfaces. Access rights and protected API routes are strictly validated via Laravel Sanctum bearer tokens and role-checking middleware. The system classifies authenticated users into five distinct operational roles across three functional tiers:
+
+1. Super Administrator (super_admin):
+
+Represents the highest tier of administrative and governance authority. The Super Administrator possesses unrestricted system access, including managing Administrator and Employee credentials, monitoring cross-tier system activity, configuring system settings, and overseeing automated database backup routines
+
+2. Gym Administrator (admin):
+
+Functions as the primary operational manager for daily gym business. The Administrator manages member accounts and coach profiles, oversees supplement product catalog inventory, approves counter orders and validates cash payment receipts, publishes announcements, and generates dynamic financial and attendance reports. Administrators are restricted from altering system-level server configurations or deleting Super Administrator accounts.
+
+3. Front-Desk Employee (employee):
+
+Receptionist and counter staff operating at the gym front desk. Employees are granted operational access to the digital optical QR camera scanner for entrance attendance check-in, walk-in member registration, pass validity lookup, and point-of-sale (POS) counter supplement sales. To safeguard financial and administrative integrity, Employees are strictly restricted from accessing financial revenue audit reports, viewing profit analytics, or modifying administrative staff accounts.
+
+4. Accredited Gym Coach (coach):
+
+Certified fitness trainers operating within the Coach Studio workspace. Coaches manage their trainee client rosters, configure weekly working availability schedules, conduct real-time duplex chat via Laravel Reverb WebSockets, and dispatch structured in-chat Workout Plan Proposals.
+
+5. Gym Member (user):
+
+End-users accessing the Member Mobile Portal. Members can monitor active pass duration, present digital QR passes at the entrance front-desk QR scanner, scan equipment printed QR code labels for instructional movement tutorials, log personal records (PRs), construct weekly split routines, browse the supplement shop catalog, and consult with accredited coaches.
+
+
+> **Table 1. User Role and Access Privilege Matrix of FordaGO**
+
+The operational boundaries, role-based capabilities, and interaction flows among these authenticated actors and system modules are formally modeled in the Use Case Diagram depicted in Figure 6. In this architecture, the Gym Member utilizes the mobile client application to scan the entrance QR code printed label for contactless attendance check-in, scan optical equipment printed QR code labels to access exercise tutorials and anatomical muscle guides, log personal workout sets and PR benchmarks, order supplements, and consult with assigned coaches. The Front-Desk Staff monitors live attendance rosters, confirms pending counter payments for walk-in daily passes, and manages point-of-sale transactions and supplement inventory.
+
+
+> **Figure 6. Use Case Diagram of FordaGO**
+
+### Context Diagram Level 0
+
+The Context Diagram Level 0 models the global operational scope and external boundary of the FordaGO system. As illustrated in Figure 7, the central system process (Process 0: FordaGO: FordaGO: Mobile-Based Gym Database Management System) interfaces with three primary external entities: Gym Member, Gym Coach, and Gym Administrator / Front-Desk Staff. Members supply account credentials, dynamic QR check-in passes, supplement cart orders, real-time chat messages, and personal workout records, while receiving immediate attendance confirmation, pass validity statuses, equipment instructional tutorials, and coach proposals. Gym Coaches exchange consultation proposals, working availability schedules, and group classes, receiving active trainee rosters, client workout progression, and monthly earnings summaries. Administrative staff ingest walk-in registrations, update inventory stock, approve counter cash payments, and configure system rules, receiving comprehensive attendance logs, POS sales transactions, inventory balances, and dynamic vector PDF reports.
+
+
+> **Figure 7. Context Diagram Level 0 of FordaGO**
+
+### Data Flow Diagram (DFD) Level 1
+
+The Data Flow Diagram (DFD) Level 1 decomposes the central system process into seven core operational subprocesses and establishes their direct bidirectional data exchanges with external entities and normalized database stores, as depicted in Figure 8. Subprocess 1.0 (User Authentication & Profile Management) securely handles member authentication and profile updates against the users data store. Subprocess 2.0 (QR Attendance Verification & Check-In Processing) validates incoming digital QR member passes and writes confirmed entry timestamps into the attendance store. Subprocess 3.0 (Optical Equipment QR Scanning & Instructional Guidance) queries machine printed labels from the equipment store to deliver anatomical guidance. Subprocess 4.0 (Workout Routine & PR Metric Logging) stores lifting benchmarks and custom split routines into the workout_sessions store. Subprocess 5.0 (Real-Time Consultation & Workout Proposals) manages coach-trainee communications and saves proposal objects into the workout_proposals store. Subprocess 6.0 (Supplement Shop POS & Order Processing) tracks cart orders, manages payment verification, and records sales in the orders store while deducting inventory from products. Finally, Subprocess 7.0 (Inventory Stock Management & Dynamic Report Generation) aggregates multi-table operational metrics from all data stores to generate administrative PDF and Excel analytics.
+
+
+> **Figure 8. Data Flow Diagram (DFD) Level 1 of FordaGO**
+
+### Database Normalization
+
+To ensure high data integrity, minimize redundancy, and preserve transactional consistency, database normalization was applied through the fundamental normal forms (1NF, 2NF, and 3NF).
+
+1. Unnormalized Form (UNF)
+
+In the unnormalized state, all attributes across users, attendance check-ins, memberships, workout routines, coaching proposals, products, and supplement orders were represented in a single flat structure with multivalued and repeating groups.
+
+UNNORMALIZED DATA ATTRIBUTES (UNF):
+
+UNF = { user_id, first_name, last_name, email, password, role, phone, fcm_token, membership_id, membership_type, start_date, end_date, membership_status, membership_price, attendance_id, attendance_date, check_in_time, attendance_status, equipment_id, equipment_name, equipment_category, target_muscle, media_url, qr_code_key, equipment_status, pr_id, exercise_name, weight, reps, record_date, workout_id, day_of_week, duration_minutes, routine_data, coach_id, coach_specialty, hourly_rate, bio, availability_data, proposal_id, proposal_title, proposal_price, proposal_routine, scheduled_date, proposal_status, message_id, conversation_id, sender_id, receiver_id, message_text, product_id, product_name, product_category, product_price, stock_quantity, image_path, order_id, total_amount, payment_method, gcash_ref, proof_image, order_status, order_date, item_id, item_quantity, unit_price, subtotal }
+
+In this unnormalized state, a single flat structure contains all operational data of the gym. Specifically, the proposal attributes (proposal_id, proposal_title, proposal_price, proposal_routine, scheduled_date, proposal_status) represent the coach-to-client personalized workout plan proposal module, where an accredited coach formulates and submits a customized exercise regimen to a specific member. The consultation chat attributes feature distinct sender_id and receiver_id references for real-time one-on-one direct messaging between trainers and members, while order attributes support front-desk cash logging and demonstration GCash reference recording.
+
+Because multiple workout routines, attendances, orders, and messages recur for each registered member, this unnormalized structure contains severe data redundancy and repeating groups that would lead to insertion, update, and deletion anomalies if implemented directly.
+
+2. First Normal Form (1NF)
+
+All multivalued attributes and repeating groups were eliminated. Atomic column structures were defined, and unique primary keys were designated for each distinct table.
+
+3. Second Normal Form (2NF)
+
+Partial functional dependencies were removed. All non-key attributes were made fully functionally dependent on the entire primary key of their respective tables.
+
+4. Third Normal Form (3NF)
+
+Transitive dependencies were removed. Non-key attributes depend solely and directly on the primary key, preventing update, insertion, and deletion anomalies.
+
+### Entity-Relationship Diagram (ERD)
+
+The Entity-Relationship Diagram illustrates the logical tables, primary keys, foreign keys, and cardinalities defining the FordaGO database structure, as presented in Figure 9.
+
+
+> **Figure 9. Entity-Relationship Diagram (ERD) of FordaGO**
+
+Data Dictionary
+
+The Data Dictionary provides the physical data schema, data types, field constraints, and descriptive purposes of each database table in FordaGO.
+
+
+> **Table 2. Data Dictionary for the users Table**
+
+
+> **Table 3. Data Dictionary for the attendances Table**
+
+
+> **Table 4. Data Dictionary for the equipment Table**
+
+
+> **Table 5. Data Dictionary for the workout_proposals Table**
+
+
+> **Table 6. Data Dictionary for the products Table**
+
+
+> **Table 7. Data Dictionary for the orders Table**
+
+1.3. Development Phase
 
 In the development phase, the blueprints, schemas, and interface models were translated into functional source code.
 
-#### Implementation Tools and Development Stack
-* **Programming Languages & Frameworks:** PHP 8.2+ (Laravel 11), TypeScript / JavaScript (Angular, Ionic 8), SCSS, SQL.
-* **Integrated Development Environment (IDE):** Visual Studio Code with PHP Intelephense, Angular Language Service, and Docker extensions.
-* **Database & Server Environment:** MySQL 8.0 Community Server managed via Laravel Migrations and Eloquent ORM.
-* **Real-Time WebSockets Engine:** Laravel Reverb running on dedicated WebSocket port `8080` with continuous event broadcasting.
-* **Mobile Runtime & Camera Access:** Capacitor Native Core with Barcode Scanner and Camera plugins.
+Implementation Tools and Development Stack
 
----
+Programming Languages & Frameworks: PHP 8.2+ (Laravel 11), TypeScript / JavaScript (Angular, Ionic 8), SCSS, SQL.
 
-#### Database Normalization
-To ensure high data integrity, minimize redundancy, and preserve transactional consistency, database normalization was applied through the fundamental normal forms (1NF, 2NF, and 3NF).
+Integrated Development Environment (IDE): Visual Studio Code with standard code intelligence and debugging tools, Angular Language Service, and Docker extensions.
 
-##### 1. Unnormalized Form (UNF)
-In the unnormalized state, all attributes across users, attendance check-ins, memberships, workout routines, coaching proposals, products, and supplement orders were represented in a single flat structure with multivalued and repeating groups.
+Database & Containerized Server Environment: MySQL 8.0 Community Server managed via Laravel Migrations and Eloquent ORM, orchestrated in production through Podman / Docker containers on a Linux Cloud Virtual Private Server (VPS).
 
-> **UNNORMALIZED DATA ATTRIBUTES (UNF):**
-> 
-> `user_id`, `first_name`, `last_name`, `email`, `password`, `role`, `contact_number`, `membership_type`, `membership_start`, `membership_expiry`, `membership_status`, `attendance_id`, `attendance_date`, `check_in_time`, `check_in_status`, `equipment_id`, `equipment_name`, `equipment_category`, `muscle_group`, `media_url`, `pr_id`, `exercise_name`, `max_weight`, `reps`, `pr_date`, `workout_id`, `split_day`, `target_duration`, `routine_details`, `coach_id`, `coach_specialty`, `coach_rate`, `availability_schedule`, `proposal_id`, `proposal_title`, `proposal_price`, `proposal_status`, `proposal_date`, `conversation_id`, `sender_id`, `receiver_id`, `message_text`, `message_timestamp`, `product_id`, `product_name`, `product_category`, `price`, `stock_quantity`, `order_id`, `order_date`, `payment_method`, `gcash_reference`, `order_total`, `order_status`
+Real-Time WebSockets Engine: Laravel Reverb running on dedicated WebSocket port 8080 with continuous event broadcasting.
 
-##### 2. First Normal Form (1NF)
-All multivalued attributes and repeating groups were eliminated. Atomic column structures were defined, and unique primary keys were designated for each distinct table.
+Mobile Runtime & Camera Access: Capacitor Native Core with QR Code Scanner and Camera plugins. The integrated development environment and source code structure implemented in Visual Studio Code are shown in Figure 10.
 
-| Relation / Table Entity | Primary Key (PK) | Atomic Column Schema (1NF) |
-| :--- | :---: | :--- |
-| **`users`** | `user_id` | `first_name`, `last_name`, `email`, `password`, `role`, `contact_number`, `created_at` |
-| **`memberships`** | `membership_id` | `user_id`, `type`, `start_date`, `end_date`, `status`, `price` |
-| **`attendances`** | `attendance_id` | `user_id`, `date`, `check_in_time`, `status` |
-| **`equipment`** | `equipment_id` | `name`, `category`, `target_muscle`, `media_url`, `status` |
-| **`personal_records`** | `pr_id` | `user_id`, `exercise_name`, `weight`, `reps`, `record_date` |
-| **`workout_splits`** | `workout_id` | `user_id`, `day_of_week`, `duration_minutes`, `routine_json` |
-| **`coach_profiles`** | `coach_id` | `user_id`, `specialty`, `hourly_rate`, `bio`, `availability_json` |
-| **`workout_proposals`** | `proposal_id` | `coach_id`, `member_id`, `title`, `price`, `routine_json`, `status` |
-| **`chat_messages`** | `message_id` | `conversation_id`, `sender_id`, `message_text`, `created_at` |
-| **`products`** | `product_id` | `name`, `category`, `price`, `stock_quantity`, `image_url` |
-| **`orders`** | `order_id` | `user_id`, `total_amount`, `payment_method`, `gcash_ref`, `status`, `created_at` |
-| **`order_items`** | `item_id` | `order_id`, `product_id`, `quantity`, `unit_price`, `subtotal` |
 
-##### 3. Second Normal Form (2NF)
-Partial functional dependencies were removed. All non-key attributes were made fully functionally dependent on the entire primary key of their respective tables.
+> **Figure 10. Visual Studio Code Environment with PHP / Laravel Source Code**
 
-##### 4. Third Normal Form (3NF)
-Transitive dependencies were removed. Non-key attributes depend solely and directly on the primary key, preventing update, insertion, and deletion anomalies.
+The relational database tables, structural schema definitions, and migration states were managed and verified through the MySQL database administration interface, as illustrated in Figure 11.
 
-| Table Name | Primary Key | Foreign Keys & Core Columns |
-| :--- | :--- | :--- |
-| **`users`** | `user_id` (PK) | `first_name`, `last_name`, `email`, `password` *(Bcrypt)*, `role`, `contact_number`, `fcm_token` |
-| **`memberships`** | `membership_id` (PK) | `user_id` *(FK ➔ `users`)*, `pass_type`, `start_date`, `end_date`, `status`, `price_paid` |
-| **`attendances`** | `attendance_id` (PK) | `user_id` *(FK ➔ `users`)*, `check_in_date`, `check_in_time`, `status` |
-| **`equipment`** | `equipment_id` (PK) | `name`, `category`, `target_muscle`, `media_url`, `qr_code_identifier`, `status` |
-| **`personal_records`** | `pr_id` (PK) | `user_id` *(FK ➔ `users`)*, `exercise_name`, `weight_kg`, `reps`, `record_date` |
-| **`workout_splits`** | `workout_id` (PK) | `user_id` *(FK ➔ `users`)*, `day_of_week`, `target_duration`, `routine_details` *(JSON)* |
-| **`workout_proposals`** | `proposal_id` (PK) | `coach_id` *(FK ➔ `users`)*, `member_id` *(FK ➔ `users`)*, `title`, `price`, `routine_json`, `status` |
-| **`chat_messages`** | `message_id` (PK) | `conversation_id`, `sender_id` *(FK ➔ `users`)*, `message_text`, `created_at` |
-| **`products`** | `product_id` (PK) | `name`, `category`, `price`, `stock_quantity`, `image_url`, `status` |
-| **`orders`** | `order_id` (PK) | `user_id` *(FK ➔ `users`)*, `total_amount`, `payment_method`, `gcash_reference`, `status` |
-| **`order_items`** | `item_id` (PK) | `order_id` *(FK ➔ `orders`)*, `product_id` *(FK ➔ `products`)*, `quantity`, `unit_price`, `subtotal` |
 
----
+> **Figure 11. Database Tables and Implementation Environment (MySQL / phpMyAdmin)**
 
-#### Entity-Relationship Diagram (ERD)
-The Entity-Relationship Diagram illustrates the logical tables, primary keys, foreign keys, and cardinalities defining the FordaGO database structure.
-
-| Primary / Parent Entity (1) | Cardinality | Related / Child Entity (N) | Foreign Key Relationship | Business Logic & Integrity Constraint |
-| :--- | :---: | :--- | :--- | :--- |
-| **`users`** | **1 : N** | **`memberships`** | `memberships.user_id` ➔ `users.user_id` | Member pass subscription history and renewal tracking |
-| **`users`** | **1 : N** | **`attendances`** | `attendances.user_id` ➔ `users.user_id` | Optical turnstile QR check-in log generation |
-| **`users`** | **1 : N** | **`personal_records`** | `personal_records.user_id` ➔ `users.user_id` | Exercise milestone and strength percentage gains |
-| **`users`** | **1 : N** | **`workout_splits`** | `workout_splits.user_id` ➔ `users.user_id` | 7-day personalized workout split routines |
-| **`users` *(Coach)*** | **1 : N** | **`workout_proposals`** | `workout_proposals.coach_id` ➔ `users.user_id` | Structured in-chat workout proposal dispatch |
-| **`users` *(Member)*** | **1 : N** | **`workout_proposals`** | `workout_proposals.member_id` ➔ `users.user_id` | Member proposal receipt, review, and 1-tap acceptance |
-| **`users`** | **1 : N** | **`orders`** | `orders.user_id` ➔ `users.user_id` | Multi-item supplement and merchandise purchases |
-| **`orders`** | **1 : N** | **`order_items`** | `order_items.order_id` ➔ `orders.order_id` | Line item breakdown per cart order |
-| **`products`** | **1 : N** | **`order_items`** | `order_items.product_id` ➔ `products.product_id` | Product catalog linkage and atomic stock deductions |
-<p align="center"><b>Figure 9.</b> <i>Entity-Relationship Diagram (ERD) of FordaGO</i></p>
-
-<p align="center">
-  <img src="../figures/clean_masters/fig09_erd_model.png" alt="Figure 9. Entity-Relationship Diagram (ERD) of FordaGO" width="100%">
-</p>
-
----
-
-#### Data Dictionary
-The Data Dictionary provides the physical data schema, data types, field constraints, and descriptive purposes of each database table in FordaGO.
-
-<p align="center"><b>Table 2.</b> <i>Data Dictionary for the <code>users</code> Table</i></p>
-
-| Field Name | Data Type | Key / Constraint | Description |
-| :--- | :--- | :--- | :--- |
-| `id` | BIGINT UNSIGNED | Primary Key, Auto Increment | Unique user identifier |
-| `first_name` | VARCHAR(100) | NOT NULL | Given first name of the user |
-| `last_name` | VARCHAR(100) | NOT NULL | Family surname of the user |
-| `email` | VARCHAR(255) | UNIQUE, NOT NULL | Account email / login credential |
-| `password` | VARCHAR(255) | NOT NULL | Bcrypt-hashed account password |
-| `role` | ENUM | NOT NULL | Role: `member`, `coach`, `admin`, `employee`, `super_admin` |
-| `contact_number`| VARCHAR(20) | NULLABLE | Contact telephone / mobile number |
-| `fcm_token` | TEXT | NULLABLE | Firebase Cloud Messaging push token |
-| `created_at` | TIMESTAMP | NULLABLE | System record creation timestamp |
-| `updated_at` | TIMESTAMP | NULLABLE | Last record modification timestamp |
-
-<br>
-
-<p align="center"><b>Table 3.</b> <i>Data Dictionary for the <code>attendances</code> Table</i></p>
-
-| Field Name | Data Type | Key / Constraint | Description |
-| :--- | :--- | :--- | :--- |
-| `id` | BIGINT UNSIGNED | Primary Key, Auto Increment | Unique attendance record identifier |
-| `user_id` | BIGINT UNSIGNED | Foreign Key (`users.id`) | Reference to the attending member |
-| `check_in_date` | DATE | NOT NULL | Calendar date of attendance |
-| `check_in_time` | TIME | NOT NULL | Exact time of turnstile check-in |
-| `status` | ENUM | NOT NULL | Status: `confirmed`, `rejected`, `pending` |
-| `created_at` | TIMESTAMP | NULLABLE | Creation timestamp |
-
-<br>
-
-<p align="center"><b>Table 4.</b> <i>Data Dictionary for the <code>equipment</code> Table</i></p>
-
-| Field Name | Data Type | Key / Constraint | Description |
-| :--- | :--- | :--- | :--- |
-| `id` | BIGINT UNSIGNED | Primary Key, Auto Increment | Unique equipment identifier |
-| `name` | VARCHAR(150) | NOT NULL | Official name of the gym machine/station |
-| `category` | VARCHAR(100) | NOT NULL | Category (e.g., Free Weights, Cardio, Machine) |
-| `target_muscle` | VARCHAR(150) | NOT NULL | Anatomical muscle group highlighted |
-| `media_url` | VARCHAR(255) | NULLABLE | Path to tutorial image / video demonstration |
-| `qr_code_key` | VARCHAR(100) | UNIQUE, NOT NULL | Alphanumeric string encoded in QR placard |
-| `status` | ENUM | NOT NULL | Equipment condition: `operational`, `maintenance` |
-
-<br>
-
-<p align="center"><b>Table 5.</b> <i>Data Dictionary for the <code>workout_proposals</code> Table</i></p>
-
-| Field Name | Data Type | Key / Constraint | Description |
-| :--- | :--- | :--- | :--- |
-| `id` | BIGINT UNSIGNED | Primary Key, Auto Increment | Unique workout proposal identifier |
-| `coach_id` | BIGINT UNSIGNED | Foreign Key (`users.id`) | Coach authoring the proposal |
-| `member_id` | BIGINT UNSIGNED | Foreign Key (`users.id`) | Target client receiving proposal |
-| `title` | VARCHAR(200) | NOT NULL | Routine title (e.g., Hypertrophy Push Day) |
-| `scheduled_date`| DATE | NOT NULL | Planned session execution date |
-| `price` | DECIMAL(10,2)| DEFAULT 0.00 | Fee charged for the coaching session |
-| `routine_data` | JSON | NOT NULL | Structured exercises, sets, reps, and notes |
-| `status` | ENUM | NOT NULL | Proposal state: `pending`, `accepted`, `declined` |
-
-<br>
-
-<p align="center"><b>Table 6.</b> <i>Data Dictionary for the <code>products</code> Table</i></p>
-
-| Field Name | Data Type | Key / Constraint | Description |
-| :--- | :--- | :--- | :--- |
-| `id` | BIGINT UNSIGNED | Primary Key, Auto Increment | Unique supplement/product identifier |
-| `name` | VARCHAR(150) | NOT NULL | Commercial product name |
-| `category` | VARCHAR(100) | NOT NULL | Category (e.g., Protein, Pre-Workout, Gear) |
-| `price` | DECIMAL(10,2)| NOT NULL | Unit retail selling price |
-| `stock_quantity`| INT | NOT NULL, DEFAULT 0 | Available physical warehouse stock count |
-| `image_path` | VARCHAR(255) | NULLABLE | Stored product preview image path |
-
-<br>
-
-<p align="center"><b>Table 7.</b> <i>Data Dictionary for the <code>orders</code> Table</i></p>
-
-| Field Name | Data Type | Key / Constraint | Description |
-| :--- | :--- | :--- | :--- |
-| `id` | BIGINT UNSIGNED | Primary Key, Auto Increment | Unique sales transaction identifier |
-| `user_id` | BIGINT UNSIGNED | Foreign Key (`users.id`) | Ordering gym member |
-| `total_amount` | DECIMAL(10,2)| NOT NULL | Total monetary amount of the order |
-| `payment_method`| ENUM | NOT NULL | Payment type: `counter_cash`, `gcash` |
-| `gcash_ref` | VARCHAR(100) | NULLABLE | GCash transaction reference number |
-| `proof_image` | VARCHAR(255) | NULLABLE | Uploaded digital receipt screenshot |
-| `status` | ENUM | NOT NULL | Order status: `pending`, `approved`, `rejected` |
-| `created_at` | TIMESTAMP | NULLABLE | Transaction placement timestamp |
-
----
-
-### 1.4. Testing Phase
+1.4. Testing Phase
 
 The testing phase executed rigorous quality assurance across multiple operational tiers:
-1. **Unit Testing:** Individual controller methods (e.g., `AttendanceController::checkin`, `InventoryController::checkout`) were tested in isolation using PHPUnit to confirm accurate input validation and database rollbacks.
-2. **Integration Testing:** Verified real-time WebSocket channel subscriptions via Laravel Echo and Reverb. In-chat message dispatches and workout plan proposal notifications demonstrated sub-second latency across mobile Android devices and desktop web browsers.
-3. **Security & Vulnerability Testing:** Verified role-based route middleware. Unauthorized access attempts to administrative routes (`/admin`, `/reports`) by member tokens were successfully intercepted and blocked with HTTP 403 Forbidden responses.
-4. **User Acceptance Testing (UAT):** Conducted at AFFORDA Gym – Cabiao Branch with the gym administrator, on-duty coaches, and active members. All primary operational scenarios (QR turnstile check-in, equipment tutorial scanning, PR metric logging, split routine creation, coach proposal acceptance, and GCash cart checkout) performed reliably without fatal exceptions.
 
----
+1. Unit Testing: Individual controller methods (e.g., AttendanceController::checkin, InventoryController::checkout) were tested in isolation using PHPUnit to confirm accurate input validation and database rollbacks.
 
-### 1.5. Deployment Phase
+2. Integration Testing: Verified real-time WebSocket channel subscriptions via Laravel Echo and Reverb. In-chat message dispatches and workout plan proposal notifications demonstrated sub-second latency across mobile Android devices and desktop web browsers.
 
-The FordaGO system was deployed in a local wireless area network (LAN) environment at AFFORDA Gym – Cabiao Branch:
-* **Server Setup:** Configured on a dedicated on-premise host running Nginx, PHP 8.2-FPM, MySQL 8.0, and the Laravel Reverb daemon on port `8080`.
-* **Mobile Client Distribution:** Generated production-ready Android APK packages installed on the mobile smartphones of gym personnel, coaches, and pilot members.
-* **Onboarding & User Training:** Conducted comprehensive orientation sessions for front-desk personnel and personal trainers covering turnstile camera operation, GCash order validation, printable equipment QR placard generation, and client proposal tracking.
+3. Security & Vulnerability Testing: Verified role-based route middleware. Unauthorized access attempts to administrative routes (/admin, /reports) by member tokens were successfully intercepted and blocked with HTTP 403 Forbidden responses.
 
----
+4. User Acceptance Testing (UAT): Conducted at AFFORDA Gym – Cabiao Branch with the gym administrator, on-duty coaches, and active members. All primary operational scenarios (QR front-desk scanning check-in, equipment tutorial scanning, PR metric logging, split routine creation, coach proposal acceptance, and counter cash cart checkout) performed reliably without fatal exceptions.
 
-### 1.6. Review Phase
+1.5. Deployment Phase
+
+The FordaGO system was deployed in a production Linux Cloud Virtual Private Server (VPS) environment, accessible live over the internet for AFFORDA Gym – Cabiao Branch:
+
+Server and Containerized Architecture:
+
+Hosted on a dedicated Linux Cloud VPS orchestrated through a multi-container Podman / Docker architecture. The production deployment consists of: (1) an Nginx reverse proxy gateway handling SSL termination and reverse-proxying HTTP/HTTPS (ports 80/443) and WebSockets; (2) a containerized Laravel 11 REST API backend running PHP 8.2-FPM; (3) an isolated MySQL 8.0 database container (fordago_db) with persistent volume storage; (4) a dedicated Laravel Reverb WebSocket daemon (port 8080) powering real-time chat, in-chat workout proposals, and instant attendance broadcasting; and (5) a background queue worker container for handling asynchronous transactional jobs.
+
+Mobile Client Distribution:
+
+Generated production-ready Android APK packages installed on the mobile smartphones of gym personnel, coaches, and pilot members.
+
+Onboarding & User Training: Conducted comprehensive orientation sessions for front-desk personnel and personal trainers covering front-desk QR scanner camera operation, counter cash order validation, printable equipment printed QR code label generation, and client proposal tracking.
+
+1.6. Review Phase
 
 Following initial deployment, the researchers monitored daily gym workflows to gather usability feedback:
-* **Attendance Flow Optimization:** The turnstile camera scanner was calibrated with automatic debounce controls to prevent accidental double-scanning of member QR passes.
-* **Proposal Flow Enhancements:** Added instant visual status badges (`Pending`, `Accepted`, `Declined`) within the coach-trainee chat view for transparent progress tracking.
-* **Inventory Stock Safeguards:** Configured atomic stock checks during multi-item cart checkout to eliminate inventory over-allocation.
 
----
+Attendance Flow Optimization:
 
-### 1.7. Maintenance and Support Phase
+The front-desk QR scanner camera scanner was calibrated with automatic debounce controls to prevent accidental double-scanning of member QR passes.
+
+Proposal Flow Enhancements:
+
+Added instant visual status badges (Pending, Accepted, Declined) within the coach-trainee chat view for transparent progress tracking.
+
+Inventory Stock Safeguards:
+
+Configured atomic stock checks during multi-item cart checkout to eliminate inventory over-allocation.
+
+1.7. Maintenance and Support Phase
 
 To guarantee long-term system sustainability, the researchers instituted structured maintenance protocols:
-* **Corrective Maintenance:** Standardized automated server error logging (`storage/logs/laravel.log`) for rapid bug identification and hot-reload patch deployment.
-* **Adaptive Maintenance:** Database migration scripts ensure that future gym expansion (e.g., adding automated turnstile hardware or cloud server deployment) can be integrated without data corruption.
-* **Database Backup Protocols:** Scheduled automated daily MySQL database dumps (`mysqldump`) to preserve member transaction histories and attendance audit records.
 
----
+Corrective Maintenance:
 
-## 2. Assessment of the Technical Quality of FordaGO by IT Experts (ISO/IEC 25010 Standards)
+Standardized automated server error logging (storage/logs/laravel.log) for rapid bug identification and hot-reload patch deployment.
 
-The technical quality and architectural robustness of the FordaGO system were comprehensively evaluated by five ($n = 5$) Information Technology professionals and software developers based on the eight (8) software product quality characteristics of the **ISO/IEC 25010** standard using a standardized **5-point Likert scale** instrument.
+Adaptive Maintenance:
 
-<p align="center"><b>Table 7.</b> <i>Demographic and Professional Profile of IT Expert Evaluators</i></p>
+Database migration scripts ensure that future gym expansion (e.g., adding automated electromechanical front-desk QR camera scanners, multi-branch scaling, or integrated biometric gateways) can be integrated without data corruption.
 
-| Evaluator Code | Educational Attainment | Current Professional Role / Specialization | Years in Practice | Evaluated Focus Area |
-| :---: | :--- | :--- | :---: | :--- |
-| **IT-01** | BS Information Technology | Senior Full-Stack Developer / REST API Engineer | 5 Years | Backend Architecture & WebSocket Pipelines |
-| **IT-02** | BS Computer Science (MSIT Units) | Systems Analyst & Cloud Infrastructure Architect | 6 Years | Linux VPS Containerization & Network Uptime |
-| **IT-03** | BS Information Technology | Database Administrator (DBA) & Security Analyst | 4 Years | 3NF Schema Integrity, Foreign Keys & Bcrypt RBAC |
-| **IT-04** | BS Computer Science | Mobile Application Developer (Cross-Platform) | 3 Years | Angular/Ionic Client UI & Camera Scanner |
-| **IT-05** | BS Information Technology | Quality Assurance (QA) & Software Test Engineer | 4 Years | Automated Logging, Error Handling & Modularity |
+Automated Cloud Backup & Disaster Recovery Protocols:
 
----
+Implemented an automated Linux cron task running on the VPS every 3 hours (vps-backup-fordago.sh). The script executes mysqldump from inside the database container with routines and triggers, compresses the SQL dump using maximum GZIP compression (-9), logs execution timestamps, and automatically rotates historical archives to retain the latest 5 verified backup snapshots in /root/fordago-backups/, ensuring zero data loss and rapid point-in-time recovery.
 
-### 2.1. Functional Suitability
+2. Assessment of the Technical Quality of FordaGO by IT Experts (ISO/IEC 25010 Standards)
 
-<p align="center"><b>Table 8.</b> <i>Results of IT Experts' Assessment on Functional Suitability</i></p>
+The technical quality of the FordaGO system was evaluated by five (5) Information Technology professionals and software developers based on the eight software product quality characteristics of the ISO/IEC 25010 standard using a 5-point Likert scale.
 
-| Criteria / Parameter | Weighted Mean ($\overline{X}$) | Qualitative Rating |
-| :--- | :---: | :---: |
-| 1. Functional Completeness (Provides all necessary functions required for Afforda Gym operations) | 4.80 | Very Functional |
-| 2. Functional Correctness (Produces accurate results and processes information correctly) | 4.60 | Very Functional |
-| 3. Functional Appropriateness (Implemented functions effectively support users in completing tasks) | 4.80 | Very Functional |
-| **Grand Mean** | **4.73** | **Very Functional** |
+2.1. Functional Suitability
 
-The Functional Suitability of FordaGO obtained a grand mean of **4.73 (Very Functional / Very Strong Evidence)**. Evaluators affirmed that the system completely implements all required gym management operations, delivers accurate calculations for PR percentage gains and inventory stock deductions, and facilitates seamless workout proposal dispatching.
 
----
+> **Table 8. Results of IT Experts’ Assessment on Functional Suitability**
 
-### 2.2. Performance Efficiency
+The Functional Suitability of FordaGO obtained a grand mean of 4.73 (Very Functional). Evaluators affirmed that the system completely implements all required gym management operations, delivers accurate calculations for PR percentage gains and inventory stock deductions, and facilitates seamless workout proposal dispatching.
 
-<p align="center"><b>Table 9.</b> <i>Results of IT Experts' Assessment on Performance Efficiency</i></p>
+2.2. Performance Efficiency
 
-| Criteria / Parameter | Weighted Mean ($\overline{X}$) | Qualitative Rating |
-| :--- | :---: | :---: |
-| 1. Time-behavior (Quick response and processing time during transactions) | 4.80 | Very Efficient |
-| 2. Resource utilization (Efficiently utilizes CPU, memory, storage, and network resources) | 4.60 | Very Efficient |
-| 3. Capacity (Maintains acceptable performance under increasing workloads and users) | 4.80 | Very Efficient |
-| **Grand Mean** | **4.73** | **Very Efficient** |
 
-Performance Efficiency garnered a grand mean of **4.73 (Very Efficient / Very Strong Evidence)**. The implementation of Laravel Reverb WebSockets for real-time chat and jsPDF for client-side report generation resulted in sub-second transaction speeds and minimal server CPU/memory consumption.
+> **Table 9. Results of IT Experts’ Assessment on Performance Efficiency**
 
----
+Performance Efficiency garnered a grand mean of 4.73 (Very Efficient). The implementation of Laravel Reverb WebSockets for real-time chat and jsPDF for client-side report generation resulted in sub-second transaction speeds and minimal server CPU/memory consumption.
 
-### 2.3. Compatibility
+2.3. Compatibility
 
-<p align="center"><b>Table 10.</b> <i>Results of IT Experts' Assessment on Compatibility</i></p>
 
-| Criteria / Parameter | Weighted Mean ($\overline{X}$) | Qualitative Rating |
-| :--- | :---: | :---: |
-| 1. Co-existence (Performs efficiently while sharing resources with other applications) | 4.80 | Very Compatible |
-| 2. Interoperability (Exchanges and utilizes information with compatible systems or applications) | 4.80 | Very Compatible |
-| **Grand Mean** | **4.80** | **Very Compatible** |
+> **Table 10. Results of IT Experts’ Assessment on Compatibility**
 
-Compatibility achieved a grand mean of **4.80 (Very Compatible / Very Strong Evidence)**. FordaGO operates smoothly across diverse Android mobile versions and modern desktop browsers (Chrome, Edge, Firefox) without hardware conflicts or driver incompatibilities.
+Compatibility achieved a grand mean of 4.80 (Very Compatible). FordaGO operates smoothly across diverse Android mobile versions and modern desktop browsers (Chrome, Edge, Firefox) without hardware conflicts or driver incompatibilities.
 
----
+2.4. Usability
 
-### 2.4. Usability
 
-<p align="center"><b>Table 11.</b> <i>Results of IT Experts' Assessment on Usability</i></p>
+> **Table 11. Results of IT Experts’ Assessment on Usability**
 
-| Criteria / Parameter | Weighted Mean ($\overline{X}$) | Qualitative Rating |
-| :--- | :---: | :---: |
-| 1. Appropriateness Recognizability (Users can easily recognize system purpose and functions) | 4.80 | Very Usable |
-| 2. Learnability (System is easy to learn for new and experienced users) | 4.80 | Very Usable |
-| 3. Operability (Users can easily navigate and control system functions) | 5.00 | Very Usable |
-| 4. User Error Protection (Prevents user errors through validation and clear messages) | 4.60 | Very Usable |
-| 5. User Interface Aesthetics (Interface is visually appealing, organized, and consistent) | 4.80 | Very Usable |
-| 6. Accessibility (System is accessible and convenient for its intended users) | 4.80 | Very Usable |
-| **Grand Mean** | **4.80** | **Very Usable** |
+Usability achieved an outstanding grand mean of 4.80 (Very Usable), with Operability receiving a perfect 5.00. Evaluators commended the dark fitness aesthetic, intuitive navigation tabs, and clear interactive onboarding tour guides.
 
-Usability achieved an outstanding grand mean of **4.80 (Very Usable / Very Strong Evidence)**, with Operability receiving a perfect **5.00**. Evaluators commended the dark fitness aesthetic, intuitive navigation tabs, and clear interactive onboarding tour guides.
+2.5. Reliability
 
----
 
-### 2.5. Reliability
+> **Table 12. Results of IT Experts’ Assessment on Reliability**
 
-<p align="center"><b>Table 12.</b> <i>Results of IT Experts' Assessment on Reliability</i></p>
+Reliability obtained a grand mean of 4.70 (Very Reliable). The database schema’s foreign key constraints and transactional integrity prevent data corruption during concurrent order submissions and front-desk scanning check-ins.
 
-| Criteria / Parameter | Weighted Mean ($\overline{X}$) | Qualitative Rating |
-| :--- | :---: | :---: |
-| 1. Maturity (System operates consistently with minimal software failures) | 4.80 | Very Reliable |
-| 2. Availability (System is available whenever authorized users need it) | 4.80 | Very Reliable |
-| 3. Fault Tolerance (Continues operating despite minor software or hardware faults) | 4.60 | Very Reliable |
-| 4. Recoverability (Can recover data and resume operation after failures) | 4.60 | Very Reliable |
-| **Grand Mean** | **4.70** | **Very Reliable** |
+2.6. Security
 
-Reliability obtained a grand mean of **4.70 (Very Reliable / Very Strong Evidence)**. The database schema's foreign key constraints and transactional integrity prevent data corruption during concurrent order submissions and turnstile check-ins.
 
----
+> **Table 13. Results of IT Experts’ Assessment on Security**
 
-### 2.6. Security
+Security was rated 4.80 (Very Secure). The use of Laravel Sanctum bearer tokens, Bcrypt password hashing, and role-based middleware guards ensures robust data confidentiality and protection against unauthorized account modification.
 
-<p align="center"><b>Table 13.</b> <i>Results of IT Experts' Assessment on Security</i></p>
+2.7. Maintainability
 
-| Criteria / Parameter | Weighted Mean ($\overline{X}$) | Qualitative Rating |
-| :--- | :---: | :---: |
-| 1. Confidentiality (Protects confidential information from unauthorized access) | 4.80 | Very Secure |
-| 2. Integrity (Protects data from unauthorized modification or deletion) | 4.80 | Very Secure |
-| 3. Fault Tolerance (System sustains secure operations despite environmental faults) | 4.60 | Very Secure |
-| 4. Non-repudiation (User actions are recorded to prevent denial of performed activities) | 4.80 | Very Secure |
-| 5. Accountability (User activities are logged for monitoring and auditing purposes) | 5.00 | Very Secure |
-| 6. Authenticity (Verifies the identity of users before granting access) | 4.80 | Very Secure |
-| **Grand Mean** | **4.80** | **Very Secure** |
 
-Security was rated **4.80 (Very Secure / Very Strong Evidence)**. The use of Laravel Sanctum bearer tokens, Bcrypt password hashing, and role-based middleware guards ensures robust data confidentiality and protection against unauthorized account modification.
+> **Table 14. Results of IT Experts’ Assessment on Maintainability**
 
----
+Maintainability achieved the highest rating of 4.84 (Very Maintainable). The modular structure of Angular standalone components and Laravel MVC controller architecture ensures seamless future scalability and code maintainability.
 
-### 2.7. Maintainability
+2.8. Portability
 
-<p align="center"><b>Table 14.</b> <i>Results of IT Experts' Assessment on Maintainability</i></p>
 
-| Criteria / Parameter | Weighted Mean ($\overline{X}$) | Qualitative Rating |
-| :--- | :---: | :---: |
-| 1. Modularity (Composed of independent modules that simplify maintenance) | 4.80 | Very Maintainable |
-| 2. Availability (System components remain available for administrative updates) | 4.80 | Very Maintainable |
-| 3. Reusability (Software components can be reused for future enhancements) | 4.80 | Very Maintainable |
-| 4. Analyzability (Errors and faults can be identified and diagnosed efficiently) | 5.00 | Very Maintainable |
-| 5. Modifiability (Can be updated without negatively affecting existing functions) | 4.80 | Very Maintainable |
-| 6. Testability (Modified components can be effectively tested after maintenance) | 4.80 | Very Maintainable |
-| **Grand Mean** | **4.84** | **Very Maintainable** |
+> **Table 15. Results of IT Experts' Assessment on Portability**
 
-Maintainability achieved the highest rating of **4.84 (Very Maintainable / Very Strong Evidence)**. The modular structure of Angular standalone components and Laravel MVC controller architecture ensures seamless future scalability and code maintainability.
+Portability was rated 4.80 (Very Portable), validating the ease of building, distributing, and installing Android APKs and containerized web environments.
 
----
+2.9. Summary of IT Experts’ Technical Quality Evaluation
 
-### 2.8. Portability
 
-<p align="center"><b>Table 15.</b> <i>Results of IT Experts' Assessment on Portability</i></p>
+> **Table 16. Summary of IT Experts’ Evaluation on ISO/IEC 25010 Software Quality**
 
-| Criteria / Parameter | Weighted Mean ($\overline{X}$) | Qualitative Rating |
-| :--- | :---: | :---: |
-| 1. Adaptability (Performs efficiently while sharing resources with other applications) | 4.80 | Very Portable |
-| 2. Installability (System can be installed and configured without difficulty) | 4.80 | Very Portable |
-| 3. Replaceability (Can replace or coexist with similar systems while maintaining functionality) | 4.80 | Very Portable |
-| **Grand Mean** | **4.80** | **Very Portable** |
+Overall, the IT Experts gave FordaGO an overall Composite Grand Mean of 4.78 (Very Strong Evidence / Excellent), confirming that the engineered system adheres strictly to international software engineering standards.
 
-Portability was rated **4.80 (Very Portable / Very Strong Evidence)**, validating the ease of building, distributing, and installing Android APKs and containerized web environments.
+3. Assessment of the System Quality by End-Users (Gym-Goers / Active Members)
 
----
+Gym end-users (n = 15), comprising the gym owner (n = 1), front-desk administrative staff member (n = 1), and active gym members (n = 13) of AFFORDA Gym – Cabiao Branch, evaluated the live mobile application across four (4) core software quality and usability criteria:
 
-### 2.9. Summary of IT Experts' Technical Quality Evaluation
 
-<p align="center"><b>Table 16.</b> <i>Summary of IT Experts' Evaluation on ISO/IEC 25010 Software Quality</i></p>
+> **Table 17. Results of End-Users’ (Gym-Goers) Assessment on FordaGO**
 
-| ISO/IEC 25010 Software Quality Criteria | Weighted Mean ($\overline{X}$) | Qualitative Rating |
-| :--- | :---: | :---: |
-| 1. Functional Suitability | 4.73 | Very Functional |
-| 2. Performance Efficiency | 4.73 | Very Efficient |
-| 3. Compatibility | 4.80 | Very Compatible |
-| 4. Usability | 4.80 | Very Usable |
-| 5. Reliability | 4.70 | Very Reliable |
-| 6. Security | 4.80 | Very Secure |
-| 7. Maintainability | 4.84 | Very Maintainable |
-| 8. Portability | 4.80 | Very Portable |
-| **COMPOSITE GRAND MEAN** | **4.78** | **VERY STRONG EVIDENCE / EXCELLENT** |
-
-Overall, the IT Experts gave FordaGO an overall Composite Grand Mean of **4.78 (Very Strong Evidence / Excellent)**, confirming that the engineered system adheres strictly to international software engineering standards.
-
----
-
-## 3. Assessment on the Use of the Application by Gym Administrators, Staff, and Coaches
-
-Gym administrators ($n = 2$) and certified personal trainers ($n = 3$) evaluated the system’s operational effectiveness across four core dimensions:
-
-<p align="center"><b>Table 17.</b> <i>Results of Gym Staff & Coaches' Assessment on FordaGO</i></p>
-
-| Quality Criteria | Weighted Mean ($\overline{X}$) | Qualitative Rating |
-| :--- | :---: | :---: |
-| **1. Functional Suitability** (Check-in, Proposals, POS, Reports) | 4.80 | Very Functional (Excellent) |
-| **2. Usability** (Interface Clarity, Tour Guides, Navigation) | 4.85 | Very Usable (Excellent) |
-| **3. Reliability** (Continuous Operation, Uptime, No Data Loss) | 4.80 | Very Reliable (Excellent) |
-| **4. Security** (Role Access, Protected Financial & Pass Records) | 4.90 | Very Secure (Excellent) |
-| **OVERALL GRAND MEAN** | **4.84** | **VERY STRONG EVIDENCE / EXCELLENT** |
-
-The evaluation yielded an overall Grand Mean of **4.84 (Very Strong Evidence / Excellent)**. Administrators highlighted the speed of camera turnstile attendance and the convenience of instant PDF/Excel sales and attendance exports. Coaches commended the Coach Studio for streamlining workout proposal creation and client communication.
-
----
-
-## 4. Assessment on the Use of the Application by Gym Members (End-Users)
-
-Gym end-users ($n = 10$, comprising front-desk staff, accredited coaches, and active members) of AFFORDA Gym – Cabiao Branch evaluated the mobile portal:
-
-<p align="center"><b>Table 18.</b> <i>Results of Gym Members' Assessment on the Mobile Portal</i></p>
-
-| Quality Criteria | Weighted Mean ($\overline{X}$) | Qualitative Rating |
-| :--- | :---: | :---: |
-| **1. Functional Suitability** (QR Check-in, PR Tracker, Workout Splits, POS) | 4.85 | Very Functional (Excellent) |
-| **2. Usability** (Ease of Use, Dark Aesthetics, Equipment Scanner) | 4.82 | Very Usable (Excellent) |
-| **3. Reliability** (Instant QR Generation, Stable Chat, Cart Persistence) | 4.80 | Very Reliable (Excellent) |
-| **4. Security** (Confidentiality of Personal Logs & GCash Proofs) | 4.85 | Very Secure (Excellent) |
-| **OVERALL GRAND MEAN** | **4.83** | **VERY STRONG EVIDENCE / EXCELLENT** |
-
-Gym members rated the application with an overall Grand Mean of **4.83 (Very Strong Evidence / Excellent)**. Members emphasized the tremendous benefit of scanning equipment QR placards to immediately watch proper execution guides and view targeted muscles, as well as the convenience of 1-tap acceptance of coach workout proposals, tracking PR strength milestones, and seamless digital check-in.
-
----
-
-## 5. Synthesis of Findings
-
-The empirical findings from all evaluation groups demonstrate that **FordaGO: Mobile-Based Gym Database Management System** successfully resolves the operational inefficiencies of **AFFORDA Gym – Cabiao Branch**. By replacing manual paper logbooks with digital QR turnstile verification, providing interactive equipment QR execution tutorials, facilitating real-time WebSocket coaching collaboration with structured in-chat proposals, and automating supplement POS inventory tracking, FordaGO delivers an innovative, highly acceptable, and technically robust gym management ecosystem.
+The evaluation yielded an overall Grand Mean of 4.82 (Very Strong Evidence / Excellent). Gym members highlighted the speed and convenience of digital QR attendance check-in, the tremendous benefit of scanning equipment printed QR code labels to immediately view exercise execution guides and targeted muscle groups, the seamless 1-tap acceptance of coach workout proposals, and the reliable tracking of personal record (PR) strength milestones.
 
