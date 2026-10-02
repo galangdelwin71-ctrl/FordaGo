@@ -2,16 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Figure 4. Gantt Chart of Activities for FordaGO System Development</title>
+<title>Figure 4. Gantt Chart of Activities for FordaGO System Development (January–October 2026)</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     background: #ffffff;
     font-family: 'Segoe UI', Arial, sans-serif;
     color: #1e293b;
-    padding: 24px;
+    padding: 16px;
     width: 1720px;
-    height: 800px;
+    height: 740px;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
@@ -23,12 +23,11 @@
     width: 1680px;
     background: #ffffff;
     border: 3px solid #1e293b;
-    border-radius: 10px;
+    border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   }
 
-  /* Table styling */
   table {
     width: 100%;
     border-collapse: collapse;
@@ -36,36 +35,36 @@
   }
 
   th, td {
-    border: 1.5px solid #cbd5e1;
+    border: 1px solid #cbd5e1;
     text-align: center;
     vertical-align: middle;
   }
 
-  /* Task Header - Reference Green */
+  /* Task Column Header */
   .th-task {
-    width: 380px;
+    width: 420px;
     background: #15803d;
     color: #ffffff;
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 1px;
-    padding: 16px 20px;
+    padding: 12px 18px;
     text-align: left;
-    border-right: 3px solid #0f172a;
+    border-right: 2.5px solid #0f172a;
   }
 
-  /* Month Header Row - Golden/Yellow Accent from reference */
+  /* Month Header Row */
   .th-month {
-    font-size: 21px;
+    font-size: 14.5px;
     font-weight: 800;
     color: #1e293b;
     background: #facc15;
-    padding: 14px 4px;
+    padding: 10px 2px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    border-bottom: 2px solid #0f172a;
-    border-right: 2px solid #0f172a;
+    border-bottom: 1.5px solid #0f172a;
+    border-right: 1.5px solid #0f172a;
   }
 
   .th-month-oct {
@@ -75,48 +74,54 @@
   .defense-tag {
     background: #dc2626;
     color: #ffffff;
-    padding: 3px 10px;
+    padding: 2px 7px;
     border-radius: 4px;
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.5px;
-    margin-left: 8px;
+    margin-left: 4px;
     display: inline-block;
     vertical-align: middle;
   }
 
-  /* Week Numbers Row */
+  /* Week Numbers Row (1, 2, 3, 4 per month) */
   .th-week {
-    font-size: 17px;
+    font-size: 12px;
     font-weight: 700;
-    color: #334155;
+    color: #475569;
     background: #f8fafc;
-    padding: 10px 0;
-    width: 81px;
-    border-bottom: 2.5px solid #0f172a;
+    padding: 6px 0;
+    width: 31.5px;
+    border-bottom: 2px solid #0f172a;
   }
 
-  /* Task Rows - Reference Green Column */
+  .th-week-defense {
+    background: #fee2e2;
+    color: #991b1b;
+    font-weight: 800;
+  }
+
+  /* Task Rows */
   .td-task-cell {
     background: #16a34a;
     color: #ffffff;
-    padding: 16px 20px;
+    padding: 10px 18px;
     text-align: left;
-    border-right: 3px solid #0f172a;
-    border-bottom: 2px solid #cbd5e1;
+    border-right: 2.5px solid #0f172a;
+    border-bottom: 1.5px solid #cbd5e1;
   }
 
   .task-main {
-    font-size: 22px;
+    font-size: 16.5px;
     font-weight: 800;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
   }
 
   .task-desc {
-    font-size: 14px;
+    font-size: 12.5px;
     font-weight: 600;
     color: #dcfce7;
-    margin-top: 3px;
+    margin-top: 2px;
   }
 
   /* Empty Grid Cells */
@@ -124,80 +129,87 @@
     background: #ffffff;
   }
 
-  /* Clean Solid Color Activity Bars - Exactly matching Reference Style */
+  /* Activity Bars */
   .bar-plan {
-    background: #6366f1 !important; /* Purple */
+    background: #6366f1 !important;
     border-top: 2px solid #4338ca;
     border-bottom: 2px solid #4338ca;
   }
   .bar-design {
-    background: #f59e0b !important; /* Amber / Yellow */
+    background: #f59e0b !important;
     border-top: 2px solid #b45309;
     border-bottom: 2px solid #b45309;
   }
   .bar-dev {
-    background: #ea580c !important; /* Orange */
+    background: #ea580c !important;
     border-top: 2px solid #9a3412;
     border-bottom: 2px solid #9a3412;
   }
   .bar-test {
-    background: #0284c7 !important; /* Cyan / Teal */
+    background: #0284c7 !important;
     border-top: 2px solid #0369a1;
     border-bottom: 2px solid #0369a1;
   }
   .bar-deploy {
-    background: #2563eb !important; /* Blue */
+    background: #2563eb !important;
     border-top: 2px solid #1d4ed8;
     border-bottom: 2px solid #1d4ed8;
   }
-  .bar-feedback {
-    background: #e11d48 !important; /* Red / Coral */
-    border-top: 2px solid #be123c;
-    border-bottom: 2px solid #be123c;
+  .bar-eval {
+    background: #059669 !important;
+    border-top: 2px solid #047857;
+    border-bottom: 2px solid #047857;
+  }
+  .bar-defense {
+    background: #dc2626 !important;
+    border: 2px solid #991b1b;
+    color: #ffffff;
+    font-weight: 900;
+    font-size: 11px;
+    letter-spacing: 0.5px;
   }
 
-  /* Footer Legend & Defense Milestone */
+  /* Footer Legend */
   .chart-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
     background: #0f172a;
     color: #ffffff;
-    padding: 14px 24px;
+    padding: 10px 20px;
   }
 
   .legend-container {
     display: flex;
-    gap: 22px;
+    gap: 18px;
     align-items: center;
   }
 
   .legend-box {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 15px;
+    gap: 6px;
+    font-size: 13px;
     font-weight: 700;
   }
 
   .legend-dot {
-    width: 16px;
-    height: 16px;
-    border-radius: 4px;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
   }
 
   .defense-banner {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     background: #dc2626;
     color: #ffffff;
-    padding: 8px 18px;
-    border-radius: 8px;
-    font-size: 16px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 14px;
     font-weight: 800;
     letter-spacing: 0.5px;
-    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
   }
 </style>
 </head>
@@ -206,131 +218,158 @@
   <div class="chart-card">
     <table>
       <thead>
-        <!-- Month Header -->
+        <!-- Month Header (10 Months: Jan to Oct 2026) -->
         <tr>
-          <th class="th-task" rowspan="2">Task</th>
-          <th class="th-month" colspan="4">July 2026</th>
-          <th class="th-month" colspan="4">August 2026</th>
-          <th class="th-month" colspan="4">September 2026</th>
+          <th class="th-task" rowspan="2">Phase / Activity</th>
+          <th class="th-month" colspan="4">Jan 2026</th>
+          <th class="th-month" colspan="4">Feb 2026</th>
+          <th class="th-month" colspan="4">Mar 2026</th>
+          <th class="th-month" colspan="4">Apr 2026</th>
+          <th class="th-month" colspan="4">May 2026</th>
+          <th class="th-month" colspan="4">Jun 2026</th>
+          <th class="th-month" colspan="4">Jul 2026</th>
+          <th class="th-month" colspan="4">Aug 2026</th>
+          <th class="th-month" colspan="4">Sep 2026</th>
           <th class="th-month th-month-oct" colspan="4">
-            October 2026 <span class="defense-tag">Defense Month</span>
+            Oct 2026 <span class="defense-tag">Oral Defense</span>
           </th>
         </tr>
-        <!-- Weeks Sub-Header (W1 to W16) -->
+        <!-- Weeks Sub-Header (4 weeks per month = 40 weeks) -->
         <tr>
-          <th class="th-week">W1</th><th class="th-week">W2</th><th class="th-week">W3</th><th class="th-week">W4</th>
-          <th class="th-week">W5</th><th class="th-week">W6</th><th class="th-week">W7</th><th class="th-week">W8</th>
-          <th class="th-week">W9</th><th class="th-week">W10</th><th class="th-week">W11</th><th class="th-week">W12</th>
-          <th class="th-week">W13</th><th class="th-week">W14</th><th class="th-week">W15</th><th class="th-week">W16</th>
+          <!-- Jan -->
+          <th class="th-week">1</th><th class="th-week">2</th><th class="th-week">3</th><th class="th-week">4</th>
+          <!-- Feb -->
+          <th class="th-week">1</th><th class="th-week">2</th><th class="th-week">3</th><th class="th-week">4</th>
+          <!-- Mar -->
+          <th class="th-week">1</th><th class="th-week">2</th><th class="th-week">3</th><th class="th-week">4</th>
+          <!-- Apr -->
+          <th class="th-week">1</th><th class="th-week">2</th><th class="th-week">3</th><th class="th-week">4</th>
+          <!-- May -->
+          <th class="th-week">1</th><th class="th-week">2</th><th class="th-week">3</th><th class="th-week">4</th>
+          <!-- Jun -->
+          <th class="th-week">1</th><th class="th-week">2</th><th class="th-week">3</th><th class="th-week">4</th>
+          <!-- Jul -->
+          <th class="th-week">1</th><th class="th-week">2</th><th class="th-week">3</th><th class="th-week">4</th>
+          <!-- Aug -->
+          <th class="th-week">1</th><th class="th-week">2</th><th class="th-week">3</th><th class="th-week">4</th>
+          <!-- Sep -->
+          <th class="th-week">1</th><th class="th-week">2</th><th class="th-week">3</th><th class="th-week">4</th>
+          <!-- Oct -->
+          <th class="th-week">1</th><th class="th-week">2</th><th class="th-week th-week-defense">3</th><th class="th-week th-week-defense">4</th>
         </tr>
       </thead>
       <tbody>
-        <!-- 1. Plan -->
+        <!-- Row 1: Planning & Requirements (Jan-Feb) = cols 1..8 -->
         <tr>
           <td class="td-task-cell">
-            <div class="task-main">Plan</div>
-            <div class="task-desc">Requirements & Feasibility</div>
+            <div class="task-main">1. Planning &amp; Requirements Gathering</div>
+            <div class="task-desc">Gym owner &amp; staff interviews, feasibility analysis &amp; scope definition</div>
           </td>
-          <td class="bar-plan"></td>
-          <td class="bar-plan"></td>
-          <td class="bar-plan"></td>
-          <td class="bar-plan"></td>
-          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
-          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
-          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
+          <td class="bar-plan"></td><td class="bar-plan"></td><td class="bar-plan"></td><td class="bar-plan"></td>
+          <td class="bar-plan"></td><td class="bar-plan"></td><td class="bar-plan"></td><td class="bar-plan"></td>
+          <!-- Mar to Oct empty (32 cols) -->
+          <td class="cell-white" colspan="32"></td>
         </tr>
 
-        <!-- 2. Design -->
+        <!-- Row 2: System & Database Design (Mar-Apr) = cols 9..16 -->
         <tr>
           <td class="td-task-cell">
-            <div class="task-main">Design</div>
-            <div class="task-desc">System & Database Layout</div>
+            <div class="task-main">2. System &amp; Database Architecture Design</div>
+            <div class="task-desc">Use case, DFD, 3NF schema, ERD &amp; UI/UX wireframes</div>
           </td>
-          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
-          <td class="bar-design"></td>
-          <td class="bar-design"></td>
-          <td class="bar-design"></td>
-          <td class="cell-white"></td>
-          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
-          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
+          <!-- Jan-Feb empty (8 cols) -->
+          <td class="cell-white" colspan="8"></td>
+          <!-- Mar-Apr active (8 cols) -->
+          <td class="bar-design"></td><td class="bar-design"></td><td class="bar-design"></td><td class="bar-design"></td>
+          <td class="bar-design"></td><td class="bar-design"></td><td class="bar-design"></td><td class="bar-design"></td>
+          <!-- May to Oct empty (24 cols) -->
+          <td class="cell-white" colspan="24"></td>
         </tr>
 
-        <!-- 3. Develop -->
+        <!-- Row 3: Development & Coding (May-Jul) = cols 17..28 -->
         <tr>
           <td class="td-task-cell">
-            <div class="task-main">Develop</div>
-            <div class="task-desc">Mobile & Web App Coding</div>
+            <div class="task-main">3. Mobile App &amp; Backend API Development</div>
+            <div class="task-desc">Ionic/Angular mobile client, Laravel 11 REST API &amp; MySQL database</div>
           </td>
-          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
-          <td class="cell-white"></td><td class="cell-white"></td>
-          <td class="bar-dev"></td>
-          <td class="bar-dev"></td>
-          <td class="bar-dev"></td>
-          <td class="bar-dev"></td>
-          <td class="cell-white"></td><td class="cell-white"></td>
-          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
+          <!-- Jan-Apr empty (16 cols) -->
+          <td class="cell-white" colspan="16"></td>
+          <!-- May-Jul active (12 cols) -->
+          <td class="bar-dev"></td><td class="bar-dev"></td><td class="bar-dev"></td><td class="bar-dev"></td>
+          <td class="bar-dev"></td><td class="bar-dev"></td><td class="bar-dev"></td><td class="bar-dev"></td>
+          <td class="bar-dev"></td><td class="bar-dev"></td><td class="bar-dev"></td><td class="bar-dev"></td>
+          <!-- Aug to Oct empty (12 cols) -->
+          <td class="cell-white" colspan="12"></td>
         </tr>
 
-        <!-- 4. Test -->
+        <!-- Row 4: Integration & System Testing (Aug) = cols 29..32 -->
         <tr>
           <td class="td-task-cell">
-            <div class="task-main">Test</div>
-            <div class="task-desc">System & Feature Testing</div>
+            <div class="task-main">4. System Integration &amp; Device Testing</div>
+            <div class="task-desc">Phone camera QR check-in testing, API route &amp; role access verification</div>
           </td>
-          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
-          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
-          <td class="cell-white"></td>
-          <td class="bar-test"></td>
-          <td class="bar-test"></td>
-          <td class="bar-test"></td>
-          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
+          <!-- Jan-Jul empty (28 cols) -->
+          <td class="cell-white" colspan="28"></td>
+          <!-- Aug active (4 cols) -->
+          <td class="bar-test"></td><td class="bar-test"></td><td class="bar-test"></td><td class="bar-test"></td>
+          <!-- Sep to Oct empty (8 cols) -->
+          <td class="cell-white" colspan="8"></td>
         </tr>
 
-        <!-- 5. Deploy -->
+        <!-- Row 5: Cloud Deployment & On-Site Setup (Sep) = cols 33..36 -->
         <tr>
           <td class="td-task-cell">
-            <div class="task-main">Deploy</div>
-            <div class="task-desc">Server & Kiosk Setup</div>
+            <div class="task-main">5. Cloud VPS Deployment &amp; On-Site Setup</div>
+            <div class="task-desc">Production hosting at fordago.online, Android APK build &amp; gym QR counter</div>
           </td>
-          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
-          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
-          <td class="cell-white"></td><td class="cell-white"></td>
-          <td class="bar-deploy"></td>
-          <td class="bar-deploy"></td>
-          <td class="bar-deploy"></td>
-          <td class="bar-deploy"></td>
-          <td class="cell-white"></td><td class="cell-white"></td>
+          <!-- Jan-Aug empty (32 cols) -->
+          <td class="cell-white" colspan="32"></td>
+          <!-- Sep active (4 cols) -->
+          <td class="bar-deploy"></td><td class="bar-deploy"></td><td class="bar-deploy"></td><td class="bar-deploy"></td>
+          <!-- Oct empty (4 cols) -->
+          <td class="cell-white" colspan="4"></td>
         </tr>
 
-        <!-- 6. Feedback -->
+        <!-- Row 6: Usability & ISO 25010 Evaluation (Sep W3 to Oct W2) = cols 35..38 -->
         <tr>
           <td class="td-task-cell">
-            <div class="task-main">Feedback</div>
-            <div class="task-desc">User Evaluation & Final Polish</div>
+            <div class="task-main">6. Stakeholder Usability &amp; ISO 25010 Evaluation</div>
+            <div class="task-desc">Evaluation with 5 IT experts and 15 gym respondents (1 owner, 1 staff, 13 members)</div>
           </td>
-          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
-          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
-          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
-          <td class="cell-white"></td>
-          <td class="bar-feedback"></td>
-          <td class="bar-feedback"></td>
-          <td class="bar-feedback"></td>
+          <!-- Jan to Sep W2 empty (34 cols) -->
+          <td class="cell-white" colspan="34"></td>
+          <!-- Sep W3, W4, Oct W1, W2 active (4 cols) -->
+          <td class="bar-eval"></td><td class="bar-eval"></td><td class="bar-eval"></td><td class="bar-eval"></td>
+          <!-- Oct W3, W4 empty (2 cols) -->
+          <td class="cell-white" colspan="2"></td>
+        </tr>
+
+        <!-- Row 7: Final Oral Defense (Oct W3-W4) = cols 39..40 -->
+        <tr>
+          <td class="td-task-cell" style="background: #991b1b;">
+            <div class="task-main" style="color: #ffffff;">7. Final Oral Defense &amp; Revisions</div>
+            <div class="task-desc" style="color: #fecaca;">Cap Stone Project presentation, panel review &amp; manuscript binding</div>
+          </td>
+          <!-- Jan to Oct W2 empty (38 cols) -->
+          <td class="cell-white" colspan="38"></td>
+          <!-- Oct W3-W4 active (2 cols) -->
+          <td class="bar-defense" colspan="2">DEFENSE</td>
         </tr>
       </tbody>
     </table>
 
-    <!-- Footer Legend & Defense Milestone Callout -->
+    <!-- Footer Legend -->
     <div class="chart-footer">
       <div class="legend-container">
-        <div class="legend-box"><div class="legend-dot" style="background:#6366f1;"></div> Plan</div>
-        <div class="legend-box"><div class="legend-dot" style="background:#f59e0b;"></div> Design</div>
-        <div class="legend-box"><div class="legend-dot" style="background:#ea580c;"></div> Develop</div>
-        <div class="legend-box"><div class="legend-dot" style="background:#0284c7;"></div> Test</div>
-        <div class="legend-box"><div class="legend-dot" style="background:#2563eb;"></div> Deploy</div>
-        <div class="legend-box"><div class="legend-dot" style="background:#e11d48;"></div> Feedback</div>
+        <div class="legend-box"><span class="legend-dot" style="background:#6366f1;"></span> Planning</div>
+        <div class="legend-box"><span class="legend-dot" style="background:#f59e0b;"></span> Designing</div>
+        <div class="legend-box"><span class="legend-dot" style="background:#ea580c;"></span> Development</div>
+        <div class="legend-box"><span class="legend-dot" style="background:#0284c7;"></span> Testing</div>
+        <div class="legend-box"><span class="legend-dot" style="background:#2563eb;"></span> Deployment</div>
+        <div class="legend-box"><span class="legend-dot" style="background:#059669;"></span> ISO Evaluation</div>
       </div>
       <div class="defense-banner">
-        <span>🎯 Final Defense: October 2026</span>
+        <span>★ MILESTONE: FINAL ORAL DEFENSE (OCTOBER 2026)</span>
       </div>
     </div>
   </div>

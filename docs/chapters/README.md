@@ -33,7 +33,7 @@ This directory contains the complete academic capstone manuscript, available in 
 1. **Figure 1:** Research Paradigm of FordaGO (Input-Process-Output [IPO] Model with Continuous Feedback Loop)
 2. **Figure 2:** Agile Methodology Framework (6-Phase Iterative Cycle)
 3. **Figure 3:** Map of the Municipality of Cabiao, Nueva Ecija (Research Locale)
-4. **Figure 4:** Gantt Chart of Activities for FordaGO System Development (July–October 2026 Timeline & Final Defense)
+4. **Figure 4:** Gantt Chart of Activities for FordaGO System Development (January–October 2026 Timeline & Final Defense)
 5. **Figure 5:** FordaGO Full-Stack Architectural Framework (4-Tier: Presentation, Cloud VPS Channel, Application, MySQL Persistence)
 6. **Figure 6:** Use Case Diagram of FordaGO (Actors: Gym Member, Gym Coach, Staff/Admin; 15 Core Use Cases)
 7. **Figure 7:** Context Diagram Level 0 of FordaGO (Process 0 and 3 External Entities matching manuscript text)
