@@ -319,7 +319,7 @@ Overall, the IT Experts gave FordaGO an overall Composite Grand Mean of 4.78 (Ve
 
 3. Assessment of the System Quality by End-Users (Gym-Goers / Active Members)
 
-Gym end-users (n = 15), comprising two (2) gym owners/administrators, one (1) front-desk administrative staff member, and twelve (12) active gym members of AFFORDA Gym – Cabiao Branch, evaluated the live mobile application across four (4) core software quality and usability criteria:
+Gym end-users (n = 15), comprising one (1) gym owner/administrator, one (1) front-desk administrative staff member, and thirteen (13) active gym members of AFFORDA Gym – Cabiao Branch, evaluated the live mobile application across four (4) core software quality and usability criteria:
 
 > **Table 27. Results of End-Users’ (Gym-Goers) Assessment on FordaGO**
 

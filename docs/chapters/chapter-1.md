@@ -308,7 +308,7 @@ While the delimitations represent deliberate scope boundaries established by the
 
 6. Front-Desk Counter Verification Latency. While digital order placement and attendance scanning are automated, manual payment confirmation and physical cash handling require active verification by front-desk personnel, introducing minor operational delays during peak arrival periods.
 
-7. Evaluation Sample Size and Contextual Generalizability. The empirical evaluation of the system was conducted specifically within AFFORDA Gym – Cabiao Branch involving twenty (20) respondents, comprising 5 IT experts and 15 gym end-users (2 gym owners/administrators, 1 front-desk staff member, and 12 active gym members). The findings reflect the specific operational workflows of this facility and may vary in larger commercial fitness chains.
+7. Evaluation Sample Size and Contextual Generalizability. The empirical evaluation of the system was conducted specifically within AFFORDA Gym – Cabiao Branch involving twenty (20) respondents, comprising 5 IT experts and 15 gym end-users (1 gym owner/administrator, 1 front-desk staff member, and 13 active gym members). The findings reflect the specific operational workflows of this facility and may vary in larger commercial fitness chains.
 
 8. Physical Queuing and Terminal Concurrency. The physical check-in throughput during peak arrival hours is bounded by the number of active camera scanning stations operating at the front-desk counter.
 

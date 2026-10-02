@@ -19,7 +19,7 @@ The developers chose the Agile Methodology (Pressman & Maxim, 2020; Sommerville,
 
 System Development Life Cycle (SDLC)
 
-The engineering of FordaGO followed the Agile System Development Life Cycle (SDLC), structured into five systematic, iterative phases:
+The engineering of FordaGO followed the Agile System Development Life Cycle (SDLC), structured into six systematic, iterative phases:
 
 
 > **Figure 2. Agile Methodology Framework**
@@ -69,9 +69,13 @@ Integration Testing: Verified end-to-end data synchronization between the Ionic 
 
 Black-Box Functional Testing: Evaluated system operations against test matrices covering QR front-desk scanning check-ins, daily single-attendance constraint verification, equipment QR tutorial loading, in-chat proposal dispatching and acceptance, and Over-the-Counter cash order checkout across physical Android mobile phones and desktop web browsers.
 
-Phase 5: Deployment, Demonstration, and Evaluation
+Phase 5: System Deployment
 
-The finalized FordaGO system was deployed to a live cloud Virtual Private Server (VPS) production environment at https://fordago.online and demonstrated to target stakeholders at AFFORDA Gym – Cabiao Branch. Hands-on testing sessions were conducted with gym staff, certified coaches, and members, followed by the administration of the standardized ISO/IEC 25010 software quality evaluation questionnaire.
+The finalized FordaGO system was deployed to a live cloud Virtual Private Server (VPS) production environment at https://fordago.online, orchestrated through containerized Nginx, Laravel 11, and MySQL 8.0 services. Production Android APK packages were distributed to gym staff, coaches, and members for live on-site operation.
+
+Phase 6: Review, Usability Trials, and Quality Evaluation
+
+Following deployment, hands-on demonstration and usability sessions were conducted with target stakeholders at AFFORDA Gym – Cabiao Branch. System performance and operational feedback were monitored, followed by the formal administration of the standardized ISO/IEC 25010 software quality evaluation instrument to the five (5) IT technical experts and fifteen (15) gym end-users.
 
 ### Research Locale
 
@@ -98,7 +102,7 @@ Technical Experts: Must hold a bachelor’s degree or professional background in
 
 End-Users: Must be an active member, certified personal trainer/coach, front-desk employee, or administrator of AFFORDA Gym – Cabiao Branch who actively engages in daily gym operations.
 
-A total of twenty (20) respondents were selected using purposive sampling, categorized into two evaluation groups: five (5) Technical Experts (IT Professionals, Software Engineers, and Systems Analysts) and fifteen (15) End-Users of AFFORDA Gym – Cabiao Branch. The end-user cohort was specifically stratified into two (2) gym owners/administrators, one (1) front-desk administrative staff member, and twelve (12) active gym members and gym-goers.
+A total of twenty (20) respondents were selected using purposive sampling, categorized into two evaluation groups: five (5) Technical Experts (IT Professionals, Software Engineers, and Systems Analysts) and fifteen (15) End-Users of AFFORDA Gym – Cabiao Branch. The end-user cohort was specifically stratified into one (1) gym owner/administrator, one (1) front-desk administrative staff member, and thirteen (13) active gym members and gym-goers.
 
 
 > **Table 3. Total Respondents**
