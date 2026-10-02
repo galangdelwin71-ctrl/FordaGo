@@ -49,6 +49,9 @@ import autoTable from 'jspdf-autotable';
 import { API_URL, resolveImageUrl } from '../config/api.config';
 import { getCachedData, setCachedData } from '../utils/local-cache.util';
 import { CACHE_KEYS } from '../utils/cache-keys';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 
 export type Tab = 'overview' | 'memberships' | 'transactions' | 'attendance' | 'sales' | 'inventory';
 export type Period = 'daily' | 'weekly' | 'monthly' | 'yearly' | 'all';
@@ -817,14 +820,64 @@ export class AdminReportsPage implements OnInit {
     return this.datePipe.transform(date, 'MMM d, yyyy h:mm a') ?? fallback;
   }
 
-  // ── Native PDF Direct Print ────────────────────────────
-  printCurrent() {
+  // ── Unified Native & Web PDF Export (Download & Print) ──
+  async printCurrent() {
     try {
-      const { doc } = this.buildPDFDoc(this.activeTab);
+      const { doc, filename } = this.buildPDFDoc(this.activeTab);
+      await this.exportPDFNativeOrWeb(doc, filename, true);
+    } catch (err) {
+      console.error('Error generating PDF for printing:', err);
+    }
+  }
+
+  async downloadPDF(tabToExport?: Tab) {
+    try {
+      const targetTab: Tab = tabToExport || this.activeTab;
+      const { doc, filename } = this.buildPDFDoc(targetTab);
+      await this.exportPDFNativeOrWeb(doc, filename, false);
+    } catch (err) {
+      console.error('Error exporting PDF:', err);
+    }
+  }
+
+  private async exportPDFNativeOrWeb(doc: jsPDF, filename: string, isPrint = false): Promise<void> {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const base64Data = doc.output('datauristring').split(',')[1];
+        const writeResult = await Filesystem.writeFile({
+          path: filename,
+          data: base64Data,
+          directory: Directory.Cache
+        });
+
+        await Share.share({
+          title: isPrint ? 'Print FordaGO Report' : 'Save FordaGO Report',
+          text: `FordaGO Report: ${filename}`,
+          url: writeResult.uri,
+          dialogTitle: isPrint ? 'Print / Share PDF Report' : 'Save / Download PDF Report'
+        });
+      } catch (err: any) {
+        console.error('Native Capacitor PDF export/share error:', err);
+        try {
+          doc.save(filename);
+        } catch (saveErr) {
+          console.error('doc.save fallback failed:', saveErr);
+        }
+      }
+    } else {
+      if (isPrint) {
+        this.printWebBlob(doc);
+      } else {
+        doc.save(filename);
+      }
+    }
+  }
+
+  private printWebBlob(doc: jsPDF): void {
+    try {
       const blob = doc.output('blob');
       const blobUrl = URL.createObjectURL(blob);
 
-      // Create a hidden iframe to trigger native browser PDF print dialog
       const iframe = document.createElement('iframe');
       iframe.style.position = 'fixed';
       iframe.style.right = '0';
@@ -839,7 +892,6 @@ export class AdminReportsPage implements OnInit {
           iframe.contentWindow?.focus();
           iframe.contentWindow?.print();
         } catch (e) {
-          // Fallback if browser security blocks iframe.contentWindow.print()
           window.open(blobUrl, '_blank');
         } finally {
           setTimeout(() => {
@@ -853,15 +905,8 @@ export class AdminReportsPage implements OnInit {
 
       document.body.appendChild(iframe);
     } catch (err) {
-      console.error('Error generating PDF for printing:', err);
+      console.error('Error printing web blob:', err);
     }
-  }
-
-  // ── Download PDF Document ──────────────────────────────
-  downloadPDF(tabToExport?: Tab) {
-    const targetTab: Tab = tabToExport || this.activeTab;
-    const { doc, filename } = this.buildPDFDoc(targetTab);
-    doc.save(filename);
   }
 
   // ── Professional Executive PDF Document Builder ─────────

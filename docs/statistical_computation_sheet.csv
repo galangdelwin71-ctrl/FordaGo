@@ -1,0 +1,67 @@
+﻿FORDAGO CAPSTONE RESEARCH - STATISTICAL COMPUTATION AND TALLY SHEET
+"Locale: AFFORDA Gym - Cabiao Branch, Cabiao, Nueva Ecija"
+"Total Respondents: N = 20 (5 IT Experts, 15 End-Users: 1 Owner, 1 Staff, 13 Members)"
+"Scale: 5-Point Likert Scale (5=Strongly Agree, 4=Agree, 3=Moderately Agree, 2=Disagree, 1=Strongly Disagree)"
+
+PART 1: IT EXPERTS EVALUATION (N = 5)
+ISO/IEC 25010 Quality Characteristic,Indicator / Sub-Characteristic,f(5),f(4),f(3),f(2),f(1),Sum(fw),N,Weighted Mean (x̄),Qualitative Rating
+1. Functional Suitability,1. Functional Completeness,4,1,0,0,0,24,5,4.8,Very Functional
+1. Functional Suitability,2. Functional Correctness,3,2,0,0,0,23,5,4.6,Very Functional
+1. Functional Suitability,3. Functional Appropriateness,4,1,0,0,0,24,5,4.8,Very Functional
+,SUBTOTAL / CATEGORY MEAN: FUNCTIONAL SUITABILITY,,,,,,,,4.73,Very Functional
+
+2. Performance Efficiency,1. Time-behavior (Response Speed),4,1,0,0,0,24,5,4.8,Very Efficient
+2. Performance Efficiency,2. Resource Utilization (CPU / Memory),3,2,0,0,0,23,5,4.6,Very Efficient
+2. Performance Efficiency,3. Capacity (Workload Concurrency),4,1,0,0,0,24,5,4.8,Very Efficient
+,SUBTOTAL / CATEGORY MEAN: PERFORMANCE EFFICIENCY,,,,,,,,4.73,Very Efficient
+
+3. Compatibility,1. Co-existence,4,1,0,0,0,24,5,4.8,Very Compatible
+3. Compatibility,2. Interoperability,4,1,0,0,0,24,5,4.8,Very Compatible
+,SUBTOTAL / CATEGORY MEAN: COMPATIBILITY,,,,,,,,4.8,Very Compatible
+
+4. Usability,1. Appropriateness Recognizability,4,1,0,0,0,24,5,4.8,Very Usable
+4. Usability,2. Learnability,4,1,0,0,0,24,5,4.8,Very Usable
+4. Usability,3. Operability,5,0,0,0,0,25,5,5.0,Very Usable
+4. Usability,4. User Error Protection,3,2,0,0,0,23,5,4.6,Very Usable
+4. Usability,5. User Interface Aesthetics,4,1,0,0,0,24,5,4.8,Very Usable
+4. Usability,6. Accessibility,4,1,0,0,0,24,5,4.8,Very Usable
+,SUBTOTAL / CATEGORY MEAN: USABILITY,,,,,,,,4.8,Very Usable
+
+5. Reliability,1. Maturity,4,1,0,0,0,24,5,4.8,Very Reliable
+5. Reliability,2. Availability,4,1,0,0,0,24,5,4.8,Very Reliable
+5. Reliability,3. Fault Tolerance,3,2,0,0,0,23,5,4.6,Very Reliable
+5. Reliability,4. Recoverability,3,2,0,0,0,23,5,4.6,Very Reliable
+,SUBTOTAL / CATEGORY MEAN: RELIABILITY,,,,,,,,4.7,Very Reliable
+
+6. Security,1. Confidentiality,4,1,0,0,0,24,5,4.8,Very Secure
+6. Security,2. Integrity,4,1,0,0,0,24,5,4.8,Very Secure
+6. Security,3. Fault Tolerance / Safety,3,2,0,0,0,23,5,4.6,Very Secure
+6. Security,4. Non-repudiation,4,1,0,0,0,24,5,4.8,Very Secure
+6. Security,5. Accountability,5,0,0,0,0,25,5,5.0,Very Secure
+6. Security,6. Authenticity,4,1,0,0,0,24,5,4.8,Very Secure
+,SUBTOTAL / CATEGORY MEAN: SECURITY,,,,,,,,4.8,Very Secure
+
+7. Maintainability,1. Modularity,4,1,0,0,0,24,5,4.8,Very Maintainable
+7. Maintainability,2. Availability / Reusability,4,1,0,0,0,24,5,4.8,Very Maintainable
+7. Maintainability,3. Reusability,4,1,0,0,0,24,5,4.8,Very Maintainable
+7. Maintainability,4. Analyzability,5,0,0,0,0,25,5,5.0,Very Maintainable
+7. Maintainability,5. Modifiability,4,1,0,0,0,24,5,4.8,Very Maintainable
+7. Maintainability,6. Testability,4,1,0,0,0,24,5,4.8,Very Maintainable
+,SUBTOTAL / CATEGORY MEAN: MAINTAINABILITY,,,,,,,,4.83,Very Maintainable
+
+8. Portability,1. Adaptability,4,1,0,0,0,24,5,4.8,Very Portable
+8. Portability,2. Installability,4,1,0,0,0,24,5,4.8,Very Portable
+8. Portability,3. Replaceability,4,1,0,0,0,24,5,4.8,Very Portable
+,SUBTOTAL / CATEGORY MEAN: PORTABILITY,,,,,,,,4.8,Very Portable
+
+SUMMARY: IT EXPERTS OVERALL,COMPOSITE GRAND MEAN (38.19 / 8),,,,,,,,4.78,EXCELLENT / VERY STRONG EVIDENCE
+
+
+"PART 2: END-USERS EVALUATION (N = 15: 1 Gym Owner, 1 Front Staff, 13 Gym Members)"
+Core Quality Criteria,Operational Scope / Sub-Items Evaluated,f(5),f(4),f(3),f(2),f(1),Sum(fw),N,Weighted Mean (x̄),Qualitative Rating
+1. Functional Suitability,"Digital QR Check-in, Coach Proposals, POS, Financial Reports",12,3,0,0,0,72,15,4.8,Excellent
+2. Usability,"Interface Clarity, Mobile Navigation, Tour Guides, Onboarding",13,2,0,0,0,73,15,4.85,Excellent
+3. Reliability,"Continuous Cloud Operation, Zero Data Loss, Responsive Lookup",12,3,0,0,0,72,15,4.8,Excellent
+4. Security,"Role-Based Authentication, Protected Personal & Financial Data",14,1,0,0,0,74,15,4.9,Excellent
+
+SUMMARY: END-USERS OVERALL,OVERALL GRAND MEAN (19.35 / 4),,,,,,,,4.84,EXCELLENT / VERY STRONG EVIDENCE

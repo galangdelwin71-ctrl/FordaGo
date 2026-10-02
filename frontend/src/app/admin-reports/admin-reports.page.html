@@ -377,10 +377,6 @@
             <button class="fg-btn" [class.active]="membershipFilter === 'daily'" (click)="membershipFilter = 'daily'">Daily Pass</button>
             <button class="fg-btn" [class.active]="membershipFilter === 'pending'" (click)="membershipFilter = 'pending'">Pending ({{ membershipSummary?.pendingPremium || 0 }})</button>
           </div>
-          <button class="header-action-btn pdf-pill" style="height: 34px; padding: 0 12px; border-radius: 8px; font-weight: 700; margin-left: auto;" (click)="downloadPDF('memberships')" title="Export Full Membership & Expiration Audit PDF">
-            <ion-icon name="download-outline"></ion-icon>
-            <span class="btn-text">Export Retention &amp; Expiry PDF</span>
-          </button>
         </div>
       </div>
 

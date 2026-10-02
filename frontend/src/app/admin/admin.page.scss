@@ -6406,6 +6406,16 @@ input[type="time"],
     overflow: hidden;
     text-overflow: ellipsis;
   }
+
+  .kpi-sub {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted, #94a3b8);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 .active-filter-strip {

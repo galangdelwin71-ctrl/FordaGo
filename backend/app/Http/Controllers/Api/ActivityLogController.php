@@ -222,6 +222,7 @@ class ActivityLogController extends Controller
         $totalToday = $loginsToday + $logoutsToday + $modificationsToday;
 
         $statsPayload = [
+            'total_all'           => ActivityLog::count(),
             'total_today'         => $totalToday,
             'logins_today'        => $loginsToday,
             'logouts_today'       => $logoutsToday,

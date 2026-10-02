@@ -3089,9 +3089,35 @@ export class AdminPage implements OnInit, OnDestroy {
   memberLogsCount: number = 0;
   allLogsCount: number = 0;
   currentAudienceLogsCount: number = 0;
-  currentAudienceStats = { total_today: 0, logins_today: 0, logouts_today: 0, modifications_today: 0, active_sessions: 0 };
+  currentAudienceStats = {
+    total_events: 0,
+    total_today: 0,
+    total_logins: 0,
+    logins_today: 0,
+    total_logouts: 0,
+    logouts_today: 0,
+    total_modifications: 0,
+    modifications_today: 0,
+    active_sessions: 0
+  };
   latestAudienceLog: any = null;
   filteredActivityLogs: any[] = [];
+
+  isLogDateToday(dateVal: any): boolean {
+    if (!dateVal) return false;
+    try {
+      const d = new Date(dateVal);
+      if (isNaN(d.getTime())) return false;
+      const today = new Date();
+      return (
+        d.getFullYear() === today.getFullYear() &&
+        d.getMonth() === today.getMonth() &&
+        d.getDate() === today.getDate()
+      );
+    } catch {
+      return false;
+    }
+  }
 
   trackByLogId(index: number, item: any): any {
     return item ? (item.id ?? index) : index;
@@ -3194,13 +3220,9 @@ export class AdminPage implements OnInit, OnDestroy {
     let memberCount = 0;
     const audienceLogs: any[] = [];
 
-    const now = new Date();
-    const todayStr = now.toISOString().slice(0, 10);
-    const isToday = (dateStr: string | null | undefined) => {
-      if (!dateStr) return false;
-      return String(dateStr).slice(0, 10) === todayStr;
-    };
-
+    let loginsCount = 0;
+    let logoutsCount = 0;
+    let modificationsCount = 0;
     let loginsToday = 0;
     let logoutsToday = 0;
     let modificationsToday = 0;
@@ -3218,14 +3240,17 @@ export class AdminPage implements OnInit, OnDestroy {
 
       if ((isStaffMode && isStaff) || (!isStaffMode && !isStaff)) {
         const action = l._actionLower || (l.action || l.action_type || '').toLowerCase();
-        const inToday = isToday(l.created_at) || isToday(l.login_at);
+        const inToday = this.isLogDateToday(l.created_at) || this.isLogDateToday(l.login_at);
 
         if (action === 'login') {
+          loginsCount++;
           if (inToday) loginsToday++;
           if (l.is_active_session) activeSessions++;
         } else if (action === 'logout') {
-          if (inToday || isToday(l.logout_at)) logoutsToday++;
+          logoutsCount++;
+          if (inToday || this.isLogDateToday(l.logout_at)) logoutsToday++;
         } else {
+          modificationsCount++;
           if (inToday) modificationsToday++;
         }
       }
@@ -3237,9 +3262,13 @@ export class AdminPage implements OnInit, OnDestroy {
     this.currentAudienceLogsCount = audienceLogs.length;
     this.latestAudienceLog = audienceLogs.length > 0 ? audienceLogs[0] : null;
     this.currentAudienceStats = {
+      total_events: audienceLogs.length,
       total_today: loginsToday + logoutsToday + modificationsToday,
+      total_logins: loginsCount,
       logins_today: loginsToday,
+      total_logouts: logoutsCount,
       logouts_today: logoutsToday,
+      total_modifications: modificationsCount,
       modifications_today: modificationsToday,
       active_sessions: activeSessions
     };

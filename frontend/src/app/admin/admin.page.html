@@ -2198,18 +2198,20 @@
             <span class="kpi-badge" *ngIf="activityLogCategoryFilter === 'all'">Active</span>
           </div>
           <div class="kpi-card-body">
-            <div class="kpi-val">{{ currentAudienceStats.total_today }}</div>
+            <div class="kpi-val">{{ currentAudienceStats.total_events }}</div>
             <div class="kpi-label">Total Events</div>
+            <div class="kpi-sub" *ngIf="currentAudienceStats.total_today > 0">{{ currentAudienceStats.total_today }} today</div>
+            <div class="kpi-sub" *ngIf="currentAudienceStats.total_today === 0">All records</div>
           </div>
         </button>
 
-        <!-- KPI Card 2: Logins Today -->
+        <!-- KPI Card 2: Logins -->
         <button
           type="button"
           class="log-kpi-card"
           [class.active-kpi]="activityLogCategoryFilter === 'login'"
           (click)="filterLogsByKpi('login')"
-          title="Filter by Logins Today"
+          title="Filter by Logins"
         >
           <div class="kpi-card-head">
             <div class="kpi-icon-wrap icon-login">
@@ -2218,18 +2220,20 @@
             <span class="kpi-badge" *ngIf="activityLogCategoryFilter === 'login'">Active</span>
           </div>
           <div class="kpi-card-body">
-            <div class="kpi-val">{{ currentAudienceStats.logins_today }}</div>
-            <div class="kpi-label">Logins Today</div>
+            <div class="kpi-val">{{ currentAudienceStats.total_logins }}</div>
+            <div class="kpi-label">Logins</div>
+            <div class="kpi-sub" *ngIf="currentAudienceStats.logins_today > 0">{{ currentAudienceStats.logins_today }} today</div>
+            <div class="kpi-sub" *ngIf="currentAudienceStats.logins_today === 0">All logins</div>
           </div>
         </button>
 
-        <!-- KPI Card 3: Logouts Today -->
+        <!-- KPI Card 3: Logouts -->
         <button
           type="button"
           class="log-kpi-card"
           [class.active-kpi]="activityLogCategoryFilter === 'logout'"
           (click)="filterLogsByKpi('logout')"
-          title="Filter by Logouts Today"
+          title="Filter by Logouts"
         >
           <div class="kpi-card-head">
             <div class="kpi-icon-wrap icon-logout">
@@ -2238,8 +2242,10 @@
             <span class="kpi-badge" *ngIf="activityLogCategoryFilter === 'logout'">Active</span>
           </div>
           <div class="kpi-card-body">
-            <div class="kpi-val">{{ currentAudienceStats.logouts_today || 0 }}</div>
-            <div class="kpi-label">Logouts Today</div>
+            <div class="kpi-val">{{ currentAudienceStats.total_logouts }}</div>
+            <div class="kpi-label">Logouts</div>
+            <div class="kpi-sub" *ngIf="currentAudienceStats.logouts_today > 0">{{ currentAudienceStats.logouts_today }} today</div>
+            <div class="kpi-sub" *ngIf="currentAudienceStats.logouts_today === 0">All logouts</div>
           </div>
         </button>
 
@@ -2258,8 +2264,10 @@
             <span class="kpi-badge" *ngIf="activityLogCategoryFilter === 'modifications'">Active</span>
           </div>
           <div class="kpi-card-body">
-            <div class="kpi-val">{{ currentAudienceStats.modifications_today }}</div>
+            <div class="kpi-val">{{ currentAudienceStats.total_modifications }}</div>
             <div class="kpi-label">Modifications</div>
+            <div class="kpi-sub" *ngIf="currentAudienceStats.modifications_today > 0">{{ currentAudienceStats.modifications_today }} today</div>
+            <div class="kpi-sub" *ngIf="currentAudienceStats.modifications_today === 0">All edits</div>
           </div>
         </button>
 
@@ -2280,6 +2288,7 @@
           <div class="kpi-card-body">
             <div class="kpi-val">{{ currentAudienceStats.active_sessions }}</div>
             <div class="kpi-label">Active Sessions</div>
+            <div class="kpi-sub">Active now</div>
           </div>
         </button>
       </div>
@@ -2310,19 +2319,19 @@
           <div class="logs-quick-shortcuts">
             <button type="button" class="btn-shortcut" (click)="openActivityLogsModal('login')">
               <ion-icon name="log-in-outline"></ion-icon>
-              <span>Logins ({{ currentAudienceStats.logins_today || 0 }})</span>
+              <span>Logins ({{ currentAudienceStats.total_logins }})</span>
             </button>
             <button type="button" class="btn-shortcut" (click)="openActivityLogsModal('logout')">
               <ion-icon name="log-out-outline"></ion-icon>
-              <span>Logouts ({{ currentAudienceStats.logouts_today || 0 }})</span>
+              <span>Logouts ({{ currentAudienceStats.total_logouts }})</span>
             </button>
             <button type="button" class="btn-shortcut" (click)="openActivityLogsModal('modifications')">
               <ion-icon name="create-outline"></ion-icon>
-              <span>Modifications ({{ currentAudienceStats.modifications_today || 0 }})</span>
+              <span>Modifications ({{ currentAudienceStats.total_modifications }})</span>
             </button>
             <button type="button" class="btn-shortcut" (click)="openActivityLogsModal('active_sessions')">
               <ion-icon name="radio-outline"></ion-icon>
-              <span>Active Sessions ({{ currentAudienceStats.active_sessions || 0 }})</span>
+              <span>Active Sessions ({{ currentAudienceStats.active_sessions }})</span>
             </button>
           </div>
         </div>
