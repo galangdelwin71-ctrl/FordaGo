@@ -7,11 +7,11 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     background: #ffffff;
-    font-family: 'Times New Roman', Times, serif;
-    color: #111827;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    color: #1e293b;
     padding: 24px;
     width: 1720px;
-    height: 780px;
+    height: 800px;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
@@ -20,12 +20,12 @@
   }
 
   .chart-card {
-    width: 1670px;
+    width: 1680px;
     background: #ffffff;
-    border: 2.5px solid #1e293b;
-    border-radius: 8px;
+    border: 3px solid #1e293b;
+    border-radius: 10px;
     overflow: hidden;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
   }
 
   /* Table styling */
@@ -36,208 +36,168 @@
   }
 
   th, td {
-    border: 1.5px solid #334155;
+    border: 1.5px solid #cbd5e1;
     text-align: center;
     vertical-align: middle;
   }
 
-  /* Month Headers Row */
-  .th-task-title {
-    width: 430px;
-    background: #1e3a8a;
+  /* Task Header - Reference Green */
+  .th-task {
+    width: 380px;
+    background: #15803d;
     color: #ffffff;
-    font-size: 20px;
-    font-weight: 900;
+    font-size: 24px;
+    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 14px 12px;
+    letter-spacing: 1px;
+    padding: 16px 20px;
     text-align: left;
-    padding-left: 20px;
+    border-right: 3px solid #0f172a;
   }
 
+  /* Month Header Row - Golden/Yellow Accent from reference */
   .th-month {
-    font-size: 20px;
-    font-weight: 900;
+    font-size: 21px;
+    font-weight: 800;
+    color: #1e293b;
+    background: #facc15;
+    padding: 14px 4px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    padding: 12px 6px;
-    color: #0f172a;
+    border-bottom: 2px solid #0f172a;
+    border-right: 2px solid #0f172a;
   }
 
-  .month-jul { background: #fef08a; } /* Warm pastel yellow */
-  .month-aug { background: #fed7aa; } /* Warm orange-amber */
-  .month-sep { background: #fde047; } /* Golden yellow */
-  .month-oct { background: #f97316; color: #ffffff !important; } /* Highlighting Defense Month in bold vibrant orange */
-
-  /* Week Headers Row */
-  .th-task-sub {
-    background: #1e40af;
-    color: #e2e8f0;
-    font-size: 15px;
-    font-weight: 700;
-    padding: 8px 12px;
-    text-align: left;
-    padding-left: 20px;
+  .th-month-oct {
+    background: #fde047;
   }
 
-  .th-week {
-    width: 77.5px;
-    font-size: 15px;
-    font-weight: 800;
-    background: #f1f5f9;
-    color: #334155;
-    padding: 8px 2px;
-  }
-
-  .th-week.oct-w {
-    background: #ffedd5;
-    color: #9a3412;
-    font-weight: 900;
-  }
-
-  /* Rows */
-  tr {
-    height: 64px;
-  }
-
-  .td-task {
-    background: #ffffff;
-    text-align: left;
-    padding: 8px 16px;
-  }
-
-  .task-badge-container {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .phase-pill {
-    display: inline-block;
-    padding: 5px 12px;
-    border-radius: 6px;
+  .defense-tag {
+    background: #dc2626;
     color: #ffffff;
-    font-size: 14px;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    min-width: 90px;
-    text-align: center;
-  }
-
-  .pill-plan    { background: #6366f1; }
-  .pill-design  { background: #d97706; }
-  .pill-dev     { background: #ea580c; }
-  .pill-test    { background: #0d9488; }
-  .pill-release { background: #2563eb; }
-  .pill-defense { background: #dc2626; }
-
-  .task-name {
-    font-size: 16.5px;
-    font-weight: 800;
-    color: #0f172a;
-    line-height: 1.25;
-  }
-
-  .task-sub {
+    padding: 3px 10px;
+    border-radius: 4px;
     font-size: 13px;
-    font-weight: 500;
-    color: #64748b;
-    margin-top: 2px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    margin-left: 8px;
+    display: inline-block;
+    vertical-align: middle;
   }
 
-  /* Grid cells */
-  .cell-empty {
+  /* Week Numbers Row */
+  .th-week {
+    font-size: 17px;
+    font-weight: 700;
+    color: #334155;
+    background: #f8fafc;
+    padding: 10px 0;
+    width: 81px;
+    border-bottom: 2.5px solid #0f172a;
+  }
+
+  /* Task Rows - Reference Green Column */
+  .td-task-cell {
+    background: #16a34a;
+    color: #ffffff;
+    padding: 16px 20px;
+    text-align: left;
+    border-right: 3px solid #0f172a;
+    border-bottom: 2px solid #cbd5e1;
+  }
+
+  .task-main {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+  }
+
+  .task-desc {
+    font-size: 14px;
+    font-weight: 600;
+    color: #dcfce7;
+    margin-top: 3px;
+  }
+
+  /* Empty Grid Cells */
+  .cell-white {
     background: #ffffff;
   }
 
-  .cell-alt {
-    background: #f8fafc;
-  }
-
-  /* Bar Fills */
+  /* Clean Solid Color Activity Bars - Exactly matching Reference Style */
   .bar-plan {
-    background: #6366f1 !important;
-    border-top: 2.5px solid #4338ca;
-    border-bottom: 2.5px solid #4338ca;
+    background: #6366f1 !important; /* Purple */
+    border-top: 2px solid #4338ca;
+    border-bottom: 2px solid #4338ca;
   }
   .bar-design {
-    background: #f59e0b !important;
-    border-top: 2.5px solid #b45309;
-    border-bottom: 2.5px solid #b45309;
+    background: #f59e0b !important; /* Amber / Yellow */
+    border-top: 2px solid #b45309;
+    border-bottom: 2px solid #b45309;
   }
   .bar-dev {
-    background: #f97316 !important;
-    border-top: 2.5px solid #c2410c;
-    border-bottom: 2.5px solid #c2410c;
+    background: #ea580c !important; /* Orange */
+    border-top: 2px solid #9a3412;
+    border-bottom: 2px solid #9a3412;
   }
   .bar-test {
-    background: #0d9488 !important;
-    border-top: 2.5px solid #0f766e;
-    border-bottom: 2.5px solid #0f766e;
+    background: #0284c7 !important; /* Cyan / Teal */
+    border-top: 2px solid #0369a1;
+    border-bottom: 2px solid #0369a1;
   }
-  .bar-release {
-    background: #2563eb !important;
-    border-top: 2.5px solid #1d4ed8;
-    border-bottom: 2.5px solid #1d4ed8;
+  .bar-deploy {
+    background: #2563eb !important; /* Blue */
+    border-top: 2px solid #1d4ed8;
+    border-bottom: 2px solid #1d4ed8;
   }
-  .bar-defense {
-    background: #dc2626 !important;
-    border-top: 2.5px solid #991b1b;
-    border-bottom: 2.5px solid #991b1b;
-  }
-
-  .bar-content {
-    color: #ffffff;
-    font-size: 13.5px;
-    font-weight: 900;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-    letter-spacing: 0.3px;
+  .bar-feedback {
+    background: #e11d48 !important; /* Red / Coral */
+    border-top: 2px solid #be123c;
+    border-bottom: 2px solid #be123c;
   }
 
-  /* Footer Legend */
+  /* Footer Legend & Defense Milestone */
   .chart-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #f8fafc;
-    padding: 12px 20px;
-    border-top: 2px solid #cbd5e1;
+    background: #0f172a;
+    color: #ffffff;
+    padding: 14px 24px;
   }
 
-  .legend-items {
+  .legend-container {
     display: flex;
-    gap: 20px;
+    gap: 22px;
     align-items: center;
   }
 
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    font-size: 14.5px;
-    font-weight: 700;
-    color: #334155;
-  }
-
-  .legend-color {
-    width: 22px;
-    height: 14px;
-    border-radius: 3px;
-    border: 1px solid rgba(0, 0, 0, 0.2);
-  }
-
-  .milestone-badge {
-    background: #fee2e2;
-    border: 1.5px solid #ef4444;
-    color: #b91c1c;
-    padding: 6px 14px;
-    border-radius: 6px;
-    font-size: 15px;
-    font-weight: 900;
+  .legend-box {
     display: flex;
     align-items: center;
     gap: 8px;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .legend-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+  }
+
+  .defense-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #dc2626;
+    color: #ffffff;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
   }
 </style>
 </head>
@@ -248,159 +208,129 @@
       <thead>
         <!-- Month Header -->
         <tr>
-          <th rowspan="2" class="th-task-title" style="vertical-align: middle;">
-            Activities / SDLC Phases
+          <th class="th-task" rowspan="2">Task</th>
+          <th class="th-month" colspan="4">July 2026</th>
+          <th class="th-month" colspan="4">August 2026</th>
+          <th class="th-month" colspan="4">September 2026</th>
+          <th class="th-month th-month-oct" colspan="4">
+            October 2026 <span class="defense-tag">Defense Month</span>
           </th>
-          <th colspan="4" class="th-month month-jul">July 2026</th>
-          <th colspan="4" class="th-month month-aug">August 2026</th>
-          <th colspan="4" class="th-month month-sep">September 2026</th>
-          <th colspan="4" class="th-month month-oct">October 2026 (Oral Defense)</th>
         </tr>
-        <!-- Week Sub-Header -->
+        <!-- Weeks Sub-Header (W1 to W16) -->
         <tr>
           <th class="th-week">W1</th><th class="th-week">W2</th><th class="th-week">W3</th><th class="th-week">W4</th>
           <th class="th-week">W5</th><th class="th-week">W6</th><th class="th-week">W7</th><th class="th-week">W8</th>
           <th class="th-week">W9</th><th class="th-week">W10</th><th class="th-week">W11</th><th class="th-week">W12</th>
-          <th class="th-week oct-w">W13</th><th class="th-week oct-w">W14</th><th class="th-week oct-w">W15</th><th class="th-week oct-w">W16</th>
+          <th class="th-week">W13</th><th class="th-week">W14</th><th class="th-week">W15</th><th class="th-week">W16</th>
         </tr>
       </thead>
       <tbody>
         <!-- 1. Plan -->
         <tr>
-          <td class="td-task">
-            <div class="task-badge-container">
-              <span class="phase-pill pill-plan">Plan</span>
-              <div>
-                <div class="task-name">Project Inception & Requirements Gathering</div>
-                <div class="task-sub">Stakeholder interviews, feasibility analysis & user stories</div>
-              </div>
-            </div>
+          <td class="td-task-cell">
+            <div class="task-main">Plan</div>
+            <div class="task-desc">Requirements & Feasibility</div>
           </td>
-          <td class="bar-plan"><span class="bar-content"></span></td>
-          <td class="bar-plan"><span class="bar-content"></span></td>
-          <td class="bar-plan"><span class="bar-content"></span></td>
-          <td class="bar-plan"><span class="bar-content">Phase 1</span></td>
-          <td class="cell-empty"></td><td class="cell-empty"></td><td class="cell-empty"></td><td class="cell-empty"></td>
-          <td class="cell-alt"></td><td class="cell-alt"></td><td class="cell-alt"></td><td class="cell-alt"></td>
-          <td class="cell-empty"></td><td class="cell-empty"></td><td class="cell-empty"></td><td class="cell-empty"></td>
+          <td class="bar-plan"></td>
+          <td class="bar-plan"></td>
+          <td class="bar-plan"></td>
+          <td class="bar-plan"></td>
+          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
+          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
+          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
         </tr>
 
         <!-- 2. Design -->
         <tr>
-          <td class="td-task">
-            <div class="task-badge-container">
-              <span class="phase-pill pill-design">Design</span>
-              <div>
-                <div class="task-name">System Architecture & Database Modeling</div>
-                <div class="task-sub">3NF database schema, Figma mockups & API route design</div>
-              </div>
-            </div>
+          <td class="td-task-cell">
+            <div class="task-main">Design</div>
+            <div class="task-desc">System & Database Layout</div>
           </td>
-          <td class="cell-empty"></td><td class="cell-empty"></td><td class="cell-empty"></td><td class="cell-empty"></td>
-          <td class="bar-design"><span class="bar-content"></span></td>
-          <td class="bar-design"><span class="bar-content"></span></td>
-          <td class="bar-design"><span class="bar-content">Phase 2</span></td>
-          <td class="cell-empty"></td>
-          <td class="cell-alt"></td><td class="cell-alt"></td><td class="cell-alt"></td><td class="cell-alt"></td>
-          <td class="cell-empty"></td><td class="cell-empty"></td><td class="cell-empty"></td><td class="cell-empty"></td>
+          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
+          <td class="bar-design"></td>
+          <td class="bar-design"></td>
+          <td class="bar-design"></td>
+          <td class="cell-white"></td>
+          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
+          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
         </tr>
 
         <!-- 3. Develop -->
         <tr>
-          <td class="td-task">
-            <div class="task-badge-container">
-              <span class="phase-pill pill-dev">Develop</span>
-              <div>
-                <div class="task-name">Full-Stack Development & Implementation</div>
-                <div class="task-sub">Laravel 11 REST API, Ionic 8 frontend & WebSockets</div>
-              </div>
-            </div>
+          <td class="td-task-cell">
+            <div class="task-main">Develop</div>
+            <div class="task-desc">Mobile & Web App Coding</div>
           </td>
-          <td class="cell-empty"></td><td class="cell-empty"></td><td class="cell-empty"></td><td class="cell-empty"></td>
-          <td class="cell-empty"></td><td class="cell-empty"></td>
-          <td class="bar-dev"><span class="bar-content"></span></td>
-          <td class="bar-dev"><span class="bar-content"></span></td>
-          <td class="bar-dev"><span class="bar-content"></span></td>
-          <td class="bar-dev"><span class="bar-content">Phase 3</span></td>
-          <td class="cell-alt"></td><td class="cell-alt"></td>
-          <td class="cell-empty"></td><td class="cell-empty"></td><td class="cell-empty"></td><td class="cell-empty"></td>
+          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
+          <td class="cell-white"></td><td class="cell-white"></td>
+          <td class="bar-dev"></td>
+          <td class="bar-dev"></td>
+          <td class="bar-dev"></td>
+          <td class="bar-dev"></td>
+          <td class="cell-white"></td><td class="cell-white"></td>
+          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
         </tr>
 
         <!-- 4. Test -->
         <tr>
-          <td class="td-task">
-            <div class="task-badge-container">
-              <span class="phase-pill pill-test">Test</span>
-              <div>
-                <div class="task-name">Integration Testing & User Acceptance (UAT)</div>
-                <div class="task-sub">Black-box testing, Postman API collections & field tests</div>
-              </div>
-            </div>
+          <td class="td-task-cell">
+            <div class="task-main">Test</div>
+            <div class="task-desc">System & Feature Testing</div>
           </td>
-          <td class="cell-empty"></td><td class="cell-empty"></td><td class="cell-empty"></td><td class="cell-empty"></td>
-          <td class="cell-empty"></td><td class="cell-empty"></td><td class="cell-empty"></td><td class="cell-empty"></td>
-          <td class="cell-alt"></td>
-          <td class="bar-test"><span class="bar-content"></span></td>
-          <td class="bar-test"><span class="bar-content"></span></td>
-          <td class="bar-test"><span class="bar-content">Phase 4</span></td>
-          <td class="cell-empty"></td><td class="cell-empty"></td><td class="cell-empty"></td><td class="cell-empty"></td>
+          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
+          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
+          <td class="cell-white"></td>
+          <td class="bar-test"></td>
+          <td class="bar-test"></td>
+          <td class="bar-test"></td>
+          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
         </tr>
 
-        <!-- 5. Release -->
+        <!-- 5. Deploy -->
         <tr>
-          <td class="td-task">
-            <div class="task-badge-container">
-              <span class="phase-pill pill-release">Release</span>
-              <div>
-                <div class="task-name">Cloud VPS Deployment & Kiosk Integration</div>
-                <div class="task-sub">Podman containers, SSL domain & reception kiosk terminal</div>
-              </div>
-            </div>
+          <td class="td-task-cell">
+            <div class="task-main">Deploy</div>
+            <div class="task-desc">Server & Kiosk Setup</div>
           </td>
-          <td class="cell-empty"></td><td class="cell-empty"></td><td class="cell-empty"></td><td class="cell-empty"></td>
-          <td class="cell-empty"></td><td class="cell-empty"></td><td class="cell-empty"></td><td class="cell-empty"></td>
-          <td class="cell-alt"></td><td class="cell-alt"></td>
-          <td class="bar-release"><span class="bar-content"></span></td>
-          <td class="bar-release"><span class="bar-content"></span></td>
-          <td class="bar-release"><span class="bar-content"></span></td>
-          <td class="bar-release"><span class="bar-content">Phase 5</span></td>
-          <td class="cell-empty"></td><td class="cell-empty"></td>
+          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
+          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
+          <td class="cell-white"></td><td class="cell-white"></td>
+          <td class="bar-deploy"></td>
+          <td class="bar-deploy"></td>
+          <td class="bar-deploy"></td>
+          <td class="bar-deploy"></td>
+          <td class="cell-white"></td><td class="cell-white"></td>
         </tr>
 
-        <!-- 6. Feedback & Defense -->
+        <!-- 6. Feedback -->
         <tr>
-          <td class="td-task">
-            <div class="task-badge-container">
-              <span class="phase-pill pill-defense">Defense</span>
-              <div>
-                <div class="task-name">System Evaluation & Final Oral Defense</div>
-                <div class="task-sub">ISO/IEC 25010 survey (n=20) & Capstone 2 Defense</div>
-              </div>
-            </div>
+          <td class="td-task-cell">
+            <div class="task-main">Feedback</div>
+            <div class="task-desc">User Evaluation & Final Polish</div>
           </td>
-          <td class="cell-empty"></td><td class="cell-empty"></td><td class="cell-empty"></td><td class="cell-empty"></td>
-          <td class="cell-empty"></td><td class="cell-empty"></td><td class="cell-empty"></td><td class="cell-empty"></td>
-          <td class="cell-alt"></td><td class="cell-alt"></td><td class="cell-alt"></td><td class="cell-alt"></td>
-          <td class="cell-empty"></td>
-          <td class="bar-defense"><span class="bar-content"></span></td>
-          <td class="bar-defense"><span class="bar-content"></span></td>
-          <td class="bar-defense"><span class="bar-content">October Defense</span></td>
+          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
+          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
+          <td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td><td class="cell-white"></td>
+          <td class="cell-white"></td>
+          <td class="bar-feedback"></td>
+          <td class="bar-feedback"></td>
+          <td class="bar-feedback"></td>
         </tr>
       </tbody>
     </table>
 
-    <!-- Footer Legend -->
+    <!-- Footer Legend & Defense Milestone Callout -->
     <div class="chart-footer">
-      <div class="legend-items">
-        <div class="legend-item"><div class="legend-color pill-plan"></div> 1. Planning</div>
-        <div class="legend-item"><div class="legend-color pill-design"></div> 2. Architecture & Design</div>
-        <div class="legend-item"><div class="legend-color pill-dev"></div> 3. Full-Stack Development</div>
-        <div class="legend-item"><div class="legend-color pill-test"></div> 4. Testing & QA</div>
-        <div class="legend-item"><div class="legend-color pill-release"></div> 5. Cloud VPS Deployment</div>
-        <div class="legend-item"><div class="legend-color pill-defense"></div> 6. Evaluation & Final Defense</div>
+      <div class="legend-container">
+        <div class="legend-box"><div class="legend-dot" style="background:#6366f1;"></div> Plan</div>
+        <div class="legend-box"><div class="legend-dot" style="background:#f59e0b;"></div> Design</div>
+        <div class="legend-box"><div class="legend-dot" style="background:#ea580c;"></div> Develop</div>
+        <div class="legend-box"><div class="legend-dot" style="background:#0284c7;"></div> Test</div>
+        <div class="legend-box"><div class="legend-dot" style="background:#2563eb;"></div> Deploy</div>
+        <div class="legend-box"><div class="legend-dot" style="background:#e11d48;"></div> Feedback</div>
       </div>
-      <div class="milestone-badge">
-        <span>🎯 Key Milestone: Final Capstone Oral Defense (October 2026)</span>
+      <div class="defense-banner">
+        <span>🎯 Final Defense: October 2026</span>
       </div>
     </div>
   </div>

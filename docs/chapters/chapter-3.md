@@ -32,7 +32,7 @@ The researchers identified the necessary software tools (Laravel 11, Ionic 8, An
 
 Project Schedule and Timeline
 
-The project was structured around an intensive Agile Software Development Life Cycle (SDLC) for AFFORDA Gym – Cabiao Branch, following the Agile SDLC framework from project inception in July 2026 to final evaluation and oral defense in October 2026, as outlined in the developmental timeline and Gantt chart presented in Figure 4.
+The project followed the Agile Software Development Life Cycle (SDLC) for AFFORDA Gym – Cabiao Branch, covering the developmental activities from project planning in July 2026 through system design, coding, testing, deployment, and user feedback in preparation for the Final Defense in October 2026, as outlined in the Gantt chart in Figure 4.
 
 > **Figure 4. Gantt Chart of Activities for FordaGO System Development (July–October 2026)**
 
