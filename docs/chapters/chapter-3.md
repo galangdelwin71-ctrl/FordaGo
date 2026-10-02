@@ -60,8 +60,9 @@ Laravel Reverb WebSocket Server integrated with Laravel Echo for instant duplex 
 
 4. Data Persistence Layer:
 
-MySQL 8.0 relational database management system enforcing strict referential integrity and automated backup protocols:   Scheduled automated daily MySQL database dumps (mysqldump) to preserve member transaction histories and attendance audit records. The comprehensive software engineering stack, integrated libraries, and cloud infrastructure powering the system are presented in the Full-Stack Architectural Framework in Figure 5.
+MySQL 8.0 relational database management system enforcing strict referential integrity and automated backup protocols: Scheduled automated daily MySQL database dumps (mysqldump) to preserve member transaction histories and attendance audit records. The comprehensive software engineering stack, integrated libraries, and cloud infrastructure powering the system are presented in Table 8 and the Full-Stack Architectural Framework in Figure 5.
 
+> **Table 8. Full-Stack Layered Architecture and Technology Stack of FordaGO**
 
 > **Figure 5. FordaGO Full-Stack Architectural Framework**
 
@@ -133,6 +134,8 @@ Because multiple workout routines, attendances, orders, and messages recur for e
 
 All multivalued attributes and repeating groups were eliminated. Atomic column structures were defined, and unique primary keys were designated for each distinct table across sixteen (16) core business domain tables: `users`, `attendance`, `equipment`, `equipment_scan_logs`, `products`, `orders`, `payments`, `activity_logs`, `conversations`, `messages`, `workout_plan_proposals`, `workout_plan_items`, `personal_records`, `workout_sessions`, `notifications`, and `feedbacks`.
 
+> **Table 10. First Normal Form (1NF) Relational Definitions**
+
 *Architectural Note on Database Schema and Auxiliary Tables:* The FordaGO relational schema is structured around sixteen (16) core business domain tables supporting member management, check-in verification, equipment guidance, coaching proposals, workout metrics, supplement inventory, and user feedback. An additional thirteen (13) auxiliary infrastructure tables are maintained automatically by Laravel and MySQL for system-level operations (including `personal_access_tokens` for Sanctum authentication, `jobs` and `failed_jobs` for asynchronous queue workers, cache stores, and migration ledgers), accounting for the complete twenty-nine (29) tables residing within the live production database environment.
 
 3. Second Normal Form (2NF)
@@ -142,6 +145,8 @@ Partial functional dependencies were removed. All non-key attributes were made f
 4. Third Normal Form (3NF)
 
 Transitive dependencies were removed. Non-key attributes depend solely and directly on the primary key, preventing update, insertion, and deletion anomalies.
+
+> **Table 11. Third Normal Form (3NF) Relational Schema Definitions**
 
 ### Entity-Relationship Diagram (ERD)
 
@@ -155,22 +160,22 @@ Data Dictionary
 The Data Dictionary provides the physical data schema, data types, field constraints, and descriptive purposes of each database table in FordaGO.
 
 
-> **Table 2. Data Dictionary for the users Table**
+> **Table 12. Data Dictionary for the users Table**
 
 
-> **Table 3. Data Dictionary for the attendances Table**
+> **Table 13. Data Dictionary for the attendance Table**
 
 
-> **Table 4. Data Dictionary for the equipment Table**
+> **Table 14. Data Dictionary for the equipment Table**
 
 
-> **Table 5. Data Dictionary for the workout_proposals Table**
+> **Table 15. Data Dictionary for the workout_plan_proposals Table**
 
 
-> **Table 6. Data Dictionary for the products Table**
+> **Table 16. Data Dictionary for the products Table**
 
 
-> **Table 7. Data Dictionary for the orders Table**
+> **Table 17. Data Dictionary for the orders Table**
 
 1.3. Development Phase
 
@@ -260,64 +265,55 @@ The technical quality of the FordaGO system was evaluated by five (5) Informatio
 
 2.1. Functional Suitability
 
-
-> **Table 8. Results of IT Experts’ Assessment on Functional Suitability**
+> **Table 18. Results of IT Experts’ Assessment on Functional Suitability**
 
 The Functional Suitability of FordaGO obtained a grand mean of 4.73 (Very Functional). Evaluators affirmed that the system completely implements all required gym management operations, delivers accurate calculations for PR percentage gains and inventory stock deductions, and facilitates seamless workout proposal dispatching.
 
 2.2. Performance Efficiency
 
-
-> **Table 9. Results of IT Experts’ Assessment on Performance Efficiency**
+> **Table 19. Results of IT Experts’ Assessment on Performance Efficiency**
 
 Performance Efficiency garnered a grand mean of 4.73 (Very Efficient). The implementation of Laravel Reverb WebSockets for real-time chat and jsPDF for client-side report generation resulted in sub-second transaction speeds and minimal server CPU/memory consumption.
 
 2.3. Compatibility
 
-
-> **Table 10. Results of IT Experts’ Assessment on Compatibility**
+> **Table 20. Results of IT Experts’ Assessment on Compatibility**
 
 Compatibility achieved a grand mean of 4.80 (Very Compatible). FordaGO operates smoothly across diverse Android mobile versions and modern desktop browsers (Chrome, Edge, Firefox) without hardware conflicts or driver incompatibilities.
 
 2.4. Usability
 
-
-> **Table 11. Results of IT Experts’ Assessment on Usability**
+> **Table 21. Results of IT Experts’ Assessment on Usability**
 
 Usability achieved an outstanding grand mean of 4.80 (Very Usable), with Operability receiving a perfect 5.00. Evaluators commended the dark fitness aesthetic, intuitive navigation tabs, and clear interactive onboarding tour guides.
 
 2.5. Reliability
 
-
-> **Table 12. Results of IT Experts’ Assessment on Reliability**
+> **Table 22. Results of IT Experts’ Assessment on Reliability**
 
 Reliability obtained a grand mean of 4.70 (Very Reliable). The database schema’s foreign key constraints and transactional integrity prevent data corruption during concurrent order submissions and front-desk scanning check-ins.
 
 2.6. Security
 
-
-> **Table 13. Results of IT Experts’ Assessment on Security**
+> **Table 23. Results of IT Experts’ Assessment on Security**
 
 Security was rated 4.80 (Very Secure). The use of Laravel Sanctum bearer tokens, Bcrypt password hashing, and role-based middleware guards ensures robust data confidentiality and protection against unauthorized account modification.
 
 2.7. Maintainability
 
-
-> **Table 14. Results of IT Experts’ Assessment on Maintainability**
+> **Table 24. Results of IT Experts’ Assessment on Maintainability**
 
 Maintainability achieved the highest rating of 4.83 (Very Maintainable). The modular structure of Angular standalone components and Laravel MVC controller architecture ensures seamless future scalability and code maintainability.
 
 2.8. Portability
 
-
-> **Table 15. Results of IT Experts' Assessment on Portability**
+> **Table 25. Results of IT Experts' Assessment on Portability**
 
 Portability was rated 4.80 (Very Portable), validating the ease of building, distributing, and installing Android APKs and containerized web environments.
 
 2.9. Summary of IT Experts’ Technical Quality Evaluation
 
-
-> **Table 16. Summary of IT Experts’ Evaluation on ISO/IEC 25010 Software Quality**
+> **Table 26. Summary of IT Experts’ Evaluation on ISO/IEC 25010 Software Quality**
 
 Overall, the IT Experts gave FordaGO an overall Composite Grand Mean of 4.78 (Very Strong Evidence / Excellent), confirming that the engineered system adheres strictly to international software engineering standards.
 
@@ -325,8 +321,7 @@ Overall, the IT Experts gave FordaGO an overall Composite Grand Mean of 4.78 (Ve
 
 Gym end-users (n = 15), comprising the gym owner (n = 1), front-desk administrative staff member (n = 1), and active gym members (n = 13) of AFFORDA Gym – Cabiao Branch, evaluated the live mobile application across four (4) core software quality and usability criteria:
 
-
-> **Table 17. Results of End-Users’ (Gym-Goers) Assessment on FordaGO**
+> **Table 27. Results of End-Users’ (Gym-Goers) Assessment on FordaGO**
 
 The evaluation yielded an overall Grand Mean of 4.82 (Very Strong Evidence / Excellent). Gym members highlighted the speed and convenience of digital QR attendance check-in, the tremendous benefit of scanning equipment printed QR code labels to immediately view exercise execution guides and targeted muscle groups, the seamless 1-tap acceptance of coach workout proposals, and the reliable tracking of personal record (PR) strength milestones.
 
