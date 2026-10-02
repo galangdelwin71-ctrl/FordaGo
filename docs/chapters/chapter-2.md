@@ -81,7 +81,9 @@ a. Operational Need for Digitalization. The gym currently operates through manua
 
 b. Diverse and Active Trainee Population. The facility accommodates a broad demographic of fitness enthusiasts ranging from novice gym-goers to seasoned lifters, offering a diverse user population for comprehensive usability and functional evaluation.
 
-c. Support and Willingness from Management. The gym proprietor, administrative reception staff, and accredited fitness coaches demonstrated active willingness to collaborate, participate in pilot testing, and integrate mobile technology into daily workflows. The geographic location of the research locale is illustrated in Figure 3, showing the Municipality of Cabiao, Nueva Ecija where AFFORDA Gym – Cabiao Branch is situated.
+c. Support and Willingness from Management. The gym proprietor, administrative reception staff, and accredited fitness coaches demonstrated active willingness to collaborate, participate in pilot testing, and integrate mobile technology into daily workflows. 
+
+Administrative Coordination Note on Branch Transition: Initial institutional permission and interview protocols were formally coordinated with the management of AFFORDA Gym through its San Isidro Branch (as presented in Appendix A and Appendix B). Due to subsequent branch consolidation and the operational closure of the San Isidro location, on-site system implementation, live testing, and user acceptance evaluations were officially transitioned and fully carried out at AFFORDA Gym – Cabiao Branch. The geographic location of the research locale is illustrated in Figure 3, showing the Municipality of Cabiao, Nueva Ecija where AFFORDA Gym – Cabiao Branch is situated.
 
 
 > **Figure 3. Map of the Municipality of Cabiao, Nueva Ecija; the Research Locale**
@@ -167,9 +169,9 @@ Confidentiality and Anonymity:
 
 Personal information and individual scoring results were kept strictly confidential. Evaluation data were reported as aggregated statistical figures to protect the identity of all respondents.
 
-Compliance with Republic Act No. 10173 (Data Privacy Act of 2012):
+Compliance with Republic Act No. 10173 (Data Privacy Act of 2012):
 
-The FordaGO application adheres to principles of transparency, legitimate purpose, and proportionality. Sensitive member data, passwords, and transaction records stored within the MySQL database are protected using Bcrypt encryption, Sanctum authentication tokens, and strict role-based access controls.
+The FordaGO application adheres to principles of transparency, legitimate purpose, and proportionality. Sensitive member data, passwords, and transaction records stored within the database are protected using Bcrypt cryptographic password hashing, Sanctum authentication tokens, and strict role-based access controls (RBAC).
 
 Academic Integrity:
 
@@ -177,50 +179,45 @@ All literature, frameworks, software libraries, and methodologies referenced thr
 
 ### Statistical Treatment of Data
 
-The quantitative data gathered from the ISO/IEC 25010 evaluation questionnaires were analyzed using descriptive statistics, specifically the Weighted Mean (WM), Composite Mean (CM), and Percentage Distribution.
+The quantitative data gathered from the ISO/IEC 25010 evaluation questionnaires were analyzed using descriptive statistics, specifically the Percentage Distribution, Weighted Mean (WM), and Composite Mean (CM).
 
 1. Percentage Distribution Formula
 
 Used to determine the proportional distribution of respondent categories:
 
+$$P = \left( \frac{f}{N} \right) \times 100$$
+
 Where:
-
-= Percentage
-
-= Number of respondents in a specific category
-
-N = Total number of respondents (N = 20; n = 5 for IT Experts, n = 15 for End-Users)
+- $P$ = Percentage distribution
+- $f$ = Frequency (number of respondents in a specific category)
+- $N$ = Total number of respondents ($N = 20$; $n = 5$ for Technical Experts, $n = 15$ for Gym End-Users)
 
 2. Weighted Mean Formula
 
 The Weighted Mean was computed for each indicator across the evaluated software quality criteria:
 
+$$\overline{X} = \frac{\sum (f \cdot x)}{N}$$
+
 Where:
-
-= Weighted Mean of the criterion
-
-= Frequency of responses for each rating scale
-
-= Numerical weight assigned to each response scale ()
-
-N = Total number of respondents (N = 20; n = 5 for IT Experts, n = 15 for End-Users)
+- $\overline{X}$ = Weighted Mean of the criterion
+- $f$ = Frequency of responses for each rating scale
+- $x$ = Numerical weight assigned to each response scale ($5 = \text{Strongly Agree}, 4 = \text{Agree}, 3 = \text{Moderately Agree}, 2 = \text{Disagree}, 1 = \text{Strongly Disagree}$)
+- $N$ = Total number of respondents ($n = 5$ for Technical Experts, $n = 15$ for Gym End-Users)
 
 3. Composite Mean Formula
 
 The overall software quality of FordaGO across all evaluated ISO/IEC 25010 characteristics was calculated using the Composite Mean:
 
+$$\overline{X}_{comp} = \frac{\sum \overline{X}}{k}$$
+
 Where:
-
-= Composite Mean of the overall software evaluation
-
-= Sum of the weighted means of all criteria
-
-k = Total number of evaluated quality criteria (k = 8 for IT Experts, k = 4 for End-Users)
+- $\overline{X}_{comp}$ = Composite Mean of the overall software evaluation
+- $\sum \overline{X}$ = Sum of the weighted means of all evaluated criteria
+- $k$ = Total number of evaluated quality criteria ($k = 8$ for IT Experts, $k = 4$ for End-Users)
 
 4. Verbal Interpretation Scale
 
-The calculated mean scores were interpreted using the following standard statistical range formula:
-
+The calculated mean scores were interpreted using the standard statistical range formula:
 
 > **Table 6. The Verbal Interpretation Scale**
 

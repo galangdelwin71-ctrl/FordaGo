@@ -131,7 +131,9 @@ Because multiple workout routines, attendances, orders, and messages recur for e
 
 2. First Normal Form (1NF)
 
-All multivalued attributes and repeating groups were eliminated. Atomic column structures were defined, and unique primary keys were designated for each distinct table.
+All multivalued attributes and repeating groups were eliminated. Atomic column structures were defined, and unique primary keys were designated for each distinct table across sixteen (16) core business domain tables: `users`, `attendance`, `equipment`, `equipment_scan_logs`, `products`, `orders`, `payments`, `activity_logs`, `conversations`, `messages`, `workout_plan_proposals`, `workout_plan_items`, `personal_records`, `workout_sessions`, `notifications`, and `feedbacks`.
+
+*Architectural Note on Database Schema and Auxiliary Tables:* The FordaGO relational schema is structured around sixteen (16) core business domain tables supporting member management, check-in verification, equipment guidance, coaching proposals, workout metrics, supplement inventory, and user feedback. An additional thirteen (13) auxiliary infrastructure tables are maintained automatically by Laravel and MySQL for system-level operations (including `personal_access_tokens` for Sanctum authentication, `jobs` and `failed_jobs` for asynchronous queue workers, cache stores, and migration ledgers), accounting for the complete twenty-nine (29) tables residing within the live production database environment.
 
 3. Second Normal Form (2NF)
 
@@ -250,7 +252,7 @@ Database migration scripts ensure that future gym expansion (e.g., adding automa
 
 Automated Cloud Backup & Disaster Recovery Protocols:
 
-Implemented an automated Linux cron task running on the VPS every 3 hours (backup-fordago.sh). The script executes database dumps from the active production database, compresses the SQL dump using maximum GZIP compression (-9), logs execution timestamps, and automatically rotates historical archives to retain the latest 5 verified backup snapshots in /root/fordago-backups/, ensuring zero data loss and rapid point-in-time recovery.
+Implemented an automated Linux cron task running on the VPS every 3 hours (backup-fordago.sh). The script executes database dumps from the active production database, compresses the SQL dump using maximum GZIP compression (-9), logs execution timestamps, and automatically rotates historical archives to retain the latest 5 verified backup snapshots in /root/fordago-backups/, ensuring automated database preservation and rapid disaster recovery.
 
 2. Assessment of the Technical Quality of FordaGO by IT Experts (ISO/IEC 25010 Standards)
 
@@ -303,7 +305,7 @@ Security was rated 4.80 (Very Secure). The use of Laravel Sanctum bearer tokens,
 
 > **Table 14. Results of IT Experts’ Assessment on Maintainability**
 
-Maintainability achieved the highest rating of 4.84 (Very Maintainable). The modular structure of Angular standalone components and Laravel MVC controller architecture ensures seamless future scalability and code maintainability.
+Maintainability achieved the highest rating of 4.83 (Very Maintainable). The modular structure of Angular standalone components and Laravel MVC controller architecture ensures seamless future scalability and code maintainability.
 
 2.8. Portability
 
