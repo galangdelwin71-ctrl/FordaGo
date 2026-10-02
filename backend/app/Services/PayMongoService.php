@@ -9,17 +9,58 @@ class PayMongoService
 {
     private string $secretKey;
     private string $publicKey;
+    private string $webhookSecret;
     private string $baseUrl = 'https://api.paymongo.com/v1';
 
     public function __construct()
     {
-        $this->secretKey = config('services.paymongo.secret_key', env('PAYMONGO_SECRET_KEY', ''));
-        $this->publicKey = config('services.paymongo.public_key', env('PAYMONGO_PUBLIC_KEY', ''));
+        $this->secretKey     = config('services.paymongo.secret_key', env('PAYMONGO_SECRET_KEY', ''));
+        $this->publicKey     = config('services.paymongo.public_key', env('PAYMONGO_PUBLIC_KEY', ''));
+        $this->webhookSecret = (string) config('services.paymongo.webhook_secret', '');
     }
 
     public function isConfigured(): bool
     {
         return ! empty($this->secretKey) && ! str_starts_with($this->secretKey, 'your_');
+    }
+
+    /**
+     * Verify the Paymongo-Signature header of an incoming webhook.
+     *
+     * Header format: "t=<unix ts>,te=<test signature>,li=<live signature>".
+     * The signature is HMAC-SHA256(webhook secret, "<t>.<raw request body>").
+     * Fails closed: returns false when no webhook secret is configured, the header is missing
+     * or malformed, or the signature does not match.
+     */
+    public function verifyWebhookSignature(string $rawBody, ?string $header): bool
+    {
+        if ($this->webhookSecret === '' || empty($header)) {
+            return false;
+        }
+
+        $parts = [];
+        foreach (explode(',', $header) as $segment) {
+            $kv = explode('=', trim($segment), 2);
+            if (count($kv) === 2) {
+                $parts[trim($kv[0])] = trim($kv[1]);
+            }
+        }
+
+        $timestamp = $parts['t'] ?? '';
+        if ($timestamp === '') {
+            return false;
+        }
+
+        // Live-mode keys are signed into "li", test-mode keys into "te".
+        $isLive   = str_starts_with($this->secretKey, 'sk_live_');
+        $provided = $parts[$isLive ? 'li' : 'te'] ?? '';
+        if ($provided === '') {
+            return false;
+        }
+
+        $expected = hash_hmac('sha256', $timestamp . '.' . $rawBody, $this->webhookSecret);
+
+        return hash_equals($expected, $provided);
     }
 
     /**

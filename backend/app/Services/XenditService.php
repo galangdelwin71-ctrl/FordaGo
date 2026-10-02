@@ -8,16 +8,31 @@ use Illuminate\Support\Facades\Log;
 class XenditService
 {
     private string $secretKey;
+    private string $callbackToken;
     private string $baseUrl = 'https://api.xendit.co';
 
     public function __construct()
     {
-        $this->secretKey = config('services.xendit.secret_key', env('XENDIT_SECRET_KEY', ''));
+        $this->secretKey     = config('services.xendit.secret_key', env('XENDIT_SECRET_KEY', ''));
+        $this->callbackToken = (string) config('services.xendit.callback_token', '');
     }
 
     public function isConfigured(): bool
     {
         return ! empty($this->secretKey) && str_starts_with($this->secretKey, 'xnd_');
+    }
+
+    /**
+     * Verify the x-callback-token header sent by Xendit with every webhook.
+     * Fails closed: returns false when no callback token is configured or the header is missing.
+     */
+    public function verifyCallbackToken(?string $headerToken): bool
+    {
+        if ($this->callbackToken === '' || empty($headerToken)) {
+            return false;
+        }
+
+        return hash_equals($this->callbackToken, $headerToken);
     }
 
     /**

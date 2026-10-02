@@ -1,13 +1,14 @@
 #!/bin/bash
 # ============================================================
-#  FordaGo - MySQL Auto-Backup (VPS / Podman)
+#  FordaGo - MariaDB/MySQL Auto-Backup (VPS Host Production)
 #  Cron: every 3 hours | keeps latest 5 GZIPs
 # ============================================================
 
 DB_NAME="fordago"
-DB_USER="root"
-DB_PASS="${DB_PASS:-RootSecurePassword123!}"
-CONTAINER="${CONTAINER:-fordago_db}"
+DB_USER="FordaGo"
+# Password can be read from /root/.fordago-backup.env or default
+[ -f /root/.fordago-backup.env ] && . /root/.fordago-backup.env
+DB_PASS="${DB_PASS:-SecurePassword123!}"
 MAX_BACKUPS=5
 BACKUP_DIR="/root/fordago-backups"
 TIMESTAMP=$(date +"%Y-%m-%d_%H-%M")
@@ -18,8 +19,8 @@ mkdir -p "$BACKUP_DIR"
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting FordaGo backup..."
 
-# Dump MySQL from inside the Podman container
-podman exec $CONTAINER mysqldump \
+# Dump MariaDB/MySQL from the active production database
+mariadb-dump \
   --user="$DB_USER" \
   --password="$DB_PASS" \
   --single-transaction \
@@ -28,7 +29,7 @@ podman exec $CONTAINER mysqldump \
   "$DB_NAME" > "$SQL_FILE" 2>/tmp/backup_err.log
 
 if [ $? -ne 0 ]; then
-  echo "[ERROR] mysqldump failed!"
+  echo "[ERROR] mariadb-dump failed!"
   cat /tmp/backup_err.log
   rm -f "$SQL_FILE"
   exit 1

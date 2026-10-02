@@ -423,6 +423,11 @@ export class AdminPage implements OnInit, OnDestroy {
   }
 
   quickOpenReports(): void {
+    // Management reports are admin/super_admin only (see managerGuard + backend role middleware).
+    if (this.isEmployee) {
+      this.toast.warning('Reports are available to administrators only.');
+      return;
+    }
     this.router.navigate(['/admin-reports']);
   }
 

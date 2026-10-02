@@ -56,7 +56,7 @@ Empirical evaluation based on the ISO/IEC 25010 software quality model demonstra
 
 a. IT professionals (n = 5) evaluated the system across all eight software characteristics using the institutional 5-point Likert instrument, awarding a Composite Grand Mean of 4.78 (Verbal Interpretation: Very Strong Evidence / Excellent), highlighted by top ratings in Maintainability (4.84), Security (4.80), Usability (4.80), Compatibility (4.80), Portability (4.80), Functional Suitability (4.73), Performance Efficiency (4.73), and Reliability (4.70); and
 
-b. Gym end-users (n = 15), consisting of the gym owner, front-desk staff, and 13 active gym members, evaluated the live application, granting an overall Grand Mean of 4.84 (Verbal Interpretation: Very Strong Evidence / Excellent), with high acclaim for Security (4.90), Usability (4.85), Functional Suitability (4.80), and Reliability (4.80).
+b. Gym end-users (n = 15), consisting of two gym owners, front-desk staff, and 12 active gym members, evaluated the live application, granting an overall Grand Mean of 4.84 (Verbal Interpretation: Very Strong Evidence / Excellent), with high acclaim for Security (4.90), Usability (4.85), Functional Suitability (4.80), and Reliability (4.80).
 
 Conclusion
 
@@ -64,7 +64,7 @@ Conclusion 1: Traditional paper-based management methods are fundamentally obsol
 
 Conclusion 2: The successful design, full-stack development, and live VPS deployment of FordaGO validate that integrating camera-based optical QR code verification, real-time WebSocket communication, and responsive hybrid mobile frameworks provides an effective, high-performance, and scalable replacement for manual gym workflows. The system successfully democratizes equipment guidance, automates attendance tracking, accelerates supplement inventory deductions, and enforces administrative accountability through comprehensive activity audit trails.
 
-Conclusion 3: The overwhelming 'Very Strong Evidence / Excellent' evaluation marks achieved across both IT experts (4.78) and gym end-users (4.82–4.84) substantiate that FordaGO meets international software quality standards defined by ISO/IEC 25010. The platform exhibits high operational reliability, robust data security, responsive real-time interaction, and superior usability, rendering it fully viable for production enterprise deployment in fitness facilities.
+Conclusion 3: The overwhelming 'Very Strong Evidence / Excellent' evaluation marks achieved across both IT experts (4.78) and gym end-users (4.84) substantiate that FordaGO meets international software quality standards defined by ISO/IEC 25010. The platform exhibits high operational reliability, robust data security, responsive real-time interaction, and superior usability, rendering it fully viable for production enterprise deployment in fitness facilities.
 
 ### Recommendations
 

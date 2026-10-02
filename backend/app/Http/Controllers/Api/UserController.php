@@ -309,6 +309,29 @@ class UserController extends Controller
             return response()->json(['message' => 'User not found'], 404);
         }
 
+        // Role-change / privileged-account protection (mirrors store() and destroy()):
+        // - nobody can change their own role
+        // - super_admin may assign any valid role
+        // - admin may only assign employee/user and may not modify admin/super_admin accounts
+        if ($isAdmin) {
+            $callerRole    = $request->user()->role;
+            $validRoles    = ['super_admin', 'admin', 'employee', 'coach', 'user'];
+            $requestedRole = $request->input('role', $user->role);
+
+            if (! is_string($requestedRole) || ! in_array($requestedRole, $validRoles, true)) {
+                return response()->json(['message' => 'Invalid role.'], 422);
+            }
+            if ($callerRole === 'admin' && ! $isSelf && in_array($user->role, ['admin', 'super_admin'], true)) {
+                return response()->json(['message' => 'Admins cannot modify other admin or super admin accounts.'], 403);
+            }
+            if ($requestedRole !== $user->role) {
+                $assignable = $callerRole === 'super_admin' ? $validRoles : ['employee', 'coach', 'user'];
+                if ($isSelf || ! in_array($requestedRole, $assignable, true)) {
+                    return response()->json(['message' => 'You are not allowed to assign that role.'], 403);
+                }
+            }
+        }
+
         $username = trim((string) $request->input('username', ''));
         if ($username === '') {
             $username = $user->username;

@@ -49,7 +49,7 @@ Phase 3: Development and Implementation
 
 During this phase, full-stack programming was executed across all tiers:
 
-Frontend Mobile & Web Client: Engineered using Ionic 8 and Angular (TypeScript, SCSS) utilizing standalone components and reactive form structures. Integrated Capacitor native plugins (Capacitor Camera and QR Code Scanner) to enable high-speed optical QR code decoding via device cameras.
+Frontend Mobile & Web Client: Engineered using Ionic 8 and Angular (TypeScript, SCSS) utilizing standalone components and reactive form structures. Integrated Capacitor native plugins (html5-qrcode Web Camera API and QR Code Scanner) to enable high-speed optical QR code decoding via device cameras.
 
 Backend Application Server: Developed using Laravel 11 (PHP 8.2+) implementing the Model-View-Controller (MVC) architectural pattern, Eloquent ORM, Sanctum authentication tokens, Bcrypt password hashing, and custom role-based route middleware (member, coach, admin, employee, super_admin).
 
@@ -67,11 +67,11 @@ Unit Testing: Verified individual controller logic, authentication token generat
 
 Integration Testing: Verified end-to-end data synchronization between the Ionic Angular frontend, Laravel REST API, MySQL database, and Reverb WebSocket server.
 
-Black-Box Functional Testing: Evaluated system operations against test matrices covering QR front-desk scanning check-ins, anti-pass-sharing timestamp verification, equipment QR tutorial loading, in-chat proposal dispatching and acceptance, and Over-the-Counter cash order checkout across physical Android mobile phones and desktop web browsers.
+Black-Box Functional Testing: Evaluated system operations against test matrices covering QR front-desk scanning check-ins, daily single-attendance constraint verification, equipment QR tutorial loading, in-chat proposal dispatching and acceptance, and Over-the-Counter cash order checkout across physical Android mobile phones and desktop web browsers.
 
 Phase 5: Deployment, Demonstration, and Evaluation
 
-The finalized FordaGO system was deployed in a local network test environment and demonstrated to target stakeholders at AFFORDA Gym – Cabiao Branch. Hands-on testing sessions were conducted with gym staff, certified coaches, and members, followed by the administration of the standardized ISO/IEC 25010 software quality evaluation questionnaire.
+The finalized FordaGO system was deployed to a live cloud Virtual Private Server (VPS) production environment at https://fordago.online and demonstrated to target stakeholders at AFFORDA Gym – Cabiao Branch. Hands-on testing sessions were conducted with gym staff, certified coaches, and members, followed by the administration of the standardized ISO/IEC 25010 software quality evaluation questionnaire.
 
 ### Research Locale
 
@@ -96,7 +96,7 @@ Technical Experts: Must hold a bachelor’s degree or professional background in
 
 End-Users: Must be an active member, certified personal trainer/coach, front-desk employee, or administrator of AFFORDA Gym – Cabiao Branch who actively engages in daily gym operations.
 
-A total of fifteen (15) respondents were selected using purposive sampling, categorized into two evaluation groups: five (5) Technical Experts (IT Professionals, Software Engineers, and Database Administrators) and fifteen (15) End-Users of AFFORDA Gym – Cabiao Branch. The end-user cohort was specifically stratified into one (1) gym owner/proprietor, one (1) front-desk administrative staff member, and thirteen (13) active gym members and gym-goers.
+A total of twenty (20) respondents were selected using purposive sampling, categorized into two evaluation groups: five (5) Technical Experts (IT Professionals, Software Engineers, and Systems Analysts) and fifteen (15) End-Users of AFFORDA Gym – Cabiao Branch. The end-user cohort was specifically stratified into two (2) gym owners/administrators, one (1) front-desk administrative staff member, and twelve (12) active gym members and gym-goers.
 
 
 > **Table 3. Total Respondents**
@@ -115,7 +115,7 @@ Reliability: Assesses system operational consistency, fault tolerance, transacti
 
 Security: Evaluates role-based access control (RBAC), token authentication, password encryption (Bcrypt), and the safeguarding of user personal and transactional records against unauthorized manipulation.
 
-Performance Efficiency: Evaluates API response speeds, database query execution times, WebSocket real-time message throughput, and mobile camera barcode scanning responsiveness under normal operational loads.
+Performance Efficiency: Evaluates API response speeds, database query execution times, WebSocket real-time message throughput, and mobile camera QR code scanning responsiveness under normal operational loads.
 
 A 5-Point Likert Scale was utilized across all questionnaire items, consistent with the standard evaluation rubrics established by the College of Information and Communications Technology (CICT).
 

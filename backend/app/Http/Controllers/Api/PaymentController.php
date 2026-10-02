@@ -266,6 +266,12 @@ class PaymentController extends Controller
             return response()->json(['success' => false, 'message' => 'Payment record not found.'], 404);
         }
 
+        // Ownership check: only the payer (or staff) may verify/fulfil a payment.
+        $caller = $request->user();
+        if (! $caller || ((int) $payment->user_id !== (int) $caller->id && ! in_array($caller->role, ['admin', 'super_admin', 'employee'], true))) {
+            return response()->json(['success' => false, 'message' => 'Forbidden.'], 403);
+        }
+
         // If already paid, return immediately
         if ($payment->isPaid()) {
             return response()->json([
@@ -277,13 +283,16 @@ class PaymentController extends Controller
 
         // Check Xendit if gateway is xendit
         if ($payment->gateway === 'xendit') {
-            $invoice = $this->xendit->retrieveInvoice($sessionId);
+            // Always query the gateway with the session id stored on OUR payment record,
+            // never with the id taken from the URL.
+            $invoice = $this->xendit->retrieveInvoice((string) $payment->gateway_session_id);
             $isPaid = $invoice && in_array(strtolower($invoice['status'] ?? ''), ['paid', 'settled']);
-            $isDev = str_starts_with(config('services.xendit.secret_key', env('XENDIT_SECRET_KEY', '')), 'xnd_development_');
 
-            if ($isPaid || $isDev || $request->input('confirm') == '1' || $request->boolean('confirm')) {
+            // Only a gateway-confirmed invoice may fulfil a Xendit payment.
+            // (The former `confirm=1` / development-key bypass allowed users to self-mark payments as paid.)
+            if ($isPaid) {
                 $this->fulfillPayment($payment, [
-                    'payment_id'      => $invoice['session_id'] ?? $sessionId,
+                    'payment_id'      => $invoice['session_id'] ?? $payment->gateway_session_id,
                     'payment_channel' => $invoice['payment_channel'] ?? $payment->payment_channel,
                 ]);
 
@@ -295,20 +304,33 @@ class PaymentController extends Controller
             }
         }
 
-        // Query PayMongo status
-        $session = $this->payMongo->retrieveCheckoutSession($sessionId);
+        // Query PayMongo status (also covers the simulated checkout, which is created through PayMongoService).
+        // Only payments that were created through the PayMongo path may be verified here, and the gateway is
+        // queried with the session id stored on the payment record, not the URL parameter. Without this, a
+        // caller could pass a "cs_mock_..." id plus their own receipt number and get ANY of their pending
+        // payments (including real-gateway and counter-cash payments) marked as paid.
+        if ($payment->gateway === 'paymongo') {
+            $storedSessionId = (string) $payment->gateway_session_id;
+            $session = null;
 
-        if ($session && ($session['status'] === 'paid' || ! empty($session['is_mock']))) {
-            $this->fulfillPayment($payment, [
-                'payment_id'      => $session['payment_id'] ?? null,
-                'payment_channel' => $session['payment_channel'] ?? $payment->payment_channel,
-            ]);
+            // A simulated session can only be accepted while no real PayMongo key is configured.
+            // Once real keys are set, mock sessions are never trusted.
+            if (! str_starts_with($storedSessionId, 'cs_mock_') || ! $this->payMongo->isConfigured()) {
+                $session = $this->payMongo->retrieveCheckoutSession($storedSessionId);
+            }
 
-            return response()->json([
-                'success' => true,
-                'payment' => $payment->fresh(),
-                'receipt' => $this->formatReceipt($payment->fresh()),
-            ]);
+            if ($session && ($session['status'] === 'paid' || ! empty($session['is_mock']))) {
+                $this->fulfillPayment($payment, [
+                    'payment_id'      => $session['payment_id'] ?? null,
+                    'payment_channel' => $session['payment_channel'] ?? $payment->payment_channel,
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'payment' => $payment->fresh(),
+                    'receipt' => $this->formatReceipt($payment->fresh()),
+                ]);
+            }
         }
 
         return response()->json([
@@ -324,6 +346,17 @@ class PaymentController extends Controller
      */
     public function webhook(Request $request)
     {
+        // Webhooks are unauthenticated, so only a request carrying a valid Paymongo-Signature is accepted.
+        // Fails closed: with no PayMongo key or no PAYMONGO_WEBHOOK_SECRET configured, nothing is processed.
+        if (! $this->payMongo->isConfigured()) {
+            return response()->json(['status' => 'ignored'], 403);
+        }
+
+        if (! $this->payMongo->verifyWebhookSignature($request->getContent(), $request->header('Paymongo-Signature'))) {
+            Log::warning('PayMongo webhook rejected: missing or invalid signature', ['ip' => $request->ip()]);
+            return response()->json(['status' => 'invalid signature'], 401);
+        }
+
         $payload = $request->all();
         Log::info('PayMongo Webhook Received', ['type' => $payload['data']['attributes']['type'] ?? 'unknown']);
 
@@ -358,6 +391,17 @@ class PaymentController extends Controller
      */
     public function xenditWebhook(Request $request)
     {
+        // Webhooks are unauthenticated, so only a request carrying the correct x-callback-token is accepted.
+        // Fails closed: with no Xendit key or no XENDIT_CALLBACK_TOKEN configured, nothing is processed.
+        if (! $this->xendit->isConfigured()) {
+            return response()->json(['status' => 'ignored'], 403);
+        }
+
+        if (! $this->xendit->verifyCallbackToken($request->header('x-callback-token'))) {
+            Log::warning('Xendit webhook rejected: missing or invalid callback token', ['ip' => $request->ip()]);
+            return response()->json(['status' => 'invalid token'], 401);
+        }
+
         $payload = $request->all();
         Log::info('Xendit Webhook Received', ['status' => $payload['status'] ?? 'unknown', 'external_id' => $payload['external_id'] ?? '']);
 

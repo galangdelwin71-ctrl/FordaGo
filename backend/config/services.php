@@ -72,13 +72,17 @@ return [
 
     // PayMongo Online Payment (GCash, Maya, Cards)
     'paymongo' => [
-        'public_key' => env('PAYMONGO_PUBLIC_KEY', ''),
-        'secret_key' => env('PAYMONGO_SECRET_KEY', ''),
+        'public_key'     => env('PAYMONGO_PUBLIC_KEY', ''),
+        'secret_key'     => env('PAYMONGO_SECRET_KEY', ''),
+        // Webhook signing secret (whsk_...) from the PayMongo dashboard; used to verify Paymongo-Signature.
+        'webhook_secret' => env('PAYMONGO_WEBHOOK_SECRET', ''),
     ],
 
     // Xendit Online Payment (GCash, Maya, QR Ph)
     'xendit' => [
-        'secret_key' => env('XENDIT_SECRET_KEY', ''),
+        'secret_key'     => env('XENDIT_SECRET_KEY', ''),
+        // Callback verification token from the Xendit dashboard; compared with the x-callback-token header.
+        'callback_token' => env('XENDIT_CALLBACK_TOKEN', ''),
     ],
 ];
 

@@ -194,12 +194,16 @@ Route::middleware('auth:sanctum')->group(function () {
     // ── Reports (server/routes/reports.js) ────────────────────────────────
     Route::prefix('reports')->group(function () {
         Route::get('/my-transactions',    [ReportsController::class, 'myTransactions']);
-        Route::get('/admin/transactions', [ReportsController::class, 'adminTransactions'])->middleware('role:admin,super_admin,employee');
-        Route::get('/admin/attendance',   [ReportsController::class, 'adminAttendance'])->middleware('role:admin,super_admin,employee');
-        Route::get('/admin/sales',        [ReportsController::class, 'adminSales'])->middleware('role:admin,super_admin,employee');
-        Route::get('/admin/inventory',    [ReportsController::class, 'adminInventory'])->middleware('role:admin,super_admin,employee');
-        Route::get('/admin/memberships',  [ReportsController::class, 'adminMemberships'])->middleware('role:admin,super_admin,employee');
-        Route::get('/admin/feedback',     [ReportsController::class, 'adminFeedback'])->middleware('role:admin,super_admin,employee');
+        // Management reports (revenue, sales, memberships, inventory valuation, feedback analytics)
+        // are admin/super_admin only. Employees do their daily work through the
+        // /attendance/* and /inventory/* endpoints instead, and the frontend already hides the
+        // Reports tab and guards /admin-reports with managerGuard for them.
+        Route::get('/admin/transactions', [ReportsController::class, 'adminTransactions'])->middleware('role:admin,super_admin');
+        Route::get('/admin/attendance',   [ReportsController::class, 'adminAttendance'])->middleware('role:admin,super_admin');
+        Route::get('/admin/sales',        [ReportsController::class, 'adminSales'])->middleware('role:admin,super_admin');
+        Route::get('/admin/inventory',    [ReportsController::class, 'adminInventory'])->middleware('role:admin,super_admin');
+        Route::get('/admin/memberships',  [ReportsController::class, 'adminMemberships'])->middleware('role:admin,super_admin');
+        Route::get('/admin/feedback',     [ReportsController::class, 'adminFeedback'])->middleware('role:admin,super_admin');
     });
 
     // ── Activity Logs (Audit Trail) ────────────────────────────────────────
