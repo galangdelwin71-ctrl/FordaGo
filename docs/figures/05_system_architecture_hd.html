@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Figure 5. FordaGO Full-Stack Architectural Framework</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=JetBrains+Mono:wght@700;800&display=swap');
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    width: 2560px;
+    height: 1440px;
+    background: #f1f5f9;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #0f172a;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 18px 28px;
+    margin: 0 auto;
+    overflow: hidden;
+  }
+
+  /* ================= COMMON TIER HEADERS ================= */
+  .tier-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 26px;
+    border-radius: 9px 9px 0 0;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  }
+
+  .tier-header h2 {
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .tier-header .badge-tech {
+    font-size: 20px;
+    font-weight: 700;
+    font-style: italic;
+    background: rgba(255, 255, 255, 0.22);
+    padding: 6px 20px;
+    border-radius: 7px;
+    letter-spacing: 0.3px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+  }
+
+  /* ================= TIER 1 SECTION ================= */
+  .tier-1-wrapper {
+    background: #ffffff;
+    border: 3.5px solid #1e3a8a;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+  }
+
+  .tier-1-wrapper .tier-header {
+    background: linear-gradient(90deg, #1e3a8a 0%, #2563eb 100%);
+  }
+
+  .tier-1-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    padding: 16px 22px;
+  }
+
+  .client-card {
+    border: 3px solid #cbd5e1;
+    border-radius: 9px;
+    background: #ffffff;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+  }
+
+  .client-card.member { border-color: #0284c7; }
+  .client-card.coach { border-color: #059669; }
+  .client-card.kiosk { border-color: #d97706; }
+  .client-card.admin { border-color: #4f46e5; }
+
+  .client-card-header {
+    padding: 12px 14px;
+    color: #ffffff;
+    text-align: center;
+  }
+
+  .client-card.member .client-card-header { background: #0284c7; }
+  .client-card.coach .client-card-header { background: #059669; }
+  .client-card.kiosk .client-card-header { background: #d97706; }
+  .client-card.admin .client-card-header { background: #4f46e5; }
+
+  .client-title {
+    font-size: 24px;
+    font-weight: 900;
+    line-height: 1.25;
+    margin-bottom: 3px;
+  }
+
+  .client-subtitle {
+    font-size: 17px;
+    font-weight: 700;
+    opacity: 0.95;
+    letter-spacing: 0.3px;
+  }
+
+  .client-card-body {
+    padding: 16px 20px;
+    flex: 1;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .bullet-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+  }
+
+  .bullet-list li {
+    font-size: 19.5px;
+    font-weight: 700;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    line-height: 1.35;
+  }
+
+  .bullet-list li::before {
+    content: "•";
+    font-size: 32px;
+    line-height: 0.8;
+    flex-shrink: 0;
+  }
+
+  .client-card.member .bullet-list li::before { color: #0284c7; }
+  .client-card.coach .bullet-list li::before { color: #059669; }
+  .client-card.kiosk .bullet-list li::before { color: #d97706; }
+  .client-card.admin .bullet-list li::before { color: #4f46e5; }
+
+  /* ================= CHANNEL 1 CONNECTOR ================= */
+  .channel-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+
+  .connectors-top-svg {
+    width: 100%;
+    height: 16px;
+    display: block;
+  }
+
+  .channel-bar {
+    width: 98%;
+    border: 3px solid #0284c7;
+    background: #f0f9ff;
+    border-radius: 9px;
+    padding: 10px 30px;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.12);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .channel-main-title {
+    font-size: 20px;
+    font-weight: 900;
+    color: #0369a1;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .channel-main-title .domain-badge {
+    background: #0284c7;
+    color: #ffffff;
+    padding: 3px 14px;
+    border-radius: 6px;
+    font-size: 18.5px;
+    font-weight: 800;
+    text-transform: none;
+    letter-spacing: 0.2px;
+    font-family: 'JetBrains Mono', monospace;
+    box-shadow: 0 2px 4px rgba(2, 132, 199, 0.3);
+  }
+
+  .channel-protocols {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 36px;
+    width: 100%;
+  }
+
+  .protocol-endpoint {
+    font-size: 19.5px;
+    font-weight: 800;
+    color: #0c4a6e;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .protocol-arrow {
+    display: flex;
+    align-items: center;
+  }
+
+  .protocol-arrow svg {
+    width: 110px;
+    height: 18px;
+  }
+
+  .connectors-bottom-svg {
+    width: 100%;
+    height: 16px;
+    display: block;
+  }
+
+  /* ================= TIER 2 SECTION ================= */
+  .tier-2-wrapper {
+    background: #ffffff;
+    border: 3.5px solid #0284c7;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+  }
+
+  .tier-2-wrapper .tier-header {
+    background: linear-gradient(90deg, #0284c7 0%, #0369a1 100%);
+  }
+
+  .tier-2-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    padding: 15px 20px;
+  }
+
+  .module-card {
+    border: 2.8px solid #cbd5e1;
+    border-radius: 9px;
+    background: #ffffff;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+  }
+
+  .module-card.m1 { border-color: #1e3a8a; }
+  .module-card.m2 { border-color: #0284c7; }
+  .module-card.m3 { border-color: #059669; }
+  .module-card.m4 { border-color: #d97706; }
+  .module-card.m5 { border-color: #6366f1; }
+
+  .module-card-header {
+    padding: 10px 12px;
+    color: #ffffff;
+    text-align: center;
+  }
+
+  .module-card.m1 .module-card-header { background: #1e3a8a; }
+  .module-card.m2 .module-card-header { background: #0284c7; }
+  .module-card.m3 .module-card-header { background: #059669; }
+  .module-card.m4 .module-card-header { background: #d97706; }
+  .module-card.m5 .module-card-header { background: #6366f1; }
+
+  .module-title {
+    font-size: 21.5px;
+    font-weight: 900;
+    line-height: 1.25;
+  }
+
+  .module-card-body {
+    padding: 13px 15px;
+    flex: 1;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .module-card.m1 .bullet-list li::before { color: #1e3a8a; }
+  .module-card.m2 .bullet-list li::before { color: #0284c7; }
+  .module-card.m3 .bullet-list li::before { color: #059669; }
+  .module-card.m4 .bullet-list li::before { color: #d97706; }
+  .module-card.m5 .bullet-list li::before { color: #6366f1; }
+
+  .module-card-body .bullet-list {
+    gap: 9px;
+  }
+
+  .module-card-body .bullet-list li {
+    font-size: 17.5px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  /* ================= CHANNEL 2 CONNECTOR ================= */
+  .channel-2-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+
+  .v-single-line {
+    width: 3.5px;
+    height: 15px;
+    background: #059669;
+  }
+
+  .channel-2-bar {
+    width: 84%;
+    border: 3px solid #059669;
+    background: #f0fdf4;
+    border-radius: 9px;
+    padding: 9px 32px;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  .channel-2-text {
+    font-size: 20px;
+    font-weight: 900;
+    color: #065f46;
+    letter-spacing: 0.6px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .channel-2-text .orm-tag {
+    background: #059669;
+    color: #ffffff;
+    padding: 4px 14px;
+    border-radius: 6px;
+    font-size: 19px;
+    font-weight: 800;
+    box-shadow: 0 2px 4px rgba(5, 150, 105, 0.3);
+  }
+
+  /* ================= TIER 3 SECTION ================= */
+  .tier-3-wrapper {
+    background: #ffffff;
+    border: 3.5px solid #047857;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+  }
+
+  .tier-3-wrapper .tier-header {
+    background: linear-gradient(90deg, #047857 0%, #065f46 100%);
+  }
+
+  .tier-3-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px 18px;
+    padding: 15px 22px;
+  }
+
+  .db-table-card {
+    border: 2.5px solid #94a3b8;
+    border-radius: 8px;
+    background: #ffffff;
+    display: flex;
+    align-items: stretch;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+    min-height: 56px;
+  }
+
+  .db-table-name {
+    width: 225px;
+    flex-shrink: 0;
+    background: #065f46;
+    color: #ffffff;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 17px;
+    font-weight: 800;
+    padding: 11px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border-right: 2.5px solid #047857;
+    letter-spacing: 0.1px;
+  }
+
+  .db-table-desc {
+    padding: 9px 13px;
+    font-size: 17.5px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.35;
+    flex: 1;
+    display: flex;
+    align-items: center;
+  }
+
+</style>
+</head>
+<body>
+
+  <!-- ==================== TIER 1 ==================== -->
+  <div class="tier-1-wrapper">
+    <div class="tier-header">
+      <h2>TIER 1: CLIENT APPLICATIONS (MOBILE &amp; WEB)</h2>
+      <div class="badge-tech">Built with Ionic 8 &amp; Angular Framework</div>
+    </div>
+    <div class="tier-1-grid">
+
+      <!-- Card 1: Member App -->
+      <div class="client-card member">
+        <div class="client-card-header">
+          <div class="client-title">Gym Member Mobile App</div>
+          <div class="client-subtitle">Android Mobile Phone (APK)</div>
+        </div>
+        <div class="client-card-body">
+          <ul class="bullet-list">
+            <li>Camera QR Check-In Scanner</li>
+            <li>Workout Routine &amp; PR Tracker</li>
+            <li>Equipment Workout Guides</li>
+            <li>Store Items &amp; GCash Demo</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Card 2: Coach App -->
+      <div class="client-card coach">
+        <div class="client-card-header">
+          <div class="client-title">Fitness Coach App</div>
+          <div class="client-subtitle">Android Mobile Phone (APK)</div>
+        </div>
+        <div class="client-card-body">
+          <ul class="bullet-list">
+            <li>Trainee List &amp; Profiles</li>
+            <li>Custom Workout Routines</li>
+            <li>1-on-1 Direct Chat</li>
+            <li>Coach Profile &amp; Availability</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Card 3: Front-Desk Tablet -->
+      <div class="client-card kiosk">
+        <div class="client-card-header">
+          <div class="client-title">Front-Desk Tablet Kiosk</div>
+          <div class="client-subtitle">Reception Desk Tablet</div>
+        </div>
+        <div class="client-card-body">
+          <ul class="bullet-list">
+            <li>Gym Counter QR Code</li>
+            <li>Real-Time Check-In Verification</li>
+            <li>Counter Cash Sales</li>
+            <li>Payment Verification</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Card 4: Admin Web Dashboard -->
+      <div class="client-card admin">
+        <div class="client-card-header">
+          <div class="client-title">Admin Web Dashboard</div>
+          <div class="client-subtitle">PC / Laptop Web Browser</div>
+        </div>
+        <div class="client-card-body">
+          <ul class="bullet-list">
+            <li>Member &amp; Staff Accounts</li>
+            <li>Gym Store Inventory</li>
+            <li>Sales &amp; Payment Records</li>
+            <li>Attendance &amp; Sales Reports</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==================== CHANNEL 1 ==================== -->
+  <div class="channel-container">
+    <svg class="connectors-top-svg" viewBox="0 0 2504 16">
+      <line x1="325" y1="0" x2="325" y2="16" stroke="#0284c7" stroke-width="3.5" />
+      <line x1="943" y1="0" x2="943" y2="16" stroke="#0284c7" stroke-width="3.5" />
+      <line x1="1561" y1="0" x2="1561" y2="16" stroke="#0284c7" stroke-width="3.5" />
+      <line x1="2179" y1="0" x2="2179" y2="16" stroke="#0284c7" stroke-width="3.5" />
+    </svg>
+
+    <div class="channel-bar">
+      <div class="channel-main-title">
+        <span>SECURE CLOUD VPS COMMUNICATION CHANNEL</span>
+        <span class="domain-badge">fordago.online</span>
+      </div>
+      <div class="channel-protocols">
+        <span class="protocol-endpoint">HTTPS RESTful API Endpoints (Sanctum Tokens)</span>
+        <div class="protocol-arrow">
+          <svg viewBox="0 0 110 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0 9L12 2V16L0 9Z" fill="#0284C7"/>
+            <line x1="10" y1="9" x2="100" y2="9" stroke="#0284C7" stroke-width="3.5"/>
+            <path d="M110 9L98 2V16L110 9Z" fill="#0284C7"/>
+          </svg>
+        </div>
+        <span class="protocol-endpoint">Real-Time WebSockets (Laravel Reverb)</span>
+      </div>
+    </div>
+
+    <svg class="connectors-bottom-svg" viewBox="0 0 2504 16">
+      <line x1="263" y1="0" x2="263" y2="16" stroke="#0284c7" stroke-width="3.5" />
+      <line x1="757" y1="0" x2="757" y2="16" stroke="#0284c7" stroke-width="3.5" />
+      <line x1="1252" y1="0" x2="1252" y2="16" stroke="#0284c7" stroke-width="3.5" />
+      <line x1="1747" y1="0" x2="1747" y2="16" stroke="#0284c7" stroke-width="3.5" />
+      <line x1="2241" y1="0" x2="2241" y2="16" stroke="#0284c7" stroke-width="3.5" />
+    </svg>
+  </div>
+
+  <!-- ==================== TIER 2 ==================== -->
+  <div class="tier-2-wrapper">
+    <div class="tier-header">
+      <h2>TIER 2: APPLICATION LAYER (BACKEND API &amp; BUSINESS LOGIC)</h2>
+      <div class="badge-tech">Laravel 11 (PHP 8.2+) on Linux Cloud VPS</div>
+    </div>
+    <div class="tier-2-grid">
+
+      <!-- Module 1: Auth -->
+      <div class="module-card m1">
+        <div class="module-card-header">
+          <div class="module-title">User Auth &amp; Roles</div>
+        </div>
+        <div class="module-card-body">
+          <ul class="bullet-list">
+            <li>Laravel Sanctum Tokens</li>
+            <li>Bcrypt Password Hashing</li>
+            <li>Role Access Control (Admin, Staff, Coach, Member)</li>
+            <li>Session &amp; Token Security</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Module 2: Attendance -->
+      <div class="module-card m2">
+        <div class="module-card-header">
+          <div class="module-title">Attendance Engine</div>
+        </div>
+        <div class="module-card-body">
+          <ul class="bullet-list">
+            <li>QR Code Verification</li>
+            <li>Membership Validity Check</li>
+            <li>Fast Check-In Response</li>
+            <li>Daily Entry Timestamp Logs</li>
+            <li>Prevent Duplicate Check-In</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Module 3: Workout -->
+      <div class="module-card m3">
+        <div class="module-card-header">
+          <div class="module-title">Workout &amp; Coaching</div>
+        </div>
+        <div class="module-card-body">
+          <ul class="bullet-list">
+            <li>Weekly Split Routine Builder</li>
+            <li>Personal Record (PR) Logs</li>
+            <li>Coach Proposal Workflow</li>
+            <li>Exercise Details &amp; Video Guides</li>
+            <li>Member Progress Tracking</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Module 4: Store -->
+      <div class="module-card m4">
+        <div class="module-card-header">
+          <div class="module-title">Store &amp; Sales Module</div>
+        </div>
+        <div class="module-card-body">
+          <ul class="bullet-list">
+            <li>Store Item Stock Tracking</li>
+            <li>Counter Cash Sales</li>
+            <li>GCash Ref No. Verification</li>
+            <li>Order Receipt Processing</li>
+            <li>Daily Sales Records</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Module 5: Real-Time -->
+      <div class="module-card m5">
+        <div class="module-card-header">
+          <div class="module-title">Real-Time &amp; Reports</div>
+        </div>
+        <div class="module-card-body">
+          <ul class="bullet-list">
+            <li>Laravel Reverb WebSockets</li>
+            <li>1-on-1 Coach-Client Chat</li>
+            <li>Attendance Broadcast Feeds</li>
+            <li>Stock &amp; Order Alerts</li>
+            <li>PDF / Excel Report Exports</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==================== CHANNEL 2 ==================== -->
+  <div class="channel-2-container">
+    <div class="v-single-line"></div>
+    <div class="channel-2-bar">
+      <div class="channel-2-text">
+        <span>DATABASE INTERACTION:</span>
+        <span class="orm-tag">Laravel Eloquent ORM</span>
+        <svg width="70" height="18" viewBox="0 0 70 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0 9L10 3V15L0 9Z" fill="#059669"/>
+          <line x1="9" y1="9" x2="61" y2="9" stroke="#059669" stroke-width="3"/>
+          <path d="M70 9L60 3V15L70 9Z" fill="#059669"/>
+        </svg>
+        <span>MySQL Database Queries (ACID Transactions)</span>
+      </div>
+    </div>
+    <div class="v-single-line"></div>
+  </div>
+
+  <!-- ==================== TIER 3 ==================== -->
+  <div class="tier-3-wrapper">
+    <div class="tier-header">
+      <h2>TIER 3: DATABASE STORAGE (MYSQL 8.0 ENGINE)</h2>
+      <div class="badge-tech">Relational Database &bull; Third Normal Form (3NF) &bull; Foreign Key Relationships</div>
+    </div>
+    <div class="tier-3-grid">
+
+      <!-- Table 1: users -->
+      <div class="db-table-card">
+        <div class="db-table-name">users</div>
+        <div class="db-table-desc">User accounts, roles, passwords &amp; profile data</div>
+      </div>
+
+      <!-- Table 2: memberships -->
+      <div class="db-table-card">
+        <div class="db-table-name">memberships</div>
+        <div class="db-table-desc">Membership plans, 30-day passes &amp; expiry dates</div>
+      </div>
+
+      <!-- Table 3: attendance -->
+      <div class="db-table-card">
+        <div class="db-table-name">attendance</div>
+        <div class="db-table-desc">QR check-in logs, timestamps &amp; member status</div>
+      </div>
+
+      <!-- Table 4: equipment -->
+      <div class="db-table-card">
+        <div class="db-table-name">equipment</div>
+        <div class="db-table-desc">Gym machinery, target muscles &amp; video URLs</div>
+      </div>
+
+      <!-- Table 5: workout_proposals -->
+      <div class="db-table-card">
+        <div class="db-table-name">workout_proposals</div>
+        <div class="db-table-desc">Coach-designed routines, sets &amp; proposed rates</div>
+      </div>
+
+      <!-- Table 6: products -->
+      <div class="db-table-card">
+        <div class="db-table-name">products</div>
+        <div class="db-table-desc">Store items, counter stock &amp; retail prices</div>
+      </div>
+
+      <!-- Table 7: orders -->
+      <div class="db-table-card">
+        <div class="db-table-name">orders</div>
+        <div class="db-table-desc">Sales orders, cash logs &amp; GCash demo receipts</div>
+      </div>
+
+      <!-- Table 8: chat_messages -->
+      <div class="db-table-card">
+        <div class="db-table-name">chat_messages</div>
+        <div class="db-table-desc">1-on-1 coach-client chat messages &amp; timestamps</div>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>

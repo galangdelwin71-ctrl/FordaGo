@@ -188,7 +188,7 @@ Lahat ng malilinis at walang redundant title banner na images ay nakatabi na sa 
   * Sales & Payment Records
   * Attendance & Sales Reports
 
-#### CHANNEL 1: SECURE CLOUD VPS COMMUNICATION CHANNEL (`app.affordagym.com`)
+#### CHANNEL 1: SECURE CLOUD VPS COMMUNICATION CHANNEL (`fordago.online`)
 * `HTTPS RESTful API Endpoints (Sanctum Tokens)` ◄──────► `Real-Time WebSockets (Laravel Reverb)`
 
 #### TIER 2: APPLICATION LAYER (BACKEND API & BUSINESS LOGIC)
