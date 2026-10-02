@@ -90,7 +90,7 @@ Certified fitness trainers operating within the Coach Studio workspace. Coaches 
 
 5. Gym Member (user):
 
-End-users accessing the Member Mobile Portal. Members can monitor active pass duration, present digital QR passes at the entrance front-desk QR scanner, scan equipment printed QR code labels for instructional movement tutorials, log personal records (PRs), construct weekly split routines, browse the supplement shop catalog, and consult with accredited coaches.
+End-users accessing the Member Mobile Portal. Members can monitor active pass duration, scan the official gym entrance QR code using their device camera for instant attendance check-in, scan equipment printed QR code labels for instructional movement tutorials, log personal records (PRs), construct weekly split routines, browse the supplement shop catalog, and consult with accredited coaches.
 
 
 > **Table 1. User Role and Access Privilege Matrix of FordaGO**
@@ -233,7 +233,7 @@ Following initial deployment, the researchers monitored daily gym workflows to g
 
 Attendance Flow Optimization:
 
-The front-desk QR scanner camera scanner was calibrated with automatic debounce controls to prevent accidental double-scanning of member QR passes.
+The in-app QR camera scanner was calibrated with automatic debounce controls to prevent accidental rapid double-scanning of the gym entrance QR code.
 
 Proposal Flow Enhancements:
 
