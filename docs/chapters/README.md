@@ -35,7 +35,7 @@ This directory contains the complete academic capstone manuscript, available in 
 3. **Figure 3:** Map of the Municipality of Cabiao, Nueva Ecija (Research Locale)
 4. **Figure 4:** Gantt Chart of Activities for FordaGO System Development (January–October 2026 Timeline & Final Defense)
 5. **Figure 5:** FordaGO Full-Stack Architectural Framework (4-Tier: Presentation, Cloud VPS Channel, Application, MySQL Persistence)
-6. **Figure 6:** Use Case Diagram of FordaGO (Actors: Gym Member, Gym Coach, Staff/Admin; 15 Core Use Cases)
+6. **Figure 6:** Use Case Diagram of FordaGO (5 Distinct Actors: Super Admin [Owner], Gym Admin [Manager], Front-Desk Staff, Gym Member, Gym Coach; 22 Core Use Cases enforcing Separation of Duties & RBAC)
 7. **Figure 7:** Context Diagram Level 0 of FordaGO (Process 0 and 3 External Entities matching manuscript text)
 8. **Figure 8:** Data Flow Diagram (DFD) Level 1 of FordaGO (7 Core Operational Subprocesses & 7 Data Stores)
 9. **Figure 9:** Entity-Relationship Diagram (ERD) of FordaGO (8 Normalized Relational Tables & Referential Foreign Keys)

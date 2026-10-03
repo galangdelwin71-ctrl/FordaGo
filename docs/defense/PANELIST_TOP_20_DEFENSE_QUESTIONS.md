@@ -136,16 +136,21 @@ Gusto marinig ng panel ang compliance niyo sa batas, consent handling, data stor
 ---
 
 ### ❓ Question 7:
-> *"What measures prevent a user from tampering with their role or membership status via Postman or browser developer tools (e.g. changing role to 'admin' or status to 'active' without paying)?"*
+> *"What measures prevent a user from tampering with their role or membership status via Postman or browser developer tools, and why do you have three separate administrative roles (Super Admin, Gym Admin, Front-Desk Staff)?"*
 
 #### 🎯 Panelist Intent:
-Technical vulnerability check (Broken Access Control / Insecure Direct Object References - IDOR).
+Technical vulnerability check (Broken Access Control / Insecure Direct Object References - IDOR) and organizational Separation of Duties (SoD / RBAC architecture).
 
 #### 💡 Ideal Defense Answer:
-> *"We enforce **Strict Server-Side Authorization via Laravel Sanctum & Custom Middleware**, following the Zero Trust principle:*
-> 1. ***Mass Assignment Protection:** In our Eloquent Models (`User.php`), privileged attributes such as `role`, `membership_status`, and `membership_expiry` are guarded against mass assignment.*
-> 2. ***Route Middleware Enforcement:** Every administrative endpoint is wrapped in `role:admin,super_admin,employee` middleware. Even if an attacker injects a modified JSON payload with `"role": "admin"` or `"membership_status": "active"` via `PUT /api/users/{id}`, the backend controller explicitly ignores or rejects unprivileged attribute mutations.*
-> 3. ***Strict Dual Validation:** Front-end validations are mirrored by server-side regular expressions (e.g., prohibiting digits in names, enforcing 11-digit `09` phone numbers). Client-side manipulation cannot bypass server logic."*
+> *"We enforce **Strict Server-Side Authorization via Laravel Sanctum & Custom Middleware**, implementing the Principle of Least Privilege (PoLP) and Separation of Duties (SoD):*
+> 1. ***Three-Tier Administrative Separation:**
+>    - **Super Admin (Proprietor / Owner):** Supreme executive authority. The only role authorized to create/delete Gym Admin accounts, configure system server variables, inspect complete security audit trails (`activity_logs`), and oversee automated database backups.
+>    - **Gym Admin (Branch Manager):** Day-to-day managerial oversight. Manages member passes, onboards and assigns Accredited Coaches (`/api/admin/coaches`), and exports executive financial revenue reports (Vector PDF & Excel). Strictly prohibited from altering server configs, deleting Super Admin, or tampering with audit logs.
+>    - **Front-Desk Staff (Receptionist / Cashier):** Frontline desk operations. Operates the optical QR camera scanner for entrance check-in, walk-in member registration, and POS counter supplement cash sales. Strictly blocked (`HTTP 403 Forbidden` via `role:admin,super_admin` and Angular `managerGuard`) from viewing financial reports, wholesale supplier costs, coach management, or audit logs.*
+> 2. ***Mass Assignment Protection:** In our Eloquent Models (`User.php`), privileged attributes such as `role`, `membership_status`, and `membership_expiry` are guarded against mass assignment.*
+> 3. ***Route Middleware Enforcement:** Every administrative endpoint is wrapped in `role:admin,super_admin,employee` or `role:admin,super_admin` middleware. Even if an attacker injects a modified JSON payload with `"role": "admin"` or `"membership_status": "active"` via `PUT /api/users/{id}`, the backend controller explicitly ignores or rejects unprivileged attribute mutations.*
+> 4. ***Strict Dual Validation:** Front-end validations are mirrored by server-side regular expressions (e.g., prohibiting digits in names, enforcing 11-digit `09` phone numbers). Client-side manipulation cannot bypass server logic."*
+
 
 ---
 

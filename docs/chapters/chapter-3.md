@@ -70,33 +70,135 @@ MySQL 8.0 relational database management system enforcing strict referential int
 
 Role-Based Access Control and System Actors
 
-The FordaGO system implements a rigorous Role-Based Access Control (RBAC) architecture designed to enforce the principle of least privilege across all mobile and web interfaces. Access rights and protected API routes are strictly validated via Laravel Sanctum bearer tokens and role-checking middleware. The system classifies authenticated users into five distinct operational roles across three functional tiers:
+To maintain strict operational accountability, safeguard sensitive financial records, and prevent unauthorized privilege escalation, FordaGO implements a multi-tier Role-Based Access Control (RBAC) architecture grounded in the Principle of Least Privilege (PoLP) and Separation of Duties (SoD) in alignment with ISO/IEC 27001 data security guidelines. Rather than treating administrative personnel as a homogeneous group, the system implements defense-in-depth access governance across three architectural strata:
+1. **Database Persistence Layer:** Schema-level role partitioning is enforced by the `users.role` MySQL ENUM column (`'super_admin'`, `'admin'`, `'employee'`, `'coach'`, `'user'`), ensuring that role identities are immutable across foreign-key relationships.
+2. **Backend Application Layer:** All incoming HTTP requests require a cryptographically signed Laravel Sanctum bearer token. Every protected API route is wrapped in custom role-validation middleware (`EnsureUserHasRole`), which verifies the authenticated token's role against permissible parameters (`middleware('role:admin,super_admin')` vs `middleware('role:admin,super_admin,employee')`). Any unauthorized route access immediately terminates with an `HTTP 403 Forbidden` response and generates a security event in the audit trail.
+3. **Frontend Presentation Layer:** Angular standalone route guards (`adminGuard`, `managerGuard`, `memberGuard`, `authGuard`) and dynamic template structural directives (`*ngIf="!isEmployee"`, `*ngIf="canManageCoaches"`, `*ngIf="isSuperAdmin"`) dynamically adapt the interface, suppressing restricted navigation tabs, control actions, and management buttons.
 
-1. Super Administrator (super_admin):
+The system formally classifies all authenticated stakeholders into five (5) distinct operational roles across three (3) functional tiers:
 
-Represents the highest tier of administrative and governance authority. The Super Administrator possesses unrestricted system access, including managing Administrator and Employee credentials, monitoring cross-tier system activity, configuring system settings, and overseeing automated database backup routines
+### Administrative Governance Tier (Super Admin, Gym Admin, Front-Desk Staff)
 
-2. Gym Administrator (admin):
+To eliminate ambiguity during institutional defense and illustrate clear business governance, the three administrative roles are strictly differentiated by business ownership, managerial authority, and front-line operational duties:
 
-Functions as the primary operational manager for daily gym business. The Administrator manages member accounts and coach profiles, oversees supplement product catalog inventory, approves counter orders and validates cash payment receipts, publishes announcements, and generates dynamic financial and attendance reports. Administrators are restricted from altering system-level server configurations or deleting Super Administrator accounts.
+#### 1. Super Administrator (`super_admin` — Gym Proprietor / Executive Authority):
+* **Organizational Role & Business Domain:** Represents the executive gym proprietor and system licensee. The Super Administrator holds supreme, unrestricted authority over the digital infrastructure and strategic configuration of the enterprise.
+* **Distinct Capabilities & Responsibilities:**
+  * **Global Role Provisioning:** The sole authority capable of creating, assigning roles to, updating, or deleting Gym Administrator (`admin`) and Front-Desk Employee (`employee`) accounts.
+  * **System Configuration & Security Governance:** Manages global application settings, payment gateway integration credentials, and business operating rules.
+  * **Unrestricted Security Audit Inspection:** Full read-only oversight of the system audit trail (`activity_logs`), inspecting user IP addresses, session logins/logouts, failed authentication attempts, and data modification events.
+  * **Database Disaster Recovery:** Oversees automated database backup jobs, manual SQL snapshot downloads, and database migration routines.
+* **Operational Restrictions:** None. Possesses root executive authority across the entire platform.
 
-3. Front-Desk Employee (employee):
+#### 2. Gym Administrator (`admin` — Branch Manager / Operational Authority):
+* **Organizational Role & Business Domain:** Functions as the on-site general manager of AFFORDA Gym – Cabiao Branch, overseeing day-to-day business viability, staff supervision, and customer satisfaction without technical server access.
+* **Distinct Capabilities & Responsibilities:**
+  * **Coach Account Lifecycle Management:** Sole administrative manager authorized to onboard, verify credentials, edit rates, and manage schedules for Accredited Gym Coaches via `/api/admin/coaches`.
+  * **Executive Financial Analytics & Vector Reporting:** Full access to the Management Reporting Engine (`/reports/admin/*`), generating dynamic daily, weekly, monthly, and yearly vector PDF audit documents and Excel spreadsheets covering gross revenue, attendance turnover, supplement retail sales, and inventory valuation.
+  * **Member Account Overrides & Pass Approvals:** Authorizes offline counter cash payments, manually overrides membership plan status (e.g., activating 30-day Premium Passes upon receipt verification), and resolves customer disputes.
+  * **Retail Inventory Oversight:** Manages the supplement catalog, adjusting retail selling prices, entering wholesale supplier costs, and monitoring profit margins.
+  * **Staff Account Management:** Authorized to create and manage Front-Desk Employee (`employee`) accounts.
+* **Operational Restrictions & Boundaries:**
+  * Strictly **prohibited from creating, editing, or deleting Super Administrator accounts**.
+  * Strictly **restricted from accessing server-level environment configurations (`.env`)** or database disaster recovery routines.
+  * Strictly **prohibited from truncating or altering system security audit logs**.
 
-Receptionist and counter staff operating at the gym front desk. Employees are granted operational access to the digital optical QR camera scanner for entrance attendance check-in, walk-in member registration, pass validity lookup, and point-of-sale (POS) counter supplement sales. To safeguard financial and administrative integrity, Employees are strictly restricted from accessing financial revenue audit reports, viewing profit analytics, or modifying administrative staff accounts.
+#### 3. Front-Desk Employee (`employee` — Receptionist / Frontline Cashier):
+* **Organizational Role & Business Domain:** Frontline customer-facing staff stationed at the gym entrance reception desk, dedicated to rapid ingress validation, retail transactions, and walk-in customer intake.
+* **Distinct Capabilities & Responsibilities:**
+  * **Optical QR Entrance Check-In:** Operates the counter tablet kiosk camera scanner to validate entering member QR codes, instantly confirming active pass status and logging entry timestamps.
+  * **Walk-In Member Intake:** Ingests personal details of walk-in customers and creates standard regular member (`user`) accounts in the system.
+  * **Daily Pass Counter Payment Confirmation:** Receives cash payments for walk-in Daily Passes (₱40.00) and marks payments as confirmed in the attendance roster.
+  * **Point-of-Sale (POS) Retail Sales:** Processes over-the-counter cash sales of supplement beverages and fitness merchandise, triggering immediate database inventory deductions.
+  * **Equipment Defect Flagging:** Submits maintenance tags and operational condition reports for malfunctioning exercise equipment.
+* **Operational Restrictions & Least-Privilege Safeguards:**
+  * **Strictly Blocked from Management Reports (`HTTP 403 Forbidden`):** Protected by `managerGuard` in Angular and `role:admin,super_admin` in Laravel. Front-desk staff cannot view financial reports, revenue summaries, net profit figures, or high-level business analytics.
+  * **No Visibility of Supplier Costs or Profit Margins:** Can view retail prices for selling purposes but cannot inspect wholesale cost prices or margin calculations.
+  * **Cannot Manage Coaches:** The Coaches management tab is completely hidden and guarded against employees.
+  * **Cannot Manage Administrative Accounts:** Cannot create, modify, or delete any Employee, Admin, or Super Admin accounts.
+  * **No Access to Security Audit Logs:** Cannot inspect the system audit trail or activity history.
 
-4. Accredited Gym Coach (coach):
+---
 
-Certified fitness trainers operating within the Coach Studio workspace. Coaches manage their trainee client rosters, configure weekly working availability schedules, conduct real-time duplex chat via Laravel Reverb WebSockets, and dispatch structured in-chat Workout Plan Proposals.
+### Client Services Tier (Gym Coach and Gym Member)
 
-5. Gym Member (user):
+#### 4. Accredited Gym Coach (`coach` — Certified Fitness Trainer):
+Operates within the Coach Studio workspace. Coaches can view their active trainee client rosters, configure weekly working availability schedules, conduct real-time duplex chat via Laravel Reverb WebSockets, formulate customized 1-on-1 Workout Plan Proposals, and schedule group fitness classes. Coaches are restricted from all administrative, financial, and inventory management modules.
 
-End-users accessing the Member Mobile Portal. Members can monitor active pass duration, scan the official gym entrance QR code using their device camera for instant attendance check-in, scan equipment printed QR code labels for instructional movement tutorials, log personal records (PRs), construct weekly split routines, browse the supplement shop catalog, and consult with accredited coaches.
+#### 5. Gym Member (`user` — End-User Patron):
+End-users accessing the mobile client portal. Members can monitor active pass duration, scan the official gym entrance QR code using their device camera for instant attendance check-in, scan equipment printed QR code labels for instructional movement tutorials, log personal workout sets and Personal Record (PR) benchmarks, browse the supplement shop catalog, checkout cart orders, and consult with accredited coaches. Members are strictly confined to their own personal data records.
 
+---
+
+### Role-Based Access Control Privilege Matrix
+
+Table 1 formally defines the role-based capability boundaries, API route protections, and functional permissions across all five system roles, demonstrating the practical enforcement of least privilege:
 
 > **Table 1. User Role and Access Privilege Matrix of FordaGO**
 
-The operational boundaries, role-based capabilities, and interaction flows among these authenticated actors and system modules are formally modeled in the Use Case Diagram depicted in Figure 6. In this architecture, the Gym Member utilizes the mobile client application to scan the entrance QR code printed label for contactless attendance check-in, scan optical equipment printed QR code labels to access exercise tutorials and anatomical muscle guides, log personal workout sets and PR benchmarks, order supplements, and consult with assigned coaches. The Front-Desk Staff monitors live attendance rosters, confirms pending counter payments for walk-in daily passes, and manages point-of-sale transactions and supplement inventory.
+| Functional Module & Operational Capability | Backend Route & Middleware Guard | Super Admin (Owner) | Gym Admin (Manager) | Front-Desk Staff | Gym Coach (Trainer) | Gym Member (User) |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| **System Configuration & Role Provisioning** | | | | | | |
+| Create / Delete Super Admin Accounts | Server Console / Database Ledger | ✓ | ✗ | ✗ | ✗ | ✗ |
+| Create / Edit Gym Administrator Accounts | `POST/PUT /api/users` (Super Admin Only) | ✓ | ✗ | ✗ | ✗ | ✗ |
+| Create / Edit Front-Desk Employee Accounts | `POST/PUT /api/users` (`role:admin,super_admin`) | ✓ | ✓ | ✗ | ✗ | ✗ |
+| Register Walk-In Member (`user`) Accounts | `POST /api/users/create` (`role:admin,super_admin,employee`) | ✓ | ✓ | ✓ | ✗ | ✗ |
+| Self-Registration via Mobile App | `POST /api/auth/register` (Public) | ✗ | ✗ | ✗ | ✗ | ✓ |
+| **Security Audit & Disaster Recovery** | | | | | | |
+| Inspect Security Activity Logs (Audit Trail) | `GET /api/admin/activity-logs` (`role:admin,super_admin`) | ✓ | ✓ | ✗ | ✗ | ✗ |
+| Automated Database Backups & Recovery | Server Scheduled Jobs & CLI Backup Engine | ✓ | ✗ | ✗ | ✗ | ✗ |
+| 2-Factor Authentication & Biometric Login | `/api/auth/2fa/*`, `/api/auth/biometric/*` | ✓ | ✓ | ✓ | ✓ | ✓ |
+| **Gym Entrance & Attendance Monitoring** | | | | | | |
+| Optical Camera Scan of Entrance QR Code | `POST /api/attendance/checkin` (Member Camera) | ✗ | ✗ | ✗ | ✗ | ✓ |
+| Front-Desk Kiosk Scanner Check-In | `POST /api/attendance/checkin` (Kiosk Camera) | ✓ | ✓ | ✓ | ✗ | ✗ |
+| View Live Daily Attendance Roster | `GET /api/attendance/today` (`role:admin,super_admin,employee`) | ✓ | ✓ | ✓ | ✗ | ✗ |
+| Confirm Cash Payment for Daily Pass (₱40) | `PUT /api/attendance/{id}/confirm` (`role:admin,super_admin,employee`) | ✓ | ✓ | ✓ | ✗ | ✗ |
+| View Personal Attendance History | `GET /api/attendance/my` (Sanctum Auth) | ✗ | ✗ | ✗ | ✗ | ✓ |
+| **Membership & Pass Management** | | | | | | |
+| Approve / Upgrade 30-Day Premium Pass (₱500) | `PUT /api/users/{id}/membership` (`role:admin,super_admin,employee`) | ✓ | ✓ | ✓ | ✗ | ✗ |
+| Request Plan Upgrade / Renewal via App | `POST /api/users/membership/renew` (Sanctum Auth) | ✗ | ✗ | ✗ | ✗ | ✓ |
+| Delete User / Inactive Member Account | `DELETE /api/users/{id}` (RBAC Enforced) | ✓ (All) | ✓ (Staff/Member) | ✓ (Member Only) | ✗ | ✗ |
+| **Supplement Store & Inventory Management** | | | | | | |
+| View Retail Selling Price & Stock Level | `GET /api/inventory/products` (Sanctum Auth) | ✓ | ✓ | ✓ | ✓ | ✓ |
+| View Wholesale Cost Price & Profit Margins | `/api/reports/admin/inventory` (`role:admin,super_admin`) | ✓ | ✓ | ✗ | ✗ | ✗ |
+| POS Counter Cash Checkout & Stock Deduction | `POST /api/inventory/orders` (`role:admin,super_admin,employee`) | ✓ | ✓ | ✓ | ✗ | ✗ |
+| Online In-App Cart Checkout (GCash Demo) | `POST /api/inventory/cart/checkout` (Sanctum Auth) | ✗ | ✗ | ✗ | ✗ | ✓ |
+| Add / Edit / Delete Inventory Catalog Items | `POST/PUT/DELETE /api/inventory/products` | ✓ | ✓ | ✓ | ✗ | ✗ |
+| **Coaching & Fitness Program Management** | | | | | | |
+| Onboard, Edit, or Delete Coach Accounts | `/api/admin/coaches/*` (`role:admin,super_admin`) | ✓ | ✓ | ✗ | ✗ | ✗ |
+| Formulate 1-on-1 Workout Plan Proposals | `POST /api/proposals` (Coach Studio) | ✗ | ✗ | ✗ | ✓ | ✗ |
+| Accept / Decline Workout Plan Proposals | `POST /api/proposals/{id}/accept` (Sanctum Auth) | ✗ | ✗ | ✗ | ✗ | ✓ |
+| Real-Time Consultation Chat (WebSocket) | `/api/conversations/*`, Reverb Channels | ✗ | ✗ | ✗ | ✓ | ✓ |
+| Set Weekly Availability & Working Hours | `POST /api/coaches/availability` (Coach Auth) | ✗ | ✗ | ✗ | ✓ | ✗ |
+| **Equipment Guidance & Workout Tracking** | | | | | | |
+| Scan Machine QR Code for Video Tutorial | `POST /api/equipment/scan` (Sanctum Auth) | ✗ | ✗ | ✗ | ✗ | ✓ |
+| Log Sets, Reps, and Personal Records (PR) | `/api/workout-sessions/*`, `/api/personal-records/*` | ✗ | ✗ | ✗ | ✗ | ✓ |
+| Add / Edit / Delete Equipment Records | `/api/equipment/*` (`role:admin,super_admin,employee`) | ✓ | ✓ | ✓ | ✗ | ✗ |
+| **Reporting & Executive Analytics** | | | | | | |
+| Export Revenue Audit Reports (PDF/Excel) | `GET /api/reports/admin/transactions` (`role:admin,super_admin`) | ✓ | ✓ | ✗ | ✗ | ✗ |
+| Export Attendance Traffic Reports (PDF/Excel) | `GET /api/reports/admin/attendance` (`role:admin,super_admin`) | ✓ | ✓ | ✗ | ✗ | ✗ |
+| Export Product Sales Breakdown (PDF/Excel) | `GET /api/reports/admin/sales` (`role:admin,super_admin`) | ✓ | ✓ | ✗ | ✗ | ✗ |
+| View Personal Transaction History | `GET /api/reports/my-transactions` (Sanctum Auth) | ✗ | ✗ | ✗ | ✗ | ✓ |
 
+*Legend: `✓` = Full Authorized Privilege; `✗` = Restricted / Denied (`HTTP 403 Forbidden` / Route Guard Blocked).*
+
+---
+
+### Use Case Diagram Analysis
+
+The operational boundaries, role-based capabilities, and interaction flows among these five (5) authenticated actors and system modules are formally modeled in the Use Case Diagram depicted in Figure 6.
+
+To clearly exhibit **Separation of Duties** to the institutional evaluation committee, the Use Case Diagram is organized into two primary operational zones:
+1. **Administrative Modules (Left Column):** Depicts the specialized responsibilities of the three administrative actors:
+   * **Super Admin (Owner):** Directly associated with *Staff Authentication & Role-Based Session Control*, *System Configuration & Global Role Management*, and *Inspect System Audit Logs & Security Governance*.
+   * **Gym Admin (Manager):** Directly associated with *Manage Member Passes & Staff Accounts (5-Tier RBAC)*, *Generate Vector PDF & Excel Analytical Reports*, and *Manage Coach Profiles & Duty Assignment Schedules*.
+   * **Front-Desk Staff:** Directly associated with *Register Walk-In Members & Process Plan Renewals*, *Monitor Attendance Roster & Confirm Counter Payments*, *POS Counter Cash Sales & Digital Payment Verification*, and *Manage Supplement Inventory & POS Product Catalog*.
+2. **Member & Coaching Modules (Right Column):** Depicts the interactions of the client-facing actors:
+   * **Gym Member (User):** Interfaces with *Member Authentication & Sanctum Token Management*, *Register Online Account & View Membership History*, *Scan Entrance QR Code for Gym Check-In*, *Scan Equipment QR Codes for Video Tutorials*, *Log Completed Workouts & Track Personal Records (PR)*, *Browse Supplement Store & Complete Multi-Channel Orders*, and *Submit Ratings & Staff / Service Feedback*.
+   * **Gym Coach (Trainer):** Interfaces with *Manage Trainee Roster & Monitor Client Progress*, *Schedule & Coordinate Group Fitness Classes*, and *Configure Trainer Availability & Work Hours*.
+   * **Shared Interactive Capabilities:** *Propose & Approve Custom Workout Plans* and *Real-Time Chat & Direct Client Consultation* are modeled as shared, bi-directional collaborative use cases linking the Gym Coach and Gym Member across real-time WebSocket communication channels.
+
+*Architectural Modeling Note on Diagram Harmonization:* In the high-level Context Diagram Level 0 (Figure 7), the administrative domain is modeled as a consolidated external boundary entity labeled `Gym Administrator / Front-Desk Staff` to reflect the singular physical reception environment of AFFORDA Gym – Cabiao Branch. In contrast, the UML Use Case Diagram (Figure 6) and the Access Privilege Matrix (Table 1) intentionally decompose this entity into **Super Administrator**, **Gym Administrator**, and **Front-Desk Staff** to formally specify the discrete behavioral boundaries, route permissions, and least-privilege constraints governing software execution.
 
 > **Figure 6. Use Case Diagram of FordaGO**
 

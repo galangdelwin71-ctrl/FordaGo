@@ -240,33 +240,42 @@ Lahat ng malilinis at walang redundant title banner na images ay nakatabi na sa 
 
 ### Figure 6: Use Case Diagram
 * **Caption sa Papel:** `Figure 6. Use Case Diagram of FordaGO`
-* **Layout:** System Boundary Box na may tatak na `FordaGO System`. Sa kaliwa ay 2 Aktor (Member, Coach), sa kanan ay 1 Aktor (Staff/Admin). Sa loob ay 15 Ovals (Use Cases).
+* **Layout:** Malaking System Boundary Box (`FordaGO: Mobile-Based Gym Management System`) na may dalawang column ng modules: `ADMINISTRATIVE MODULES` sa kaliwa at `MEMBER & COACHING MODULES` sa kanan. May limang (5) magkakahiwalay na Aktor upang maipakita nang malinaw sa mga panelist ang **Separation of Duties** at **Role-Based Access Control (RBAC)**.
+* **Master Image:** `docs/figures/canva_export/06_Figure_6_Use_Case_Diagram.png` (HD Render mula sa `docs/figures/06_use_case_diagram_hd.html`).
 
-#### Mga Aktor:
-1. **Gym Member** (Mobile App User) - Kaliwa
-2. **Gym Coach** (Coach App User) - Kaliwa
-3. **Staff / Admin** (Tablet Kiosk & Web) - Kanan
+#### Limang (5) Aktor ng FordaGO:
+1. **Super Admin (Owner)** - Itaas-Kaliwa: Pinakamataas na ehekutibo. Hawak ang system configs, global role provisioning (paglikha/pagtanggal ng Admin at Staff accounts), at pagsusuri ng system security audit logs (`activity_logs`).
+2. **Gym Admin (Manager)** - Gitna-Kaliwa: Tagapamahala ng pang-araw-araw na operasyon. Hawak ang member pass approvals, accredited coach account onboarding, at dynamic vector PDF & Excel financial/sales/attendance analytics reports.
+3. **Front-Desk Staff** - Ibaba-Kaliwa: Receptionist at counter cashier sa bukana ng gym. Hawak ang optical QR scanner check-in validation, walk-in member registration, counter cash payment confirmation, at Point-of-Sale (POS) supplement sales. Mahigpit na **restricted (HTTP 403)** sa financial reports, coach deletion, at audit logs.
+4. **Gym Member (User)** - Gitna-Kanan: Regular na parokyano sa mobile app. Nag-i-scan ng entrance QR para sa attendance, nag-i-scan ng equipment QR para sa exercise video guides, nagla-log ng workouts/PRs, nag-o-order ng supplements, at nagpapadala ng feedback.
+5. **Gym Coach (Trainer)** - Ibaba-Kanan: Sertipikadong fitness trainer sa Coach Studio. Nag-a-avail ng 1-on-1 workout plan proposals sa chat, namamahala ng trainee progress roster, nagse-set ng weekly availability schedule, at nagha-handle ng group fitness classes.
 
-#### 15 Use Cases (Mga Oval):
-* **Pangkalahatan:**
-  * `Log In & Authenticate` (Account & Password) - Nakakonekta ang lahat ng 3 aktor
-* **Para kay Gym Member:**
-  * `Scan QR for Attendance` (Scan Counter QR at Front Desk)
-  * `Scan Equipment QR` (View Exercise Guides & Videos)
-  * `Log Workouts & PRs` (Track Exercises & Benchmarks)
-  * `Browse & Order Products` (Store Items & GCash Demo)
-  * `1-on-1 Real-Time Chat` (Direct Coach-Client Messages) - Nakakonekta kay Member at Coach
-* **Para kay Gym Coach:**
-  * `Propose Workout Plans` (Custom Routines for Trainees)
-  * `Monitor Trainee Progress` (View Workout Logs & History)
-  * `Set Schedule & Profile` (Availability & Specialization)
-* **Para kay Staff / Admin:**
-  * `Verify Attendance & Cash` (Check-In Log & Cash Confirmation)
-  * `Register Members & Plans` (New Accounts & Renewals)
-  * `Manage Equipment & QR` (Equipment Details & Video Links)
-  * `Manage Store Inventory` (Stock In/Out & Cash Sales)
-  * `Generate System Reports` (Export Attendance & Sales Logs)
-  * `Manage User Accounts` (Roles: Admin, Staff, Coach, Member)
+#### 22 Core Use Cases (Mga Oval):
+* **Administrative Modules (Kaliwa):**
+  * `Staff Authentication & Role-Based Session Control` (Super Admin)
+  * `System Configuration & Global Role Management` (Super Admin)
+  * `Inspect System Audit Logs & Security Governance` (Super Admin)
+  * `Manage Member Passes & Staff Accounts (5-Tier RBAC)` (Gym Admin)
+  * `Generate Vector PDF & Excel Analytical Reports` (Gym Admin)
+  * `Manage Coach Profiles & Duty Assignment Schedules` (Gym Admin)
+  * `Register Walk-In Members & Process Plan Renewals` (Front-Desk Staff)
+  * `Monitor Attendance Roster & Confirm Counter Payments` (Front-Desk Staff)
+  * `POS Counter Cash Sales & Digital Payment Verification` (Front-Desk Staff)
+  * `Manage Supplement Inventory & POS Product Catalog` (Front-Desk Staff)
+* **Member & Coaching Modules (Kanan):**
+  * `Member Authentication & Sanctum Token Management` (Gym Member)
+  * `Register Online Account & View Membership History` (Gym Member)
+  * `Scan Entrance QR Code for Gym Check-In` (Gym Member)
+  * `Scan Equipment QR Codes for Video Tutorials` (Gym Member)
+  * `Log Completed Workouts & Track Personal Records (PR)` (Gym Member)
+  * `Browse Supplement Store & Complete Multi-Channel Orders` (Gym Member)
+  * `Submit Ratings & Staff / Service Feedback` (Gym Member)
+  * `Propose & Approve Custom Workout Plans` (Shared: Coach & Member)
+  * `Real-Time Chat & Direct Client Consultation` (Shared: Coach & Member)
+  * `Manage Trainee Roster & Monitor Client Progress` (Gym Coach)
+  * `Schedule & Coordinate Group Fitness Classes` (Gym Coach)
+  * `Configure Trainer Availability & Work Hours` (Gym Coach)
+
 
 ---
 
