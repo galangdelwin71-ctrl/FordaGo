@@ -147,17 +147,16 @@ Lahat ng malilinis at walang redundant title banner na images ay nakatabi na sa 
 
 ### Figure 4: Gantt Chart of Activities (January–October 2026)
 * **Caption sa Papel:** `Figure 4. Gantt Chart of Activities for FordaGO System Development (January–October 2026)`
-* **Layout:** Grid Table na may 10 Buwan (Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct 2026) at 4 na linggo bawat buwan (40 weeks total).
+* **Layout:** Grid Table na may 10 Buwan (Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct 2026) na may 4 na linggo bawat buwan (40 weeks total) para sa 6 na phases ng SDLC.
 
 | Phase / Activity | Deskripsyon / Gawain | Sakop na Buwan |
 | :--- | :--- | :--- |
-| **1. Planning & Requirements Gathering** | Gym owner & staff interviews, feasibility analysis & scope definition | **Jan – Feb 2026** (Linggo 1 hanggang 8) |
-| **2. System & Database Architecture Design** | Use case, DFD, 3NF schema, ERD & UI/UX wireframes | **Mar – Apr 2026** (Linggo 9 hanggang 16) |
-| **3. Mobile App & Backend API Development** | Ionic/Angular mobile client, Laravel 11 REST API & MySQL database | **May – Jul 2026** (Linggo 17 hanggang 28) |
-| **4. System Integration & Device Testing** | Phone camera QR check-in testing, API route & role access verification | **Aug 2026** (Linggo 29 hanggang 32) |
-| **5. Cloud VPS Deployment & On-Site Setup** | Production hosting at fordago.online, Android APK build & gym QR counter | **Sep 2026** (Linggo 33 hanggang 36) |
-| **6. Stakeholder Usability & ISO 25010 Evaluation** | Evaluation with 5 IT experts and 15 gym respondents (1 owner, 1 staff, 13 members) | **Sep W3 – Oct W2 2026** (Linggo 35 hanggang 38) |
-| **7. Final Oral Defense & Revisions** | Capstone Project presentation, panel review & manuscript binding | **Oct W3 – W4 2026** (Linggo 39 hanggang 40) ★ **DEFENSE** |
+| **Planning & Requirements Gathering** | Gym owner & staff interviews, feasibility analysis & scope definition | **Jan – Feb 2026** (Linggo 1 hanggang 8) |
+| **System & Database Architecture Design** | Use case, DFD, 3NF schema, ERD & UI/UX wireframes | **Mar – Apr 2026** (Linggo 9 hanggang 16) |
+| **Mobile App & Backend API Development** | Ionic/Angular mobile client, Laravel 11 REST API & MySQL database | **May – Jul 2026** (Linggo 17 hanggang 28) |
+| **System Integration & Device Testing** | Phone camera QR check-in testing, API route & role access verification | **Aug 2026** (Linggo 29 hanggang 32) |
+| **Cloud VPS Deployment & On-Site Setup** | Production hosting at fordago.online, Android APK build & gym QR counter | **Sep 2026** (Linggo 33 hanggang 36) |
+| **Stakeholder Usability & ISO 25010 Evaluation** | Evaluation with 5 IT experts and 15 gym respondents (1 owner, 1 staff, 13 members) | **Sep W3 – Oct W2 2026** (Linggo 35 hanggang 38) |
 
 ---
 
@@ -274,6 +273,7 @@ Lahat ng malilinis at walang redundant title banner na images ay nakatabi na sa 
 ### Figure 7: Context Diagram Level 0
 * **Caption sa Papel:** `Figure 7. Context Diagram Level 0 of FordaGO`
 * **Layout:** Central Circle `0: FORDAGO: Mobile-Based Gym Database Management System` sa gitna, at 3 External Entity Boxes.
+* **Tandaan:** Zero-overlap orthogonal routing na may 25px bold Times New Roman text para napakalinaw basahin at walang linya o arrow na tumatagos sa mga text.
 
 #### 1. Entity: GYM MEMBER (Itaas)
 * **Papuntang System (Inflow):**
@@ -345,6 +345,7 @@ Lahat ng malilinis at walang redundant title banner na images ay nakatabi na sa 
 ### Figure 9: Entity-Relationship Diagram (ERD)
 * **Caption sa Papel:** `Figure 9. Entity-Relationship Diagram (ERD) of FordaGO`
 * **Layout:** Relational Database tables na may Primary Keys `[PK]`, Foreign Keys `[FK]`, at connecting relationship lines (One-to-Many `1───<`).
+* **Tandaan:** Inalis na ang dating legend box sa ibaba upang maging 100% puro at malinaw ang ERD na walang anumang natatakpang table (tulad ng feedbacks at activity_logs), at lahat ng relationship lines ay may sapat na espasyo at walang overlap.
 
 Heto ang **100% kumpletong listahan ng bawat table at mga columns** para direktang makopya sa Canva table cards:
 

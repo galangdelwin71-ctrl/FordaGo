@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Figure 7. Context Diagram Level 0 of FordaGO</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #ffffff;
+    font-family: 'Times New Roman', Times, serif;
+    color: #000000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 30px;
+    width: 2800px;
+    height: 1900px;
+    margin: 0 auto;
+  }
+  .diagram-container {
+    width: 2740px;
+    height: 1840px;
+    border: 4.5px solid #000000;
+    position: relative;
+    background: #ffffff;
+  }
+  svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* Entity Boxes */
+  .entity-box {
+    fill: #ffffff;
+    stroke: #000000;
+    stroke-width: 4.5;
+  }
+  .entity-header-bg {
+    fill: #111827;
+  }
+  .entity-title-white {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 38px;
+    font-weight: 900;
+    text-anchor: middle;
+    fill: #ffffff;
+    letter-spacing: 1px;
+  }
+  .entity-sub {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 25px;
+    font-weight: 700;
+    font-style: italic;
+    text-anchor: middle;
+    fill: #111111;
+  }
+
+  /* Process Circle */
+  .process-circle {
+    fill: #ffffff;
+    stroke: #000000;
+    stroke-width: 5;
+  }
+  .process-num {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 58px;
+    font-weight: 900;
+    text-anchor: middle;
+    fill: #000000;
+  }
+  .process-title {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 44px;
+    font-weight: 900;
+    text-anchor: middle;
+    fill: #000000;
+    letter-spacing: 1px;
+  }
+  .process-sub {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 33px;
+    font-weight: 800;
+    text-anchor: middle;
+    fill: #000000;
+  }
+  .process-branch {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 26px;
+    font-weight: 700;
+    font-style: italic;
+    text-anchor: middle;
+    fill: #222222;
+  }
+  .process-meta {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 22px;
+    font-weight: 700;
+    text-anchor: middle;
+    fill: #333333;
+  }
+
+  /* Flow Lines and Text */
+  .flow-line {
+    stroke: #000000;
+    stroke-width: 4;
+    fill: none;
+    marker-end: url(#arrow);
+  }
+  .flow-item {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 25px;
+    font-weight: 800;
+    fill: #000000;
+  }
+</style>
+</head>
+<body>
+
+<div class="diagram-container">
+<svg viewBox="0 0 2740 1840" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 12 6 L 0 10.5 z" fill="#000000"/>
+    </marker>
+  </defs>
+
+  <!-- ================= CENTRAL PROCESS (0) ================= -->
+  <!-- Center at (1370, 920), Radius = 260 -->
+  <circle cx="1370" cy="920" r="260" class="process-circle" />
+  
+  <!-- Horizontal partition lines inside circle -->
+  <line x1="1140" y1="800" x2="1600" y2="800" stroke="#000000" stroke-width="4" />
+  <line x1="1170" y1="1050" x2="1570" y2="1050" stroke="#000000" stroke-width="2.5" />
+
+  <text x="1370" y="765" class="process-num">0</text>
+  <text x="1370" y="865" class="process-title">FORDAGO:</text>
+  <text x="1370" y="925" class="process-sub">Mobile-Based Gym Database</text>
+  <text x="1370" y="980" class="process-sub">Management System</text>
+  
+  <text x="1370" y="1095" class="process-branch">AFFORDA Gym &ndash; Cabiao Branch</text>
+  <text x="1370" y="1135" class="process-meta">(Central Information Process)</text>
+
+
+  <!-- ================= 1. TOP ENTITY: GYM MEMBER ================= -->
+  <!-- Box: x = 920, y = 50, w = 900, h = 150 -->
+  <rect x="920" y="50" width="900" height="150" class="entity-box" />
+  <rect x="920" y="50" width="900" height="65" class="entity-header-bg" />
+  <text x="1370" y="98" class="entity-title-white">GYM MEMBER</text>
+  <text x="1370" y="162" class="entity-sub">(Active Gym Member / Mobile App Client)</text>
+
+  <!-- Inflow (Member -> System) -->
+  <line x1="1100" y1="200" x2="1100" y2="700" class="flow-line" />
+  <text x="1065" y="370" class="flow-item" text-anchor="end">&bull; Login Credentials &amp; Profile Data</text>
+  <text x="1065" y="420" class="flow-item" text-anchor="end">&bull; Camera QR Check-In Scan</text>
+  <text x="1065" y="470" class="flow-item" text-anchor="end">&bull; Equipment QR Code Scan</text>
+  <text x="1065" y="520" class="flow-item" text-anchor="end">&bull; Workout Logs &amp; Personal Records (PR)</text>
+  <text x="1065" y="570" class="flow-item" text-anchor="end">&bull; Supplement Orders &amp; GCash Reference</text>
+  <text x="1065" y="620" class="flow-item" text-anchor="end">&bull; Coach Consultation Chat Messages</text>
+
+  <!-- Outflow (System -> Member) -->
+  <line x1="1640" y1="700" x2="1640" y2="200" class="flow-line" />
+  <text x="1675" y="390" class="flow-item" text-anchor="start">&bull; Attendance Status &amp; Pass Validity</text>
+  <text x="1675" y="440" class="flow-item" text-anchor="start">&bull; Equipment Video Guides &amp; Exercises</text>
+  <text x="1675" y="490" class="flow-item" text-anchor="start">&bull; Workout Plans &amp; Coach Advice</text>
+  <text x="1675" y="540" class="flow-item" text-anchor="start">&bull; Order Confirmations &amp; Receipts</text>
+  <text x="1675" y="590" class="flow-item" text-anchor="start">&bull; Coach Consultation Chat Replies</text>
+
+
+  <!-- ================= 2. BOTTOM-LEFT ENTITY: GYM COACH ================= -->
+  <!-- Box: x = 60, y = 1580, w = 680, h = 150 -->
+  <rect x="60" y="1580" width="680" height="150" class="entity-box" />
+  <rect x="60" y="1580" width="680" height="65" class="entity-header-bg" />
+  <text x="400" y="1628" class="entity-title-white">GYM COACH</text>
+  <text x="400" y="1692" class="entity-sub">(Fitness Coach / Mobile App User)</text>
+
+  <!-- Inflow (Coach -> System) -->
+  <!-- Clean orthogonal routing: Up from Coach (x=300, y=1580) to y=980, then right to circle (x=1115, y=980) -->
+  <path d="M 300 1580 L 300 980 L 1115 980" class="flow-line" />
+  <!-- Inflow Text Placed Inside the Corner / Above the Horizontal Line -->
+  <text x="340" y="780" class="flow-item" text-anchor="start">&bull; Coach Login Credentials</text>
+  <text x="340" y="830" class="flow-item" text-anchor="start">&bull; Custom Workout Plan Proposals</text>
+  <text x="340" y="880" class="flow-item" text-anchor="start">&bull; Coaching Hours &amp; Availability</text>
+  <text x="340" y="930" class="flow-item" text-anchor="start">&bull; Consultation Chat Messages</text>
+
+  <!-- Outflow (System -> Coach) -->
+  <!-- Clean symmetrical routing: Down from Circle (x=1290, y=1170) down to y=1360, west to x=520, then down into Coach (x=520, y=1580) -->
+  <path d="M 1290 1170 L 1290 1360 L 520 1360 L 520 1580" class="flow-line" />
+  <!-- Outflow Text placed above the horizontal line with huge clearance -->
+  <text x="555" y="1210" class="flow-item" text-anchor="start">&bull; Trainee Workout Logs &amp; PRs</text>
+  <text x="555" y="1260" class="flow-item" text-anchor="start">&bull; Trainee Chat Messages &amp; Alerts</text>
+  <text x="555" y="1310" class="flow-item" text-anchor="start">&bull; Active Client Roster &amp; Profiles</text>
+
+
+  <!-- ================= 3. BOTTOM-RIGHT ENTITY: GYM ADMIN / STAFF ================= -->
+  <!-- Box: x = 2000, y = 1580, w = 680, h = 150 -->
+  <rect x="2000" y="1580" width="680" height="150" class="entity-box" />
+  <rect x="2000" y="1580" width="680" height="65" class="entity-header-bg" />
+  <text x="2340" y="1628" class="entity-title-white">GYM ADMIN / STAFF</text>
+  <text x="2340" y="1692" class="entity-sub">(Front-Desk Staff &amp; System Admin)</text>
+
+  <!-- Inflow (Admin -> System) -->
+  <!-- Clean orthogonal routing: Up from Admin (x=2440, y=1580) to y=980, then left to circle (x=1625, y=980) -->
+  <path d="M 2440 1580 L 2440 980 L 1625 980" class="flow-line" />
+  <!-- Inflow Text Placed Inside the Corner / Above the Horizontal Line -->
+  <text x="2405" y="670" class="flow-item" text-anchor="end">&bull; Admin &amp; Staff Login Credentials</text>
+  <text x="2405" y="720" class="flow-item" text-anchor="end">&bull; Member Registrations &amp; Renewals</text>
+  <text x="2405" y="770" class="flow-item" text-anchor="end">&bull; Counter Attendance Confirmation</text>
+  <text x="2405" y="820" class="flow-item" text-anchor="end">&bull; Store Stock &amp; Product Prices</text>
+  <text x="2405" y="870" class="flow-item" text-anchor="end">&bull; Cash Payments &amp; GCash Approvals</text>
+  <text x="2405" y="920" class="flow-item" text-anchor="end">&bull; Report Date Filters &amp; Query Parameters</text>
+
+  <!-- Outflow (System -> Admin) -->
+  <!-- Clean symmetrical routing: Down from circle (x=1450, y=1170) down to y=1360, east to x=2220, then down into Admin (x=2220, y=1580) -->
+  <path d="M 1450 1170 L 1450 1360 L 2220 1360 L 2220 1580" class="flow-line" />
+  <!-- Outflow Text placed above horizontal line with huge clearance -->
+  <text x="2185" y="1110" class="flow-item" text-anchor="end">&bull; Real-Time Attendance Check-In Feed</text>
+  <text x="2185" y="1160" class="flow-item" text-anchor="end">&bull; Member Account Records &amp; Expiry Alerts</text>
+  <text x="2185" y="1210" class="flow-item" text-anchor="end">&bull; Supplement Stock Levels &amp; Inventory</text>
+  <text x="2185" y="1260" class="flow-item" text-anchor="end">&bull; Daily Cash &amp; Sales Audit Summaries</text>
+  <text x="2185" y="1310" class="flow-item" text-anchor="end">&bull; Exportable PDF &amp; Excel Analytical Reports</text>
+
+</svg>
+</div>
+
+</body>
+</html>
