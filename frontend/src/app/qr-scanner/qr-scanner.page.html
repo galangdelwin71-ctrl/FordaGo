@@ -285,7 +285,10 @@
             <span class="pass-lbl">MEMBER</span>
             <span class="pass-val member-highlight">
               <span class="pass-avatar" *ngIf="initials">{{ initials }}</span>
-              {{ currentUserName }}
+              <span class="pass-name-col">
+                <span class="pass-username">{{ currentUserName }}</span>
+                <span class="pass-realname" *ngIf="currentUserRealName">{{ currentUserRealName }}</span>
+              </span>
             </span>
           </div>
           <div class="pass-item right">
@@ -353,7 +356,10 @@
               <span class="pass-lbl">MEMBER</span>
               <span class="pass-val member-highlight">
                 <span class="pass-avatar" *ngIf="initials">{{ initials }}</span>
-                {{ currentUserName }}
+                <span class="pass-name-col">
+                  <span class="pass-username">{{ currentUserName }}</span>
+                  <span class="pass-realname" *ngIf="currentUserRealName">{{ currentUserRealName }}</span>
+                </span>
               </span>
             </div>
             <div class="pass-item right">
@@ -445,7 +451,10 @@
               <span class="pass-lbl">MEMBER</span>
               <span class="pass-val member-highlight">
                 <span class="pass-avatar" *ngIf="initials">{{ initials }}</span>
-                {{ currentUserName }}
+                <span class="pass-name-col">
+                  <span class="pass-username">{{ currentUserName }}</span>
+                  <span class="pass-realname" *ngIf="currentUserRealName">{{ currentUserRealName }}</span>
+                </span>
               </span>
             </div>
             <div class="pass-item right">

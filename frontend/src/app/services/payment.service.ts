@@ -258,13 +258,13 @@ export class PaymentService {
       body,
       this.getAuthHeaders()
     ).pipe(
-      timeout(3000),
-      catchError(() => {
-        const cached = ref ? this.getCachedReceipt(ref) : (this.activeReceiptSubject.value || null);
+      timeout(5000),
+      catchError((err) => {
+        console.warn('Payment verification network error or timeout:', err);
         return of({
-          success: true,
-          payment: { status: 'paid' },
-          receipt: cached || undefined,
+          success: false,
+          payment: { status: 'pending' },
+          message: 'Payment verification timed out. If your account was debited, the receipt will update automatically once confirmed.',
         });
       })
     );

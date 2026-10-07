@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\ActivityLogger;
 use App\Services\FcmService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Ported from server/routes/attendance.js.
@@ -38,18 +39,9 @@ class AttendanceController extends Controller
             return response()->json(['message' => 'User not found'], 404);
         }
 
-        // Already checked in today?
-        $today = now()->toDateString();
-        $existing = Attendance::where('user_id', $user->id)
-            ->whereDate('check_in_time', $today)
-            ->first();
-
-        if ($existing) {
-            return response()->json([
-                'message'    => 'Already checked in today.',
-                'attendance' => $existing,
-            ], 409);
-        }
+        // Auto-revert expired premium membership to daily pass immediately
+        $user->checkAndExpireMembership();
+        $user->refresh();
 
         if ($user->membership_status !== 'active') {
             $msg = $user->membership_type === 'premium'
@@ -58,20 +50,36 @@ class AttendanceController extends Controller
             return response()->json(['message' => $msg], 403);
         }
 
-        if ($user->membership_type === 'premium') {
-            if (! $user->membership_expiry || $user->membership_expiry->isPast()) {
-                return response()->json(['message' => 'Your Premium membership has expired. Please renew at the gym counter.'], 403);
+        // Already checked in today? Atomic check & insertion inside transaction
+        $today = now()->toDateString();
+        $existing = null;
+
+        $attendance = DB::transaction(function () use ($user, $today, &$existing) {
+            $existing = Attendance::where('user_id', $user->id)
+                ->whereDate('check_in_time', $today)
+                ->lockForUpdate()
+                ->first();
+
+            if ($existing) {
+                return null;
             }
+
+            $paymentStatus = $user->membership_type === 'premium' ? 'paid' : 'pending';
+
+            return Attendance::create([
+                'user_id'         => $user->id,
+                'membership_type' => $user->membership_type,
+                'payment_status'  => $paymentStatus,
+                'check_in_time'   => now(),
+            ]);
+        });
+
+        if (! $attendance) {
+            return response()->json([
+                'message'    => 'Already checked in today.',
+                'attendance' => $existing,
+            ], 409);
         }
-
-        $paymentStatus = $user->membership_type === 'premium' ? 'paid' : 'pending';
-
-        $attendance = Attendance::create([
-            'user_id'         => $user->id,
-            'membership_type' => $user->membership_type,
-            'payment_status'  => $paymentStatus,
-            'check_in_time'   => now(),
-        ]);
 
         // Notify all staff (admin, super_admin, employee) for gym attendance
         try {

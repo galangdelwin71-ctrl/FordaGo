@@ -50,26 +50,31 @@ class InventoryController extends Controller
     private function invalidateProductsCache(): void
     {
         Cache::forget(self::PRODUCTS_CACHE_KEY);
+        Cache::forget(self::PRODUCTS_CACHE_KEY . '.staff');
+        Cache::forget(self::PRODUCTS_CACHE_KEY . '.member');
     }
 
     // ── Products ──────────────────────────────────────────────────────────
 
     /** GET /api/inventory/products */
-    public function products()
+    public function products(Request $request)
     {
-        // NOTE: see the identical note in EquipmentController::index() --
-        // ->toArray() is required here too, for the same reason: caching
-        // raw Product models through the file store hits config/cache.php's
-        // 'serializable_classes' => false on every cache HIT, silently
-        // corrupting them into unreadable __PHP_Incomplete_Class objects.
-        // Here it surfaced as the Shop tab intermittently rendering "No
-        // products available" -- the frontend treats a non-array response
-        // as an empty list rather than an error, so it never even showed a
-        // "couldn't load" message, just a silently empty shop.
+        $user = $request->user();
+        $isStaff = $user && in_array($user->role, ['admin', 'super_admin', 'employee']);
+        $cacheKey = self::PRODUCTS_CACHE_KEY . ($isStaff ? '.staff' : '.member');
+
         $products = Cache::remember(
-            self::PRODUCTS_CACHE_KEY,
+            $cacheKey,
             now()->addMinutes(self::PRODUCTS_CACHE_TTL_MINUTES),
-            fn () => Product::orderByDesc('created_at')->get()->toArray()
+            function () use ($isStaff) {
+                $items = Product::orderByDesc('created_at')->get();
+                if ($isStaff) {
+                    $items->makeVisible(['cost_price']);
+                } else {
+                    $items->makeHidden(['cost_price']);
+                }
+                return $items->toArray();
+            }
         );
 
         return response()->json($products);

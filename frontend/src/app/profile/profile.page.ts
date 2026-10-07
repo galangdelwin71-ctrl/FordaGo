@@ -18,6 +18,8 @@ import {
   arrowBackOutline,
   arrowForwardOutline,
   bagHandleOutline,
+  barbellOutline,
+  bodyOutline,
   calendarOutline,
   callOutline,
   cardOutline,
@@ -39,7 +41,10 @@ import {
   eyeOutline,
   fingerPrintOutline,
   fitnessOutline,
+  flameOutline,
+  flashOutline,
   giftOutline,
+  heartOutline,
   homeOutline,
   informationCircleOutline,
   keyOutline,
@@ -91,6 +96,7 @@ import { API_URL, resolveImageUrl } from '../config/api.config';
 import {
   FITNESS_GOAL_OPTIONS,
   FitnessGoalOption,
+  FitnessGoalKey,
   computeBmi,
   getBmiCategory,
   buildGoalWeekPlan,
@@ -229,6 +235,7 @@ export class ProfilePage implements OnInit {
   editForm: Partial<MemberProfile> = {};
   editBmi: number | null = null;
   phoneInvalid = false;
+  usernameInvalid = false;
   savingProfile = false;
   profileImageFailed = false;
 
@@ -253,14 +260,51 @@ export class ProfilePage implements OnInit {
     return getGoalOptionsForBmi(this.editBmi ?? this.profile.bmi);
   }
 
+  // ── BMI Goal Recommendation Prompt States ─────────────
+  bmiRecommendationModalOpen = false;
+  recommendedGoals: FitnessGoalOption[] = [];
+  selectedRecommendedGoalId: FitnessGoalKey = 'muscle_gain';
+  pendingBmiValue: number | null = null;
+  initialEditHeight: number | null = null;
+  initialEditWeight: number | null = null;
+  initialEditBmi: number | null = null;
+  initialEditGoal: string = '';
+  pendingSaveContext: {
+    rawUsername: string;
+    nextFirstName: string;
+    nextLastName: string;
+    payloadEmail: string;
+    safePhone: string;
+    nextDob: string | null;
+    nextFormattedDob: string;
+    nextImage: string;
+    parsedHeight: number | null;
+    parsedWeight: number | null;
+    computedBmiVal: number | null;
+    nextGoal: string;
+    nextTime: string;
+    isEmailChanging: boolean;
+    requestedEmail: string;
+  } | null = null;
+
+  get pendingBmiCategory() {
+    return getBmiCategory(this.pendingBmiValue ?? this.editBmi ?? this.profile.bmi);
+  }
+
+  get selectedRecommendedGoalDetails(): FitnessGoalOption | undefined {
+    return this.recommendedGoals.find((g) => g.id === this.selectedRecommendedGoalId);
+  }
+
+  get currentGoalLabel(): string {
+    const goalKey = this.initialEditGoal || this.profile.fitnessGoal || 'muscle_gain';
+    const match = this.fitnessGoalOptions.find((g) => g.id === goalKey);
+    return match ? match.title : 'Current Goal';
+  }
+
   onEditStatsChange(): void {
     const h = Number(this.editForm.height);
     const w = Number(this.editForm.weight);
     this.editBmi = computeBmi(h > 0 ? h : null, w > 0 ? w : null);
-    const available = this.availableGoalOptionsForProfile;
-    if (available.length > 0 && !available.some((g) => g.id === this.editForm.fitnessGoal)) {
-      this.editForm.fitnessGoal = available[0].id;
-    }
   }
 
   // ── Password Form ─────────────────────────────────────
@@ -452,6 +496,7 @@ export class ProfilePage implements OnInit {
       this.twoFactorActivationModalOpen ||
       this.disableTwoFactorModalOpen ||
       this.editModalOpen ||
+      this.bmiRecommendationModalOpen ||
       this.emailChangeModalOpen ||
       this.notificationsModalOpen ||
       this.renewalModalOpen ||
@@ -490,6 +535,11 @@ export class ProfilePage implements OnInit {
       'calendar-outline': calendarOutline,
       'call-outline': callOutline,
       'card-outline': cardOutline,
+      'barbell-outline': barbellOutline,
+      'body-outline': bodyOutline,
+      'flame-outline': flameOutline,
+      'flash-outline': flashOutline,
+      'heart-outline': heartOutline,
       'cash-outline': cashOutline,
       'wallet-outline': walletOutline,
       'chatbubble-ellipses-outline': chatbubbleEllipsesOutline,
@@ -538,6 +588,8 @@ export class ProfilePage implements OnInit {
       arrowBackOutline,
       arrowForwardOutline,
       bagHandleOutline,
+      barbellOutline,
+      bodyOutline,
       calendarOutline,
       callOutline,
       cardOutline,
@@ -559,7 +611,10 @@ export class ProfilePage implements OnInit {
       eyeOutline,
       fingerPrintOutline,
       fitnessOutline,
+      flameOutline,
+      flashOutline,
       giftOutline,
+      heartOutline,
       homeOutline,
       informationCircleOutline,
       keyOutline,
@@ -703,11 +758,24 @@ export class ProfilePage implements OnInit {
     const first = String((user as any).first_name || '').trim() || parts[0] || '';
     const last  = String((user as any).last_name || '').trim() || parts.slice(1).join(' ') || '';
 
-    const membershipType = (user as any).membership_type || 'daily';
+    const rawMembershipType = (user as any).membership_type || 'daily';
     const expiryRaw      = (user as any).membership_expiry || null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
+    let isExpired = false;
+    let expDateObj: Date | null = null;
+    if (rawMembershipType === 'premium' && expiryRaw) {
+      expDateObj = new Date(expiryRaw);
+      expDateObj.setHours(0, 0, 0, 0);
+      if (expDateObj.getTime() < today.getTime()) {
+        isExpired = true;
+      }
+    }
+
+    const membershipType = isExpired ? 'daily' : rawMembershipType;
     let expiryDate = membershipType === 'daily' ? 'Pay per visit' : 'N/A';
-    if (expiryRaw) {
+    if (membershipType === 'premium' && expiryRaw && !isExpired) {
       const exp = new Date(expiryRaw);
       expiryDate = exp.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     }
@@ -762,10 +830,20 @@ export class ProfilePage implements OnInit {
         const fParts = (freshUser.username || '').split(' ');
         const fFirst = String(freshUser.first_name || '').trim() || fParts[0] || '';
         const fLast  = String(freshUser.last_name || '').trim() || fParts.slice(1).join(' ') || '';
-        const fMemType = freshUser.membership_type || 'daily';
+        const rawFMemType = freshUser.membership_type || 'daily';
+        const fExpiryRaw = freshUser.membership_expiry || null;
+        let fIsExpired = false;
+        if (rawFMemType === 'premium' && fExpiryRaw) {
+          const fed = new Date(fExpiryRaw);
+          fed.setHours(0, 0, 0, 0);
+          if (fed.getTime() < today.getTime()) {
+            fIsExpired = true;
+          }
+        }
+        const fMemType = fIsExpired ? 'daily' : rawFMemType;
         let fExpDate = fMemType === 'daily' ? 'Pay per visit' : 'N/A';
-        if (freshUser.membership_expiry) {
-          const fExp = new Date(freshUser.membership_expiry);
+        if (fMemType === 'premium' && fExpiryRaw && !fIsExpired) {
+          const fExp = new Date(fExpiryRaw);
           fExpDate = fExp.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
         }
 
@@ -811,25 +889,26 @@ export class ProfilePage implements OnInit {
   }
 
   openEdit(): void {
-    this.editBmi = this.profile.bmi ?? computeBmi(this.profile.height, this.profile.weight);
-    const available = getGoalOptionsForBmi(this.editBmi);
-    let initialGoal = this.profile.fitnessGoal || 'muscle_gain';
-    if (available.length > 0 && !available.some((g) => g.id === initialGoal)) {
-      initialGoal = available[0].id;
-    }
+    this.initialEditHeight = this.profile.height ?? null;
+    this.initialEditWeight = this.profile.weight ?? null;
+    this.initialEditBmi = this.profile.bmi ?? computeBmi(this.profile.height, this.profile.weight);
+    this.initialEditGoal = this.profile.fitnessGoal || 'muscle_gain';
+    this.editBmi = this.initialEditBmi;
     this.editForm = {
       firstName:            this.profile.firstName,
       lastName:             this.profile.lastName,
+      username:             (this.profile.username || (this.auth.user as any)?.username || '').replace(/^@/, ''),
       email:                this.profile.email,
       phone:                this.normalizePhone(this.profile.phone),
       dateOfBirth:          this.profile.dateOfBirthRaw || '',
       profileImage:         this.profile.profileImage,
       height:               this.profile.height,
       weight:               this.profile.weight,
-      fitnessGoal:          initialGoal,
+      fitnessGoal:          this.initialEditGoal,
       preferredWorkoutTime: this.profile.preferredWorkoutTime || '17:00',
     };
     this.phoneInvalid = false;
+    this.usernameInvalid = false;
     this.editModalOpen = true;
   }
 
@@ -838,6 +917,11 @@ export class ProfilePage implements OnInit {
     this.editForm = {};
     this.editBmi = null;
     this.phoneInvalid = false;
+    this.usernameInvalid = false;
+    this.initialEditHeight = null;
+    this.initialEditWeight = null;
+    this.initialEditBmi = null;
+    this.initialEditGoal = '';
   }
 
   saveProfile(): void {
@@ -854,6 +938,16 @@ export class ProfilePage implements OnInit {
     }
     if (/[0-9]/.test(this.editForm.lastName || '')) {
       void this.showMobileToast('Last name must contain letters only, no numbers.', true);
+      return;
+    }
+
+    const rawUsername = (this.editForm.username ?? this.profile.username ?? (this.auth.user as any)?.username ?? '').trim().replace(/^@/, '');
+    if (!rawUsername) {
+      void this.showMobileToast('Please choose a username.', true);
+      return;
+    }
+    if (!/^[a-zA-Z0-9_.]{3,30}$/.test(rawUsername)) {
+      void this.showMobileToast('Username must be 3-30 characters (letters, numbers, underscores, or periods).', true);
       return;
     }
 
@@ -891,20 +985,131 @@ export class ProfilePage implements OnInit {
       }
     }
 
+    // Check if height or weight was modified
+    const statsChanged = (parsedHeight !== this.initialEditHeight || parsedWeight !== this.initialEditWeight);
+
+    if (statsChanged && computedBmiVal != null && computedBmiVal > 0) {
+      // User updated their BMI! Ask them the recommended goals for their current BMI
+      this.pendingSaveContext = {
+        rawUsername,
+        nextFirstName,
+        nextLastName,
+        payloadEmail,
+        safePhone,
+        nextDob,
+        nextFormattedDob,
+        nextImage,
+        parsedHeight,
+        parsedWeight,
+        computedBmiVal,
+        nextGoal,
+        nextTime,
+        isEmailChanging,
+        requestedEmail,
+      };
+      this.pendingBmiValue = computedBmiVal;
+      this.recommendedGoals = getGoalOptionsForBmi(computedBmiVal);
+
+      // Preselect either current goal if in list or first recommendation
+      if (this.recommendedGoals.some(g => g.id === nextGoal)) {
+        this.selectedRecommendedGoalId = nextGoal as FitnessGoalKey;
+      } else if (this.recommendedGoals.length > 0) {
+        this.selectedRecommendedGoalId = this.recommendedGoals[0].id;
+      }
+
+      this.bmiRecommendationModalOpen = true;
+      return;
+    }
+
+    // Direct save if height & weight were unchanged
+    this.commitProfileSave({
+      rawUsername,
+      nextFirstName,
+      nextLastName,
+      payloadEmail,
+      safePhone,
+      nextDob,
+      nextFormattedDob,
+      nextImage,
+      parsedHeight,
+      parsedWeight,
+      computedBmiVal,
+      nextGoal,
+      nextTime,
+      isEmailChanging,
+      requestedEmail,
+    });
+  }
+
+  skipBmiRecommendation(): void {
+    this.bmiRecommendationModalOpen = false;
+    if (this.pendingSaveContext) {
+      const ctx = this.pendingSaveContext;
+      this.pendingSaveContext = null;
+      // Strictly retain the user's old / current goal as requested
+      const currentGoal = this.initialEditGoal || this.profile.fitnessGoal || 'muscle_gain';
+      this.commitProfileSave({
+        ...ctx,
+        nextGoal: currentGoal,
+      });
+    }
+  }
+
+  applyRecommendedGoal(): void {
+    this.bmiRecommendationModalOpen = false;
+    const chosenGoal = this.selectedRecommendedGoalId;
+
+    if (this.pendingSaveContext) {
+      const ctx = this.pendingSaveContext;
+      this.pendingSaveContext = null;
+      this.editForm.fitnessGoal = chosenGoal;
+      this.commitProfileSave({
+        ...ctx,
+        nextGoal: chosenGoal,
+      });
+    } else {
+      // Applied directly from profile screen
+      this.updateGoalDirectly(chosenGoal);
+    }
+  }
+
+  commitProfileSave(ctx: {
+    rawUsername: string;
+    nextFirstName: string;
+    nextLastName: string;
+    payloadEmail: string;
+    safePhone: string;
+    nextDob: string | null;
+    nextFormattedDob: string;
+    nextImage: string;
+    parsedHeight: number | null;
+    parsedWeight: number | null;
+    computedBmiVal: number | null;
+    nextGoal: string;
+    nextTime: string;
+    isEmailChanging: boolean;
+    requestedEmail: string;
+  }): void {
+    const userId = this.auth.user?.id;
+    if (!userId) {
+      void this.showMobileToast('Your session has expired. Please log in again.', true);
+      return;
+    }
+
     const payload: Record<string, any> = {
-      username:               `${nextFirstName} ${nextLastName}`.trim(),
-      first_name:             nextFirstName,
-      last_name:              nextLastName,
-      email:                  payloadEmail,
-      phone:                  safePhone,
+      username:               ctx.rawUsername,
+      first_name:             ctx.nextFirstName,
+      last_name:              ctx.nextLastName,
+      email:                  ctx.payloadEmail,
+      phone:                  ctx.safePhone,
       gender:                 (this.profile.gender || '').toLowerCase() || null,
-      date_of_birth:          nextDob,
-      profile_image:          nextImage || null,
-      height:                 parsedHeight,
-      weight:                 parsedWeight,
-      bmi:                    computedBmiVal,
-      fitness_goal:           nextGoal,
-      preferred_workout_time: nextTime,
+      date_of_birth:          ctx.nextDob,
+      profile_image:          ctx.nextImage || null,
+      height:                 ctx.parsedHeight,
+      weight:                 ctx.parsedWeight,
+      bmi:                    ctx.computedBmiVal,
+      fitness_goal:           ctx.nextGoal,
+      preferred_workout_time: ctx.nextTime,
     };
 
     const headers = { Authorization: `Bearer ${this.auth.token}` };
@@ -913,46 +1118,48 @@ export class ProfilePage implements OnInit {
     this.http.put(`${this.api}/users/${userId}`, payload, { headers }).subscribe({
       next: (res: any) => {
         this.savingProfile = false;
-        const returnedAvatar = res?.profile_image ?? nextImage;
+        const returnedAvatar = res?.profile_image ?? ctx.nextImage;
         const resolved = resolveImageUrl(returnedAvatar);
-        const finalBmi = res?.bmi != null ? Number(res.bmi) : computedBmiVal;
+        const finalBmi = res?.bmi != null ? Number(res.bmi) : ctx.computedBmiVal;
 
         this.profile = {
           ...this.profile,
-          firstName:            nextFirstName,
-          lastName:             nextLastName,
-          email:                payloadEmail,
-          phone:                safePhone,
-          dateOfBirth:          nextFormattedDob,
-          dateOfBirthRaw:       nextDob || '',
+          username:             ctx.rawUsername,
+          firstName:            ctx.nextFirstName,
+          lastName:             ctx.nextLastName,
+          email:                ctx.payloadEmail,
+          phone:                ctx.safePhone,
+          dateOfBirth:          ctx.nextFormattedDob,
+          dateOfBirthRaw:       ctx.nextDob || '',
           profileImage:         resolved,
-          initials:             this.buildInitials(nextFirstName, nextLastName),
-          height:               parsedHeight,
-          weight:               parsedWeight,
+          initials:             this.buildInitials(ctx.nextFirstName, ctx.nextLastName),
+          height:               ctx.parsedHeight,
+          weight:               ctx.parsedWeight,
           bmi:                  finalBmi,
-          fitnessGoal:          nextGoal,
-          preferredWorkoutTime: nextTime,
+          fitnessGoal:          ctx.nextGoal,
+          preferredWorkoutTime: ctx.nextTime,
         };
         this.profileImageFailed = false;
         this.auth.updateCurrentUser({
           ...payload,
+          username: ctx.rawUsername,
           profile_image: returnedAvatar,
-          date_of_birth: nextDob,
+          date_of_birth: ctx.nextDob,
           bmi: finalBmi,
         });
 
         // Re-generate suggested workout plan with the updated target goal, BMI adaptation, and afternoon time
         try {
-          const updatedPlan = buildGoalWeekPlan(nextGoal, finalBmi, nextTime);
+          const updatedPlan = buildGoalWeekPlan(ctx.nextGoal, finalBmi, ctx.nextTime);
           localStorage.setItem('fordago_week_plan_v1', JSON.stringify(updatedPlan));
           this.workoutTracker.reseedFutureDaysWithPlan(updatedPlan);
         } catch {}
 
         this.closeEdit();
 
-        if (isEmailChanging) {
+        if (ctx.isEmailChanging) {
           void this.showMobileToast('Profile saved! Please verify your new email address.');
-          this.startEmailChangeVerification(requestedEmail);
+          this.startEmailChangeVerification(ctx.requestedEmail);
         } else {
           void this.showMobileToast('Profile & body goal updated successfully!');
         }
@@ -964,6 +1171,69 @@ export class ProfilePage implements OnInit {
             ? 'Cannot reach the server. Please check your connection and try again.'
             : 'Failed to save profile. Please try again.');
         void this.showMobileToast(message, true);
+      }
+    });
+  }
+
+  openBmiRecommendationsPrompt(): void {
+    const bmi = this.editBmi ?? this.profile.bmi ?? computeBmi(this.editForm.height, this.editForm.weight);
+    this.pendingBmiValue = bmi;
+    this.recommendedGoals = getGoalOptionsForBmi(bmi);
+    const curr = (this.editForm.fitnessGoal || this.profile.fitnessGoal || 'muscle_gain') as FitnessGoalKey;
+    if (this.recommendedGoals.some(g => g.id === curr)) {
+      this.selectedRecommendedGoalId = curr;
+    } else if (this.recommendedGoals.length > 0) {
+      this.selectedRecommendedGoalId = this.recommendedGoals[0].id;
+    }
+    this.bmiRecommendationModalOpen = true;
+  }
+
+  openBmiRecommendationsFromProfile(): void {
+    const bmi = this.profile.bmi ?? computeBmi(this.profile.height, this.profile.weight);
+    this.pendingBmiValue = bmi;
+    this.recommendedGoals = getGoalOptionsForBmi(bmi);
+    const curr = (this.profile.fitnessGoal || 'muscle_gain') as FitnessGoalKey;
+    if (this.recommendedGoals.some(g => g.id === curr)) {
+      this.selectedRecommendedGoalId = curr;
+    } else if (this.recommendedGoals.length > 0) {
+      this.selectedRecommendedGoalId = this.recommendedGoals[0].id;
+    }
+    this.pendingSaveContext = null;
+    this.bmiRecommendationModalOpen = true;
+  }
+
+  selectRecommendedGoal(goalId: FitnessGoalKey): void {
+    this.selectedRecommendedGoalId = goalId;
+    if (this.editModalOpen) {
+      this.editForm.fitnessGoal = goalId;
+    }
+  }
+
+  closeBmiRecommendationModal(): void {
+    this.bmiRecommendationModalOpen = false;
+  }
+
+  updateGoalDirectly(newGoal: string): void {
+    const userId = this.auth.user?.id;
+    if (!userId) return;
+    this.savingProfile = true;
+    const headers = { Authorization: `Bearer ${this.auth.token}` };
+    this.http.put(`${this.api}/users/${userId}`, { fitness_goal: newGoal }, { headers }).subscribe({
+      next: () => {
+        this.savingProfile = false;
+        this.profile.fitnessGoal = newGoal;
+        this.auth.updateCurrentUser({ fitness_goal: newGoal });
+        try {
+          const updatedPlan = buildGoalWeekPlan(newGoal, this.profile.bmi, this.profile.preferredWorkoutTime || '17:00');
+          localStorage.setItem('fordago_week_plan_v1', JSON.stringify(updatedPlan));
+          this.workoutTracker.reseedFutureDaysWithPlan(updatedPlan);
+        } catch {}
+        const goalObj = this.fitnessGoalOptions.find(g => g.id === newGoal);
+        void this.showMobileToast(`Target goal updated to ${goalObj?.title || newGoal}!`);
+      },
+      error: () => {
+        this.savingProfile = false;
+        void this.showMobileToast('Failed to update goal. Please try again.', true);
       }
     });
   }
@@ -1223,7 +1493,32 @@ export class ProfilePage implements OnInit {
 
   // ── Getters ───────────────────────────────────────────
   get fullName(): string {
-    return `${this.profile.firstName} ${this.profile.lastName}`;
+    return `${this.profile.firstName} ${this.profile.lastName}`.trim();
+  }
+
+  get displayUsername(): string {
+    const raw = (this.profile.username || (this.auth.user as any)?.username || '').trim().replace(/^@/, '');
+    return raw ? `@${raw}` : (this.fullName || 'Member');
+  }
+
+  get displayRealName(): string {
+    const real = this.fullName.trim();
+    if (!real) return '';
+    const rawUser = (this.profile.username || (this.auth.user as any)?.username || '').trim().replace(/^@/, '');
+    if (rawUser && real.toLowerCase() !== rawUser.toLowerCase()) {
+      return real;
+    }
+    return '';
+  }
+
+  onUsernameIonInput(event: any): void {
+    const raw = (event?.detail?.value ?? this.editForm.username ?? '').trim().replace(/^@/, '');
+    this.editForm.username = raw;
+    if (raw && !/^[a-zA-Z0-9_.]{3,30}$/.test(raw)) {
+      this.usernameInvalid = true;
+    } else {
+      this.usernameInvalid = false;
+    }
   }
 
   private buildInitials(first: string, last: string): string {

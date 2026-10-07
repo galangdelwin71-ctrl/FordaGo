@@ -90,6 +90,33 @@ services:
     networks:
       - fordago_net
 
+  # ─── 3b. Laravel Scheduler (Cron for Workout & Membership Reminders) ─────
+  scheduler:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fordago_scheduler
+    restart: unless-stopped
+    command: php artisan schedule:work
+    env_file:
+      - ./backend/.env
+    environment:
+      RUN_MIGRATIONS: "false"
+    extra_hosts:
+      - "host.containers.internal:host-gateway"
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./backend:/var/www/html
+      - /var/www/html/vendor
+      - ./backend/storage:/var/www/html/storage
+    depends_on:
+      - backend
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    networks:
+      - fordago_net
+
 networks:
   fordago_net:
     driver: bridge

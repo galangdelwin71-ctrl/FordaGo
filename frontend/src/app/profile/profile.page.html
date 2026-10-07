@@ -31,8 +31,8 @@
     <div class="profile-hero fade-up" id="tour-profile-hero">
       <div class="profile-avatar" *ngIf="!profile.profileImage || profileImageFailed">{{ profile.initials }}</div>
       <img *ngIf="profile.profileImage && !profileImageFailed" [src]="profile.profileImage" (error)="onProfileImageError()" alt="" class="profile-avatar profile-avatar-img" />
-      <div class="profile-name">{{ fullName }}</div>
-      <div class="profile-handle" *ngIf="profile.username" style="font-size:0.875rem; color:#94a3b8; margin-top:-2px; margin-bottom:4px;">@{{ profile.username }}</div>
+      <div class="profile-name">{{ displayUsername }}</div>
+      <div class="profile-realname" *ngIf="displayRealName">{{ displayRealName }}</div>
       <div class="profile-email">{{ profile.email }}</div>
       <div class="badges-row">
         <div class="badge premium">
@@ -48,6 +48,13 @@
     <!-- Personal Information -->
     <div class="section-label">Personal Information</div>
     <div class="info-card fade-up">
+      <div class="info-row" *ngIf="profile.username">
+        <span class="info-icon"><ion-icon name="at-outline"></ion-icon></span>
+        <div class="info-content">
+          <div class="info-label">Username</div>
+          <div class="info-value">@{{ profile.username.replace('@', '') }}</div>
+        </div>
+      </div>
       <div class="info-row">
         <span class="info-icon"><ion-icon name="call-outline"></ion-icon></span>
         <div class="info-content">
@@ -80,6 +87,7 @@
             </span>
           </div>
         </div>
+        <span class="info-action" (click)="openBmiRecommendationsFromProfile()">Goals for BMI</span>
       </div>
       <div class="info-row" *ngIf="profile.fitnessGoal">
         <span class="info-icon"><ion-icon name="trophy-outline"></ion-icon></span>
@@ -260,7 +268,7 @@
         <button
           type="button"
           class="modal-header-save-btn"
-          [disabled]="phoneInvalid || savingProfile"
+          [disabled]="phoneInvalid || usernameInvalid || savingProfile"
           (click)="saveProfile()">
           {{ savingProfile ? 'Saving…' : 'Save' }}
         </button>
@@ -280,6 +288,20 @@
           class="photo-file-input"
           (change)="onProfileImageSelected($event)"
         />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <ion-input
+          type="text"
+          [(ngModel)]="editForm.username"
+          placeholder="e.g. delwin_master"
+          (ionInput)="onUsernameIonInput($event)"
+          class="form-input">
+        </ion-input>
+        <div *ngIf="usernameInvalid" style="margin-top:6px;color:#ff6b6b;font-size:12px;">
+          Username must be 3-30 characters (letters, numbers, underscore, or period).
+        </div>
       </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -376,12 +398,20 @@
 
       <!-- Live BMI Preview in Edit Modal -->
       <div *ngIf="editBmi" class="edit-bmi-card">
-        <div class="edit-bmi-label">
-          Calculated BMI: <strong>{{ editBmi }}</strong>
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <div class="edit-bmi-label">
+              Calculated BMI: <strong>{{ editBmi }}</strong>
+            </div>
+            <span class="badge" [ngClass]="editBmiCategory.color">
+              {{ editBmiCategory.label }}
+            </span>
+          </div>
+          <button type="button" class="view-recom-chip" (click)="openBmiRecommendationsPrompt()">
+            <ion-icon name="sparkles-outline"></ion-icon>
+            Recommended Goals
+          </button>
         </div>
-        <span class="badge" [ngClass]="editBmiCategory.color">
-          {{ editBmiCategory.label }}
-        </span>
       </div>
 
       <!-- Target Body Goal Selection -->
@@ -418,7 +448,7 @@
       </div>
 
       <div class="modal-actions">
-        <button class="modal-save-btn" [disabled]="phoneInvalid || savingProfile" (click)="saveProfile()">
+        <button class="modal-save-btn" [disabled]="phoneInvalid || usernameInvalid || savingProfile" (click)="saveProfile()">
           {{ savingProfile ? 'Saving…' : 'Save Changes' }}
         </button>
         <button class="modal-cancel-btn" [disabled]="savingProfile" (click)="closeEdit()">
@@ -1334,6 +1364,114 @@
           Cancel
         </button>
       </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<!-- Recommended Goals for Current BMI Modal -->
+<ion-modal
+  [isOpen]="bmiRecommendationModalOpen"
+  (didDismiss)="closeBmiRecommendationModal()"
+  [breakpoints]="[0, 1]"
+  [initialBreakpoint]="1"
+  [handle]="true">
+  <ng-template>
+    <ion-content class="ion-padding modal-content bmi-recom-modal-content">
+      <div class="modal-handle"></div>
+      
+      <div class="modal-header-row">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="recom-header-icon-box">
+            <ion-icon name="trophy-outline"></ion-icon>
+          </div>
+          <div>
+            <div class="modal-title" style="font-size: 19px; font-weight: 800;">Recommended Body Goals</div>
+            <div style="font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 2px;">
+              Tailored for your current BMI category
+            </div>
+          </div>
+        </div>
+        <button type="button" class="modal-close-icon-btn" (click)="closeBmiRecommendationModal()">✕</button>
+      </div>
+
+      <!-- Current BMI Status Banner -->
+      <div class="recom-bmi-banner">
+        <div class="recom-bmi-left">
+          <div class="recom-bmi-label">CURRENT BMI STATUS</div>
+          <div class="recom-bmi-score">
+            <span>BMI {{ pendingBmiValue || profile.bmi || '--' }}</span>
+            <span class="badge" [ngClass]="pendingBmiCategory.color" style="font-size: 11px; padding: 3px 10px; margin-left: 8px;">
+              {{ pendingBmiCategory.label }}
+            </span>
+          </div>
+        </div>
+        <div class="recom-bmi-desc">
+          {{ pendingBmiCategory.advice }}
+        </div>
+      </div>
+
+      <p class="recom-sub-prompt">
+        Our trainers recommend following one of these verified training paths optimized for your body composition. You can choose a new goal or skip to keep your current routine:
+      </p>
+
+      <!-- Recommended Goal Cards List -->
+      <div class="recom-goals-list">
+        <div
+          *ngFor="let goal of recommendedGoals"
+          class="recom-goal-card"
+          [class.is-selected]="selectedRecommendedGoalId === goal.id"
+          (click)="selectRecommendedGoal(goal.id)">
+          
+          <div class="recom-goal-header">
+            <div class="recom-goal-icon-wrap">
+              <ion-icon [name]="goal.icon"></ion-icon>
+            </div>
+            <div class="recom-goal-titles">
+              <div class="recom-goal-title">{{ goal.title }}</div>
+              <div class="recom-goal-tagline">{{ goal.tagline }}</div>
+            </div>
+            <div class="recom-goal-check" [class.checked]="selectedRecommendedGoalId === goal.id">
+              <ion-icon [name]="selectedRecommendedGoalId === goal.id ? 'checkmark-circle' : 'radio-button-off-outline'"></ion-icon>
+            </div>
+          </div>
+
+          <div class="recom-goal-badge-row">
+            <span class="recom-pill-badge">{{ goal.badge }}</span>
+            <span class="recom-days-info">
+              <ion-icon name="time-outline" style="font-size: 12px; vertical-align: -1px; margin-right: 3px;"></ion-icon>
+              {{ goal.recommendedDays }}
+            </span>
+          </div>
+
+          <div class="recom-goal-desc">
+            {{ goal.description }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Actions (Apply vs Skip) -->
+      <div class="modal-actions" style="margin-top: 22px; display: flex; flex-direction: column; gap: 10px;">
+        <button
+          type="button"
+          class="modal-save-btn btn-apply-recom"
+          [disabled]="savingProfile"
+          (click)="applyRecommendedGoal()">
+          <ion-spinner *ngIf="savingProfile" name="crescent"></ion-spinner>
+          <span *ngIf="!savingProfile">
+            Apply Goal ({{ selectedRecommendedGoalDetails?.badge || selectedRecommendedGoalDetails?.title || 'Selected Goal' }})
+          </span>
+        </button>
+
+        <button
+          type="button"
+          class="modal-cancel-btn btn-skip-recom"
+          [disabled]="savingProfile"
+          (click)="skipBmiRecommendation()">
+          Skip (Keep Current: {{ currentGoalLabel }})
+        </button>
+      </div>
+
+      <div style="height: 24px;"></div>
     </ion-content>
   </ng-template>
 </ion-modal>

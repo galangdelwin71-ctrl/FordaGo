@@ -6,9 +6,12 @@
 
 DB_NAME="fordago"
 DB_USER="FordaGo"
-# Password can be read from /root/.fordago-backup.env or default
+# Password must be provided via /root/.fordago-backup.env or environment variable
 [ -f /root/.fordago-backup.env ] && . /root/.fordago-backup.env
-DB_PASS="${DB_PASS:-SecurePassword123!}"
+if [ -z "$DB_PASS" ]; then
+  echo "[ERROR] Database password is not set. Please define DB_PASS in /root/.fordago-backup.env"
+  exit 1
+fi
 MAX_BACKUPS=5
 BACKUP_DIR="/root/fordago-backups"
 TIMESTAMP=$(date +"%Y-%m-%d_%H-%M")

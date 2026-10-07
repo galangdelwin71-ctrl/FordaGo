@@ -21,6 +21,14 @@ class Product extends Model
         'thumbnail_url',
     ];
 
+    /**
+     * Hidden attributes for arrays and JSON serialization.
+     * Prevents wholesale cost price from leaking to non-administrative clients.
+     */
+    protected $hidden = [
+        'cost_price',
+    ];
+
     protected function casts(): array
     {
         return [

@@ -85,7 +85,8 @@ class FcmService
                     'body'  => (string) $body,
                 ], array_map('strval', $data)),
                 'android' => [
-                    'priority' => 'high',
+                    'priority' => 'HIGH',
+                    'ttl'      => '86400s',
                     'notification' => [
                         'channel_id'              => $data['channel_id'] ?? 'fordago-alerts-v3',
                         'icon'                    => 'ic_stat_icon',

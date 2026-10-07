@@ -33,6 +33,7 @@
     <div class="fade-up greeting-wrap">
       <div class="greeting-sub">{{ timeGreeting }}</div>
       <div class="greeting-name">{{ memberName }}</div>
+      <div class="greeting-realname" *ngIf="realName">{{ realName }}</div>
     </div>
 
     <!-- Membership Card -->

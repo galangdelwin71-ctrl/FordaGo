@@ -211,6 +211,7 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   // ── Member Info ──────────────────────────────────────
   memberName      = '';
+  realName        = '';
   initials        = '';
   profileImage    = '';
 
@@ -1828,30 +1829,43 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   private applyUserContext(user: any): void {
-    this.memberName = user?.username || '';
-    this.initials = this.memberName
-      ? this.memberName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
-      : '';
+    const rawUser = (user?.username || '').trim().replace(/^@/, '');
+    const real = `${(user as any)?.first_name || ''} ${(user as any)?.last_name || ''}`.trim();
+    this.memberName = rawUser ? `@${rawUser}` : (real || 'Member');
+    this.realName = (real && real.toLowerCase() !== rawUser.toLowerCase()) ? real : '';
+    const nameForInitials = real || rawUser || 'Member';
+    this.initials = nameForInitials
+      ? nameForInitials.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+      : 'U';
     this.profileImage = resolveImageUrl((user as any)?.profile_image || '');
 
-    const membershipType = (user as any)?.membership_type || 'premium';
+    const rawMembershipType = (user as any)?.membership_type || 'daily';
     const expiryRaw = (user as any)?.membership_expiry || null;
-
-    this.planName = membershipType === 'premium' ? 'Premium Membership' : 'Daily Pass';
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    if (membershipType === 'premium') {
-      const expiryDate = expiryRaw
+    let isExpired = false;
+    let computedExpiryDate: Date | null = null;
+    if (rawMembershipType === 'premium') {
+      computedExpiryDate = expiryRaw
         ? new Date(expiryRaw)
         : new Date(today.getFullYear(), today.getMonth(), today.getDate() + 30);
+      computedExpiryDate.setHours(0, 0, 0, 0);
 
-      expiryDate.setHours(0, 0, 0, 0);
-      const diff = Math.ceil((expiryDate.getTime() - today.getTime()) / 86400000);
+      if (computedExpiryDate.getTime() < today.getTime()) {
+        isExpired = true;
+      }
+    }
+
+    const membershipType = isExpired ? 'daily' : rawMembershipType;
+    this.planName = membershipType === 'premium' ? 'Premium Membership' : 'Daily Pass';
+
+    if (membershipType === 'premium' && computedExpiryDate) {
+      const diff = Math.ceil((computedExpiryDate.getTime() - today.getTime()) / 86400000);
       const boundedDaysLeft = Math.max(diff, 0);
 
       this.daysLeft = boundedDaysLeft;
-      this.expiryDate = expiryDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      this.expiryDate = computedExpiryDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
       const totalDays = 30;
       const consumedDays = Math.min(Math.max(totalDays - boundedDaysLeft, 0), totalDays);
@@ -1860,6 +1874,10 @@ export class DashboardPage implements OnInit, OnDestroy {
       this.daysLeft = 0;
       this.expiryDate = 'Pay per visit';
       this.progressPercent = 0;
+      if (isExpired) {
+        // Sync with backend to ensure DB row is permanently updated to daily pass
+        this.auth.fetchCurrentUser().subscribe({ error: () => {} });
+      }
     }
   }
 

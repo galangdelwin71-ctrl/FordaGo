@@ -122,7 +122,8 @@ class PaymentController extends Controller
         
         // Prevent mobile devices from redirecting back to localhost
         if (str_contains($baseReturnUrl, 'localhost') || str_contains($baseReturnUrl, '127.0.0.1')) {
-            $baseReturnUrl = preg_replace('#https?://(localhost|127\.0\.0\.1)(:\d+)?#', 'http://168.144.141.27', $baseReturnUrl);
+            $configuredAppUrl = rtrim(config('app.url') ?: 'https://fordago.site', '/');
+            $baseReturnUrl = preg_replace('#https?://(localhost|127\.0\.0\.1)(:\d+)?#', $configuredAppUrl, $baseReturnUrl);
         }
 
         $sep = str_contains($baseReturnUrl, '?') ? '&' : '?';
@@ -313,13 +314,22 @@ class PaymentController extends Controller
             $storedSessionId = (string) $payment->gateway_session_id;
             $session = null;
 
-            // A simulated session can only be accepted while no real PayMongo key is configured.
+            // In production, NEVER trust or accept mock simulated checkout sessions
+            if (str_starts_with($storedSessionId, 'cs_mock_') && app()->isProduction()) {
+                return response()->json([
+                    'success' => false,
+                    'status'  => 'failed',
+                    'message' => 'Simulated test checkout sessions are disabled in production environment.',
+                ], 403);
+            }
+
+            // A simulated session can only be accepted in local/testing while no real PayMongo key is configured.
             // Once real keys are set, mock sessions are never trusted.
             if (! str_starts_with($storedSessionId, 'cs_mock_') || ! $this->payMongo->isConfigured()) {
                 $session = $this->payMongo->retrieveCheckoutSession($storedSessionId);
             }
 
-            if ($session && ($session['status'] === 'paid' || ! empty($session['is_mock']))) {
+            if ($session && ($session['status'] === 'paid' || (! empty($session['is_mock']) && ! app()->isProduction()))) {
                 $this->fulfillPayment($payment, [
                     'payment_id'      => $session['payment_id'] ?? null,
                     'payment_channel' => $session['payment_channel'] ?? $payment->payment_channel,

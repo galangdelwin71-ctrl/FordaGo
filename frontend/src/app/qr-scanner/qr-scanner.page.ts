@@ -263,7 +263,18 @@ export class QrScannerPage implements OnInit, OnDestroy {
   }
 
   get currentUserName(): string {
-    return this.auth.user?.username || 'Member';
+    const u = this.auth.user;
+    if (!u) return 'Member';
+    const raw = (u.username || '').trim().replace(/^@/, '');
+    return raw ? `@${raw}` : (`${(u as any).first_name || ''} ${(u as any).last_name || ''}`.trim() || 'Member');
+  }
+
+  get currentUserRealName(): string {
+    const u = this.auth.user;
+    if (!u) return '';
+    const real = `${(u as any).first_name || ''} ${(u as any).last_name || ''}`.trim();
+    const raw = (u.username || '').trim().replace(/^@/, '');
+    return (real && real.toLowerCase() !== raw.toLowerCase()) ? real : '';
   }
 
   get anyModalOpen(): boolean {

@@ -16,6 +16,7 @@ import {
 } from 'ionicons/icons';
 import { Subscription } from 'rxjs';
 import { PaymentService, OfficialReceipt } from '../../services/payment.service';
+import { PdfExportService } from '../../services/pdf-export.service';
 import jsPDF from 'jspdf';
 
 @Component({
@@ -34,7 +35,8 @@ export class ReceiptModalComponent implements OnInit, OnDestroy {
   constructor(
     public paymentService: PaymentService,
     private decimalPipe: DecimalPipe,
-    private datePipe: DatePipe
+    private datePipe: DatePipe,
+    private pdfExportService: PdfExportService
   ) {
     addIcons({
       downloadOutline,
@@ -91,7 +93,7 @@ export class ReceiptModalComponent implements OnInit, OnDestroy {
     return 'cash-outline';
   }
 
-  downloadPDF(): void {
+  async downloadPDF(): Promise<void> {
     if (!this.receipt) return;
     const r = this.receipt;
 
@@ -274,6 +276,8 @@ export class ReceiptModalComponent implements OnInit, OnDestroy {
     doc.text('BIR Registered under R.A. No. 8792 (E-Commerce Act)', CTR, y, { align: 'center' }); y += 4;
     doc.text('Thank you for training with FordaGO!', CTR, y, { align: 'center' });
 
-    doc.save(`FordaGO_Receipt_${r.receipt_number}.pdf`);
+    await this.pdfExportService.exportPdf(doc, `FordaGO_Receipt_${r.receipt_number}.pdf`, {
+      title: `FordaGO Official Receipt #${r.receipt_number}`,
+    });
   }
 }

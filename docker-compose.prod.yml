@@ -12,8 +12,8 @@ services:
     environment:
       MYSQL_DATABASE: ${DB_DATABASE:-fordago}
       MYSQL_USER: ${DB_USERNAME:-fordago_user}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-SecurePassword123!}
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-RootSecurePassword123!}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD is required}
     volumes:
       - db_data:/var/lib/mysql
     networks:
@@ -85,6 +85,29 @@ services:
       - 8.8.8.8
       - 1.1.1.1
     command: php artisan queue:work --tries=3 --timeout=90
+    env_file:
+      - ./backend/.env
+    environment:
+      DB_HOST: db
+      RUN_MIGRATIONS: "false"
+    volumes:
+      - ./backend/storage:/var/www/html/storage
+    depends_on:
+      - backend
+    networks:
+      - fordago_net
+
+  # ─── 4b. Laravel Scheduler (Cron for Workout & Membership Reminders) ─────
+  scheduler:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fordago_scheduler
+    restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    command: php artisan schedule:work
     env_file:
       - ./backend/.env
     environment:

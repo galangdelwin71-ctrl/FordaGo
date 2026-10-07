@@ -14,6 +14,7 @@ import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
 import { PaymentService, OfficialReceipt } from '../services/payment.service';
 import { ToastService } from '../services/toast.service';
+import { PdfExportService } from '../services/pdf-export.service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { API_URL } from '../config/api.config';
@@ -58,6 +59,7 @@ export class TransactionsPage implements OnInit {
     private datePipe: DatePipe,
     public paymentService: PaymentService,
     private toast: ToastService,
+    private pdfExportService: PdfExportService,
   ) {}
 
   ngOnInit() {
@@ -284,7 +286,7 @@ export class TransactionsPage implements OnInit {
     return map[key] ?? key;
   }
 
-  downloadPDF() {
+  async downloadPDF() {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const periodLabel: Record<string, string> = {
@@ -379,6 +381,9 @@ export class TransactionsPage implements OnInit {
       doc.text(`Page ${i} of ${pageCount}`, 196, 289.5, { align: 'right' });
     }
 
-    doc.save(`fordago-transactions-${this.period}-${new Date().toISOString().slice(0, 10)}.pdf`);
+    const filename = `fordago-transactions-${this.period}-${new Date().toISOString().slice(0, 10)}.pdf`;
+    await this.pdfExportService.exportPdf(doc, filename, {
+      title: `FordaGO Transactions Statement (${this.period})`,
+    });
   }
 }

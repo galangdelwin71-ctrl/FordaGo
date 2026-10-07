@@ -1057,6 +1057,24 @@ ion-modal.bottom-sheet-modal {
             align-items: center;
             justify-content: center;
           }
+
+          .pass-name-col {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.25;
+
+            .pass-username {
+              font-size: 13px;
+              font-weight: 700;
+              color: #ffffff;
+            }
+
+            .pass-realname {
+              font-size: 10px;
+              font-weight: 600;
+              color: rgba(255, 255, 255, 0.65);
+            }
+          }
         }
 
         &.time-val {

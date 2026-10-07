@@ -66,7 +66,14 @@ Route::post('/payments/xendit/webhook',   [PaymentController::class, 'xenditWebh
 Route::get('/payments/receipt/{receiptNumber}', [PaymentController::class, 'getReceipt']);
 
 // Convenience: return the authenticated user (used by frontend on app boot)
-Route::middleware('auth:sanctum')->get('/user', fn (\Illuminate\Http\Request $r) => $r->user());
+Route::middleware('auth:sanctum')->get('/user', function (\Illuminate\Http\Request $r) {
+    $user = $r->user();
+    if ($user) {
+        $user->checkAndExpireMembership();
+        $user->refresh();
+    }
+    return $user;
+});
 
 // ── All routes below require a valid Sanctum token ─────────────────────────
 Route::middleware('auth:sanctum')->group(function () {
@@ -207,7 +214,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // ── Activity Logs (Audit Trail) ────────────────────────────────────────
-    Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])->middleware('role:admin,super_admin,employee');
+    Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])->middleware('role:admin,super_admin');
 
     // ── Coaching & Chat (Coaching feature) ─────────────────────────────────
     // Read-only for regular users: browsing active coaches, viewing your own

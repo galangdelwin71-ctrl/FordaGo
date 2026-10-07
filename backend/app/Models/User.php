@@ -158,6 +158,7 @@ class User extends Authenticatable
             $expiry = \Carbon\Carbon::parse($this->membership_expiry)->endOfDay();
             if (now()->gt($expiry)) {
                 $this->membership_type = 'daily';
+                $this->membership_status = 'active';
                 $this->membership_expiry = null;
                 $this->save();
 

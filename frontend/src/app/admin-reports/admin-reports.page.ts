@@ -49,9 +49,7 @@ import autoTable from 'jspdf-autotable';
 import { API_URL, resolveImageUrl } from '../config/api.config';
 import { getCachedData, setCachedData } from '../utils/local-cache.util';
 import { CACHE_KEYS } from '../utils/cache-keys';
-import { Capacitor } from '@capacitor/core';
-import { Filesystem, Directory } from '@capacitor/filesystem';
-import { Share } from '@capacitor/share';
+import { PdfExportService } from '../services/pdf-export.service';
 
 export type Tab = 'overview' | 'memberships' | 'transactions' | 'attendance' | 'sales' | 'inventory';
 export type Period = 'daily' | 'weekly' | 'monthly' | 'yearly' | 'all';
@@ -277,6 +275,7 @@ export class AdminReportsPage implements OnInit {
     private decimalPipe: DecimalPipe,
     private datePipe: DatePipe,
     public paymentService: PaymentService,
+    private pdfExportService: PdfExportService,
   ) {
     addIcons({
       arrowBackOutline,
@@ -824,7 +823,10 @@ export class AdminReportsPage implements OnInit {
   async printCurrent() {
     try {
       const { doc, filename } = this.buildPDFDoc(this.activeTab);
-      await this.exportPDFNativeOrWeb(doc, filename, true);
+      await this.pdfExportService.exportPdf(doc, filename, {
+        isPrint: true,
+        title: `FordaGO Report (${this.activeTab})`,
+      });
     } catch (err) {
       console.error('Error generating PDF for printing:', err);
     }
@@ -834,78 +836,12 @@ export class AdminReportsPage implements OnInit {
     try {
       const targetTab: Tab = tabToExport || this.activeTab;
       const { doc, filename } = this.buildPDFDoc(targetTab);
-      await this.exportPDFNativeOrWeb(doc, filename, false);
+      await this.pdfExportService.exportPdf(doc, filename, {
+        isPrint: false,
+        title: `FordaGO Report (${targetTab})`,
+      });
     } catch (err) {
       console.error('Error exporting PDF:', err);
-    }
-  }
-
-  private async exportPDFNativeOrWeb(doc: jsPDF, filename: string, isPrint = false): Promise<void> {
-    if (Capacitor.isNativePlatform()) {
-      try {
-        const base64Data = doc.output('datauristring').split(',')[1];
-        const writeResult = await Filesystem.writeFile({
-          path: filename,
-          data: base64Data,
-          directory: Directory.Cache
-        });
-
-        await Share.share({
-          title: isPrint ? 'Print FordaGO Report' : 'Save FordaGO Report',
-          text: `FordaGO Report: ${filename}`,
-          url: writeResult.uri,
-          dialogTitle: isPrint ? 'Print / Share PDF Report' : 'Save / Download PDF Report'
-        });
-      } catch (err: any) {
-        console.error('Native Capacitor PDF export/share error:', err);
-        try {
-          doc.save(filename);
-        } catch (saveErr) {
-          console.error('doc.save fallback failed:', saveErr);
-        }
-      }
-    } else {
-      if (isPrint) {
-        this.printWebBlob(doc);
-      } else {
-        doc.save(filename);
-      }
-    }
-  }
-
-  private printWebBlob(doc: jsPDF): void {
-    try {
-      const blob = doc.output('blob');
-      const blobUrl = URL.createObjectURL(blob);
-
-      const iframe = document.createElement('iframe');
-      iframe.style.position = 'fixed';
-      iframe.style.right = '0';
-      iframe.style.bottom = '0';
-      iframe.style.width = '0';
-      iframe.style.height = '0';
-      iframe.style.border = '0';
-      iframe.src = blobUrl;
-
-      iframe.onload = () => {
-        try {
-          iframe.contentWindow?.focus();
-          iframe.contentWindow?.print();
-        } catch (e) {
-          window.open(blobUrl, '_blank');
-        } finally {
-          setTimeout(() => {
-            if (document.body.contains(iframe)) {
-              document.body.removeChild(iframe);
-            }
-            URL.revokeObjectURL(blobUrl);
-          }, 60000);
-        }
-      };
-
-      document.body.appendChild(iframe);
-    } catch (err) {
-      console.error('Error printing web blob:', err);
     }
   }
 

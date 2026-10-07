@@ -100,6 +100,7 @@ import { API_URL, resolveImageUrl } from '../config/api.config';
 import { CoachingService } from '../services/coaching.service';
 import { ToastService } from '../services/toast.service';
 import { NotificationCenterService } from '../services/notification-center.service';
+import { PdfExportService } from '../services/pdf-export.service';
 import { PullToRefreshComponent } from '../shared/pull-to-refresh/pull-to-refresh.component';
 
 @Component({
@@ -1274,7 +1275,8 @@ export class AdminPage implements OnInit, OnDestroy {
     private http: HttpClient,
     private coaching: CoachingService,
     private toast: ToastService,
-    private notificationCenter: NotificationCenterService
+    private notificationCenter: NotificationCenterService,
+    private pdfExportService: PdfExportService
   ) {
     addIcons({
       paperPlaneOutline,
@@ -2521,13 +2523,14 @@ export class AdminPage implements OnInit, OnDestroy {
     await this.loadGymQrCode(true);
   }
 
-  downloadGymQrCode() {
+  async downloadGymQrCode() {
     if (!this.gymQrImageUrl) return;
 
-    const link = document.createElement('a');
-    link.href = this.gymQrImageUrl;
-    link.download = 'fordago-gym-attendance-qr.png';
-    link.click();
+    await this.pdfExportService.exportBase64Image(
+      this.gymQrImageUrl,
+      'fordago-gym-attendance-qr.png',
+      'FordaGO Gym Attendance QR'
+    );
   }
 
   private async loadGymQrCode(forceRefresh = false) {
@@ -2570,7 +2573,7 @@ export class AdminPage implements OnInit, OnDestroy {
     }
   }
 
-  exportAttendancePdf() {
+  async exportAttendancePdf() {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const reportDate = this.selectedReportDate || this.toIsoDate(new Date());
     const genTime = this.formatDateTime(new Date());
@@ -2683,10 +2686,12 @@ export class AdminPage implements OnInit, OnDestroy {
       }
     }
 
-    doc.save(`fordago-attendance-${reportDate}.pdf`);
+    await this.pdfExportService.exportPdf(doc, `fordago-attendance-${reportDate}.pdf`, {
+      title: `FordaGO Daily Attendance Report (${reportDate})`,
+    });
   }
 
-  exportEquipmentLogsPdf() {
+  async exportEquipmentLogsPdf() {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const reportDate = this.selectedReportDate || this.toIsoDate(new Date());
     const genTime = this.formatDateTime(new Date());
@@ -2798,7 +2803,9 @@ export class AdminPage implements OnInit, OnDestroy {
       }
     }
 
-    doc.save(`fordago-equipment-scans-${reportDate}.pdf`);
+    await this.pdfExportService.exportPdf(doc, `fordago-equipment-scans-${reportDate}.pdf`, {
+      title: `FordaGO Equipment Scans Report (${reportDate})`,
+    });
   }
 
   private formatDateTime(value: string | Date) {
