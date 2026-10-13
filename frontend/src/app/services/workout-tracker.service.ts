@@ -840,7 +840,11 @@ export class WorkoutTrackerService {
     // If all exercises are done and timer was running, auto-complete the timer and cancel alarm
     if (summary.allDone && existingSession.startedAt) {
       const startedMs = new Date(existingSession.startedAt).getTime();
-      updatedActualMinutes = Number.isNaN(startedMs) ? 0 : Math.max(1, Math.round((Date.now() - startedMs) / 60000));
+      let tracked = Number.isNaN(startedMs) ? 0 : Math.max(1, Math.round((Date.now() - startedMs) / 60000));
+      if (tracked > 180) {
+        tracked = Math.min(this.durationToMinutes(existingSession.duration) || 60, 120);
+      }
+      updatedActualMinutes = tracked;
       updatedStartedAt = null;
       void this.notificationCenter.cancelNativeDurationAlarm(existingSession.id || sessionId);
     }
@@ -945,9 +949,14 @@ export class WorkoutTrackerService {
     }
 
     const startedMs = new Date(existingSession.startedAt).getTime();
-    const elapsedMinutes = Number.isNaN(startedMs)
+    let elapsedMinutes = Number.isNaN(startedMs)
       ? 0
       : Math.max(1, Math.round((Date.now() - startedMs) / 60000));
+
+    // Sanity cap: if timer ran > 180 min (3 hrs, e.g. forgotten overnight), cap to scheduled duration or realistic max
+    if (elapsedMinutes > 180) {
+      elapsedMinutes = Math.min(this.durationToMinutes(existingSession.duration) || 60, 120);
+    }
 
     const finalStatus = existingSession.status === 'missed' ? existingSession.status : 'done';
     if (finalStatus === 'done') {
@@ -1312,9 +1321,16 @@ export class WorkoutTrackerService {
       done: typeof exercise.done === 'boolean' ? exercise.done : session.status === 'done',
     })) ?? [];
 
+    let actualMinutes = session.actualMinutes;
+    if (typeof actualMinutes === 'number' && actualMinutes > 180) {
+      const scheduled = this.durationToMinutes(session.duration) || 60;
+      actualMinutes = Math.min(scheduled, 120);
+    }
+
     return {
       ...session,
       exercises,
+      actualMinutes,
     };
   }
 

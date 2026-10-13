@@ -1,223 +1,230 @@
 # FordaGo — Technology Stack & Architectural Specification
 
 **Project Title:** FordaGo: Mobile-Based Gym Database Management System  
-**Document Type:** Technical & Defense Specification Document  
-**Version:** 2.0 (Defense Ready)  
-**Target Platform:** Mobile (Android Native APK & Cross-Platform iOS) / Progressive Web App  
+**Document Type:** Technical Architecture & Defense Specification  
+**Version:** 3.0 (Defense Ready Edition)  
 
 ---
 
-## 1. Executive Summary & System Architecture
+## 1. System Architecture Overview
 
-**FordaGo** is an enterprise-grade mobile gym management system developed specifically for **AffordaGym – San Isidro Branch**. The platform replaces error-prone manual paper logs and fragmented spreadsheets with a synchronized, real-time digital ecosystem.
+FordaGo is an enterprise-grade mobile gym database management system engineered for **AffordaGym – San Isidro Branch**.
 
-The system adopts a **Decoupled Client-Server & Event-Driven Architecture**:
-- **Presentation / Client Tier:** A high-performance hybrid mobile application built with **Ionic 8 + Angular 20**, packaged into native mobile binaries via **Capacitor 8**.
-- **Application / API Tier:** A robust, secure RESTful API powered by **Laravel 12+ (PHP 8.3+)**, handling all business logic, role-based authorization, rate limiting, and transactions.
-- **Real-Time Communication Layer:** **Laravel Reverb WebSockets** paired with **Laravel Echo** to power sub-second live attendance tracking, coaching messaging, and administrative broadcasts.
-- **Data Persistence Tier:** **MySQL RDBMS** with foreign key constraints, ACID transaction isolation, and Eloquent ORM indexing.
-
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                      FORDAGO CLIENT MOBILE APP                          │
-│             (Ionic Framework 8 + Angular 20 + TypeScript)                │
-│                                                                         │
-│  ┌──────────────────────┐  ┌─────────────────────┐  ┌────────────────┐ │
-│  │ Biometric Auth (Bio) │  │ Camera QR Scanner   │  │ jsPDF Engine   │ │
-│  └──────────┬───────────┘  └──────────┬──────────┘  └────────┬───────┘ │
-└─────────────┼─────────────────────────┼──────────────────────┼──────────┘
-              │                         │                      │
-              ▼                         ▼                      │
-   ┌────────────────────────────────────────────────┐          │
-   │            CAPACITOR 8 NATIVE BRIDGE           │          │
-   │     (Android Hardware / Camera / Haptics)      │          │
-   └──────────────────────┬─────────────────────────┘          │
-                          │                                    │
-       HTTPS REST API     │             WSS WebSockets         │
-       (Bearer Sanctum)   │             (Reverb / Echo)        │
-                          ▼                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                      FORDAGO BACKEND API SERVER                         │
-│                    (Laravel 12+ Framework / PHP 8.3)                    │
-│                                                                         │
-│  ┌──────────────────┐  ┌─────────────────────┐  ┌────────────────────┐  │
-│  │ Laravel Sanctum  │  │ Laravel Reverb      │  │ SMS Gateway        │  │
-│  │ Token Auth & RBAC│  │ Real-Time WS Server │  │ Semaphore / PhilSMS│  │
-│  └────────┬─────────┘  └──────────┬──────────┘  └────────┬───────────┘  │
-└───────────┼───────────────────────┼──────────────────────┼──────────────┘
-            │                       │                      │
-            └───────────────────────┼──────────────────────┘
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                           DATABASE STORAGE                              │
-│                      (MySQL Relational Database)                        │
-│                                                                         │
-│  • Users & RBAC Roles          • Attendance & QR Scans                  │
-│  • Workouts & Coaching Plans   • Inventory & Cart Orders                │
-│  • Announcements & Notices     • System Activity Audit Logs             │
-└─────────────────────────────────────────────────────────────────────────┘
-```
+- **Frontend Client Tier:** Ionic 8 + Angular 20 + TypeScript + Capacitor 8
+- **Backend API Tier:** Laravel 12+ (PHP 8.3+) + Laravel Sanctum Bearer Auth
+- **Real-Time Tier:** Laravel Reverb WebSockets + Laravel Echo
+- **Database Tier:** MySQL 8.0 RDBMS in 3rd Normal Form (3NF)
 
 ---
 
-## 2. Frontend Tier (Mobile Application)
+## 2. Top 20 Panelist Defense Questions & Answers (Tanong at Sagot)
 
-### 2.1 Core Framework & Language
-* **Framework:** [Ionic Framework](https://ionicframework.com/) (Version 8.0+)
-* **Application Framework:** [Angular](https://angular.dev/) (Version 20.3+)
-* **Language:** TypeScript 5.9+ with strict typing
-* **Styling Architecture:** Vanilla SCSS utilizing custom design tokens, modern HSL color curves, CSS Flexbox/Grid, and responsive typography.
+### Tanong 1: Bakit Ionic + Angular + Capacitor ang pinili ninyo sa halip na Native Android (Java/Kotlin) o Flutter / React Native?
 
-### 2.2 Native Runtime & Device Hardware Bridge
-* **Mobile Engine:** **Capacitor 8 (v8.3+)**
-* **Target OS:** Android 8.0+ (API Level 26 to API Level 35) & iOS 14+
-* **Biometric Hardware Authentication:** `@aparajita/capacitor-biometric-auth` (Version 10.0+)
-  * Interfaces with Android BiometricPrompt and iOS LocalAuthentication for fingerprint and face recognition.
-  * Tokens are encrypted and bound locally to device storage.
-* **Optical Camera & QR Code Scanner:** `html5-qrcode` (Version 2.3+)
-  * High-speed hardware camera feed with live frame analysis for Equipment lookup and Front-Desk Attendance check-ins.
-  * Real-time dual validation (Front-desk dynamic daily QR and static equipment asset tags).
-* **Hardware Haptics & Feedback:** `@capacitor/haptics`
-  * Haptic vibration triggers on successful QR detection, error alerts, and key interactions.
-* **Hardware Status Bar & Keyboard Control:** `@capacitor/status-bar`, `@capacitor/keyboard`
-  * Adaptive keyboard avoidance and native notch/status bar theming.
-* **Secure Client Storage:** `@capacitor/preferences`
-  * Encrypted persistent device store for active tokens, user preferences, and biometric consent states.
+**Eksaktong Sagot:**  
+> *"Dahil po sa Single Codebase. Isang code lang ang sinulat namin para sa frontend pero pwede nang gumana sa Android at iOS nang hindi dodoble ang trabaho at gastos sa maintenance. Gamit ang Capacitor 8, may direct access pa rin kami sa camera para sa QR scanner at fingerprint sensor tulad ng native app, habang ang Angular naman ang nagbibigay ng maayos at structured na code sa pamamagitan ng TypeScript."*
 
-### 2.3 Client-Side Utilities & Offline Services
-* **PDF Report Generation:** `jspdf` (v4.2+) & `jspdf-autotable` (v5.0+)
-  * Generates administrative audit reports (Attendance summaries, inventory stock audits, financial summaries) client-side without overloading backend resources.
-* **Reactive State & Interceptors:** `rxjs` (v7.8+)
-  * Angular HTTP Interceptor automatically injects `Authorization: Bearer <token>` and intercepts `401 Unauthorized` responses to redirect cleanly to login.
+**Punto na dapat tandaan:** *Single Codebase Architecture, Native Hardware Bridge, at Zero Code Duplication.*
 
 ---
 
-## 3. Backend & API Tier
+### Tanong 2: Ano ang Capacitor at ano ang pinagkaiba nito sa lumang Cordova?
 
-### 3.1 Application Framework
-* **Framework:** [Laravel](https://laravel.com/) (Version 12+ / 13+)
-* **Runtime Language:** PHP 8.3+ (Strict typing, typed properties, match expressions)
-* **Architecture Pattern:** Model-View-Controller (MVC) implemented as a stateless RESTful JSON API.
+**Eksaktong Sagot:**  
+> *"Ang Capacitor ang tulay o bridge para magamit ng web code namin ang hardware ng phone tulad ng camera, fingerprint scanner, at haptics vibration. Mas bago at mas mabilis ito kaysa lumang Cordova dahil gumagamit ito ng modernong Promise-based APIs, mas magaan sa memory, at direktang binubuksan ang source code sa Android Studio nang walang magulong plugins."*
 
-### 3.2 Authentication, Authorization & Security
-* **Authentication Engine:** **Laravel Sanctum (v4.3+)**
-  * Issues cryptographic Bearer API Tokens upon validated login or biometric token exchange.
-  * Tokens are checked on every protected endpoint via the `auth:sanctum` middleware.
-* **Password Hashing:** **Bcrypt** cryptographic algorithm with adaptive work factor (`BCRYPT_ROUNDS=10`).
-* **Role-Based Access Control (RBAC):**
-  * `super_admin`: Full system control, activity logs, financial reports, employee provisioning.
-  * `admin`: Member verification, attendance validation, inventory management, notification center.
-  * `coach`: Workout plan proposition, member progress tracking, direct coaching chat.
-  * `member`: QR check-in, equipment guides, personal workout logs, inventory ordering, profile management.
-* **Security Defenses & Middleware:**
-  * **Rate Limiting:** Granular rate limits per IP/token to thwart brute-force and DDoS attacks.
-  * **SQL Injection Immunity:** 100% parameter-bound queries via Laravel Eloquent ORM and PDO.
-  * **XSS & Input Sanitization:** Form Request Validation strips malicious payloads prior to controller execution.
-  * **Comprehensive Audit Trail:** `ActivityLog` model records actor ID, target entity, action type, IP address, and timestamps.
-
-### 3.3 Real-Time WebSocket Infrastructure
-* **WebSocket Server:** **Laravel Reverb (v1.11+)**
-  * First-party, native PHP asynchronous WebSocket server optimized for high-concurrency event broadcasting.
-* **Client WebSocket Driver:** **Laravel Echo** + **Pusher-JS (v8.6+)**
-  * Subscribes to private and presence channels:
-    * `attendance-channel`: Instant front-desk check-in updates.
-    * `chat.{conversationId}`: Real-time coach-member workout consultation.
-    * `broadcast-notifs`: Gym-wide announcements pushed instantly to active screens.
-
-### 3.4 SMS Gateway Integration
-* **Service Layer:** `SmsService`
-* **Supported Gateways:** **Semaphore**, **PhilSMS**, and **Twilio**
-* **Capabilities:** Automated SMS dispatch for OTP verification, membership expiry reminders, and emergency gym alerts.
+**Punto na dapat tandaan:** *Modern Hardware Bridge, Asynchronous Promises, at Native Studio Integration.*
 
 ---
 
-## 4. Database Tier
+### Tanong 3: Bakit Laravel 12 (PHP 8.3) ang backend ninyo at hindi Node.js o Python?
 
-* **RDBMS Engine:** **MySQL 8.0+**
-* **ORM:** Laravel Eloquent (ActiveRecord pattern)
-* **Design Standards:** 3rd Normal Form (3NF) normalization, strict foreign key constraints, composite indexing on high-frequency search fields (e.g. `email`, `scanned_at`, `status`).
+**Eksaktong Sagot:**  
+> *"Dahil kumpleto na po ang built-in security at tools ng Laravel para sa transactional database tulad ng gym management. Mayroon na itong Laravel Sanctum para sa token login, Eloquent ORM na kusang pumipigil sa SQL Injection, at sariling WebSocket server (Laravel Reverb) kaya hindi na kailangang magbayad sa third-party services tulad ng Pusher."*
 
-### Key Schema Entities
-| Table | Description |
-| :--- | :--- |
-| `users` | Member, coach, and admin credentials, roles, membership types, expiry, and biometric enrollment. |
-| `attendances` | Check-in records, scanned timestamps, payment statuses (Cash/GCash/Online), and desk verification. |
-| `equipment` | Gym machines and free weights, categories, maintenance statuses, photos, and guide links. |
-| `products` & `orders` | Gym shop inventory items, stock tracking, order line-items, and pickup statuses. |
-| `notifications` | Direct user notifications, membership alerts, and gym-wide broadcast announcements. |
-| `activity_logs` | Tamper-evident administrative audit trail recording every significant system mutation. |
-| `coaching_sessions` | Assigned coach-member workout regimes, schedules, and progress logs. |
+**Punto na dapat tandaan:** *Enterprise Batteries-Included, Built-in Sanctum Auth, Eloquent Security, at Native Reverb Sockets.*
 
 ---
 
-## 5. Panel Evaluation Defense Guide (Q&A)
+### Tanong 4: Bakit Decoupled REST API ang ginawa ninyo at hindi simpleng Monolithic website (Laravel Blade)?
 
-### Q1: "Why did you choose Ionic + Angular instead of building a native Java/Kotlin Android app?"
-> **Answer:**  
-> *"Building with Ionic Framework and Angular allows for a **Single Codebase, Cross-Platform Architecture**. Instead of writing and maintaining two separate codebases for Android and iOS, our application runs at native speed through Capacitor while ensuring 100% UI and business logic consistency. Capacitor bridges all critical native device features—specifically Biometric Fingerprint authentication and hardware Camera QR scanning—giving our users a native experience at a fraction of the development and maintenance overhead."*
+**Eksaktong Sagot:**  
+> *"Dahil inihiwalay po namin ang mobile app sa server. Dahil REST API ito, magaang JSON data lang ang lumilipat sa network kaya napakabilis mag-load sa cellphone. Bukod dito, sa iisang API na ito ay pwedeng kumonekta ang Android app, admin web dashboard, at mga future hardware kiosks nang hindi binabago ang server code."*
 
-### Q2: "Why Laravel instead of Node.js/Express for your backend?"
-> **Answer:**  
-> *"While Node.js is lightweight, Laravel provides an enterprise-ready, robust ecosystem out of the box. Specifically for a database-heavy management system like FordaGo, Laravel provides:  
-> 1. **Laravel Sanctum** for battle-tested token security and RBAC.  
-> 2. **Eloquent ORM** with built-in protection against SQL Injection and automated migrations.  
-> 3. **Laravel Reverb**, which gave us our own high-performance WebSocket server without paying costly monthly fees for external WebSocket providers like Pusher."*
-
-### Q3: "How is data security handled in the system?"
-> **Answer:**  
-> *"Security is implemented at every layer:  
-> • **In Transit:** All communications use encrypted HTTPS endpoints and secure WSS WebSocket connections.  
-> • **Authentication:** Handled through cryptographic Bearer tokens via Sanctum. Passwords are never stored in plaintext; they are hashed with adaptive Bcrypt.  
-> • **Device Authentication:** Sensitive biometric authentication delegates verification to the hardware's secure enclave (`BiometricPrompt` on Android).  
-> • **Auditability:** Every administrative action—such as creating an account, approving payments, or editing equipment—is logged with the user ID, timestamp, and IP address in our tamper-resistant `activity_logs` table."*
-
-### Q4: "What makes FordaGo real-time?"
-> **Answer:**  
-> *"Rather than relying on continuous, battery-draining HTTP polling, FordaGo uses **Laravel Reverb with Laravel Echo over WebSockets**. When an attendance QR code is scanned or a coach sends a message, a backend event is broadcasted. Active clients receive the socket payload within milliseconds, immediately updating the UI without any manual screen refresh."*
+**Punto na dapat tandaan:** *Separation of Concerns, Magaang JSON Payloads, at Multi-Platform Reusability.*
 
 ---
 
-## 6. Strategic Business & Evaluation Reviewer (Core Call Questions)
+### Tanong 5: Paano tinitiyak na hindi masisira ang display ng app sa iba't ibang laki ng cellphone?
 
-### Question 1: "How do you save data and what do you plan to do with that?"
-* **How Data is Saved:**
-  * **Relational Database (MySQL):** Data is saved in structured, normalized relational tables (Users, Attendances, Equipment, Inventory Products, Shop Orders, Coaching Sessions, Notifications, and Activity Logs).
-  * **Security & Integrity:** Passwords use adaptive **Bcrypt** hashing. Client requests are authenticated via **Laravel Sanctum Bearer tokens**. Critical actions use ACID database transactions (`DB::transaction`) to avoid data corruption.
-* **What We Plan to Do with the Data:**
-  1. **Operational Automation:** Real-time QR attendance check-in, automated tracking of daily walk-ins vs. monthly premium passes, auto-expiry detection, and live inventory stock level updates.
-  2. **Business Intelligence & Reporting:** Aggregating data into actionable reports (peak gym hours, daily revenue, member retention trends, and expiring passes) exported to PDF via jsPDF.
-  3. **Personalized Member Progress:** Using workout completion logs to calculate user streaks and enable coaches to propose tailored workout routines based on historical attendance.
+**Eksaktong Sagot:**  
+> *"Gumamit po kami ng Ionic Responsive Grid System at SCSS Flexbox. Naka-set sa relative units tulad ng percentages at rem ang layout kaya kusa itong nag-a-adjust sa screen size. Mayroon din kaming Capacitor Keyboard plugin para kapag lumabas ang keypad, kusa itong umaatras at hindi natatakpan ang input fields."*
+
+**Punto na dapat tandaan:** *Responsive Design Tokens, Relative Units, at Adaptive Keyboard Avoidance.*
 
 ---
 
-### Question 2: "Was this a unique project and what is the use case that you built on?"
-* **The Core Use Case:**
-  * Built specifically for local community fitness centers (**AffordaGym – San Isidro Branch**) that currently rely on manual paper logbooks, paper receipts, unmonitored daily pass fees, and disconnected communication between members and fitness coaches.
-* **What Makes FordaGo Unique (Novelty & Value Proposition):**
-  1. **All-in-One Community Gym Ecosystem:** Unlike generic fitness tracker apps (which only track reps) or standalone POS systems (which only track payments), FordaGo unifies **hardware check-in, gym equipment training, coaching consultations, and inventory commerce** into a single mobile app.
-  2. **Dual-Function QR Architecture:**
-     * *Front-Desk QR:* High-speed contactless attendance and payment verification.
-     * *Equipment QR:* Optical tags pasted on machines that open step-by-step video/visual exercise guides and muscle group target instructions.
-  3. **Hardware Biometric Security:** Members can securely authenticate via their device's native fingerprint/biometric scanner.
-  4. **Direct Coach-Member Consultation:** Members receive workout plans and chat directly with gym-assigned coaches within the platform.
+### Tanong 6: Paano gumagana ang login at seguridad ng token (Laravel Sanctum)?
+
+**Eksaktong Sagot:**  
+> *"Kapag tama ang username at password o fingerprint ng user, bibigyan siya ng server ng Bearer Token. Itatago ito ng app sa encrypted storage ng phone (@capacitor/preferences). Sa bawat request ng user, ipinapadala ang token na ito sa header. Kung walang token o expired na, agad itong ibo-block ng server gamit ang 401 Unauthorized."*
+
+**Punto na dapat tandaan:** *Stateless Bearer Tokens, SHA-256 Hashing sa Database, at auth:sanctum Middleware.*
 
 ---
 
-### Question 3: "Did you think about the marketing side?"
-* **Yes, Built-in Growth, Retention & Marketing Strategy:**
-  1. **Member Retention through Gamification:** Visual workout streak counters and milestone badges incentivize members to return consistently, reducing gym membership churn.
-  2. **Direct Marketing & Broadcast Announcements:** Gym administrators can push gym-wide marketing announcements (seasonal discount promos, supplement sales, holiday hours, fitness challenges) directly to every member's smartphone.
-  3. **Daily-to-Premium Conversion Funnel:** Walk-in members who scan the Daily Pass QR are prompted with the transparent benefits of upgrading to a monthly Premium Pass, boosting recurring gym revenue.
-  4. **Dynamic Capacity Marketing:** Peak hour analytics help gym management launch off-peak discounts or happy-hour promos to balance gym traffic.
+### Tanong 7: Ligtas ba ang Biometric Login? Hindi ba nananakaw ang fingerprint ng member sa database?
+
+**Eksaktong Sagot:**  
+> *"Opo, 100% ligtas po dahil hindi kailanman ipinapadala o itinatago ang fingerprint sa aming database. Ang mismong operating system ng cellphone (BiometricPrompt ng Android) ang nagbeberipika ng daliri sa loob ng hardware secure enclave ng phone. Kapag sinabi ng phone na tama ang daliri, saka lang nagpapalitan ng login token ang app at ang server."*
+
+**Punto na dapat tandaan:** *Hardware Secure Enclave, Android BiometricPrompt, at Zero Biometric Data Storage.*
 
 ---
 
-### Question 4: "Does this all have basic features like push notifications and how do you manage it?"
-* **Yes, Comprehensive Notification System:**
-  * **Technology Engine:** Integrated using **Firebase Cloud Messaging (FCM)**, **Capacitor Local Notifications**, and **Laravel Reverb WebSockets** for instant real-time delivery.
-  * **How It Is Managed (Admin Notification Center):**
-    1. **Broadcast Announcements:** One-click modal dispatch to broadcast announcements to all registered gym members at once.
-    2. **Targeted Direct Notices:** Admins can select an individual member from a searchable list to send private notices (e.g., payment confirmations, order pickup alerts, account verification).
-    3. **Automated Event Triggers:** The system automatically notifies members when their membership is about to expire, when a coach proposes a new workout plan, or when an inventory order status changes.
-    4. **Notification Management Hub:** Full administrative interface to filter notifications by member account, search past broadcasts, mark all as read, and delete obsolete entries.
+### Tanong 8: Paano ninyo pinoprotektahan ang database laban sa SQL Injection attacks?
 
+**Eksaktong Sagot:**  
+> *"Gumagamit po kami ng 100% Parameter-Bound PDO Prepared Statements sa ilalim ng Eloquent ORM. Walang kahit anong raw SQL query na pinagdudugtong gamit ang string concatenation. Lahat ng input ng user ay awtomatikong itinuturing bilang data literal kaya imposible itong tumakbo bilang SQL command."*
+
+**Punto na dapat tandaan:** *Parameter-Bound Queries, PDO Prepared Statements, at Eloquent ORM Abstraction.*
+
+---
+
+### Tanong 9: Paano ninyo pinipigilan ang XSS (Cross-Site Scripting) at Brute-Force attacks?
+
+**Eksaktong Sagot:**  
+> *"Sa XSS, awtomatikong nililinis ng Angular DomSanitizer ang inputs bago i-render sa screen, at may Form Request validation sa Laravel para i-strip ang scripts. Sa Brute-Force naman, may API Rate Limiting (throttle:api) kung saan kapag sunod-sunod na nagkamali ng login ang isang IP address, pansamantala itong ibo-block at magbabalik ng 429 Too Many Requests."*
+
+**Punto na dapat tandaan:** *Angular DomSanitizer, Laravel Form Requests, at Route Throttling (throttle:api).*
+
+---
+
+### Tanong 10: Paano naipapatupad ang Role-Based Access Control (RBAC)? Pwede bang ma-hack ng member ang admin endpoints?
+
+**Eksaktong Sagot:**  
+> *"Hindi po, dahil sa Server-Side Middleware nakalagay ang security check, hindi lang sa pagtago ng buttons sa mobile. Bawat ruta ng admin ay may role middleware. Kahit subukan ng member na mag-send ng request gamit ang Postman papunta sa admin URL, iche-check ng server ang kanyang role sa token, at agad siyang ibo-block gamit ang 403 Forbidden."*
+
+**Punto na dapat tandaan:** *Server-Side Middleware Enforcement, Token Payload Roles, at 403 Forbidden Response.*
+
+---
+
+### Tanong 11: Bakit Laravel Reverb WebSockets ang ginamit sa real-time features at hindi simpleng HTTP polling?
+
+**Eksaktong Sagot:**  
+> *"Dahil ang HTTP polling ay nagpapadala ng paulit-ulit na request bawat segundo kaya maaksaya sa data at malakas kumain ng battery ng phone. Sa WebSockets, isang bukas na koneksyon lang ang kailangan. Kapag may nag-check-in sa gym o may nag-chat na coach, agad itong lumalabas sa screen sa loob ng ilang milliseconds nang hindi nagre-refresh."*
+
+**Punto na dapat tandaan:** *Full-Duplex Persistent TCP Sockets, Zero Battery Polling Drain, at Sub-second Latency.*
+
+---
+
+### Tanong 12: Paano tinitiyak na pribado ang chat sa pagitan ng coach at trainee sa WebSockets?
+
+**Eksaktong Sagot:**  
+> *"Naka-set po ito bilang Private Channel (private-chat.{id}). Bago makapasok ang user sa channel, hihingi muna ang WebSocket server ng pahintulot sa Laravel API gamit ang Bearer token. Tinitiyak ng server logic na ang naka-login na user ay siyang coach o trainee ng naturang conversation bago siya payagang makinig sa socket."*
+
+**Punto na dapat tandaan:** *Private Channel Handshake, Broadcasting Authorization (/broadcasting/auth), at Sanctum Guard.*
+
+---
+
+### Tanong 13: Paano gumagana ang Camera QR Scanner at ano ang kaibahan ng Attendance QR sa Equipment QR?
+
+**Eksaktong Sagot:**  
+> *"Ginagamit ng app ang camera ng phone gamit ang html5-qrcode library. Ang Attendance QR sa entrance ay dynamic at nagpapalit araw-araw para hindi mapicturan o maipasa sa iba. Ang Equipment QR naman ay static tag na nakadikit sa bawat makina kung saan kapag ini-scan, agad na bubuksan ng app ang exercise video tutorial at tamang buhat para sa makina na iyon."*
+
+**Punto na dapat tandaan:** *Dynamic Encrypted Session QR para sa Attendance vs. Static Asset Tag para sa Equipment Guides.*
+
+---
+
+### Tanong 14: Bakit sa mismong phone ginagawa ang PDF reports (jsPDF) at hindi sa backend server?
+
+**Eksaktong Sagot:**  
+> *"Para hindi bumigat ang server. Kapag sabay-sabay nag-download ng PDF reports ang mga admin, pwedeng mag-lag o mag-hang ang server CPU. Sa jsPDF, magaang JSON data lang ang kinukuha sa server, at ang mismong processor ng phone ang nagko-convert nito sa PDF file nang mabilis."*
+
+**Punto na dapat tandaan:** *Client-Side Processing, Pag-iwas sa Server CPU Spikes, at Mabilisang Offline Export.*
+
+---
+
+### Tanong 15: Naka-Third Normal Form (3NF) ba ang database ninyo? Paano ninyo mapapatunayan?
+
+**Eksaktong Sagot:**  
+> *"Opo. Una, bawat column ay may iisang atomic value (1NF). Pangalawa, lahat ng table ay may sariling Primary Key na id (2NF). Pangatlo, inalis namin ang transitive dependencies (3NF)—halimbawa, ang coach details, workout proposals, at payments ay may sariling tables at konektado gamit ang Foreign Keys (FK), kaya walang redundant o paulit-ulit na data."*
+
+**Punto na dapat tandaan:** *1NF Atomic Values, 2NF No Partial Dependency, at 3NF Removal of Transitive Dependency.*
+
+---
+
+### Tanong 16: Paano kung dalawang tao ang sabay na bumili ng huling supplement sa POS inventory?
+
+**Eksaktong Sagot:**  
+> *"Gumagamit po kami ng Database Transactions (DB::transaction) na may pessimistic row locking (lockForUpdate()). Pansamantalang ikino-lock ng database ang record ng produkto habang binabawasan ang stock. Ang unang makapindot ang makakabili, at ang pangalawa ay agad makakatanggap ng 'Out of Stock' error para hindi maging negative ang inventory."*
+
+**Punto na dapat tandaan:** *ACID Transactions, lockForUpdate() Row Locking, at Race Condition Prevention.*
+
+---
+
+### Tanong 17: Bakit MySQL Relational Database ang pinili ninyo at hindi NoSQL tulad ng MongoDB?
+
+**Eksaktong Sagot:**  
+> *"Dahil ang mga transaksyon sa gym—tulad ng membership expiry, attendance logs, bayaran, at coach bookings—ay nangangailangan ng mahigpit na ugnayan at Foreign Key constraints. Mas garantisado sa MySQL ang ACID compliance (consistency ng pera at records) kaysa sa NoSQL na mas para sa unstructured data."*
+
+**Punto na dapat tandaan:** *Relational Foreign Keys, Strict Referential Integrity, at ACID Transaction Compliance.*
+
+---
+
+### Tanong 18: Paano kung biglang mawalan ng internet habang nagwo-workout ang member?
+
+**Eksaktong Sagot:**  
+> *"May Offline Caching po ang app gamit ang @capacitor/preferences. Naka-save sa phone ang basic profile ng user at ang mga video/exercise guides ng equipment. Pwede pa rin niyang basahin ang mga workout instructions kahit walang signal. Magpapakita lang ang app ng offline badge at kusang magre-reconnect kapag bumalik ang internet."*
+
+**Punto na dapat tandaan:** *Graceful Offline Degradation, Local Cache Storage, at Auto-reconnect Handling.*
+
+---
+
+### Tanong 19: Paano ide-deploy ang FordaGo sa tunay na operasyon (Production)?
+
+**Eksaktong Sagot:**  
+> *"Ilalagay po ang backend sa isang Linux Cloud VPS (Ubuntu) gamit ang Nginx web server na may libreng SSL/TLS encryption (HTTPS at WSS). Ang Supervisor daemon ang magpapanatiling laging bukas sa WebSocket server sa background. Ang mobile app naman ay ibi-build bilang signed production APK para mai-install sa Android phones ng mga miyembro."*
+
+**Punto na dapat tandaan:** *Ubuntu Cloud VPS, Nginx Reverse Proxy with SSL, Supervisor Daemon, at Signed Production APK.*
+
+---
+
+### Tanong 20: Ano ang mga limitasyon ng inyong system ngayon at ano ang plano ninyo sa hinaharap (Future Works)?
+
+**Eksaktong Sagot:**  
+> *"Ang kasalukuyang saklaw ay para sa iisang branch pa lamang (AffordaGym – San Isidro), at ang bayaran ay cash at GCash manual reference confirmation. Sa future works, plano po naming magkabit ng IoT turnstile gates para kusang magbukas ang gate kapag nag-scan ng QR, at AI camera tracking na kusang magbibilang ng reps ng buhat gamit ang phone camera."*
+
+**Punto na dapat tandaan:** *Single-Branch Scoping, IoT Turnstile Hardware Gate, at AI Computer Vision Rep Tracking.*
+
+---
+
+## 3. Strategic Business & Evaluation Questions
+
+### Business Question 1: How do you save data and what do you plan to do with that?
+
+**Sagot:**  
+> *"Iniimbak po ang data sa relational MySQL tables (Users, Attendance, Equipment, Orders, Payments, Logs) na protektado ng Bcrypt hashing at Sanctum tokens. Ginagamit po namin ang data para sa: (1) Operational automation tulad ng real-time QR attendance at auto-expiry; (2) Business intelligence at downloadable audit PDF reports; at (3) Pagtatala ng workout streaks at personalized coaching routines para sa mga miyembro."*
+
+---
+
+### Business Question 2: Was this a unique project and what is the use case that you built on?
+
+**Sagot:**  
+> *"Opo, natatangi po ito dahil pinagsama namin sa iisang mobile app ang: (1) Dual QR scanning—entrance attendance at equipment exercise tutorials; (2) Native biometric fingerprint login; (3) Direct coach-trainee consultation at workout proposal generator; at (4) Point-of-Sale supplement ordering. Sinolusyunan nito ang manu-manong logbook at magulong papel sa AffordaGym."*
+
+---
+
+### Business Question 3: Did you think about the marketing side?
+
+**Sagot:**  
+> *"Opo, may built-in marketing tools ang FordaGo: (1) Admin broadcast announcements para sa mga promo at discounts; (2) Daily-to-Premium conversion funnel kung saan hinihikayat ang walk-ins na mag-monthly membership; (3) Member retention gamit ang workout streaks at badges; at (4) Peak hour analytics para makapagbigay ang gym ng happy-hour promos tuwing matumal ang oras."*
+
+---
+
+### Business Question 4: Does this all have basic features like push notifications and how do you manage it?
+
+**Sagot:**  
+> *"Opo, kumpleto po ito gamit ang Firebase Cloud Messaging (FCM) at Laravel Reverb WebSockets. May Admin Notification Hub kung saan pwedeng mag-broadcast sa lahat ng miyembro, magpadala ng private alert sa isang member (tulad ng payment approval o order pickup), at may automated notifications kapag malapit nang mag-expire ang membership o may bagong workout plan mula sa coach."*
+
+---

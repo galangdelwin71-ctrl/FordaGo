@@ -22,10 +22,11 @@ class ActivityLogController extends Controller
             ->where('created_at', '<', now()->subHours(12))
             ->update(['logout_at' => now()]);
 
-        // Active sessions: single latest login per user within the active window (last 8 hours) with no logout_at
+        // Active sessions: single latest login per staff user within the active window (last 8 hours) with no logout_at
         $activeSessionsQuery = ActivityLog::where('action_type', 'login')
             ->where('created_at', '>=', now()->subHours(8))
-            ->whereNull('logout_at');
+            ->whereNull('logout_at')
+            ->whereIn('role', ['admin', 'super_admin', 'employee']);
 
         $activeLogIds = (clone $activeSessionsQuery)
             ->selectRaw('MAX(id) as id')
@@ -36,7 +37,10 @@ class ActivityLogController extends Controller
 
         $activeCount = count($activeLogIds);
 
-        $query = ActivityLog::query()->with('user')->orderBy('created_at', 'desc');
+        $query = ActivityLog::query()
+            ->with('user')
+            ->whereIn('role', ['admin', 'super_admin', 'employee'])
+            ->orderBy('created_at', 'desc');
 
         // Filter: action_type / category
         $actionType = $request->input('action_type', $request->input('category'));
@@ -190,22 +194,22 @@ class ActivityLogController extends Controller
         $todayEnd = now()->endOfDay();
 
         $loginsToday = ActivityLog::where('action_type', 'login')
+            ->whereIn('role', ['admin', 'super_admin', 'employee'])
             ->whereBetween('created_at', [$todayStart, $todayEnd])
             ->count();
 
         $logoutsToday = ActivityLog::where('action_type', 'logout')
+            ->whereIn('role', ['admin', 'super_admin', 'employee'])
             ->whereBetween('created_at', [$todayStart, $todayEnd])
             ->count();
 
         $modificationsToday = ActivityLog::whereNotIn('action_type', ['login', 'logout'])
+            ->whereIn('role', ['admin', 'super_admin', 'employee'])
             ->whereBetween('created_at', [$todayStart, $todayEnd])
             ->count();
 
-        // Staff & users list for filtering dropdown
-        $staffUsers = User::whereIn('role', ['admin', 'super_admin', 'employee', 'coach'])
-            ->orWhereIn('id', function($q) {
-                $q->select('user_id')->from('activity_logs')->whereNotNull('user_id');
-            })
+        // Staff list for filtering dropdown (admin, super_admin, employee)
+        $staffUsers = User::whereIn('role', ['admin', 'super_admin', 'employee'])
             ->select('id', 'username', 'first_name', 'last_name', 'role')
             ->orderBy('username')
             ->get()
@@ -222,7 +226,7 @@ class ActivityLogController extends Controller
         $totalToday = $loginsToday + $logoutsToday + $modificationsToday;
 
         $statsPayload = [
-            'total_all'           => ActivityLog::count(),
+            'total_all'           => ActivityLog::whereIn('role', ['admin', 'super_admin', 'employee'])->count(),
             'total_today'         => $totalToday,
             'logins_today'        => $loginsToday,
             'logouts_today'       => $logoutsToday,

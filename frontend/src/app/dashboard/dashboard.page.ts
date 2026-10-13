@@ -731,9 +731,14 @@ export class DashboardPage implements OnInit, OnDestroy {
   // back to the scheduled duration preset for sessions that were never
   // timed (e.g. marked done manually, or logged before this feature shipped).
   private sessionMinutes(session: PersistedScheduleSession): number {
-    return typeof session.actualMinutes === 'number' && session.actualMinutes > 0
-      ? session.actualMinutes
-      : this.durationToMinutes(session.duration);
+    const scheduled = this.durationToMinutes(session.duration) || 60;
+    if (typeof session.actualMinutes === 'number' && session.actualMinutes > 0) {
+      if (session.actualMinutes > 180) {
+        return Math.min(scheduled, 120);
+      }
+      return session.actualMinutes;
+    }
+    return scheduled;
   }
 
   private buildExerciseColor(index: number): string {
@@ -750,6 +755,11 @@ export class DashboardPage implements OnInit, OnDestroy {
       done: session.status === 'done' || Boolean(exercise.done),
     }));
 
+    let actualMinutes = session.actualMinutes;
+    if (typeof actualMinutes === 'number' && actualMinutes > 180) {
+      actualMinutes = Math.min(this.durationToMinutes(session.duration) || 60, 120);
+    }
+
     return {
       sessionId: session.id ?? `${session.title}-${session.timeVal}-${session.timeAmpm}`,
       name: session.title,
@@ -758,7 +768,7 @@ export class DashboardPage implements OnInit, OnDestroy {
       duration: session.duration || '',
       exercises,
       status: session.status,
-      actualMinutes: session.actualMinutes,
+      actualMinutes,
       startedAt: session.startedAt ?? null,
     };
   }
@@ -855,7 +865,7 @@ export class DashboardPage implements OnInit, OnDestroy {
           date: item.sessionDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
           time: `${item.session.timeVal} ${item.session.timeAmpm}`,
           duration: typeof item.session.actualMinutes === 'number' && item.session.actualMinutes > 0
-            ? `${item.session.actualMinutes} min`
+            ? `${item.session.actualMinutes > 180 ? Math.min(this.durationToMinutes(item.session.duration) || 60, 120) : item.session.actualMinutes} min`
             : (item.session.duration || '45 min'),
           target: item.session.customTarget || item.session.title,
           coach: item.session.coach,
@@ -1016,9 +1026,9 @@ export class DashboardPage implements OnInit, OnDestroy {
       // Never alert for finished or missed sessions, or if timer isn't running
       if (workout.status === 'done' || workout.status === 'missed' || !workout.startedAt) return;
 
-      // Auto-stop stale session if running for more than 12 hours (e.g. from previous days)
+      // Auto-stop stale session if running for more than 3 hours (e.g. forgotten overnight)
       const elapsedMinutes = this.getElapsedMinutes(workout);
-      if (elapsedMinutes > 720) {
+      if (elapsedMinutes > 180) {
         this.stopWorkoutSession(workout);
         return;
       }

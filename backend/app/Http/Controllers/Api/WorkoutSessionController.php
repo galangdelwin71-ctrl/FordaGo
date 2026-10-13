@@ -146,6 +146,9 @@ class WorkoutSessionController extends Controller
                         if (! $s->is_rest_day) {
                             $item = $s->toArray();
                             $item['session_date'] = substr($s->getRawOriginal('session_date') ?: (string) $s->session_date, 0, 10);
+                            if (isset($item['actual_minutes']) && (int) $item['actual_minutes'] > 180) {
+                                $item['actual_minutes'] = 60;
+                            }
                             $cleaned[] = $item;
                         }
                     }
@@ -153,6 +156,9 @@ class WorkoutSessionController extends Controller
                     foreach ($dateSessions as $s) {
                         $item = $s->toArray();
                         $item['session_date'] = substr($s->getRawOriginal('session_date') ?: (string) $s->session_date, 0, 10);
+                        if (isset($item['actual_minutes']) && (int) $item['actual_minutes'] > 180) {
+                            $item['actual_minutes'] = 60;
+                        }
                         $cleaned[] = $item;
                     }
                 }
@@ -172,6 +178,9 @@ class WorkoutSessionController extends Controller
     public function store(Request $request)
     {
         $validated = $this->validatePayload($request, forCreate: true);
+        if (isset($validated['actual_minutes']) && (int) $validated['actual_minutes'] > 180) {
+            $validated['actual_minutes'] = 60;
+        }
 
         // If storing an active workout on this date, remove any stale rest-day records on this date
         if (! empty($validated['is_rest_day'])) {
@@ -254,6 +263,11 @@ class WorkoutSessionController extends Controller
                 $statusToSave = in_array($incomingStatus, ['upcoming', 'optional', 'missed', 'done']) ? $incomingStatus : 'upcoming';
             }
 
+            $actualMinutes = $item['actual_minutes'] ?? null;
+            if ($actualMinutes !== null && (int) $actualMinutes > 180) {
+                $actualMinutes = 60;
+            }
+
             WorkoutSession::updateOrCreate(
                 [
                     'user_id'           => $userId,
@@ -265,7 +279,7 @@ class WorkoutSessionController extends Controller
                     'is_rest_day'    => $isRestDay,
                     'status'         => $statusToSave,
                     'exercises'      => $item['exercises'] ?? [],
-                    'actual_minutes' => $item['actual_minutes'] ?? null,
+                    'actual_minutes' => $actualMinutes,
                     'started_at'     => $item['started_at'] ?? null,
                     'time_val'       => $item['time_val'] ?? null,
                     'time_ampm'      => $item['time_ampm'] ?? null,

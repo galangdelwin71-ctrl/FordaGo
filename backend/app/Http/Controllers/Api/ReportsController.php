@@ -101,7 +101,23 @@ class ReportsController extends Controller
                     'online_payment' AS source,
                     pay.created_at AS transaction_date,
                     pay.payment_channel AS sub_type,
-                    pay.status AS payment_status,
+                    CASE
+                        WHEN pay.payment_for = 'order' AND EXISTS (
+                            SELECT 1 FROM orders ord 
+                            WHERE (ord.order_group_id = pay.related_id OR CAST(ord.id AS CHAR) = pay.related_id)
+                            AND ord.status = 'rejected'
+                        ) THEN 'rejected'
+                        WHEN pay.payment_for = 'order' AND EXISTS (
+                            SELECT 1 FROM orders ord 
+                            WHERE (ord.order_group_id = pay.related_id OR CAST(ord.id AS CHAR) = pay.related_id)
+                            AND ord.status IN ('approved', 'completed')
+                        ) THEN 'paid'
+                        WHEN pay.payment_for = 'membership' AND EXISTS (
+                            SELECT 1 FROM users u2
+                            WHERE u2.id = pay.user_id AND u2.membership_status = 'rejected'
+                        ) THEN 'rejected'
+                        ELSE pay.status
+                    END AS payment_status,
                     pay.payment_channel AS payment_method,
                     pay.amount,
                     CASE
@@ -225,7 +241,23 @@ class ReportsController extends Controller
                     u.profile_image,
                     pay.created_at AS transaction_date,
                     pay.payment_channel AS sub_type,
-                    pay.status AS payment_status,
+                    CASE
+                        WHEN pay.payment_for = 'order' AND EXISTS (
+                            SELECT 1 FROM orders ord 
+                            WHERE (ord.order_group_id = pay.related_id OR CAST(ord.id AS CHAR) = pay.related_id)
+                            AND ord.status = 'rejected'
+                        ) THEN 'rejected'
+                        WHEN pay.payment_for = 'order' AND EXISTS (
+                            SELECT 1 FROM orders ord 
+                            WHERE (ord.order_group_id = pay.related_id OR CAST(ord.id AS CHAR) = pay.related_id)
+                            AND ord.status IN ('approved', 'completed')
+                        ) THEN 'paid'
+                        WHEN pay.payment_for = 'membership' AND EXISTS (
+                            SELECT 1 FROM users u2
+                            WHERE u2.id = pay.user_id AND u2.membership_status = 'rejected'
+                        ) THEN 'rejected'
+                        ELSE pay.status
+                    END AS payment_status,
                     pay.payment_channel AS payment_method,
                     pay.amount,
                     CASE

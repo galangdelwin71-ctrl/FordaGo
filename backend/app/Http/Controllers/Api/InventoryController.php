@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Notification;
 use App\Models\Order;
+use App\Models\Payment;
 use App\Models\Product;
 use App\Models\User;
 use App\Services\ActivityLogger;
@@ -540,6 +541,21 @@ class InventoryController extends Controller
                 $order->update(['status' => 'approved']);
             }
 
+            // Synchronize associated online payment record
+            try {
+                $orderIds = $orders->pluck('id')->map(fn ($id) => (string) $id)->all();
+                Payment::where('payment_for', 'order')
+                    ->where(function ($q) use ($groupId, $orderIds) {
+                        $q->where('related_id', $groupId)
+                          ->orWhere('related_id', (string) $groupId);
+                        if (! empty($orderIds)) {
+                            $q->orWhereIn('related_id', $orderIds);
+                        }
+                    })
+                    ->where('status', '!=', 'rejected')
+                    ->update(['status' => 'paid']);
+            } catch (\Throwable $e) {}
+
             // Notify customer that order was approved
             try {
                 $firstOrder = $orders->first();
@@ -598,6 +614,20 @@ class InventoryController extends Controller
                 $order->update(['status' => 'rejected']);
             }
 
+            // Synchronize associated online payment record to rejected
+            try {
+                $orderIds = $orders->pluck('id')->map(fn ($id) => (string) $id)->all();
+                Payment::where('payment_for', 'order')
+                    ->where(function ($q) use ($groupId, $orderIds) {
+                        $q->where('related_id', $groupId)
+                          ->orWhere('related_id', (string) $groupId);
+                        if (! empty($orderIds)) {
+                            $q->orWhereIn('related_id', $orderIds);
+                        }
+                    })
+                    ->update(['status' => 'rejected']);
+            } catch (\Throwable $e) {}
+
             $this->invalidateProductsCache();
 
             // Notify customer that order was rejected
@@ -624,6 +654,21 @@ class InventoryController extends Controller
             return response()->json(['message' => 'Order not found'], 404);
         }
         $order->update(['status' => 'approved']);
+
+        try {
+            $groupId = $order->order_group_id;
+            Payment::where('payment_for', 'order')
+                ->where(function ($q) use ($groupId, $id) {
+                    $q->where('related_id', (string) $id);
+                    if ($groupId) {
+                        $q->orWhere('related_id', $groupId)
+                          ->orWhere('related_id', (string) $groupId);
+                    }
+                })
+                ->where('status', '!=', 'rejected')
+                ->update(['status' => 'paid']);
+        } catch (\Throwable $e) {}
+
         return response()->json(['message' => 'Order approved']);
     }
 
@@ -645,6 +690,20 @@ class InventoryController extends Controller
             }
 
             $order->update(['status' => 'rejected']);
+
+            try {
+                $groupId = $order->order_group_id;
+                Payment::where('payment_for', 'order')
+                    ->where(function ($q) use ($groupId, $id) {
+                        $q->where('related_id', (string) $id);
+                        if ($groupId) {
+                            $q->orWhere('related_id', $groupId)
+                              ->orWhere('related_id', (string) $groupId);
+                        }
+                    })
+                    ->update(['status' => 'rejected']);
+            } catch (\Throwable $e) {}
+
             return response()->json(['message' => 'Order rejected']);
         });
     }

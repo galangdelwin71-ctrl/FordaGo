@@ -2141,43 +2141,15 @@
         </div>
       </div>
 
-      <!-- Audience Filter Switcher (Admin / Staff vs End-User / Member) -->
+      <!-- Admin & Staff Audit Badge -->
       <div class="logs-audience-bar">
-        <div class="audience-toggle-group">
-          <button
-            type="button"
-            class="audience-toggle-btn"
-            [class.active]="activityLogAudience === 'staff'"
-            (click)="setActivityAudience('staff')"
-            title="Show Admin & Staff Activity Logs only"
-          >
-            <ion-icon name="shield-checkmark-outline"></ion-icon>
-            <span class="btn-text">Admin &amp; Staff Logs</span>
-            <span class="audience-pill-count">{{ staffLogsCount }}</span>
-          </button>
-
-          <button
-            type="button"
-            class="audience-toggle-btn"
-            [class.active]="activityLogAudience === 'member'"
-            (click)="setActivityAudience('member')"
-            title="Show Member & End-User Activity Logs only"
-          >
-            <ion-icon name="people-outline"></ion-icon>
-            <span class="btn-text">Member &amp; User Logs</span>
-            <span class="audience-pill-count">{{ memberLogsCount }}</span>
-          </button>
-        </div>
-
-        <div class="audience-active-caption">
+        <div class="audience-active-caption" style="width: 100%;">
           <div class="caption-left">
-            <ion-icon name="information-circle-outline"></ion-icon>
-            <span *ngIf="activityLogAudience === 'staff'">Viewing audit records of Super Admins, Admins, Employees, and Coaches.</span>
-            <span *ngIf="activityLogAudience === 'member'">Viewing logins, logouts, and sessions of Members &amp; End Users.</span>
+            <ion-icon name="shield-checkmark-outline"></ion-icon>
+            <span>Official audit trail recording administrative actions, staff logins, inventory, and system modifications.</span>
           </div>
           <span class="caption-tag">
-            <span *ngIf="activityLogAudience === 'staff'">Admin &amp; Staff Mode</span>
-            <span *ngIf="activityLogAudience === 'member'">Member Mode</span>
+            <span>Admin &amp; Staff Only</span>
           </span>
         </div>
       </div>
@@ -2370,8 +2342,8 @@
           <ion-icon [name]="getKpiIconName(activityLogCategoryFilter)"></ion-icon>
         </div>
         <div class="lm-title-col">
-          <h3 class="lm-title-text">{{ activityLogAudience === 'staff' ? 'Admin & Staff' : 'Member & User' }} Activity Records: {{ getCategoryFilterLabel() }}</h3>
-          <span class="lm-title-sub">{{ filteredActivityLogs.length }} {{ activityLogAudience === 'staff' ? 'staff record' : 'member record' }}{{ filteredActivityLogs.length === 1 ? '' : 's' }} found</span>
+          <h3 class="lm-title-text">Admin &amp; Staff Activity Records: {{ getCategoryFilterLabel() }}</h3>
+          <span class="lm-title-sub">{{ filteredActivityLogs.length }} audit record{{ filteredActivityLogs.length === 1 ? '' : 's' }} found</span>
         </div>
       </div>
       <div class="lm-header-actions">
@@ -2902,16 +2874,10 @@
         </div>
       </div>
 
-      <!-- Location & Coach Grid -->
-      <div class="form-grid-2">
-        <div class="form-field-group">
-          <label class="field-lbl"><ion-icon name="location-outline"></ion-icon> Location</label>
-          <input class="field-input" type="text" placeholder="e.g. Main Gym Floor, Studio A" [(ngModel)]="newSession.location" />
-        </div>
-        <div class="form-field-group">
-          <label class="field-lbl"><ion-icon name="person-outline"></ion-icon> Coach / Trainer</label>
-          <input class="field-input" type="text" placeholder="e.g. Coach Ethan, Coach Ryza" [(ngModel)]="newSession.coach" />
-        </div>
+      <!-- Location Field -->
+      <div class="form-field-group" style="margin-bottom: 12px;">
+        <label class="field-lbl"><ion-icon name="location-outline"></ion-icon> Location</label>
+        <input class="field-input" type="text" placeholder="e.g. Main Gym Floor, Studio A" [(ngModel)]="newSession.location" />
       </div>
 
       <!-- Mention Members Section -->
@@ -3021,16 +2987,10 @@
         </div>
       </div>
 
-      <!-- Location & Coach Grid -->
-      <div class="form-grid-2">
-        <div class="form-field-group">
-          <label class="field-lbl"><ion-icon name="location-outline"></ion-icon> Location</label>
-          <input class="field-input" type="text" placeholder="Location" [(ngModel)]="editingSession.location" />
-        </div>
-        <div class="form-field-group">
-          <label class="field-lbl"><ion-icon name="person-outline"></ion-icon> Coach / Trainer</label>
-          <input class="field-input" type="text" placeholder="Coach" [(ngModel)]="editingSession.coach" />
-        </div>
+      <!-- Location Field -->
+      <div class="form-field-group" style="margin-bottom: 12px;">
+        <label class="field-lbl"><ion-icon name="location-outline"></ion-icon> Location</label>
+        <input class="field-input" type="text" placeholder="Location" [(ngModel)]="editingSession.location" />
       </div>
 
       <!-- Mention Members Section -->

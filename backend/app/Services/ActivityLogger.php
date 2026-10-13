@@ -90,28 +90,30 @@ class ActivityLogger
     }
 
     /**
-     * Log user, coach, or staff login with timestamp and device details.
+     * Log admin or staff login with timestamp and device details.
      */
     public static function logLogin(User $user, Request $request): ?ActivityLog
     {
         try {
-            $fullName = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
-            if (!$fullName) {
-                $fullName = $user->username ?? 'User';
+            $role = $user->role ?? 'user';
+            $isStaff = in_array($role, ['admin', 'super_admin', 'employee'], true);
+            if (! $isStaff) {
+                return null;
             }
 
-            $role = $user->role ?? 'user';
+            $fullName = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
+            if (!$fullName) {
+                $fullName = $user->username ?? 'Staff';
+            }
+
             $roleLabel = match($role) {
                 'super_admin'    => 'Super Admin',
                 'admin'          => 'Admin',
                 'employee'       => 'Staff FrontDesk',
-                'coach'          => 'Coach',
-                'user', 'member' => 'Member',
                 default          => ucfirst($role),
             };
 
-            $isStaff = in_array($role, ['admin', 'super_admin', 'employee'], true);
-            $portalLabel = $isStaff ? 'management control center' : 'FordaGo application';
+            $portalLabel = 'management control center';
 
             // Auto-close any previous unclosed login sessions for this user so they don't pile up as active
             ActivityLog::where('user_id', $user->id)
@@ -143,28 +145,30 @@ class ActivityLogger
     }
 
     /**
-     * Log user, coach, or staff logout.
+     * Log admin or staff logout.
      */
     public static function logLogout(User $user, ?Request $request = null): ?ActivityLog
     {
         try {
-            $fullName = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
-            if (!$fullName) {
-                $fullName = $user->username ?? 'User';
+            $role = $user->role ?? 'user';
+            $isStaff = in_array($role, ['admin', 'super_admin', 'employee'], true);
+            if (! $isStaff) {
+                return null;
             }
 
-            $role = $user->role ?? 'user';
+            $fullName = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
+            if (!$fullName) {
+                $fullName = $user->username ?? 'Staff';
+            }
+
             $roleLabel = match($role) {
                 'super_admin'    => 'Super Admin',
                 'admin'          => 'Admin',
                 'employee'       => 'Staff FrontDesk',
-                'coach'          => 'Coach',
-                'user', 'member' => 'Member',
                 default          => ucfirst($role),
             };
 
-            $isStaff = in_array($role, ['admin', 'super_admin', 'employee'], true);
-            $portalLabel = $isStaff ? 'management control center' : 'FordaGo application';
+            $portalLabel = 'management control center';
 
             // Find recent login log within last 24 hours that does not have logout_at set
             $recentLogin = ActivityLog::where('user_id', $user->id)
