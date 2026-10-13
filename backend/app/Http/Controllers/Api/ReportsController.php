@@ -104,12 +104,12 @@ class ReportsController extends Controller
                     CASE
                         WHEN pay.payment_for = 'order' AND EXISTS (
                             SELECT 1 FROM orders ord 
-                            WHERE (ord.order_group_id = pay.related_id OR CAST(ord.id AS CHAR) = pay.related_id)
+                            WHERE (ord.order_group_id COLLATE utf8mb4_unicode_ci = pay.related_id COLLATE utf8mb4_unicode_ci OR CAST(ord.id AS CHAR) = pay.related_id COLLATE utf8mb4_unicode_ci)
                             AND ord.status = 'rejected'
                         ) THEN 'rejected'
                         WHEN pay.payment_for = 'order' AND EXISTS (
                             SELECT 1 FROM orders ord 
-                            WHERE (ord.order_group_id = pay.related_id OR CAST(ord.id AS CHAR) = pay.related_id)
+                            WHERE (ord.order_group_id COLLATE utf8mb4_unicode_ci = pay.related_id COLLATE utf8mb4_unicode_ci OR CAST(ord.id AS CHAR) = pay.related_id COLLATE utf8mb4_unicode_ci)
                             AND ord.status IN ('approved', 'completed')
                         ) THEN 'paid'
                         WHEN pay.payment_for = 'membership' AND EXISTS (
@@ -216,7 +216,7 @@ class ReportsController extends Controller
                 u.profile_image,
                 u.created_at AS transaction_date,
                 u.membership_type AS sub_type,
-                CASE WHEN u.membership_status = 'active' THEN 'paid' ELSE 'pending' END AS payment_status,
+                CASE WHEN u.membership_status = 'rejected' THEN 'rejected' WHEN u.membership_status = 'active' THEN 'paid' ELSE 'pending' END AS payment_status,
                 COALESCE(u.payment_method, 'cash') AS payment_method,
                 500.00 AS amount,
                 'Premium Membership Plan' AS type_label,
@@ -244,12 +244,12 @@ class ReportsController extends Controller
                     CASE
                         WHEN pay.payment_for = 'order' AND EXISTS (
                             SELECT 1 FROM orders ord 
-                            WHERE (ord.order_group_id = pay.related_id OR CAST(ord.id AS CHAR) = pay.related_id)
+                            WHERE (ord.order_group_id COLLATE utf8mb4_unicode_ci = pay.related_id COLLATE utf8mb4_unicode_ci OR CAST(ord.id AS CHAR) = pay.related_id COLLATE utf8mb4_unicode_ci)
                             AND ord.status = 'rejected'
                         ) THEN 'rejected'
                         WHEN pay.payment_for = 'order' AND EXISTS (
                             SELECT 1 FROM orders ord 
-                            WHERE (ord.order_group_id = pay.related_id OR CAST(ord.id AS CHAR) = pay.related_id)
+                            WHERE (ord.order_group_id COLLATE utf8mb4_unicode_ci = pay.related_id COLLATE utf8mb4_unicode_ci OR CAST(ord.id AS CHAR) = pay.related_id COLLATE utf8mb4_unicode_ci)
                             AND ord.status IN ('approved', 'completed')
                         ) THEN 'paid'
                         WHEN pay.payment_for = 'membership' AND EXISTS (
