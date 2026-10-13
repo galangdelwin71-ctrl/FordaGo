@@ -326,8 +326,6 @@ export class AdminReportsPage implements OnInit {
     // Adjust period if needed
     if (tab === 'inventory' || tab === 'memberships') {
       // No period filter required for stock / membership profiles
-    } else if (tab === 'sales' && this.period === 'all') {
-      this.period = 'monthly';
     }
     const hasCached = this.applyCurrentTabFromCache();
     if (!hasCached) {
@@ -472,7 +470,7 @@ export class AdminReportsPage implements OnInit {
     const p = this.period;
 
     if (this.activeTab === 'overview') {
-      const ap = p === 'all' || p === 'yearly' ? 'monthly' : p;
+      const ap = p;
       let pendingReqs = 5;
       const checkDone = () => {
         pendingReqs--;
@@ -581,7 +579,7 @@ export class AdminReportsPage implements OnInit {
       });
 
     } else if (this.activeTab === 'attendance') {
-      const ap = p === 'all' || p === 'yearly' ? 'monthly' : p;
+      const ap = p;
       this.http.get<any>(`${this.api}/reports/admin/attendance?period=${ap}`, h).subscribe({
         next: data => {
           this.attRows = data?.rows || [];

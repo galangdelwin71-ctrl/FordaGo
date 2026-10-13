@@ -66,7 +66,7 @@
         <button class="pill" [class.active]="period === 'weekly'" (click)="setPeriod('weekly')">Weekly</button>
         <button class="pill" [class.active]="period === 'monthly'" (click)="setPeriod('monthly')">Monthly</button>
         <button class="pill" [class.active]="period === 'yearly'" (click)="setPeriod('yearly')">Yearly</button>
-        <button class="pill" [class.active]="period === 'all'" (click)="setPeriod('all')" *ngIf="activeTab === 'transactions' || activeTab === 'overview'">All Time</button>
+        <button class="pill" [class.active]="period === 'all'" (click)="setPeriod('all')" *ngIf="activeTab === 'transactions' || activeTab === 'overview' || activeTab === 'sales' || activeTab === 'attendance'">All Time</button>
       </div>
     </div>
 

@@ -68,9 +68,12 @@ class ReportsController extends Controller
                 'Shop Purchase' AS type_label,
                 NULL AS confirmed_at,
                 p.name AS product_name,
-                o.quantity
+                o.quantity,
+                pay.receipt_number,
+                pay.id AS payment_id
             FROM orders o
             LEFT JOIN products p ON o.product_id = p.id
+            LEFT JOIN payments pay ON (pay.related_id COLLATE utf8mb4_unicode_ci = o.order_group_id COLLATE utf8mb4_unicode_ci OR pay.related_id COLLATE utf8mb4_unicode_ci = CAST(o.id AS CHAR))
             WHERE o.user_id = ? {$ordWhere}
             ORDER BY o.created_at DESC
         ", [$userId]);
@@ -86,9 +89,14 @@ class ReportsController extends Controller
                 'Premium Membership Plan' AS type_label,
                 NULL AS confirmed_at,
                 '1-Month Premium Access' AS product_name,
-                1 AS quantity
+                1 AS quantity,
+                pay.receipt_number,
+                pay.id AS payment_id
             FROM users u
-            WHERE u.id = ? AND u.membership_type = 'premium' {$usrWhere}
+            LEFT JOIN payments pay ON (pay.user_id = u.id AND pay.payment_for = 'membership')
+            WHERE u.id = ? AND u.membership_type = 'premium' AND u.role = 'user'
+            AND NOT EXISTS (SELECT 1 FROM coach_profiles cp WHERE cp.user_id = u.id)
+            {$usrWhere}
             ORDER BY u.created_at DESC
         ", [$userId]);
 
@@ -130,9 +138,19 @@ class ReportsController extends Controller
                     NULL AS confirmed_at,
                     CONCAT(UPPER(pay.payment_channel), ' • Ref: ', pay.receipt_number) AS product_name,
                     1 AS quantity,
-                    pay.receipt_number
+                    pay.receipt_number,
+                    pay.id AS payment_id
                 FROM payments pay
                 WHERE pay.user_id = ? {$payWhere}
+                AND NOT (pay.payment_for = 'order' AND EXISTS (
+                    SELECT 1 FROM orders ord 
+                    WHERE (ord.order_group_id COLLATE utf8mb4_unicode_ci = pay.related_id COLLATE utf8mb4_unicode_ci OR CAST(ord.id AS CHAR) = pay.related_id COLLATE utf8mb4_unicode_ci)
+                ))
+                AND NOT (pay.payment_for = 'membership' AND EXISTS (
+                    SELECT 1 FROM users u2 
+                    WHERE u2.id = pay.user_id AND u2.membership_type = 'premium' AND u2.role = 'user'
+                    AND NOT EXISTS (SELECT 1 FROM coach_profiles cp2 WHERE cp2.user_id = u2.id)
+                ))
                 ORDER BY pay.created_at DESC
             ", [$userId]);
         }
@@ -188,20 +206,23 @@ class ReportsController extends Controller
                 o.id,
                 'order' AS source,
                 u.id AS user_id,
-                u.username,
+                COALESCE(u.username, 'Customer') AS username,
                 u.email,
                 u.profile_image,
                 o.created_at AS transaction_date,
                 o.status AS sub_type,
                 o.status AS payment_status,
-                COALESCE(o.payment_method, 'cash') AS payment_method,
+                COALESCE(pay.payment_channel, o.payment_method, 'cash') AS payment_method,
                 o.total AS amount,
                 'Shop Purchase' AS type_label,
                 p.name AS product_name,
-                o.quantity
+                o.quantity,
+                pay.receipt_number,
+                pay.id AS payment_id
             FROM orders o
-            JOIN users u ON o.user_id = u.id
+            LEFT JOIN users u ON o.user_id = u.id
             LEFT JOIN products p ON o.product_id = p.id
+            LEFT JOIN payments pay ON (pay.related_id COLLATE utf8mb4_unicode_ci = o.order_group_id COLLATE utf8mb4_unicode_ci OR pay.related_id COLLATE utf8mb4_unicode_ci = CAST(o.id AS CHAR))
             {$ordWhere}
             ORDER BY o.created_at DESC
         ");
@@ -217,20 +238,24 @@ class ReportsController extends Controller
                 u.created_at AS transaction_date,
                 u.membership_type AS sub_type,
                 CASE WHEN u.membership_status = 'rejected' THEN 'rejected' WHEN u.membership_status = 'active' THEN 'paid' ELSE 'pending' END AS payment_status,
-                COALESCE(u.payment_method, 'cash') AS payment_method,
+                COALESCE(pay.payment_channel, u.payment_method, 'cash') AS payment_method,
                 500.00 AS amount,
                 'Premium Membership Plan' AS type_label,
                 NULL AS product_name,
-                1 AS quantity
+                1 AS quantity,
+                pay.receipt_number,
+                pay.id AS payment_id
             FROM users u
+            LEFT JOIN payments pay ON (pay.user_id = u.id AND pay.payment_for = 'membership')
             {$usrWhere}
             " . ($usrWhere ? "AND" : "WHERE") . " u.membership_type = 'premium' AND u.role = 'user'
+            AND NOT EXISTS (SELECT 1 FROM coach_profiles cp WHERE cp.user_id = u.id)
             ORDER BY u.created_at DESC
         ");
 
         $payments = [];
         if (Schema::hasTable('payments')) {
-            $payWhere = $period !== 'all' ? 'WHERE ' . $this->periodWhere($period, 'pay.created_at') : '';
+            $payWhere = $period !== 'all' ? 'AND ' . $this->periodWhere($period, 'pay.created_at') : '';
             $payments = DB::select("
                 SELECT
                     pay.id,
@@ -269,10 +294,20 @@ class ReportsController extends Controller
                     END AS type_label,
                     CONCAT(UPPER(pay.payment_channel), ' • Ref: ', pay.receipt_number) AS product_name,
                     1 AS quantity,
-                    pay.receipt_number
+                    pay.receipt_number,
+                    pay.id AS payment_id
                 FROM payments pay
                 LEFT JOIN users u ON pay.user_id = u.id
-                {$payWhere}
+                WHERE 1=1 {$payWhere}
+                AND NOT (pay.payment_for = 'order' AND EXISTS (
+                    SELECT 1 FROM orders ord 
+                    WHERE (ord.order_group_id COLLATE utf8mb4_unicode_ci = pay.related_id COLLATE utf8mb4_unicode_ci OR CAST(ord.id AS CHAR) = pay.related_id COLLATE utf8mb4_unicode_ci)
+                ))
+                AND NOT (pay.payment_for = 'membership' AND EXISTS (
+                    SELECT 1 FROM users u2 
+                    WHERE u2.id = pay.user_id AND u2.membership_type = 'premium' AND u2.role = 'user'
+                    AND NOT EXISTS (SELECT 1 FROM coach_profiles cp2 WHERE cp2.user_id = u2.id)
+                ))
                 ORDER BY pay.created_at DESC
             ");
         }
@@ -398,6 +433,7 @@ class ReportsController extends Controller
                 SUM(500.00) AS revenue
             FROM users u
             WHERE {$usrWhere} AND u.membership_type = 'premium' AND u.membership_status = 'active' AND u.role = 'user'
+            AND NOT EXISTS (SELECT 1 FROM coach_profiles cp WHERE cp.user_id = u.id)
             GROUP BY DATE(u.created_at)
             ORDER BY sale_date DESC
         ");
@@ -447,6 +483,7 @@ class ReportsController extends Controller
                 COALESCE(SUM(CASE WHEN u.membership_status = 'active' AND u.payment_method = 'gcash' THEN 500.00 ELSE 0 END), 0) AS gcash_membership
             FROM users u
             WHERE {$usrWhere} AND u.membership_type = 'premium' AND u.role = 'user'
+            AND NOT EXISTS (SELECT 1 FROM coach_profiles cp WHERE cp.user_id = u.id)
         ");
 
         $gymRevenue        = (float) ($attTotal->gym_revenue  ?? 0);
