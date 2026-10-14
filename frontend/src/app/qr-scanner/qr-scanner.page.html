@@ -76,18 +76,6 @@
         <ion-icon class="scan-btn-icon" [name]="isScanning ? 'stop-circle-outline' : 'camera-outline'"></ion-icon>
         {{ isScanning ? 'Stop Scanning' : 'Start Camera Scan' }}
       </button>
-
-      <button
-        *ngIf="!isScanning"
-        type="button"
-        class="scan-btn quick-gym-checkin-btn"
-        [disabled]="isProcessingScan"
-        (click)="checkInWithGymQr()"
-        title="Check in directly with official gym QR code"
-      >
-        <ion-icon class="scan-btn-icon" name="checkmark-done-circle-outline"></ion-icon>
-        Gym Check-in
-      </button>
     </div>
 
     <!-- My Scan Log -->
@@ -266,6 +254,9 @@
 >
   <ng-template>
     <div class="modal-sheet attendance-success-sheet">
+      <button type="button" class="modal-corner-close-btn" (click)="closeAttendanceModal()" aria-label="Close modal">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
 
       <div class="success-hero">
         <div class="glow-orb"></div>
@@ -335,6 +326,9 @@
 >
   <ng-template>
     <div class="modal-sheet attendance-pending-sheet">
+      <button type="button" class="modal-corner-close-btn" (click)="closePendingModal()" aria-label="Close modal">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
 
       <!-- State 1: Awaiting Cashier Confirmation -->
       <ng-container *ngIf="!isPendingPaymentConfirmed">

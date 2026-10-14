@@ -260,15 +260,16 @@ ion-modal.centered-dialog-modal {
   --backdrop-opacity: 0.85 !important;
   --width: 92% !important;
   --max-width: 440px !important;
-  --height: fit-content !important;
+  --height: auto !important;
   --border-radius: 28px !important;
   --box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85) !important;
+  z-index: 2000 !important;
 
   &::part(content) {
     background: transparent !important;
     border-radius: 28px !important;
     box-shadow: none !important;
-    overflow: visible !important;
+    overflow: hidden !important;
     margin: auto !important;
     max-height: 90vh !important;
     display: flex !important;
@@ -279,6 +280,11 @@ ion-modal.centered-dialog-modal {
 
 ion-modal.tutorial-dialog-modal {
   --max-width: 520px !important;
+
+  &::part(content) {
+    border-radius: 24px !important;
+    max-height: 90vh !important;
+  }
 }
 
 body.ion-palette-dark ion-modal.attendance-dialog-modal,

@@ -751,95 +751,184 @@ export class QrScannerPage implements OnInit, OnDestroy {
     this.isProcessingScan = true;
 
     await this.stopCameraScan();
+    this.isScanning = false;
 
     const raw = String(decodedText || '').trim();
-    const isExplicitEquipment = raw.toLowerCase().startsWith('equipment:');
-    const normalizedCode = raw.toLowerCase().replace(/^equipment:/, '').trim();
+    const upperRaw = raw.toUpperCase();
+    const lowerRaw = raw.toLowerCase();
 
-    // 1. Check if it's an attendance scan
-    const isAttendanceQr = raw === 'FORDAGO_GYM_CHECKIN_V1' ||
-                           raw.toUpperCase().startsWith('FORDAGO_GYM_') ||
-                           raw.toLowerCase().includes('fordago_gym_checkin') ||
-                           raw.toLowerCase().startsWith('attendance:') ||
-                           raw.toLowerCase().startsWith('gym:');
+    // 1. Check if it's an official attendance check-in scan
+    const isAttendanceQr =
+      upperRaw === 'FORDAGO_GYM_CHECKIN_V1' ||
+      upperRaw.startsWith('FORDAGO_GYM_') ||
+      lowerRaw.includes('fordago_gym_checkin') ||
+      lowerRaw.startsWith('attendance:') ||
+      lowerRaw.startsWith('gym:') ||
+      lowerRaw === 'attendance' ||
+      lowerRaw === 'checkin' ||
+      lowerRaw === 'check-in';
 
-    if (this.scanMode === 'attendance' || isAttendanceQr) {
-      const payload = raw;
-      await this.doCheckIn(payload);
+    if (isAttendanceQr) {
+      this.scanMode = 'attendance';
+      await this.doCheckIn(raw);
       return;
     }
 
-    // 2. Check if the scanned QR matches an equipment guide
-    const guide = this.guideService.getGuideById(normalizedCode) || this.guideService.getGuideByName(normalizedCode);
-    
-    if (guide || isExplicitEquipment) {
-      if (guide) {
-        const now = new Date();
-        const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const newLogEntry: ScanLogEntry = { type: 'equipment', label: guide.name, time, date: this.formatLogDate(now) };
-        
-        this.myLogs = [newLogEntry, ...this.myLogs];
-        this.persistEquipmentLog(newLogEntry);
-        this.saveEquipmentScanLog({ id: String(guide.equipmentId), name: guide.name }, decodedText);
+    // 2. Equipment QR code handling
+    this.scanMode = 'equipment';
 
-        this.ngZone.run(() => {
-          this.activeFullGuide = guide;
-          this.activeVariationIndex = 0;
-          this.activeEquipment = {
-            id: String(guide.equipmentId),
-            name: guide.name,
-            category: guide.category,
-            muscles: guide.muscles || [],
-            warning: guide.warning || '',
-            steps: guide.variations[0]?.steps || []
-          };
-          this.tutorialModalOpen = true;
-          this.isScanning = false;
-          this.isProcessingScan = false;
-          this.scanStatusMessage = 'Point your camera at a gym QR code to scan';
-          this.cdr.detectChanges();
-        });
-        return;
-      }
+    let equipKey = raw;
+    if (equipKey.toLowerCase().startsWith('equipment:')) {
+      equipKey = equipKey.slice(10).trim();
+    } else if (equipKey.startsWith('http://') || equipKey.startsWith('https://')) {
+      try {
+        const url = new URL(equipKey);
+        const segments = url.pathname.split('/').filter(s => !!s);
+        equipKey = segments[segments.length - 1] || equipKey;
+      } catch {}
+    } else if (equipKey.startsWith('{') && equipKey.endsWith('}')) {
+      try {
+        const parsed = JSON.parse(equipKey);
+        equipKey = String(parsed.id || parsed.equipment_id || parsed.code || parsed.name || equipKey);
+      } catch {}
     }
 
-    // 3. Fallback to basic equipment library
-    const equipment = this.equipmentLibrary.find(item =>
-      item.id === normalizedCode || item.name.toLowerCase() === normalizedCode
-    );
+    const normalizedCode = equipKey.toLowerCase().trim();
+    const cleanName = normalizedCode.replace(/[_\-]+/g, ' ').trim();
 
-    if (!equipment) {
+    // A. Check if the scanned QR matches a rich equipment guide
+    let guide = this.guideService.getGuideById(normalizedCode) ||
+                this.guideService.getGuideByName(normalizedCode) ||
+                this.guideService.getGuideByName(cleanName) ||
+                this.guideService.getGuideById(cleanName);
+
+    if (!guide) {
+      const allGuides = this.guideService.getAllGuides();
+      guide = allGuides.find(g =>
+        String(g.equipmentId) === normalizedCode ||
+        String(g.id) === normalizedCode ||
+        g.name.toLowerCase() === normalizedCode ||
+        g.name.toLowerCase() === cleanName ||
+        g.name.toLowerCase().includes(cleanName) ||
+        cleanName.includes(g.name.toLowerCase())
+      ) || null;
+    }
+
+    if (guide) {
       const now = new Date();
       const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const fallbackName = `Equipment (${normalizedCode || 'Unknown'})`;
-      const newLogEntry: ScanLogEntry = { type: 'equipment', label: fallbackName, time, date: this.formatLogDate(now) };
-      
+      const newLogEntry: ScanLogEntry = {
+        type: 'equipment',
+        label: guide.name,
+        time,
+        date: this.formatLogDate(now)
+      };
+
       this.myLogs = [newLogEntry, ...this.myLogs];
       this.persistEquipmentLog(newLogEntry);
-      this.saveEquipmentScanLog({ id: normalizedCode || 'unknown', name: fallbackName }, decodedText);
-      
-      this.isProcessingScan = false;
-      this.isScanning = false;
-      this.scanStatusMessage = 'QR detected. Usage was recorded, but no tutorial is mapped yet for this equipment.';
-      this.toast.info('Equipment usage recorded, but no tutorial is linked to this QR yet.');
+      this.saveEquipmentScanLog({ id: String(guide.equipmentId || guide.id), name: guide.name }, decodedText);
+
+      this.ngZone.run(() => {
+        this.activeFullGuide = guide;
+        this.activeVariationIndex = 0;
+        this.activeEquipment = {
+          id: String(guide.equipmentId || guide.id),
+          name: guide.name,
+          category: guide.category,
+          muscles: guide.muscles || [],
+          warning: guide.warning || '',
+          steps: (guide.variations && guide.variations[0]?.steps) || guide.safetyRules || []
+        };
+        this.tutorialModalOpen = true;
+        this.isScanning = false;
+        this.isProcessingScan = false;
+        this.scanStatusMessage = 'Scan complete. You can scan again anytime.';
+        this.cdr.detectChanges();
+      });
       return;
     }
+
+    // B. Check basic equipment library
+    const equipment = this.equipmentLibrary.find(item =>
+      item.id === normalizedCode ||
+      item.id === cleanName ||
+      item.name.toLowerCase() === normalizedCode ||
+      item.name.toLowerCase() === cleanName ||
+      item.name.toLowerCase().includes(cleanName) ||
+      cleanName.includes(item.name.toLowerCase())
+    );
+
+    if (equipment) {
+      const now = new Date();
+      const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const newLogEntry: ScanLogEntry = {
+        type: 'equipment',
+        label: equipment.name,
+        time,
+        date: this.formatLogDate(now)
+      };
+
+      this.myLogs = [newLogEntry, ...this.myLogs];
+      this.persistEquipmentLog(newLogEntry);
+      this.saveEquipmentScanLog(equipment, decodedText);
+
+      this.ngZone.run(() => {
+        this.activeEquipment = equipment;
+        this.activeFullGuide = this.guideService.getGuideByName(equipment.name);
+        this.activeVariationIndex = 0;
+        this.tutorialModalOpen = true;
+        this.isScanning = false;
+        this.isProcessingScan = false;
+        this.scanStatusMessage = 'Scan complete. You can scan again anytime.';
+        this.cdr.detectChanges();
+      });
+      return;
+    }
+
+    // C. Generic fallback for any other equipment QR code or asset tag
+    const formattedTitle = cleanName
+      ? cleanName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+      : `Gym Equipment (${normalizedCode || 'Scan'})`;
+
+    const fallbackEquipment: EquipmentTutorial = {
+      id: normalizedCode || 'equipment',
+      name: formattedTitle,
+      category: 'Afforda Gym Equipment · Floor Workout',
+      muscles: ['Chest', 'Legs', 'Back', 'Arms', 'Core'],
+      warning: 'Always inspect the machine before use. Warm up thoroughly and adjust weights/cables to match your strength level.',
+      steps: [
+        'Check that all adjustment pins, collars, and cables are securely locked into position.',
+        'Select a moderate weight to begin and maintain a stable, athletic posture.',
+        'Execute each repetition through a full, controlled range of motion without slamming the weight stack.',
+        'Exhale on the concentric (effort) phase and inhale during the eccentric (lowering) phase.',
+        'Wipe down padding and return weights or accessories after completing your sets.'
+      ]
+    };
 
     const now = new Date();
     const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const newLogEntry: ScanLogEntry = { type: 'equipment', label: equipment.name, time, date: this.formatLogDate(now) };
-    
+    const newLogEntry: ScanLogEntry = {
+      type: 'equipment',
+      label: fallbackEquipment.name,
+      time,
+      date: this.formatLogDate(now)
+    };
+
     this.myLogs = [newLogEntry, ...this.myLogs];
     this.persistEquipmentLog(newLogEntry);
-    this.saveEquipmentScanLog(equipment, decodedText);
-    
-    this.activeEquipment = equipment;
-    this.activeFullGuide = this.guideService.getGuideByName(equipment.name);
-    this.activeVariationIndex = 0;
-    this.tutorialModalOpen = true;
-    this.isScanning = false;
-    this.isProcessingScan = false;
-    this.scanStatusMessage = 'Point your camera at a gym QR code to scan';
+    this.saveEquipmentScanLog({ id: fallbackEquipment.id, name: fallbackEquipment.name }, decodedText);
+
+    this.ngZone.run(() => {
+      this.activeEquipment = fallbackEquipment;
+      this.activeFullGuide = null;
+      this.activeVariationIndex = 0;
+      this.tutorialModalOpen = true;
+      this.isScanning = false;
+      this.isProcessingScan = false;
+      this.scanStatusMessage = 'Scan complete. You can scan again anytime.';
+      this.toast.success(`Loaded guide for ${fallbackEquipment.name}`);
+      this.cdr.detectChanges();
+    });
   }
 
   private saveEquipmentScanLog(equipment: { id: string; name: string }, rawQr: string): void {
@@ -1077,24 +1166,34 @@ export class QrScannerPage implements OnInit, OnDestroy {
 
   // ── Modals ────────────────────────────────────────────
   closeAttendanceModal(): void {
-    this.attendanceModalOpen = false;
-    this.cdr.detectChanges();
+    this.ngZone.run(() => {
+      this.attendanceModalOpen = false;
+      this.scanStatusMessage = 'Point your camera at a gym QR code to scan';
+      this.cdr.detectChanges();
+    });
   }
 
   closePendingModal(): void {
-    this.pendingModalOpen = false;
-    this.stopPendingAttendanceWatcher();
-    this.loadMyAttendanceLogs();
-    this.cdr.detectChanges();
+    this.ngZone.run(() => {
+      this.pendingModalOpen = false;
+      this.stopPendingAttendanceWatcher();
+      this.loadMyAttendanceLogs();
+      this.scanStatusMessage = 'Point your camera at a gym QR code to scan';
+      this.cdr.detectChanges();
+    });
   }
 
   closeTutorialModal(): void {
-    this.tutorialModalOpen = false;
-    this.activeEquipment   = null;
-    this.isVideoPlaying    = false;
-    this.currentEmbedUrl   = null;
-    this.currentVideoUrl   = '';
-    this.scanStatusMessage = 'Point your camera at a gym QR code to scan';
+    this.ngZone.run(() => {
+      this.tutorialModalOpen = false;
+      this.activeEquipment   = null;
+      this.activeFullGuide   = null;
+      this.isVideoPlaying    = false;
+      this.currentEmbedUrl   = null;
+      this.currentVideoUrl   = '';
+      this.scanStatusMessage = 'Point your camera at a gym QR code to scan';
+      this.cdr.detectChanges();
+    });
   }
 
   // ── Coaching screen ────────────────────────────────────────
