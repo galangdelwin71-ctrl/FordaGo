@@ -19,6 +19,13 @@ class CheckMembershipExpirations extends Command
     protected $signature = 'memberships:check-expirations';
 
     /**
+     * The console command aliases.
+     *
+     * @var array<int, string>
+     */
+    protected $aliases = ['members:check-expirations'];
+
+    /**
      * The console command description.
      */
     protected $description = 'Audit Premium memberships for 7-day expiration notice and automatically convert expired accounts to Daily Pass';
