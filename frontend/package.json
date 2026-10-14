@@ -36,6 +36,7 @@
     "@capacitor/share": "^8.0.2",
     "@capacitor/status-bar": "8.0.2",
     "@ionic/angular": "^8.0.0",
+    "docx": "^9.11.0",
     "firebase": "^12.18.0",
     "html5-qrcode": "^2.3.8",
     "ionicons": "^7.0.0",
@@ -46,6 +47,7 @@
     "qrcode": "^1.5.4",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
+    "xlsx": "^0.18.5",
     "zone.js": "~0.15.0"
   },
   "devDependencies": {

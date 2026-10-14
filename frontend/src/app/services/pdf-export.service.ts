@@ -11,11 +11,99 @@ export interface PdfExportOptions {
   dialogTitle?: string;
 }
 
+export interface BlobExportOptions {
+  title?: string;
+  dialogTitle?: string;
+  mimeType?: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class PdfExportService {
   constructor(private toastService: ToastService) {}
+
+  /**
+   * Universal Blob exporter for both Web browsers and Native Android/iOS (Capacitor).
+   * Supports Word (.docx), Excel (.xlsx), PDF (.pdf), and any binary documents.
+   * - On Web: triggers immediate browser file download.
+   * - On Native APK: writes file to device Cache via Filesystem and opens
+   *   native Share sheet so user can Save to Device / Drive / Office / Files / Share.
+   */
+  async exportBlob(blob: Blob, filename: string, options: BlobExportOptions = {}): Promise<void> {
+    const title = options.title || filename;
+    const dialogTitle = options.dialogTitle || 'Save / Share Document';
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const base64Data = await this.blobToBase64(blob);
+
+        const writeResult = await Filesystem.writeFile({
+          path: filename,
+          data: base64Data,
+          directory: Directory.Cache,
+          recursive: true,
+        });
+
+        await Share.share({
+          title,
+          text: `FordaGO Document: ${filename}`,
+          files: [writeResult.uri],
+          dialogTitle,
+        });
+
+        await this.toastService.success(`${filename} generated! Choose where to save or open.`);
+      } catch (err: any) {
+        const msg = String(err?.message || err || '').toLowerCase();
+        if (msg.includes('cancel') || msg.includes('dismiss')) {
+          return;
+        }
+
+        console.error('Native file export failed:', err);
+        // Fallback to web download
+        try {
+          this.downloadBlobWeb(blob, filename);
+        } catch {
+          // ignore fallback error
+        }
+        await this.toastService.error('Failed to export file on this device.');
+      }
+    } else {
+      // Browser Web execution
+      this.downloadBlobWeb(blob, filename);
+      await this.toastService.success(`${filename} downloaded!`);
+    }
+  }
+
+  private blobToBase64(blob: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Failed to convert file to base64'));
+      reader.onload = () => {
+        const dataUrl = reader.result as string;
+        const base64 = dataUrl.split(',')[1] || '';
+        resolve(base64);
+      };
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  private downloadBlobWeb(blob: Blob, filename: string): void {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => {
+      try {
+        URL.revokeObjectURL(url);
+      } catch {
+        // ignore
+      }
+    }, 2500);
+  }
 
   /**
    * Universal PDF exporter for both Web browsers and Native Android/iOS (Capacitor).

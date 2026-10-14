@@ -39,6 +39,11 @@ import {
   shieldCheckmarkOutline,
   closeCircleOutline,
   hourglassOutline,
+  documentOutline,
+  gridOutline,
+  closeOutline,
+  statsChartOutline,
+  createOutline,
 } from 'ionicons/icons';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -46,6 +51,20 @@ import { AuthService } from '../services/auth.service';
 import { PaymentService, OfficialReceipt } from '../services/payment.service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import {
+  Document,
+  Paragraph,
+  TextRun,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
+  AlignmentType,
+  HeadingLevel,
+  BorderStyle,
+  Packer,
+} from 'docx';
+import * as XLSX from 'xlsx';
 import { API_URL, resolveImageUrl } from '../config/api.config';
 import { getCachedData, setCachedData } from '../utils/local-cache.util';
 import { CACHE_KEYS } from '../utils/cache-keys';
@@ -306,6 +325,11 @@ export class AdminReportsPage implements OnInit {
       shieldCheckmarkOutline,
       closeCircleOutline,
       hourglassOutline,
+      documentOutline,
+      gridOutline,
+      closeOutline,
+      statsChartOutline,
+      createOutline,
     });
   }
 
@@ -817,7 +841,58 @@ export class AdminReportsPage implements OnInit {
     return this.datePipe.transform(date, 'MMM d, yyyy h:mm a') ?? fallback;
   }
 
-  // ── Unified Native & Web PDF Export (Download & Print) ──
+  // ── Multi-Format Export Hub (PDF, Word DOCX, Excel XLSX) ──
+  isExportModalOpen = false;
+  isExporting = false;
+  exportingFormat: 'pdf' | 'docx' | 'xlsx' | null = null;
+
+  openExportModal(): void {
+    this.isExportModalOpen = true;
+  }
+
+  closeExportModal(): void {
+    if (!this.isExporting) {
+      this.isExportModalOpen = false;
+    }
+  }
+
+  async exportAs(format: 'pdf' | 'docx' | 'xlsx') {
+    if (this.isExporting) return;
+    this.isExporting = true;
+    this.exportingFormat = format;
+
+    try {
+      const targetTab = this.activeTab;
+      if (format === 'pdf') {
+        const { doc, filename } = this.buildPDFDoc(targetTab);
+        await this.pdfExportService.exportPdf(doc, filename, {
+          isPrint: false,
+          title: `FordaGO Report (${targetTab})`,
+          dialogTitle: 'Save / Share PDF Audit Report',
+        });
+      } else if (format === 'docx') {
+        const { blob, filename } = await this.buildWordDoc(targetTab);
+        await this.pdfExportService.exportBlob(blob, filename, {
+          title: `FordaGO Report (${targetTab})`,
+          dialogTitle: 'Save / Share Word Document',
+        });
+      } else if (format === 'xlsx') {
+        const { blob, filename } = this.buildExcelDoc(targetTab);
+        await this.pdfExportService.exportBlob(blob, filename, {
+          title: `FordaGO Report (${targetTab})`,
+          dialogTitle: 'Save / Share Excel Workbook',
+        });
+      }
+    } catch (err) {
+      console.error(`Export failed for format ${format}:`, err);
+    } finally {
+      this.isExporting = false;
+      this.exportingFormat = null;
+      this.isExportModalOpen = false;
+    }
+  }
+
+  // ── Unified Native & Web PDF Export (Quick Print & Direct PDF) ──
   async printCurrent() {
     try {
       const { doc, filename } = this.buildPDFDoc(this.activeTab);
@@ -841,6 +916,1190 @@ export class AdminReportsPage implements OnInit {
     } catch (err) {
       console.error('Error exporting PDF:', err);
     }
+  }
+
+  // ── Professional Executive Word (.docx) Document Builder ──
+  async buildWordDoc(tabToExport?: Tab): Promise<{ blob: Blob; filename: string }> {
+    const targetTab: Tab = tabToExport || this.activeTab;
+    const currentPeriod = this.period;
+    const genTimestamp = this.formatDateTime(new Date());
+    const reportRef = `FDG-${targetTab.toUpperCase().slice(0, 3)}-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const periodLabel: Record<string, string> = {
+      daily: 'Today (Daily)',
+      weekly: 'This Week (Weekly)',
+      monthly: 'This Month (Monthly)',
+      yearly: 'This Year (Yearly)',
+      all: 'All-Time Records',
+    };
+
+    const tabLabel: Record<string, string> = {
+      overview: 'Executive Analytics & Comprehensive Operational Audit',
+      memberships: 'Membership Roster, Retention & Expiration Audit',
+      transactions: 'Financial Transaction & Receivables Audit Ledger',
+      attendance: 'Gym Attendance, Traffic & Peak-Hours Analysis',
+      sales: 'Revenue Streams & Sales Performance Ledger',
+      inventory: 'Shop Inventory Valuation & Batch Expiration Audit',
+    };
+
+    const reportTitle = tabLabel[targetTab] || 'Management Intelligence Audit';
+
+    const thinBorder = { style: BorderStyle.SINGLE, size: 1, color: 'CBD5E1' };
+    const tableBorders = {
+      top: thinBorder,
+      bottom: thinBorder,
+      left: thinBorder,
+      right: thinBorder,
+      insideHorizontal: thinBorder,
+      insideVertical: thinBorder,
+    };
+
+    const makeCell = (
+      text: string,
+      opts: {
+        bold?: boolean;
+        color?: string;
+        fill?: string;
+        align?: any;
+        colSpan?: number;
+        fontSize?: number;
+        italic?: boolean;
+      } = {}
+    ) => {
+      return new TableCell({
+        children: [
+          new Paragraph({
+            alignment: opts.align || AlignmentType.LEFT,
+            spacing: { before: 80, after: 80 },
+            children: [
+              new TextRun({
+                text: String(text ?? ''),
+                bold: Boolean(opts.bold),
+                italics: Boolean(opts.italic),
+                color: opts.color || '0F172A',
+                size: opts.fontSize || 18,
+                font: 'Calibri',
+              }),
+            ],
+          }),
+        ],
+        shading: opts.fill ? { fill: opts.fill } : undefined,
+        columnSpan: opts.colSpan,
+        borders: tableBorders,
+      });
+    };
+
+    const makeHeaderCell = (text: string, colSpan = 1, align?: any) => {
+      return makeCell(text, {
+        bold: true,
+        color: 'FFFFFF',
+        fill: '1E293B',
+        align: align || AlignmentType.LEFT,
+        colSpan,
+        fontSize: 18,
+      });
+    };
+
+    const children: any[] = [];
+
+    // Header Branding
+    children.push(
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 0, after: 40 },
+        children: [
+          new TextRun({
+            text: 'FORDAGO FITNESS & WELLNESS CLUB',
+            bold: true,
+            size: 32,
+            color: '0F172A',
+            font: 'Calibri',
+          }),
+        ],
+      }),
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 0, after: 80 },
+        children: [
+          new TextRun({
+            text: 'MANAGEMENT INFORMATION SYSTEM • AUDIT & COMPLIANCE DIVISION',
+            bold: true,
+            size: 17,
+            color: '64748B',
+            font: 'Calibri',
+          }),
+        ],
+      }),
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 0, after: 160 },
+        children: [
+          new TextRun({
+            text: `EXECUTIVE MANAGEMENT AUDIT REPORT — ${targetTab.toUpperCase()}`,
+            bold: true,
+            size: 22,
+            color: 'B45309',
+            font: 'Calibri',
+          }),
+        ],
+      })
+    );
+
+    // Metadata Table
+    const metaTable = new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      rows: [
+        new TableRow({
+          children: [
+            makeCell('Audit Module:', { bold: true, fill: 'F8FAFC', color: '475569' }),
+            makeCell(`${targetTab.toUpperCase()} (${reportTitle})`, { bold: true }),
+            makeCell('Period Scope:', { bold: true, fill: 'F8FAFC', color: '475569' }),
+            makeCell(periodLabel[currentPeriod] || currentPeriod, { bold: true }),
+          ],
+        }),
+        new TableRow({
+          children: [
+            makeCell('Reference Code:', { bold: true, fill: 'F8FAFC', color: '475569' }),
+            makeCell(reportRef),
+            makeCell('Audit Timestamp:', { bold: true, fill: 'F8FAFC', color: '475569' }),
+            makeCell(genTimestamp),
+          ],
+        }),
+        new TableRow({
+          children: [
+            makeCell('Data Verification:', { bold: true, fill: 'F8FAFC', color: '475569' }),
+            makeCell('100% Live Sync Verified', { color: '059669', bold: true }),
+            makeCell('Security Classification:', { bold: true, fill: 'F8FAFC', color: '475569' }),
+            makeCell('STRICTLY CONFIDENTIAL', { color: 'B91C1C', bold: true }),
+          ],
+        }),
+      ],
+    });
+    children.push(metaTable);
+
+    const addSectionHeader = (title: string) => {
+      children.push(
+        new Paragraph({
+          spacing: { before: 180, after: 80 },
+          children: [
+            new TextRun({
+              text: title.toUpperCase(),
+              bold: true,
+              size: 20,
+              color: '0F172A',
+              font: 'Calibri',
+            }),
+          ],
+        })
+      );
+    };
+
+    if (targetTab === 'inventory') {
+      addSectionHeader('Key Performance Indicators (Inventory & Valuation)');
+      const totalProducts = this.invRows.length;
+      const totalStock = this.invSummary?.totalStock ?? this.invRows.reduce((a, b) => a + (b.current_stock || 0), 0);
+      const totalSold = this.invSummary?.totalSold ?? this.invRows.reduce((a, b) => a + (b.total_sold || 0), 0);
+      const totalRevenue = this.invSummary?.totalRevenue ?? this.invRows.reduce((a, b) => a + (b.total_revenue || 0), 0);
+      const totalCogs = this.invSummary?.totalCogs ?? this.invRows.reduce((a, b) => a + ((b.cost_price || 0) * (b.total_sold || 0)), 0);
+      const totalProfit = this.invSummary?.totalProfit ?? Math.max(0, totalRevenue - totalCogs);
+      const inventoryCostValue = this.invSummary?.inventoryCostValue ?? this.invRows.reduce((a, b) => a + ((b.cost_price || 0) * (b.current_stock || 0)), 0);
+      const expiredItems = this.invRows.filter(r => r.expiry_status === 'expired' || (r.days_until_expiry !== null && r.days_until_expiry < 0));
+      const expiredLossRisk = this.invSummary?.expiredLossRisk ?? expiredItems.reduce((a, b) => a + ((b.cost_price || 0) * (b.current_stock || 0)), 0);
+
+      const kpiTable = new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        rows: [
+          new TableRow({
+            children: [
+              makeCell('Active Product Lines', { bold: true, fill: 'F1F5F9' }),
+              makeCell(`${totalProducts} catalog SKUs`),
+              makeCell('Stock on Hand', { bold: true, fill: 'F1F5F9' }),
+              makeCell(`${totalStock} total units`),
+            ],
+          }),
+          new TableRow({
+            children: [
+              makeCell('Gross Merchandise Sales', { bold: true, fill: 'F1F5F9' }),
+              makeCell(this.formatCurrency(totalRevenue), { bold: true }),
+              makeCell('Cost of Goods Sold (COGS)', { bold: true, fill: 'F1F5F9' }),
+              makeCell(this.formatCurrency(totalCogs)),
+            ],
+          }),
+          new TableRow({
+            children: [
+              makeCell('Net Merchandise Profit', { bold: true, fill: 'F1F5F9' }),
+              makeCell(this.formatCurrency(totalProfit), { bold: true, color: '059669' }),
+              makeCell('Capital Valuation (Cost)', { bold: true, fill: 'F1F5F9' }),
+              makeCell(this.formatCurrency(inventoryCostValue)),
+            ],
+          }),
+          new TableRow({
+            children: [
+              makeCell('Expired Stock Alert', { bold: true, fill: 'FEE2E2', color: 'B91C1C' }),
+              makeCell(`${expiredItems.length} items (${this.formatCurrency(expiredLossRisk)})`, { bold: true, color: 'B91C1C' }),
+              makeCell('Lifetime Units Sold', { bold: true, fill: 'F1F5F9' }),
+              makeCell(`${totalSold} units`),
+            ],
+          }),
+        ],
+      });
+      children.push(kpiTable);
+
+      addSectionHeader('Complete Product Inventory & Profitability Master');
+      const rows = this.filteredInvRows.length ? this.filteredInvRows : this.invRows;
+      const invTableRows: TableRow[] = [
+        new TableRow({
+          children: [
+            makeHeaderCell('#', 1, AlignmentType.CENTER),
+            makeHeaderCell('Product Name'),
+            makeHeaderCell('Brand'),
+            makeHeaderCell('Unit Cost'),
+            makeHeaderCell('Retail'),
+            makeHeaderCell('Margin'),
+            makeHeaderCell('Stock', 1, AlignmentType.CENTER),
+            makeHeaderCell('Sold', 1, AlignmentType.CENTER),
+            makeHeaderCell('Net Profit'),
+            makeHeaderCell('Status'),
+          ],
+        }),
+      ];
+
+      rows.forEach((item, idx) => {
+        const isExp = item.expiry_status === 'expired' || (item.days_until_expiry !== null && item.days_until_expiry < 0);
+        const isExpSoon = item.expiry_status === 'expiring_soon' || (item.days_until_expiry !== null && item.days_until_expiry >= 0 && item.days_until_expiry <= 30);
+        let statusTag = 'Fresh / Safe';
+        let statusFill = idx % 2 === 1 ? 'F8FAFC' : 'FFFFFF';
+        let statusColor = '0F172A';
+        if (isExp) {
+          statusTag = `EXPIRED (${Math.abs(item.days_until_expiry)}d)`;
+          statusFill = 'FEE2E2';
+          statusColor = 'B91C1C';
+        } else if (isExpSoon) {
+          statusTag = `EXPIRING (${item.days_until_expiry}d)`;
+          statusFill = 'FEF3C7';
+          statusColor = 'B45309';
+        }
+
+        invTableRows.push(
+          new TableRow({
+            children: [
+              makeCell(String(idx + 1), { align: AlignmentType.CENTER, fill: statusFill }),
+              makeCell(item.name || '—', { bold: true, fill: statusFill }),
+              makeCell(item.brand || '—', { fill: statusFill }),
+              makeCell(this.formatCurrency(item.cost_price), { fill: statusFill }),
+              makeCell(this.formatCurrency(item.price), { fill: statusFill }),
+              makeCell(`${item.profit_margin || 0}%`, { fill: statusFill }),
+              makeCell(String(item.current_stock || 0), { align: AlignmentType.CENTER, fill: statusFill }),
+              makeCell(String(item.total_sold || 0), { align: AlignmentType.CENTER, fill: statusFill }),
+              makeCell(this.formatCurrency(item.total_profit), { bold: true, color: '059669', fill: statusFill }),
+              makeCell(statusTag, { bold: isExp || isExpSoon, color: statusColor, fill: statusFill }),
+            ],
+          })
+        );
+      });
+      children.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: invTableRows }));
+
+    } else if (targetTab === 'overview') {
+      addSectionHeader('Executive Performance Audit Scorecard');
+      const expiredItems = this.invRows.filter(r => r.expiry_status === 'expired' || (r.days_until_expiry !== null && r.days_until_expiry < 0));
+      const expiredLossRisk = this.invSummary?.expiredLossRisk ?? expiredItems.reduce((a, b) => a + ((b.cost_price || 0) * (b.current_stock || 0)), 0);
+      const expiringMembers = this.membershipRows.filter(m => m.is_expiring_soon);
+
+      const overviewKpiTable = new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        rows: [
+          new TableRow({
+            children: [
+              makeCell('Total Realized Revenue Collected', { bold: true, fill: 'F1F5F9' }),
+              makeCell(this.formatCurrency(this.grandTotalCollected), { bold: true, color: '059669' }),
+              makeCell('Pending Receivables', { bold: true, fill: 'F1F5F9' }),
+              makeCell(this.formatCurrency(this.salesSummary?.pendingRevenue || 0)),
+            ],
+          }),
+          new TableRow({
+            children: [
+              makeCell('Premium Subscriptions (₱500/mo)', { bold: true, fill: 'F1F5F9' }),
+              makeCell(this.formatCurrency(this.salesSummary?.membershipRevenue || 0), { bold: true }),
+              makeCell('Active Premium Members', { bold: true, fill: 'F1F5F9' }),
+              makeCell(`${this.membershipSummary?.activePremium || 0} active members`),
+            ],
+          }),
+          new TableRow({
+            children: [
+              makeCell('Gym Daily Passes (₱40/visit)', { bold: true, fill: 'F1F5F9' }),
+              makeCell(this.formatCurrency(this.salesSummary?.gymRevenue || 0), { bold: true }),
+              makeCell('Gym Walk-ins & Visits Logged', { bold: true, fill: 'F1F5F9' }),
+              makeCell(`${this.attSummary?.total || this.attRows.length || 0} check-ins`),
+            ],
+          }),
+          new TableRow({
+            children: [
+              makeCell('Shop Merchandise Realized Revenue', { bold: true, fill: 'F1F5F9' }),
+              makeCell(this.formatCurrency(this.salesSummary?.shopRevenue || 0), { bold: true }),
+              makeCell('Inventory Capital Valuation', { bold: true, fill: 'F1F5F9' }),
+              makeCell(this.formatCurrency(this.invSummary?.inventoryCostValue || 0)),
+            ],
+          }),
+          new TableRow({
+            children: [
+              makeCell('Product Expiry Capital Loss Risk', { bold: true, fill: 'FEE2E2', color: 'B91C1C' }),
+              makeCell(`${expiredItems.length} products (${this.formatCurrency(expiredLossRisk)})`, { bold: true, color: 'B91C1C' }),
+              makeCell('Memberships Expiring This Week', { bold: true, fill: 'FEF3C7', color: 'B45309' }),
+              makeCell(`${expiringMembers.length} members require renewal`, { bold: true, color: 'B45309' }),
+            ],
+          }),
+        ],
+      });
+      children.push(overviewKpiTable);
+
+      addSectionHeader('Revenue Stream Contribution Breakdown');
+      const streamsTable = new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        rows: [
+          new TableRow({
+            children: [
+              makeHeaderCell('Revenue Stream'),
+              makeHeaderCell('Collected Realized'),
+              makeHeaderCell('Share (%)', 1, AlignmentType.CENTER),
+              makeHeaderCell('Pending Receivables'),
+              makeHeaderCell('Payment Channels'),
+            ],
+          }),
+          new TableRow({
+            children: [
+              makeCell('Premium Membership Subscriptions', { bold: true }),
+              makeCell(this.formatCurrency(this.salesSummary?.membershipRevenue || 0), { bold: true }),
+              makeCell(`${this.revenueMembershipPercent}%`, { align: AlignmentType.CENTER }),
+              makeCell(this.formatCurrency(this.salesSummary?.cashRevenue || 0)),
+              makeCell('Cash / GCash'),
+            ],
+          }),
+          new TableRow({
+            children: [
+              makeCell('Gym Walk-in Daily Passes', { bold: true }),
+              makeCell(this.formatCurrency(this.salesSummary?.gymRevenue || 0), { bold: true }),
+              makeCell(`${this.revenueGymPercent}%`, { align: AlignmentType.CENTER }),
+              makeCell('—'),
+              makeCell('Cash at Counter'),
+            ],
+          }),
+          new TableRow({
+            children: [
+              makeCell('Shop Products & Nutrition', { bold: true }),
+              makeCell(this.formatCurrency(this.salesSummary?.shopRevenue || 0), { bold: true }),
+              makeCell(`${this.revenueShopPercent}%`, { align: AlignmentType.CENTER }),
+              makeCell(this.formatCurrency(this.salesSummary?.pendingRevenue || 0)),
+              makeCell('Cash / GCash'),
+            ],
+          }),
+        ],
+      });
+      children.push(streamsTable);
+
+    } else if (targetTab === 'memberships') {
+      addSectionHeader('Membership & Subscription Audit Summary');
+      const expiringSoon = this.filteredMembershipRows.filter(m => m.is_expiring_soon);
+      const expired = this.filteredMembershipRows.filter(m => m.is_expired);
+
+      const memKpiTable = new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        rows: [
+          new TableRow({
+            children: [
+              makeCell('Total Registered Accounts', { bold: true, fill: 'F1F5F9' }),
+              makeCell(`${this.membershipSummary?.totalMembers || this.membershipRows.length} accounts`),
+              makeCell('Active Premium Subscribers', { bold: true, fill: 'F1F5F9' }),
+              makeCell(`${this.membershipSummary?.activePremium || 0} members (₱500/mo)`),
+            ],
+          }),
+          new TableRow({
+            children: [
+              makeCell('Monthly Premium Run-rate', { bold: true, fill: 'F1F5F9' }),
+              makeCell(this.formatCurrency(this.membershipSummary?.premiumRevenue || 0), { bold: true }),
+              makeCell('Registered Fitness Coaches', { bold: true, fill: 'F1F5F9' }),
+              makeCell(`${this.membershipSummary?.totalCoaches || 0} coaches on roster`),
+            ],
+          }),
+          new TableRow({
+            children: [
+              makeCell('Expiring Within 7 Days', { bold: true, fill: 'FEF3C7', color: 'B45309' }),
+              makeCell(`${expiringSoon.length} members require renewal`, { bold: true, color: 'B45309' }),
+              makeCell('Expired Membership Plans', { bold: true, fill: 'FEE2E2', color: 'B91C1C' }),
+              makeCell(`${expired.length} expired accounts`, { bold: true, color: 'B91C1C' }),
+            ],
+          }),
+        ],
+      });
+      children.push(memKpiTable);
+
+      addSectionHeader('Complete Membership & Coach Audit Roster');
+      const memTableRows: TableRow[] = [
+        new TableRow({
+          children: [
+            makeHeaderCell('#', 1, AlignmentType.CENTER),
+            makeHeaderCell('Member Name'),
+            makeHeaderCell('Type'),
+            makeHeaderCell('Email'),
+            makeHeaderCell('Plan'),
+            makeHeaderCell('Channel'),
+            makeHeaderCell('Expiry Date'),
+            makeHeaderCell('Lifespan'),
+            makeHeaderCell('Status'),
+          ],
+        }),
+      ];
+
+      this.filteredMembershipRows.forEach((m, idx) => {
+        const rowBg = idx % 2 === 1 ? 'F8FAFC' : 'FFFFFF';
+        memTableRows.push(
+          new TableRow({
+            children: [
+              makeCell(String(idx + 1), { align: AlignmentType.CENTER, fill: rowBg }),
+              makeCell(m.username || '—', { bold: true, fill: rowBg }),
+              makeCell(m.account_type === 'coach' ? 'Coach' : 'Member', { fill: rowBg }),
+              makeCell(m.email || '—', { fill: rowBg }),
+              makeCell(m.membership_type === 'premium' ? 'Premium (₱500)' : (m.membership_type === 'daily' ? 'Daily Pass' : 'Coach'), { fill: rowBg }),
+              makeCell((m.payment_method || 'cash').toUpperCase(), { fill: rowBg }),
+              makeCell(m.membership_expiry ? this.formatDate(m.membership_expiry) : 'Per Visit', { fill: rowBg }),
+              makeCell(m.membership_type === 'premium' ? `${m.days_left}d left` : 'Per Visit', { fill: rowBg }),
+              makeCell(m.membership_status === 'active' ? 'Active' : 'Pending', { bold: true, color: m.membership_status === 'active' ? '059669' : 'B45309', fill: rowBg }),
+            ],
+          })
+        );
+      });
+      children.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: memTableRows }));
+
+    } else if (targetTab === 'transactions') {
+      addSectionHeader('Financial Transaction & Ledger Audit Summary');
+      const txKpiTable = new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        rows: [
+          new TableRow({
+            children: [
+              makeCell('Total Realized Revenue Collected', { bold: true, fill: 'F1F5F9' }),
+              makeCell(this.formatCurrency(this.txCollectedRevenue), { bold: true, color: '059669' }),
+              makeCell('Pending Receivables', { bold: true, fill: 'F1F5F9' }),
+              makeCell(this.formatCurrency(this.txPendingRevenue), { color: 'B45309' }),
+            ],
+          }),
+          new TableRow({
+            children: [
+              makeCell('Total Audit Volume', { bold: true, fill: 'F1F5F9' }),
+              makeCell(this.formatCurrency(this.txTotalVolume)),
+              makeCell('Total Transactions Count', { bold: true, fill: 'F1F5F9' }),
+              makeCell(`${this.filteredTxRows.length} transactions`),
+            ],
+          }),
+          new TableRow({
+            children: [
+              makeCell('Membership Subscriptions', { bold: true, fill: 'F1F5F9' }),
+              makeCell(`${this.txMembershipCount} txs`),
+              makeCell('Gym Passes / Shop Orders', { bold: true, fill: 'F1F5F9' }),
+              makeCell(`${this.txGymCount} gym / ${this.txShopCount} shop`),
+            ],
+          }),
+        ],
+      });
+      children.push(txKpiTable);
+
+      addSectionHeader('Consolidated Financial Transactions Ledger');
+      const txTableRows: TableRow[] = [
+        new TableRow({
+          children: [
+            makeHeaderCell('#', 1, AlignmentType.CENTER),
+            makeHeaderCell('Date & Time'),
+            makeHeaderCell('Reference Code'),
+            makeHeaderCell('Customer / Payer'),
+            makeHeaderCell('Type / Description'),
+            makeHeaderCell('Channel'),
+            makeHeaderCell('Amount (PHP)'),
+            makeHeaderCell('Audit Status'),
+          ],
+        }),
+      ];
+
+      this.filteredTxRows.forEach((tx, idx) => {
+        const rowBg = idx % 2 === 1 ? 'F8FAFC' : 'FFFFFF';
+        const isPaid = (tx.payment_status || tx.sub_type || '').toLowerCase() === 'paid';
+        txTableRows.push(
+          new TableRow({
+            children: [
+              makeCell(String(idx + 1), { align: AlignmentType.CENTER, fill: rowBg }),
+              makeCell(this.formatDateTime(tx.transaction_date || tx.created_at), { fill: rowBg }),
+              makeCell(tx.reference_number || tx.receipt_number || `TX-${tx.id || idx + 1}`, { bold: true, fill: rowBg }),
+              makeCell(tx.username || 'Walk-in Guest', { fill: rowBg }),
+              makeCell(tx.product_name || tx.type_label || (tx.source || 'General').toUpperCase(), { fill: rowBg }),
+              makeCell((tx.payment_method || 'CASH').toUpperCase(), { fill: rowBg }),
+              makeCell(this.formatCurrency(tx.amount), { bold: true, color: isPaid ? '059669' : '0F172A', fill: rowBg }),
+              makeCell(this.getStatusLabel(tx), { bold: true, color: isPaid ? '059669' : 'B45309', fill: rowBg }),
+            ],
+          })
+        );
+      });
+      children.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: txTableRows }));
+
+    } else if (targetTab === 'attendance') {
+      addSectionHeader('Gym Attendance & Traffic Summary');
+      const attKpiTable = new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        rows: [
+          new TableRow({
+            children: [
+              makeCell('Total Logged Check-ins', { bold: true, fill: 'F1F5F9' }),
+              makeCell(`${this.attSummary?.total || 0} visits`),
+              makeCell('Paid Daily Walk-in Passes', { bold: true, fill: 'F1F5F9' }),
+              makeCell(`${this.attSummary?.paidCount || 0} (${this.formatCurrency(this.attSummary?.paidRevenue || 0)})`, { bold: true }),
+            ],
+          }),
+          new TableRow({
+            children: [
+              makeCell('Premium Member Visits', { bold: true, fill: 'F1F5F9' }),
+              makeCell(`${this.attSummary?.premiumCount || 0} visits (Free pass)`),
+              makeCell('Peak Operating Hours', { bold: true, fill: 'F1F5F9' }),
+              makeCell(this.attSummary?.busiestHour || '6:00 PM - 7:00 PM', { bold: true }),
+            ],
+          }),
+          new TableRow({
+            children: [
+              makeCell('Average Workout Session', { bold: true, fill: 'F1F5F9' }),
+              makeCell(this.attSummary?.avgDurationFormatted || '45 mins'),
+              makeCell('Daily Pass Tariff', { bold: true, fill: 'F1F5F9' }),
+              makeCell('PHP 40.00 / visit standard'),
+            ],
+          }),
+        ],
+      });
+      children.push(attKpiTable);
+
+      addSectionHeader('Gym Check-in Traffic Audit Log');
+      const attTableRows: TableRow[] = [
+        new TableRow({
+          children: [
+            makeHeaderCell('#', 1, AlignmentType.CENTER),
+            makeHeaderCell('Check-in Time'),
+            makeHeaderCell('Check-out Time'),
+            makeHeaderCell('Duration'),
+            makeHeaderCell('Customer / Member'),
+            makeHeaderCell('Account Type'),
+            makeHeaderCell('Daily Fee Paid'),
+            makeHeaderCell('Status'),
+          ],
+        }),
+      ];
+
+      this.filteredAttRows.forEach((r, idx) => {
+        const rowBg = idx % 2 === 1 ? 'F8FAFC' : 'FFFFFF';
+        const isPaidType = (r.membership_type || '').toLowerCase() === 'daily';
+        attTableRows.push(
+          new TableRow({
+            children: [
+              makeCell(String(idx + 1), { align: AlignmentType.CENTER, fill: rowBg }),
+              makeCell(this.formatDateTime(r.check_in_time), { fill: rowBg }),
+              makeCell(r.check_out_time ? this.formatDateTime(r.check_out_time) : 'Active Inside', { fill: rowBg }),
+              makeCell(r.duration_minutes ? `${r.duration_minutes} mins` : '—', { fill: rowBg }),
+              makeCell(r.username || 'Walk-in Guest', { bold: true, fill: rowBg }),
+              makeCell(r.membership_type === 'premium' ? 'Premium Member' : 'Daily Pass Guest', { fill: rowBg }),
+              makeCell(isPaidType ? 'PHP 40.00' : 'PHP 0.00 (Plan Included)', { bold: isPaidType, color: isPaidType ? '059669' : '64748B', fill: rowBg }),
+              makeCell('VERIFIED', { bold: true, color: '059669', fill: rowBg }),
+            ],
+          })
+        );
+      });
+      children.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: attTableRows }));
+
+    } else if (targetTab === 'sales') {
+      addSectionHeader('Financial Sales & Revenue Audit Summary');
+      const salesKpiTable = new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        rows: [
+          new TableRow({
+            children: [
+              makeCell('Total Realized Revenue Collected', { bold: true, fill: 'F1F5F9' }),
+              makeCell(this.formatCurrency(this.salesSummary?.totalRevenue || 0), { bold: true, color: '059669' }),
+              makeCell('Pending Receivables', { bold: true, fill: 'F1F5F9' }),
+              makeCell(this.formatCurrency(this.salesSummary?.pendingRevenue || 0)),
+            ],
+          }),
+          new TableRow({
+            children: [
+              makeCell('Daily Gym Passes (₱40)', { bold: true, fill: 'F1F5F9' }),
+              makeCell(this.formatCurrency(this.salesSummary?.gymRevenue || 0)),
+              makeCell('Shop Merchandise', { bold: true, fill: 'F1F5F9' }),
+              makeCell(this.formatCurrency(this.salesSummary?.shopRevenue || 0)),
+            ],
+          }),
+          new TableRow({
+            children: [
+              makeCell('Premium Subscriptions (₱500)', { bold: true, fill: 'F1F5F9' }),
+              makeCell(this.formatCurrency(this.salesSummary?.membershipRevenue || 0)),
+              makeCell('Cash Remittance Collected', { bold: true, fill: 'F1F5F9' }),
+              makeCell(this.formatCurrency(this.salesSummary?.cashRevenue || 0)),
+            ],
+          }),
+        ],
+      });
+      children.push(salesKpiTable);
+
+      if (this.attSalesRows.length > 0) {
+        addSectionHeader('Gym Daily Walk-in Passes (Revenue by Date)');
+        const attSalesRows: TableRow[] = [
+          new TableRow({
+            children: [
+              makeHeaderCell('Date'),
+              makeHeaderCell('Day of Week'),
+              makeHeaderCell('Paid Check-ins', 1, AlignmentType.CENTER),
+              makeHeaderCell('Collected Revenue'),
+            ],
+          }),
+        ];
+        this.attSalesRows.forEach((r, idx) => {
+          const rowBg = idx % 2 === 1 ? 'F8FAFC' : 'FFFFFF';
+          attSalesRows.push(
+            new TableRow({
+              children: [
+                makeCell(this.formatDate(r.sale_date), { bold: true, fill: rowBg }),
+                makeCell(this.datePipe.transform(r.sale_date, 'EEEE') ?? '', { fill: rowBg }),
+                makeCell(String(r.count || 0), { align: AlignmentType.CENTER, fill: rowBg }),
+                makeCell(this.formatCurrency(r.revenue), { bold: true, color: '059669', fill: rowBg }),
+              ],
+            })
+          );
+        });
+        children.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: attSalesRows }));
+      }
+
+      if (this.shopSalesRows.length > 0) {
+        addSectionHeader('Shop Merchandise Sales (Revenue by Date)');
+        const shopRows: TableRow[] = [
+          new TableRow({
+            children: [
+              makeHeaderCell('Date'),
+              makeHeaderCell('Day of Week'),
+              makeHeaderCell('Completed Orders', 1, AlignmentType.CENTER),
+              makeHeaderCell('Collected Revenue'),
+            ],
+          }),
+        ];
+        this.shopSalesRows.forEach((r, idx) => {
+          const rowBg = idx % 2 === 1 ? 'F8FAFC' : 'FFFFFF';
+          shopRows.push(
+            new TableRow({
+              children: [
+                makeCell(this.formatDate(r.sale_date), { bold: true, fill: rowBg }),
+                makeCell(this.datePipe.transform(r.sale_date, 'EEEE') ?? '', { fill: rowBg }),
+                makeCell(String(r.count || 0), { align: AlignmentType.CENTER, fill: rowBg }),
+                makeCell(this.formatCurrency(r.revenue), { bold: true, color: '059669', fill: rowBg }),
+              ],
+            })
+          );
+        });
+        children.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: shopRows }));
+      }
+    }
+
+    // Administrative Notes (Editable)
+    children.push(
+      new Paragraph({ spacing: { before: 240, after: 80 }, text: '' }),
+      new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        rows: [
+          new TableRow({
+            children: [
+              makeCell('ADMINISTRATIVE NOTES & OPERATIONAL DIRECTIVES (EDITABLE MANAGEMENT REMARKS)', {
+                bold: true,
+                color: 'FFFFFF',
+                fill: '0F172A',
+                fontSize: 18,
+              }),
+            ],
+          }),
+          new TableRow({
+            children: [
+              new TableCell({
+                borders: tableBorders,
+                shading: { fill: 'FFFBEB' },
+                children: [
+                  new Paragraph({
+                    spacing: { before: 80, after: 40 },
+                    children: [
+                      new TextRun({
+                        text: '1. Revenue & POS Reconciliation: ',
+                        bold: true,
+                        color: '92400E',
+                        size: 18,
+                        font: 'Calibri',
+                      }),
+                      new TextRun({
+                        text: 'All realized revenue figures listed in this audit report correspond directly to cleared cash register drawers and electronic merchant payouts.',
+                        size: 18,
+                        color: '334155',
+                        font: 'Calibri',
+                      }),
+                    ],
+                  }),
+                  new Paragraph({
+                    spacing: { before: 40, after: 40 },
+                    children: [
+                      new TextRun({
+                        text: '2. Inventory & Expiry Controls: ',
+                        bold: true,
+                        color: '92400E',
+                        size: 18,
+                        font: 'Calibri',
+                      }),
+                      new TextRun({
+                        text: 'All nutrition supplements and consumable items must be audited weekly. Products reaching within 30 days of shelf-life expiry require immediate discount clearance.',
+                        size: 18,
+                        color: '334155',
+                        font: 'Calibri',
+                      }),
+                    ],
+                  }),
+                  new Paragraph({
+                    spacing: { before: 40, after: 40 },
+                    children: [
+                      new TextRun({
+                        text: '3. Member Retention Protocol: ',
+                        bold: true,
+                        color: '92400E',
+                        size: 18,
+                        font: 'Calibri',
+                      }),
+                      new TextRun({
+                        text: 'Members with plans expiring in 7 days should receive automated SMS and in-app renewal reminders to ensure uninterrupted gym facility access.',
+                        size: 18,
+                        color: '334155',
+                        font: 'Calibri',
+                      }),
+                    ],
+                  }),
+                  new Paragraph({
+                    spacing: { before: 40, after: 80 },
+                    children: [
+                      new TextRun({
+                        text: '4. Physical vs Digital Attendance: ',
+                        bold: true,
+                        color: '92400E',
+                        size: 18,
+                        font: 'Calibri',
+                      }),
+                      new TextRun({
+                        text: 'All QR code turnstile check-ins must correlate 1:1 with counter logs. Unregistered walk-ins are prohibited without daily pass issuance.',
+                        size: 18,
+                        color: '334155',
+                        font: 'Calibri',
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      })
+    );
+
+    // Certification & Sign-off Block
+    children.push(
+      new Paragraph({ spacing: { before: 240, after: 80 }, text: '' }),
+      new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        rows: [
+          new TableRow({
+            children: [
+              makeCell('PREPARED & CONSOLIDATED BY:', { bold: true, color: '64748B', fill: 'F8FAFC' }),
+              makeCell('VERIFIED & AUDITED BY:', { bold: true, color: '64748B', fill: 'F8FAFC' }),
+            ],
+          }),
+          new TableRow({
+            children: [
+              new TableCell({
+                borders: tableBorders,
+                children: [
+                  new Paragraph({
+                    spacing: { before: 280, after: 40 },
+                    children: [
+                      new TextRun({ text: '____________________________________________', color: '94A3B8' }),
+                    ],
+                  }),
+                  new Paragraph({
+                    children: [
+                      new TextRun({ text: 'FordaGO System Administrator', bold: true, color: '0F172A', size: 19 }),
+                    ],
+                  }),
+                  new Paragraph({
+                    children: [
+                      new TextRun({ text: 'Management Information System Division', color: '64748B', size: 16 }),
+                    ],
+                  }),
+                  new Paragraph({
+                    spacing: { after: 120 },
+                    children: [
+                      new TextRun({ text: `Date Signed: ${new Date().toLocaleDateString()}`, italics: true, color: '94A3B8', size: 16 }),
+                    ],
+                  }),
+                ],
+              }),
+              new TableCell({
+                borders: tableBorders,
+                children: [
+                  new Paragraph({
+                    spacing: { before: 280, after: 40 },
+                    children: [
+                      new TextRun({ text: '____________________________________________', color: '94A3B8' }),
+                    ],
+                  }),
+                  new Paragraph({
+                    children: [
+                      new TextRun({ text: 'Operations & Inventory Controller', bold: true, color: '0F172A', size: 19 }),
+                    ],
+                  }),
+                  new Paragraph({
+                    children: [
+                      new TextRun({ text: 'Official Administrative Endorsement', color: '64748B', size: 16 }),
+                    ],
+                  }),
+                  new Paragraph({
+                    spacing: { after: 120 },
+                    children: [
+                      new TextRun({ text: `Date Endorsed: ${new Date().toLocaleDateString()}`, italics: true, color: '94A3B8', size: 16 }),
+                    ],
+                  }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      })
+    );
+
+    const doc = new Document({
+      sections: [
+        {
+          properties: {
+            page: {
+              margin: { top: 1080, bottom: 1080, left: 1080, right: 1080 },
+            },
+          },
+          children,
+        },
+      ],
+    });
+
+    const blob = await Packer.toBlob(doc);
+    const filename = `FordaGO_Audit_${targetTab.toUpperCase()}_${currentPeriod}_${new Date().toISOString().slice(0, 10)}.docx`;
+    return { blob, filename };
+  }
+
+  // ── Professional Executive Excel (.xlsx) Spreadsheet Builder ──
+  buildExcelDoc(tabToExport?: Tab): { blob: Blob; filename: string } {
+    const targetTab: Tab = tabToExport || this.activeTab;
+    const currentPeriod = this.period;
+    const genTimestamp = this.formatDateTime(new Date());
+    const reportRef = `FDG-${targetTab.toUpperCase().slice(0, 3)}-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const periodLabel: Record<string, string> = {
+      daily: 'Today (Daily)',
+      weekly: 'This Week (Weekly)',
+      monthly: 'This Month (Monthly)',
+      yearly: 'This Year (Yearly)',
+      all: 'All-Time Records',
+    };
+
+    const wb = XLSX.utils.book_new();
+
+    // ── Sheet 1: Executive Summary ──
+    const summaryData: any[][] = [
+      ['FORDAGO FITNESS & WELLNESS CLUB'],
+      ['MANAGEMENT INFORMATION SYSTEM - OFFICIAL AUDIT WORKBOOK'],
+      [`Module: ${targetTab.toUpperCase()}`, `Scope: ${periodLabel[currentPeriod] || currentPeriod}`, `Ref: ${reportRef}`],
+      [`Generated: ${genTimestamp}`, 'Security: STRICTLY CONFIDENTIAL', 'Source: 100% Live Verified Sync'],
+      [],
+      ['EXECUTIVE AUDIT SCORECARD'],
+      ['Key Performance Indicator', 'Numeric Amount (PHP)', 'Unit / Metric Scope', 'Audit Remarks'],
+    ];
+
+    if (targetTab === 'inventory') {
+      const totalProducts = this.invRows.length;
+      const totalStock = this.invSummary?.totalStock ?? this.invRows.reduce((a, b) => a + (b.current_stock || 0), 0);
+      const totalSold = this.invSummary?.totalSold ?? this.invRows.reduce((a, b) => a + (b.total_sold || 0), 0);
+      const totalRevenue = this.invSummary?.totalRevenue ?? this.invRows.reduce((a, b) => a + (b.total_revenue || 0), 0);
+      const totalCogs = this.invSummary?.totalCogs ?? this.invRows.reduce((a, b) => a + ((b.cost_price || 0) * (b.total_sold || 0)), 0);
+      const totalProfit = this.invSummary?.totalProfit ?? Math.max(0, totalRevenue - totalCogs);
+      const inventoryCostValue = this.invSummary?.inventoryCostValue ?? this.invRows.reduce((a, b) => a + ((b.cost_price || 0) * (b.current_stock || 0)), 0);
+      const expiredItems = this.invRows.filter(r => r.expiry_status === 'expired' || (r.days_until_expiry !== null && r.days_until_expiry < 0));
+      const expiredLossRisk = this.invSummary?.expiredLossRisk ?? expiredItems.reduce((a, b) => a + ((b.cost_price || 0) * (b.current_stock || 0)), 0);
+
+      summaryData.push(
+        ['Active Product Catalog Lines', totalProducts, 'SKUs', 'Active shop catalog'],
+        ['Total Stock on Hand', totalStock, 'Units', 'Available shelf inventory'],
+        ['Gross Merchandise Sales', Number(totalRevenue.toFixed(2)), 'PHP', 'Realized sales revenue'],
+        ['Cost of Goods Sold (COGS)', Number(totalCogs.toFixed(2)), 'PHP', 'Direct inventory acquisition cost'],
+        ['Net Merchandise Profit', Number(totalProfit.toFixed(2)), 'PHP', 'Gross sales less COGS'],
+        ['Capital Valuation (Cost Basis)', Number(inventoryCostValue.toFixed(2)), 'PHP', 'Current asset inventory cost'],
+        ['Expired Stock Spoilage Risk', Number(expiredLossRisk.toFixed(2)), 'PHP', `${expiredItems.length} products expired`]
+      );
+    } else if (targetTab === 'memberships') {
+      const expiringSoon = this.filteredMembershipRows.filter(m => m.is_expiring_soon);
+      const expired = this.filteredMembershipRows.filter(m => m.is_expired);
+      summaryData.push(
+        ['Total Registered Accounts', this.membershipSummary?.totalMembers || this.membershipRows.length, 'Accounts', 'User accounts on database'],
+        ['Active Premium Subscribers', this.membershipSummary?.activePremium || 0, 'Subscribers', '₱500/month recurring plan'],
+        ['Monthly Premium Run-rate', Number((this.membershipSummary?.premiumRevenue || 0).toFixed(2)), 'PHP', 'Expected monthly subscription run-rate'],
+        ['Registered Coaches', this.membershipSummary?.totalCoaches || 0, 'Coaches', 'Trainers on roster'],
+        ['Expiring in ≤7 Days', expiringSoon.length, 'Members', 'Action required: Send renewal SMS'],
+        ['Expired Membership Accounts', expired.length, 'Accounts', 'Action required: Retention follow-up']
+      );
+    } else if (targetTab === 'transactions') {
+      summaryData.push(
+        ['Total Realized Revenue Collected', Number(this.txCollectedRevenue.toFixed(2)), 'PHP', 'Sum of all paid transactions'],
+        ['Pending Receivables', Number(this.txPendingRevenue.toFixed(2)), 'PHP', 'Uncleared transactions'],
+        ['Total Audit Volume', Number(this.txTotalVolume.toFixed(2)), 'PHP', 'Total transaction volume'],
+        ['Total Transactions Count', this.filteredTxRows.length, 'Records', 'Filtered transactions log'],
+        ['Membership Transactions', this.txMembershipCount, 'Subscriptions', 'Membership fees'],
+        ['Gym Pass / Shop Transactions', this.txGymCount + this.txShopCount, 'Orders/Visits', 'Daily passes & shop orders']
+      );
+    } else if (targetTab === 'attendance') {
+      summaryData.push(
+        ['Total Logged Gym Check-ins', this.attSummary?.total || 0, 'Visits', 'All attendance sessions'],
+        ['Paid Daily Walk-in Passes', this.attSummary?.paidCount || 0, 'Passes', `Revenue: PHP ${(this.attSummary?.paidRevenue || 0).toFixed(2)}`],
+        ['Premium Member Check-ins', this.attSummary?.premiumCount || 0, 'Visits', 'Inclusive with membership'],
+        ['Peak Hours', this.attSummary?.busiestHour || '6:00 PM - 7:00 PM', 'Time Window', 'Maximum concurrent facility traffic'],
+        ['Average Session Duration', this.attSummary?.avgDurationFormatted || '45 mins', 'Duration', 'Mean member workout time']
+      );
+    } else if (targetTab === 'sales') {
+      summaryData.push(
+        ['Total Realized Sales Revenue', Number((this.salesSummary?.totalRevenue || 0).toFixed(2)), 'PHP', 'Consolidated financial sales'],
+        ['Gym Daily Passes Revenue', Number((this.salesSummary?.gymRevenue || 0).toFixed(2)), 'PHP', 'Walk-in entrance fees'],
+        ['Shop Products Revenue', Number((this.salesSummary?.shopRevenue || 0).toFixed(2)), 'PHP', 'Consumables and gear'],
+        ['Membership Plans Revenue', Number((this.salesSummary?.membershipRevenue || 0).toFixed(2)), 'PHP', 'Premium subscriptions'],
+        ['Cash Drawer Remittance', Number((this.salesSummary?.cashRevenue || 0).toFixed(2)), 'PHP', 'Direct counter receipts']
+      );
+    } else {
+      summaryData.push(
+        ['Total Realized Revenue Collected', Number(this.grandTotalCollected.toFixed(2)), 'PHP', 'Consolidated income'],
+        ['Pending Receivables', Number((this.salesSummary?.pendingRevenue || 0).toFixed(2)), 'PHP', 'Unpaid orders / pending plans'],
+        ['Premium Subscriptions', Number((this.salesSummary?.membershipRevenue || 0).toFixed(2)), 'PHP', `${this.membershipSummary?.activePremium || 0} active members`],
+        ['Gym Daily Passes', Number((this.salesSummary?.gymRevenue || 0).toFixed(2)), 'PHP', `${this.attSummary?.total || 0} check-ins`],
+        ['Shop Merchandise Revenue', Number((this.salesSummary?.shopRevenue || 0).toFixed(2)), 'PHP', 'Merchandise orders'],
+        ['Inventory Capital Valuation', Number((this.invSummary?.inventoryCostValue || 0).toFixed(2)), 'PHP', 'Asset cost basis']
+      );
+    }
+
+    const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+    wsSummary['!cols'] = [{ wch: 35 }, { wch: 22 }, { wch: 18 }, { wch: 40 }];
+    XLSX.utils.book_append_sheet(wb, wsSummary, 'Executive Summary');
+
+    // ── Sheet 2: Tab-Specific Audit Records Ledger ──
+    const recordsData: any[][] = [];
+
+    if (targetTab === 'inventory') {
+      recordsData.push([
+        '#',
+        'Product Name',
+        'Brand',
+        'Unit Cost (PHP)',
+        'Retail Price (PHP)',
+        'Profit Margin (%)',
+        'Stock on Hand',
+        'Units Sold',
+        'Gross Revenue (PHP)',
+        'Net Profit (PHP)',
+        'Expiry Date',
+        'Shelf-Life Status',
+      ]);
+      const rows = this.filteredInvRows.length ? this.filteredInvRows : this.invRows;
+      rows.forEach((item, idx) => {
+        const isExp = item.expiry_status === 'expired' || (item.days_until_expiry !== null && item.days_until_expiry < 0);
+        const isExpSoon = item.expiry_status === 'expiring_soon' || (item.days_until_expiry !== null && item.days_until_expiry >= 0 && item.days_until_expiry <= 30);
+        let statusTag = 'Fresh / Safe';
+        if (isExp) statusTag = `EXPIRED (${Math.abs(item.days_until_expiry)}d ago)`;
+        else if (isExpSoon) statusTag = `EXPIRING (${item.days_until_expiry}d left)`;
+        else if (!item.expiry_date) statusTag = 'Non-perishable';
+
+        recordsData.push([
+          idx + 1,
+          item.name || '—',
+          item.brand || '—',
+          Number(Number(item.cost_price || 0).toFixed(2)),
+          Number(Number(item.price || 0).toFixed(2)),
+          Number(item.profit_margin || 0),
+          Number(item.current_stock || 0),
+          Number(item.total_sold || 0),
+          Number(Number(item.total_revenue || 0).toFixed(2)),
+          Number(Number(item.total_profit || 0).toFixed(2)),
+          item.expiry_date ? this.formatDate(item.expiry_date) : 'No Expiry',
+          statusTag,
+        ]);
+      });
+    } else if (targetTab === 'memberships') {
+      recordsData.push([
+        '#',
+        'Member Name',
+        'Account Type',
+        'Email Address',
+        'Phone Number',
+        'Membership Plan',
+        'Payment Channel',
+        'Expiry Date',
+        'Remaining Days',
+        'Account Status',
+      ]);
+      this.filteredMembershipRows.forEach((m, idx) => {
+        recordsData.push([
+          idx + 1,
+          m.username || '—',
+          m.account_type === 'coach' ? 'Coach' : 'Member',
+          m.email || '—',
+          m.phone || '—',
+          m.membership_type === 'premium' ? 'Premium (₱500)' : (m.membership_type === 'daily' ? 'Daily Pass' : 'Coach Profile'),
+          (m.payment_method || 'CASH').toUpperCase(),
+          m.membership_expiry ? this.formatDate(m.membership_expiry) : 'Per Visit',
+          m.membership_type === 'premium' ? `${m.days_left} days` : 'Per Visit',
+          (m.membership_status || 'active').toUpperCase(),
+        ]);
+      });
+    } else if (targetTab === 'transactions') {
+      recordsData.push([
+        '#',
+        'Date & Time',
+        'Reference Code',
+        'Customer / Payer',
+        'Type / Description',
+        'Payment Channel',
+        'Amount (PHP)',
+        'Audit Status',
+      ]);
+      this.filteredTxRows.forEach((tx, idx) => {
+        recordsData.push([
+          idx + 1,
+          this.formatDateTime(tx.transaction_date || tx.created_at),
+          tx.reference_number || tx.receipt_number || `TX-${tx.id || idx + 1}`,
+          tx.username || 'Walk-in Guest',
+          tx.product_name || tx.type_label || (tx.source || 'General').toUpperCase(),
+          (tx.payment_method || 'CASH').toUpperCase(),
+          Number(Number(tx.amount || 0).toFixed(2)),
+          this.getStatusLabel(tx),
+        ]);
+      });
+    } else if (targetTab === 'attendance') {
+      recordsData.push([
+        '#',
+        'Check-in Time',
+        'Check-out Time',
+        'Duration (Minutes)',
+        'Customer / Member',
+        'Account Type',
+        'Daily Pass Fee (PHP)',
+        'Audit Status',
+      ]);
+      this.filteredAttRows.forEach((r, idx) => {
+        const isPaidType = (r.membership_type || '').toLowerCase() === 'daily';
+        recordsData.push([
+          idx + 1,
+          this.formatDateTime(r.check_in_time),
+          r.check_out_time ? this.formatDateTime(r.check_out_time) : 'Active Inside',
+          r.duration_minutes ? Number(r.duration_minutes) : 0,
+          r.username || 'Walk-in Guest',
+          r.membership_type === 'premium' ? 'Premium Member' : 'Daily Pass Guest',
+          isPaidType ? 40.00 : 0.00,
+          'VERIFIED',
+        ]);
+      });
+    } else if (targetTab === 'sales') {
+      recordsData.push([
+        '#',
+        'Sale Date',
+        'Day of Week',
+        'Revenue Stream',
+        'Volume / Count',
+        'Revenue Collected (PHP)',
+      ]);
+      let counter = 1;
+      this.attSalesRows.forEach(r => {
+        recordsData.push([
+          counter++,
+          this.formatDate(r.sale_date),
+          this.datePipe.transform(r.sale_date, 'EEEE') ?? '',
+          'Gym Walk-in Daily Passes',
+          Number(r.count || 0),
+          Number(Number(r.revenue || 0).toFixed(2)),
+        ]);
+      });
+      this.shopSalesRows.forEach(r => {
+        recordsData.push([
+          counter++,
+          this.formatDate(r.sale_date),
+          this.datePipe.transform(r.sale_date, 'EEEE') ?? '',
+          'Shop Merchandise Sales',
+          Number(r.count || 0),
+          Number(Number(r.revenue || 0).toFixed(2)),
+        ]);
+      });
+      this.membershipSalesRows.forEach(r => {
+        recordsData.push([
+          counter++,
+          this.formatDate(r.sale_date),
+          this.datePipe.transform(r.sale_date, 'EEEE') ?? '',
+          'Premium Membership Subscriptions',
+          Number(r.count || 0),
+          Number(Number(r.revenue || 0).toFixed(2)),
+        ]);
+      });
+    } else {
+      recordsData.push([
+        '#',
+        'Revenue Stream',
+        'Realized Collected (PHP)',
+        'Contribution Share (%)',
+        'Pending Receivables (PHP)',
+        'Payment Channels',
+      ]);
+      recordsData.push([
+        1,
+        'Premium Membership Subscriptions',
+        Number((this.salesSummary?.membershipRevenue || 0).toFixed(2)),
+        `${this.revenueMembershipPercent}%`,
+        Number((this.salesSummary?.cashRevenue || 0).toFixed(2)),
+        'Cash / GCash',
+      ]);
+      recordsData.push([
+        2,
+        'Gym Walk-in Daily Passes',
+        Number((this.salesSummary?.gymRevenue || 0).toFixed(2)),
+        `${this.revenueGymPercent}%`,
+        0.00,
+        'Cash at Counter',
+      ]);
+      recordsData.push([
+        3,
+        'Shop Merchandise & Nutrition',
+        Number((this.salesSummary?.shopRevenue || 0).toFixed(2)),
+        `${this.revenueShopPercent}%`,
+        Number((this.salesSummary?.pendingRevenue || 0).toFixed(2)),
+        'Cash / GCash',
+      ]);
+    }
+
+    const wsRecords = XLSX.utils.aoa_to_sheet(recordsData);
+    const colWidths = recordsData.reduce((acc: number[], row: any[]) => {
+      row.forEach((cell: any, i: number) => {
+        const len = String(cell ?? '').length;
+        acc[i] = Math.max(acc[i] || 10, len + 3);
+      });
+      return acc;
+    }, []);
+    wsRecords['!cols'] = colWidths.map((w: number) => ({ wch: Math.min(Math.max(w, 12), 45) }));
+
+    const sheetName = `${targetTab.slice(0, 10).toUpperCase()} Ledger`;
+    XLSX.utils.book_append_sheet(wb, wsRecords, sheetName);
+
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([wbout], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const filename = `FordaGO_Audit_${targetTab.toUpperCase()}_${currentPeriod}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    return { blob, filename };
   }
 
   // ── Professional Executive PDF Document Builder ─────────
