@@ -357,6 +357,43 @@ class MailService
     }
 
     /**
+     * Send email notification when an account is approved by the admin.
+     *
+     * @return array{sent: bool, provider?: string, skippedReason?: string, error?: string}
+     */
+    public static function sendAccountApprovedEmail(
+        string $to,
+        string $name,
+        string $membershipType = 'Membership',
+        ?string $expiry = null,
+        ?string $username = null
+    ): array {
+        $destination = trim($to);
+        if ($destination === '') {
+            return ['sent' => false, 'skippedReason' => 'Missing destination email'];
+        }
+
+        $typeLabel = $membershipType === 'daily' ? 'Daily Pass' : ucfirst(str_replace('_', ' ', $membershipType));
+        $title = "Your FordaGO Account Has Been Approved! 🎉";
+        $plainText = "Hi {$name}! Great news: Your FordaGO account has been approved by the administration. You can now log in to the FordaGO app (https://fordago.online) with your credentials. Plan: {$typeLabel}. Status: ACTIVE." . ($expiry ? " Valid until: {$expiry}." : "");
+
+        // Render Blade template
+        $htmlContent = null;
+        try {
+            $htmlContent = View::make('emails.account-approved', [
+                'name'      => $name,
+                'username'  => $username,
+                'typeLabel' => $typeLabel,
+                'expiry'    => $expiry,
+            ])->render();
+        } catch (\Throwable $e) {
+            Log::warning('Failed rendering account-approved email template: ' . $e->getMessage());
+        }
+
+        return self::send($destination, $title, $plainText, $htmlContent);
+    }
+
+    /**
      * Send email via Resend REST API (HTTPS port 443 — NEVER blocked by DigitalOcean/VPS firewalls).
      */
     protected static function sendViaResend(string $to, string $subject, string $text, ?string $html = null): array

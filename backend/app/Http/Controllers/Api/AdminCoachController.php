@@ -39,7 +39,9 @@ class AdminCoachController extends Controller
      */
     public function index()
     {
-        $profiles = CoachProfile::with([
+        $profiles = CoachProfile::whereHas('user', function ($u) {
+            $u->where('role', 'coach');
+        })->with([
             'user:id,username,first_name,last_name,email,phone,profile_image',
             'creator:id,username,first_name,last_name',
         ])->orderByDesc('created_at')->get();

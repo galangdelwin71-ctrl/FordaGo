@@ -51,7 +51,7 @@ export class OnboardingService {
     shop_main: ['/inventory'],
     equipment_main: ['/equipment'],
     profile_main: ['/profile'],
-    chat_main: ['/coaching/chat'],
+    chat_main: ['/chat', '/coaching/chat'],
     coach_studio_main: ['/dashboard', '/schedule', '/equipment', '/inventory', '/profile', '/coaching'],
     coaching_member_main: ['/dashboard', '/schedule', '/equipment', '/inventory', '/profile', '/coaching'],
   };
@@ -91,6 +91,13 @@ export class OnboardingService {
       return null;
     }
     return tour[this.currentStepIndex];
+  }
+
+  isRouteAllowedForTour(tourId: string, url: string): boolean {
+    const allowed = this.tourRouteMap[tourId];
+    if (!allowed) return true;
+    const cleanUrl = url.split('?')[0];
+    return allowed.some((r) => cleanUrl.startsWith(r));
   }
 
   /**

@@ -31,6 +31,18 @@ class ConversationController extends Controller
             $q->where('coach_id', $userId)
               ->orWhere('client_id', $userId);
         })
+        ->whereHas('coach', function ($c) {
+            $c->where('role', 'coach')
+              ->where('membership_status', 'active')
+              ->whereHas('coachProfile', function ($p) {
+                  $p->where('is_active', true)
+                    ->where(function ($cp) {
+                        $cp->whereNull('contract_expiry')
+                          ->orWhereDate('contract_expiry', '>=', now()->toDateString());
+                    });
+              });
+        })
+        ->whereHas('client')
         ->get();
 
         // Single aggregated query for all unread counts — replaces the old
@@ -98,13 +110,13 @@ class ConversationController extends Controller
         }
 
         // Determine who is coach and who is client
-        $authHasCoachProfile = CoachProfile::where('user_id', $authId)->exists();
-        $targetHasCoachProfile = CoachProfile::where('user_id', $targetId)->exists();
+        $authIsCoach = ($request->user()->role === 'coach') && CoachProfile::where('user_id', $authId)->where('is_active', true)->exists();
+        $targetIsCoach = ($targetUser->role === 'coach') && CoachProfile::where('user_id', $targetId)->where('is_active', true)->exists();
 
-        if ($authHasCoachProfile && ! $targetHasCoachProfile) {
+        if ($authIsCoach && ! $targetIsCoach) {
             $coachId = $authId;
             $clientId = $targetId;
-        } elseif ($targetHasCoachProfile && ! $authHasCoachProfile) {
+        } elseif ($targetIsCoach && ! $authIsCoach) {
             $coachId = $targetId;
             $clientId = $authId;
         } else {
@@ -116,6 +128,23 @@ class ConversationController extends Controller
                 $coachId = $authId;
                 $clientId = $targetId;
             }
+        }
+
+        // Verify that the coach is a valid active coach
+        $coachUser = User::where('id', $coachId)
+            ->where('role', 'coach')
+            ->where('membership_status', 'active')
+            ->whereHas('coachProfile', function ($p) {
+                $p->where('is_active', true)
+                  ->where(function ($cp) {
+                      $cp->whereNull('contract_expiry')
+                        ->orWhereDate('contract_expiry', '>=', now()->toDateString());
+                  });
+            })
+            ->first();
+
+        if (! $coachUser) {
+            return response()->json(['message' => 'The selected coach is no longer active or available.'], 404);
         }
 
         // A client starting a fresh thread with a coach requires that
@@ -175,6 +204,10 @@ class ConversationController extends Controller
 
         if ((int) $conversation->coach_id !== (int) $userId && (int) $conversation->client_id !== (int) $userId) {
             return response()->json(['message' => 'Unauthorized to view this conversation.'], 403);
+        }
+
+        if (! $conversation->coach || $conversation->coach->role !== 'coach') {
+            return response()->json(['message' => 'This coach is no longer active.'], 404);
         }
 
         $isCoach = ((int) $conversation->coach_id === (int) $userId);

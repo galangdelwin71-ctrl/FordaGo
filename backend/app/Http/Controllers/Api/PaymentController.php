@@ -465,12 +465,39 @@ class PaymentController extends Controller
 
             // 1. MEMBERSHIP FULFILLMENT
             if ($payment->payment_for === 'membership' && $user) {
+                $expiryDateStr = now()->addDays(30)->toDateString();
                 $user->update([
                     'membership_type'   => 'premium',
                     'membership_status' => 'active',
                     'payment_method'    => $payment->payment_channel,
-                    'membership_expiry' => now()->addDays(30)->toDateString(),
+                    'membership_expiry' => $expiryDateStr,
                 ]);
+
+                // Send SMS & Email confirmation that account has been activated
+                try {
+                    $personName = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
+                    $displayName = $personName ?: ($user->username ?? 'Member');
+
+                    if (!empty($user->phone)) {
+                        \App\Services\SmsService::sendAccountApprovedSms(
+                            $user->phone,
+                            $displayName,
+                            'premium',
+                            $expiryDateStr
+                        );
+                    }
+                    if (!empty($user->email)) {
+                        \App\Services\MailService::sendAccountApprovedEmail(
+                            $user->email,
+                            $displayName,
+                            'premium',
+                            $expiryDateStr,
+                            $user->username
+                        );
+                    }
+                } catch (\Throwable $e) {
+                    \Log::warning('Failed sending online payment activation SMS/Email: ' . $e->getMessage());
+                }
 
                 try {
                     ActivityLogger::log(

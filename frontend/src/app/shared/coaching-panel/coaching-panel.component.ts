@@ -768,7 +768,7 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
               CoachingPanelComponent.cachedConversations = this.conversations;
               void setCachedData(CACHE_KEYS.COACH_CONVERSATIONS, res.conversations);
             }
-            if (Array.isArray(res.coaches) && res.coaches.length > 0) {
+            if (Array.isArray(res.coaches)) {
               this.coaches = res.coaches;
               this.isLoading = false;
               CoachingPanelComponent.cachedCoaches = res.coaches;

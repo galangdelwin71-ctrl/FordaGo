@@ -133,7 +133,14 @@ class User extends Authenticatable
 
     public function isCoach(): bool
     {
-        return $this->coachProfile()->exists();
+        return $this->role === 'coach'
+            && $this->coachProfile()
+                ->where('is_active', true)
+                ->where(function ($q) {
+                    $q->whereNull('contract_expiry')
+                      ->orWhereDate('contract_expiry', '>=', now()->toDateString());
+                })
+                ->exists();
     }
 
     /** Weekly availability slots this user set up as a coach. */

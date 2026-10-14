@@ -27,10 +27,16 @@ class CoachController extends Controller
         $search = trim((string) $request->input('search', ''));
         $specialty = trim((string) $request->input('specialty', ''));
 
-        // Only users with an ACTIVE coach profile are visible to clients.
+        // Only users with role coach, active status, and an ACTIVE unexpired coach profile are visible to clients.
         $query = User::with('coachProfile')
+            ->where('role', 'coach')
+            ->where('membership_status', 'active')
             ->whereHas('coachProfile', function ($p) {
-                $p->where('is_active', true);
+                $p->where('is_active', true)
+                  ->where(function ($q) {
+                      $q->whereNull('contract_expiry')
+                        ->orWhereDate('contract_expiry', '>=', now()->toDateString());
+                  });
             });
 
         if ($search !== '') {
@@ -80,7 +86,7 @@ class CoachController extends Controller
     {
         $user = User::with('coachProfile')->find($id);
 
-        if (! $user || ! $user->coachProfile || ! $user->coachProfile->is_active) {
+        if (! $user || $user->role !== 'coach' || $user->membership_status !== 'active' || ! $user->coachProfile || ! $user->coachProfile->is_active) {
             return response()->json(['message' => 'Coach not found'], 404);
         }
 

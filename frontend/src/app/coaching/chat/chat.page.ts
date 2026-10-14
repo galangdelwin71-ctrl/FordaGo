@@ -284,11 +284,14 @@ export class ChatPage implements OnInit, OnDestroy {
     this.checkAndStartChatTour();
   }
 
+  private chatTourTimer: any = null;
+
   private checkAndStartChatTour(): void {
     const user = this.auth.user;
     if (!user || user.role === 'admin') return;
 
-    setTimeout(() => {
+    clearTimeout(this.chatTourTimer);
+    this.chatTourTimer = setTimeout(() => {
       if (this.onboardingService.isRunning) return;
 
       const steps: TourStep[] = [
@@ -315,16 +318,37 @@ export class ChatPage implements OnInit, OnDestroy {
     }, 700);
   }
 
+  private closeOverlays(): void {
+    this.partnerInfoOpen = false;
+    this.isProposalModalOpen = false;
+    try {
+      void this.modalCtrl.dismiss().catch(() => {});
+    } catch {}
+    if (typeof document !== 'undefined') {
+      document.querySelectorAll('ion-backdrop, .modal-backdrop').forEach((el) => {
+        el.remove();
+      });
+    }
+  }
+
   /**
    * Called by Ionic every time this page is about to leave the active view.
    */
   ionViewWillLeave() {
+    clearTimeout(this.chatTourTimer);
+    this.chatTourTimer = null;
+    this.onboardingService.dismissActiveTour();
+    this.closeOverlays();
     this.stopLiveSync();
     // Re-enable notifications for this conversation as soon as user navigates away
     this.chatToastService.setActiveChat(null);
   }
 
   ngOnDestroy() {
+    clearTimeout(this.chatTourTimer);
+    this.chatTourTimer = null;
+    this.onboardingService.dismissActiveTour();
+    this.closeOverlays();
     this.stopLiveSync();
     this.chatToastService.setActiveChat(null);
   }
@@ -1091,6 +1115,17 @@ export class ChatPage implements OnInit, OnDestroy {
    * already-correct value with a guess.
    */
   goBack() {
-    this.location.back();
+    clearTimeout(this.chatTourTimer);
+    this.chatTourTimer = null;
+    this.onboardingService.dismissActiveTour();
+    this.closeOverlays();
+    this.stopLiveSync();
+    this.chatToastService.setActiveChat(null);
+
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      this.location.back();
+    } else {
+      this.router.navigate(['/profile'], { replaceUrl: true });
+    }
   }
 }

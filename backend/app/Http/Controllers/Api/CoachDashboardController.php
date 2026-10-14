@@ -39,6 +39,8 @@ class CoachDashboardController extends Controller
         $thisYear  = now()->year;
         $thisMonth = now()->month;
 
+        $isActualCoach = ($user->role === 'coach') && (bool) $profile && (bool) $profile->is_active;
+
         // ── 1. My Profile ──────────────────────────────────────────────────
         $myProfile = [
             'id'            => $user->id,
@@ -46,17 +48,17 @@ class CoachDashboardController extends Controller
             'username'      => $user->username,
             'first_name'    => $user->first_name,
             'last_name'     => $user->last_name,
-            'profile_image' => $profile?->photo_url ?: $user->profile_image,
-            'bio'           => $profile?->bio ?: '',
-            'specialty'     => $profile?->specialty ?: 'Personal Training',
-            'rate'          => $profile?->rate ? (float) $profile->rate : 0.00,
-            'is_active'     => (bool) ($profile?->is_active ?? false),
-            'has_profile'   => (bool) $profile,
+            'profile_image' => ($isActualCoach && $profile?->photo_url) ? $profile->photo_url : $user->profile_image,
+            'bio'           => $isActualCoach ? ($profile?->bio ?: '') : '',
+            'specialty'     => $isActualCoach ? ($profile?->specialty ?: 'Personal Training') : 'Personal Training',
+            'rate'          => ($isActualCoach && $profile?->rate) ? (float) $profile->rate : 0.00,
+            'is_active'     => $isActualCoach,
+            'has_profile'   => $isActualCoach,
         ];
 
-        // If this user has no coach profile, return their profile, active coaches, and conversations
+        // If this user is NOT an active coach, return their profile, active coaches, and conversations
         // all in ONE single round-trip so the member panel opens instantly with 0 delay.
-        if (! $profile) {
+        if (! $isActualCoach) {
             $memberConversations = Conversation::with([
                 'coach:id,username,first_name,last_name,profile_image',
                 'coach.coachProfile',
@@ -95,6 +97,13 @@ class CoachDashboardController extends Controller
 
             $activeCoaches = CoachProfile::with(['user:id,username,first_name,last_name,profile_image'])
                 ->where('is_active', true)
+                ->where(function ($q) {
+                    $q->whereNull('contract_expiry')
+                      ->orWhereDate('contract_expiry', '>=', now()->toDateString());
+                })
+                ->whereHas('user', function ($u) {
+                    $u->where('role', 'coach')->where('membership_status', 'active');
+                })
                 ->get()
                 ->map(function ($cp) {
                     return [

@@ -165,6 +165,20 @@
           </span>
           <ion-icon class="signup-arrow" name="chevron-forward-outline" aria-hidden="true"></ion-icon>
         </button>
+
+        <!-- Web Only: Download Android App APK -->
+        <div class="apk-download-wrap" *ngIf="!isNativePlatform">
+          <a href="/fordago_latest.apk" download="fordago_latest.apk" class="download-apk-card">
+            <div class="apk-card-icon">
+              <ion-icon name="logo-android" aria-hidden="true"></ion-icon>
+            </div>
+            <div class="apk-card-text">
+              <small>Android App Available</small>
+              <strong>Download FordaGO APK</strong>
+            </div>
+            <ion-icon class="apk-card-arrow" name="download-outline" aria-hidden="true"></ion-icon>
+          </a>
+        </div>
       </form>
 
       <!-- REGISTER STEP 1 -->
@@ -1032,16 +1046,17 @@
           </button>
         </div>
 
-        <div class="status-note" *ngIf="regSuccessPhone && regSuccessSmsSent">
-          <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
-          <span>Confirmation sent to {{ regSuccessPhone }}.</span>
-        </div>
-
-        <div class="status-note" *ngIf="regSuccessPhone && !regSuccessSmsSent">
-          <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
-          <span>
-            Account created for {{ regSuccessPhone }}. SMS alert is not available yet{{ regSuccessSmsReason ? ' (' + regSuccessSmsReason + ')' : '' }}.
-          </span>
+        <div class="status-note" *ngIf="!regOnlinePaid">
+          <ion-icon name="mail-unread-outline" aria-hidden="true"></ion-icon>
+          <div>
+            <strong style="color: #ffd600; display: block; font-size: 13px; margin-bottom: 2px;">Check your Email or SMS for confirmation</strong>
+            <span style="display: block; line-height: 1.45; color: #ffffff;">
+              Pakicheck ang iyong Email o SMS para sa kumpirmasyon kapag na-approve na ng admin ang iyong account upang malaman mong pwede ka nang mag-login.
+            </span>
+            <small style="display: block; margin-top: 4px; font-size: 11px; color: #9aa7be;">
+              (Please check your Email or SMS for confirmation once your account has been approved by the admin so you can sign in.)
+            </small>
+          </div>
         </div>
 
         <button class="submit-btn" type="button" (click)="goToLogin()">

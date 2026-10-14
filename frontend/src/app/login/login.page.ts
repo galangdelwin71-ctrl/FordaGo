@@ -58,7 +58,10 @@ import {
   timerOutline,
   receiptOutline,
   heartOutline,
+  logoAndroid,
+  downloadOutline,
 } from 'ionicons/icons';
+import { Capacitor } from '@capacitor/core';
 import {
   FITNESS_GOAL_OPTIONS,
   FitnessGoalOption,
@@ -82,6 +85,7 @@ import {
 export class LoginPage implements OnDestroy {
   segment: 'login' | 'register' | 'forgot' | '2fa' = 'login';
   regStep = 1;
+  isNativePlatform: boolean = Capacitor.isNativePlatform();
 
   // Biometric Quick Login (GCash style auto-prompt & sleek view)
   savedBiometricUser: { identifier: string; name: string; avatar?: string } | null = null;
@@ -312,6 +316,8 @@ export class LoginPage implements OnDestroy {
       'fitness-outline': fitnessOutline,
       'receipt-outline': receiptOutline,
       'heart-outline': heartOutline,
+      'logo-android': logoAndroid,
+      'download-outline': downloadOutline,
     });
 
     this.route.queryParams.subscribe((params) => {

@@ -74,6 +74,26 @@ class SmsService
     }
 
     /**
+     * Send SMS notification when an account is approved by the admin.
+     *
+     * @return array{sent: bool, provider?: string, skippedReason?: string, error?: string}
+     */
+    public static function sendAccountApprovedSms(
+        string $to,
+        string $name,
+        string $membershipType = 'Membership',
+        ?string $expiry = null
+    ): array {
+        $cleanName = trim($name) ?: 'Member';
+        $typeLabel = $membershipType === 'daily' ? 'Daily Pass' : ucfirst(str_replace('_', ' ', $membershipType));
+        $expiryText = $expiry ? " Valid until: {$expiry}." : "";
+
+        $message = "FordaGO: Hello {$cleanName}! Your account has been approved by the admin. You can now log in to the FordaGO app (https://fordago.online). Plan: {$typeLabel}.{$expiryText} Keep moving!";
+
+        return self::send($to, $message);
+    }
+
+    /**
      * Send SMS via PhilSMS API (https://app.philsms.com/api/v3/sms/send)
      */
     protected static function sendViaPhilSMS(string $to, string $message): array

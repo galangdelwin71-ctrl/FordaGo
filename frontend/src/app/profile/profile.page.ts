@@ -1,5 +1,4 @@
-// profile.page.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -526,6 +525,7 @@ export class ProfilePage implements OnInit {
     private workoutTracker: WorkoutTrackerService,
     public biometricService: BiometricService,
     private paymentService: PaymentService,
+    private cdr: ChangeDetectorRef,
   ) {
     addIcons({
       'alert-circle-outline': alertCircleOutline,
@@ -671,9 +671,15 @@ export class ProfilePage implements OnInit {
 
   ionViewWillEnter(): void {
     if (!this.auth.user) return;
+    if (typeof document !== 'undefined') {
+      document.querySelectorAll('ion-backdrop, .modal-backdrop').forEach((el) => {
+        el.remove();
+      });
+    }
     this.applyPendingCoachingReopen();
     this.loadProfile();
     this.isActiveStatus = this.userStatusService.isActive;
+    try { this.cdr.detectChanges(); } catch {}
     this.checkAndStartProfileTour();
   }
 
@@ -725,13 +731,6 @@ export class ProfilePage implements OnInit {
           title: 'Dark / Light Theme',
           description: 'Toggle between FordaGO sleek dark aesthetic and daylight light mode.',
           icon: 'moon-outline',
-          position: 'top',
-        },
-        {
-          targetId: '#tour-profile-history',
-          title: 'Progress History',
-          description: 'Track your bodyweight progression, completed session logs, and personal best records.',
-          icon: 'stats-chart-outline',
           position: 'top',
         },
         {
@@ -2276,6 +2275,7 @@ export class ProfilePage implements OnInit {
     if (pendingTab) {
       this.coachingPanelInitialTab = pendingTab;
       this.coachingPanelOpen = true;
+      try { this.cdr.detectChanges(); } catch {}
     }
   }
 

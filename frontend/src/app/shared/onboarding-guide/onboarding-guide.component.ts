@@ -258,6 +258,16 @@ export class OnboardingGuideComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const currentTourId = this.onboardingService.activeTourId;
+    const currentUrl = (this.router.url || window.location.pathname || '').split('?')[0];
+    if (currentTourId && !this.onboardingService.isRouteAllowedForTour(currentTourId, currentUrl)) {
+      this.isVisible = false;
+      this.spotlight.visible = false;
+      this.onboardingService.dismissActiveTour();
+      this.cdr.detectChanges();
+      return;
+    }
+
     const targetEl = document.querySelector(this.currentStep.targetId) as HTMLElement;
     const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
@@ -265,21 +275,12 @@ export class OnboardingGuideComponent implements OnInit, OnDestroy {
     const isTargetVisible = this.isElementVisible(targetEl);
 
     if (!targetEl || !isTargetVisible) {
-      // Fallback: center in viewport if target not found or belongs to a hidden page
-      this.spotlight = {
-        top: viewportHeight / 2 - 40,
-        left: viewportWidth / 2 - 40,
-        width: 80,
-        height: 80,
-        radius: 20,
-        visible: false,
-      };
-      this.tooltipPos = {
-        top: Math.max(20, (viewportHeight - 200) / 2),
-        left: 16,
-        arrowPosition: 'none',
-        arrowOffset: 50,
-      };
+      // Target element is not found or not visible on current screen.
+      // Immediately dismiss tour to prevent stuck/unresponsive transparent overlays!
+      this.spotlight.visible = false;
+      this.isVisible = false;
+      this.onboardingService.dismissActiveTour();
+      this.cdr.detectChanges();
       return;
     }
 

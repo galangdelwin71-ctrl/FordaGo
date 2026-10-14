@@ -448,6 +448,11 @@ class UserController extends Controller
                     $originals[$dk] = $user->getOriginal($dk);
                 }
                 $user->save();
+
+                // If user role is no longer coach, remove any associated coach profile
+                if ($user->role !== 'coach') {
+                    \App\Models\CoachProfile::where('user_id', $user->id)->delete();
+                }
             } else {
                 $user->fill(array_merge([
                     'username'      => $username ?: $user->username,
@@ -629,23 +634,64 @@ class UserController extends Controller
             \Log::warning('Failed to send FCM push on membership update: ' . $e->getMessage());
         }
 
-        try {
-            $personName = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
-            $displayName = $personName ?: $user->username;
-            $displayWithHandle = ($personName && $personName !== $user->username) ? "{$personName} ({$user->username})" : "{$user->username}";
+        $personName = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
+        $displayName = $personName ?: $user->username;
+        $displayWithHandle = ($personName && $personName !== $user->username) ? "{$personName} ({$user->username})" : "{$user->username}";
 
+        // 1. Send SMS Notification so member knows their account is approved and they can log in
+        $smsResult = ['sent' => false];
+        if (!empty($user->phone)) {
+            try {
+                $smsResult = SmsService::sendAccountApprovedSms(
+                    $user->phone,
+                    $displayName,
+                    $membershipType,
+                    $membershipExpiry
+                );
+            } catch (\Throwable $e) {
+                \Log::warning('Failed sending account approved SMS: ' . $e->getMessage(), ['user_id' => $user->id]);
+            }
+        }
+
+        // 2. Send Email Notification with official approval details
+        $emailResult = ['sent' => false];
+        if (!empty($user->email)) {
+            try {
+                $emailResult = MailService::sendAccountApprovedEmail(
+                    $user->email,
+                    $displayName,
+                    $membershipType,
+                    $membershipExpiry,
+                    $user->username
+                );
+            } catch (\Throwable $e) {
+                \Log::warning('Failed sending account approved email: ' . $e->getMessage(), ['user_id' => $user->id]);
+            }
+        }
+
+        try {
             ActivityLogger::log(
                 $request->user(),
                 'membership_update',
                 "Approved Membership: {$displayName}",
-                "Set {$membershipType} membership as active for {$displayWithHandle}. Expiry: " . ($membershipExpiry ?: 'Daily/N/A'),
+                "Set {$membershipType} membership as active for {$displayWithHandle}. Notifications dispatched (SMS: " . (!empty($smsResult['sent']) ? 'Sent' : 'Skipped/Failed') . ", Email: " . (!empty($emailResult['sent']) ? 'Sent' : 'Skipped/Failed') . ").",
                 'user',
                 $user->id,
-                ['membership_type' => $membershipType, 'expiry' => $membershipExpiry, 'target_name' => $displayName]
+                [
+                    'membership_type' => $membershipType,
+                    'expiry'          => $membershipExpiry,
+                    'target_name'     => $displayName,
+                    'sms_sent'        => !empty($smsResult['sent']),
+                    'email_sent'      => !empty($emailResult['sent']),
+                ]
             );
         } catch (\Throwable) {}
 
-        return response()->json(['message' => 'Membership updated and user notified.']);
+        return response()->json([
+            'message'    => 'Membership updated and user notified via SMS, Email, and Push.',
+            'sms_sent'   => !empty($smsResult['sent']),
+            'email_sent' => !empty($emailResult['sent']),
+        ]);
     }
 
     /**
@@ -683,6 +729,7 @@ class UserController extends Controller
         $displayName = $personName ?: $user->username;
         $displayWithHandle = ($personName && $personName !== $user->username) ? "{$personName} ({$user->username})" : "{$user->username}";
 
+        \App\Models\CoachProfile::where('user_id', $user->id)->delete();
         $user->delete();
 
         try {

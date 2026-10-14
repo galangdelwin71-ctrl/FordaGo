@@ -834,24 +834,21 @@
               <div class="exp-member-details">
                 <div class="exp-member-name">{{ m.username }}</div>
                 <div class="exp-member-meta">
+                  <ion-icon name="calendar-outline" aria-hidden="true" class="exp-meta-icon"></ion-icon>
                   <span class="exp-date">Expires {{ m.expiryDate }}</span>
-                  <span class="exp-dot">·</span>
-                  <span class="exp-days-tag" [ngClass]="m.daysLeft <= 0 ? 'urgent' : (m.daysLeft <= 2 ? 'urgent' : 'warning')">
-                    <ng-container *ngIf="m.daysLeft < 0">
-                      {{ m.daysLeft === -1 ? 'Expired yesterday' : 'Expired ' + (-m.daysLeft) + ' days ago' }}
-                    </ng-container>
-                    <ng-container *ngIf="m.daysLeft === 0">Expires Today!</ng-container>
-                    <ng-container *ngIf="m.daysLeft > 0">
-                      {{ m.daysLeft === 1 ? '1 day left' : m.daysLeft + ' days left' }}
-                    </ng-container>
-                  </span>
                 </div>
               </div>
             </div>
             <div class="exp-card-right">
-              <span class="badge danger" *ngIf="m.daysLeft < 0">Expired</span>
-              <span class="badge danger" *ngIf="m.daysLeft === 0">Expires Today</span>
-              <span class="badge warn" *ngIf="m.daysLeft > 0">Expiring Soon</span>
+              <span class="badge danger" *ngIf="m.daysLeft < 0">
+                {{ m.daysLeft === -1 ? 'Expired Yesterday' : 'Expired ' + (-m.daysLeft) + 'd ago' }}
+              </span>
+              <span class="badge danger" *ngIf="m.daysLeft === 0">
+                Expires Today
+              </span>
+              <span class="badge" [ngClass]="m.daysLeft <= 2 ? 'badge-urgent' : 'warn'" *ngIf="m.daysLeft > 0">
+                {{ m.daysLeft === 1 ? '1 Day Left' : m.daysLeft + ' Days Left' }}
+              </span>
               <button
                 type="button"
                 class="act-notify-btn"

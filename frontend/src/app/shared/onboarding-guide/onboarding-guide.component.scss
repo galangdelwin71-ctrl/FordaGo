@@ -3,6 +3,7 @@
 :host {
   display: block;
   position: static;
+  pointer-events: none;
 }
 
 .onboarding-overlay {

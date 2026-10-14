@@ -134,14 +134,6 @@
       <ion-toggle [checked]="isActiveStatus" (ionChange)="onActiveStatusToggle($event)" class="theme-toggle"></ion-toggle>
     </div>
 
-    <div class="menu-item fade-up" id="tour-profile-history" (click)="openProgressHistory()">
-      <span class="menu-icon"><ion-icon name="stats-chart-outline"></ion-icon></span>
-      <div class="menu-content">
-        <div class="menu-label">Progress History</div>
-        <div class="menu-sub">View past sessions &amp; records</div>
-      </div>
-      <span class="menu-arrow">›</span>
-    </div>
 
     <div class="menu-item fade-up" id="tour-profile-transactions" (click)="router.navigate(['/transactions'])">
       <span class="menu-icon"><ion-icon name="receipt-outline"></ion-icon></span>
