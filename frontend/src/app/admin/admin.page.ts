@@ -2585,7 +2585,56 @@ export class AdminPage implements OnInit, OnDestroy {
   }
 
   async regenerateGymQrCode() {
-    await this.loadGymQrCode(true);
+    if (this.isLoadingQrCode) return;
+
+    this.askConfirm(
+      'Gym QR Code',
+      'Attendance Token',
+      async () => {
+        await this.performRegenerateGymQr();
+      },
+      {
+        title: 'Regenerate Gym Attendance QR?',
+        message: 'Generating a new QR code will IMMEDIATELY INVALIDATE all previous QR codes. Members with old screenshots or printed copies will no longer be able to check in.',
+        actionLabel: 'Regenerate Now',
+        icon: 'refresh-outline',
+      }
+    );
+  }
+
+  private async performRegenerateGymQr() {
+    this.isLoadingQrCode = true;
+    this.qrCodeError = '';
+
+    try {
+      const headers = { Authorization: `Bearer ${this.auth.token}` };
+      const res = await firstValueFrom(
+        this.http.post<{ qr_code: string; message?: string }>(
+          `${this.api}/attendance/regenerate-qr`,
+          {},
+          { headers }
+        )
+      );
+
+      if (res?.qr_code) {
+        this.gymQrCode = res.qr_code.trim();
+        this.gymQrImageUrl = await QRCode.toDataURL(this.gymQrCode, {
+          width: 260,
+          margin: 1,
+          color: {
+            dark: '#111111',
+            light: '#FFFFFF',
+          },
+        });
+        this.toast.success(res.message || 'Gym QR code regenerated! All old QR codes are now invalidated.');
+      }
+    } catch (error: any) {
+      const msg = error?.error?.message || 'Failed to regenerate QR code.';
+      this.qrCodeError = msg;
+      this.toast.error(msg);
+    } finally {
+      this.isLoadingQrCode = false;
+    }
   }
 
   async downloadGymQrCode() {

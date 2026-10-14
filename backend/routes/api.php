@@ -154,7 +154,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/pending',      [AttendanceController::class, 'pending'])->middleware('role:admin,super_admin,employee');
         Route::put('/{id}/confirm', [AttendanceController::class, 'confirm'])->whereNumber('id')->middleware('role:admin,super_admin,employee');
         Route::put('/{id}/reject',  [AttendanceController::class, 'reject'])->whereNumber('id')->middleware('role:admin,super_admin,employee');
-        Route::get('/qr-code', [AttendanceController::class, 'qrCode'])->middleware('role:admin,super_admin,employee');
+        Route::get('/qr-code',          [AttendanceController::class, 'qrCode'])->middleware('role:admin,super_admin,employee');
+        Route::post('/regenerate-qr',   [AttendanceController::class, 'regenerateQr'])->middleware('role:admin,super_admin');
     });
 
     // ── Workouts (server/routes/workout.js) ───────────────────────────────

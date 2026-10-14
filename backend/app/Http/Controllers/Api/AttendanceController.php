@@ -10,14 +10,72 @@ use App\Models\User;
 use App\Services\ActivityLogger;
 use App\Services\FcmService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * Ported from server/routes/attendance.js.
  */
 class AttendanceController extends Controller
 {
-    private const GYM_QR_CODE = 'FORDAGO_GYM_CHECKIN_V1';
+    private const DEFAULT_GYM_QR_CODE = 'FORDAGO_GYM_CHECKIN_V1';
+
+    /**
+     * Get the active gym attendance QR code token.
+     */
+    public static function getActiveGymQr(): string
+    {
+        // 1. Check in-memory / persistent Laravel Cache
+        try {
+            $cached = Cache::get('gym_qr_code');
+            if ($cached && is_string($cached) && trim($cached) !== '') {
+                return trim($cached);
+            }
+        } catch (\Throwable) {}
+
+        // 2. Check persistent JSON file in storage
+        try {
+            $filePath = storage_path('app/gym_qr.json');
+            if (file_exists($filePath)) {
+                $raw = @file_get_contents($filePath);
+                $data = json_decode($raw, true);
+                if (!empty($data['qr_code'])) {
+                    $token = trim((string) $data['qr_code']);
+                    try {
+                        Cache::forever('gym_qr_code', $token);
+                    } catch (\Throwable) {}
+                    return $token;
+                }
+            }
+        } catch (\Throwable) {}
+
+        return self::DEFAULT_GYM_QR_CODE;
+    }
+
+    /**
+     * Set the active gym attendance QR code token.
+     */
+    public static function setActiveGymQr(string $newToken): void
+    {
+        $token = trim($newToken);
+
+        try {
+            Cache::forever('gym_qr_code', $token);
+        } catch (\Throwable) {}
+
+        try {
+            $dir = storage_path('app');
+            if (!is_dir($dir)) {
+                @mkdir($dir, 0755, true);
+            }
+            $filePath = $dir . '/gym_qr.json';
+            @file_put_contents($filePath, json_encode([
+                'qr_code'    => $token,
+                'updated_at' => now()->toIso8601String(),
+            ], JSON_PRETTY_PRINT));
+        } catch (\Throwable) {}
+    }
 
     private function parseDate(?string $value): ?string
     {
@@ -30,8 +88,13 @@ class AttendanceController extends Controller
      */
     public function checkin(Request $request)
     {
-        if ($request->input('qr_code') !== self::GYM_QR_CODE) {
-            return response()->json(['message' => 'Invalid QR code. Please scan the official gym QR code.'], 400);
+        $activeQr = self::getActiveGymQr();
+        $scannedQr = trim((string) $request->input('qr_code'));
+
+        if ($scannedQr !== $activeQr) {
+            return response()->json([
+                'message' => 'Invalid or expired gym QR code. Please scan the newly generated QR code at the gym counter.',
+            ], 400);
         }
 
         $user = User::find($request->user()->id);
@@ -307,6 +370,37 @@ class AttendanceController extends Controller
      */
     public function qrCode()
     {
-        return response()->json(['qr_code' => self::GYM_QR_CODE]);
+        return response()->json([
+            'qr_code' => self::getActiveGymQr(),
+        ]);
+    }
+
+    /**
+     * POST /api/attendance/regenerate-qr
+     */
+    public function regenerateQr(Request $request)
+    {
+        // Generate a new secure, unique gym QR token
+        $newToken = 'FORDAGO_GYM_' . date('Ymd') . '_' . strtoupper(Str::random(8));
+        self::setActiveGymQr($newToken);
+
+        try {
+            if ($request->user()) {
+                ActivityLogger::log(
+                    $request->user(),
+                    'attendance_qr_regenerate',
+                    'Regenerated Gym Attendance QR',
+                    "Generated new gym attendance QR code ({$newToken}). All previous QR codes have been invalidated.",
+                    'attendance',
+                    null,
+                    ['new_qr_code' => $newToken]
+                );
+            }
+        } catch (\Throwable) {}
+
+        return response()->json([
+            'message' => 'New gym attendance QR code generated successfully. All previous QR codes have been invalidated.',
+            'qr_code' => $newToken,
+        ]);
     }
 }

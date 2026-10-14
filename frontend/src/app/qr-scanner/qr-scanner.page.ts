@@ -12,6 +12,7 @@ import {
   IonSpinner,
 } from '@ionic/angular/standalone';
 import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { EchoService } from '../services/echo.service';
 import { Html5Qrcode } from 'html5-qrcode';
@@ -757,12 +758,13 @@ export class QrScannerPage implements OnInit, OnDestroy {
 
     // 1. Check if it's an attendance scan
     const isAttendanceQr = raw === 'FORDAGO_GYM_CHECKIN_V1' ||
+                           raw.toUpperCase().startsWith('FORDAGO_GYM_') ||
                            raw.toLowerCase().includes('fordago_gym_checkin') ||
                            raw.toLowerCase().startsWith('attendance:') ||
                            raw.toLowerCase().startsWith('gym:');
 
     if (this.scanMode === 'attendance' || isAttendanceQr) {
-      const payload = isAttendanceQr ? 'FORDAGO_GYM_CHECKIN_V1' : decodedText;
+      const payload = raw;
       await this.doCheckIn(payload);
       return;
     }
@@ -882,9 +884,24 @@ export class QrScannerPage implements OnInit, OnDestroy {
   }
 
   /** Direct check-in with the official gym QR payload (useful for testing or direct check-in) */
-  checkInWithGymQr(): void {
+  async checkInWithGymQr(): Promise<void> {
     if (this.isProcessingScan) return;
     this.isProcessingScan = true;
+
+    // Staff/admin testing on browser can query the active QR code
+    if (this.auth.user?.role && this.auth.user.role !== 'user') {
+      try {
+        const headers = { Authorization: `Bearer ${this.auth.token}` };
+        const res = await firstValueFrom(
+          this.http.get<{ qr_code?: string }>(`${this.api}/attendance/qr-code`, { headers })
+        );
+        if (res?.qr_code) {
+          await this.doCheckIn(res.qr_code);
+          return;
+        }
+      } catch {}
+    }
+
     void this.doCheckIn('FORDAGO_GYM_CHECKIN_V1');
   }
 

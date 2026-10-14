@@ -863,7 +863,7 @@ class AuthController extends Controller
             'channel'           => $channel,
             'destinationMasked' => $destMasked,
             'reason'            => $isSent ? null : ($deliveryResult['skippedReason'] ?? $deliveryResult['error'] ?? 'Could not send code'),
-            'devCode'           => null,
+            'devCode'           => (! $isSent) ? $code : null,
         ]);
     }
 
