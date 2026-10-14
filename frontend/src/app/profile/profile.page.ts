@@ -1498,7 +1498,7 @@ export class ProfilePage implements OnInit {
 
   get displayUsername(): string {
     const raw = (this.profile.username || (this.auth.user as any)?.username || '').trim().replace(/^@/, '');
-    return raw ? `@${raw}` : (this.fullName || 'Member');
+    return raw ? raw : (this.fullName || 'Member');
   }
 
   get displayRealName(): string {

@@ -255,6 +255,7 @@ export class AdminPage implements OnInit, OnDestroy {
   lowStockCount = 0;
   pendingOrders = 0;
   expiringMembers: any[] = [];
+  expiringProducts: any[] = [];
   lowStockThreshold = 5;
   outOfStockProducts: any[] = [];
   lowStockProducts: any[] = [];
@@ -318,6 +319,14 @@ export class AdminPage implements OnInit, OnDestroy {
     this.lowStockProducts = this.products.filter(p => Number(p.stock) > 0 && Number(p.stock) <= this.lowStockThreshold);
     this.allLowStockAlerts = [...this.outOfStockProducts, ...this.lowStockProducts];
     this.lowStockCount = this.allLowStockAlerts.length;
+    this.expiringProducts = this.products
+      .map(p => ({
+        ...p,
+        expiryDays: this.getProductExpiryDays(p),
+        expiryStatus: this.getProductExpiryStatus(p)
+      }))
+      .filter(p => p.expiryStatus === 'expired' || p.expiryStatus === 'expiring_soon')
+      .sort((a, b) => (a.expiryDays ?? 999) - (b.expiryDays ?? 999));
   }
 
   openQuickRestock(p: any, event?: Event): void {
@@ -383,6 +392,20 @@ export class AdminPage implements OnInit, OnDestroy {
     this.activeTab = 'inventory';
     this.showAllProducts = true;
     this.productSearch = p.name;
+    this.editProduct(p);
+  }
+
+  navigateToExpiringProducts(): void {
+    this.activeTab = 'inventory';
+    this.shopSubTab = 'expiring';
+    this.showAllProducts = true;
+  }
+
+  navigateToExpiringProduct(p: any, event?: Event): void {
+    if (event) event.stopPropagation();
+    this.activeTab = 'inventory';
+    this.shopSubTab = 'expiring';
+    this.showAllProducts = true;
     this.editProduct(p);
   }
 
@@ -472,6 +495,46 @@ export class AdminPage implements OnInit, OnDestroy {
     this.activeTab = 'members';
     this.memberSearch = member?.username || '';
     this.showAllMembers = true;
+  }
+
+  isNotifyingExpiring = false;
+
+  notifyExpiringMember(m: any, event?: Event): void {
+    if (event) event.stopPropagation();
+    if (!this.auth.token || !m || !m.id || m.notifying) return;
+
+    m.notifying = true;
+    const headers = { Authorization: `Bearer ${this.auth.token}` };
+    this.http.post<any>(`${this.api}/users/${m.id}/notify-expiry`, {}, { headers }).subscribe({
+      next: (res) => {
+        m.notifying = false;
+        m.notified = true;
+        this.toast.success(res.message || `Expiration reminder sent to @${m.username}!`);
+      },
+      error: (err) => {
+        m.notifying = false;
+        this.toast.error(err?.error?.message || 'Failed to send expiration reminder.');
+      }
+    });
+  }
+
+  notifyAllExpiringMembers(event?: Event): void {
+    if (event) event.stopPropagation();
+    if (!this.auth.token || this.isNotifyingExpiring) return;
+
+    this.isNotifyingExpiring = true;
+    const headers = { Authorization: `Bearer ${this.auth.token}` };
+    this.http.post<any>(`${this.api}/users/notify-all-expiring`, {}, { headers }).subscribe({
+      next: (res) => {
+        this.isNotifyingExpiring = false;
+        this.expiringMembers.forEach(x => { x.notified = true; });
+        this.toast.success(res.message || `Expiration reminders sent to ${res.count || 0} members!`);
+      },
+      error: (err) => {
+        this.isNotifyingExpiring = false;
+        this.toast.error(err?.error?.message || 'Failed to send expiration reminders.');
+      }
+    });
   }
 
   // ── Members ─────────────────────────────────────────
@@ -1482,7 +1545,8 @@ export class AdminPage implements OnInit, OnDestroy {
           this.latestMemberId = null;
         }
         this.expiringMembers = membersWithDays
-          .filter(m => m.membership_type === 'premium' && m.daysLeft !== null && m.daysLeft <= 7 && m.daysLeft >= 0);
+          .filter(m => (m.membership_type === 'premium' || !!m.membership_expiry) && m.daysLeft !== null && m.daysLeft <= 7)
+          .sort((a, b) => (a.daysLeft ?? 0) - (b.daysLeft ?? 0));
       },
       error: () => {
         this.membersLoading = false;
@@ -1860,6 +1924,7 @@ export class AdminPage implements OnInit, OnDestroy {
       this.http.delete(`${this.api}/users/${m.id}`, { headers }).subscribe({
         next: () => {
           this.members = this.members.filter(x => x.id !== m.id);
+          this.expiringMembers = this.expiringMembers.filter(x => x.id !== m.id);
           this.totalMembers--;
           if (this.latestMemberId === m.id) {
             this.latestMemberId = this.members.length > 0 ? this.members[0].id : null;
@@ -2967,7 +3032,7 @@ export class AdminPage implements OnInit, OnDestroy {
     const fn = f.user?.first_name || '';
     const ln = f.user?.last_name || '';
     const full = (fn + ' ' + ln).trim();
-    return full || (f.user?.username ? `@${f.user.username}` : (f.user_id ? `Member (${f.user_id})` : 'Anonymous Member'));
+    return full || (f.user?.username ? f.user.username : (f.user_id ? `Member (${f.user_id})` : 'Anonymous Member'));
   }
 
   loadFeedbacks() {
@@ -3455,10 +3520,10 @@ export class AdminPage implements OnInit, OnDestroy {
     // Replace any "user #\d+ (@username)" or "user #\d+" with actual name
     result = result.replace(/user\s*#(\d+)(?:\s*\(@?([a-zA-Z0-9_.\-]+)\))?/gi, (match, id, handle) => {
       if (targetName) {
-        return handle && targetName !== handle ? `${targetName} (@${handle})` : targetName;
+        return handle && targetName !== handle ? `${targetName} (${handle})` : targetName;
       }
       if (handle) {
-        return `@${handle}`;
+        return `${handle}`;
       }
       return `${targetRole} (${id})`;
     });

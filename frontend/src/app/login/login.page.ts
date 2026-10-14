@@ -203,6 +203,20 @@ export class LoginPage implements OnDestroy {
   regSuccessSmsSent = false;
   regSuccessSmsReason = '';
 
+  // Registration Email OTP Verification
+  regEmailVerified = false;
+  regVerifiedEmail = '';
+  regVerificationToken = '';
+  showRegEmailOtpModal = false;
+  regOtpDigits: string[] = ['', '', '', '', '', ''];
+  regOtpCode = '';
+  regOtpLoading = false;
+  regOtpSending = false;
+  regOtpError = '';
+  regOtpResendCountdown = 0;
+  regOtpDevCode = '';
+  private regOtpTimer: any = null;
+
   // Forgot-password fields
   fpStep: number = 1;
   fpIdentifier = '';
@@ -315,6 +329,8 @@ export class LoginPage implements OnDestroy {
 
   ngOnDestroy(): void {
     this.clearResendTimer();
+    this.clearTwoFactorTimer();
+    this.clearRegOtpTimer();
   }
 
   @HostListener('document:click')
@@ -547,6 +563,11 @@ export class LoginPage implements OnDestroy {
     this.regError = '';
     this.showRegisterPassword = false;
     this.showRegisterConfirm = false;
+    this.regEmailVerified = false;
+    this.regVerifiedEmail = '';
+    this.regVerificationToken = '';
+    this.showRegEmailOtpModal = false;
+    this.clearRegOtpTimer();
     this.updatePreviewGoalPlan();
   }
 
@@ -998,6 +1019,13 @@ export class LoginPage implements OnDestroy {
 
       if (this.reg.password !== this.reg.confirm) {
         this.regError = 'Passwords do not match.';
+        return;
+      }
+
+      // Check email verification before allowing user to advance to Step 2
+      const normalizedEmail = this.reg.email.trim().toLowerCase();
+      if (!this.regEmailVerified || this.regVerifiedEmail !== normalizedEmail) {
+        this.openRegEmailOtp();
         return;
       }
 
@@ -1503,6 +1531,13 @@ export class LoginPage implements OnDestroy {
 
   register(): void {
     this.regError = '';
+    const normalizedEmail = this.reg.email.trim().toLowerCase();
+    if (!this.regEmailVerified || this.regVerifiedEmail !== normalizedEmail) {
+      this.regError = 'Please verify your email address via OTP before completing registration.';
+      this.regStep = 1;
+      return;
+    }
+
     this.regLoading = true;
 
     const fitnessProfile = {
@@ -1537,7 +1572,8 @@ export class LoginPage implements OnDestroy {
         this.reg.payment_method,
         fitnessProfile,
         this.reg.dateOfBirth,
-        this.reg.username
+        this.reg.username,
+        this.regVerificationToken
       )
       .subscribe({
         next: (res: any) => {
@@ -1556,6 +1592,165 @@ export class LoginPage implements OnDestroy {
           this.regError = err?.error?.message || 'Registration failed.';
         },
       });
+  }
+
+  // ── Registration Email OTP Verification Methods ─────────────
+
+  onRegEmailChange(): void {
+    if (this.regEmailVerified && this.regVerifiedEmail !== this.reg.email.trim().toLowerCase()) {
+      this.regEmailVerified = false;
+      this.regVerifiedEmail = '';
+      this.regVerificationToken = '';
+    }
+  }
+
+  openRegEmailOtp(): void {
+    const email = this.reg.email.trim().toLowerCase();
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      this.regError = 'Please enter a valid email address.';
+      return;
+    }
+
+    this.regError = '';
+    this.regOtpError = '';
+    this.regOtpSending = true;
+    this.regOtpDigits = ['', '', '', '', '', ''];
+    this.regOtpCode = '';
+
+    this.auth.sendRegistrationOtp(email, this.reg.firstName).subscribe({
+      next: (res: any) => {
+        this.regOtpSending = false;
+        this.showRegEmailOtpModal = true;
+        this.regOtpDevCode = res?.dev_code || '';
+        this.startRegOtpTimer(60);
+        setTimeout(() => this.focusRegOtpDigit(0), 180);
+      },
+      error: (err: any) => {
+        this.regOtpSending = false;
+        this.regError = err?.error?.message || 'Failed to send verification code. Please check your email and try again.';
+      }
+    });
+  }
+
+  resendRegEmailOtp(): void {
+    if (this.regOtpResendCountdown > 0 || this.regOtpSending) return;
+    const email = this.reg.email.trim().toLowerCase();
+    this.regOtpSending = true;
+    this.regOtpError = '';
+
+    this.auth.sendRegistrationOtp(email, this.reg.firstName).subscribe({
+      next: (res: any) => {
+        this.regOtpSending = false;
+        this.regOtpDevCode = res?.dev_code || '';
+        this.regOtpDigits = ['', '', '', '', '', ''];
+        this.regOtpCode = '';
+        this.startRegOtpTimer(60);
+        setTimeout(() => this.focusRegOtpDigit(0), 100);
+      },
+      error: (err: any) => {
+        this.regOtpSending = false;
+        this.regOtpError = err?.error?.message || 'Failed to resend verification code. Please try again.';
+      }
+    });
+  }
+
+  onRegOtpDigitInput(event: any, index: number): void {
+    const input = event.target as HTMLInputElement;
+    const val = input.value.replace(/\D/g, '');
+
+    if (val.length > 1) {
+      const chars = val.slice(0, 6).split('');
+      for (let i = 0; i < 6; i++) {
+        this.regOtpDigits[i] = chars[i] || '';
+      }
+      this.regOtpCode = this.regOtpDigits.join('');
+      const lastIndex = Math.min(chars.length - 1, 5);
+      this.focusRegOtpDigit(lastIndex);
+      if (this.regOtpCode.length === 6) {
+        this.verifyRegEmailOtp();
+      }
+      return;
+    }
+
+    this.regOtpDigits[index] = val ? val.slice(-1) : '';
+    this.regOtpCode = this.regOtpDigits.join('');
+
+    if (val && index < 5) {
+      this.focusRegOtpDigit(index + 1);
+    }
+    if (this.regOtpCode.length === 6) {
+      this.verifyRegEmailOtp();
+    }
+  }
+
+  onRegOtpDigitKeyDown(event: KeyboardEvent, index: number): void {
+    if (event.key === 'Backspace' && !this.regOtpDigits[index] && index > 0) {
+      this.regOtpDigits[index - 1] = '';
+      this.regOtpCode = this.regOtpDigits.join('');
+      this.focusRegOtpDigit(index - 1);
+    }
+  }
+
+  focusRegOtpDigit(index: number): void {
+    setTimeout(() => {
+      const el = document.getElementById(`reg-email-otp-${index}`) as HTMLInputElement | null;
+      if (el) {
+        el.focus();
+        el.select();
+      }
+    }, 50);
+  }
+
+  verifyRegEmailOtp(): void {
+    if (this.regOtpCode.length !== 6) {
+      this.regOtpError = 'Please enter all 6 digits of the code.';
+      return;
+    }
+    this.regOtpLoading = true;
+    this.regOtpError = '';
+    const email = this.reg.email.trim().toLowerCase();
+
+    this.auth.verifyRegistrationOtp(email, this.regOtpCode).subscribe({
+      next: (res: any) => {
+        this.regOtpLoading = false;
+        this.regEmailVerified = true;
+        this.regVerifiedEmail = email;
+        this.regVerificationToken = res?.verification_token || 'verified';
+        this.clearRegOtpTimer();
+        this.showRegEmailOtpModal = false;
+        // Step 1 email is verified, advance smoothly to Step 2!
+        this.regStep = 2;
+      },
+      error: (err: any) => {
+        this.regOtpLoading = false;
+        this.regOtpError = err?.error?.message || 'Invalid verification code. Please check and try again.';
+      }
+    });
+  }
+
+  closeRegEmailOtpModal(): void {
+    this.showRegEmailOtpModal = false;
+    this.clearRegOtpTimer();
+  }
+
+  private startRegOtpTimer(seconds = 60): void {
+    this.clearRegOtpTimer();
+    this.regOtpResendCountdown = seconds;
+    this.regOtpTimer = setInterval(() => {
+      if (this.regOtpResendCountdown > 1) {
+        this.regOtpResendCountdown--;
+      } else {
+        this.regOtpResendCountdown = 0;
+        this.clearRegOtpTimer();
+      }
+    }, 1000);
+  }
+
+  private clearRegOtpTimer(): void {
+    if (this.regOtpTimer) {
+      clearInterval(this.regOtpTimer);
+      this.regOtpTimer = null;
+    }
   }
 
   payOnlineRegistration(): void {

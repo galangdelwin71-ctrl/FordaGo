@@ -156,6 +156,53 @@ ion-content {
     font-size: 11px;
     color: var(--text-muted);
   }
+
+  .expiring-notice-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(245, 158, 11, 0.14);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-top: 14px;
+    animation: fadeIn 0.3s ease;
+
+    ion-icon {
+      font-size: 20px;
+      color: #f59e0b;
+      flex-shrink: 0;
+    }
+
+    .expiring-notice-text {
+      flex: 1;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #fde68a;
+      line-height: 1.4;
+    }
+
+    .renew-quick-btn {
+      padding: 5px 12px;
+      background: #f59e0b;
+      color: #000;
+      font-size: 11px;
+      font-weight: 800;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: transform 0.15s ease, background 0.15s ease;
+
+      &:hover {
+        background: #fbbf24;
+      }
+
+      &:active {
+        transform: scale(0.96);
+      }
+    }
+  }
 }
 
 // ── Section Label ─────────────────────────────────────

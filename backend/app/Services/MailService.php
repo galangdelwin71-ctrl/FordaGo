@@ -104,6 +104,105 @@ class MailService
     }
 
     /**
+     * Send 6-digit OTP verification email for Account Registration.
+     */
+    public static function sendRegistrationEmailOtp(string $to, string $code, string $name = 'Future Member'): array
+    {
+        $destination = trim($to);
+        $title = "FordaGO Email Verification Code: {$code}";
+        $plainText = "FordaGO: Your registration email verification code is {$code}. It expires in 10 minutes. If you did not sign up for FordaGO, please ignore this email.";
+
+        if ($destination === '' || $code === '') {
+            return ['sent' => false, 'skippedReason' => 'Missing destination email or code'];
+        }
+
+        $htmlContent = null;
+        try {
+            $htmlContent = View::make('emails.password-reset-otp', [
+                'code'        => $code,
+                'name'        => $name,
+                'heading'     => 'Verify Your Email Address',
+                'subtitle'    => 'Thank you for registering with FordaGO! To ensure your email address is valid and protect your account, please verify using the 6-digit verification code below:',
+                'instruction' => 'Enter this 6-digit code in the FordaGO registration screen to continue.',
+            ])->render();
+        } catch (\Throwable $e) {
+            Log::warning('Failed rendering Blade email template: ' . $e->getMessage());
+        }
+
+        // 1. Resend API
+        $resendKey = config('services.resend.key');
+        if ($resendKey) {
+            $resendResult = self::sendViaResend($destination, $title, $plainText, $htmlContent);
+            if (!empty($resendResult['sent'])) {
+                return $resendResult;
+            }
+        }
+
+        // 2. Brevo API
+        $brevoKey = config('services.brevo.key');
+        if ($brevoKey) {
+            $brevoResult = self::sendViaBrevo($destination, $title, $plainText, $htmlContent);
+            if (!empty($brevoResult['sent'])) {
+                return $brevoResult;
+            }
+        }
+
+        // 3. Fallback to Laravel Mailer
+        $mailer = config('mail.default') ?: 'log';
+        if ($mailer === 'log') {
+            try {
+                Mail::raw($plainText, function ($message) use ($destination, $title) {
+                    $message->to($destination)->subject($title);
+                });
+            } catch (\Throwable) {}
+
+            return [
+                'sent' => true,
+                'provider' => 'log',
+                'skippedReason' => 'Email is set to log mode (MAIL_MAILER=log).',
+            ];
+        }
+
+        if ($mailer === 'smtp') {
+            $host = config('mail.mailers.smtp.host');
+            $port = (int) (config('mail.mailers.smtp.port') ?: 587);
+            if (! config('mail.mailers.smtp.username') || ! $host) {
+                return [
+                    'sent' => false,
+                    'provider' => 'smtp',
+                    'skippedReason' => 'SMTP is not configured (MAIL_HOST/MAIL_USERNAME/MAIL_PASSWORD in .env)',
+                ];
+            }
+            $fp = @fsockopen($host, $port, $errno, $errstr, 1.5);
+            if (! $fp) {
+                Log::warning("SMTP port {$port} on {$host} is unreachable/blocked ({$errstr}). Skipping SMTP fallback.");
+                return [
+                    'sent' => false,
+                    'provider' => 'smtp',
+                    'skippedReason' => "SMTP port {$port} unreachable/blocked on this server.",
+                ];
+            }
+            fclose($fp);
+        }
+
+        try {
+            if ($htmlContent) {
+                Mail::html($htmlContent, function ($message) use ($destination, $title) {
+                    $message->to($destination)->subject($title);
+                });
+            } else {
+                Mail::raw($plainText, function ($message) use ($destination, $title) {
+                    $message->to($destination)->subject($title);
+                });
+            }
+            return ['sent' => true, 'provider' => $mailer];
+        } catch (\Throwable $e) {
+            Log::warning('Email send failed: ' . $e->getMessage());
+            return ['sent' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
      * Send 6-digit OTP verification email for Two-Factor Authentication Login.
      */
     public static function sendTwoFactorOtp(string $to, string $code, string $name = 'Member'): array

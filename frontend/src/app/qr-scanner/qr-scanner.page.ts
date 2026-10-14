@@ -1,5 +1,5 @@
 // qr-scanner.page.ts
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, NgZone, ChangeDetectorRef } from '@angular/core';
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 import { Router, ActivatedRoute } from '@angular/router';
 import { getExerciseSvgHtml } from '../data/exercise-svgs.data';
@@ -266,7 +266,7 @@ export class QrScannerPage implements OnInit, OnDestroy {
     const u = this.auth.user;
     if (!u) return 'Member';
     const raw = (u.username || '').trim().replace(/^@/, '');
-    return raw ? `@${raw}` : (`${(u as any).first_name || ''} ${(u as any).last_name || ''}`.trim() || 'Member');
+    return raw ? raw : (`${(u as any).first_name || ''} ${(u as any).last_name || ''}`.trim() || 'Member');
   }
 
   get currentUserRealName(): string {
@@ -295,6 +295,8 @@ export class QrScannerPage implements OnInit, OnDestroy {
     public guideService: EquipmentGuideService,
     private sanitizer: DomSanitizer,
     public paymentService: PaymentService,
+    private ngZone: NgZone,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   isProcessingPayment = false;
@@ -683,7 +685,9 @@ export class QrScannerPage implements OnInit, OnDestroy {
           aspectRatio: 1,
         },
         (decodedText) => {
-          void this.handleDecodedQr(decodedText);
+          this.ngZone.run(() => {
+            void this.handleDecodedQr(decodedText);
+          });
         },
         () => {}
       );
@@ -751,7 +755,19 @@ export class QrScannerPage implements OnInit, OnDestroy {
     const isExplicitEquipment = raw.toLowerCase().startsWith('equipment:');
     const normalizedCode = raw.toLowerCase().replace(/^equipment:/, '').trim();
 
-    // 1. Check if the scanned QR matches an equipment guide
+    // 1. Check if it's an attendance scan
+    const isAttendanceQr = raw === 'FORDAGO_GYM_CHECKIN_V1' ||
+                           raw.toLowerCase().includes('fordago_gym_checkin') ||
+                           raw.toLowerCase().startsWith('attendance:') ||
+                           raw.toLowerCase().startsWith('gym:');
+
+    if (this.scanMode === 'attendance' || isAttendanceQr) {
+      const payload = isAttendanceQr ? 'FORDAGO_GYM_CHECKIN_V1' : decodedText;
+      await this.doCheckIn(payload);
+      return;
+    }
+
+    // 2. Check if the scanned QR matches an equipment guide
     const guide = this.guideService.getGuideById(normalizedCode) || this.guideService.getGuideByName(normalizedCode);
     
     if (guide || isExplicitEquipment) {
@@ -764,28 +780,25 @@ export class QrScannerPage implements OnInit, OnDestroy {
         this.persistEquipmentLog(newLogEntry);
         this.saveEquipmentScanLog({ id: String(guide.equipmentId), name: guide.name }, decodedText);
 
-        this.activeFullGuide = guide;
-        this.activeVariationIndex = 0;
-        this.activeEquipment = {
-          id: String(guide.equipmentId),
-          name: guide.name,
-          category: guide.category,
-          muscles: guide.muscles || [],
-          warning: guide.warning || '',
-          steps: guide.variations[0]?.steps || []
-        };
-        this.tutorialModalOpen = true;
-        this.isScanning = false;
-        this.isProcessingScan = false;
-        this.scanStatusMessage = 'Point your camera at a gym QR code to scan';
+        this.ngZone.run(() => {
+          this.activeFullGuide = guide;
+          this.activeVariationIndex = 0;
+          this.activeEquipment = {
+            id: String(guide.equipmentId),
+            name: guide.name,
+            category: guide.category,
+            muscles: guide.muscles || [],
+            warning: guide.warning || '',
+            steps: guide.variations[0]?.steps || []
+          };
+          this.tutorialModalOpen = true;
+          this.isScanning = false;
+          this.isProcessingScan = false;
+          this.scanStatusMessage = 'Point your camera at a gym QR code to scan';
+          this.cdr.detectChanges();
+        });
         return;
       }
-    }
-
-    // 2. If it's an attendance scan or not recognized as equipment
-    if (this.scanMode === 'attendance' || raw.toLowerCase().startsWith('attendance:') || raw.toLowerCase().startsWith('gym:')) {
-      await this.doCheckIn(decodedText);
-      return;
     }
 
     // 3. Fallback to basic equipment library
@@ -868,8 +881,15 @@ export class QrScannerPage implements OnInit, OnDestroy {
     this.html5QrCode = null;
   }
 
+  /** Direct check-in with the official gym QR payload (useful for testing or direct check-in) */
+  checkInWithGymQr(): void {
+    if (this.isProcessingScan) return;
+    this.isProcessingScan = true;
+    void this.doCheckIn('FORDAGO_GYM_CHECKIN_V1');
+  }
+
   // ── Real check-in API call ────────────────────────────
-  private async doCheckIn(qrPayload: string): Promise<void> {
+  async doCheckIn(qrPayload: string): Promise<void> {
     const headers = { Authorization: `Bearer ${this.auth.token}` };
     this.http.post<any>(
       `${this.api}/attendance/checkin`,
@@ -877,51 +897,83 @@ export class QrScannerPage implements OnInit, OnDestroy {
       { headers }
     ).subscribe({
       next: (res) => {
-        const now  = new Date();
-        const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        this.scannedTime = time;
-        this.isScanning = false;
-        this.isProcessingScan = false;
-        this.scanStatusMessage = 'Scan complete. You can scan again anytime.';
+        this.ngZone.run(() => {
+          const now  = new Date();
+          const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          this.scannedTime = time;
+          this.isScanning = false;
+          this.isProcessingScan = false;
+          this.scanStatusMessage = 'Scan complete. You can scan again anytime.';
 
-        if (res.payment_status === 'pending') {
-          this.pendingAttendanceId = res.attendance_id || null;
-          this.isPendingPaymentConfirmed = false;
-          this.checkInMessage = res.message || 'Please proceed to the cashier counter to pay your ₱40 Daily Pass fee.';
-          this.pendingModalOpen = true;
+          if (res.payment_status === 'pending') {
+            this.pendingAttendanceId = res.attendance_id || null;
+            this.isPendingPaymentConfirmed = false;
+            this.checkInMessage = res.message || 'Please proceed to the cashier counter to pay your ₱40 Daily Pass fee.';
+            this.pendingModalOpen = true;
 
-          this.myLogs = [
-            {
-              type: 'attendance',
-              label: 'Gym Check-in (Pending Payment)',
-              time,
-              date: this.formatLogDate(now),
-            },
-            ...this.myLogs,
-          ];
+            this.myLogs = [
+              {
+                type: 'attendance',
+                label: 'Gym Check-in (Pending Payment)',
+                time,
+                date: this.formatLogDate(now),
+              },
+              ...this.myLogs,
+            ];
 
-          this.startPendingAttendanceWatcher(res.attendance_id);
-        } else {
-          this.checkInMessage = res.message || 'You\'re checked in! Welcome to FordaGO 💪';
-          this.attendanceModalOpen = true;
+            this.startPendingAttendanceWatcher(res.attendance_id);
+          } else {
+            this.checkInMessage = res.message || 'You\'re checked in! Welcome to FordaGO 💪';
+            this.attendanceModalOpen = true;
 
-          this.myLogs = [
-            {
-              type: 'attendance',
-              label: 'Gym Check-in (Confirmed)',
-              time,
-              date: this.formatLogDate(now),
-            },
-            ...this.myLogs,
-          ];
-        }
+            this.myLogs = [
+              {
+                type: 'attendance',
+                label: 'Gym Check-in (Confirmed)',
+                time,
+                date: this.formatLogDate(now),
+              },
+              ...this.myLogs,
+            ];
+          }
+          this.cdr.detectChanges();
+        });
       },
       error: (err) => {
-        this.isScanning = false;
-        this.isProcessingScan = false;
-        this.scanStatusMessage = 'Scan failed. Check the QR code and try again.';
-        const msg = err.error?.message || 'Check-in failed. Please try again.';
-        this.toast.error(msg);
+        this.ngZone.run(() => {
+          this.isScanning = false;
+          this.isProcessingScan = false;
+          this.scanStatusMessage = 'Scan complete. You can scan again anytime.';
+
+          // ── If user already checked in today (HTTP 409 Conflict) ────────
+          if (err.status === 409 && err.error?.attendance) {
+            const existing = err.error.attendance;
+            const now = new Date();
+            const time = existing.check_in_time
+              ? new Date(existing.check_in_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              : now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            this.scannedTime = time;
+
+            if (existing.payment_status === 'pending') {
+              this.pendingAttendanceId = existing.id || null;
+              this.isPendingPaymentConfirmed = false;
+              this.checkInMessage = 'You already checked in today. Please proceed to the cashier counter to pay your ₱40 Daily Pass fee.';
+              this.pendingModalOpen = true;
+              this.startPendingAttendanceWatcher(existing.id);
+              this.toast.info('Attendance recorded today. Awaiting payment confirmation at cashier.');
+            } else {
+              this.checkInMessage = 'You are already checked in for today! Welcome back 💪';
+              this.attendanceModalOpen = true;
+              this.toast.success('Already checked in for today!');
+            }
+            this.cdr.detectChanges();
+            return;
+          }
+
+          const msg = err.error?.message || 'Check-in failed. Please try again.';
+          this.toast.error(msg);
+          this.cdr.detectChanges();
+        });
       }
     });
   }
@@ -961,10 +1013,14 @@ export class QrScannerPage implements OnInit, OnDestroy {
       next: (rows) => {
         if (manualClick) this.isVerifyingPayment = false;
         if (!rows || rows.length === 0) return;
-        const todayStr = new Date().toISOString().split('T')[0];
+        const now = new Date();
+        const localY = now.getFullYear();
+        const localM = String(now.getMonth() + 1).padStart(2, '0');
+        const localD = String(now.getDate()).padStart(2, '0');
+        const todayStr = `${localY}-${localM}-${localD}`;
         const matching = rows.find(r =>
           (this.pendingAttendanceId && Number(r.id) === Number(this.pendingAttendanceId)) ||
-          (r.check_in_time && String(r.check_in_time).startsWith(todayStr))
+          (r.check_in_time && String(r.check_in_time).includes(todayStr))
         );
 
         if (matching && matching.payment_status === 'paid') {
@@ -981,10 +1037,13 @@ export class QrScannerPage implements OnInit, OnDestroy {
 
   handlePaymentConfirmed(): void {
     if (this.isPendingPaymentConfirmed) return;
-    this.isPendingPaymentConfirmed = true;
-    this.stopPendingAttendanceWatcher();
-    this.loadMyAttendanceLogs();
-    this.toast.success('Payment Confirmed! Attendance Recorded ✅');
+    this.ngZone.run(() => {
+      this.isPendingPaymentConfirmed = true;
+      this.stopPendingAttendanceWatcher();
+      this.loadMyAttendanceLogs();
+      this.toast.success('Payment Confirmed! Attendance Recorded ✅');
+      this.cdr.detectChanges();
+    });
   }
 
   stopPendingAttendanceWatcher(): void {
@@ -1002,12 +1061,14 @@ export class QrScannerPage implements OnInit, OnDestroy {
   // ── Modals ────────────────────────────────────────────
   closeAttendanceModal(): void {
     this.attendanceModalOpen = false;
+    this.cdr.detectChanges();
   }
 
   closePendingModal(): void {
     this.pendingModalOpen = false;
     this.stopPendingAttendanceWatcher();
     this.loadMyAttendanceLogs();
+    this.cdr.detectChanges();
   }
 
   closeTutorialModal(): void {

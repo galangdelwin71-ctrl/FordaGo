@@ -36,54 +36,23 @@ class CheckMembershipExpirations extends Command
         $this->info("Checking membership expirations for {$todayStr} (Asia/Manila)...");
 
         // ─────────────────────────────────────────────────────────────────────
-        // PHASE 1: 7-Day Advance Notice for Expiring Premium Memberships
+        // PHASE 1: Advance Notice for Expiring Premium Memberships (<= 7 Days)
         // ─────────────────────────────────────────────────────────────────────
         $expiringUsers = User::whereIn('role', ['user', 'member'])
             ->where('membership_type', 'premium')
             ->where('membership_status', 'active')
-            ->whereDate('membership_expiry', $sevenDaysAhead)
+            ->whereNotNull('membership_expiry')
+            ->whereDate('membership_expiry', '>=', $todayStr)
+            ->whereDate('membership_expiry', '<=', $sevenDaysAhead)
             ->get();
 
-        $this->info("Found {$expiringUsers->count()} members expiring in 7 days ({$sevenDaysAhead}).");
+        $this->info("Found {$expiringUsers->count()} members expiring within the next 7 days (up to {$sevenDaysAhead}).");
 
         foreach ($expiringUsers as $user) {
-            $sessionKey = "premium-exp-7d-{$user->id}-{$sevenDaysAhead}";
-
-            // Ensure idempotency — do not send duplicate notice for the same cycle
-            $alreadyNotified = Notification::where('session_key', $sessionKey)->exists();
-            if ($alreadyNotified) {
-                continue;
+            $sent = $user->checkExpiringMembershipNotification();
+            if ($sent) {
+                $this->line("Sent advance expiration notice to member: {$user->username} (ID: {$user->id}, Expiry: {$user->membership_expiry})");
             }
-
-            $firstName = $user->first_name ?: $user->username;
-            $formattedExpiry = Carbon::parse($user->membership_expiry)->format('F d, Y');
-
-            $title = 'Premium Membership Expiring Soon ⏳';
-            $message = "Hi {$firstName}, your Premium membership will expire in 7 days on {$formattedExpiry}. Please renew your plan at the gym reception or via the app to maintain unlimited gym access.";
-
-            $notification = Notification::create([
-                'user_id'     => $user->id,
-                'session_key' => $sessionKey,
-                'title'       => $title,
-                'message'     => $message,
-                'is_read'     => false,
-            ]);
-
-            // Real-time WebSocket delivery
-            try {
-                broadcast(new NotificationSent($notification, $user->id));
-            } catch (\Throwable $e) {
-                Log::warning("WebSocket broadcast failed for user {$user->id}: " . $e->getMessage());
-            }
-
-            // Direct FCM push notification
-            $fcmService->sendToUser($user->id, $title, $message, [
-                'type'        => 'membership_expiring',
-                'targetRoute' => '/profile',
-                'channel_id'  => 'fordago-alerts-v3',
-            ]);
-
-            $this->line("Sent 7-day expiration notice to member: {$user->username} (ID: {$user->id})");
         }
 
         // ─────────────────────────────────────────────────────────────────────

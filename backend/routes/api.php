@@ -35,6 +35,8 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('auth')->group(function () {
     Route::post('/login',    [AuthController::class, 'login']);
     Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/register/send-otp',   [AuthController::class, 'sendRegistrationOtp']);
+    Route::post('/register/verify-otp', [AuthController::class, 'verifyRegistrationOtp']);
 
     Route::post('/forgot-password/lookup', [AuthController::class, 'forgotPasswordLookup']);
     Route::post('/forgot-password/send',   [AuthController::class, 'forgotPasswordSend']);
@@ -97,7 +99,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/fcm-token',       [UserController::class, 'updateFcmToken']); // FCM push registration
         Route::delete('/fcm-token',    [UserController::class, 'clearFcmToken']);  // FCM push deregistration on logout
         Route::post('/request-email-change', [UserController::class, 'requestEmailChange']);
-        Route::post('/confirm-email-change', [UserController::class, 'confirmEmailChange']);
+        Route::post('/notify-all-expiring', [UserController::class, 'notifyAllExpiring'])->middleware('role:admin,super_admin,employee');
+        Route::post('/{id}/notify-expiry', [UserController::class, 'notifyExpiry'])->whereNumber('id')->middleware('role:admin,super_admin,employee');
         Route::put('/{id}',            [UserController::class, 'update'])->whereNumber('id');
         Route::put('/{id}/membership', [UserController::class, 'updateMembership'])->whereNumber('id')->middleware('role:admin,super_admin,employee');
         Route::delete('/{id}',         [UserController::class, 'destroy'])->whereNumber('id')->middleware('role:admin,super_admin,employee');

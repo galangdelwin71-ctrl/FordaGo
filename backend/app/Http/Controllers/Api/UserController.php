@@ -262,7 +262,7 @@ class UserController extends Controller
             if ($request->user() && in_array($request->user()->role, ['admin', 'super_admin', 'employee'], true)) {
                 $personName = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
                 $displayName = $personName ?: $username;
-                $displayWithHandle = ($personName && $personName !== $username) ? "{$personName} (@{$username})" : "@{$username}";
+                $displayWithHandle = ($personName && $personName !== $username) ? "{$personName} ({$username})" : "{$username}";
 
                 ActivityLogger::log(
                     $request->user(),
@@ -485,7 +485,7 @@ class UserController extends Controller
                         $targetRole = ucfirst($user->role ?: 'User');
                         $personName = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
                         $displayName = $personName ?: $user->username;
-                        $displayWithHandle = ($personName && $personName !== $user->username) ? "{$personName} (@{$user->username})" : "@{$user->username}";
+                        $displayWithHandle = ($personName && $personName !== $user->username) ? "{$personName} ({$user->username})" : "{$user->username}";
 
                         $userChanges = [];
                         foreach ($changedKeys as $k) {
@@ -632,7 +632,7 @@ class UserController extends Controller
         try {
             $personName = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
             $displayName = $personName ?: $user->username;
-            $displayWithHandle = ($personName && $personName !== $user->username) ? "{$personName} (@{$user->username})" : "@{$user->username}";
+            $displayWithHandle = ($personName && $personName !== $user->username) ? "{$personName} ({$user->username})" : "{$user->username}";
 
             ActivityLogger::log(
                 $request->user(),
@@ -681,7 +681,7 @@ class UserController extends Controller
 
         $personName = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
         $displayName = $personName ?: $user->username;
-        $displayWithHandle = ($personName && $personName !== $user->username) ? "{$personName} (@{$user->username})" : "@{$user->username}";
+        $displayWithHandle = ($personName && $personName !== $user->username) ? "{$personName} ({$user->username})" : "{$user->username}";
 
         $user->delete();
 
@@ -853,6 +853,69 @@ class UserController extends Controller
             return $email;
         }
         return substr($email, 0, 2) . '••••' . substr($email, $at);
+    }
+
+    /**
+     * POST /api/users/{id}/notify-expiry
+     * Admin manually triggers an expiration reminder notification to a member.
+     */
+    public function notifyExpiry(Request $request, int $id)
+    {
+        $targetUser = User::find($id);
+        if (! $targetUser) {
+            return response()->json(['message' => 'Member not found.'], 404);
+        }
+
+        if ($targetUser->membership_type !== 'premium') {
+            return response()->json(['message' => 'User does not have an active Premium membership.'], 400);
+        }
+
+        $sent = $targetUser->checkExpiringMembershipNotification(true);
+        if (! $sent) {
+            return response()->json(['message' => 'Could not send reminder. Member may not have an active expiry date.'], 400);
+        }
+
+        $admin = $request->user();
+        ActivityLogger::log($request, 'member_notify_expiry', "Admin {$admin->username} sent membership expiration reminder to {$targetUser->username}.");
+
+        return response()->json([
+            'success' => true,
+            'message' => "Expiration reminder successfully sent to @{$targetUser->username}!",
+        ]);
+    }
+
+    /**
+     * POST /api/users/notify-all-expiring
+     * Admin sends expiration reminder notifications to all members expiring in <= 7 days.
+     */
+    public function notifyAllExpiring(Request $request)
+    {
+        $todayStr = now('Asia/Manila')->toDateString();
+        $sevenDaysAhead = now('Asia/Manila')->addDays(7)->toDateString();
+
+        $expiringUsers = User::whereIn('role', ['user', 'member'])
+            ->where('membership_type', 'premium')
+            ->where('membership_status', 'active')
+            ->whereNotNull('membership_expiry')
+            ->whereDate('membership_expiry', '>=', $todayStr)
+            ->whereDate('membership_expiry', '<=', $sevenDaysAhead)
+            ->get();
+
+        $count = 0;
+        foreach ($expiringUsers as $u) {
+            if ($u->checkExpiringMembershipNotification(true)) {
+                $count++;
+            }
+        }
+
+        $admin = $request->user();
+        ActivityLogger::log($request, 'member_notify_all_expiring', "Admin {$admin->username} sent expiration reminders to {$count} expiring members.");
+
+        return response()->json([
+            'success' => true,
+            'count'   => $count,
+            'message' => "Successfully sent expiration reminders to {$count} member" . ($count === 1 ? '' : 's') . ".",
+        ]);
     }
 }
 

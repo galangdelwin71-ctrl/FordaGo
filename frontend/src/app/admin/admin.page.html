@@ -161,7 +161,7 @@
       </div>
       <div class="fb-modal-reviewer-meta">
         <div class="fb-modal-name">{{ getFeedbackUserName(selectedFeedback) }}</div>
-        <div class="fb-modal-sub">@{{ selectedFeedback.user?.username }} · {{ formatNotifDate(selectedFeedback.created_at) }}</div>
+        <div class="fb-modal-sub">{{ selectedFeedback.user?.username }} · {{ formatNotifDate(selectedFeedback.created_at) }}</div>
       </div>
     </div>
 
@@ -666,6 +666,68 @@
         </div>
       </div>
 
+      <!-- ── PENDING DAILY PASS PAYMENTS (URGENT CASHIER ALERT) ── -->
+      <div class="overview-card-panel pending-daily-payments-panel" *ngIf="attendancePending.length > 0">
+        <div class="panel-header-row">
+          <div class="panel-title-group">
+            <div class="panel-icon-badge amber">
+              <ion-icon name="time-outline"></ion-icon>
+            </div>
+            <div>
+              <div class="panel-main-title">Pending Daily Pass Payments</div>
+              <div class="panel-sub-title">Visitors waiting at the counter to pay ₱40 daily pass cash fee.</div>
+            </div>
+          </div>
+          <div class="panel-header-right">
+            <span class="panel-counter-badge amber">
+              {{ attendancePending.length }} {{ attendancePending.length === 1 ? 'Pending' : 'Pending' }}
+            </span>
+            <button class="panel-pill-action" (click)="navigateToAttendance()">
+              All Check-ins
+            </button>
+          </div>
+        </div>
+
+        <div class="pending-daily-list">
+          <div *ngFor="let a of attendancePending" class="member-card pending-card">
+            <div class="member-card-main">
+              <div class="member-avatar pending-avatar">
+                <img *ngIf="a.profile_image" [src]="resolveImg(a.profile_image)" [alt]="a.username" (error)="a.profile_image = null" />
+                <span *ngIf="!a.profile_image">{{ a.initials }}</span>
+              </div>
+              <div class="member-card-details">
+                <div class="member-card-name-row">
+                  <span class="member-name">{{ a.username }}</span>
+                  <span class="role-badge">daily</span>
+                </div>
+                <div class="member-meta">{{ a.email || a.phone || 'Daily Visitor' }} · {{ a.check_in_time | date:'h:mm a, MMM d' }}</div>
+                <div class="card-chips-row">
+                  <span class="type-chip daily">
+                    <ion-icon name="today-outline"></ion-icon> Daily Pass
+                  </span>
+                  <ion-icon name="star-outline" class="badge-star-icon"></ion-icon>
+                  <span class="status-pill pending">
+                    <ion-icon name="time-outline"></ion-icon> Awaiting Payment
+                  </span>
+                  <span class="payment-note-pill">₱40 · {{ a.payment_method || 'cash' | titlecase }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="card-actions-row">
+              <button class="act-btn approve-btn" (click)="confirmCheckin(a)">
+                <ion-icon name="checkmark-circle-outline"></ion-icon> Confirm
+              </button>
+              <button class="act-btn plan-btn" (click)="openMembershipEdit(a)">
+                <ion-icon name="star-outline"></ion-icon> Plan
+              </button>
+              <button class="act-btn del" (click)="rejectCheckin(a)">
+                <ion-icon name="close-circle-outline"></ion-icon> Reject
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- ── NEW: INVENTORY LOW-STOCK ATTENTION CENTER ────────────── -->
       <div class="overview-card-panel inventory-alert-panel" *ngIf="allLowStockAlerts.length > 0">
         <div class="panel-header-row">
@@ -726,31 +788,44 @@
         </div>
       </div>
 
-      <!-- ── EXPIRING MEMBERSHIPS (WITHIN 7 DAYS) ────────────── -->
+      <!-- ── EXPIRING & EXPIRED MEMBERSHIPS ────────────── -->
       <div class="overview-card-panel expiring-panel" *ngIf="expiringMembers.length > 0">
         <div class="panel-header-row">
           <div class="panel-title-group">
-            <div class="panel-icon-badge blue">
+            <div class="panel-icon-badge amber">
               <ion-icon name="time-outline"></ion-icon>
             </div>
             <div>
-              <div class="panel-main-title">Expiring Memberships</div>
-              <div class="panel-sub-title">Active premium passes ending in the next 7 days.</div>
+              <div class="panel-main-title">Member Pass Expiration Alerts</div>
+              <div class="panel-sub-title">Members with premium passes expired or ending soon within 7 days.</div>
             </div>
           </div>
           <div class="panel-header-right">
             <span class="panel-counter-badge amber">
-              {{ expiringMembers.length }} {{ expiringMembers.length === 1 ? 'Member' : 'Members' }}
+              {{ expiringMembers.length }} {{ expiringMembers.length === 1 ? 'Pass' : 'Passes' }}
             </span>
-            <button class="panel-pill-action" (click)="router.navigate(['/admin-reports'])" *ngIf="!isEmployee">
-              View Reports
+            <button
+              type="button"
+              class="panel-pill-action notify-all-btn"
+              (click)="notifyAllExpiringMembers($event)"
+              [disabled]="isNotifyingExpiring"
+              title="Send expiration reminder to all expiring members"
+            >
+              <ion-spinner *ngIf="isNotifyingExpiring" name="dots"></ion-spinner>
+              <ng-container *ngIf="!isNotifyingExpiring">
+                <ion-icon name="notifications-outline"></ion-icon>
+                <span>Notify All</span>
+              </ng-container>
+            </button>
+            <button class="panel-pill-action" (click)="navigateToMembers()">
+              Manage
             </button>
           </div>
         </div>
 
-        <!-- When members expiring -->
+        <!-- When members expiring/expired -->
         <div class="expiring-members-list">
-          <div *ngFor="let m of expiringMembers" class="expiring-member-card clickable" (click)="viewExpiringMember(m)" role="button" tabindex="0" (keydown.enter)="viewExpiringMember(m)">
+          <div *ngFor="let m of expiringMembers" class="expiring-member-card clickable" [class.is-expired]="m.daysLeft < 0" (click)="viewExpiringMember(m)" role="button" tabindex="0" (keydown.enter)="viewExpiringMember(m)">
             <div class="exp-card-left">
               <div class="exp-member-avatar">
                 <img *ngIf="m.profile_image" [src]="resolveImg(m.profile_image)" [alt]="m.username" (error)="m.profile_image = null" />
@@ -761,62 +836,115 @@
                 <div class="exp-member-meta">
                   <span class="exp-date">Expires {{ m.expiryDate }}</span>
                   <span class="exp-dot">·</span>
-                  <span class="exp-days-tag" [ngClass]="m.daysLeft <= 2 ? 'urgent' : 'warning'">
-                    {{ m.daysLeft === 0 ? 'Expires Today!' : (m.daysLeft === 1 ? '1 day left' : m.daysLeft + ' days left') }}
+                  <span class="exp-days-tag" [ngClass]="m.daysLeft <= 0 ? 'urgent' : (m.daysLeft <= 2 ? 'urgent' : 'warning')">
+                    <ng-container *ngIf="m.daysLeft < 0">
+                      {{ m.daysLeft === -1 ? 'Expired yesterday' : 'Expired ' + (-m.daysLeft) + ' days ago' }}
+                    </ng-container>
+                    <ng-container *ngIf="m.daysLeft === 0">Expires Today!</ng-container>
+                    <ng-container *ngIf="m.daysLeft > 0">
+                      {{ m.daysLeft === 1 ? '1 day left' : m.daysLeft + ' days left' }}
+                    </ng-container>
                   </span>
                 </div>
               </div>
             </div>
             <div class="exp-card-right">
-              <span class="badge warn">Expiring</span>
+              <span class="badge danger" *ngIf="m.daysLeft < 0">Expired</span>
+              <span class="badge danger" *ngIf="m.daysLeft === 0">Expires Today</span>
+              <span class="badge warn" *ngIf="m.daysLeft > 0">Expiring Soon</span>
+              <button
+                type="button"
+                class="act-notify-btn"
+                [class.sent]="m.notified"
+                [disabled]="m.notifying || m.notified"
+                (click)="notifyExpiringMember(m, $event)"
+                title="Send expiration reminder notification"
+              >
+                <ion-spinner *ngIf="m.notifying" name="dots"></ion-spinner>
+                <ng-container *ngIf="!m.notifying">
+                  <ion-icon [name]="m.notified ? 'checkmark-circle' : 'notifications-outline'"></ion-icon>
+                  <span>{{ m.notified ? 'Sent' : 'Remind' }}</span>
+                </ng-container>
+              </button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- ── TODAY'S GYM ATTENDANCE PULSE ────────────────────────── -->
-      <div class="overview-card-panel attendance-pulse-panel" *ngIf="attendanceToday.length > 0">
+      <!-- ── INVENTORY PRODUCTS EXPIRATION MONITOR ──────────────── -->
+      <div class="overview-card-panel inventory-expiry-panel" *ngIf="expiringProducts.length > 0">
         <div class="panel-header-row">
           <div class="panel-title-group">
-            <div class="panel-icon-badge green">
-              <ion-icon name="clipboard-outline"></ion-icon>
+            <div class="panel-icon-badge red">
+              <ion-icon name="alert-circle-outline"></ion-icon>
             </div>
             <div>
-              <div class="panel-main-title">Today's Foot Traffic & Check-ins</div>
-              <div class="panel-sub-title">Real-time attendance logs for {{ todayFormatted }}.</div>
+              <div class="panel-main-title">Inventory Expiration Monitor</div>
+              <div class="panel-sub-title">Supplements and perishable stock nearing expiration (≤30 days) or already expired.</div>
             </div>
           </div>
           <div class="panel-header-right">
-            <span class="panel-counter-badge green">
-              {{ attendanceToday.length }} Check-ins
+            <span class="panel-counter-badge red">
+              {{ expiringProducts.length }} {{ expiringProducts.length === 1 ? 'Product' : 'Products' }}
             </span>
-            <button class="panel-pill-action" (click)="navigateToAttendance()">
-              All Check-ins
+            <button class="panel-pill-action" (click)="navigateToExpiringProducts()">
+              View in Shop
             </button>
           </div>
         </div>
 
-        <!-- When there are check-ins today -->
-        <div class="attendance-today-list">
-          <div *ngFor="let a of attendanceToday.slice(0, 5)" class="attendance-today-item">
-            <div class="att-item-left">
-              <div class="att-avatar">
-                <img *ngIf="a.profile_image" [src]="resolveImg(a.profile_image)" [alt]="a.username" (error)="a.profile_image = null" />
-                <span *ngIf="!a.profile_image">{{ a.initials }}</span>
+        <!-- Expiring products list -->
+        <div class="stock-alerts-list">
+          <div *ngFor="let p of expiringProducts" class="stock-alert-item" [class.out-of-stock]="p.expiryStatus === 'expired'">
+            <div class="stock-item-left">
+              <div class="stock-item-thumb">
+                <img *ngIf="p.thumbnail_url || p.image_url" [src]="resolveImg(p.thumbnail_url || p.image_url)" [alt]="p.name" (error)="p.thumbnail_url = null; p.image_url = null" />
+                <div *ngIf="!p.thumbnail_url && !p.image_url" class="stock-thumb-fallback">
+                  <ion-icon name="nutrition-outline"></ion-icon>
+                </div>
               </div>
-              <div class="att-info">
-                <div class="att-name">{{ a.username }}</div>
-                <div class="att-time">
-                  <ion-icon name="time-outline"></ion-icon>
-                  <span>{{ a.check_in_time || 'Checked In' }}</span>
+              <div class="stock-item-info">
+                <div class="stock-item-name-row">
+                  <span class="stock-item-name">{{ p.name }}</span>
+                  <span class="stock-item-brand" *ngIf="p.brand">({{ p.brand }})</span>
+                </div>
+                <div class="stock-item-meta-row">
+                  <span class="stock-item-price">₱{{ p.price | number:'1.2-2' }}</span>
+                  <span class="stock-status-chip" [ngClass]="p.expiryStatus === 'expired' ? 'critical' : (p.expiryDays <= 7 ? 'critical' : 'warning')">
+                    <ion-icon [name]="p.expiryStatus === 'expired' ? 'close-circle-outline' : 'alert-circle-outline'"></ion-icon>
+                    <ng-container *ngIf="p.expiryStatus === 'expired'">
+                      EXPIRED on {{ p.expiry_date | date:'MMM d, yyyy' }}
+                    </ng-container>
+                    <ng-container *ngIf="p.expiryStatus === 'expiring_soon'">
+                      {{ p.expiryDays === 0 ? 'Expires Today!' : (p.expiryDays === 1 ? 'Expires in 1 day' : 'Expires in ' + p.expiryDays + ' days') }} ({{ p.expiry_date | date:'MMM d, yyyy' }})
+                    </ng-container>
+                  </span>
+                  <span class="stock-status-chip" style="background: #f1f5f9; color: #475569;">
+                    {{ p.stock }} units in stock
+                  </span>
                 </div>
               </div>
             </div>
-            <div class="att-item-right">
-              <span class="att-type-pill" [ngClass]="a.membership_type === 'premium' ? 'premium' : 'daily'">
-                {{ a.membership_type === 'premium' ? 'Premium Member' : 'Daily Pass' }}
-              </span>
+
+            <div class="stock-item-actions">
+              <button class="stock-quick-restock-btn" style="background: #fee2e2; color: #b91c1c; border-color: rgba(220, 38, 38, 0.2);" (click)="navigateToExpiringProduct(p, $event)" title="View product details in shop to update expiry or pull out">
+                <ion-icon name="create-outline"></ion-icon>
+                <span>Manage</span>
+              </button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ALL OPERATIONS IN GOOD STANDING (OPTIONAL FALLBACK) ── -->
+      <div class="overview-card-panel all-clear-panel" *ngIf="allLowStockAlerts.length === 0 && expiringMembers.length === 0 && expiringProducts.length === 0 && attendancePending.length === 0">
+        <div class="all-clear-inner">
+          <div class="all-clear-icon">
+            <ion-icon name="shield-checkmark-outline"></ion-icon>
+          </div>
+          <div class="all-clear-content">
+            <div class="all-clear-title">All Operations in Good Standing</div>
+            <div class="all-clear-desc">No expired or expiring member passes, and all inventory supplements are fully fresh and stocked.</div>
           </div>
         </div>
       </div>
@@ -850,7 +978,7 @@
             <div class="member-card-details">
               <div class="member-card-name-row">
                 <span class="member-name">{{ m.full_name || (m.first_name ? (m.first_name + ' ' + (m.last_name || '')) : m.username) }}</span>
-                <span class="member-handle" *ngIf="m.username" style="font-size: 0.8rem; color: #94a3b8; font-weight: 500;">@{{ m.username }}</span>
+                <span class="member-handle" *ngIf="m.username" style="font-size: 0.8rem; color: #94a3b8; font-weight: 500;">{{ m.username }}</span>
                 <span class="role-badge">{{ m.role }}</span>
                 <span class="newest-chip" *ngIf="isNewlyCreated(m)">
                   <ion-icon name="sparkles"></ion-icon> Newly Created
@@ -937,7 +1065,7 @@
           <div class="member-card-details">
             <div class="member-card-name-row">
               <span class="member-name">{{ m.full_name || (m.first_name ? (m.first_name + ' ' + (m.last_name || '')) : m.username) }}</span>
-              <span class="member-handle" *ngIf="m.username" style="font-size: 0.8rem; color: #94a3b8; font-weight: 500;">@{{ m.username }}</span>
+              <span class="member-handle" *ngIf="m.username" style="font-size: 0.8rem; color: #94a3b8; font-weight: 500;">{{ m.username }}</span>
               <span class="role-badge">{{ m.role }}</span>
               <span class="newest-chip" *ngIf="isNewlyCreated(m)">
                 <ion-icon name="sparkles"></ion-icon> Newly Created
@@ -978,6 +1106,17 @@
         <div class="card-actions-row" *ngIf="m.membership_status === 'active'">
           <button class="act-btn plan-btn" (click)="openMembershipEdit(m)">
             <ion-icon name="star-outline"></ion-icon> Plan
+          </button>
+          <button
+            type="button"
+            class="act-btn notify-remind-btn"
+            *ngIf="m.membership_type === 'premium' && m.membership_expiry"
+            (click)="notifyExpiringMember(m, $event)"
+            [disabled]="m.notifying || m.notified"
+            title="Send membership expiry notice to member"
+          >
+            <ion-icon [name]="m.notified ? 'checkmark-circle-outline' : 'notifications-outline'"></ion-icon>
+            {{ m.notified ? 'Notified' : 'Remind' }}
           </button>
           <button class="act-btn edit" (click)="editMember(m)">
             <ion-icon name="create-outline"></ion-icon> Edit
@@ -1047,7 +1186,7 @@
             <div class="session-members-row" *ngIf="s.member_names">
               <span class="session-members-label"><ion-icon name="people-outline"></ion-icon> Mentioned:</span>
               <span class="session-member-tag" *ngFor="let name of (s.member_names.split ? s.member_names.split(',') : [s.member_names])">
-                @{{ name.trim() }}
+                {{ name.trim() }}
               </span>
             </div>
           </div>
@@ -2097,7 +2236,7 @@
             </div>
             <div class="fb-user-info">
               <div class="fb-user-name">{{ getFeedbackUserName(f) }}</div>
-              <div class="fb-user-meta">@{{ f.user?.username }} · {{ formatNotifDate(f.created_at) }}</div>
+              <div class="fb-user-meta">{{ f.user?.username }} · {{ formatNotifDate(f.created_at) }}</div>
             </div>
             <div class="fb-sentiment-pill" [ngClass]="getFeedbackSentiment(f.rating).cls">
               {{ getFeedbackSentiment(f.rating).emoji }} {{ getFeedbackSentiment(f.rating).label }}
@@ -2470,7 +2609,7 @@
                   <span class="log-role-badge" [ngClass]="'role-' + (log.role || log.user?.role || 'staff')">
                     {{ log._roleLabel }}
                   </span>
-                  <span class="log-username-handle" *ngIf="log._showActorHandle">@{{ log.username || log.user?.username }}</span>
+                  <span class="log-username-handle" *ngIf="log._showActorHandle">{{ log.username || log.user?.username }}</span>
                 </div>
               </div>
               <div class="log-time-col">
@@ -2581,7 +2720,7 @@
               {{ selectedActivityLog._roleLabel || getLogRoleLabel(selectedActivityLog) }}
             </span>
             <span class="mag-handle" *ngIf="selectedActivityLog._showActorHandle">
-              @{{ selectedActivityLog.username || selectedActivityLog.user?.username }}
+              {{ selectedActivityLog.username || selectedActivityLog.user?.username }}
             </span>
           </div>
         </div>
@@ -2891,7 +3030,7 @@
         <div class="mentioned-chips-wrap" *ngIf="newSession.member_ids && newSession.member_ids.length > 0">
           <span class="mentioned-chip" *ngFor="let id of newSession.member_ids; let i = index">
             <ion-icon name="person-circle-outline"></ion-icon>
-            <span>@{{ newSession.member_names[i] || ('Member #' + id) }}</span>
+            <span>{{ newSession.member_names[i] || ('Member #' + id) }}</span>
             <button type="button" class="remove-mention-btn" (click)="removeMentionedMember(id, 'new')" title="Remove member">✕</button>
           </span>
         </div>
@@ -3004,7 +3143,7 @@
         <div class="mentioned-chips-wrap" *ngIf="editingSession.member_ids && editingSession.member_ids.length > 0">
           <span class="mentioned-chip" *ngFor="let id of editingSession.member_ids; let i = index">
             <ion-icon name="person-circle-outline"></ion-icon>
-            <span>@{{ editingSession.member_names[i] || ('Member #' + id) }}</span>
+            <span>{{ editingSession.member_names[i] || ('Member #' + id) }}</span>
             <button type="button" class="remove-mention-btn" (click)="removeMentionedMember(id, 'edit')" title="Remove member">✕</button>
           </span>
         </div>

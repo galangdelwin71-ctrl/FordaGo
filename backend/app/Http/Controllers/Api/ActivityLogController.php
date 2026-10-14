@@ -133,12 +133,12 @@ class ActivityLogController extends Controller
                 if ($target) {
                     $name = trim(($target->first_name ?? '') . ' ' . ($target->last_name ?? ''));
                     if ($name) {
-                        return "{$name} (@{$target->username})";
+                        return "{$name} ({$target->username})";
                     }
-                    return "@{$target->username}";
+                    return "{$target->username}";
                 }
                 if (!empty($m[2])) {
-                    return "@" . ltrim($m[2], '@');
+                    return ltrim($m[2], '@');
                 }
                 return "Member (ID: {$uid})";
             }, $desc);
@@ -148,13 +148,13 @@ class ActivityLogController extends Controller
                 $target = $resolvedUsers->get($uid);
                 if ($target) {
                     $name = trim(($target->first_name ?? '') . ' ' . ($target->last_name ?? ''));
-                    return $name ?: "@{$target->username}";
+                    return $name ?: "{$target->username}";
                 }
                 return "Member";
             }, $title);
 
-            // Clean up titles like "Updated Employee @employee1" -> if target user has a real name
-            if ($targetName && preg_match('/^(Updated|Created|Deleted|Approved Membership for)\s+([A-Za-z]+)\s+@([a-zA-Z0-9_.\-]+)$/i', $title, $tm)) {
+            // Clean up titles like "Updated Employee employee1" -> if target user has a real name
+            if ($targetName && preg_match('/^(Updated|Created|Deleted|Approved Membership for)\s+([A-Za-z]+)\s+@?([a-zA-Z0-9_.\-]+)$/i', $title, $tm)) {
                 $prefix = $tm[1];
                 $roleWord = $tm[2];
                 $handle = $tm[3];

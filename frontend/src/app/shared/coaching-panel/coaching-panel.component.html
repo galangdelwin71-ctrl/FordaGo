@@ -217,7 +217,7 @@
               </div>
               <div class="cd-session-info">
                 <div class="cd-session-name">{{ item.client.first_name || item.client.username || 'Client' }} {{ item.client.last_name || '' }}</div>
-                <div class="cd-client-tag" *ngIf="item.client.username">@{{ item.client.username }}</div>
+                <div class="cd-client-tag" *ngIf="item.client.username">{{ item.client.username }}</div>
               </div>
               <div class="cd-client-actions">
                 <button type="button" class="cd-delete-client-btn" (click)="promptDeleteClient(item, $event)" title="Remove client">

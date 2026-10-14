@@ -254,6 +254,66 @@ ion-backdrop {
   -webkit-backdrop-filter: blur(28px) !important;
 }
 
+/* ── Centered Dialog Modals (Attendance Check-in, Pending Payment, Equipment Tutorial) ── */
+ion-modal.centered-dialog-modal {
+  --background: transparent !important;
+  --backdrop-opacity: 0.85 !important;
+  --width: 92% !important;
+  --max-width: 440px !important;
+  --height: fit-content !important;
+  --border-radius: 28px !important;
+  --box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85) !important;
+
+  &::part(content) {
+    background: transparent !important;
+    border-radius: 28px !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    margin: auto !important;
+    max-height: 90vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+  }
+}
+
+ion-modal.tutorial-dialog-modal {
+  --max-width: 520px !important;
+}
+
+body.ion-palette-dark ion-modal.attendance-dialog-modal,
+html.ion-palette-dark ion-modal.attendance-dialog-modal {
+  --background: transparent !important;
+
+  .modal-sheet {
+    background: radial-gradient(circle at 50% 0%, rgba(234, 179, 8, 0.18) 0%, #0e121b 45%, #090c12 100%) !important;
+    border: 1.5px solid rgba(234, 179, 8, 0.45) !important;
+    border-radius: 28px !important;
+    box-shadow: 0 16px 50px rgba(0, 0, 0, 0.85) !important;
+  }
+}
+
+body.light-theme ion-modal.attendance-dialog-modal,
+html.light-theme ion-modal.attendance-dialog-modal {
+  --background: transparent !important;
+
+  .modal-sheet {
+    background: radial-gradient(circle at 50% 0%, rgba(234, 179, 8, 0.12) 0%, #ffffff 45%, #f8fafc 100%) !important;
+    border: 1.5px solid rgba(234, 179, 8, 0.4) !important;
+    border-radius: 28px !important;
+    box-shadow: 0 16px 50px rgba(0, 0, 0, 0.15) !important;
+
+    .modal-title { color: #0f172a !important; }
+    .modal-sub   { color: #64748b !important; }
+    .digital-pass-card {
+      background: #f8fafc !important;
+      border-color: rgba(15, 23, 42, 0.12) !important;
+      .pass-val { color: #0f172a !important; }
+      .pass-lbl { color: #64748b !important; }
+    }
+  }
+}
+
 body.ion-palette-dark ion-modal {
   /* modal backgrounds */
   --background: #101010 !important;

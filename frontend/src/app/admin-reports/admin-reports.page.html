@@ -12,13 +12,11 @@
     </div>
     
     <div slot="end" class="header-actions-group">
-      <button class="header-action-btn print-pill" (click)="printCurrent()" title="Print Summary Report">
+      <button class="header-action-btn print-pill icon-only" (click)="printCurrent()" title="Print Summary Report" aria-label="Print Report">
         <ion-icon name="print-outline"></ion-icon>
-        <span class="btn-text">Print</span>
       </button>
-      <button class="header-action-btn export-pill" (click)="openExportModal()" title="Generate Audit File (PDF, Word, Excel)">
+      <button class="header-action-btn export-pill icon-only" (click)="openExportModal()" title="Download &amp; Export Report (PDF, Word, Excel)" aria-label="Download Report">
         <ion-icon name="download-outline"></ion-icon>
-        <span class="btn-text">Generate File</span>
       </button>
     </div>
   </ion-toolbar>
@@ -947,121 +945,120 @@
     </ng-container>
 
   </div>
+</ion-content>
 
-  <!-- ═══════════════════════════════════════════════════════════ -->
-  <!-- MULTI-FORMAT EXPORT MODAL (PDF, WORD, EXCEL)                -->
-  <!-- ═══════════════════════════════════════════════════════════ -->
-  <div class="export-modal-backdrop" *ngIf="isExportModalOpen" (click)="closeExportModal()">
-    <div class="export-modal-card" (click)="$event.stopPropagation()">
-      
-      <!-- Modal Header -->
-      <div class="modal-card-header">
-        <div class="modal-title-group">
-          <div class="modal-badge">
-            <ion-icon name="sparkles-outline"></ion-icon>
-            <span>Executive Export Hub</span>
-          </div>
-          <h3 class="modal-main-title">Generate Report File</h3>
-          <p class="modal-subtext">
-            Select your preferred document format for
-            <strong class="highlight-text">{{ activeTab | uppercase }}</strong>
-            <span class="scope-tag">({{ getPeriodDisplayLabel() }})</span>
-          </p>
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- MULTI-FORMAT EXPORT MODAL (PDF, WORD, EXCEL)                -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="export-modal-backdrop" *ngIf="isExportModalOpen" (click)="closeExportModal()">
+  <div class="export-modal-card" (click)="$event.stopPropagation()">
+    
+    <!-- Modal Header -->
+    <div class="modal-card-header">
+      <div class="modal-title-group">
+        <div class="modal-badge">
+          <ion-icon name="sparkles-outline"></ion-icon>
+          <span>Executive Export Hub</span>
         </div>
-        <button class="modal-close-btn" (click)="closeExportModal()" aria-label="Close modal" [disabled]="isExporting">
-          <ion-icon name="close-outline"></ion-icon>
+        <h3 class="modal-main-title">Export Report Files</h3>
+        <p class="modal-subtext">
+          Select format for <strong class="highlight-text">{{ activeTab | uppercase }}</strong>
+          <span class="scope-tag">({{ getPeriodDisplayLabel() }})</span>
+        </p>
+      </div>
+      <button class="modal-close-btn" (click)="closeExportModal()" aria-label="Close modal" [disabled]="isExporting">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+
+    <!-- Format Cards Grid -->
+    <div class="format-cards-grid">
+      
+      <!-- Format 1: PDF Document -->
+      <div class="format-card pdf-card" [class.loading]="isExporting && exportingFormat === 'pdf'" (click)="exportAs('pdf')">
+        <div class="card-glow-pill pdf-pill-badge">Official Audit</div>
+        <div class="format-icon-box pdf-icon-box">
+          <ion-icon name="document-text-outline"></ion-icon>
+        </div>
+        <div class="format-info">
+          <div class="format-name-row">
+            <h4 class="format-name">PDF Document</h4>
+            <span class="ext-badge pdf-ext">.pdf</span>
+          </div>
+          <p class="format-desc">Official, print-ready document with executive security headers, KPI scorecards, and certified audit sign-off lines.</p>
+          <ul class="format-features">
+            <li><ion-icon name="checkmark-circle-outline"></ion-icon> Tamper-proof layout</li>
+            <li><ion-icon name="checkmark-circle-outline"></ion-icon> Presentation &amp; print ready</li>
+            <li><ion-icon name="checkmark-circle-outline"></ion-icon> Official certification block</li>
+          </ul>
+        </div>
+        <button class="format-select-btn pdf-btn" [disabled]="isExporting">
+          <ion-spinner name="crescent" *ngIf="isExporting && exportingFormat === 'pdf'"></ion-spinner>
+          <ion-icon name="download-outline" *ngIf="!(isExporting && exportingFormat === 'pdf')"></ion-icon>
+          <span>{{ isExporting && exportingFormat === 'pdf' ? 'Generating PDF…' : 'Generate PDF' }}</span>
         </button>
       </div>
 
-      <!-- Format Cards Grid -->
-      <div class="format-cards-grid">
-        
-        <!-- Format 1: PDF Document -->
-        <div class="format-card pdf-card" [class.loading]="isExporting && exportingFormat === 'pdf'" (click)="exportAs('pdf')">
-          <div class="card-glow-pill pdf-pill-badge">Official Audit</div>
-          <div class="format-icon-box pdf-icon-box">
-            <ion-icon name="document-text-outline"></ion-icon>
-          </div>
-          <div class="format-info">
-            <div class="format-name-row">
-              <h4 class="format-name">PDF Document</h4>
-              <span class="ext-badge pdf-ext">.pdf</span>
-            </div>
-            <p class="format-desc">Official, print-ready document with executive security headers, KPI scorecards, and certified audit sign-off lines.</p>
-            <ul class="format-features">
-              <li><ion-icon name="checkmark-circle-outline"></ion-icon> Tamper-proof layout</li>
-              <li><ion-icon name="checkmark-circle-outline"></ion-icon> Presentation &amp; print ready</li>
-              <li><ion-icon name="checkmark-circle-outline"></ion-icon> Official certification block</li>
-            </ul>
-          </div>
-          <button class="format-select-btn pdf-btn" [disabled]="isExporting">
-            <ion-spinner name="crescent" *ngIf="isExporting && exportingFormat === 'pdf'"></ion-spinner>
-            <ion-icon name="download-outline" *ngIf="!(isExporting && exportingFormat === 'pdf')"></ion-icon>
-            <span>{{ isExporting && exportingFormat === 'pdf' ? 'Generating PDF…' : 'Generate PDF' }}</span>
-          </button>
+      <!-- Format 2: Word Document (DOCX) -->
+      <div class="format-card word-card" [class.loading]="isExporting && exportingFormat === 'docx'" (click)="exportAs('docx')">
+        <div class="card-glow-pill word-pill-badge">Fully Editable</div>
+        <div class="format-icon-box word-icon-box">
+          <ion-icon name="document-outline"></ion-icon>
         </div>
-
-        <!-- Format 2: Word Document (DOCX) -->
-        <div class="format-card word-card" [class.loading]="isExporting && exportingFormat === 'docx'" (click)="exportAs('docx')">
-          <div class="card-glow-pill word-pill-badge">Fully Editable</div>
-          <div class="format-icon-box word-icon-box">
-            <ion-icon name="document-outline"></ion-icon>
+        <div class="format-info">
+          <div class="format-name-row">
+            <h4 class="format-name">Word Document</h4>
+            <span class="ext-badge word-ext">.docx</span>
           </div>
-          <div class="format-info">
-            <div class="format-name-row">
-              <h4 class="format-name">Word Document</h4>
-              <span class="ext-badge word-ext">.docx</span>
-            </div>
-            <p class="format-desc">Fully customizable document in Microsoft Word format. Includes editable data tables, KPI scorecard, and memo notes.</p>
-            <ul class="format-features">
-              <li><ion-icon name="checkmark-circle-outline"></ion-icon> 100% editable text &amp; tables</li>
-              <li><ion-icon name="checkmark-circle-outline"></ion-icon> Built-in Administrative Notes</li>
-              <li><ion-icon name="checkmark-circle-outline"></ion-icon> Ideal for thesis, paper &amp; memos</li>
-            </ul>
-          </div>
-          <button class="format-select-btn word-btn" [disabled]="isExporting">
-            <ion-spinner name="crescent" *ngIf="isExporting && exportingFormat === 'docx'"></ion-spinner>
-            <ion-icon name="create-outline" *ngIf="!(isExporting && exportingFormat === 'docx')"></ion-icon>
-            <span>{{ isExporting && exportingFormat === 'docx' ? 'Generating Word…' : 'Generate Word Doc' }}</span>
-          </button>
+          <p class="format-desc">Fully customizable document in Microsoft Word format. Includes editable data tables, KPI scorecard, and memo notes.</p>
+          <ul class="format-features">
+            <li><ion-icon name="checkmark-circle-outline"></ion-icon> 100% editable text &amp; tables</li>
+            <li><ion-icon name="checkmark-circle-outline"></ion-icon> Built-in Administrative Notes</li>
+            <li><ion-icon name="checkmark-circle-outline"></ion-icon> Ideal for thesis, paper &amp; memos</li>
+          </ul>
         </div>
-
-        <!-- Format 3: Excel Spreadsheet (XLSX) -->
-        <div class="format-card excel-card" [class.loading]="isExporting && exportingFormat === 'xlsx'" (click)="exportAs('xlsx')">
-          <div class="card-glow-pill excel-pill-badge">Data &amp; Formulas</div>
-          <div class="format-icon-box excel-icon-box">
-            <ion-icon name="grid-outline"></ion-icon>
-          </div>
-          <div class="format-info">
-            <div class="format-name-row">
-              <h4 class="format-name">Excel Workbook</h4>
-              <span class="ext-badge excel-ext">.xlsx</span>
-            </div>
-            <p class="format-desc">Structured multi-sheet workbook with numeric amounts ready for formulas, filtering, sorting, and financial computation.</p>
-            <ul class="format-features">
-              <li><ion-icon name="checkmark-circle-outline"></ion-icon> Executive Summary + Records Ledger</li>
-              <li><ion-icon name="checkmark-circle-outline"></ion-icon> Raw numeric values for formulas</li>
-              <li><ion-icon name="checkmark-circle-outline"></ion-icon> Auto-sized columns &amp; clean layout</li>
-            </ul>
-          </div>
-          <button class="format-select-btn excel-btn" [disabled]="isExporting">
-            <ion-spinner name="crescent" *ngIf="isExporting && exportingFormat === 'xlsx'"></ion-spinner>
-            <ion-icon name="stats-chart-outline" *ngIf="!(isExporting && exportingFormat === 'xlsx')"></ion-icon>
-            <span>{{ isExporting && exportingFormat === 'xlsx' ? 'Exporting Excel…' : 'Export Excel Sheet' }}</span>
-          </button>
-        </div>
-
+        <button class="format-select-btn word-btn" [disabled]="isExporting">
+          <ion-spinner name="crescent" *ngIf="isExporting && exportingFormat === 'docx'"></ion-spinner>
+          <ion-icon name="create-outline" *ngIf="!(isExporting && exportingFormat === 'docx')"></ion-icon>
+          <span>{{ isExporting && exportingFormat === 'docx' ? 'Generating Word…' : 'Generate Word Doc' }}</span>
+        </button>
       </div>
 
-      <!-- Modal Footer -->
-      <div class="modal-card-footer">
-        <div class="footer-note">
-          <ion-icon name="shield-checkmark-outline"></ion-icon>
-          <span>All documents are synchronized directly from verified live database records. Fully compatible with Web browsers and native Android APK.</span>
+      <!-- Format 3: Excel Spreadsheet (XLSX) -->
+      <div class="format-card excel-card" [class.loading]="isExporting && exportingFormat === 'xlsx'" (click)="exportAs('xlsx')">
+        <div class="card-glow-pill excel-pill-badge">Data &amp; Formulas</div>
+        <div class="format-icon-box excel-icon-box">
+          <ion-icon name="grid-outline"></ion-icon>
         </div>
+        <div class="format-info">
+          <div class="format-name-row">
+            <h4 class="format-name">Excel Workbook</h4>
+            <span class="ext-badge excel-ext">.xlsx</span>
+          </div>
+          <p class="format-desc">Structured multi-sheet workbook with numeric amounts ready for formulas, filtering, sorting, and financial computation.</p>
+          <ul class="format-features">
+            <li><ion-icon name="checkmark-circle-outline"></ion-icon> Executive Summary + Records Ledger</li>
+            <li><ion-icon name="checkmark-circle-outline"></ion-icon> Raw numeric values for formulas</li>
+            <li><ion-icon name="checkmark-circle-outline"></ion-icon> Auto-sized columns &amp; clean layout</li>
+          </ul>
+        </div>
+        <button class="format-select-btn excel-btn" [disabled]="isExporting">
+          <ion-spinner name="crescent" *ngIf="isExporting && exportingFormat === 'xlsx'"></ion-spinner>
+          <ion-icon name="stats-chart-outline" *ngIf="!(isExporting && exportingFormat === 'xlsx')"></ion-icon>
+          <span>{{ isExporting && exportingFormat === 'xlsx' ? 'Exporting Excel…' : 'Export Excel Sheet' }}</span>
+        </button>
       </div>
 
     </div>
+
+    <!-- Modal Footer -->
+    <div class="modal-card-footer">
+      <div class="footer-note">
+        <ion-icon name="shield-checkmark-outline"></ion-icon>
+        <span>All documents are synchronized directly from verified live database records. Fully compatible with Web browsers and native Android APK.</span>
+      </div>
+    </div>
+
   </div>
-</ion-content>
+</div>
 

@@ -225,6 +225,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   expiryDate      = '';
   daysLeft        = 0;
   progressPercent = 0;
+  isExpiringSoon  = false;
 
   // ── Stats ────────────────────────────────────────────
   sessionsThisMonth = 0;
@@ -1841,7 +1842,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   private applyUserContext(user: any): void {
     const rawUser = (user?.username || '').trim().replace(/^@/, '');
     const real = `${(user as any)?.first_name || ''} ${(user as any)?.last_name || ''}`.trim();
-    this.memberName = rawUser ? `@${rawUser}` : (real || 'Member');
+    this.memberName = rawUser ? rawUser : (real || 'Member');
     this.realName = (real && real.toLowerCase() !== rawUser.toLowerCase()) ? real : '';
     const nameForInitials = real || rawUser || 'Member';
     this.initials = nameForInitials
@@ -1880,10 +1881,12 @@ export class DashboardPage implements OnInit, OnDestroy {
       const totalDays = 30;
       const consumedDays = Math.min(Math.max(totalDays - boundedDaysLeft, 0), totalDays);
       this.progressPercent = Math.round((consumedDays / totalDays) * 100);
+      this.isExpiringSoon = boundedDaysLeft <= 7;
     } else {
       this.daysLeft = 0;
       this.expiryDate = 'Pay per visit';
       this.progressPercent = 0;
+      this.isExpiringSoon = false;
       if (isExpired) {
         // Sync with backend to ensure DB row is permanently updated to daily pass
         this.auth.fetchCurrentUser().subscribe({ error: () => {} });

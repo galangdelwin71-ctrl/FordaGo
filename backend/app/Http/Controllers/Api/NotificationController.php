@@ -50,6 +50,13 @@ class NotificationController extends Controller
         $user    = $request->user();
         $isStaff = in_array($user->role, ['admin', 'super_admin', 'employee'], true);
 
+        // Check if member has expiring or expired membership
+        if ($user && ! $isStaff && $user->membership_type === 'premium') {
+            try {
+                $user->checkAndExpireMembership();
+            } catch (\Throwable $e) {}
+        }
+
         // 30-second per-user cache: prevents the notification endpoint from
         // hammering the DB when multiple page components call refreshNotifications()
         // simultaneously on dashboard open. Cache is per-user so different

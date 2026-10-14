@@ -56,6 +56,15 @@
         <span>Start</span>
         <span>{{ daysLeft }} days left</span>
       </div>
+
+      <!-- Expiring Soon Notice on Dashboard -->
+      <div class="expiring-notice-banner" *ngIf="isExpiringSoon">
+        <ion-icon name="alert-circle"></ion-icon>
+        <span class="expiring-notice-text">
+          {{ daysLeft <= 0 ? 'Your Premium Pass expires today! Renew now to keep unlimited gym access.' : ('Your Premium Pass expires in ' + daysLeft + (daysLeft === 1 ? ' day' : ' days') + '! Renew now to keep unlimited gym access.') }}
+        </span>
+        <button type="button" class="renew-quick-btn" (click)="goToProfile()">Renew</button>
+      </div>
     </div>
 
     <!-- Stats -->

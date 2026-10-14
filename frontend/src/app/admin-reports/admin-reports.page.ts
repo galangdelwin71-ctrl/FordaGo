@@ -1218,7 +1218,7 @@ export class AdminReportsPage implements OnInit {
           }),
           new TableRow({
             children: [
-              makeCell('Premium Subscriptions (₱500/mo)', { bold: true, fill: 'F1F5F9' }),
+              makeCell('Premium Subscriptions (PHP 500/mo)', { bold: true, fill: 'F1F5F9' }),
               makeCell(this.formatCurrency(this.salesSummary?.membershipRevenue || 0), { bold: true }),
               makeCell('Active Premium Members', { bold: true, fill: 'F1F5F9' }),
               makeCell(`${this.membershipSummary?.activePremium || 0} active members`),
@@ -1226,7 +1226,7 @@ export class AdminReportsPage implements OnInit {
           }),
           new TableRow({
             children: [
-              makeCell('Gym Daily Passes (₱40/visit)', { bold: true, fill: 'F1F5F9' }),
+              makeCell('Gym Daily Passes (PHP 40/visit)', { bold: true, fill: 'F1F5F9' }),
               makeCell(this.formatCurrency(this.salesSummary?.gymRevenue || 0), { bold: true }),
               makeCell('Gym Walk-ins & Visits Logged', { bold: true, fill: 'F1F5F9' }),
               makeCell(`${this.attSummary?.total || this.attRows.length || 0} check-ins`),
@@ -1296,6 +1296,88 @@ export class AdminReportsPage implements OnInit {
       });
       children.push(streamsTable);
 
+      // Critical Expiration & Retention Alerts Table
+      if (expiredItems.length > 0 || expiringMembers.length > 0) {
+        addSectionHeader('Critical Expiration & Retention Action Items');
+        const alertRows: TableRow[] = [
+          new TableRow({
+            children: [
+              makeHeaderCell('Category'),
+              makeHeaderCell('Target Item / Member'),
+              makeHeaderCell('Contact / Qty'),
+              makeHeaderCell('Expiry Date'),
+              makeHeaderCell('Risk / Days Left'),
+              makeHeaderCell('Required Follow-up Action'),
+            ],
+          }),
+        ];
+        expiredItems.slice(0, 8).forEach(item => {
+          alertRows.push(
+            new TableRow({
+              children: [
+                makeCell('Expired Product', { bold: true, color: 'B91C1C', fill: 'FEE2E2' }),
+                makeCell(item.name || '—', { bold: true }),
+                makeCell(`Stock: ${item.current_stock} units`),
+                makeCell(this.formatDate(item.expiry_date)),
+                makeCell(`Loss: ${this.formatCurrency((item.cost_price || 0) * (item.current_stock || 0))}`, { bold: true, color: 'B91C1C' }),
+                makeCell('Pull out from inventory immediately', { italic: true }),
+              ],
+            })
+          );
+        });
+        expiringMembers.slice(0, 8).forEach(m => {
+          alertRows.push(
+            new TableRow({
+              children: [
+                makeCell('Expiring Member', { bold: true, color: 'B45309', fill: 'FEF3C7' }),
+                makeCell(m.username || 'Member', { bold: true }),
+                makeCell(m.phone || m.email || '—'),
+                makeCell(this.formatDate(m.membership_expiry)),
+                makeCell(`${m.days_left} days remaining`, { bold: true, color: 'B45309' }),
+                makeCell('Send renewal SMS reminder notification', { italic: true }),
+              ],
+            })
+          );
+        });
+        children.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: alertRows }));
+      }
+
+      // Sample Recent Transactions Ledger
+      if (this.txRows.length > 0) {
+        addSectionHeader('Recent Verified Transactions Ledger (Sample Audit Trail)');
+        const recentTxRows: TableRow[] = [
+          new TableRow({
+            children: [
+              makeHeaderCell('#', 1, AlignmentType.CENTER),
+              makeHeaderCell('Date & Time'),
+              makeHeaderCell('Customer / Payer'),
+              makeHeaderCell('Type / Description'),
+              makeHeaderCell('Channel', 1, AlignmentType.CENTER),
+              makeHeaderCell('Amount (PHP)'),
+              makeHeaderCell('Audit Status', 1, AlignmentType.CENTER),
+            ],
+          }),
+        ];
+        this.txRows.slice(0, 10).forEach((tx, idx) => {
+          const rowBg = idx % 2 === 1 ? 'F8FAFC' : 'FFFFFF';
+          const isPaid = (tx.payment_status || tx.sub_type || '').toLowerCase() === 'paid';
+          recentTxRows.push(
+            new TableRow({
+              children: [
+                makeCell(String(idx + 1), { align: AlignmentType.CENTER, fill: rowBg }),
+                makeCell(this.formatDateTime(tx.transaction_date || tx.created_at), { fill: rowBg }),
+                makeCell(tx.username || 'Walk-in Guest', { bold: true, fill: rowBg }),
+                makeCell(tx.product_name || tx.type_label || (tx.source || 'General').toUpperCase(), { fill: rowBg }),
+                makeCell((tx.payment_method || 'CASH').toUpperCase(), { align: AlignmentType.CENTER, fill: rowBg }),
+                makeCell(tx.amount > 0 ? this.formatCurrency(tx.amount) : 'Included', { bold: true, color: isPaid ? '059669' : '0F172A', fill: rowBg }),
+                makeCell(this.getStatusLabel(tx), { bold: true, color: isPaid ? '059669' : 'B45309', align: AlignmentType.CENTER, fill: rowBg }),
+              ],
+            })
+          );
+        });
+        children.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: recentTxRows }));
+      }
+
     } else if (targetTab === 'memberships') {
       addSectionHeader('Membership & Subscription Audit Summary');
       const expiringSoon = this.filteredMembershipRows.filter(m => m.is_expiring_soon);
@@ -1309,7 +1391,7 @@ export class AdminReportsPage implements OnInit {
               makeCell('Total Registered Accounts', { bold: true, fill: 'F1F5F9' }),
               makeCell(`${this.membershipSummary?.totalMembers || this.membershipRows.length} accounts`),
               makeCell('Active Premium Subscribers', { bold: true, fill: 'F1F5F9' }),
-              makeCell(`${this.membershipSummary?.activePremium || 0} members (₱500/mo)`),
+              makeCell(`${this.membershipSummary?.activePremium || 0} members (PHP 500/mo)`),
             ],
           }),
           new TableRow({
@@ -1358,7 +1440,7 @@ export class AdminReportsPage implements OnInit {
               makeCell(m.username || '—', { bold: true, fill: rowBg }),
               makeCell(m.account_type === 'coach' ? 'Coach' : 'Member', { fill: rowBg }),
               makeCell(m.email || '—', { fill: rowBg }),
-              makeCell(m.membership_type === 'premium' ? 'Premium (₱500)' : (m.membership_type === 'daily' ? 'Daily Pass' : 'Coach'), { fill: rowBg }),
+              makeCell(m.membership_type === 'premium' ? 'Premium (PHP 500)' : (m.membership_type === 'daily' ? 'Daily Pass' : 'Coach'), { fill: rowBg }),
               makeCell((m.payment_method || 'cash').toUpperCase(), { fill: rowBg }),
               makeCell(m.membership_expiry ? this.formatDate(m.membership_expiry) : 'Per Visit', { fill: rowBg }),
               makeCell(m.membership_type === 'premium' ? `${m.days_left}d left` : 'Per Visit', { fill: rowBg }),
@@ -1436,6 +1518,19 @@ export class AdminReportsPage implements OnInit {
           })
         );
       });
+
+      // Total summary row
+      txTableRows.push(
+        new TableRow({
+          children: [
+            makeCell('', { fill: 'F1F5F9' }),
+            makeCell('CONSOLIDATED AUDIT TOTALS', { bold: true, colSpan: 4, fill: 'F1F5F9' }),
+            makeCell('TOTAL COLLECTED:', { bold: true, fill: 'ECFDF5', color: '059669' }),
+            makeCell(this.formatCurrency(this.txCollectedRevenue), { bold: true, color: '059669', fill: 'ECFDF5' }),
+            makeCell(`${this.filteredTxRows.length} Records`, { bold: true, align: AlignmentType.CENTER, fill: 'F1F5F9' }),
+          ],
+        })
+      );
       children.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: txTableRows }));
 
     } else if (targetTab === 'attendance') {
@@ -1522,7 +1617,7 @@ export class AdminReportsPage implements OnInit {
           }),
           new TableRow({
             children: [
-              makeCell('Daily Gym Passes (₱40)', { bold: true, fill: 'F1F5F9' }),
+              makeCell('Daily Gym Passes (PHP 40)', { bold: true, fill: 'F1F5F9' }),
               makeCell(this.formatCurrency(this.salesSummary?.gymRevenue || 0)),
               makeCell('Shop Merchandise', { bold: true, fill: 'F1F5F9' }),
               makeCell(this.formatCurrency(this.salesSummary?.shopRevenue || 0)),
@@ -1530,7 +1625,7 @@ export class AdminReportsPage implements OnInit {
           }),
           new TableRow({
             children: [
-              makeCell('Premium Subscriptions (₱500)', { bold: true, fill: 'F1F5F9' }),
+              makeCell('Premium Subscriptions (PHP 500)', { bold: true, fill: 'F1F5F9' }),
               makeCell(this.formatCurrency(this.salesSummary?.membershipRevenue || 0)),
               makeCell('Cash Remittance Collected', { bold: true, fill: 'F1F5F9' }),
               makeCell(this.formatCurrency(this.salesSummary?.cashRevenue || 0)),
@@ -1808,17 +1903,31 @@ export class AdminReportsPage implements OnInit {
 
     const wb = XLSX.utils.book_new();
 
-    // ── Sheet 1: Executive Summary ──
-    const summaryData: any[][] = [
+    const appendSheet = (sheetName: string, data: any[][], customCols?: any[]) => {
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      const colWidths = data.reduce((acc: number[], row: any[]) => {
+        row.forEach((cell: any, i: number) => {
+          const len = String(cell ?? '').length;
+          acc[i] = Math.max(acc[i] || 10, len + 3);
+        });
+        return acc;
+      }, []);
+      ws['!cols'] = customCols || colWidths.map((w: number) => ({ wch: Math.min(Math.max(w, 12), 48) }));
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    };
+
+    // Header branding block builder
+    const makeHeaderBlock = (sheetSubtitle: string) => [
       ['FORDAGO FITNESS & WELLNESS CLUB'],
       ['MANAGEMENT INFORMATION SYSTEM - OFFICIAL AUDIT WORKBOOK'],
-      [`Module: ${targetTab.toUpperCase()}`, `Scope: ${periodLabel[currentPeriod] || currentPeriod}`, `Ref: ${reportRef}`],
+      [`Module: ${targetTab.toUpperCase()} (${sheetSubtitle})`, `Scope: ${periodLabel[currentPeriod] || currentPeriod}`, `Ref: ${reportRef}`],
       [`Generated: ${genTimestamp}`, 'Security: STRICTLY CONFIDENTIAL', 'Source: 100% Live Verified Sync'],
       [],
-      ['EXECUTIVE AUDIT SCORECARD'],
-      ['Key Performance Indicator', 'Numeric Amount (PHP)', 'Unit / Metric Scope', 'Audit Remarks'],
     ];
 
+    // ─────────────────────────────────────────────
+    // 1. INVENTORY WORKBOOK (Multi-Sheet)
+    // ─────────────────────────────────────────────
     if (targetTab === 'inventory') {
       const totalProducts = this.invRows.length;
       const totalStock = this.invSummary?.totalStock ?? this.invRows.reduce((a, b) => a + (b.current_stock || 0), 0);
@@ -1827,87 +1936,38 @@ export class AdminReportsPage implements OnInit {
       const totalCogs = this.invSummary?.totalCogs ?? this.invRows.reduce((a, b) => a + ((b.cost_price || 0) * (b.total_sold || 0)), 0);
       const totalProfit = this.invSummary?.totalProfit ?? Math.max(0, totalRevenue - totalCogs);
       const inventoryCostValue = this.invSummary?.inventoryCostValue ?? this.invRows.reduce((a, b) => a + ((b.cost_price || 0) * (b.current_stock || 0)), 0);
+      const inventoryRetailValue = this.invSummary?.inventoryValue ?? this.invRows.reduce((a, b) => a + ((b.price || 0) * (b.current_stock || 0)), 0);
       const expiredItems = this.invRows.filter(r => r.expiry_status === 'expired' || (r.days_until_expiry !== null && r.days_until_expiry < 0));
       const expiredLossRisk = this.invSummary?.expiredLossRisk ?? expiredItems.reduce((a, b) => a + ((b.cost_price || 0) * (b.current_stock || 0)), 0);
+      const expiringSoonItems = this.invRows.filter(r => r.expiry_status === 'expiring_soon' || (r.days_until_expiry !== null && r.days_until_expiry >= 0 && r.days_until_expiry <= 30));
+      const expiringSoonRisk = this.invSummary?.expiringSoonRisk ?? expiringSoonItems.reduce((a, b) => a + ((b.cost_price || 0) * (b.current_stock || 0)), 0);
 
-      summaryData.push(
+      // Sheet 1: Executive Summary
+      const summaryData: any[][] = [
+        ...makeHeaderBlock('Executive Scorecard'),
+        ['EXECUTIVE AUDIT SCORECARD'],
+        ['Key Performance Indicator', 'Numeric Amount (PHP)', 'Unit / Metric Scope', 'Audit Remarks'],
         ['Active Product Catalog Lines', totalProducts, 'SKUs', 'Active shop catalog'],
         ['Total Stock on Hand', totalStock, 'Units', 'Available shelf inventory'],
         ['Gross Merchandise Sales', Number(totalRevenue.toFixed(2)), 'PHP', 'Realized sales revenue'],
         ['Cost of Goods Sold (COGS)', Number(totalCogs.toFixed(2)), 'PHP', 'Direct inventory acquisition cost'],
         ['Net Merchandise Profit', Number(totalProfit.toFixed(2)), 'PHP', 'Gross sales less COGS'],
-        ['Capital Valuation (Cost Basis)', Number(inventoryCostValue.toFixed(2)), 'PHP', 'Current asset inventory cost'],
-        ['Expired Stock Spoilage Risk', Number(expiredLossRisk.toFixed(2)), 'PHP', `${expiredItems.length} products expired`]
-      );
-    } else if (targetTab === 'memberships') {
-      const expiringSoon = this.filteredMembershipRows.filter(m => m.is_expiring_soon);
-      const expired = this.filteredMembershipRows.filter(m => m.is_expired);
-      summaryData.push(
-        ['Total Registered Accounts', this.membershipSummary?.totalMembers || this.membershipRows.length, 'Accounts', 'User accounts on database'],
-        ['Active Premium Subscribers', this.membershipSummary?.activePremium || 0, 'Subscribers', '₱500/month recurring plan'],
-        ['Monthly Premium Run-rate', Number((this.membershipSummary?.premiumRevenue || 0).toFixed(2)), 'PHP', 'Expected monthly subscription run-rate'],
-        ['Registered Coaches', this.membershipSummary?.totalCoaches || 0, 'Coaches', 'Trainers on roster'],
-        ['Expiring in ≤7 Days', expiringSoon.length, 'Members', 'Action required: Send renewal SMS'],
-        ['Expired Membership Accounts', expired.length, 'Accounts', 'Action required: Retention follow-up']
-      );
-    } else if (targetTab === 'transactions') {
-      summaryData.push(
-        ['Total Realized Revenue Collected', Number(this.txCollectedRevenue.toFixed(2)), 'PHP', 'Sum of all paid transactions'],
-        ['Pending Receivables', Number(this.txPendingRevenue.toFixed(2)), 'PHP', 'Uncleared transactions'],
-        ['Total Audit Volume', Number(this.txTotalVolume.toFixed(2)), 'PHP', 'Total transaction volume'],
-        ['Total Transactions Count', this.filteredTxRows.length, 'Records', 'Filtered transactions log'],
-        ['Membership Transactions', this.txMembershipCount, 'Subscriptions', 'Membership fees'],
-        ['Gym Pass / Shop Transactions', this.txGymCount + this.txShopCount, 'Orders/Visits', 'Daily passes & shop orders']
-      );
-    } else if (targetTab === 'attendance') {
-      summaryData.push(
-        ['Total Logged Gym Check-ins', this.attSummary?.total || 0, 'Visits', 'All attendance sessions'],
-        ['Paid Daily Walk-in Passes', this.attSummary?.paidCount || 0, 'Passes', `Revenue: PHP ${(this.attSummary?.paidRevenue || 0).toFixed(2)}`],
-        ['Premium Member Check-ins', this.attSummary?.premiumCount || 0, 'Visits', 'Inclusive with membership'],
-        ['Peak Hours', this.attSummary?.busiestHour || '6:00 PM - 7:00 PM', 'Time Window', 'Maximum concurrent facility traffic'],
-        ['Average Session Duration', this.attSummary?.avgDurationFormatted || '45 mins', 'Duration', 'Mean member workout time']
-      );
-    } else if (targetTab === 'sales') {
-      summaryData.push(
-        ['Total Realized Sales Revenue', Number((this.salesSummary?.totalRevenue || 0).toFixed(2)), 'PHP', 'Consolidated financial sales'],
-        ['Gym Daily Passes Revenue', Number((this.salesSummary?.gymRevenue || 0).toFixed(2)), 'PHP', 'Walk-in entrance fees'],
-        ['Shop Products Revenue', Number((this.salesSummary?.shopRevenue || 0).toFixed(2)), 'PHP', 'Consumables and gear'],
-        ['Membership Plans Revenue', Number((this.salesSummary?.membershipRevenue || 0).toFixed(2)), 'PHP', 'Premium subscriptions'],
-        ['Cash Drawer Remittance', Number((this.salesSummary?.cashRevenue || 0).toFixed(2)), 'PHP', 'Direct counter receipts']
-      );
-    } else {
-      summaryData.push(
-        ['Total Realized Revenue Collected', Number(this.grandTotalCollected.toFixed(2)), 'PHP', 'Consolidated income'],
-        ['Pending Receivables', Number((this.salesSummary?.pendingRevenue || 0).toFixed(2)), 'PHP', 'Unpaid orders / pending plans'],
-        ['Premium Subscriptions', Number((this.salesSummary?.membershipRevenue || 0).toFixed(2)), 'PHP', `${this.membershipSummary?.activePremium || 0} active members`],
-        ['Gym Daily Passes', Number((this.salesSummary?.gymRevenue || 0).toFixed(2)), 'PHP', `${this.attSummary?.total || 0} check-ins`],
-        ['Shop Merchandise Revenue', Number((this.salesSummary?.shopRevenue || 0).toFixed(2)), 'PHP', 'Merchandise orders'],
-        ['Inventory Capital Valuation', Number((this.invSummary?.inventoryCostValue || 0).toFixed(2)), 'PHP', 'Asset cost basis']
-      );
-    }
+        ['Capital Valuation (Cost Basis)', Number(inventoryCostValue.toFixed(2)), 'PHP', 'Current asset inventory cost basis'],
+        ['Retail Valuation (Asset Price)', Number(inventoryRetailValue.toFixed(2)), 'PHP', 'Current asset retail sales value'],
+        ['Expired Stock Spoilage Risk', Number(expiredLossRisk.toFixed(2)), 'PHP', `${expiredItems.length} products expired (immediate pull-out)`],
+        ['Expiring Soon Spoilage Risk (<=30d)', Number(expiringSoonRisk.toFixed(2)), 'PHP', `${expiringSoonItems.length} products near expiry`],
+      ];
+      appendSheet('Executive Summary', summaryData);
 
-    const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
-    wsSummary['!cols'] = [{ wch: 35 }, { wch: 22 }, { wch: 18 }, { wch: 40 }];
-    XLSX.utils.book_append_sheet(wb, wsSummary, 'Executive Summary');
-
-    // ── Sheet 2: Tab-Specific Audit Records Ledger ──
-    const recordsData: any[][] = [];
-
-    if (targetTab === 'inventory') {
-      recordsData.push([
-        '#',
-        'Product Name',
-        'Brand',
-        'Unit Cost (PHP)',
-        'Retail Price (PHP)',
-        'Profit Margin (%)',
-        'Stock on Hand',
-        'Units Sold',
-        'Gross Revenue (PHP)',
-        'Net Profit (PHP)',
-        'Expiry Date',
-        'Shelf-Life Status',
-      ]);
+      // Sheet 2: Master Inventory
+      const masterData: any[][] = [
+        ...makeHeaderBlock('Product Master'),
+        [
+          '#', 'Product Name', 'Brand', 'Unit Cost (PHP)', 'Retail Price (PHP)',
+          'Profit Margin (%)', 'Stock on Hand', 'Units Sold', 'Gross Revenue (PHP)',
+          'Net Profit (PHP)', 'Expiry Date', 'Shelf-Life Status',
+        ],
+      ];
       const rows = this.filteredInvRows.length ? this.filteredInvRows : this.invRows;
       rows.forEach((item, idx) => {
         const isExp = item.expiry_status === 'expired' || (item.days_until_expiry !== null && item.days_until_expiry < 0);
@@ -1917,7 +1977,7 @@ export class AdminReportsPage implements OnInit {
         else if (isExpSoon) statusTag = `EXPIRING (${item.days_until_expiry}d left)`;
         else if (!item.expiry_date) statusTag = 'Non-perishable';
 
-        recordsData.push([
+        masterData.push([
           idx + 1,
           item.name || '—',
           item.brand || '—',
@@ -1932,46 +1992,137 @@ export class AdminReportsPage implements OnInit {
           statusTag,
         ]);
       });
-    } else if (targetTab === 'memberships') {
-      recordsData.push([
-        '#',
-        'Member Name',
-        'Account Type',
-        'Email Address',
-        'Phone Number',
-        'Membership Plan',
-        'Payment Channel',
-        'Expiry Date',
-        'Remaining Days',
-        'Account Status',
+      masterData.push([
+        'TOTALS', 'Consolidated Inventory Figures', '', '', '', '',
+        totalStock, totalSold, Number(totalRevenue.toFixed(2)), Number(totalProfit.toFixed(2)), '', '',
       ]);
+      appendSheet('Inventory Master', masterData);
+
+      // Sheet 3: Urgent Spoilage Register
+      const priorityItems = [...expiredItems, ...expiringSoonItems];
+      const riskData: any[][] = [
+        ...makeHeaderBlock('Perishables Risk'),
+        ['#', 'Product Name', 'Brand', 'Stock', 'Unit Cost (PHP)', 'Retail Price (PHP)', 'Expiry Date', 'Days Status', 'Audit Directive', 'Loss at Risk (PHP)'],
+      ];
+      priorityItems.forEach((item, idx) => {
+        const isExp = item.expiry_status === 'expired' || (item.days_until_expiry !== null && item.days_until_expiry < 0);
+        const lossRisk = (item.cost_price || 0) * (item.current_stock || 0);
+        riskData.push([
+          idx + 1,
+          item.name || '—',
+          item.brand || '—',
+          Number(item.current_stock || 0),
+          Number(Number(item.cost_price || 0).toFixed(2)),
+          Number(Number(item.price || 0).toFixed(2)),
+          item.expiry_date ? this.formatDate(item.expiry_date) : '—',
+          isExp ? `Expired (${Math.abs(item.days_until_expiry)}d ago)` : `${item.days_until_expiry} days remaining`,
+          isExp ? 'PULL-OUT & WRITE OFF' : '20-50% CLEARANCE SALE',
+          Number(lossRisk.toFixed(2)),
+        ]);
+      });
+      riskData.push([
+        'TOTAL RISK', 'Perishables Loss Exposure', '', '', '', '', '', '', '',
+        Number((expiredLossRisk + expiringSoonRisk).toFixed(2)),
+      ]);
+      appendSheet('Urgent Spoilage Risk', riskData);
+
+    // ─────────────────────────────────────────────
+    // 2. MEMBERSHIPS WORKBOOK (Multi-Sheet)
+    // ─────────────────────────────────────────────
+    } else if (targetTab === 'memberships') {
+      const expiringSoon = this.filteredMembershipRows.filter(m => m.is_expiring_soon);
+      const expired = this.filteredMembershipRows.filter(m => m.is_expired);
+
+      // Sheet 1: Executive Summary
+      const summaryData: any[][] = [
+        ...makeHeaderBlock('Executive Scorecard'),
+        ['EXECUTIVE AUDIT SCORECARD'],
+        ['Key Performance Indicator', 'Numeric Amount (PHP)', 'Unit / Metric Scope', 'Audit Remarks'],
+        ['Total Registered Accounts', this.membershipSummary?.totalMembers || this.membershipRows.length, 'Accounts', 'User accounts on database'],
+        ['Active Premium Subscribers', this.membershipSummary?.activePremium || 0, 'Subscribers', 'PHP 500/month recurring plan'],
+        ['Monthly Premium Run-rate', Number((this.membershipSummary?.premiumRevenue || 0).toFixed(2)), 'PHP', 'Expected monthly subscription run-rate'],
+        ['Registered Coaches', this.membershipSummary?.totalCoaches || 0, 'Coaches', 'Trainers on roster'],
+        ['Expiring in <=7 Days', expiringSoon.length, 'Members', 'Action required: Send renewal SMS'],
+        ['Expired Membership Accounts', expired.length, 'Accounts', 'Action required: Retention follow-up'],
+      ];
+      appendSheet('Executive Summary', summaryData);
+
+      // Sheet 2: Complete Roster
+      const rosterData: any[][] = [
+        ...makeHeaderBlock('Member & Coach Roster'),
+        [
+          '#', 'Member Name', 'Account Type', 'Email Address', 'Phone Number',
+          'Membership Plan', 'Payment Channel', 'Expiry Date', 'Remaining Days', 'Account Status',
+        ],
+      ];
       this.filteredMembershipRows.forEach((m, idx) => {
-        recordsData.push([
+        rosterData.push([
           idx + 1,
           m.username || '—',
           m.account_type === 'coach' ? 'Coach' : 'Member',
           m.email || '—',
           m.phone || '—',
-          m.membership_type === 'premium' ? 'Premium (₱500)' : (m.membership_type === 'daily' ? 'Daily Pass' : 'Coach Profile'),
+          m.membership_type === 'premium' ? 'Premium (PHP 500)' : (m.membership_type === 'daily' ? 'Daily Pass' : 'Coach Profile'),
           (m.payment_method || 'CASH').toUpperCase(),
           m.membership_expiry ? this.formatDate(m.membership_expiry) : 'Per Visit',
           m.membership_type === 'premium' ? `${m.days_left} days` : 'Per Visit',
           (m.membership_status || 'active').toUpperCase(),
         ]);
       });
+      appendSheet('Member & Coach Roster', rosterData);
+
+      // Sheet 3: Priority Retention & Renewal
+      const priorityList = [...expiringSoon, ...expired];
+      const renewalData: any[][] = [
+        ...makeHeaderBlock('Priority Retention & Renewal'),
+        [
+          '#', 'Member Name', 'Account Type', 'Email Address', 'Phone Number',
+          'Expiry Date', 'Days Status', 'Account Status', 'Required Retention Action',
+        ],
+      ];
+      priorityList.forEach((m, idx) => {
+        renewalData.push([
+          idx + 1,
+          m.username || '—',
+          m.account_type === 'coach' ? 'Coach' : 'Member',
+          m.email || '—',
+          m.phone || '—',
+          m.membership_expiry ? this.formatDate(m.membership_expiry) : '—',
+          m.is_expired ? 'EXPIRED' : `${m.days_left} days left`,
+          m.is_expired ? 'Inactive' : 'Action Needed',
+          m.is_expired ? 'Contact for Reactivation Plan' : 'Send Renewal SMS Reminder',
+        ]);
+      });
+      appendSheet('Priority Retention', renewalData);
+
+    // ─────────────────────────────────────────────
+    // 3. TRANSACTIONS WORKBOOK (Multi-Sheet)
+    // ─────────────────────────────────────────────
     } else if (targetTab === 'transactions') {
-      recordsData.push([
-        '#',
-        'Date & Time',
-        'Reference Code',
-        'Customer / Payer',
-        'Type / Description',
-        'Payment Channel',
-        'Amount (PHP)',
-        'Audit Status',
-      ]);
+      // Sheet 1: Executive Summary
+      const summaryData: any[][] = [
+        ...makeHeaderBlock('Executive Scorecard'),
+        ['EXECUTIVE AUDIT SCORECARD'],
+        ['Key Performance Indicator', 'Numeric Amount (PHP)', 'Unit / Metric Scope', 'Audit Remarks'],
+        ['Total Realized Revenue Collected', Number(this.txCollectedRevenue.toFixed(2)), 'PHP', 'Sum of all paid transactions'],
+        ['Pending Receivables', Number(this.txPendingRevenue.toFixed(2)), 'PHP', 'Uncleared transactions'],
+        ['Total Audit Volume', Number(this.txTotalVolume.toFixed(2)), 'PHP', 'Total transaction volume'],
+        ['Total Transactions Count', this.filteredTxRows.length, 'Records', 'Filtered transactions log'],
+        ['Membership Transactions', this.txMembershipCount, 'Subscriptions', 'Membership fees'],
+        ['Gym Pass / Shop Transactions', this.txGymCount + this.txShopCount, 'Orders/Visits', 'Daily passes & shop orders'],
+      ];
+      appendSheet('Executive Summary', summaryData);
+
+      // Sheet 2: Audit Ledger
+      const ledgerData: any[][] = [
+        ...makeHeaderBlock('Financial Audit Ledger'),
+        [
+          '#', 'Date & Time', 'Reference Code', 'Customer / Payer', 'Type / Description',
+          'Payment Channel', 'Amount (PHP)', 'Audit Status',
+        ],
+      ];
       this.filteredTxRows.forEach((tx, idx) => {
-        recordsData.push([
+        ledgerData.push([
           idx + 1,
           this.formatDateTime(tx.transaction_date || tx.created_at),
           tx.reference_number || tx.receipt_number || `TX-${tx.id || idx + 1}`,
@@ -1982,20 +2133,41 @@ export class AdminReportsPage implements OnInit {
           this.getStatusLabel(tx),
         ]);
       });
-    } else if (targetTab === 'attendance') {
-      recordsData.push([
-        '#',
-        'Check-in Time',
-        'Check-out Time',
-        'Duration (Minutes)',
-        'Customer / Member',
-        'Account Type',
-        'Daily Pass Fee (PHP)',
-        'Audit Status',
+      ledgerData.push([
+        'TOTALS', 'Consolidated Financial Audit Figures', '', '', '', '',
+        Number(this.txCollectedRevenue.toFixed(2)), `Pending: PHP ${this.txPendingRevenue.toFixed(2)}`,
       ]);
+      appendSheet('Financial Ledger', ledgerData);
+
+    // ─────────────────────────────────────────────
+    // 4. ATTENDANCE WORKBOOK (Multi-Sheet)
+    // ─────────────────────────────────────────────
+    } else if (targetTab === 'attendance') {
+      // Sheet 1: Executive Summary
+      const summaryData: any[][] = [
+        ...makeHeaderBlock('Executive Scorecard'),
+        ['EXECUTIVE AUDIT SCORECARD'],
+        ['Key Performance Indicator', 'Numeric Amount (PHP)', 'Unit / Metric Scope', 'Audit Remarks'],
+        ['Total Logged Gym Check-ins', this.attSummary?.total || 0, 'Visits', 'All attendance sessions'],
+        ['Paid Daily Walk-in Passes', this.attSummary?.paidCount || 0, 'Passes', `Revenue: PHP ${(this.attSummary?.paidRevenue || 0).toFixed(2)}`],
+        ['Premium Member Check-ins', this.attSummary?.premiumCount || 0, 'Visits', 'Inclusive with membership'],
+        ['Total Daily Pass Revenue', Number((this.attSummary?.totalRevenue || 0).toFixed(2)), 'PHP', 'Walk-in counter collections'],
+        ['Peak Hours', this.attSummary?.busiestHour || '6:00 PM - 7:00 PM', 'Time Window', 'Maximum concurrent facility traffic'],
+        ['Average Session Duration', this.attSummary?.avgDurationFormatted || '45 mins', 'Duration', 'Mean member workout time'],
+      ];
+      appendSheet('Executive Summary', summaryData);
+
+      // Sheet 2: Check-in Audit Log
+      const checkinData: any[][] = [
+        ...makeHeaderBlock('Check-in Audit Log'),
+        [
+          '#', 'Check-in Time', 'Check-out Time', 'Duration (Minutes)', 'Customer / Member',
+          'Account Type', 'Daily Pass Fee (PHP)', 'Audit Status',
+        ],
+      ];
       this.filteredAttRows.forEach((r, idx) => {
         const isPaidType = (r.membership_type || '').toLowerCase() === 'daily';
-        recordsData.push([
+        checkinData.push([
           idx + 1,
           this.formatDateTime(r.check_in_time),
           r.check_out_time ? this.formatDateTime(r.check_out_time) : 'Active Inside',
@@ -2006,93 +2178,193 @@ export class AdminReportsPage implements OnInit {
           'VERIFIED',
         ]);
       });
+      checkinData.push([
+        'TOTALS', 'Consolidated Attendance Log', '', '', `${this.filteredAttRows.length} Visits`, '',
+        Number((this.attSummary?.totalRevenue || 0).toFixed(2)), 'VERIFIED',
+      ]);
+      appendSheet('Check-in Audit Log', checkinData);
+
+      // Sheet 3: Traffic Schedule
+      const trafficData: any[][] = [
+        ...makeHeaderBlock('Facility Traffic Schedule'),
+        ['Time Interval', 'Visits Count', 'Traffic Share (%)', 'Capacity Status'],
+        ['Morning Rush (5:00 AM – 11:59 AM)', Number(this.attSummary?.morningCount || 0), `${this.attendanceMorningPercent}%`, 'High equipment utilization'],
+        ['Afternoon Session (12:00 PM – 4:59 PM)', Number(this.attSummary?.afternoonCount || 0), `${this.attendanceAfternoonPercent}%`, 'Moderate facility load'],
+        ['Evening Peak (5:00 PM – 11:00 PM)', Number(this.attSummary?.eveningCount || 0), `${this.attendanceEveningPercent}%`, 'Peak gym traffic hours'],
+      ];
+      appendSheet('Traffic Schedule', trafficData);
+
+    // ─────────────────────────────────────────────
+    // 5. SALES WORKBOOK (Multi-Sheet)
+    // ─────────────────────────────────────────────
     } else if (targetTab === 'sales') {
-      recordsData.push([
-        '#',
-        'Sale Date',
-        'Day of Week',
-        'Revenue Stream',
-        'Volume / Count',
-        'Revenue Collected (PHP)',
-      ]);
-      let counter = 1;
-      this.attSalesRows.forEach(r => {
-        recordsData.push([
-          counter++,
+      // Sheet 1: Executive Summary
+      const summaryData: any[][] = [
+        ...makeHeaderBlock('Executive Scorecard'),
+        ['EXECUTIVE AUDIT SCORECARD'],
+        ['Key Performance Indicator', 'Numeric Amount (PHP)', 'Unit / Metric Scope', 'Audit Remarks'],
+        ['Total Realized Sales Revenue', Number((this.salesSummary?.totalRevenue || 0).toFixed(2)), 'PHP', 'Consolidated financial sales'],
+        ['Pending Orders & Subscriptions', Number((this.salesSummary?.pendingRevenue || 0).toFixed(2)), 'PHP', 'Uncleared sales'],
+        ['Gym Daily Passes Revenue', Number((this.salesSummary?.gymRevenue || 0).toFixed(2)), 'PHP', 'Walk-in entrance fees'],
+        ['Shop Products Revenue', Number((this.salesSummary?.shopRevenue || 0).toFixed(2)), 'PHP', 'Consumables and gear'],
+        ['Membership Plans Revenue', Number((this.salesSummary?.membershipRevenue || 0).toFixed(2)), 'PHP', 'Premium subscriptions'],
+        ['Cash Drawer Remittance', Number((this.salesSummary?.cashRevenue || 0).toFixed(2)), 'PHP', 'Direct counter receipts'],
+        ['GCash Digital Remittance', Number((this.salesSummary?.gcashRevenue || 0).toFixed(2)), 'PHP', 'Mobile payment receipts'],
+        ['Total Merchandise Items Sold', Number(this.salesSummary?.itemsSold || 0), 'Units', 'Products purchased'],
+      ];
+      appendSheet('Executive Summary', summaryData);
+
+      // Sheet 2: Gym Passes
+      const gymData: any[][] = [
+        ...makeHeaderBlock('Gym Daily Passes Sales'),
+        ['#', 'Sale Date', 'Day of Week', 'Paid Check-ins', 'Collected Revenue (PHP)'],
+      ];
+      let gymTotalCount = 0;
+      let gymTotalRev = 0;
+      this.attSalesRows.forEach((r, idx) => {
+        const c = Number(r.count || 0);
+        const rev = Number(Number(r.revenue || 0).toFixed(2));
+        gymTotalCount += c;
+        gymTotalRev += rev;
+        gymData.push([
+          idx + 1,
           this.formatDate(r.sale_date),
           this.datePipe.transform(r.sale_date, 'EEEE') ?? '',
-          'Gym Walk-in Daily Passes',
-          Number(r.count || 0),
-          Number(Number(r.revenue || 0).toFixed(2)),
+          c,
+          rev,
         ]);
       });
-      this.shopSalesRows.forEach(r => {
-        recordsData.push([
-          counter++,
+      gymData.push(['TOTALS', 'All Logged Walk-in Passes', '', gymTotalCount, Number(gymTotalRev.toFixed(2))]);
+      appendSheet('Gym Daily Passes', gymData);
+
+      // Sheet 3: Shop Sales
+      const shopData: any[][] = [
+        ...makeHeaderBlock('Shop Merchandise Sales'),
+        ['#', 'Sale Date', 'Day of Week', 'Completed Orders', 'Collected Revenue (PHP)'],
+      ];
+      let shopTotalCount = 0;
+      let shopTotalRev = 0;
+      this.shopSalesRows.forEach((r, idx) => {
+        const c = Number(r.count || 0);
+        const rev = Number(Number(r.revenue || 0).toFixed(2));
+        shopTotalCount += c;
+        shopTotalRev += rev;
+        shopData.push([
+          idx + 1,
           this.formatDate(r.sale_date),
           this.datePipe.transform(r.sale_date, 'EEEE') ?? '',
-          'Shop Merchandise Sales',
-          Number(r.count || 0),
-          Number(Number(r.revenue || 0).toFixed(2)),
+          c,
+          rev,
         ]);
       });
-      this.membershipSalesRows.forEach(r => {
-        recordsData.push([
-          counter++,
+      shopData.push(['TOTALS', 'All Logged Merchandise Orders', '', shopTotalCount, Number(shopTotalRev.toFixed(2))]);
+      appendSheet('Shop Merchandise', shopData);
+
+      // Sheet 4: Membership Subscriptions
+      const memData: any[][] = [
+        ...makeHeaderBlock('Premium Membership Subscriptions'),
+        ['#', 'Sale Date', 'Day of Week', 'Subscriptions Count', 'Collected Revenue (PHP)'],
+      ];
+      let memTotalCount = 0;
+      let memTotalRev = 0;
+      this.membershipSalesRows.forEach((r, idx) => {
+        const c = Number(r.count || 0);
+        const rev = Number(Number(r.revenue || 0).toFixed(2));
+        memTotalCount += c;
+        memTotalRev += rev;
+        memData.push([
+          idx + 1,
           this.formatDate(r.sale_date),
           this.datePipe.transform(r.sale_date, 'EEEE') ?? '',
-          'Premium Membership Subscriptions',
-          Number(r.count || 0),
-          Number(Number(r.revenue || 0).toFixed(2)),
+          c,
+          rev,
         ]);
       });
+      memData.push(['TOTALS', 'All Membership Subscriptions', '', memTotalCount, Number(memTotalRev.toFixed(2))]);
+      appendSheet('Membership Subscriptions', memData);
+
+    // ─────────────────────────────────────────────
+    // 6. OVERVIEW WORKBOOK (Multi-Sheet)
+    // ─────────────────────────────────────────────
     } else {
-      recordsData.push([
-        '#',
-        'Revenue Stream',
-        'Realized Collected (PHP)',
-        'Contribution Share (%)',
-        'Pending Receivables (PHP)',
-        'Payment Channels',
-      ]);
-      recordsData.push([
-        1,
-        'Premium Membership Subscriptions',
-        Number((this.salesSummary?.membershipRevenue || 0).toFixed(2)),
-        `${this.revenueMembershipPercent}%`,
-        Number((this.salesSummary?.cashRevenue || 0).toFixed(2)),
-        'Cash / GCash',
-      ]);
-      recordsData.push([
-        2,
-        'Gym Walk-in Daily Passes',
-        Number((this.salesSummary?.gymRevenue || 0).toFixed(2)),
-        `${this.revenueGymPercent}%`,
-        0.00,
-        'Cash at Counter',
-      ]);
-      recordsData.push([
-        3,
-        'Shop Merchandise & Nutrition',
-        Number((this.salesSummary?.shopRevenue || 0).toFixed(2)),
-        `${this.revenueShopPercent}%`,
-        Number((this.salesSummary?.pendingRevenue || 0).toFixed(2)),
-        'Cash / GCash',
-      ]);
-    }
+      const expiredItems = this.invRows.filter(r => r.expiry_status === 'expired' || (r.days_until_expiry !== null && r.days_until_expiry < 0));
+      const expiredLossRisk = this.invSummary?.expiredLossRisk ?? expiredItems.reduce((a, b) => a + ((b.cost_price || 0) * (b.current_stock || 0)), 0);
+      const expiringMembers = this.membershipRows.filter(m => m.is_expiring_soon);
 
-    const wsRecords = XLSX.utils.aoa_to_sheet(recordsData);
-    const colWidths = recordsData.reduce((acc: number[], row: any[]) => {
-      row.forEach((cell: any, i: number) => {
-        const len = String(cell ?? '').length;
-        acc[i] = Math.max(acc[i] || 10, len + 3);
+      // Sheet 1: Executive Summary Scorecard
+      const summaryData: any[][] = [
+        ...makeHeaderBlock('Executive Scorecard'),
+        ['EXECUTIVE AUDIT SCORECARD'],
+        ['Key Performance Indicator', 'Numeric Amount (PHP)', 'Unit / Metric Scope', 'Audit Remarks'],
+        ['Total Realized Revenue Collected', Number(this.grandTotalCollected.toFixed(2)), 'PHP', 'Consolidated financial income'],
+        ['Pending Receivables', Number((this.salesSummary?.pendingRevenue || 0).toFixed(2)), 'PHP', 'Unpaid orders / pending plans'],
+        ['Premium Subscriptions Revenue', Number((this.salesSummary?.membershipRevenue || 0).toFixed(2)), 'PHP', `${this.membershipSummary?.activePremium || 0} active members (PHP 500/mo)`],
+        ['Gym Daily Passes Revenue', Number((this.salesSummary?.gymRevenue || 0).toFixed(2)), 'PHP', `${this.attSummary?.total || 0} visits logged (PHP 40/visit)`],
+        ['Shop Merchandise Revenue', Number((this.salesSummary?.shopRevenue || 0).toFixed(2)), 'PHP', 'Direct merchandise & supplement sales'],
+        ['Inventory Capital Valuation (Cost Basis)', Number((this.invSummary?.inventoryCostValue || 0).toFixed(2)), 'PHP', 'Asset acquisition cost'],
+        ['Product Expiry Loss Risk', Number(expiredLossRisk.toFixed(2)), 'PHP', `${expiredItems.length} expired SKUs require write-off`],
+        ['Memberships Expiring This Week', expiringMembers.length, 'Members', 'Priority retention follow-up required'],
+        ['Registered Coaches on Roster', this.membershipSummary?.totalCoaches || 0, 'Coaches', 'Official gym staff/trainers'],
+      ];
+      appendSheet('Executive Summary', summaryData);
+
+      // Sheet 2: Revenue Distribution
+      const streamData: any[][] = [
+        ...makeHeaderBlock('Revenue Distribution'),
+        ['#', 'Revenue Stream', 'Collected Realized (PHP)', 'Contribution Share (%)', 'Pending Receivables (PHP)', 'Primary Payment Channels'],
+        [1, 'Premium Membership Subscriptions', Number((this.salesSummary?.membershipRevenue || 0).toFixed(2)), `${this.revenueMembershipPercent}%`, Number((this.salesSummary?.cashRevenue || 0).toFixed(2)), 'Cash / GCash'],
+        [2, 'Gym Walk-in Daily Passes', Number((this.salesSummary?.gymRevenue || 0).toFixed(2)), `${this.revenueGymPercent}%`, 0.00, 'Cash at Counter'],
+        [3, 'Shop Merchandise & Nutrition', Number((this.salesSummary?.shopRevenue || 0).toFixed(2)), `${this.revenueShopPercent}%`, Number((this.salesSummary?.pendingRevenue || 0).toFixed(2)), 'Cash / GCash'],
+        ['TOTAL', 'Consolidated Revenue Streams', Number(this.grandTotalCollected.toFixed(2)), '100%', Number((this.salesSummary?.pendingRevenue || 0).toFixed(2)), 'Cash & Digital Channels'],
+      ];
+      appendSheet('Revenue Distribution', streamData);
+
+      // Sheet 3: Recent Transactions Audit Trail
+      const recentTxData: any[][] = [
+        ...makeHeaderBlock('Recent Transactions Audit Trail'),
+        ['#', 'Date & Time', 'Reference Code', 'Customer / Payer', 'Type / Description', 'Payment Channel', 'Amount (PHP)', 'Audit Status'],
+      ];
+      this.txRows.slice(0, 50).forEach((tx, idx) => {
+        recentTxData.push([
+          idx + 1,
+          this.formatDateTime(tx.transaction_date || tx.created_at),
+          tx.reference_number || tx.receipt_number || `TX-${tx.id || idx + 1}`,
+          tx.username || 'Walk-in Guest',
+          tx.product_name || tx.type_label || (tx.source || 'General').toUpperCase(),
+          (tx.payment_method || 'CASH').toUpperCase(),
+          Number(Number(tx.amount || 0).toFixed(2)),
+          this.getStatusLabel(tx),
+        ]);
       });
-      return acc;
-    }, []);
-    wsRecords['!cols'] = colWidths.map((w: number) => ({ wch: Math.min(Math.max(w, 12), 45) }));
+      appendSheet('Recent Transactions', recentTxData);
 
-    const sheetName = `${targetTab.slice(0, 10).toUpperCase()} Ledger`;
-    XLSX.utils.book_append_sheet(wb, wsRecords, sheetName);
+      // Sheet 4: Critical Alerts
+      const alertsData: any[][] = [
+        ...makeHeaderBlock('Critical Operational Alerts'),
+        ['Category', 'Target Item / Member', 'Contact / Quantity', 'Expiry Date', 'Risk / Days Left', 'Required Follow-up Directive'],
+      ];
+      expiredItems.forEach(item => {
+        alertsData.push([
+          'Expired Product',
+          item.name || '—',
+          `Stock: ${item.current_stock || 0} units`,
+          item.expiry_date ? this.formatDate(item.expiry_date) : '—',
+          `Loss: PHP ${((item.cost_price || 0) * (item.current_stock || 0)).toFixed(2)}`,
+          'Pull out from gym shelf immediately & write off',
+        ]);
+      });
+      expiringMembers.forEach(m => {
+        alertsData.push([
+          'Expiring Member',
+          m.username || '—',
+          m.phone || m.email || '—',
+          m.membership_expiry ? this.formatDate(m.membership_expiry) : '—',
+          `${m.days_left} days remaining`,
+          'Send renewal SMS notification & offer incentive',
+        ]);
+      });
+      appendSheet('Critical Alerts', alertsData);
+    }
 
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
     const blob = new Blob([wbout], {
@@ -2183,7 +2455,7 @@ export class AdminReportsPage implements OnInit {
         [
           { content: 'Expired Stock Alert', styles: { fontStyle: 'bold', fillColor: [254, 226, 226], textColor: [185, 28, 28] } },
           { content: `${expiredItems.length} SKUs (${expiredUnits} units) — Loss: ${this.formatCurrency(expiredLossRisk)}`, styles: { fontStyle: 'bold', textColor: [185, 28, 28], fillColor: [254, 226, 226] } },
-          { content: 'Expiring Soon Alert (≤30d)', styles: { fontStyle: 'bold', fillColor: [254, 243, 199], textColor: [180, 83, 9] } },
+          { content: 'Expiring Soon Alert (<=30d)', styles: { fontStyle: 'bold', fillColor: [254, 243, 199], textColor: [180, 83, 9] } },
           { content: `${expiringSoonItems.length} SKUs (${expiringSoonUnits} units) — Risk: ${this.formatCurrency(expiringSoonRisk)}`, styles: { fontStyle: 'bold', textColor: [180, 83, 9], fillColor: [254, 243, 199] } },
         ],
       ];
@@ -2202,7 +2474,7 @@ export class AdminReportsPage implements OnInit {
       // Section 1: PRIORITY EXPIRATION AUDIT TABLE
       if (expiredItems.length > 0 || expiringSoonItems.length > 0) {
         const priorityItems = [...expiredItems, ...expiringSoonItems];
-        const priorityRows = priorityItems.map((item, idx) => {
+        const priorityRows: any[] = priorityItems.map((item, idx) => {
           const isExp = item.expiry_status === 'expired' || (item.days_until_expiry !== null && item.days_until_expiry < 0);
           const daysText = isExp
             ? `Expired (${Math.abs(item.days_until_expiry)}d ago)`
@@ -2227,8 +2499,8 @@ export class AdminReportsPage implements OnInit {
         // Add total risk footer row
         const combinedRisk = expiredLossRisk + expiringSoonRisk;
         priorityRows.push([
-          { content: 'TOTAL PERISHABLE CAPITAL AT RISK (IMMEDIATE ACTION)', colSpan: 9, styles: { halign: 'right', fontStyle: 'bold', fillColor: [254, 226, 226], textColor: [185, 28, 28] } } as any,
-          { content: this.formatCurrency(combinedRisk), styles: { fontStyle: 'bold', fillColor: [254, 226, 226], textColor: [185, 28, 28] } } as any,
+          { content: 'TOTAL PERISHABLE CAPITAL AT RISK (IMMEDIATE ACTION)', colSpan: 9, styles: { halign: 'right', fontStyle: 'bold', fillColor: [254, 226, 226], textColor: [185, 28, 28] } },
+          { content: this.formatCurrency(combinedRisk), styles: { halign: 'right', fontStyle: 'bold', fillColor: [254, 226, 226], textColor: [185, 28, 28] } },
         ]);
 
         autoTable(doc, {
@@ -2242,6 +2514,16 @@ export class AdminReportsPage implements OnInit {
           body: priorityRows,
           headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.5 },
           styles: { fontSize: 7.2, cellPadding: 2 },
+          columnStyles: {
+            0: { halign: 'center', cellWidth: 8 },
+            3: { halign: 'center' },
+            4: { halign: 'right' },
+            5: { halign: 'right' },
+            6: { halign: 'center' },
+            7: { halign: 'center' },
+            8: { halign: 'center' },
+            9: { halign: 'right', fontStyle: 'bold' },
+          },
           didParseCell: (data) => {
             if (data.section === 'body' && data.row.index < priorityItems.length) {
               const item = priorityItems[data.row.index];
@@ -2281,7 +2563,7 @@ export class AdminReportsPage implements OnInit {
       }
 
       // Section 2: COMPLETE INVENTORY MASTER & PROFITABILITY LEDGER
-      const masterRows = rows.map((item, idx) => {
+      const masterRows: any[] = rows.map((item, idx) => {
         const isExp = item.expiry_status === 'expired' || (item.days_until_expiry !== null && item.days_until_expiry < 0);
         const isExpSoon = item.expiry_status === 'expiring_soon' || (item.days_until_expiry !== null && item.days_until_expiry >= 0 && item.days_until_expiry <= 30);
         let statusTag = 'Fresh / Safe';
@@ -2305,6 +2587,15 @@ export class AdminReportsPage implements OnInit {
         ];
       });
 
+      masterRows.push([
+        { content: 'TOTALS', colSpan: 6, styles: { halign: 'right', fontStyle: 'bold', fillColor: [241, 245, 249] } },
+        { content: String(totalStock), styles: { halign: 'center', fontStyle: 'bold', fillColor: [241, 245, 249] } },
+        { content: String(totalSold), styles: { halign: 'center', fontStyle: 'bold', fillColor: [241, 245, 249] } },
+        { content: this.formatCurrency(totalRevenue), styles: { halign: 'right', fontStyle: 'bold', fillColor: [241, 245, 249], textColor: [5, 150, 105] } },
+        { content: this.formatCurrency(totalProfit), styles: { halign: 'right', fontStyle: 'bold', fillColor: [241, 245, 249], textColor: [5, 150, 105] } },
+        { content: '', colSpan: 2, styles: { fillColor: [241, 245, 249] } },
+      ]);
+
       autoTable(doc, {
         startY,
         margin: { top: 18, bottom: 20, left: 14, right: 14 },
@@ -2317,6 +2608,18 @@ export class AdminReportsPage implements OnInit {
         headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.2 },
         alternateRowStyles: { fillColor: [248, 250, 252] },
         styles: { fontSize: 7, cellPadding: 1.8 },
+        columnStyles: {
+          0: { halign: 'center', cellWidth: 8 },
+          3: { halign: 'right' },
+          4: { halign: 'right' },
+          5: { halign: 'center' },
+          6: { halign: 'center' },
+          7: { halign: 'center' },
+          8: { halign: 'right', fontStyle: 'bold' },
+          9: { halign: 'right', fontStyle: 'bold' },
+          10: { halign: 'center' },
+          11: { halign: 'center' },
+        },
         didParseCell: (data) => {
           if (data.section === 'body' && data.column.index === 11) {
             const val = String(data.cell.raw || '');
@@ -2349,13 +2652,13 @@ export class AdminReportsPage implements OnInit {
           this.formatCurrency(this.salesSummary?.pendingRevenue || 0),
         ],
         [
-          { content: 'Premium Subscriptions (₱500/mo)', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          { content: 'Premium Subscriptions (PHP 500/mo)', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
           this.formatCurrency(this.salesSummary?.membershipRevenue || 0),
           { content: 'Active Premium Memberships', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
           `${this.membershipSummary?.activePremium || 0} active members`,
         ],
         [
-          { content: 'Gym Daily Passes (₱40/visit)', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          { content: 'Gym Daily Passes (PHP 40/visit)', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
           this.formatCurrency(this.salesSummary?.gymRevenue || 0),
           { content: 'Gym Walk-ins & Visits Logged', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
           `${this.attSummary?.total || this.attRows.length || 0} check-ins`,
@@ -2401,6 +2704,13 @@ export class AdminReportsPage implements OnInit {
         body: streams,
         headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.5 },
         styles: { fontSize: 7.5, cellPadding: 2 },
+        columnStyles: {
+          0: { halign: 'left' },
+          1: { halign: 'right', fontStyle: 'bold' },
+          2: { halign: 'center' },
+          3: { halign: 'right' },
+          4: { halign: 'center' },
+        },
       });
 
       startY = (doc as any).lastAutoTable.finalY + 7;
@@ -2438,6 +2748,12 @@ export class AdminReportsPage implements OnInit {
           body: riskData,
           headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.5 },
           styles: { fontSize: 7.2, cellPadding: 2 },
+          columnStyles: {
+            0: { halign: 'center' },
+            2: { halign: 'center' },
+            3: { halign: 'center' },
+            4: { halign: 'center', fontStyle: 'bold' },
+          },
         });
 
         startY = (doc as any).lastAutoTable.finalY + 7;
@@ -2459,7 +2775,45 @@ export class AdminReportsPage implements OnInit {
         body: trafficRows,
         headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.5 },
         styles: { fontSize: 7.5, cellPadding: 2 },
+        columnStyles: {
+          0: { halign: 'left' },
+          1: { halign: 'center' },
+          2: { halign: 'center' },
+          3: { halign: 'center' },
+        },
       });
+
+      // Section 4: RECENT VERIFIED TRANSACTIONS AUDIT TRAIL
+      if (this.txRows.length > 0) {
+        startY = (doc as any).lastAutoTable.finalY + 7;
+        const recentTx = this.txRows.slice(0, 10).map((tx, idx) => [
+          idx + 1,
+          this.formatDateTime(tx.transaction_date || tx.created_at),
+          tx.username || 'Walk-in Guest',
+          tx.product_name || tx.type_label || (tx.source || 'General').toUpperCase(),
+          (tx.payment_method || 'cash').toUpperCase(),
+          tx.amount > 0 ? this.formatCurrency(tx.amount) : 'Included',
+          this.getStatusLabel(tx),
+        ]);
+
+        autoTable(doc, {
+          startY,
+          margin: { top: 18, bottom: 20, left: 14, right: 14 },
+          head: [[
+            { content: 'RECENT VERIFIED TRANSACTIONS AUDIT TRAIL', colSpan: 7, styles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' } },
+          ], ['#', 'Date & Time', 'Member / Payer', 'Type / Description', 'Channel', 'Amount', 'Audit Status']],
+          body: recentTx,
+          headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.2 },
+          alternateRowStyles: { fillColor: [248, 250, 252] },
+          styles: { fontSize: 7, cellPadding: 1.8 },
+          columnStyles: {
+            0: { halign: 'center', cellWidth: 8 },
+            4: { halign: 'center', cellWidth: 20 },
+            5: { halign: 'right', fontStyle: 'bold', cellWidth: 26 },
+            6: { halign: 'center', cellWidth: 22 },
+          },
+        });
+      }
 
     // ───────────────────────────────────────────────────────
     // TAB 3: MEMBERSHIPS & RETENTION AUDIT
@@ -2473,7 +2827,7 @@ export class AdminReportsPage implements OnInit {
           { content: 'Total Registered Accounts', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
           `${this.membershipSummary?.totalMembers || this.membershipRows.length} accounts`,
           { content: 'Active Premium Subscribers', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
-          `${this.membershipSummary?.activePremium || 0} members (₱500/mo)`,
+          `${this.membershipSummary?.activePremium || 0} members (PHP 500/mo)`,
         ],
         [
           { content: 'Monthly Premium Run-rate', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
@@ -2508,7 +2862,7 @@ export class AdminReportsPage implements OnInit {
           m.username,
           m.email || '—',
           m.phone || '—',
-          m.membership_type === 'premium' ? 'Premium (₱500)' : 'Coach Profile',
+          m.membership_type === 'premium' ? 'Premium (PHP 500)' : 'Coach Profile',
           this.formatDate(m.membership_expiry),
           m.is_expired ? 'EXPIRED' : `${m.days_left}d left`,
           m.is_expired ? 'Account Inactive' : 'Action Needed',
@@ -2524,6 +2878,14 @@ export class AdminReportsPage implements OnInit {
           body: priorityRows,
           headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.2 },
           styles: { fontSize: 7, cellPadding: 2 },
+          columnStyles: {
+            0: { halign: 'center', cellWidth: 8 },
+            4: { halign: 'center' },
+            5: { halign: 'center' },
+            6: { halign: 'center' },
+            7: { halign: 'center' },
+            8: { halign: 'center' },
+          },
           didParseCell: (data) => {
             if (data.section === 'body' && data.row.index < priorityList.length) {
               const item = priorityList[data.row.index];
@@ -2553,7 +2915,7 @@ export class AdminReportsPage implements OnInit {
         m.username,
         m.account_type === 'coach' ? 'Coach' : 'Member',
         m.email || '—',
-        m.membership_type === 'premium' ? 'Premium (₱500)' : (m.membership_type === 'daily' ? 'Daily Pass' : 'Coach'),
+        m.membership_type === 'premium' ? 'Premium (PHP 500)' : (m.membership_type === 'daily' ? 'Daily Pass' : 'Coach'),
         (m.payment_method || 'cash').toUpperCase(),
         m.membership_expiry ? this.formatDate(m.membership_expiry) : 'Per Visit',
         m.membership_type === 'premium' ? `${m.days_left}d left` : 'Per Visit',
@@ -2570,6 +2932,15 @@ export class AdminReportsPage implements OnInit {
         headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.2 },
         alternateRowStyles: { fillColor: [248, 250, 252] },
         styles: { fontSize: 7, cellPadding: 1.8 },
+        columnStyles: {
+          0: { halign: 'center', cellWidth: 8 },
+          2: { halign: 'center' },
+          4: { halign: 'center' },
+          5: { halign: 'center' },
+          6: { halign: 'center' },
+          7: { halign: 'center' },
+          8: { halign: 'center' },
+        },
       });
 
     // ───────────────────────────────────────────────────────
@@ -2602,7 +2973,7 @@ export class AdminReportsPage implements OnInit {
 
       startY = (doc as any).lastAutoTable.finalY + 7;
 
-      const txTableRows = this.filteredTxRows.map((tx, idx) => [
+      const txTableRows: any[] = this.filteredTxRows.map((tx, idx) => [
         idx + 1,
         this.formatDateTime(tx.transaction_date),
         tx.username,
@@ -2611,6 +2982,12 @@ export class AdminReportsPage implements OnInit {
         tx.amount > 0 ? this.formatCurrency(tx.amount) : 'Included',
         (tx.payment_method || 'cash').toUpperCase(),
         this.getStatusLabel(tx),
+      ]);
+
+      txTableRows.push([
+        { content: 'TOTAL REALIZED REVENUE COLLECTED (PAID ONLY)', colSpan: 5, styles: { halign: 'right', fontStyle: 'bold', fillColor: [241, 245, 249] } },
+        { content: this.formatCurrency(this.txCollectedRevenue), styles: { halign: 'right', fontStyle: 'bold', fillColor: [241, 245, 249], textColor: [5, 150, 105] } },
+        { content: `Pending: ${this.formatCurrency(this.txPendingRevenue)}`, colSpan: 2, styles: { halign: 'center', fontStyle: 'bold', fillColor: [241, 245, 249], textColor: [180, 83, 9] } },
       ]);
 
       autoTable(doc, {
@@ -2623,6 +3000,12 @@ export class AdminReportsPage implements OnInit {
         headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.2 },
         alternateRowStyles: { fillColor: [248, 250, 252] },
         styles: { fontSize: 7, cellPadding: 1.8 },
+        columnStyles: {
+          0: { halign: 'center', cellWidth: 8 },
+          5: { halign: 'right', fontStyle: 'bold', cellWidth: 26 },
+          6: { halign: 'center', cellWidth: 20 },
+          7: { halign: 'center', cellWidth: 22 },
+        },
       });
 
     // ───────────────────────────────────────────────────────
@@ -2634,7 +3017,7 @@ export class AdminReportsPage implements OnInit {
           { content: 'Total Visits Logged', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
           `${this.attSummary?.total || this.attRows.length} check-ins`,
           { content: 'Daily Walk-in Passes', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
-          `${this.attSummary?.daily || 0} visits (₱40)`,
+          `${this.attSummary?.daily || 0} visits (PHP 40)`,
         ],
         [
           { content: 'Premium Member Visits', styles: { fontStyle: 'bold', fillColor: [241, 245, 249] } },
@@ -2655,14 +3038,20 @@ export class AdminReportsPage implements OnInit {
 
       startY = (doc as any).lastAutoTable.finalY + 7;
 
-      const attTableRows = this.filteredAttRows.map((r, idx) => [
+      const attTableRows: any[] = this.filteredAttRows.map((r, idx) => [
         idx + 1,
         this.formatDateTime(r.check_in_time),
         r.username,
         r.email || '—',
-        r.membership_type === 'daily' ? 'Daily Pass (₱40)' : 'Premium Member',
+        r.membership_type === 'daily' ? 'Daily Pass (PHP 40)' : 'Premium Member',
         r.membership_type === 'daily' ? this.formatCurrency(40) : 'Included in Plan',
         (r.payment_status || 'paid').toUpperCase(),
+      ]);
+
+      attTableRows.push([
+        { content: 'TOTAL ATTENDANCE SESSIONS / WALK-IN REVENUE', colSpan: 5, styles: { halign: 'right', fontStyle: 'bold', fillColor: [241, 245, 249] } },
+        { content: this.formatCurrency(this.attSummary?.totalRevenue || 0), styles: { halign: 'right', fontStyle: 'bold', fillColor: [241, 245, 249], textColor: [5, 150, 105] } },
+        { content: 'VERIFIED', styles: { halign: 'center', fontStyle: 'bold', fillColor: [241, 245, 249] } },
       ]);
 
       autoTable(doc, {
@@ -2675,6 +3064,12 @@ export class AdminReportsPage implements OnInit {
         headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.2 },
         alternateRowStyles: { fillColor: [248, 250, 252] },
         styles: { fontSize: 7, cellPadding: 1.8 },
+        columnStyles: {
+          0: { halign: 'center', cellWidth: 8 },
+          4: { halign: 'center', cellWidth: 32 },
+          5: { halign: 'right', fontStyle: 'bold', cellWidth: 26 },
+          6: { halign: 'center', cellWidth: 24 },
+        },
       });
 
     // ───────────────────────────────────────────────────────
@@ -2721,11 +3116,23 @@ export class AdminReportsPage implements OnInit {
 
       // Table A: Daily Gym Passes
       if (this.attSalesRows.length > 0) {
-        const attSalesTable = this.attSalesRows.map(r => [
-          this.formatDate(r.sale_date),
-          this.datePipe.transform(r.sale_date, 'EEEE') ?? '',
-          r.count,
-          this.formatCurrency(r.revenue),
+        let attTotalCount = 0;
+        let attTotalRev = 0;
+        const attSalesTable: any[] = this.attSalesRows.map(r => {
+          attTotalCount += Number(r.count || 0);
+          attTotalRev += Number(r.revenue || 0);
+          return [
+            this.formatDate(r.sale_date),
+            this.datePipe.transform(r.sale_date, 'EEEE') ?? '',
+            r.count,
+            this.formatCurrency(r.revenue),
+          ];
+        });
+
+        attSalesTable.push([
+          { content: 'TOTALS', colSpan: 2, styles: { halign: 'right', fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          { content: `${attTotalCount} check-ins`, styles: { halign: 'center', fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          { content: this.formatCurrency(attTotalRev), styles: { halign: 'right', fontStyle: 'bold', fillColor: [241, 245, 249], textColor: [5, 150, 105] } },
         ]);
 
         autoTable(doc, {
@@ -2738,6 +3145,12 @@ export class AdminReportsPage implements OnInit {
           headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.2 },
           alternateRowStyles: { fillColor: [248, 250, 252] },
           styles: { fontSize: 7, cellPadding: 1.8 },
+          columnStyles: {
+            0: { halign: 'center' },
+            1: { halign: 'center' },
+            2: { halign: 'center' },
+            3: { halign: 'right', fontStyle: 'bold' },
+          },
         });
 
         startY = (doc as any).lastAutoTable.finalY + 7;
@@ -2745,11 +3158,23 @@ export class AdminReportsPage implements OnInit {
 
       // Table B: Shop Sales
       if (this.shopSalesRows.length > 0) {
-        const shopSalesTable = this.shopSalesRows.map(r => [
-          this.formatDate(r.sale_date),
-          this.datePipe.transform(r.sale_date, 'EEEE') ?? '',
-          r.count,
-          this.formatCurrency(r.revenue),
+        let shopTotalCount = 0;
+        let shopTotalRev = 0;
+        const shopSalesTable: any[] = this.shopSalesRows.map(r => {
+          shopTotalCount += Number(r.count || 0);
+          shopTotalRev += Number(r.revenue || 0);
+          return [
+            this.formatDate(r.sale_date),
+            this.datePipe.transform(r.sale_date, 'EEEE') ?? '',
+            r.count,
+            this.formatCurrency(r.revenue),
+          ];
+        });
+
+        shopSalesTable.push([
+          { content: 'TOTALS', colSpan: 2, styles: { halign: 'right', fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          { content: `${shopTotalCount} orders`, styles: { halign: 'center', fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          { content: this.formatCurrency(shopTotalRev), styles: { halign: 'right', fontStyle: 'bold', fillColor: [241, 245, 249], textColor: [5, 150, 105] } },
         ]);
 
         autoTable(doc, {
@@ -2762,6 +3187,12 @@ export class AdminReportsPage implements OnInit {
           headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.2 },
           alternateRowStyles: { fillColor: [248, 250, 252] },
           styles: { fontSize: 7, cellPadding: 1.8 },
+          columnStyles: {
+            0: { halign: 'center' },
+            1: { halign: 'center' },
+            2: { halign: 'center' },
+            3: { halign: 'right', fontStyle: 'bold' },
+          },
         });
 
         startY = (doc as any).lastAutoTable.finalY + 7;
@@ -2769,11 +3200,23 @@ export class AdminReportsPage implements OnInit {
 
       // Table C: Membership Subscriptions
       if (this.membershipSalesRows.length > 0) {
-        const memSalesTable = this.membershipSalesRows.map(r => [
-          this.formatDate(r.sale_date),
-          this.datePipe.transform(r.sale_date, 'EEEE') ?? '',
-          r.count,
-          this.formatCurrency(r.revenue),
+        let memTotalCount = 0;
+        let memTotalRev = 0;
+        const memSalesTable: any[] = this.membershipSalesRows.map(r => {
+          memTotalCount += Number(r.count || 0);
+          memTotalRev += Number(r.revenue || 0);
+          return [
+            this.formatDate(r.sale_date),
+            this.datePipe.transform(r.sale_date, 'EEEE') ?? '',
+            r.count,
+            this.formatCurrency(r.revenue),
+          ];
+        });
+
+        memSalesTable.push([
+          { content: 'TOTALS', colSpan: 2, styles: { halign: 'right', fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          { content: `${memTotalCount} subscriptions`, styles: { halign: 'center', fontStyle: 'bold', fillColor: [241, 245, 249] } },
+          { content: this.formatCurrency(memTotalRev), styles: { halign: 'right', fontStyle: 'bold', fillColor: [241, 245, 249], textColor: [5, 150, 105] } },
         ]);
 
         autoTable(doc, {
@@ -2786,6 +3229,12 @@ export class AdminReportsPage implements OnInit {
           headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7.2 },
           alternateRowStyles: { fillColor: [248, 250, 252] },
           styles: { fontSize: 7, cellPadding: 1.8 },
+          columnStyles: {
+            0: { halign: 'center' },
+            1: { halign: 'center' },
+            2: { halign: 'center' },
+            3: { halign: 'right', fontStyle: 'bold' },
+          },
         });
       }
     }

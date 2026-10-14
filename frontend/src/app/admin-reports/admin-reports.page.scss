@@ -127,67 +127,53 @@ ion-content.reports-content {
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
-  margin-right: 6px;
+  margin-right: 4px;
 }
 
 .header-action-btn {
-  height: 36px;
-  padding: 0 13px;
-  border-radius: 9px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  font-size: 12.5px;
-  font-weight: 800;
+  padding: 0;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   border: 1px solid var(--border-color);
   flex-shrink: 0;
 
   ion-icon {
-    font-size: 16px;
+    font-size: 19px;
     display: inline-block;
-  }
-
-  &.icon-only {
-    width: 38px;
-    padding: 0;
-    background: #F8FAFC;
-    color: var(--text-secondary);
-
-    &:hover {
-      background: #F1F5F9;
-      color: var(--text-primary);
-      transform: rotate(45deg);
-    }
   }
 
   &.print-pill {
     background: #F8FAFC;
-    color: var(--text-secondary);
+    color: #334155;
+    border-color: rgba(15, 23, 42, 0.1);
 
     ion-icon {
-      color: var(--text-secondary);
+      color: #334155;
     }
 
     &:hover {
       background: #F1F5F9;
-      color: var(--text-primary);
+      color: #0F172A;
+      border-color: rgba(15, 23, 42, 0.2);
+      transform: translateY(-1px);
     }
   }
 
-  &.export-pill,
-  &.pdf-pill {
+  &.export-pill {
     background: linear-gradient(135deg, #EAB308, #CA8A04);
     border-color: #B45309;
     color: #0F172A;
     box-shadow: 0 2px 10px rgba(234, 179, 8, 0.3);
-    font-weight: 800;
 
     ion-icon {
       color: #0F172A;
-      font-size: 17px;
+      font-size: 20px;
     }
 
     &:hover {
@@ -198,7 +184,7 @@ ion-content.reports-content {
   }
 
   &:active {
-    transform: scale(0.95);
+    transform: scale(0.93);
   }
 }
 
@@ -1678,12 +1664,12 @@ ion-content.reports-content {
   background: rgba(15, 23, 42, 0.65);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  z-index: 99999;
+  z-index: 999999;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
-  animation: modalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: modalFadeIn 0.2s ease-out forwards;
 }
 
 @keyframes modalFadeIn {
@@ -1698,25 +1684,14 @@ ion-content.reports-content {
 .export-modal-card {
   width: 100%;
   max-width: 820px;
-  max-height: 92vh;
+  max-height: 88vh;
   background: #FFFFFF;
-  border-radius: 24px;
+  border-radius: 22px;
   box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.4), 0 0 0 1px rgba(15, 23, 42, 0.08);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: modalCardSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes modalCardSlideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  transform: none;
 }
 
 .modal-card-header {
@@ -2089,12 +2064,13 @@ ion-content.reports-content {
 
 @media (max-width: 768px) {
   .export-modal-backdrop {
-    padding: 10px;
+    padding: 12px;
   }
 
   .export-modal-card {
-    border-radius: 20px;
-    max-height: 94vh;
+    border-radius: 18px;
+    max-height: 86vh;
+    width: 100%;
   }
 
   .modal-card-header {
@@ -2109,11 +2085,110 @@ ion-content.reports-content {
     grid-template-columns: 1fr;
     gap: 12px;
     padding: 14px 16px;
-    max-height: calc(94vh - 150px);
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .format-card {
     padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .reports-toolbar {
+    padding: 6px 10px 6px 8px;
+  }
+
+  .toolbar-brand-wrapper {
+    gap: 8px;
+  }
+
+  .toolbar-main-title {
+    font-size: 14px;
+  }
+
+  .toolbar-sub-badge {
+    font-size: 9px;
+  }
+
+  .header-actions-group {
+    gap: 6px;
+    margin-right: 2px;
+  }
+
+  .header-action-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+
+    ion-icon {
+      font-size: 18px;
+    }
+  }
+
+  .export-modal-backdrop {
+    padding: 8px;
+  }
+
+  .export-modal-card {
+    border-radius: 16px;
+    max-height: 88vh;
+  }
+
+  .modal-card-header {
+    padding: 14px 14px 10px;
+  }
+
+  .modal-main-title {
+    font-size: 16px;
+  }
+
+  .format-cards-grid {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .format-card {
+    padding: 14px 12px;
+
+    .format-icon-box {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+
+      ion-icon {
+        font-size: 22px;
+      }
+    }
+
+    .format-name {
+      font-size: 14px;
+    }
+
+    .format-desc {
+      font-size: 11.5px;
+      margin-bottom: 8px;
+    }
+
+    .format-features li {
+      font-size: 11px;
+    }
+
+    .format-select-btn {
+      height: 38px;
+      font-size: 12px;
+    }
+  }
+
+  .modal-card-footer {
+    padding: 10px 14px;
+
+    .footer-note {
+      font-size: 10.5px;
+    }
   }
 }
 

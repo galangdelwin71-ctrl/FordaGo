@@ -41,6 +41,18 @@ export class AuthService {
     void Preferences.remove({ key: 'user' });
   }
 
+  sendRegistrationOtp(email: string, firstName = '') {
+    return this.http.post<any>(`${this.apiUrl}/register/send-otp`, { email, firstName }).pipe(
+      catchError((err: HttpErrorResponse) => this.handleError(err))
+    );
+  }
+
+  verifyRegistrationOtp(email: string, code: string) {
+    return this.http.post<any>(`${this.apiUrl}/register/verify-otp`, { email, code }).pipe(
+      catchError((err: HttpErrorResponse) => this.handleError(err))
+    );
+  }
+
   register(
     firstName: string,
     lastName: string,
@@ -58,7 +70,8 @@ export class AuthService {
       preferred_workout_time?: string | null;
     },
     dateOfBirth?: string,
-    username = ''
+    username = '',
+    verificationToken = ''
   ) {
     const payload: Record<string, any> = {
       firstName,
@@ -71,6 +84,7 @@ export class AuthService {
       date_of_birth: dateOfBirth || null,
       membership_type,
       payment_method,
+      verification_token: verificationToken || undefined,
     };
     if (fitnessProfile) {
       if (fitnessProfile.height != null) payload['height'] = fitnessProfile.height;

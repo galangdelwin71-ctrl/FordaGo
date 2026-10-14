@@ -273,6 +273,19 @@ ion-content::part(scroll) {
     cursor: not-allowed;
     box-shadow: none;
   }
+
+  &.quick-gym-checkin-btn {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: none;
+
+    &:hover, &:active {
+      background: rgba(255, 214, 0, 0.15);
+      border-color: rgba(255, 214, 0, 0.4);
+      color: var(--accent-lime);
+    }
+  }
 }
 
 // ── Log Section Header ────────────────────────────────────
@@ -769,25 +782,26 @@ ion-content::part(scroll) {
   pointer-events: none !important;
 }
 
+::ng-deep ion-modal.centered-dialog-modal,
 ion-modal.centered-dialog-modal {
-  --background: transparent;
-  --backdrop-opacity: 0.85;
-  --width: 92%;
-  --max-width: 440px;
-  --height: auto;
-  --border-radius: 28px;
-  --box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85);
+  --background: transparent !important;
+  --backdrop-opacity: 0.85 !important;
+  --width: 92% !important;
+  --max-width: 440px !important;
+  --height: fit-content !important;
+  --border-radius: 28px !important;
+  --box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85) !important;
 
   &::part(content) {
-    background: transparent;
-    border-radius: 28px;
-    box-shadow: none;
-    overflow: hidden;
-    margin: auto;
-    max-height: 90vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    background: transparent !important;
+    border-radius: 28px !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    margin: auto !important;
+    max-height: 90vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
   }
 }
 

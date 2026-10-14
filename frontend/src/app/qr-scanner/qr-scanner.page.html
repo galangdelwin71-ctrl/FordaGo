@@ -76,6 +76,18 @@
         <ion-icon class="scan-btn-icon" [name]="isScanning ? 'stop-circle-outline' : 'camera-outline'"></ion-icon>
         {{ isScanning ? 'Stop Scanning' : 'Start Camera Scan' }}
       </button>
+
+      <button
+        *ngIf="!isScanning"
+        type="button"
+        class="scan-btn quick-gym-checkin-btn"
+        [disabled]="isProcessingScan"
+        (click)="checkInWithGymQr()"
+        title="Check in directly with official gym QR code"
+      >
+        <ion-icon class="scan-btn-icon" name="checkmark-done-circle-outline"></ion-icon>
+        Gym Check-in
+      </button>
     </div>
 
     <!-- My Scan Log -->

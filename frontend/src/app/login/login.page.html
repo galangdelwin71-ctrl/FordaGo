@@ -238,19 +238,45 @@
         </div>
 
         <div class="field">
-          <label class="field-lbl" for="reg-email">Email</label>
-          <div class="input-shell">
+          <div class="field-lbl-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label class="field-lbl" for="reg-email" style="margin-bottom: 0;">Email</label>
+            <span *ngIf="regEmailVerified && regVerifiedEmail === reg.email.trim().toLowerCase()" class="email-verified-badge">
+              <ion-icon name="checkmark-circle"></ion-icon> Verified
+            </span>
+          </div>
+          <div class="input-shell" [class.is-verified]="regEmailVerified && regVerifiedEmail === reg.email.trim().toLowerCase()">
             <ion-icon name="mail-outline" aria-hidden="true"></ion-icon>
             <input
               id="reg-email"
               class="field-input"
               type="email"
               [(ngModel)]="reg.email"
+              (input)="onRegEmailChange()"
               placeholder="Enter email address"
               autocomplete="email"
               inputmode="email"
             />
+            <button
+              *ngIf="!regEmailVerified || regVerifiedEmail !== reg.email.trim().toLowerCase()"
+              type="button"
+              class="email-verify-trigger-btn"
+              [disabled]="regOtpSending || !reg.email.trim()"
+              (click)="openRegEmailOtp()"
+              title="Verify this email with OTP"
+            >
+              <ion-spinner *ngIf="regOtpSending" name="crescent" style="width: 14px; height: 14px;"></ion-spinner>
+              <span *ngIf="!regOtpSending">Verify</span>
+            </button>
+            <ion-icon
+              *ngIf="regEmailVerified && regVerifiedEmail === reg.email.trim().toLowerCase()"
+              name="checkmark-circle"
+              class="verified-check-icon"
+              aria-hidden="true"
+            ></ion-icon>
           </div>
+          <small class="field-hint" style="display:block;margin-top:4px;font-size:0.75rem;color:var(--text-muted, #94a3b8);">
+            A 6-digit verification code will be sent to confirm this is your real email.
+          </small>
         </div>
 
         <div class="field">
@@ -410,8 +436,10 @@
           <span>{{ regError }}</span>
         </div>
 
-        <button class="submit-btn" type="button" (click)="nextStep()">
-          <span>Continue</span>
+        <button class="submit-btn" type="button" (click)="nextStep()" [disabled]="regOtpSending" [class.is-loading]="regOtpSending">
+          <ion-spinner *ngIf="regOtpSending" name="crescent"></ion-spinner>
+          <span *ngIf="!regOtpSending">Continue</span>
+          <span *ngIf="regOtpSending">Sending OTP Code...</span>
         </button>
 
         <button type="button" class="bottom-text-link" (click)="goToLogin()">
@@ -1694,6 +1722,89 @@
           (click)="closeNoAccountsLinkedModal()"
         >
           Sign In with Password
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Registration Email OTP Verification Modal ─────────────────── -->
+  <div class="bio-picker-overlay reg-otp-overlay" *ngIf="showRegEmailOtpModal" (click)="closeRegEmailOtpModal()">
+    <div class="bio-picker-card reg-otp-card" (click)="$event.stopPropagation()">
+      <div class="reg-otp-icon-ring">
+        <ion-icon name="mail-outline"></ion-icon>
+      </div>
+
+      <h3 class="reg-otp-title">Verify Your Email</h3>
+      <p class="reg-otp-sub">
+        We sent a 6-digit verification code to
+      </p>
+
+      <div class="reg-otp-email-pill">
+        <ion-icon name="mail-outline"></ion-icon>
+        <span>{{ reg.email }}</span>
+      </div>
+
+      <!-- 6-Box OTP Input Grid -->
+      <div class="otp-boxes-container reg-otp-boxes">
+        <input
+          *ngFor="let digit of regOtpDigits; let i = index"
+          [id]="'reg-email-otp-' + i"
+          class="otp-digit-box"
+          [class.filled]="digit !== ''"
+          type="tel"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          maxlength="1"
+          [value]="digit"
+          (input)="onRegOtpDigitInput($event, i)"
+          (keydown)="onRegOtpDigitKeyDown($event, i)"
+          autocomplete="one-time-code"
+        />
+      </div>
+
+      <div class="dev-otp-hint" *ngIf="regOtpDevCode">
+        <ion-icon name="information-circle-outline"></ion-icon>
+        <span>Dev OTP: <strong>{{ regOtpDevCode }}</strong></span>
+      </div>
+
+      <div class="err-msg" *ngIf="regOtpError" role="alert" style="margin-top: 10px; margin-bottom: 8px;">
+        <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
+        <span>{{ regOtpError }}</span>
+      </div>
+
+      <div class="reg-otp-actions" style="margin-top: 14px;">
+        <button
+          type="button"
+          class="submit-btn"
+          [disabled]="regOtpLoading || regOtpCode.length !== 6"
+          [class.is-loading]="regOtpLoading"
+          (click)="verifyRegEmailOtp()"
+        >
+          <ion-spinner *ngIf="regOtpLoading" name="crescent"></ion-spinner>
+          <span *ngIf="!regOtpLoading">Verify &amp; Continue</span>
+          <span *ngIf="regOtpLoading">Verifying...</span>
+        </button>
+
+        <div class="resend-row" style="margin-top: 14px; margin-bottom: 4px;">
+          <button
+            type="button"
+            class="resend-btn"
+            [disabled]="regOtpResendCountdown > 0 || regOtpSending"
+            (click)="resendRegEmailOtp()"
+          >
+            <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+            <span *ngIf="regOtpResendCountdown === 0">Resend Code</span>
+            <span *ngIf="regOtpResendCountdown > 0">Resend code in {{ regOtpResendCountdown }}s</span>
+          </button>
+        </div>
+
+        <button
+          type="button"
+          class="bottom-text-link"
+          style="margin-top: 8px;"
+          (click)="closeRegEmailOtpModal()"
+        >
+          Change Email or Edit Details
         </button>
       </div>
     </div>

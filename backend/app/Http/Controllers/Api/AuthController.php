@@ -427,6 +427,112 @@ class AuthController extends Controller
         return response()->json(['message' => 'Logged out successfully.']);
     }
 
+    /**
+     * POST /api/auth/register/send-otp
+     * Send a 6-digit OTP to verify email before registration.
+     */
+    public function sendRegistrationOtp(Request $request)
+    {
+        $rawEmail = $request->input('email');
+        $email = $this->normalizeEmail($rawEmail);
+        $firstName = $this->normalizeName($request->input('firstName', $request->input('first_name', 'Future Member')));
+
+        if ($email === '' || ! $this->isValidEmail($email)) {
+            return response()->json(['message' => 'Please provide a valid email address.'], 400);
+        }
+
+        // Check if email already belongs to a registered account
+        if (User::where('email', $email)->exists()) {
+            return response()->json([
+                'message' => 'This email address is already registered. Please sign in or use a different email.'
+            ], 409);
+        }
+
+        // Rate limiting: max 10 per hour per IP/email, 60s cooldown
+        $limitKey = 'reg-otp:' . $request->ip() . ':' . $email;
+        if (RateLimiter::tooManyAttempts($limitKey . ':hourly', 10)) {
+            return response()->json(['message' => 'Too many verification code requests. Please try again after 1 hour.'], 429);
+        }
+        if (RateLimiter::tooManyAttempts($limitKey . ':cooldown', 1)) {
+            $secondsRemaining = RateLimiter::availableIn($limitKey . ':cooldown');
+            return response()->json(['message' => "Please wait {$secondsRemaining} second(s) before requesting another code."], 429);
+        }
+
+        $code = $this->generateResetCode();
+        $codeHash = $this->hashResetCode($code);
+
+        // Store code in Cache for 10 minutes
+        Cache::put("reg_email_otp:{$email}", $codeHash, now()->addMinutes(10));
+        Cache::put("reg_email_otp_attempts:{$email}", 0, now()->addMinutes(10));
+
+        $deliveryResult = MailService::sendRegistrationEmailOtp($email, $code, $firstName ?: 'Future Member');
+        $isSent = (bool) ($deliveryResult['sent'] ?? false);
+
+        if ($isSent) {
+            RateLimiter::hit($limitKey . ':hourly', 3600);
+            RateLimiter::hit($limitKey . ':cooldown', 60);
+        }
+
+        $devCode = (config('app.env') === 'local' || ($deliveryResult['provider'] ?? '') === 'log') ? $code : null;
+
+        return response()->json([
+            'sent'               => $isSent,
+            'email_masked'       => $this->maskEmail($email),
+            'message'            => "A 6-digit verification code was sent to {$email}. Please check your inbox and spam folder.",
+            'dev_code'           => $devCode,
+        ]);
+    }
+
+    /**
+     * POST /api/auth/register/verify-otp
+     * Verify the 6-digit OTP for email verification.
+     */
+    public function verifyRegistrationOtp(Request $request)
+    {
+        $email = $this->normalizeEmail($request->input('email'));
+        $code = trim((string) ($request->input('code') ?? $request->input('otp') ?? ''));
+
+        if ($email === '' || ! $this->isValidEmail($email)) {
+            return response()->json(['message' => 'Invalid email address.'], 400);
+        }
+
+        if (! preg_match('/^\d{6}$/', $code)) {
+            return response()->json(['message' => 'Please enter the complete 6-digit verification code.'], 400);
+        }
+
+        $cachedHash = Cache::get("reg_email_otp:{$email}");
+        if (! $cachedHash) {
+            return response()->json(['message' => 'Verification code expired or not found. Please click Resend Code.'], 400);
+        }
+
+        $attempts = (int) Cache::get("reg_email_otp_attempts:{$email}", 0);
+        if ($attempts >= 5) {
+            Cache::forget("reg_email_otp:{$email}");
+            return response()->json(['message' => 'Too many incorrect attempts. Please request a new verification code.'], 429);
+        }
+
+        $inputHash = $this->hashResetCode($code);
+        if (! hash_equals($cachedHash, $inputHash)) {
+            $attempts++;
+            Cache::put("reg_email_otp_attempts:{$email}", $attempts, now()->addMinutes(10));
+            $remaining = 5 - $attempts;
+            return response()->json(['message' => "Invalid verification code. {$remaining} attempt(s) remaining."], 400);
+        }
+
+        // Verification successful
+        Cache::forget("reg_email_otp:{$email}");
+        Cache::forget("reg_email_otp_attempts:{$email}");
+
+        $token = hash('sha256', "verified_{$email}_" . config('app.key') . '_' . now()->timestamp);
+        Cache::put("reg_email_verified:{$email}", $token, now()->addMinutes(30));
+
+        return response()->json([
+            'success'            => true,
+            'message'            => 'Email verified successfully!',
+            'verification_token' => $token,
+        ]);
+    }
+
     public function register(Request $request)
     {
         $firstName      = $this->normalizeName($request->input('firstName', $request->input('first_name')));
@@ -477,6 +583,30 @@ class AuthController extends Controller
         }
         if (User::where('email', $email)->exists()) {
             return response()->json(['message' => 'Email already exists.'], 409);
+        }
+
+        // Enforce Email OTP Verification before creating user
+        $verifiedToken = Cache::get("reg_email_verified:{$email}");
+        $clientToken   = $request->input('verification_token');
+        $passedOtp     = trim((string) ($request->input('otp_code') ?? $request->input('code') ?? ''));
+
+        $isVerified = false;
+        if ($verifiedToken) {
+            if (!$clientToken || hash_equals($verifiedToken, $clientToken)) {
+                $isVerified = true;
+            }
+        } elseif ($passedOtp) {
+            $cachedHash = Cache::get("reg_email_otp:{$email}");
+            if ($cachedHash && hash_equals($cachedHash, $this->hashResetCode($passedOtp))) {
+                $isVerified = true;
+            }
+        }
+
+        if (! $isVerified) {
+            return response()->json([
+                'message' => 'Please verify your email address via OTP before completing registration.',
+                'require_email_verification' => true,
+            ], 422);
         }
 
         $username = $cleanUsername;
@@ -530,6 +660,10 @@ class AuthController extends Controller
             'membership_expiry'      => null,
         ]);
 
+        // Consume email verification token
+        Cache::forget("reg_email_verified:{$email}");
+        Cache::forget("reg_email_otp:{$email}");
+
         // Notify all staff (admin, super_admin, employee) via in-app & FCM Push
         try {
             $staffMembers = User::whereIn('role', ['admin', 'super_admin', 'employee'])->get();
@@ -538,8 +672,8 @@ class AuthController extends Controller
                     'user_id' => $staff->id,
                     'title'   => "New Member Registration: {$firstName} {$lastName}",
                     'message' => $normalizedMembershipType === 'premium'
-                        ? "{$firstName} {$lastName} (@{$username}) registered as Premium ({$normalizedPaymentMethod}). Please verify payment and activate account."
-                        : "{$firstName} {$lastName} (@{$username}) registered as Daily Pass. Please verify and activate account before login.",
+                        ? "{$firstName} {$lastName} ({$username}) registered as Premium ({$normalizedPaymentMethod}). Please verify payment and activate account."
+                        : "{$firstName} {$lastName} ({$username}) registered as Daily Pass. Please verify and activate account before login.",
                 ]);
             }
 
