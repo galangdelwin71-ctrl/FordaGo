@@ -26,29 +26,29 @@ The pre-development assessment confirmed that AFFORDA Gym – Cabiao Branch suff
 
 1.2. Engineered System Architecture and Functional Modules (SOP 2):
 
-The researchers successfully engineered, integrated, and deployed the FordaGO system across a robust three-tier architecture (Ionic 8 and Angular frontend client, Laravel 11 RESTful API backend, and MySQL relational database), containerized within a live Linux Cloud Virtual Private Server (VPS). The platform comprises eleven (11) functional modules:
+The researchers successfully engineered, integrated, and deployed the FordaGO system across a robust multi-tier architecture (Ionic 8 and Angular frontend client, Laravel 11 RESTful API backend, and MySQL relational database), containerized within a live Linux Cloud Virtual Private Server (VPS). The platform comprises eleven (11) functional modules:
 
-Secure Authentication & RBAC,
+1. Secure Authentication, Role-Based Access Control, & Email OTP Verification with Clean Identity Governance,
 
-Optical QR Code Attendance Monitoring,
+2. Optical Camera QR Code Attendance Monitoring & Front-Desk Kiosk,
 
-Interactive Equipment QR Guidance Placards,
+3. Interactive Equipment QR Guidance Placards,
 
-Personal Record (PR) Strength Milestone Tracker,
+4. Personal Record (PR) Strength Milestone Tracker & Split Builder,
 
-Coach Studio with In-Chat Structured Proposals,
+5. Coach Studio with In-Chat Structured Proposals,
 
-Supplement Shop & Counter Point-of-Sale,
+6. Supplement Shop & Counter Point-of-Sale,
 
-Membership Pass & Billing Lifecycle Management,
+7. Membership Pass Lifecycle & Automated Proactive Expiration Governance,
 
-Real-Time WebSocket Notifications via Laravel Reverb,
+8. Real-Time WebSocket Notifications via Laravel Reverb,
 
-Consolidated Revenue & Financial Analytics,
+9. Administrative Overview Analytics & Multi-Tab Vector Reporting Engine,
 
-Administrator Activity Logs & Security Audit Trail, and
+10. Administrator Activity Logs & Security Audit Trail, and
 
-Member Feedback & Net Promoter Score (NPS) Evaluation Engine. Together, these modules established an automated, highly synchronized, and paperless operational environment.
+11. Member Feedback & Net Promoter Score (NPS) Evaluation Engine. Together, these modules established an automated, highly synchronized, and paperless operational environment.
 
 1.3. Technical Quality and User Acceptability (SOP 3):
 

@@ -143,7 +143,7 @@ Table 1 formally defines the role-based capability boundaries, API route protect
 | Create / Edit Gym Administrator Accounts | `POST/PUT /api/users` (Super Admin Only) | ✓ | ✗ | ✗ | ✗ | ✗ |
 | Create / Edit Front-Desk Employee Accounts | `POST/PUT /api/users` (`role:admin,super_admin`) | ✓ | ✓ | ✗ | ✗ | ✗ |
 | Register Walk-In Member (`user`) Accounts | `POST /api/users/create` (`role:admin,super_admin,employee`) | ✓ | ✓ | ✓ | ✗ | ✗ |
-| Self-Registration via Mobile App | `POST /api/auth/register` (Public) | ✗ | ✗ | ✗ | ✗ | ✓ |
+| Self-Registration with Email OTP Verification | `POST /api/auth/register/send-otp`, `verify-otp`, `register` | ✗ | ✗ | ✗ | ✗ | ✓ |
 | **Security Audit & Disaster Recovery** | | | | | | |
 | Inspect Security Activity Logs (Audit Trail) | `GET /api/admin/activity-logs` (`role:admin,super_admin`) | ✓ | ✓ | ✗ | ✗ | ✗ |
 | Automated Database Backups & Recovery | Server Scheduled Jobs & CLI Backup Engine | ✓ | ✗ | ✗ | ✗ | ✗ |
@@ -156,6 +156,7 @@ Table 1 formally defines the role-based capability boundaries, API route protect
 | View Personal Attendance History | `GET /api/attendance/my` (Sanctum Auth) | ✗ | ✗ | ✗ | ✗ | ✓ |
 | **Membership & Pass Management** | | | | | | |
 | Approve / Upgrade 30-Day Premium Pass (₱500) | `PUT /api/users/{id}/membership` (`role:admin,super_admin,employee`) | ✓ | ✓ | ✓ | ✗ | ✗ |
+| Proactive Pass Expiration Audit & Notice Dispatch | CLI / Scheduled Cron (`members:check-expirations`) | ✓ | ✓ | ✓ | ✗ | ✓ (Receives) |
 | Request Plan Upgrade / Renewal via App | `POST /api/users/membership/renew` (Sanctum Auth) | ✗ | ✗ | ✗ | ✗ | ✓ |
 | Delete User / Inactive Member Account | `DELETE /api/users/{id}` (RBAC Enforced) | ✓ (All) | ✓ (Staff/Member) | ✓ (Member Only) | ✗ | ✗ |
 | **Supplement Store & Inventory Management** | | | | | | |
