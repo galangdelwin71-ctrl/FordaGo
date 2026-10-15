@@ -88,7 +88,7 @@ class SmsService
         $typeLabel = $membershipType === 'daily' ? 'Daily Pass' : ucfirst(str_replace('_', ' ', $membershipType));
         $expiryText = $expiry ? " Valid until: {$expiry}." : "";
 
-        $message = "FordaGO: Hello {$cleanName}! Your account has been approved by the admin. You can now log in to the FordaGO app (https://fordago.online). Plan: {$typeLabel}.{$expiryText} Keep moving!";
+        $message = "FordaGO: Congratulations {$cleanName}! Your gym membership ({$typeLabel}) is now approved and active.{$expiryText} Welcome to FordaGO! See you at the gym.";
 
         return self::send($to, $message);
     }
