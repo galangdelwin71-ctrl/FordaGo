@@ -231,23 +231,52 @@
         </div>
 
         <div class="field">
-          <label class="field-lbl" for="reg-username">Username</label>
-          <div class="input-shell">
+          <div class="field-lbl-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label class="field-lbl" for="reg-username" style="margin-bottom: 0;">Username</label>
+            <span *ngIf="usernameStatus === 'available'" class="status-badge is-available">
+              <ion-icon name="checkmark-circle"></ion-icon> Available
+            </span>
+            <span *ngIf="usernameStatus === 'taken'" class="status-badge is-taken">
+              <ion-icon name="close-circle-outline"></ion-icon> Already Taken
+            </span>
+          </div>
+          <div class="input-shell" [class.is-verified]="usernameStatus === 'available'" [class.is-error]="usernameStatus === 'taken'">
             <ion-icon name="at-outline" aria-hidden="true"></ion-icon>
             <input
               id="reg-username"
               class="field-input"
               type="text"
               [(ngModel)]="reg.username"
+              (input)="onUsernameInput()"
+              (blur)="checkUsernameAvailability(true)"
               placeholder="Choose a username (e.g. delwin_26)"
               autocomplete="username"
               autocapitalize="none"
               spellcheck="false"
               maxlength="30"
             />
+            <ion-spinner *ngIf="isCheckingUsername" name="crescent" style="width: 16px; height: 16px; color: var(--gold, #ffb300); margin-left: 6px; flex-shrink: 0;"></ion-spinner>
+            <ion-icon
+              *ngIf="!isCheckingUsername && usernameStatus === 'available'"
+              name="checkmark-circle"
+              class="verified-check-icon"
+              aria-hidden="true"
+            ></ion-icon>
+            <ion-icon
+              *ngIf="!isCheckingUsername && usernameStatus === 'taken'"
+              name="close-circle-outline"
+              class="taken-close-icon"
+              aria-hidden="true"
+            ></ion-icon>
           </div>
-          <small class="field-hint" style="display:block;margin-top:4px;font-size:0.75rem;color:var(--text-muted, #94a3b8);">
-            Used for signing in and your profile handle.
+          <small *ngIf="usernameStatus === 'taken'" class="field-hint username-err-hint">
+            ✕ {{ usernameErrorMsg || 'The username is already taken. Please choose another username.' }}
+          </small>
+          <small *ngIf="usernameStatus === 'available'" class="field-hint username-ok-hint">
+            ✓ Username is available!
+          </small>
+          <small *ngIf="!usernameStatus" class="field-hint" style="display:block;margin-top:4px;font-size:0.75rem;color:var(--text-muted, #94a3b8);">
+            Used for signing in and your profile handle (3-30 letters, numbers, _, .).
           </small>
         </div>
 
@@ -455,10 +484,11 @@
           <span>{{ regError }}</span>
         </div>
 
-        <button class="submit-btn" type="button" (click)="nextStep()" [disabled]="regOtpSending" [class.is-loading]="regOtpSending">
-          <ion-spinner *ngIf="regOtpSending" name="crescent"></ion-spinner>
-          <span *ngIf="!regOtpSending">Continue</span>
+        <button class="submit-btn" type="button" (click)="nextStep()" [disabled]="regOtpSending || isStep1Validating" [class.is-loading]="regOtpSending || isStep1Validating">
+          <ion-spinner *ngIf="regOtpSending || isStep1Validating" name="crescent"></ion-spinner>
+          <span *ngIf="!regOtpSending && !isStep1Validating">Continue</span>
           <span *ngIf="regOtpSending">Sending OTP Code...</span>
+          <span *ngIf="!regOtpSending && isStep1Validating">Checking Availability...</span>
         </button>
 
         <button type="button" class="bottom-text-link" (click)="goToLogin()">

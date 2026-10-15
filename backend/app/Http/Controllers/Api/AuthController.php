@@ -533,6 +533,72 @@ class AuthController extends Controller
         ]);
     }
 
+    /**
+     * POST /api/auth/register/check-availability
+     * Fast check on Step 1: verify if username, email, or phone is already taken.
+     */
+    public function checkRegistrationAvailability(Request $request)
+    {
+        $rawUsername = trim((string) ($request->input('username') ?? ''));
+        $rawEmail    = trim((string) ($request->input('email') ?? ''));
+        $rawPhone    = trim((string) ($request->input('phone') ?? ''));
+
+        // 1. Check Username
+        if ($rawUsername !== '') {
+            $cleanUsername = strtolower(ltrim($rawUsername, '@'));
+            if (strlen($cleanUsername) < 3 || strlen($cleanUsername) > 30) {
+                return response()->json([
+                    'available' => false,
+                    'field'     => 'username',
+                    'message'   => 'Username must be 3-30 characters long.',
+                ], 422);
+            }
+            if (! preg_match('/^[a-zA-Z0-9_.]{3,30}$/', $cleanUsername)) {
+                return response()->json([
+                    'available' => false,
+                    'field'     => 'username',
+                    'message'   => 'Username can only contain letters, numbers, underscores, and periods.',
+                ], 422);
+            }
+            if (User::whereRaw('LOWER(username) = ?', [$cleanUsername])->exists()) {
+                return response()->json([
+                    'available' => false,
+                    'field'     => 'username',
+                    'message'   => 'The username "@' . $cleanUsername . '" is already taken. Please choose another username.',
+                ], 409);
+            }
+        }
+
+        // 2. Check Email
+        if ($rawEmail !== '') {
+            $email = $this->normalizeEmail($rawEmail);
+            if ($this->isValidEmail($email) && User::where('email', $email)->exists()) {
+                return response()->json([
+                    'available' => false,
+                    'field'     => 'email',
+                    'message'   => 'This email address is already registered. Please sign in or use a different email.',
+                ], 409);
+            }
+        }
+
+        // 3. Check Phone
+        if ($rawPhone !== '') {
+            $phone = $this->normalizePhone($rawPhone);
+            if ($phone !== '' && User::where('phone', $phone)->exists()) {
+                return response()->json([
+                    'available' => false,
+                    'field'     => 'phone',
+                    'message'   => 'This phone number is already registered to another account.',
+                ], 409);
+            }
+        }
+
+        return response()->json([
+            'available' => true,
+            'message'   => 'Available for registration.',
+        ]);
+    }
+
     public function register(Request $request)
     {
         $firstName      = $this->normalizeName($request->input('firstName', $request->input('first_name')));

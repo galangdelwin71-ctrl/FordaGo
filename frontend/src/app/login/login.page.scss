@@ -3327,6 +3327,62 @@ ion-content.login-bg::part(scroll) {
   background: rgba(16, 185, 129, 0.04) !important;
 }
 
+.input-shell.is-error {
+  border-color: rgba(239, 68, 68, 0.55) !important;
+  background: rgba(239, 68, 68, 0.05) !important;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  border-radius: 20px;
+  padding: 3px 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+
+  ion-icon {
+    font-size: 13px;
+  }
+
+  &.is-available {
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.32);
+  }
+
+  &.is-taken {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.32);
+  }
+}
+
+.taken-close-icon {
+  color: #ef4444 !important;
+  font-size: 20px !important;
+  margin-left: 6px;
+  flex-shrink: 0;
+}
+
+.username-err-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: #ef4444 !important;
+  font-weight: 600;
+}
+
+.username-ok-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: #10b981 !important;
+  font-weight: 600;
+}
+
 .reg-otp-overlay {
   z-index: 10000;
 }

@@ -221,6 +221,13 @@ export class LoginPage implements OnDestroy {
   regOtpDevCode = '';
   private regOtpTimer: any = null;
 
+  // Username Availability State (Immediate Step 1 validation)
+  usernameStatus: 'available' | 'taken' | null = null;
+  usernameErrorMsg = '';
+  isCheckingUsername = false;
+  private usernameDebounceTimer: any = null;
+  isStep1Validating = false;
+
   // Forgot-password fields
   fpStep: number = 1;
   fpIdentifier = '';
@@ -337,6 +344,14 @@ export class LoginPage implements OnDestroy {
     this.clearResendTimer();
     this.clearTwoFactorTimer();
     this.clearRegOtpTimer();
+    this.clearUsernameDebounceTimer();
+  }
+
+  clearUsernameDebounceTimer(): void {
+    if (this.usernameDebounceTimer) {
+      clearTimeout(this.usernameDebounceTimer);
+      this.usernameDebounceTimer = null;
+    }
   }
 
   @HostListener('document:click')
@@ -574,6 +589,11 @@ export class LoginPage implements OnDestroy {
     this.regVerificationToken = '';
     this.showRegEmailOtpModal = false;
     this.clearRegOtpTimer();
+    this.usernameStatus = null;
+    this.usernameErrorMsg = '';
+    this.isCheckingUsername = false;
+    this.clearUsernameDebounceTimer();
+    this.isStep1Validating = false;
     this.updatePreviewGoalPlan();
   }
 
@@ -589,6 +609,11 @@ export class LoginPage implements OnDestroy {
     this.regStep = 1;
     this.regError = '';
     this.regSuccess = false;
+    this.usernameStatus = null;
+    this.usernameErrorMsg = '';
+    this.isCheckingUsername = false;
+    this.clearUsernameDebounceTimer();
+    this.isStep1Validating = false;
   }
 
   goToLogin(): void {
@@ -1035,7 +1060,36 @@ export class LoginPage implements OnDestroy {
         return;
       }
 
-      this.regStep = 2;
+      // Fast check if username is already marked as taken
+      if (this.usernameStatus === 'taken') {
+        this.regError = this.usernameErrorMsg || `The username "@${usernameVal}" is already taken. Please choose another username.`;
+        return;
+      }
+
+      // Authoritative async server availability check for username, email, and phone
+      this.isStep1Validating = true;
+      this.auth.checkRegistrationAvailability({
+        username: usernameVal,
+        email: normalizedEmail,
+        phone: phoneDigits || undefined,
+      }).subscribe({
+        next: () => {
+          this.isStep1Validating = false;
+          this.usernameStatus = 'available';
+          this.usernameErrorMsg = '';
+          this.regStep = 2;
+        },
+        error: (err: any) => {
+          this.isStep1Validating = false;
+          const field = err?.error?.field;
+          const msg = err?.error?.message || 'Validation error. Please check your details.';
+          if (field === 'username' || msg.toLowerCase().includes('username')) {
+            this.usernameStatus = 'taken';
+            this.usernameErrorMsg = msg;
+          }
+          this.regError = msg;
+        }
+      });
       return;
     }
 
@@ -1598,6 +1652,81 @@ export class LoginPage implements OnDestroy {
           this.regError = err?.error?.message || 'Registration failed.';
         },
       });
+  }
+
+  // ── Registration Username Availability Check Methods ────────
+
+  onUsernameInput(): void {
+    this.clearUsernameDebounceTimer();
+    const raw = (this.reg.username || '').trim().replace(/^@/, '');
+
+    if (!raw) {
+      this.usernameStatus = null;
+      this.usernameErrorMsg = '';
+      this.isCheckingUsername = false;
+      return;
+    }
+
+    if (raw.length < 3) {
+      this.usernameStatus = null;
+      this.usernameErrorMsg = '';
+      this.isCheckingUsername = false;
+      return;
+    }
+
+    if (!/^[a-zA-Z0-9_.]{3,30}$/.test(raw)) {
+      this.usernameStatus = 'taken';
+      this.usernameErrorMsg = 'Username must be 3-30 characters (letters, numbers, _, .).';
+      this.isCheckingUsername = false;
+      return;
+    }
+
+    this.isCheckingUsername = true;
+    this.usernameDebounceTimer = setTimeout(() => {
+      this.checkUsernameAvailability(false);
+    }, 400);
+  }
+
+  checkUsernameAvailability(isBlur = false): void {
+    const raw = (this.reg.username || '').trim().replace(/^@/, '');
+    if (!raw) {
+      this.usernameStatus = null;
+      this.usernameErrorMsg = '';
+      this.isCheckingUsername = false;
+      return;
+    }
+
+    if (raw.length < 3 || !/^[a-zA-Z0-9_.]{3,30}$/.test(raw)) {
+      if (isBlur) {
+        this.usernameStatus = 'taken';
+        this.usernameErrorMsg = 'Username must be 3-30 letters, numbers, underscores, or periods.';
+      }
+      this.isCheckingUsername = false;
+      return;
+    }
+
+    this.isCheckingUsername = true;
+    this.auth.checkRegistrationAvailability({ username: raw }).subscribe({
+      next: () => {
+        this.isCheckingUsername = false;
+        const current = (this.reg.username || '').trim().replace(/^@/, '');
+        if (current.toLowerCase() === raw.toLowerCase()) {
+          this.usernameStatus = 'available';
+          this.usernameErrorMsg = '';
+          if (this.regError && this.regError.toLowerCase().includes('username')) {
+            this.regError = '';
+          }
+        }
+      },
+      error: (err: any) => {
+        this.isCheckingUsername = false;
+        const current = (this.reg.username || '').trim().replace(/^@/, '');
+        if (current.toLowerCase() === raw.toLowerCase()) {
+          this.usernameStatus = 'taken';
+          this.usernameErrorMsg = err?.error?.message || `The username "@${raw}" is already taken. Please choose another username.`;
+        }
+      }
+    });
   }
 
   // ── Registration Email OTP Verification Methods ─────────────

@@ -37,6 +37,7 @@ Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/register/send-otp',   [AuthController::class, 'sendRegistrationOtp']);
     Route::post('/register/verify-otp', [AuthController::class, 'verifyRegistrationOtp']);
+    Route::post('/register/check-availability', [AuthController::class, 'checkRegistrationAvailability']);
 
     Route::post('/forgot-password/lookup', [AuthController::class, 'forgotPasswordLookup']);
     Route::post('/forgot-password/send',   [AuthController::class, 'forgotPasswordSend']);

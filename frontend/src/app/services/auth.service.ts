@@ -53,6 +53,12 @@ export class AuthService {
     );
   }
 
+  checkRegistrationAvailability(params: { username?: string; email?: string; phone?: string }) {
+    return this.http.post<any>(`${this.apiUrl}/register/check-availability`, params).pipe(
+      catchError((err: HttpErrorResponse) => this.handleError(err))
+    );
+  }
+
   register(
     firstName: string,
     lastName: string,
