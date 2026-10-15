@@ -116,8 +116,9 @@ class AttendanceController extends Controller
         // Already checked in today? Atomic check & insertion inside transaction
         $today = now()->toDateString();
         $existing = null;
+        $paymentStatus = $user->membership_type === 'premium' ? 'paid' : 'pending';
 
-        $attendance = DB::transaction(function () use ($user, $today, &$existing) {
+        $attendance = DB::transaction(function () use ($user, $today, $paymentStatus, &$existing) {
             $existing = Attendance::where('user_id', $user->id)
                 ->whereDate('check_in_time', $today)
                 ->lockForUpdate()
@@ -126,8 +127,6 @@ class AttendanceController extends Controller
             if ($existing) {
                 return null;
             }
-
-            $paymentStatus = $user->membership_type === 'premium' ? 'paid' : 'pending';
 
             return Attendance::create([
                 'user_id'         => $user->id,
