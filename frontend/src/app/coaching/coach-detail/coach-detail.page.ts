@@ -21,6 +21,7 @@ import {
 } from 'ionicons/icons';
 import { CoachingService, Coach } from '../../services/coaching.service';
 import { resolveImageUrl } from '../../config/api.config';
+import { setCachedData } from '../../utils/local-cache.util';
 
 @Component({
   selector: 'app-coach-detail',
@@ -98,6 +99,7 @@ export class CoachDetailPage implements OnInit {
       next: (convo) => {
         this.isStartingChat = false;
         if (convo && convo.id) {
+          void setCachedData(`fordago.cache.chat_convo_${convo.id}`, convo);
           this.router.navigate(['/chat', convo.id]);
         }
       },

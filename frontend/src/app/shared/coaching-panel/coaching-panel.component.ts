@@ -1546,6 +1546,7 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
       next: (convo) => {
         this.isStartingChat = false;
         if (convo && convo.id) {
+          void setCachedData(`fordago.cache.chat_convo_${convo.id}`, convo);
           this.navigateAway(); // Close panel before navigating
           this.router.navigate(['/chat', convo.id]);
         }
@@ -1690,6 +1691,7 @@ export class CoachingPanelComponent implements OnChanges, OnDestroy {
       CoachingPanelComponent.cachedConversations = this.conversations;
       void setCachedData(CACHE_KEYS.COACH_CONVERSATIONS, this.conversations);
     }
+    void setCachedData(`fordago.cache.chat_convo_${convo.id}`, convo);
     this.navigateAway(); // Close panel before navigating
     this.router.navigate(['/chat', convo.id]);
   }

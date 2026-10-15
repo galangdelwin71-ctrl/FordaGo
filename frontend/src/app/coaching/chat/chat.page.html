@@ -28,6 +28,17 @@
 
         <ion-icon name="chevron-forward-outline" class="partner-header-chevron"></ion-icon>
       </button>
+
+      <!-- Fallback Header while fetching (guarantees header is never blank) -->
+      <div class="chat-partner-header fallback-header" *ngIf="!partner">
+        <div class="chat-partner-avatar">
+          <div class="avatar-placeholder">{{ isCoach ? 'C' : 'P' }}</div>
+        </div>
+        <div class="chat-partner-meta">
+          <h4 class="partner-name">{{ partnerDisplayName || (isCoach ? 'Client' : 'Personal Coach') }}</h4>
+          <span class="partner-role-tag">{{ isCoach ? 'Client' : 'Personal Coach' }}</span>
+        </div>
+      </div>
     </div>
 
     <div slot="end" class="chat-toolbar-end" *ngIf="isCoach">

@@ -22,9 +22,9 @@ class ConversationController extends Controller
         $userId = $request->user()->id;
 
         $conversations = Conversation::with([
-            'coach:id,username,first_name,last_name,profile_image',
+            'coach:id,username,first_name,last_name,profile_image,role',
             'coach.coachProfile',
-            'client:id,username,first_name,last_name,profile_image',
+            'client:id,username,first_name,last_name,profile_image,role',
             'latestMessage.sender:id,username,first_name,last_name',
         ])
         ->where(function ($q) use ($userId) {
@@ -163,9 +163,9 @@ class ConversationController extends Controller
         );
 
         $conversation->loadMissing([
-            'coach:id,username,first_name,last_name,profile_image',
+            'coach:id,username,first_name,last_name,profile_image,role',
             'coach.coachProfile',
-            'client:id,username,first_name,last_name,profile_image',
+            'client:id,username,first_name,last_name,profile_image,role',
         ]);
 
         $isCoach = ((int) $conversation->coach_id === (int) $authId);
@@ -193,9 +193,9 @@ class ConversationController extends Controller
         $userId = $request->user()->id;
 
         $conversation = Conversation::with([
-            'coach:id,username,first_name,last_name,profile_image',
+            'coach:id,username,first_name,last_name,profile_image,role',
             'coach.coachProfile',
-            'client:id,username,first_name,last_name,profile_image',
+            'client:id,username,first_name,last_name,profile_image,role',
         ])->find($id);
 
         if (! $conversation) {
@@ -206,7 +206,11 @@ class ConversationController extends Controller
             return response()->json(['message' => 'Unauthorized to view this conversation.'], 403);
         }
 
-        if (! $conversation->coach || $conversation->coach->role !== 'coach') {
+        if (! $conversation->coach) {
+            return response()->json(['message' => 'This coach is no longer active.'], 404);
+        }
+
+        if ($conversation->coach->role && $conversation->coach->role !== 'coach') {
             return response()->json(['message' => 'This coach is no longer active.'], 404);
         }
 

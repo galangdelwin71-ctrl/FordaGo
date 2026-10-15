@@ -236,8 +236,15 @@ export class ChatPage implements OnInit, OnDestroy {
   }
 
   // ── Local-First Cache (Memory & Storage) ─────────────────────
-  private static conversationCache = new Map<number, Conversation>();
-  private static messagesCache = new Map<number, Message[]>();
+  public static conversationCache = new Map<number, Conversation>();
+  public static messagesCache = new Map<number, Message[]>();
+
+  public static primeConversationCache(convo: Conversation): void {
+    if (convo && convo.id) {
+      ChatPage.conversationCache.set(convo.id, convo);
+      void setCachedData(`fordago.cache.chat_convo_${convo.id}`, convo);
+    }
+  }
 
   ngOnInit() {
     void this.modalCtrl.dismiss().catch(() => {});
@@ -248,13 +255,25 @@ export class ChatPage implements OnInit, OnDestroy {
       void this.hydrateChatFromCache();
       // Load conversation metadata (name, partner info)
       this.loadConversation();
-      // NOTE: loadMessages(), markConversationAsRead(), setActiveChat(), and
-      // setupEchoListener() are intentionally moved to ionViewWillEnter() so
-      // they run on EVERY page activation (first load AND back-navigation
-      // return), not just the first component creation.
     } else {
       this.goBack();
     }
+
+    // Subscribe to paramMap so changing conversation routes re-hydrates properly
+    this.route.paramMap.subscribe((params) => {
+      const pId = params.get('conversationId');
+      if (pId) {
+        const nextId = parseInt(pId, 10);
+        if (nextId && nextId !== this.conversationId) {
+          this.conversationId = nextId;
+          this.conversation = null;
+          this.messages = [];
+          void this.hydrateChatFromCache();
+          this.loadConversation();
+          this.loadMessages();
+        }
+      }
+    });
   }
 
   /**
@@ -267,6 +286,13 @@ export class ChatPage implements OnInit, OnDestroy {
     // Dismiss any leftover modals immediately
     void this.modalCtrl.dismiss().catch(() => {});
 
+    if (!this.conversationId) {
+      const idParam = this.route.snapshot.paramMap.get('conversationId');
+      if (idParam) {
+        this.conversationId = parseInt(idParam, 10);
+      }
+    }
+
     if (!this.conversationId) return;
 
     // Suppress incoming toasts while the user is actively reading this chat
@@ -274,6 +300,9 @@ export class ChatPage implements OnInit, OnDestroy {
 
     // Optimistically clear unread badge in memory & local cache, and notify backend (0ms perceived delay)
     this.coachingService.markConversationAsRead(this.conversationId, true);
+
+    // Ensure conversation metadata (partner name, avatar) is loaded/refreshed
+    this.loadConversation();
 
     // Refresh messages in case any arrived while we were away
     this.loadMessages();
@@ -508,9 +537,11 @@ export class ChatPage implements OnInit, OnDestroy {
    */
   get partnerDisplayName(): string {
     const p = this.partner;
-    if (!p) return '';
+    if (!p) {
+      return this.conversation?.partner_role === 'coach' ? 'Personal Coach' : (this.isCoach ? 'Client' : 'Personal Coach');
+    }
     const full = `${p.first_name || ''} ${p.last_name || ''}`.trim();
-    return full || p.username || 'FordaGO User';
+    return full || p.username || (this.isCoach ? 'Client' : 'Personal Coach');
   }
 
   private getDefaultTomorrowDate(): string {
