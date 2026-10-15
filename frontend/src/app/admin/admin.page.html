@@ -1104,17 +1104,6 @@
           <button class="act-btn plan-btn" (click)="openMembershipEdit(m)">
             <ion-icon name="star-outline"></ion-icon> Plan
           </button>
-          <button
-            type="button"
-            class="act-btn notify-remind-btn"
-            *ngIf="m.membership_type === 'premium' && m.membership_expiry"
-            (click)="notifyExpiringMember(m, $event)"
-            [disabled]="m.notifying || m.notified"
-            title="Send membership expiry notice to member"
-          >
-            <ion-icon [name]="m.notified ? 'checkmark-circle-outline' : 'notifications-outline'"></ion-icon>
-            {{ m.notified ? 'Notified' : 'Remind' }}
-          </button>
           <button class="act-btn edit" (click)="editMember(m)">
             <ion-icon name="create-outline"></ion-icon> Edit
           </button>

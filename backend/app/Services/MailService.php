@@ -408,10 +408,11 @@ class MailService
         $fromName = config('services.resend.from_name') ?: config('mail.from.name') ?: 'FordaGO Gym';
 
         $payload = [
-            'from'    => "{$fromName} <{$fromEmail}>",
-            'to'      => [$to],
-            'subject' => $subject,
-            'text'    => $text,
+            'from'     => "{$fromName} <{$fromEmail}>",
+            'to'       => [$to],
+            'reply_to' => $rawFrom,
+            'subject'  => $subject,
+            'text'     => $text,
         ];
 
         if ($html) {
@@ -451,6 +452,7 @@ class MailService
         $payload = [
             'sender'      => ['name' => $fromName, 'email' => $fromEmail],
             'to'          => [['email' => $to]],
+            'replyTo'     => ['name' => $fromName, 'email' => $fromEmail],
             'subject'     => $subject,
             'textContent' => $text,
         ];
