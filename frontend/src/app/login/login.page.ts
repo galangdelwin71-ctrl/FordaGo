@@ -1031,7 +1031,7 @@ export class LoginPage implements OnDestroy {
       // Check email verification before allowing user to advance to Step 2
       const normalizedEmail = this.reg.email.trim().toLowerCase();
       if (!this.regEmailVerified || this.regVerifiedEmail !== normalizedEmail) {
-        this.openRegEmailOtp();
+        this.regError = 'Please verify your email address first. Tap the "Verify" button beside your email to confirm with a 6-digit code.';
         return;
       }
 
@@ -1724,8 +1724,8 @@ export class LoginPage implements OnDestroy {
         this.regVerificationToken = res?.verification_token || 'verified';
         this.clearRegOtpTimer();
         this.showRegEmailOtpModal = false;
-        // Step 1 email is verified, advance smoothly to Step 2!
-        this.regStep = 2;
+        this.regError = '';
+        // Stay on Step 1 so the user can complete the remaining fields peacefully
       },
       error: (err: any) => {
         this.regOtpLoading = false;

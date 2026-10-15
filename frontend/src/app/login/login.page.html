@@ -445,6 +445,11 @@
           <span>Use at least 8 characters with uppercase, lowercase, number, and special character.</span>
         </div>
 
+        <div class="hint-msg" *ngIf="reg.email && (!regEmailVerified || regVerifiedEmail !== reg.email.trim().toLowerCase())" style="border-color: rgba(255, 204, 0, 0.4); background: rgba(255, 204, 0, 0.08); margin-bottom: 12px;">
+          <ion-icon name="mail-outline" aria-hidden="true" style="color: #ffd600;"></ion-icon>
+          <span style="color: #ffd600;">Email verification is required before continuing. Please tap "Verify" on your email above.</span>
+        </div>
+
         <div class="err-msg" *ngIf="regError" role="alert">
           <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
           <span>{{ regError }}</span>
@@ -1796,7 +1801,7 @@
           (click)="verifyRegEmailOtp()"
         >
           <ion-spinner *ngIf="regOtpLoading" name="crescent"></ion-spinner>
-          <span *ngIf="!regOtpLoading">Verify &amp; Continue</span>
+          <span *ngIf="!regOtpLoading">Verify Email</span>
           <span *ngIf="regOtpLoading">Verifying...</span>
         </button>
 
